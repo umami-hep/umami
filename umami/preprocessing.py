@@ -23,7 +23,7 @@ class DownSampling(object):
         self.pT_var_name = 'pt_uncalib'
         self.eta_var_name = 'abs_eta_uncalib'
 
-    def Apply(self):
+    def GetIndices(self):
         """Applies the DownSampling to the given arrays.
         Returns the indices for the jets to be used separately for b,c and
         light jets."""
@@ -58,27 +58,40 @@ class DownSampling(object):
         u_locations = zip(u_locations_pt, u_locations_eta)
         u_locations = list(u_locations)
 
-        c_loc_indices = {(pti, etai): [] for pti, _ in
+        b_loc_indices = {(pti, etai): [] for pti, _ in
                          enumerate(self.pt_bins[::-1]) for etai, _ in
                          enumerate(self.eta_bins[::-1])}
-        b_loc_indices = {(pti, etai): [] for pti, _ in
+        c_loc_indices = {(pti, etai): [] for pti, _ in
                          enumerate(self.pt_bins[::-1]) for etai, _ in
                          enumerate(self.eta_bins[::-1])}
         u_loc_indices = {(pti, etai): [] for pti, _ in
                          enumerate(self.pt_bins[::-1]) for etai, _ in
                          enumerate(self.eta_bins[::-1])}
         print('Grouping the bins')
-        for i, x in enumerate(c_locations):
-            c_loc_indices[x].append(i)
-
+        ignored_over_underflow = False
         for i, x in enumerate(b_locations):
+            if x not in b_loc_indices:
+                ignored_over_underflow = True
+                continue
             b_loc_indices[x].append(i)
 
-        for i, x in enumerate(u_locations):
-            u_loc_indices[x].append(i)
+        for i, x in enumerate(c_locations):
+            if x not in c_loc_indices:
+                ignored_over_underflow = True
+                continue
+            c_loc_indices[x].append(i)
 
-        cjet_indices = []
+        for i, x in enumerate(u_locations):
+            if x not in u_loc_indices:
+                ignored_over_underflow = True
+                continue
+            u_loc_indices[x].append(i)
+        if ignored_over_underflow:
+            print("# WARNING: You havejets in your sample which are not in",
+                  "the provided bins.")
+
         bjet_indices = []
+        cjet_indices = []
         ujet_indices = []
         print('Matching the bins for all flavours')
 
@@ -91,15 +104,15 @@ class DownSampling(object):
                 nujets = int(histvals_u[eta_bin_i][pt_bin_i])
 
                 njets = min([nbjets, ncjets, nujets])
-                c_indices_for_bin = c_loc_indices[loc][0:njets]
                 b_indices_for_bin = b_loc_indices[loc][0:njets]
+                c_indices_for_bin = c_loc_indices[loc][0:njets]
                 u_indices_for_bin = u_loc_indices[loc][0:njets]
-                cjet_indices += c_indices_for_bin
                 bjet_indices += b_indices_for_bin
+                cjet_indices += c_indices_for_bin
                 ujet_indices += u_indices_for_bin
 
-        cjet_indices.sort()
         bjet_indices.sort()
+        cjet_indices.sort()
         ujet_indices.sort()
 
         return np.array(bjet_indices), np.array(cjet_indices),\
