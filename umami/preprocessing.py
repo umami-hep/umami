@@ -81,6 +81,7 @@ class DownSampling(object):
         bjet_indices = []
         ujet_indices = []
         print('Matching the bins for all flavours')
+
         for pt_bin_i in range(len(self.pt_bins) - 1):
             for eta_bin_i in range(len(self.eta_bins) - 1):
                 loc = (pt_bin_i, eta_bin_i)
@@ -97,7 +98,9 @@ class DownSampling(object):
                 bjet_indices += b_indices_for_bin
                 ujet_indices += u_indices_for_bin
 
-        cjet_indices = np.aray(cjet_indices.sort())
-        bjet_indices = np.aray(bjet_indices.sort())
-        ujet_indices = np.aray(ujet_indices.sort())
-        return bjet_indices, cjet_indices, ujet_indices
+        cjet_indices.sort()
+        bjet_indices.sort()
+        ujet_indices.sort()
+
+        return np.array(bjet_indices), np.array(cjet_indices),\
+            np.array(ujet_indices)
