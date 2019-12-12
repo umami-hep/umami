@@ -1,5 +1,6 @@
 stages:
   - test
+  - build
 
 unittest:
   stage: test
@@ -7,3 +8,31 @@ unittest:
   script:
     - pip install -r requirements.txt
     - python setup.py test
+
+build_img_gpu:
+  stage: build
+  variables:
+    FROM: tensorflow/tensorflow:latest-gpu-py3
+    TAG: latest
+    IMAGE_NAME: umami-gpu
+    CI_REGISTRY: gitlab-registry.cern.ch
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/${IMAGE_NAME}:${TAG}'
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
+
+build_img_cpu:
+  stage: build
+  variables:
+    FROM: tensorflow/tensorflow:latest-py3
+    TAG: latest
+    IMAGE_NAME: umami-cpu
+    CI_REGISTRY: gitlab-registry.cern.ch
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/${IMAGE_NAME}:${TAG}'
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
