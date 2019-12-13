@@ -1,6 +1,28 @@
 # Umami
 
-## MC Samples 
+## Installation
+
+### Docker image
+
+```
+singularity exec docker://gitlab-registry.cern.ch/mguth/umami/umami-cpu:latest bash
+```
+
+### Manual installation
+
+you can check out this repository via `git clone` and then run
+```python setupy.py install```
+this will install the umami package
+if you want to modify the code you should install it via
+```python setupy.py develop```
+
+## Testing
+The unit test you can run via
+```
+python setup.py test
+```
+
+## MC Samples
 
 The FTAG1 derivations and the most recent ntuples for PFlow with the new RNNIP, SMT and the latest DL1* recommendations inside are shown in the following table
 
