@@ -26,5 +26,7 @@ RUN apt-get update && \
     apt-get install -y krb5-user && \
     apt-get install -y vim less screen graphviz python3-tk wget
 
-COPY . /btagging
-WORKDIR /btagging
+COPY . /umami
+WORKDIR /umami
+
+RUN python /umami/setup.py install 
