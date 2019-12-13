@@ -1,0 +1,22 @@
+parameters:
+  file_path: &file_path /work/ws/atlas/mg294-b_tagging/ntuples_2018/VRJets/MC16d/hybrids
+njets: 5e6
+ttbar_frac: 0.7
+iterations: 6
+pTcut: 1.25e5
+bhad_pTcut: 2.5e5
+pT_max: False
+f_z:
+  path: *file_path
+  file: MC16d_hybrid_even_0_ext-Zprime_VRtrackJets-pTcuts-stats-file_merged.h5
+f_ttb_bjets:
+  path: *file_path
+  file: MC16d_hybrid_even_100_VRtrackJets-pTcuts-bjets-stats-file_merged.h5
+f_ttb_cjets:
+  path: *file_path
+  file: MC16d_hybrid_even_100_VRtrackJets-pTcuts-cjets-stats-file_merged.h5
+f_ttb_ujets:
+  path: *file_path
+  file: MC16d_hybrid_even_100_VRtrackJets-pTcuts-ujets-stats-file_merged.h5
+outfile_name: /work/ws/nemo/fr_mg1150-DL1-0/VR_samples/downsampled_ext-hybrid-VR_70-train-3TeV_pT.h5
+plot_name: VR_hybrid-3TeV_pT

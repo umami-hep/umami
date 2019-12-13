@@ -1,0 +1,22 @@
+parameters:
+  file_path: &file_path ./
+njets: 5e6
+ttbar_frac: 0.7
+iterations: 6
+pTcut: 1.25e5
+bhad_pTcut: 2.5e5
+pT_max: 3e6
+f_z:
+  path: *file_path
+  file: dummy.h5
+f_ttb_bjets:
+  path: *file_path
+  file: dummy.h5
+f_ttb_cjets:
+  path: *file_path
+  file: dummy.h5
+f_ttb_ujets:
+  path: *file_path
+  file: dummy.h5
+outfile_name: dummy_out.h5
+plot_name: dummy_plot
