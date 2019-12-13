@@ -1,5 +1,7 @@
 import numpy as np
-
+import yaml
+import os
+import warnings
 # import h5py
 # from numpy.lib.recfunctions import repack_fields
 # import pandas as pd
@@ -87,7 +89,7 @@ class DownSampling(object):
                 continue
             u_loc_indices[x].append(i)
         if ignored_over_underflow:
-            print("# WARNING: You havejets in your sample which are not in",
+            print("# WARNING: You have jets in your sample which are not in",
                   "the provided bins.")
 
         bjet_indices = []
@@ -117,3 +119,61 @@ class DownSampling(object):
 
         return np.array(bjet_indices), np.array(cjet_indices),\
             np.array(ujet_indices)
+
+    def GetComposition(self, config):
+        if config.ttbar_frac > 0:
+            nZ = int(config.Njets * 3 * (1 / config.ttbar_frac - 1)
+                     ) // config.iterations
+            ncjets = int(2.3 * config.Njets) // config.iterations
+            nujets = int(2.7 * config.Njets) // config.iterations
+            Njets = int(config.Njets) // config.iterations
+        else:
+            nZ = int(config.Njets) // config.iterations
+            ncjets = nujets = Njets = 0
+
+        N_list = []
+        for x in range(config.iterations + 1):
+            N_dict = {"nZ": nZ * x,
+                      "nbjets": Njets * x,
+                      "ncjets": ncjets * x,
+                      "nujets": nujets * x
+                      }
+            N_list.append(N_dict)
+        return N_list
+
+
+class Configuration(object):
+    """docstring for Configuration."""
+
+    def __init__(self, yaml_config):
+        super(Configuration, self).__init__()
+        self.yaml_config = yaml_config
+        self.yaml_default_config = "configs/preprocessing_default_config.yaml"
+        self.LoadConfigFiles()
+        self.GetConfiguration()
+
+    def LoadConfigFiles(self):
+        self.yaml_default_config = os.path.join(os.path.dirname(__file__),
+                                                self.yaml_default_config)
+        with open(self.yaml_default_config, "r") as conf:
+            self.default_config = yaml.load(conf, Loader=yaml.FullLoader)
+
+        with open(self.yaml_config, "r") as conf:
+            self.config = yaml.load(conf, Loader=yaml.FullLoader)
+
+    def GetConfiguration(self):
+        for elem in self.default_config:
+            if elem in self.config:
+                if type(self.config[elem]) is dict and "f_" in elem:
+                    setattr(self, elem, os.path.join(self.config[elem]['path'],
+                                                     self.config[elem]['file'])
+                            )
+                else:
+                    setattr(self, elem, self.config[elem])
+            elif self.default_config[elem] is None:
+                raise KeyError(f"You need to specify {elem} in your"
+                               "config file!")
+            else:
+                warnings.warn(f"setting {elem} to default value "
+                              f"{self.default_config[elem]}")
+                setattr(self, elem, self.default_config[elem])

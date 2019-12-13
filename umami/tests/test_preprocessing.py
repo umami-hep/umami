@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 import pandas as pd
-from umami.preprocessing import DownSampling
+import os
+from umami.preprocessing import DownSampling, Configuration
 
 
 class DownSamplingTestCase(unittest.TestCase):
@@ -53,3 +54,23 @@ class DownSamplingTestCase(unittest.TestCase):
         b_ind, c_ind, u_ind = down_s.GetIndices()
         assert len(b_ind) == len(c_ind)
         assert len(b_ind) == len(u_ind)
+
+
+class ConfigurationTestCase(unittest.TestCase):
+    """
+    Test the implementation of the Configuration class.
+    """
+
+    def test_missing_key_error(self):
+        config = Configuration(os.path.join(os.path.dirname(__file__),
+                                            "test_preprocess_config.yaml"))
+        del config.config["outfile_name"]
+        with self.assertRaises(KeyError):
+            config.GetConfiguration()
+
+    def test_missing_key_warning(self):
+        config = Configuration(os.path.join(os.path.dirname(__file__),
+                                            "test_preprocess_config.yaml"))
+        del config.config["pT_max"]
+        with self.assertWarns(Warning):
+            config.GetConfiguration()
