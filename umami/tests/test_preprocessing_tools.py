@@ -2,7 +2,8 @@ import unittest
 import numpy as np
 import pandas as pd
 import os
-from umami.preprocessing import DownSampling, Configuration
+from umami.preprocessing_tools.DownSampling import DownSampling, Configuration
+from umami.preprocessing_tools.DownSampling import GetNJetsPerIteration
 
 
 class DownSamplingTestCase(unittest.TestCase):
@@ -61,16 +62,39 @@ class ConfigurationTestCase(unittest.TestCase):
     Test the implementation of the Configuration class.
     """
 
+    def setUp(self):
+        """
+        Set a example config file.
+        """
+        self.config_file = os.path.join(os.path.dirname(__file__),
+                                        "test_preprocess_config.yaml")
+
     def test_missing_key_error(self):
-        config = Configuration(os.path.join(os.path.dirname(__file__),
-                                            "test_preprocess_config.yaml"))
+        config = Configuration(self.config_file)
         del config.config["outfile_name"]
         with self.assertRaises(KeyError):
             config.GetConfiguration()
 
     def test_missing_key_warning(self):
-        config = Configuration(os.path.join(os.path.dirname(__file__),
-                                            "test_preprocess_config.yaml"))
+        config = Configuration(self.config_file)
         del config.config["pT_max"]
         with self.assertWarns(Warning):
             config.GetConfiguration()
+
+
+class GetNJetsPerIterationTestCase(unittest.TestCase):
+    """
+    Test the implementation of the GetNJetsPerIteration function.
+    """
+    def setUp(self):
+        """
+        Set a example config file.
+        """
+        self.config_file = os.path.join(os.path.dirname(__file__),
+                                        "test_preprocess_config.yaml")
+
+    def test_zero_case(self):
+        config = Configuration(self.config_file)
+        config.config["ttbar_frac"] = 0
+        config.config["Njets"] = 1e6
+        GetNJetsPerIteration(config)
