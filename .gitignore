@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+*.egg-info
+*.ipynb_checkpoints
+*.h5
+doc/*
+.eggs/
+examples/*.html
+examples/*.json
+examples/*.sh
+build/*
+dist/*
