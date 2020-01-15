@@ -2,8 +2,8 @@ import unittest
 import numpy as np
 import pandas as pd
 import os
-from umami.preprocessing_tools.DownSampling import DownSampling, Configuration
-from umami.preprocessing_tools.DownSampling import GetNJetsPerIteration
+from umami.preprocessing_tools import DownSampling, Configuration
+from umami.preprocessing_tools import GetNJetsPerIteration, GetCuts
 
 
 class DownSamplingTestCase(unittest.TestCase):
@@ -30,31 +30,31 @@ class DownSamplingTestCase(unittest.TestCase):
                                 columns=["pt_uncalib", "abs_eta_uncalib"])
         down_s = DownSampling(df_zeros, df_zeros, df_zeros)
         b_ind, c_ind, u_ind = down_s.GetIndices()
-        assert len(b_ind) == len(df_zeros)
+        self.assertEqual(len(b_ind), len(df_zeros))
 
     def test_underflow(self):
         df_minus_ones = pd.DataFrame(-1 * np.ones((1000, 2)),
                                      columns=["pt_uncalib", "abs_eta_uncalib"])
         down_s = DownSampling(df_minus_ones, df_minus_ones, df_minus_ones)
         b_ind, c_ind, u_ind = down_s.GetIndices()
-        assert b_ind.size == 0
-        assert c_ind.size == 0
-        assert u_ind.size == 0
+        self.assertEqual(b_ind.size, 0)
+        self.assertEqual(c_ind.size, 0)
+        self.assertEqual(u_ind.size, 0)
 
     def test_overflow(self):
         df_minus_ones = pd.DataFrame(1e10 * np.ones((1000, 2)),
                                      columns=["pt_uncalib", "abs_eta_uncalib"])
         down_s = DownSampling(df_minus_ones, df_minus_ones, df_minus_ones)
         b_ind, c_ind, u_ind = down_s.GetIndices()
-        assert b_ind.size == 0
-        assert c_ind.size == 0
-        assert u_ind.size == 0
+        self.assertEqual(b_ind.size, 0)
+        self.assertEqual(c_ind.size, 0)
+        self.assertEqual(u_ind.size, 0)
 
     def test_equal_length(self):
         down_s = DownSampling(self.df_bjets, self.df_cjets, self.df_ujets)
         b_ind, c_ind, u_ind = down_s.GetIndices()
-        assert len(b_ind) == len(c_ind)
-        assert len(b_ind) == len(u_ind)
+        self.assertEqual(len(b_ind), len(c_ind))
+        self.assertEqual(len(b_ind), len(u_ind))
 
 
 class ConfigurationTestCase(unittest.TestCase):
@@ -95,6 +95,124 @@ class GetNJetsPerIterationTestCase(unittest.TestCase):
 
     def test_zero_case(self):
         config = Configuration(self.config_file)
-        config.config["ttbar_frac"] = 0
-        config.config["Njets"] = 1e6
-        GetNJetsPerIteration(config)
+        config.ttbar_frac = 0
+        N_list = GetNJetsPerIteration(config)
+        self.assertEqual(N_list[-1]['nbjets'], 0)
+        self.assertEqual(N_list[-1]['ncjets'], 0)
+        self.assertEqual(N_list[-1]['nujets'], 0)
+
+    def test_one_case(self):
+        config = Configuration(self.config_file)
+        config.ttbar_frac = 1
+        N_list = GetNJetsPerIteration(config)
+        self.assertEqual(N_list[-1]['nZ'], 0)
+        self.assertGreater(N_list[-1]['nbjets'], config.njets * 0.9)
+
+    def test_one_iteration(self):
+        config = Configuration(self.config_file)
+        config.iterations = 1
+        config.njets = 1e6
+        N_list = GetNJetsPerIteration(config)
+        self.assertEqual(N_list[-1]['nbjets'], 1e6)
+
+    def test_no_iteration(self):
+        config = Configuration(self.config_file)
+        config.iterations = 0
+        config.njets = 1e6
+        with self.assertRaises(ValueError):
+            GetNJetsPerIteration(config)
+
+
+class PreprocessingTestCuts(unittest.TestCase):
+    """
+    Test the implementation of the Prerocessing cut application.
+    """
+
+    def setUp(self):
+        self.config_file = os.path.join(os.path.dirname(__file__),
+                                        "test_preprocess_config.yaml")
+        self.config = Configuration(self.config_file)
+        self.jets = pd.DataFrame({"secondaryVtx_m": [2e3, 2.6e4, 2.7e4, 2.4e4,
+                                                     np.nan, np.nan, 25, 30e4,
+                                                     np.nan, 0],
+                                  "secondaryVtx_E": [2001, 26001, 1e9, 1.5e8,
+                                                     5, np.nan, np.nan, np.nan,
+                                                     4e8, 0],
+                                  "HadronConeExclTruthLabelID": [5, 5, 5, 5,
+                                                                 4, 4, 4,
+                                                                 0, 0, 0],
+                                  "GhostBHadronsFinalPt": 5e3 * np.ones(10),
+                                  "pt_uncalib": 5.2e3 * np.ones(10),
+                                  })
+        self.pass_ttbar = np.array([1., 0., 0., 0., 1., 1., 1., 0., 0., 1.])
+
+    def test_cuts_passing_ttbar(self):
+        indices_to_remove = GetCuts(self.jets.to_records(index=False),
+                                    self.config)
+        cut_result = np.ones(len(self.jets))
+        np.put(cut_result, indices_to_remove, 0)
+        self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
+
+    def test_cuts_passing_Zprime_all_false(self):
+        pass_Zprime = np.zeros(len(self.jets))
+        indices_to_remove = GetCuts(self.jets.to_records(index=False),
+                                    self.config, sample='Zprime')
+        cut_result = np.ones(len(self.jets))
+        np.put(cut_result, indices_to_remove, 0)
+        self.assertTrue(np.array_equal(cut_result, pass_Zprime))
+
+    def test_cuts_passing_Zprime_inverted_pt(self):
+        jets = self.jets.copy()
+        jets["GhostBHadronsFinalPt"] *= 1e2
+        jets["pt_uncalib"] *= 1e2
+        indices_to_remove = GetCuts(jets.to_records(index=False),
+                                    self.config, sample='Zprime')
+        cut_result = np.ones(len(jets))
+        np.put(cut_result, indices_to_remove, 0)
+        self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
+
+    def test_cuts_exceed_pTmax_Zprime(self):
+        jets = self.jets.copy()
+        jets["GhostBHadronsFinalPt"] *= 1e5
+        jets["pt_uncalib"] *= 1e5
+        indices_to_remove = GetCuts(jets.to_records(index=False),
+                                    self.config, sample='Zprime')
+        cut_result = np.ones(len(jets))
+        np.put(cut_result, indices_to_remove, 0)
+        self.assertTrue(np.array_equal(cut_result, np.zeros(len(jets))))
+
+    def test_cuts_exceed_pTmax_ttbar(self):
+        jets = self.jets.copy()
+        jets["GhostBHadronsFinalPt"] *= 1e5
+        jets["pt_uncalib"] *= 1e5
+        indices_to_remove = GetCuts(jets.to_records(index=False),
+                                    self.config, sample='ttbar')
+        cut_result = np.ones(len(jets))
+        np.put(cut_result, indices_to_remove, 0)
+        self.assertTrue(np.array_equal(cut_result, np.zeros(len(jets))))
+
+    def test_cuts_bjets_exceed_pt_ttbar(self):
+        jets = pd.DataFrame({"secondaryVtx_m": [0, 0, 0],
+                             "secondaryVtx_E": [0, 0, 0],
+                             "HadronConeExclTruthLabelID": [5, 4, 0],
+                             "GhostBHadronsFinalPt": 5e5 * np.ones(3),
+                             "pt_uncalib": 5e3 * np.ones(3)
+                             })
+        indices_to_remove = GetCuts(jets.to_records(index=False),
+                                    self.config, sample='ttbar')
+        cut_result = np.ones(len(jets))
+        np.put(cut_result, indices_to_remove, 0)
+        self.assertTrue(np.array_equal(cut_result, np.array([0, 1, 1])))
+
+    def test_cuts_bjets_pass_pt_Zprime(self):
+        jets = pd.DataFrame({"secondaryVtx_m": [0, 0, 0],
+                             "secondaryVtx_E": [0, 0, 0],
+                             "HadronConeExclTruthLabelID": [5, 4, 0],
+                             "GhostBHadronsFinalPt": 5e5 * np.ones(3),
+                             "pt_uncalib": 5e3 * np.ones(3)
+                             })
+        indices_to_remove = GetCuts(jets.to_records(index=False),
+                                    self.config, sample='Zprime')
+        cut_result = np.ones(len(jets))
+        np.put(cut_result, indices_to_remove, 0)
+        self.assertTrue(np.array_equal(cut_result, np.array([1, 0, 0])))

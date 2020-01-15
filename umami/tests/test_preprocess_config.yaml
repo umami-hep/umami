@@ -1,22 +1,50 @@
 parameters:
+  # file path
   file_path: &file_path ./
+# amount of b-jets which are used
 njets: 5e6
+# fraction of ttbar jets wrt. Z'
 ttbar_frac: 0.7
+# outputfiles are split into 6
 iterations: 6
+# pT cut for hybrid creation (for light and c-jets)
 pTcut: 1.25e5
+# pT cut for b-jets
 bhad_pTcut: 2.5e5
+# upper pT limit for all jets
 pT_max: 3e6
 f_z:
   path: *file_path
   file: dummy.h5
-f_ttb_bjets:
+f_tt_bjets:
   path: *file_path
   file: dummy.h5
-f_ttb_cjets:
+f_tt_cjets:
   path: *file_path
   file: dummy.h5
-f_ttb_ujets:
+f_tt_ujets:
   path: *file_path
   file: dummy.h5
 outfile_name: dummy_out.h5
 plot_name: dummy_plot
+
+
+# cut definitions to be applied to remove outliers
+# possible operators: <, ==, >, >=, <=
+Cuts:
+  secondaryVtx_m:
+    operator: <
+    condition: 25000
+    NaNcheck: True
+  secondaryVtx_E:
+    operator: <
+    condition: 1e8
+    NaNcheck: True
+  # vr_overlap:
+  #   operator: ==
+  #   condition: 1
+  #   NaNcheck: False
+  # jetPtRank:
+  #   operator: <=
+  #   condition: 3
+  #   NaNcheck: False
