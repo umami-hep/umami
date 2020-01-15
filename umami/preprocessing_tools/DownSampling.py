@@ -138,10 +138,10 @@ def GetNJetsPerIteration(config):
 
     N_list = []
     for x in range(config.iterations + 1):
-        N_dict = {"nZ": nZ * x,
-                  "nbjets": njets * x,
-                  "ncjets": ncjets * x,
-                  "nujets": nujets * x
+        N_dict = {"nZ": int(nZ * x),
+                  "nbjets": int(njets * x),
+                  "ncjets": int(ncjets * x),
+                  "nujets": int(nujets * x)
                   }
         N_list.append(N_dict)
     return N_list
