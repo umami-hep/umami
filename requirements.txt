@@ -3,6 +3,7 @@ pandas
 dask
 toolz
 fsspec>=0.3.3
+xhistogram
 keras
 uproot
 jupyter
