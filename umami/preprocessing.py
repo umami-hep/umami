@@ -2,7 +2,11 @@ import umami.preprocessing_tools as upt
 import h5py
 import numpy as np
 from numpy.lib.recfunctions import append_fields
+import pandas as pd
 import argparse
+import os
+import yaml
+from umami.tools import yaml_loader
 
 
 def GetParser():
@@ -14,18 +18,18 @@ def GetParser():
                         required=True,
                         help="Enter the name of the config file to create the"
                         "hybrid sample.")
-    parser.add_argument('--cut_config_file', type=str, default=None,
-                        help="Enter the name of the cut config file.")
     parser.add_argument('-t', '--tracks', action='store_true',
                         help="Stores also track information.")
     return parser.parse_args()
 
 
-def main():
+def RunDownsampling():
+    """Applies required cuts to the samples and applies the downsampling."""
     args = GetParser()
-    config = upt.Configuration(args.config)
+    config = upt.Configuration(args.config_file)
     N_list = upt.GetNJetsPerIteration(config)
 
+    # initialise input files (they are not yet loaded to memory)
     f_Z = h5py.File(config.f_z, 'r')
     f_tt_bjets = h5py.File(config.f_tt_bjets, 'r')
     f_tt_cjets = h5py.File(config.f_tt_cjets, 'r')
@@ -62,10 +66,10 @@ def main():
             tnp_tt_u = np.asarray(f_tt_ujets['tracks'][N_list[x]["nujets"]:
                                   N_list[x + 1]["nujets"]])
 
-        indices_toremove_Zprime = GetPtCuts(vec_Z, config, 'Zprime')
-        indices_toremove_bjets = GetPtCuts(vec_tt_bjets, config)
-        indices_toremove_cjets = GetPtCuts(vec_tt_cjets, config)
-        indices_toremove_ujets = GetPtCuts(vec_tt_ujets, config)
+        indices_toremove_Zprime = upt.GetCuts(vec_Z, config, 'Zprime')
+        indices_toremove_bjets = upt.GetCuts(vec_tt_bjets, config)
+        indices_toremove_cjets = upt.GetCuts(vec_tt_cjets, config)
+        indices_toremove_ujets = upt.GetCuts(vec_tt_ujets, config)
 
         vec_Z = np.delete(vec_Z, indices_toremove_Zprime, 0)
         vec_tt_bjets = np.delete(vec_tt_bjets, indices_toremove_bjets, 0)
@@ -79,35 +83,116 @@ def main():
             tnp_tt_u = np.delete(tnp_tt_u, indices_toremove_ujets, 0)
 
         print("starting downsampling")
-        b_indices, c_indices, u_indices = upt.DownSampling(
-            np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5],
-                            vec_tt_bjets]),
-            np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 4],
-                            vec_tt_cjets]),
-            np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0],
-                            vec_tt_ujets])
-        )
-        ttfrac = float(len(b[b["category"] == 1]) + len(c[c["category"] == 1])
-                       + len(u[u["category"] == 1])) / float(len(b) + len(c) +
-                                                             len(u))
-        print("ttbar fraction:", ttfrac)
-        out_file = config.outfile_name
-        if config.iterations > 1:
-            idx = out_file.index(".h5")
-            inserttxt = "-file%i_%i" % (x + 1, config.iterations)
-            out_file = out_file[:idx] + inserttxt + out_file[idx:]
+        bjets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5
+                                      ], vec_tt_bjets])
+        cjets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 4
+                                      ], vec_tt_cjets])
+        ujets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0
+                                      ], vec_tt_ujets])
+        downs = upt.DownSampling(bjets, cjets, ujets)
+        b_indices, c_indices, u_indices = downs.GetIndices()
+
+        bjets = bjets[b_indices]
+        cjets = cjets[c_indices]
+        ujets = ujets[u_indices]
+
+        if args.tracks:
+            btrk = np.concatenate([tnp_Zprime[
+                vec_Z["HadronConeExclTruthLabelID"] == 5], tnp_tt_b])[
+                    b_indices]
+            ctrk = np.concatenate([tnp_Zprime[
+                vec_Z["HadronConeExclTruthLabelID"] == 4], tnp_tt_c])[
+                    c_indices]
+            utrk = np.concatenate([tnp_Zprime[
+                vec_Z["HadronConeExclTruthLabelID"] == 0], tnp_tt_u])[
+                    u_indices]
+
+        ttfrac = float(len(bjets[bjets["category"] == 1]) + len(
+            cjets[cjets["category"] == 1]) + len(
+                ujets[ujets["category"] == 1])) / float(len(bjets) + len(
+                    cjets) + len(ujets))
+        print("ttbar fraction:", round(ttfrac, 2))
+
+        out_file = config.GetFileName(x + 1, option="downsampled")
         print("saving file:", out_file)
         h5f = h5py.File(out_file, 'w')
-        h5f.create_dataset('bjets', data=b)
-        h5f.create_dataset('cjets', data=c)
-        h5f.create_dataset('ujets', data=u)
+        h5f.create_dataset('bjets', data=bjets)
+        h5f.create_dataset('cjets', data=cjets)
+        h5f.create_dataset('ujets', data=ujets)
+        if args.tracks:
+            h5f.create_dataset('btrk', data=btrk)
+            h5f.create_dataset('ctrk', data=ctrk)
+            h5f.create_dataset('utrk', data=utrk)
+
         h5f.close()
-        print("Plotting ...")
-        tp.MakePlots(b, u, c, plot_name=config.plot_name, option=str(x),
-                     binning={"pt_uncalib": 200, "abs_eta_uncalib": 200})
+        # TODO: Implement plotting
+        # TODO: verify track handling
+        # print("Plotting ...")
+        # tp.MakePlots(b, u, c, plot_name=config.plot_name, option=str(x),
+        #              binning={"pt_uncalib": 200, "abs_eta_uncalib": 200})
+
+
+# python Preprocessing.py --no_writing --downsampled --only_scale --dummy_weights --input_file ${INPUTFILE} -f params_MC16D-2019-VRjets -o ""
+
+def GetScaleDict():
+    args = GetParser()
+    config = upt.Configuration(args.config_file)
+    # TODO: find good way to get file names
+    input_file = config.GetFileName()
+    infile_all = h5py.File(input_file, 'r')
+
+    # TODO: add properly Variable config
+    config.variable_config = "/home/fr/fr_fr/fr_mg1150/workspace/btagging/umami/umami/configs/DL1r_Variables.yaml"
+    # TODO: check if dictfile already exists in proper way
+    dict_dir = "./"
+    dict_file = "test.json"
+    # if not (os.path.isfile("%s/%s.json" % (dict_dir, dict_file))):
+    #     print("Scaler file ", "%s/%s.json" % (dict_dir, dict_file),
+    #           "does not exist.",
+    #           "Run first in training mode --add_dl1 0 or specify dict",
+    #           "file via --dict_file.")
+    #     exit()
+    input_file = "test.h5"
+    print('Preprocessing', input_file)
+
+    with open(config.variable_config, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
+
+    var_list = [variable_config["label"], "category"]
+    var_list += variable_config["train_variables"]
+    var_list += variable_config["spectator_variables"]
+
+    bjets = pd.DataFrame(infile_all['bjets'][:][var_list])
+    cjets = pd.DataFrame(infile_all['cjets'][:][var_list])
+    ujets = pd.DataFrame(infile_all['ujets'][:][var_list])
+    X = pd.concat([bjets, cjets, ujets])
+    del bjets, cjets, ujets
+    X['weight'] = np.ones(len(X))
+
+    X.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+    print("Apply scaling and shifting")
+    scale_dict = []
+    for var in X.columns.values:
+        if var in [variable_config["label"], 'weight', 'category']:
+            continue
+        elif 'isDefaults' in var:
+            # no scaling and shifting is applied to the check variables
+            scale_dict.append(tp.dict_in(var, 0., 1., None))
+        else:
+            dict_entry = tp.Get_Shift_Scale(vec=X[var].values,
+                                            w=X['weight'].values, varname=var)
+            scale_dict.append(tp.dict_in(*dict_entry))
+
+    # save scale/shift dictionary to json file
+    scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
+    with open(scale_name, 'w') as outfile:
+        json.dump(scale_dict, outfile, indent=4)
+    print("saved scale dictionary as", scale_name)
 
 
 
 
 if __name__ == '__main__':
-    main()
+    # RunDownsampling()
+    GetScaleDict()

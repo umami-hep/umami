@@ -1,22 +1,66 @@
 parameters:
-  file_path: &file_path /work/ws/atlas/mg294-b_tagging/ntuples_2018/VRJets/MC16d/hybrids
-njets: 5e6
-ttbar_frac: 0.7
-iterations: 6
-pTcut: 1.25e5
+  # file path
+  file_path: &file_path /work/ws/atlas/mg294-b_tagging/ntuples_2018/PFlow/new_taggers/MC16d/hybrids
+# amount of b-jets which are used
+# njets: 1e4
+njets: 5.5e6
+# fraction of ttbar jets wrt. Z'
+ttbar_frac: 0.65
+# outputfiles are split into 6
+iterations: 5
+# pT cut for hybrid creation (for light and c-jets)
+pTcut: 2.5e5
+# pT cut for b-jets
 bhad_pTcut: 2.5e5
+# upper pT limit for all jets
 pT_max: False
 f_z:
   path: *file_path
-  file: MC16d_hybrid_even_0_ext-Zprime_VRtrackJets-pTcuts-stats-file_merged.h5
-f_ttb_bjets:
+  file: MC16d_hybrid_even_0-extended_PFlow-pTcuts.h5
+f_tt_bjets:
   path: *file_path
-  file: MC16d_hybrid_even_100_VRtrackJets-pTcuts-bjets-stats-file_merged.h5
-f_ttb_cjets:
+  file: MC16d_hybrid_even_100_PFlow-pTcuts-bjets.h5
+f_tt_cjets:
   path: *file_path
-  file: MC16d_hybrid_even_100_VRtrackJets-pTcuts-cjets-stats-file_merged.h5
-f_ttb_ujets:
+  file: MC16d_hybrid_even_100_PFlow-pTcuts-cjets-stats-merged.h5
+f_tt_ujets:
   path: *file_path
-  file: MC16d_hybrid_even_100_VRtrackJets-pTcuts-ujets-stats-file_merged.h5
-outfile_name: /work/ws/nemo/fr_mg1150-DL1-0/VR_samples/downsampled_ext-hybrid-VR_70-train-3TeV_pT.h5
-plot_name: VR_hybrid-3TeV_pT
+  file: MC16d_hybrid_even_100_PFlow-pTcuts-ujets-stats-merged.h5
+outfile_name: /work/ws/nemo/fr_mg1150-umami-0/framework_develop/PFlow-hybrid_70-22M.h5
+plot_name: PFlow_ext-hybrid
+
+# Dictfile for the scaling and shifting
+dict_file: "test.json"
+
+
+# cut definitions to be applied to remove outliers
+# possible operators: <, ==, >, >=, <=
+Cuts:
+  secondaryVtx_m:
+    operator: <
+    condition: 25000
+    NaNcheck: True
+  secondaryVtx_E:
+    operator: <
+    condition: 1e8
+    NaNcheck: True
+  JetFitter_deltaR:
+    operator: <
+    condition: 0.6
+    NaNcheck: True
+  softMuon_pt:
+    operator: <
+    condition: 0.5e9
+    NaNcheck: True
+  softMuon_momentumBalanceSignificance:
+    operator: <
+    condition: 50
+    NaNcheck: True
+  softMuon_scatteringNeighbourSignificance:
+    operator: <
+    condition: 600
+    NaNcheck: True
+  softMuon_momentumBalanceSignificance:
+    operator: <
+    condition: 4000
+    NaNcheck: True
