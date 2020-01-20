@@ -1,3 +1,17 @@
 numpy
 pandas
 dask
+toolz
+fsspec>=0.3.3
+keras
+uproot
+jupyter
+jupyterlab
+matplotlib
+seaborn
+hep_ml
+sklearn
+tables
+papermill
+pydot 
+Pillow

@@ -5,20 +5,9 @@ ENV LANG C.UTF-8
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN pip install numpy && \
-    pip install pandas && \
-    pip install dask && \
-    pip install keras && \
-    pip install uproot && \
-    pip install jupyter && \
-    pip install jupyterlab && \
-    pip install matplotlib && \
-    pip install seaborn && \
-    pip install hep_ml && \
-    pip install sklearn && \
-    pip install tables && \
-    pip install papermill pydot Pillow
+COPY requirements.txt .
 
+RUN pip install -r requirements.txt
 
 RUN apt-get update && \
     apt-get install -y git debconf-utils h5utils && \
