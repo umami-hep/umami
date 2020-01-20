@@ -1,6 +1,8 @@
 numpy
 pandas
 dask
+toolz
+fsspec>=0.3.3
 keras
 uproot
 jupyter
