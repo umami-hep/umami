@@ -1,8 +1,8 @@
 import numpy as np
-import yaml
-import os
+# import yaml
+# import os
 import warnings
-from umami.tools import yaml_loader
+# from umami.tools import yaml_loader
 # import h5py
 # from numpy.lib.recfunctions import repack_fields
 # import json
@@ -14,7 +14,7 @@ class DownSampling(object):
     """The DownSampling is used to prepare the training dataset. It makes sure
     that in each pT/eta bin the same amount of jets are filled."""
 
-    def __init__(self, bjets, cjets, ujets, run_immediatly=True):
+    def __init__(self, bjets, cjets, ujets):
         super(DownSampling, self).__init__()
         self.bjets = bjets
         self.cjets = cjets
@@ -24,8 +24,6 @@ class DownSampling(object):
         self.eta_bins = np.linspace(0, 2.5, 10)
         self.pT_var_name = 'pt_uncalib'
         self.eta_var_name = 'abs_eta_uncalib'
-        if run_immediatly:
-            self.GetIndices()
 
     def GetIndices(self):
         """Applies the DownSampling to the given arrays.
@@ -91,8 +89,8 @@ class DownSampling(object):
                 continue
             u_loc_indices[x].append(i)
         if ignored_over_underflow:
-            print("# WARNING: You have jets in your sample which are not in",
-                  "the provided bins.")
+            warnings.warn("You have jets in your sample which are not in"
+                          "the provided bins.")
 
         bjet_indices = []
         cjet_indices = []
@@ -123,57 +121,9 @@ class DownSampling(object):
             np.array(ujet_indices)
 
 
-class Configuration(object):
-    """docstring for Configuration."""
-
-    def __init__(self, yaml_config=None):
-        super(Configuration, self).__init__()
-        self.yaml_config = yaml_config
-        self.yaml_default_config = "configs/preprocessing_default_config.yaml"
-        self.LoadConfigFiles()
-        self.GetConfiguration()
-
-    def LoadConfigFiles(self):
-        self.yaml_default_config = os.path.join(os.path.dirname(__file__),
-                                                self.yaml_default_config)
-        with open(self.yaml_default_config, "r") as conf:
-            self.default_config = yaml.load(conf, Loader=yaml_loader)
-        print("Using config file", self.yaml_config)
-        with open(self.yaml_config, "r") as conf:
-            self.config = yaml.load(conf, Loader=yaml_loader)
-
-    def GetConfiguration(self):
-        for elem in self.default_config:
-            if elem in self.config:
-                if type(self.config[elem]) is dict and "f_" in elem:
-                    if 'file' not in self.config[elem]:
-                        raise KeyError("You need to specify the 'file' for"
-                                       f"{elem} in your config file!")
-                    if self.config[elem]['file'] is None:
-                        raise KeyError("You need to specify the 'file' for"
-                                       f" {elem} in your config file!")
-                    if 'path' in self.config[elem]:
-                        setattr(self, elem,
-                                os.path.join(self.config[elem]['path'],
-                                             self.config[elem]['file'])
-                                )
-                    else:
-                        setattr(self, elem, self.config[elem]['file'])
-
-                else:
-                    setattr(self, elem, self.config[elem])
-            elif self.default_config[elem] is None:
-                raise KeyError(f"You need to specify {elem} in your"
-                               "config file!")
-            else:
-                warnings.warn(f"setting {elem} to default value "
-                              f"{self.default_config[elem]}")
-                setattr(self, elem, self.default_config[elem])
-
-
 def GetNJetsPerIteration(config):
-    print(type(config.ttbar_frac))
-    print(type(config.njets))
+    if config.iterations == 0:
+        raise ValueError("The iterations have to be >=1 and not 0.")
     if config.ttbar_frac > 0.:
         nZ = (int(config.njets) * 3 * (1 / config.ttbar_frac - 1)
               ) // config.iterations
@@ -186,10 +136,10 @@ def GetNJetsPerIteration(config):
 
     N_list = []
     for x in range(config.iterations + 1):
-        N_dict = {"nZ": nZ * x,
-                  "nbjets": njets * x,
-                  "ncjets": ncjets * x,
-                  "nujets": nujets * x
+        N_dict = {"nZ": int(nZ * x),
+                  "nbjets": int(njets * x),
+                  "ncjets": int(ncjets * x),
+                  "nujets": int(nujets * x)
                   }
         N_list.append(N_dict)
     return N_list

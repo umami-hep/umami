@@ -21,6 +21,7 @@ setup(name='umami',
                         "tensorflow",
                         "keras"],
       test_suite='umami.tests',
+      scripts=["umami/preprocessing.py"],
       description='Machine learning based flavour tagging training framework.',
       url="https://gitlab.cern.ch/mguth/umami"
       )

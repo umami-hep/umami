@@ -1,0 +1,51 @@
+label: HadronConeExclTruthLabelID
+train_variables:
+  - abs_eta_uncalib
+  - pt_uncalib
+  - JetFitter_mass
+  - JetFitter_isDefaults
+  - JetFitter_energyFraction
+  - JetFitter_significance3d
+  - JetFitter_nVTX
+  - JetFitter_nSingleTracks
+  - JetFitter_nTracksAtVtx
+  - JetFitter_N2Tpair
+  - JetFitter_deltaR
+  - SV1_NGTinSvx
+  - SV1_masssvx
+  - SV1_isDefaults
+  - SV1_N2Tpair
+  - SV1_efracsvx
+  - SV1_deltaR
+  - SV1_Lxy
+  - SV1_L3d
+  - SV1_significance3d
+  - IP2D_bu
+  - IP2D_isDefaults
+  - IP2D_bc
+  - IP2D_cu
+  - IP3D_bu
+  - IP3D_isDefaults
+  - IP3D_bc
+  - IP3D_cu
+  - secondaryVtx_nTrks
+  - secondaryVtx_isDefaults
+  - secondaryVtx_m
+  - secondaryVtx_E
+  - secondaryVtx_EFrac
+  - secondaryVtx_L3d
+  - secondaryVtx_Lxy
+  - secondaryVtx_max_trk_flightDirRelEta
+  - secondaryVtx_min_trk_flightDirRelEta
+  - secondaryVtx_avg_trk_flightDirRelEta
+  - max_trk_flightDirRelEta
+  - min_trk_flightDirRelEta
+  - avg_trk_flightDirRelEta
+  - iprnn_pb
+  - iprnn_pc
+  - iprnn_pu
+
+# useful variables which might want to be kept but being used for training
+spectator_variables:
+  - category
+  - DL1r_pu

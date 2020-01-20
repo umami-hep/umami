@@ -1,20 +1,27 @@
+# amount of b-jets which are used
 njets: 5e6
+# fraction of ttbar jets wrt. Z'
 ttbar_frac: 0.65
+# outputfiles are split into n iterations
 iterations: 2
+# pT cut for hybrid creation (for light and c-jets)
 pTcut: 2.5e5
+# pT cut for b-jets
 bhad_pTcut: 2.5e5
+# upper pT limit for all jets
 pT_max: False
 f_z:
   path: Null
   file: Null
-f_ttb_bjets:
+f_tt_bjets:
   path: Null
   file: Null
-f_ttb_cjets:
+f_tt_cjets:
   path: Null
   file: Null
-f_ttb_ujets:
+f_tt_ujets:
   path: Null
   file: Null
 outfile_name: Null
 plot_name: Null
+Cuts: Null
