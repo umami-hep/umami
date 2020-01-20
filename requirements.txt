@@ -1,3 +1,15 @@
 numpy
 pandas
 dask
+keras
+uproot
+jupyter
+jupyterlab
+matplotlib
+seaborn
+hep_ml
+sklearn
+tables
+papermill
+pydot 
+Pillow
