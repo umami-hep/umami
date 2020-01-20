@@ -50,3 +50,19 @@ class Configuration(object):
                 warnings.warn(f"setting {elem} to default value "
                               f"{self.default_config[elem]}")
                 setattr(self, elem, self.default_config[elem])
+
+    def GetFileName(self, iteration=None, option=None):
+        if option is None:
+            return self.outfile_name
+        out_file = self.outfile_name
+        idx = out_file.index(".h5")
+
+        if iteration is None:
+            inserttxt = f"-{option}"
+        else:
+            inserttxt = f"-{option}-file-{iteration:.0f}"\
+                        f"_{self.iterations:.0f}"
+
+        print(inserttxt)
+        out_file = out_file[:idx] + inserttxt + out_file[idx:]
+        return out_file

@@ -1,7 +1,7 @@
 import numpy as np
 # import yaml
 # import os
-# import warnings
+import warnings
 # from umami.tools import yaml_loader
 # import h5py
 # from numpy.lib.recfunctions import repack_fields
@@ -14,7 +14,7 @@ class DownSampling(object):
     """The DownSampling is used to prepare the training dataset. It makes sure
     that in each pT/eta bin the same amount of jets are filled."""
 
-    def __init__(self, bjets, cjets, ujets, run_immediatly=True):
+    def __init__(self, bjets, cjets, ujets):
         super(DownSampling, self).__init__()
         self.bjets = bjets
         self.cjets = cjets
@@ -24,8 +24,6 @@ class DownSampling(object):
         self.eta_bins = np.linspace(0, 2.5, 10)
         self.pT_var_name = 'pt_uncalib'
         self.eta_var_name = 'abs_eta_uncalib'
-        if run_immediatly:
-            self.GetIndices()
 
     def GetIndices(self):
         """Applies the DownSampling to the given arrays.
@@ -91,8 +89,8 @@ class DownSampling(object):
                 continue
             u_loc_indices[x].append(i)
         if ignored_over_underflow:
-            print("# WARNING: You have jets in your sample which are not in",
-                  "the provided bins.")
+            warnings.warn("You have jets in your sample which are not in"
+                          "the provided bins.")
 
         bjet_indices = []
         cjet_indices = []

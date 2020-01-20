@@ -81,6 +81,17 @@ class ConfigurationTestCase(unittest.TestCase):
         with self.assertWarns(Warning):
             config.GetConfiguration()
 
+    def test_GetFileName_no_input(self):
+        config = Configuration(self.config_file)
+        out_file = config.GetFileName()
+        self.assertEqual(out_file, config.outfile_name)
+
+    def test_GetFileName_no_iterations(self):
+        config = Configuration(self.config_file)
+        self.assertNotIn("test", config.outfile_name)
+        out_file = config.GetFileName(option="test")
+        self.assertIn("test", out_file)
+
 
 class GetNJetsPerIterationTestCase(unittest.TestCase):
     """

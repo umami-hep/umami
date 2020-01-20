@@ -7,6 +7,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN pip install numpy && \
     pip install pandas && \
+    pip install dask && \
     pip install keras && \
     pip install uproot && \
     pip install jupyter && \
