@@ -18,3 +18,4 @@ pydot
 Pillow
 xarray
 netcdf4
+h5netcdf
