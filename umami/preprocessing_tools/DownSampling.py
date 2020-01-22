@@ -1,7 +1,9 @@
 import numpy as np
 # import yaml
 # import os
-import warnings
+# import warnings
+from scipy.stats import binned_statistic_2d
+
 # from umami.tools import yaml_loader
 # import h5py
 # from numpy.lib.recfunctions import repack_fields
@@ -22,6 +24,7 @@ class DownSampling(object):
         self.pt_bins = np.concatenate((np.linspace(0, 600000, 351),
                                        np.linspace(650000, 6000000, 84)))
         self.eta_bins = np.linspace(0, 2.5, 10)
+        self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
         self.pT_var_name = 'pt_uncalib'
         self.eta_var_name = 'abs_eta_uncalib'
 
@@ -29,96 +32,36 @@ class DownSampling(object):
         """Applies the DownSampling to the given arrays.
         Returns the indices for the jets to be used separately for b,c and
         light jets."""
-        histvals_b, _, _ = np.histogram2d(self.bjets[self.eta_var_name],
-                                          self.bjets[self.pT_var_name],
-                                          [self.eta_bins, self.pt_bins])
-        histvals_c, _, _ = np.histogram2d(self.cjets[self.eta_var_name],
-                                          self.cjets[self.pT_var_name],
-                                          [self.eta_bins, self.pt_bins])
-        histvals_u, _, _ = np.histogram2d(self.ujets[self.eta_var_name],
-                                          self.ujets[self.pT_var_name],
-                                          [self.eta_bins, self.pt_bins])
-
-        b_locations_pt = np.digitize(self.bjets[self.pT_var_name],
-                                     self.pt_bins) - 1
-        b_locations_eta = np.digitize(self.bjets[self.eta_var_name],
-                                      self.eta_bins) - 1
-        b_locations = zip(b_locations_pt, b_locations_eta)
-        b_locations = list(b_locations)
-
-        c_locations_pt = np.digitize(self.cjets[self.pT_var_name],
-                                     self.pt_bins) - 1
-        c_locations_eta = np.digitize(self.cjets[self.eta_var_name],
-                                      self.eta_bins) - 1
-        c_locations = zip(c_locations_pt, c_locations_eta)
-        c_locations = list(c_locations)
-
-        u_locations_pt = np.digitize(self.ujets[self.pT_var_name],
-                                     self.pt_bins) - 1
-        u_locations_eta = np.digitize(self.ujets[self.eta_var_name],
-                                      self.eta_bins) - 1
-        u_locations = zip(u_locations_pt, u_locations_eta)
-        u_locations = list(u_locations)
-
-        b_loc_indices = {(pti, etai): [] for pti, _ in
-                         enumerate(self.pt_bins[::-1]) for etai, _ in
-                         enumerate(self.eta_bins[::-1])}
-        c_loc_indices = {(pti, etai): [] for pti, _ in
-                         enumerate(self.pt_bins[::-1]) for etai, _ in
-                         enumerate(self.eta_bins[::-1])}
-        u_loc_indices = {(pti, etai): [] for pti, _ in
-                         enumerate(self.pt_bins[::-1]) for etai, _ in
-                         enumerate(self.eta_bins[::-1])}
-        print('Grouping the bins')
-        ignored_over_underflow = False
-        for i, x in enumerate(b_locations):
-            if x not in b_loc_indices:
-                ignored_over_underflow = True
-                continue
-            b_loc_indices[x].append(i)
-
-        for i, x in enumerate(c_locations):
-            if x not in c_loc_indices:
-                ignored_over_underflow = True
-                continue
-            c_loc_indices[x].append(i)
-
-        for i, x in enumerate(u_locations):
-            if x not in u_loc_indices:
-                ignored_over_underflow = True
-                continue
-            u_loc_indices[x].append(i)
-        if ignored_over_underflow:
-            warnings.warn("You have jets in your sample which are not in"
-                          "the provided bins.")
+        binnumbers_b, ind_b, stat_b = self.GetBins(self.bjets)
+        binnumbers_c, _, stat_c = self.GetBins(self.cjets)
+        binnumbers_u, _, stat_u = self.GetBins(self.ujets)
+        min_count_per_bin = np.amin([stat_b, stat_c, stat_u], axis=0)
 
         bjet_indices = []
         cjet_indices = []
         ujet_indices = []
-        print('Matching the bins for all flavours')
+        
+        for elem, count in zip(ind_b, min_count_per_bin):
+            bjet_indices.append(np.where(binnumbers_b == elem)[0][:int(count)])
+            cjet_indices.append(np.where(binnumbers_c == elem)[0][:int(count)])
+            ujet_indices.append(np.where(binnumbers_u == elem)[0][:int(count)])
 
-        for pt_bin_i in range(len(self.pt_bins) - 1):
-            for eta_bin_i in range(len(self.eta_bins) - 1):
-                loc = (pt_bin_i, eta_bin_i)
+        return np.sort(np.concatenate(bjet_indices)),\
+            np.sort(np.concatenate(cjet_indices)),\
+            np.sort(np.concatenate(ujet_indices))
 
-                nbjets = int(histvals_b[eta_bin_i][pt_bin_i])
-                ncjets = int(histvals_c[eta_bin_i][pt_bin_i])
-                nujets = int(histvals_u[eta_bin_i][pt_bin_i])
+    def GetBins(self, df):
+        statistic, xedges, yedges, binnumber = binned_statistic_2d(
+            x=df[self.pT_var_name],
+            y=df[self.eta_var_name],
+            values=df[self.pT_var_name],
+            statistic='count', bins=[self.pt_bins, self.eta_bins])
 
-                njets = min([nbjets, ncjets, nujets])
-                b_indices_for_bin = b_loc_indices[loc][0:njets]
-                c_indices_for_bin = c_loc_indices[loc][0:njets]
-                u_indices_for_bin = u_loc_indices[loc][0:njets]
-                bjet_indices += b_indices_for_bin
-                cjet_indices += c_indices_for_bin
-                ujet_indices += u_indices_for_bin
+        bins_indices_flat_2d = np.indices(self.nbins - 1) + 1
+        bins_indices_flat = np.ravel_multi_index(
+            bins_indices_flat_2d, self.nbins + 1).flatten()
 
-        bjet_indices.sort()
-        cjet_indices.sort()
-        ujet_indices.sort()
-
-        return np.array(bjet_indices), np.array(cjet_indices),\
-            np.array(ujet_indices)
+        return binnumber, bins_indices_flat, statistic.flatten()
 
 
 def GetNJetsPerIteration(config):
