@@ -7,6 +7,7 @@ import argparse
 import os
 import yaml
 from umami.tools import yaml_loader
+import json
 
 
 def GetParser():
@@ -138,7 +139,7 @@ def GetScaleDict():
     args = GetParser()
     config = upt.Configuration(args.config_file)
     # TODO: find good way to get file names
-    input_file = config.GetFileName()
+    input_file = config.GetFileName(iteration=1, option='downsampled')
     infile_all = h5py.File(input_file, 'r')
 
     # TODO: add properly Variable config
@@ -171,24 +172,24 @@ def GetScaleDict():
 
     X.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    print("Apply scaling and shifting")
-    scale_dict = []
-    for var in X.columns.values:
-        if var in [variable_config["label"], 'weight', 'category']:
-            continue
-        elif 'isDefaults' in var:
-            # no scaling and shifting is applied to the check variables
-            scale_dict.append(tp.dict_in(var, 0., 1., None))
-        else:
-            dict_entry = tp.Get_Shift_Scale(vec=X[var].values,
-                                            w=X['weight'].values, varname=var)
-            scale_dict.append(tp.dict_in(*dict_entry))
+    # print("Apply scaling and shifting")
+    # scale_dict = []
+    # for var in X.columns.values:
+    #     if var in [variable_config["label"], 'weight', 'category']:
+    #         continue
+    #     elif 'isDefaults' in var:
+    #         # no scaling and shifting is applied to the check variables
+    #         scale_dict.append(tp.dict_in(var, 0., 1., None))
+    #     else:
+    #         dict_entry = tp.Get_Shift_Scale(vec=X[var].values,
+    #                                         w=X['weight'].values, varname=var)
+    #         scale_dict.append(tp.dict_in(*dict_entry))
 
-    # save scale/shift dictionary to json file
-    scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
-    with open(scale_name, 'w') as outfile:
-        json.dump(scale_dict, outfile, indent=4)
-    print("saved scale dictionary as", scale_name)
+    # # save scale/shift dictionary to json file
+    # scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
+    # with open(scale_name, 'w') as outfile:
+    #     json.dump(scale_dict, outfile, indent=4)
+    # print("saved scale dictionary as", scale_name)
 
 
 
