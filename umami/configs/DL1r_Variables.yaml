@@ -47,5 +47,5 @@ train_variables:
 
 # useful variables which might want to be kept but being used for training
 spectator_variables:
-  - category
+  - DL1r_pb
   - DL1r_pu

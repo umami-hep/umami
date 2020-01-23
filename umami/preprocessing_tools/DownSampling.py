@@ -1,15 +1,5 @@
 import numpy as np
-# import yaml
-# import os
-# import warnings
 from scipy.stats import binned_statistic_2d
-
-# from umami.tools import yaml_loader
-# import h5py
-# from numpy.lib.recfunctions import repack_fields
-# import json
-# import yaml
-# from keras.utils import np_utils
 
 
 class DownSampling(object):
