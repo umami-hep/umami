@@ -2,13 +2,13 @@ import unittest
 import numpy as np
 import pandas as pd
 import os
-from umami.preprocessing_tools import DownSampling, Configuration
+from umami.preprocessing_tools import UnderSampling, Configuration
 from umami.preprocessing_tools import GetNJetsPerIteration, GetCuts
 
 
-class DownSamplingTestCase(unittest.TestCase):
+class UnderSamplingTestCase(unittest.TestCase):
     """
-    Test the implementation of the DownSampling class.
+    Test the implementation of the UnderSampling class.
     """
 
     def setUp(self):
@@ -28,14 +28,14 @@ class DownSamplingTestCase(unittest.TestCase):
     def test_zero_case(self):
         df_zeros = pd.DataFrame(np.zeros((1000, 2)),
                                 columns=["pt_uncalib", "abs_eta_uncalib"])
-        down_s = DownSampling(df_zeros, df_zeros, df_zeros)
+        down_s = UnderSampling(df_zeros, df_zeros, df_zeros)
         b_ind, c_ind, u_ind = down_s.GetIndices()
         self.assertEqual(len(b_ind), len(df_zeros))
 
     def test_underflow(self):
         df_minus_ones = pd.DataFrame(-1 * np.ones((1000, 2)),
                                      columns=["pt_uncalib", "abs_eta_uncalib"])
-        down_s = DownSampling(df_minus_ones, df_minus_ones, df_minus_ones)
+        down_s = UnderSampling(df_minus_ones, df_minus_ones, df_minus_ones)
         b_ind, c_ind, u_ind = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
         self.assertEqual(c_ind.size, 0)
@@ -44,14 +44,14 @@ class DownSamplingTestCase(unittest.TestCase):
     def test_overflow(self):
         df_minus_ones = pd.DataFrame(1e10 * np.ones((1000, 2)),
                                      columns=["pt_uncalib", "abs_eta_uncalib"])
-        down_s = DownSampling(df_minus_ones, df_minus_ones, df_minus_ones)
+        down_s = UnderSampling(df_minus_ones, df_minus_ones, df_minus_ones)
         b_ind, c_ind, u_ind = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
         self.assertEqual(c_ind.size, 0)
         self.assertEqual(u_ind.size, 0)
 
     def test_equal_length(self):
-        down_s = DownSampling(self.df_bjets, self.df_cjets, self.df_ujets)
+        down_s = UnderSampling(self.df_bjets, self.df_cjets, self.df_ujets)
         b_ind, c_ind, u_ind = down_s.GetIndices()
         self.assertEqual(len(b_ind), len(c_ind))
         self.assertEqual(len(b_ind), len(u_ind))

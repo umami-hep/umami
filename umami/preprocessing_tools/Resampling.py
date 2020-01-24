@@ -2,12 +2,12 @@ import numpy as np
 from scipy.stats import binned_statistic_2d
 
 
-class DownSampling(object):
+class UnderSampling(object):
     """The DownSampling is used to prepare the training dataset. It makes sure
     that in each pT/eta bin the same amount of jets are filled."""
 
     def __init__(self, bjets, cjets, ujets):
-        super(DownSampling, self).__init__()
+        super(UnderSampling, self).__init__()
         self.bjets = bjets
         self.cjets = cjets
         self.ujets = ujets
@@ -17,9 +17,10 @@ class DownSampling(object):
         self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
         self.pT_var_name = 'pt_uncalib'
         self.eta_var_name = 'abs_eta_uncalib'
+        self.rnd_seed = 42
 
     def GetIndices(self):
-        """Applies the DownSampling to the given arrays.
+        """Applies the UnderSampling to the given arrays.
         Returns the indices for the jets to be used separately for b,c and
         light jets."""
         binnumbers_b, ind_b, stat_b = self.GetBins(self.bjets)
@@ -32,9 +33,15 @@ class DownSampling(object):
         ujet_indices = []
         
         for elem, count in zip(ind_b, min_count_per_bin):
-            bjet_indices.append(np.where(binnumbers_b == elem)[0][:int(count)])
-            cjet_indices.append(np.where(binnumbers_c == elem)[0][:int(count)])
-            ujet_indices.append(np.where(binnumbers_u == elem)[0][:int(count)])
+            np.random.seed(self.rnd_seed)
+            bjet_indices.append(np.random.choice(np.where(binnumbers_b == elem)
+                                [0], int(count), replace=False))
+            np.random.seed(self.rnd_seed)
+            cjet_indices.append(np.random.choice(np.where(binnumbers_c == elem)
+                                [0], int(count), replace=False))
+            np.random.seed(self.rnd_seed)
+            ujet_indices.append(np.random.choice(np.where(binnumbers_u == elem)
+                                [0], int(count), replace=False))
 
         return np.sort(np.concatenate(bjet_indices)),\
             np.sort(np.concatenate(cjet_indices)),\
