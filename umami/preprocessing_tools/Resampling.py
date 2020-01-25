@@ -83,3 +83,28 @@ def GetNJetsPerIteration(config):
                   }
         N_list.append(N_dict)
     return N_list
+
+
+def Get_Shift_Scale(vec, w, varname, custom_defaults_vars):
+    """Calculates the weighted average and std for vector vec and weight w."""
+    # find NaN values
+    nans = np.isnan(vec)
+    # check if variable has predefined default value
+    if varname in custom_defaults_vars:
+        default = custom_defaults_vars[varname]
+    # NaN values are not considered in calculation for average
+    else:
+        w_without_nan = w[~nans]
+        vec_without_nan = vec[~nans]
+        default = np.ma.average(vec_without_nan, weights=w_without_nan)
+    # replace NaN values with default values
+    vec[nans] = default
+    average = np.ma.average(vec, weights=w)
+    std = np.sqrt(np.average((vec - average) ** 2, weights=w))
+    return [varname, average, std, default]
+
+
+def dict_in(varname, average, std, default):
+    """Creates dictionary entry containing scale and shift parameters."""
+    return {"name": varname, "shift": average, "scale": std,
+            "default": default}

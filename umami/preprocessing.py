@@ -21,10 +21,32 @@ def GetParser():
                         "hybrid sample.")
     parser.add_argument('-t', '--tracks', action='store_true',
                         help="Stores also track information.")
-    return parser.parse_args()
+    # possible job options for the different preprocessing steps
+    parser.add_argument('-u', '--undersampling', action='store_true',
+                        help="Runs undersampling.")
+    parser.add_argument('-s', '--scaling', action='store_true',
+                        help="Retrieves scaling and shifting factors.")
+    parser.add_argument('-a', '--apply_scales', action='store_true',
+                        help="Apllies scaling and shifting factors.")
+    parser.add_argument('-l', '--prepare_large', action='store_true',
+                        help="Prepares the large datasets to be directly used"
+                        "for the keras Data Generator.")
+    # the variable dictionary is always needed except for downsampling
+    parser.add_argument('-v', '--var_dict', required=False, default=None,
+                        help="Dictionary with input variables of tagger.",
+                        type=str)
+    args = parser.parse_args()
+    need_var_dict = (args.scaling or args.apply_scales or args.prepare_large
+                     or not (args.scaling or args.apply_scales or
+                             args.prepare_large or args.undersampling))
+
+    if need_var_dict and args.var_dict is None:
+        parser.error('It is required to specify --var_dict [-v]')
+
+    return args
 
 
-def RunDownsampling():
+def RunUndersampling():
     """Applies required cuts to the samples and applies the downsampling."""
     args = GetParser()
     config = upt.Configuration(args.config_file)
@@ -147,12 +169,6 @@ def GetScaleDict():
     # TODO: check if dictfile already exists in proper way
     dict_dir = "./"
     dict_file = "test.json"
-    # if not (os.path.isfile("%s/%s.json" % (dict_dir, dict_file))):
-    #     print("Scaler file ", "%s/%s.json" % (dict_dir, dict_file),
-    #           "does not exist.",
-    #           "Run first in training mode --add_dl1 0 or specify dict",
-    #           "file via --dict_file.")
-    #     exit()
     input_file = "test.h5"
     print('Preprocessing', input_file)
 
@@ -168,32 +184,35 @@ def GetScaleDict():
     ujets = pd.DataFrame(infile_all['ujets'][:][var_list])
     X = pd.concat([bjets, cjets, ujets])
     del bjets, cjets, ujets
-    X['weight'] = np.ones(len(X))
 
     X.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    # print("Apply scaling and shifting")
-    # scale_dict = []
-    # for var in X.columns.values:
-    #     if var in [variable_config["label"], 'weight', 'category']:
-    #         continue
-    #     elif 'isDefaults' in var:
-    #         # no scaling and shifting is applied to the check variables
-    #         scale_dict.append(tp.dict_in(var, 0., 1., None))
-    #     else:
-    #         dict_entry = tp.Get_Shift_Scale(vec=X[var].values,
-    #                                         w=X['weight'].values, varname=var)
-    #         scale_dict.append(tp.dict_in(*dict_entry))
+    print("Apply scaling and shifting")
 
-    # # save scale/shift dictionary to json file
-    # scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
-    # with open(scale_name, 'w') as outfile:
-    #     json.dump(scale_dict, outfile, indent=4)
-    # print("saved scale dictionary as", scale_name)
+    scale_dict = []
+    for var in X.columns.values:
+        if var in [variable_config["label"], 'weight', 'category']:
+            continue
+        elif 'isDefaults' in var:
+            # no scaling and shifting is applied to the check variables
+            scale_dict.append(upt.dict_in(var, 0., 1., None))
+        else:
+            dict_entry = upt.Get_Shift_Scale(
+                vec=X[var].values,
+                w=X['weight'].values, varname=var,
+                custom_defaults_vars=variable_config["custom_defaults_vars"])
+            scale_dict.append(upt.dict_in(*dict_entry))
+
+        # save scale/shift dictionary to json file
+        scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
+        with open(scale_name, 'w') as outfile:
+            json.dump(scale_dict, outfile, indent=4)
+        print("saved scale dictionary as", scale_name)
 
 
 
 
 if __name__ == '__main__':
+    args = GetParser()
     # RunDownsampling()
-    GetScaleDict()
+    # GetScaleDict()
