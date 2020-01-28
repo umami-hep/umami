@@ -1,7 +1,8 @@
 import yaml
 import re
 
-# adding a custom yaml loader in order to be able to have nubers with scientific notation
+# adding a custom yaml loader in order to be able to have nubers with
+# scientific notation
 yaml_loader = yaml.SafeLoader
 yaml_loader.add_implicit_resolver(
     u'tag:yaml.org,2002:float',

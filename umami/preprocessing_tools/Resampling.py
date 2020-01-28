@@ -31,7 +31,7 @@ class UnderSampling(object):
         bjet_indices = []
         cjet_indices = []
         ujet_indices = []
-        
+
         for elem, count in zip(ind_b, min_count_per_bin):
             np.random.seed(self.rnd_seed)
             bjet_indices.append(np.random.choice(np.where(binnumbers_b == elem)
