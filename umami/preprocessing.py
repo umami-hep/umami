@@ -4,7 +4,6 @@ import numpy as np
 from numpy.lib.recfunctions import append_fields
 import pandas as pd
 import argparse
-import os
 import yaml
 from umami.tools import yaml_loader
 import json
@@ -155,7 +154,8 @@ def RunUndersampling():
         #              binning={"pt_uncalib": 200, "abs_eta_uncalib": 200})
 
 
-# python Preprocessing.py --no_writing --downsampled --only_scale --dummy_weights --input_file ${INPUTFILE} -f params_MC16D-2019-VRjets -o ""
+# python Preprocessing.py --no_writing --downsampled --only_scale
+# --dummy_weights --input_file ${INPUTFILE} -f params_MC16D-2019-VRjets -o ""
 
 def GetScaleDict():
     args = GetParser()
@@ -165,10 +165,11 @@ def GetScaleDict():
     infile_all = h5py.File(input_file, 'r')
 
     # TODO: add properly Variable config
-    config.variable_config = "/home/fr/fr_fr/fr_mg1150/workspace/btagging/umami/umami/configs/DL1r_Variables.yaml"
+    config.variable_config = "/home/fr/fr_fr/fr_mg1150/workspace/btagging/"\
+        "umami/umami/configs/DL1r_Variables.yaml"
     # TODO: check if dictfile already exists in proper way
-    dict_dir = "./"
-    dict_file = "test.json"
+    # dict_dir = "./"
+    # dict_file = "test.json"
     input_file = "test.h5"
     print('Preprocessing', input_file)
 
@@ -208,8 +209,6 @@ def GetScaleDict():
         with open(scale_name, 'w') as outfile:
             json.dump(scale_dict, outfile, indent=4)
         print("saved scale dictionary as", scale_name)
-
-
 
 
 if __name__ == '__main__':

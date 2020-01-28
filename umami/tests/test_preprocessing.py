@@ -1,4 +1,4 @@
-import unittest
+import unittest  # noqa
 from unittest import mock
 import argparse
 import os
@@ -19,7 +19,7 @@ class PreprocessingTestParser(unittest.TestCase):
     @mock.patch('argparse.ArgumentParser.parse_args',
                 return_value=argparse.Namespace(config_file=config_file,
                                                 undersampling=False,
-                                                scaling=True, 
+                                                scaling=True,
                                                 apply_scales=False,
                                                 prepare_large=True,
                                                 var_dict="test", tracks=False
@@ -28,18 +28,18 @@ class PreprocessingTestParser(unittest.TestCase):
         parser = GetParser()
         self.assertEqual(parser.config_file, self.config_file)
         self.assertFalse(parser.tracks)
-        #self.assertIsNone(parser.cut_config_file)
+        # self.assertIsNone(parser.cut_config_file)
 
-   # @mock.patch('argparse.ArgumentParser.parse_args',
-    #            return_value=argparse.Namespace(config_file=config_file,
-     #                                           tracks=True))
-    #def test_ParserTracks(self, mock_args):
-     #   self.parser = GetParser()
-      #  self.assertTrue(self.parser.tracks)
+#    @mock.patch('argparse.ArgumentParser.parse_args',
+#                return_value=argparse.Namespace(config_file=config_file,
+#                                                tracks=True))
+#     def test_ParserTracks(self, mock_args):
+#        self.parser = GetParser()
+#        self.assertTrue(self.parser.tracks)
 
-    # @mock.patch('argparse.ArgumentParser.parse_args',
-    #             return_value=argparse.Namespace(config_file=config_file,
-    #                                             undersampling=True))
-    # def test_ParserTracks(self, mock_args):
-    #     self.parser = GetParser()
-    #     self.assertTrue(self.parser.tracks)
+#     @mock.patch('argparse.ArgumentParser.parse_args',
+#                 return_value=argparse.Namespace(config_file=config_file,
+#                                                 undersampling=True))
+#     def test_ParserTracks(self, mock_args):
+#         self.parser = GetParser()
+#         self.assertTrue(self.parser.tracks)
