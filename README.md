@@ -19,7 +19,7 @@ if you want to modify the code you should install it via
 ## Testing
 The unit test you can run via
 ```
-python setup.py test
+pytest ./umami/tests/ -v
 ```
 
 ## MC Samples
