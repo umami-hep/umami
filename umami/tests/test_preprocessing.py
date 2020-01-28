@@ -30,16 +30,16 @@ class PreprocessingTestParser(unittest.TestCase):
         self.assertFalse(parser.tracks)
         # self.assertIsNone(parser.cut_config_file)
 
-   @mock.patch('argparse.ArgumentParser.parse_args',
-   return_value=argparse.Namespace(config_file=config_file,
-                                               tracks=True))
-    def test_ParserTracks(self, mock_args):
-       self.parser = GetParser()
-       self.assertTrue(self.parser.tracks)
+#    @mock.patch('argparse.ArgumentParser.parse_args',
+#                return_value=argparse.Namespace(config_file=config_file,
+#                                                tracks=True))
+#     def test_ParserTracks(self, mock_args):
+#        self.parser = GetParser()
+#        self.assertTrue(self.parser.tracks)
 
-    @mock.patch('argparse.ArgumentParser.parse_args',
-                return_value=argparse.Namespace(config_file=config_file,
-                                                undersampling=True))
-    def test_ParserTracks(self, mock_args):
-        self.parser = GetParser()
-        self.assertTrue(self.parser.tracks)
+#     @mock.patch('argparse.ArgumentParser.parse_args',
+#                 return_value=argparse.Namespace(config_file=config_file,
+#                                                 undersampling=True))
+#     def test_ParserTracks(self, mock_args):
+#         self.parser = GetParser()
+#         self.assertTrue(self.parser.tracks)
