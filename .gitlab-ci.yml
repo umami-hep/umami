@@ -9,6 +9,14 @@ unittest:
     - pip install -r requirements.txt
     - pytest ./umami/tests/ -v
 
+linter:
+  stage: test
+  image: python:3.7
+  allow_failure: true
+  script:
+    - pip install flake8
+    - flake8 ./umami
+
 build_img_gpu:
   stage: build
   variables:
