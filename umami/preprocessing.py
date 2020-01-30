@@ -45,9 +45,8 @@ def GetParser():
     return args
 
 
-def RunUndersampling():
+def RunUndersampling(args):
     """Applies required cuts to the samples and applies the downsampling."""
-    args = GetParser()
     config = upt.Configuration(args.config_file)
     N_list = upt.GetNJetsPerIteration(config)
 
@@ -157,28 +156,16 @@ def RunUndersampling():
 # python Preprocessing.py --no_writing --downsampled --only_scale
 # --dummy_weights --input_file ${INPUTFILE} -f params_MC16D-2019-VRjets -o ""
 
-def GetScaleDict():
-    args = GetParser()
+def GetScaleDict(args):
     config = upt.Configuration(args.config_file)
-    # TODO: find good way to get file names
+    # TODO: find good way to get file names, breaks if no iterations
     input_file = config.GetFileName(iteration=1, option='downsampled')
     infile_all = h5py.File(input_file, 'r')
 
-    # TODO: add properly Variable config
-    config.variable_config = "/home/fr/fr_fr/fr_mg1150/workspace/btagging/"\
-        "umami/umami/configs/DL1r_Variables.yaml"
-    # TODO: check if dictfile already exists in proper way
-    # dict_dir = "./"
-    # dict_file = "test.json"
-    input_file = "test.h5"
-    print('Preprocessing', input_file)
-
-    with open(config.variable_config, "r") as conf:
+    with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
-    var_list = [variable_config["label"], "category"]
-    var_list += variable_config["train_variables"]
-    var_list += variable_config["spectator_variables"]
+    var_list = variable_config["train_variables"]
 
     bjets = pd.DataFrame(infile_all['bjets'][:][var_list])
     cjets = pd.DataFrame(infile_all['cjets'][:][var_list])
@@ -198,20 +185,21 @@ def GetScaleDict():
             # no scaling and shifting is applied to the check variables
             scale_dict.append(upt.dict_in(var, 0., 1., None))
         else:
-            dict_entry = upt.Get_Shift_Scale(
+            dict_entry = upt.GetScales(
                 vec=X[var].values,
-                w=X['weight'].values, varname=var,
+                # TODO: implement weights
+                w=np.ones(len(X)), varname=var,
                 custom_defaults_vars=variable_config["custom_defaults_vars"])
             scale_dict.append(upt.dict_in(*dict_entry))
-
+        
         # save scale/shift dictionary to json file
-        scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
-        with open(scale_name, 'w') as outfile:
-            json.dump(scale_dict, outfile, indent=4)
-        print("saved scale dictionary as", scale_name)
+    #     scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
+    #     with open(scale_name, 'w') as outfile:
+    #         json.dump(scale_dict, outfile, indent=4)
+    #     print("saved scale dictionary as", scale_name)
 
 
 if __name__ == '__main__':
     args = GetParser()
     # RunDownsampling()
-    # GetScaleDict()
+    GetScaleDict(args)
