@@ -265,4 +265,3 @@ class GetScalesTestCase(unittest.TestCase):
         self.assertEqual(average, 1)
         self.assertEqual(std, 0)
         self.assertEqual(default, 1)
-

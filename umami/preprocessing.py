@@ -6,7 +6,7 @@ import pandas as pd
 import argparse
 import yaml
 from umami.tools import yaml_loader
-import json
+# import json
 
 
 def GetParser():
@@ -191,7 +191,7 @@ def GetScaleDict(args):
                 w=np.ones(len(X)), varname=var,
                 custom_defaults_vars=variable_config["custom_defaults_vars"])
             scale_dict.append(upt.dict_in(*dict_entry))
-        
+
         # save scale/shift dictionary to json file
     #     scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
     #     with open(scale_name, 'w') as outfile:
