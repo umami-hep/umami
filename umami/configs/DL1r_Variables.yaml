@@ -50,15 +50,15 @@ spectator_variables:
   - DL1r_pb
   - DL1r_pu
 
-  custom_defaults_vars:
-    JetFitter_energyFraction: 0
-    JetFitter_significance3d: 0
-    JetFitter_nVTX: -1
-    JetFitter_nSingleTracks: -1
-    JetFitter_nTracksAtVtx: -1
-    JetFitter_N2Tpair: -1
-    SV1_N2Tpair: -1
-    SV1_NGTinSvx: -1
-    SV1_efracsvx: 0
-    secondaryVtx_nTrks: 0
-    secondaryVtx_EFrac: 0
+custom_defaults_vars:
+  JetFitter_energyFraction: 0
+  JetFitter_significance3d: 0
+  JetFitter_nVTX: -1
+  JetFitter_nSingleTracks: -1
+  JetFitter_nTracksAtVtx: -1
+  JetFitter_N2Tpair: -1
+  SV1_N2Tpair: -1
+  SV1_NGTinSvx: -1
+  SV1_efracsvx: 0
+  secondaryVtx_nTrks: 0
+  secondaryVtx_EFrac: 0

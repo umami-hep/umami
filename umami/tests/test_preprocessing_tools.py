@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 from umami.preprocessing_tools import UnderSampling, Configuration
-from umami.preprocessing_tools import GetNJetsPerIteration, GetCuts
+from umami.preprocessing_tools import GetNJetsPerIteration, GetCuts, GetScales
 
 
 class UnderSamplingTestCase(unittest.TestCase):
@@ -91,6 +91,11 @@ class ConfigurationTestCase(unittest.TestCase):
         self.assertNotIn("test", config.outfile_name)
         out_file = config.GetFileName(option="test")
         self.assertIn("test", out_file)
+
+    def test_GetFileName_no_iterations_no_input(self):
+        config = Configuration(self.config_file)
+        out_file = config.GetFileName()
+        self.assertEqual(config.outfile_name, out_file)
 
 
 class GetNJetsPerIterationTestCase(unittest.TestCase):
@@ -227,3 +232,36 @@ class PreprocessingTestCuts(unittest.TestCase):
         cut_result = np.ones(len(jets))
         np.put(cut_result, indices_to_remove, 0)
         self.assertTrue(np.array_equal(cut_result, np.array([1, 0, 0])))
+
+
+class GetScalesTestCase(unittest.TestCase):
+    """
+    Test the implementation of the GetScales class.
+    """
+
+    def setUp(self):
+        self.arr_0 = np.zeros(500)
+        self.arr_1 = np.ones(500)
+
+    def test_ZeroCase(self):
+        varname, average, std, default = GetScales(
+            self.arr_0, self.arr_1, "zeros", {})
+        self.assertEqual(average, 0)
+        self.assertEqual(std, 0)
+        self.assertEqual(default, 0)
+
+    def test_ReturnVarname(self):
+        varname, _, _, _ = GetScales(self.arr_0, self.arr_1, "zeros", {})
+        self.assertEqual(varname, "zeros")
+
+    def test_WeightZero(self):
+        with self.assertRaises(ValueError):
+            varname, average, std, default = GetScales(
+                self.arr_1,  self.arr_0, "zeros", {})
+
+    def test_OneCase(self):
+        varname, average, std, default = GetScales(
+            self.arr_1, self.arr_1, "ones", {})
+        self.assertEqual(average, 1)
+        self.assertEqual(std, 0)
+        self.assertEqual(default, 1)

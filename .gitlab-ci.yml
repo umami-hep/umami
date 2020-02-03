@@ -4,14 +4,14 @@ stages:
 
 unittest:
   stage: test
-  image: python:3.7
+  image: python:3.7-slim
   script:
     - pip install -r requirements.txt
     - pytest ./umami/tests/ -v
 
 linter:
   stage: test
-  image: python:3.7
+  image: python:3.7-slim
   allow_failure: true
   script:
     - pip install flake8

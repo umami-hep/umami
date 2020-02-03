@@ -28,18 +28,15 @@ class PreprocessingTestParser(unittest.TestCase):
         parser = GetParser()
         self.assertEqual(parser.config_file, self.config_file)
         self.assertFalse(parser.tracks)
-        # self.assertIsNone(parser.cut_config_file)
 
-#    @mock.patch('argparse.ArgumentParser.parse_args',
-#                return_value=argparse.Namespace(config_file=config_file,
-#                                                tracks=True))
-#     def test_ParserTracks(self, mock_args):
-#        self.parser = GetParser()
-#        self.assertTrue(self.parser.tracks)
 
-#     @mock.patch('argparse.ArgumentParser.parse_args',
-#                 return_value=argparse.Namespace(config_file=config_file,
-#                                                 undersampling=True))
-#     def test_ParserTracks(self, mock_args):
-#         self.parser = GetParser()
-#         self.assertTrue(self.parser.tracks)
+class PreprocessingTestGetScaleDict(unittest.TestCase):
+    """
+    Test the implementation of the GetScaleDict function.
+    """
+    config_file = os.path.join(os.path.dirname(__file__),
+                               "test_preprocess_config.yaml")
+
+    def setUp(self):
+        self.config_file = os.path.join(os.path.dirname(__file__),
+                                        "test_preprocess_config.yaml")
