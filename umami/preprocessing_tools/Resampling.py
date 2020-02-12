@@ -110,3 +110,13 @@ def dict_in(varname, average, std, default):
     """Creates dictionary entry containing scale and shift parameters."""
     return {"name": varname, "shift": average, "scale": std,
             "default": default}
+
+
+def Gen_default_dict(scale_dict):
+    """Generates default value dictionary from scale/shift dictionary."""
+    default_dict = {}
+    for elem in scale_dict:
+        if 'isDefaults' in elem['name']:
+            continue
+        default_dict[elem['name']] = elem['default']
+    return default_dict

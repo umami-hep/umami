@@ -21,3 +21,4 @@ netcdf4
 h5netcdf
 pytest
 flake8
+partd
