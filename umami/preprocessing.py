@@ -6,7 +6,9 @@ import pandas as pd
 import argparse
 import yaml
 from umami.tools import yaml_loader
-# import json
+import json
+import dask.array as da
+import dask.dataframe as dd
 
 
 def GetParser():
@@ -45,9 +47,8 @@ def GetParser():
     return args
 
 
-def RunUndersampling(args):
+def RunUndersampling(args, config):
     """Applies required cuts to the samples and applies the downsampling."""
-    config = upt.Configuration(args.config_file)
     N_list = upt.GetNJetsPerIteration(config)
 
     # initialise input files (they are not yet loaded to memory)
@@ -81,11 +82,11 @@ def RunUndersampling(args):
             tnp_Zprime = np.asarray(f_Z['tracks'][N_list[x]["nZ"]:N_list[x + 1]
                                                   ["nZ"]])
             tnp_tt_b = np.asarray(f_tt_bjets['tracks'][N_list[x]["nbjets"]:
-                                  N_list[x + 1]["nbjets"]])
+                                                       N_list[x + 1]["nbjets"]])
             tnp_tt_c = np.asarray(f_tt_cjets['tracks'][N_list[x]["ncjets"]:
-                                  N_list[x + 1]["ncjets"]])
+                                                       N_list[x + 1]["ncjets"]])
             tnp_tt_u = np.asarray(f_tt_ujets['tracks'][N_list[x]["nujets"]:
-                                  N_list[x + 1]["nujets"]])
+                                                       N_list[x + 1]["nujets"]])
 
         indices_toremove_Zprime = upt.GetCuts(vec_Z, config, 'Zprime')
         indices_toremove_bjets = upt.GetCuts(vec_tt_bjets, config)
@@ -153,10 +154,7 @@ def RunUndersampling(args):
         #              binning={"pt_uncalib": 200, "abs_eta_uncalib": 200})
 
 
-# python Preprocessing.py --no_writing --downsampled --only_scale
-# --dummy_weights --input_file ${INPUTFILE} -f params_MC16D-2019-VRjets -o ""
-
-def GetScaleDict(args):
+def GetScaleDict(args, config):
     config = upt.Configuration(args.config_file)
     # TODO: find good way to get file names, breaks if no iterations
     input_file = config.GetFileName(iteration=1, option='downsampled')
@@ -175,7 +173,7 @@ def GetScaleDict(args):
 
     X.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    print("Apply scaling and shifting")
+    print("Retrieving scaling and shifting values")
 
     scale_dict = []
     for var in X.columns.values:
@@ -192,14 +190,80 @@ def GetScaleDict(args):
                 custom_defaults_vars=variable_config["custom_defaults_vars"])
             scale_dict.append(upt.dict_in(*dict_entry))
 
-        # save scale/shift dictionary to json file
-    #     scale_name = '%s/%s.json' % (args.dict_dir, args.dict_file)
-    #     with open(scale_name, 'w') as outfile:
-    #         json.dump(scale_dict, outfile, indent=4)
-    #     print("saved scale dictionary as", scale_name)
+    # save scale/shift dictionary to json file
+    with open(config.dict_file, 'w') as outfile:
+        json.dump(scale_dict, outfile, indent=4)
+    print("saved scale dictionary as", config.dict_file)
+
+
+def ApplyScales(args, config):
+    """
+        Apply the scaling and shifting to dataset
+    """
+    input_files = [config.GetFileName(iteration=x+1, option='downsampled') for
+                   x in range(config.iterations)]
+
+    dsets = [h5py.File(fn, 'r')['/bjets'][:] for fn in input_files]
+    dsets += [h5py.File(fn, 'r')['/cjets'][:] for fn in input_files]
+    dsets += [h5py.File(fn, 'r')['/ujets'][:] for fn in input_files]
+    arrays = [da.from_array(dset) for dset in dsets]
+    x = da.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
+    df = x.to_dask_dataframe()
+
+    with open(args.var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variables = variable_config["train_variables"]
+    variables += variable_config["spectator_variables"]
+    variables += [variable_config["label"], 'weight', 'category']
+    df_len = len(df)
+    if 'weight' not in df.columns.values:
+        df['weight'] = dd.from_array(np.ones(df_len))
+
+    df = df[variables]
+    df = df.replace([np.inf, -np.inf], np.nan)
+    with open(config.dict_file, 'r') as infile:
+        scale_dict = json.load(infile)
+
+    default_dict = upt.Gen_default_dict(scale_dict)
+    df = df.fillna(default_dict)
+    # var_list = variable_config["train_variables"]
+    for elem in scale_dict:
+        if 'isDefaults' in elem['name']:
+            continue
+        else:
+            df[elem['name']] -= elem['shift']
+            df[elem['name']] /= elem['scale']
+    print("shuffeling sample")
+    rng = np.random.default_rng()
+    numbers = rng.choice(df_len, size=df_len, replace=False)
+    df['rnd_index'] = dd.from_array(numbers)
+    df = df.set_index('rnd_index')
+    d_arr = df.to_dask_array(True)
+    # d_arr = df.astype('float').to_dask_array(True)
+    out_file = config.GetFileName(option='preprocessed')
+    print("Saving file:", out_file)
+
+    with h5py.File(out_file, 'w') as f:
+        d = f.require_dataset('/jets', shape=d_arr.shape, dtype=d_arr.dtype)
+        da.store(d_arr, d, compression='gzip')
+
+    # da.to_hdf5(outfile, '/x', df_b, compression='lzf', shuffle=True)
 
 
 if __name__ == '__main__':
     args = GetParser()
-    # RunDownsampling()
-    GetScaleDict(args)
+    config = upt.Configuration(args.config_file)
+    if not (args.undersampling or args.scaling or args.apply_scales or
+            args.prepare_large):
+        args.undersampling = True
+        args.scaling = True
+        args.apply_scales = True
+        args.prepare_large = True
+    if args.undersampling:
+        RunUndersampling(args, config)
+    if args.scaling:
+        GetScaleDict(args, config)
+    if args.apply_scales:
+        ApplyScales(args, config)
+    if args.prepare_large:
+        RunUndersampling()
