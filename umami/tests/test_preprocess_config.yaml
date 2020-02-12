@@ -28,6 +28,8 @@ f_tt_ujets:
 outfile_name: dummy_out.h5
 plot_name: dummy_plot
 
+# Dictfile for the scaling and shifting (json)
+dict_file: "test.json"
 
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=
