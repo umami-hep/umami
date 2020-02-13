@@ -9,6 +9,9 @@ from umami.tools import yaml_loader
 import json
 import dask.array as da
 import dask.dataframe as dd
+import dask
+
+dask.config.set({'temporary_directory': '/tmp'})
 
 
 def GetParser():
@@ -29,17 +32,17 @@ def GetParser():
                         help="Retrieves scaling and shifting factors.")
     parser.add_argument('-a', '--apply_scales', action='store_true',
                         help="Apllies scaling and shifting factors.")
-    parser.add_argument('-l', '--prepare_large', action='store_true',
-                        help="Prepares the large datasets to be directly used"
-                        "for the keras Data Generator.")
+    parser.add_argument('-w', '--write', action='store_true',
+                        help="Shuffles sample and writes training sample and"
+                             "training labelsto disk")
     # the variable dictionary is always needed except for downsampling
     parser.add_argument('-v', '--var_dict', required=False, default=None,
                         help="Dictionary with input variables of tagger.",
                         type=str)
     args = parser.parse_args()
-    need_var_dict = (args.scaling or args.apply_scales or args.prepare_large
-                     or not (args.scaling or args.apply_scales or
-                             args.prepare_large or args.undersampling))
+    need_var_dict = (args.scaling or args.apply_scales or args.write or not (
+                     args.scaling or args.write or args.apply_scales or
+                     args.prepare_large or args.undersampling))
 
     if need_var_dict and args.var_dict is None:
         parser.error('It is required to specify --var_dict [-v]')
@@ -50,6 +53,7 @@ def GetParser():
 def RunUndersampling(args, config):
     """Applies required cuts to the samples and applies the downsampling."""
     N_list = upt.GetNJetsPerIteration(config)
+    # TODO: switch to dask
 
     # initialise input files (they are not yet loaded to memory)
     f_Z = h5py.File(config.f_z, 'r')
@@ -82,11 +86,11 @@ def RunUndersampling(args, config):
             tnp_Zprime = np.asarray(f_Z['tracks'][N_list[x]["nZ"]:N_list[x + 1]
                                                   ["nZ"]])
             tnp_tt_b = np.asarray(f_tt_bjets['tracks'][N_list[x]["nbjets"]:
-                                                       N_list[x + 1]["nbjets"]])
+                                  N_list[x + 1]["nbjets"]])
             tnp_tt_c = np.asarray(f_tt_cjets['tracks'][N_list[x]["ncjets"]:
-                                                       N_list[x + 1]["ncjets"]])
+                                  N_list[x + 1]["ncjets"]])
             tnp_tt_u = np.asarray(f_tt_ujets['tracks'][N_list[x]["nujets"]:
-                                                       N_list[x + 1]["nujets"]])
+                                  N_list[x + 1]["nujets"]])
 
         indices_toremove_Zprime = upt.GetCuts(vec_Z, config, 'Zprime')
         indices_toremove_bjets = upt.GetCuts(vec_tt_bjets, config)
@@ -155,6 +159,7 @@ def RunUndersampling(args, config):
 
 
 def GetScaleDict(args, config):
+    # TODO: switch to dask
     config = upt.Configuration(args.config_file)
     # TODO: find good way to get file names, breaks if no iterations
     input_file = config.GetFileName(iteration=1, option='downsampled')
@@ -209,61 +214,82 @@ def ApplyScales(args, config):
     arrays = [da.from_array(dset) for dset in dsets]
     x = da.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
     df = x.to_dask_dataframe()
-
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
     variables = variable_config["train_variables"]
     variables += variable_config["spectator_variables"]
     variables += [variable_config["label"], 'weight', 'category']
-    df_len = len(df)
+    # df_len = len(df)
     if 'weight' not in df.columns.values:
-        df['weight'] = dd.from_array(np.ones(df_len))
-
+        # df['weight'] = dd.from_array(np.ones(df_len))
+        # TODO: ugly workaround, but if not used a lot of NaNs are appended
+        # instad of ones (see also https://stackoverflow.com/questions/46923274/appending-new-column-to-dask-dataframe?rq=1) # noqa
+        df['weight'] = df["category"] * 0 + 1
     df = df[variables]
     df = df.replace([np.inf, -np.inf], np.nan)
     with open(config.dict_file, 'r') as infile:
         scale_dict = json.load(infile)
-
+    print("Replacing default values.")
     default_dict = upt.Gen_default_dict(scale_dict)
     df = df.fillna(default_dict)
     # var_list = variable_config["train_variables"]
+    print("Applying scaling and shifting.")
     for elem in scale_dict:
         if 'isDefaults' in elem['name']:
             continue
         else:
             df[elem['name']] -= elem['shift']
             df[elem['name']] /= elem['scale']
-    print("shuffeling sample")
-    rng = np.random.default_rng()
-    numbers = rng.choice(df_len, size=df_len, replace=False)
-    df['rnd_index'] = dd.from_array(numbers)
-    df = df.set_index('rnd_index')
-    d_arr = df.to_dask_array(True)
-    # d_arr = df.astype('float').to_dask_array(True)
+
     out_file = config.GetFileName(option='preprocessed')
     print("Saving file:", out_file)
+    df.to_hdf(out_file, '/jets')
 
+
+def WriteTrainSample(args, config):
+    with open(args.var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
+
+    in_file = config.GetFileName(option='preprocessed')
+    df = dd.read_hdf(in_file, '/jets')
+    # df = dd.from_pandas(df.head(1000), npartitions=3)
+    df_len = len(df)
+
+    print("Calculating binary labels.")
+    labels = upt.GetBinaryLabels(df, variable_config['label'])
+    np.random.seed(42)
+    np.random.shuffle(labels)
+
+    out_file = config.GetFileName(option='preprocessed_shuffled')
+    print("Saving labels to", out_file)
     with h5py.File(out_file, 'w') as f:
-        d = f.require_dataset('/jets', shape=d_arr.shape, dtype=d_arr.dtype)
-        da.store(d_arr, d, compression='gzip')
+        f.create_dataset('/Y_train', data=labels, compression="gzip")
+    del labels
 
-    # da.to_hdf5(outfile, '/x', df_b, compression='lzf', shuffle=True)
+    print("Shuffling sample")
+    d_arr = upt.ShuffleDataFrame(df[variable_config['train_variables']],
+                                 df_len=df_len)
+    print("Saving sample to", out_file)
+    with h5py.File(out_file, 'a') as f:
+        d = f.require_dataset('/X_train', shape=d_arr.shape,
+                              dtype=d_arr.dtype)
+        da.store(d_arr, d, compression='lzf')
 
 
 if __name__ == '__main__':
     args = GetParser()
     config = upt.Configuration(args.config_file)
     if not (args.undersampling or args.scaling or args.apply_scales or
-            args.prepare_large):
+            args.write):
         args.undersampling = True
         args.scaling = True
         args.apply_scales = True
-        args.prepare_large = True
+        args.write = True
     if args.undersampling:
         RunUndersampling(args, config)
     if args.scaling:
         GetScaleDict(args, config)
     if args.apply_scales:
         ApplyScales(args, config)
-    if args.prepare_large:
-        RunUndersampling()
+    if args.write:
+        WriteTrainSample(args, config)

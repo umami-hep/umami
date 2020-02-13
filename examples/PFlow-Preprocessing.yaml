@@ -29,7 +29,7 @@ f_tt_ujets:
 outfile_name: /work/ws/nemo/fr_mg1150-umami-0/framework_develop/PFlow-hybrid_70-22M.h5
 plot_name: PFlow_ext-hybrid
 
-# Dictfile for the scaling and shifting
+# Dictfile for the scaling and shifting (json)
 dict_file: "test.json"
 
 
