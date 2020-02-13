@@ -2,8 +2,10 @@ import unittest
 import numpy as np
 import pandas as pd
 import os
+import dask.dataframe as dd
 from umami.preprocessing_tools import UnderSampling, Configuration
 from umami.preprocessing_tools import GetNJetsPerIteration, GetCuts, GetScales
+from umami.preprocessing_tools import ShuffleDataFrame, GetBinaryLabels
 
 
 class UnderSamplingTestCase(unittest.TestCase):
@@ -265,3 +267,66 @@ class GetScalesTestCase(unittest.TestCase):
         self.assertEqual(average, 1)
         self.assertEqual(std, 0)
         self.assertEqual(default, 1)
+
+
+class ShuffleDataFrameTestCase(unittest.TestCase):
+    """
+    Test the implementation of the ShuffleDataFrame function.
+    """
+
+    def setUp(self):
+        """
+        Create a default dataset for testing.
+        """
+        self.df = dd.from_pandas(pd.DataFrame({'A': range(100),
+                                               'B': range(200, 300)}),
+                                 npartitions=3)
+
+    def testZeroLength(self):
+        df_0 = dd.from_pandas(pd.DataFrame(), npartitions=3)
+        self.assertEqual(len(ShuffleDataFrame(df_0)), 0)
+
+    def testLength(self):
+        df_shuf = ShuffleDataFrame(self.df)
+        self.assertEqual(len(df_shuf), len(self.df))
+
+    def testShuffle(self):
+        df_shuf = ShuffleDataFrame(self.df)
+        np.random.seed(42)
+        rep_a = np.random.choice(100, 100, replace=False)
+        np.random.seed(42)
+        rep_b = np.random.choice(range(200, 300), 100, replace=False)
+        np.testing.assert_array_equal(df_shuf[:, 0], rep_a)
+        np.testing.assert_array_equal(df_shuf[:, 1], rep_b)
+
+    def testRandomSeed(self):
+        df_shuf = ShuffleDataFrame(self.df, seed=176)
+        np.random.seed(176)
+        rep_a = np.random.choice(100, 100, replace=False)
+        np.testing.assert_array_equal(df_shuf[:, 0], rep_a)
+
+
+class GetBinaryLabelsTestCase(unittest.TestCase):
+    """
+    Test the implementation of the ShuffleDataFrame function.
+    """
+
+    def setUp(self):
+        """
+        Create a default dataset for testing.
+        """
+        self.y = np.concatenate([np.zeros(12), 4 * np.ones(35), 6 * np.ones(5),
+                                15 * np.ones(35)])
+        np.random.seed(42)
+        np.random.shuffle(self.y)
+        self.df = dd.from_pandas(pd.DataFrame(
+            {"label": self.y}), npartitions=3)
+
+    def testZeroLength(self):
+        df_0 = dd.from_pandas(pd.DataFrame({'label': []}), npartitions=3)
+        with self.assertRaises(ValueError):
+            GetBinaryLabels(df_0)
+
+    def testShape(self):
+        y_categ = GetBinaryLabels(self.df, 'label')
+        self.assertEqual(y_categ.shape, (len(self.y), 4))
