@@ -21,7 +21,7 @@ class PreprocessingTestParser(unittest.TestCase):
                                                 undersampling=False,
                                                 scaling=True,
                                                 apply_scales=False,
-                                                prepare_large=True,
+                                                write=False,
                                                 var_dict="test", tracks=False
                                                 ))
     def test_Parser(self, mock_args):

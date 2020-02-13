@@ -26,7 +26,6 @@ def ShuffleDataFrame(df, seed=42, df_len=None, return_array=True):
     d_arr = df.to_dask_array(True)
     np.random.seed(seed)
     index = np.random.choice(df_len, df_len, replace=False)
-    print("suffling sample")
     d_arr = shuffle_slice(d_arr, index)
     if return_array:
         return d_arr
