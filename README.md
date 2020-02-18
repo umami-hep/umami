@@ -63,3 +63,5 @@ In addition there are the Z+jets (Z->mumu/nunu) samples for the bb extension
 
 
 ntuples on slac cluster: `/u/ki/nhartman/gpfs/public/btag_hdf5/umami-stdTrkCuts`
+
+ntuples on Freiburg cluster: `/work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/`
