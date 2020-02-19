@@ -1,6 +1,8 @@
-# Umami
+Umami
+==============
 
-## Installation
+Installation
+-------------
 
 ### Docker image
 
@@ -21,6 +23,25 @@ The unit test you can run via
 ```
 pytest ./umami/tests/ -v
 ```
+Preprocessing
+---------------
+For the training of umami the ntuples are used as specified in the section [MC Samples](#mc-samples).
+
+Training ntuples are produced using the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) which dumps them directly into hdf5 files. The finished ntuples are also listed in the table in the section [MC Samples](#mc-samples).
+
+
+### Ntuple preparation for b-,c- & light-jets
+These jets are taken from ttbar and Z' events.
+
+
+
+### Ntuple Preparation for bb-jets
+The double b-jets will be taken from Znunu and Zmumu samples.
+
+
+Since the double b-jets represent only a fraction of the jets, they can be filtered out using the [```merge_ntuples.py```](https://gitlab.cern.ch/mguth/hdf5_manipulator/blob/master/merge_ntuples.py) script from the [hdf5-manipulator](https://gitlab.cern.ch/mguth/hdf5_manipulator).
+
+
 
 ## MC Samples
 
