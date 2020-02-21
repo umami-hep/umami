@@ -1,6 +1,7 @@
 stages:
   - test
   - build
+  - publish
 
 unittest:
   stage: test
@@ -46,5 +47,39 @@ build_img_cpu:
     - ignore
   tags:
     - docker-image-build
+  only:
+    - master
+
+
+push_to_hub_cpu:
+  stage: publish
+  image: matthewfeickert/skopeo-docker:latest
+  variables:
+    USER: btagging
+    IMAGE: umami-cpu
+  script:
+    # Tag the images with their respective alias tags
+    - /home/docker/skopeo copy
+      --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
+      --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
+      docker://${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${IMAGE}:latest
+      docker://${USER}/${IMAGE}:latest
+  only:
+    - master
+
+
+push_to_hub_gpu:
+  stage: publish
+  image: matthewfeickert/skopeo-docker:latest
+  variables:
+    USER: btagging
+    IMAGE: umami-gpu
+  script:
+    # Tag the images with their respective alias tags
+    - /home/docker/skopeo copy
+      --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
+      --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
+      docker://${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${IMAGE}:latest
+      docker://${USER}/${IMAGE}:latest
   only:
     - master
