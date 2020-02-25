@@ -55,33 +55,36 @@ There are several training and validation/test samples to produce. See below a l
 * ttbar (pT < 250 GeV)
     * b-jets
         ```
-        python ${SCRIPT}/create_hybrid.py --n_split 4 --even --bjets -Z ${ZPRIME} -t ${TTBAR} -n 10000000 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid_even_100_PFlow-pTcuts-bjets.h5 --write_tracks 
+        python ${SCRIPT}/create_hybrid.py --n_split 4 --even --bjets -Z ${ZPRIME} -t ${TTBAR} -n 10000000 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid-bjets_even_1_PFlow-merged.h5 --write_tracks 
         ```
     * c-jets
         ```
-        python ${SCRIPT}/create_hybrid-large_files.py --n_split 4 --even --cjets -Z ${ZPRIME} -t ${TTBAR} -n 12745953 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid_even_100_PFlow-pTcuts-cjets-stats.h5 --write_tracks
+        python ${SCRIPT}/create_hybrid-large_files.py --n_split 4 --even --cjets -Z ${ZPRIME} -t ${TTBAR} -n 12745953 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid-cjets_even_1_PFlow-merged.h5 --write_tracks
         ```
     * light-jets
         ```
-        python ${SCRIPT}/create_hybrid-large_files.py --n_split 5 --even --ujets -Z ${ZPRIME} -t ${TTBAR} -n 20000000 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid_even_100_PFlow-pTcuts-ujets-stats.h5 --write_tracks
+        python ${SCRIPT}/create_hybrid-large_files.py --n_split 5 --even --ujets -Z ${ZPRIME} -t ${TTBAR} -n 20000000 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid-ujets_even_1_PFlow-merged.h5 --write_tracks
         ```
-* Z' (pT > 250 GeV)
+* Z' (pT > 250 GeV) -> extended Z'
     * b, c, light-jets combined 
         ```
-        python ${SCRIPT}/create_hybrid-large_files.py --even -Z ${ZPRIME} -t ${TTBAR} -n 9593092 -c 0.0 -o ${FPATH}/hybrids/MC16d_hybrid-ext_even_0_PFlow-pTcuts.h5 --write_tracks
+        python ${SCRIPT}/create_hybrid-large_files.py --even -Z ${ZPRIME} -t ${TTBAR} -n 9593092 -c 0.0 -o ${FPATH}/hybrids/MC16d_hybrid-ext_even_0_PFlow-merged.h5 --write_tracks
         ```
+
 
 ##### Validation and Test Samples (odd EventNumber)
 * ttbar
     ```
-    python ${SCRIPT}/create_hybrid-large_files.py --n_split 2 --odd --no_cut -Z ${ZPRIME} -t ${TTBAR} -n 4000000 -c 1.0 -o ${FPATH}/hybrids/
-/MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5 --write_tracks
+    python ${SCRIPT}/create_hybrid-large_files.py --n_split 2 --odd --no_cut -Z ${ZPRIME} -t ${TTBAR} -n 4000000 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5 --write_tracks
     ```
-* Z'
+* Z' (extended and standard)
     ```
-    python ${SCRIPT}/create_hybrid-large_files.py --n_split 2 --odd --no_cut -Z ${ZPRIME} -t ${TTBAR} -n 4000000 -c 0.0 -o ${FPATH}/hybrids/
-/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5 --write_tracks
+    python ${SCRIPT}/create_hybrid-large_files.py --n_split 2 --odd --no_cut -Z ${ZPRIME} -t ${TTBAR} -n 4000000 -c 0.0 -o ${FPATH}/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5 --write_tracks
     ```
+
+The above script will output several files per sample which can be merged using the [```merge_big.py```](https://gitlab.cern.ch/mguth/hdf5_manipulator/blob/master/merge_big.py) script.
+
+
 
 ### Ntuple Preparation for bb-jets
 The double b-jets will be taken from Znunu and Zmumu samples.
