@@ -168,7 +168,7 @@ def GetScaleDict(args, config):
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
-    var_list = variable_config["train_variables"]
+    var_list = variable_config["train_variables"][:]
 
     bjets = pd.DataFrame(infile_all['bjets'][:][var_list])
     cjets = pd.DataFrame(infile_all['cjets'][:][var_list])
@@ -216,8 +216,8 @@ def ApplyScales(args, config):
     df = x.to_dask_dataframe()
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
-    variables = variable_config["train_variables"]
-    variables += variable_config["spectator_variables"]
+    variables = variable_config["train_variables"][:]
+    variables += variable_config["spectator_variables"][:]
     variables += [variable_config["label"], 'weight', 'category']
     # df_len = len(df)
     if 'weight' not in df.columns.values:
@@ -267,7 +267,7 @@ def WriteTrainSample(args, config):
     del labels
 
     print("Shuffling sample")
-    d_arr = upt.ShuffleDataFrame(df[variable_config['train_variables']],
+    d_arr = upt.ShuffleDataFrame(df[variable_config['train_variables'][:]],
                                  df_len=df_len)
     print("Saving sample to", out_file)
     with h5py.File(out_file, 'a') as f:
