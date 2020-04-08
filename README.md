@@ -35,7 +35,7 @@ There are two different labeling available, the ```HadronConeExclTruthLabelID```
 | ------------- | ---------------- |
 | 0            | light jets   |
 | 4            | c-jets   | 
-| 5            | b-jets   | 
+| 5, 54            | single b-jets   | 
 | 15            | tau-jets   | 
 | 44            | double c-jets   | 
 | 55            | double b-jets   | 
