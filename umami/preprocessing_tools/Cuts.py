@@ -27,7 +27,7 @@ def GetCuts(jets, config, sample='ttbar'):
             indices_to_remove.append(indices_i_to_remove)
 
     if config.pT_max is not False:
-        indices_to_remove.append(np.where(jets["pt_uncalib"] > config.pT_max
+        indices_to_remove.append(np.where(jets["pt_btagJes"] > config.pT_max
                                           )[0])
     if sample == 'ttbar':
         if config.bhad_pTcut is not None:
@@ -39,7 +39,7 @@ def GetCuts(jets, config, sample='ttbar'):
         if config.pTcut is not None:
             indices_to_remove_xjets = np.where(
                 (jets["HadronConeExclTruthLabelID"] < 5) & (
-                    jets["pt_uncalib"] > config.pTcut))[0]
+                    jets["pt_btagJes"] > config.pTcut))[0]
             indices_to_remove.append(indices_to_remove_xjets)
 
         return np.unique(np.concatenate(indices_to_remove))
@@ -54,7 +54,7 @@ def GetCuts(jets, config, sample='ttbar'):
         if config.pTcut is not None:
             indices_to_remove_xjets = np.where(
                 (jets["HadronConeExclTruthLabelID"] < 5) & (
-                    jets["pt_uncalib"] < config.pTcut))[0]
+                    jets["pt_btagJes"] < config.pTcut))[0]
             indices_to_remove.append(indices_to_remove_xjets)
 
         return np.unique(np.concatenate(indices_to_remove))

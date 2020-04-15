@@ -15,8 +15,8 @@ class UnderSampling(object):
                                        np.linspace(650000, 6000000, 84)))
         self.eta_bins = np.linspace(0, 2.5, 10)
         self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
-        self.pT_var_name = 'pt_uncalib'
-        self.eta_var_name = 'abs_eta_uncalib'
+        self.pT_var_name = 'pt_btagJes'
+        self.eta_var_name = 'absEta_btagJes'
         self.rnd_seed = 42
 
     def GetIndices(self):

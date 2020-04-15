@@ -18,25 +18,25 @@ class UnderSamplingTestCase(unittest.TestCase):
         Create a default dataset for testing.
         """
         self.df_bjets = pd.DataFrame(
-            {"pt_uncalib": abs(np.random.normal(300000, 30000, 10000)),
-             "abs_eta_uncalib": abs(np.random.normal(1.25, 1, 10000))})
+            {"pt_btagJes": abs(np.random.normal(300000, 30000, 10000)),
+             "absEta_btagJes": abs(np.random.normal(1.25, 1, 10000))})
         self.df_cjets = pd.DataFrame(
-            {"pt_uncalib": abs(np.random.normal(280000, 28000, 10000)),
-             "abs_eta_uncalib": abs(np.random.normal(1.4, 1, 10000))})
+            {"pt_btagJes": abs(np.random.normal(280000, 28000, 10000)),
+             "absEta_btagJes": abs(np.random.normal(1.4, 1, 10000))})
         self.df_ujets = pd.DataFrame(
-            {"pt_uncalib": abs(np.random.normal(250000, 25000, 10000)),
-             "abs_eta_uncalib": abs(np.random.normal(1.0, 1, 10000))})
+            {"pt_btagJes": abs(np.random.normal(250000, 25000, 10000)),
+             "absEta_btagJes": abs(np.random.normal(1.0, 1, 10000))})
 
     def test_zero_case(self):
         df_zeros = pd.DataFrame(np.zeros((1000, 2)),
-                                columns=["pt_uncalib", "abs_eta_uncalib"])
+                                columns=["pt_btagJes", "absEta_btagJes"])
         down_s = UnderSampling(df_zeros, df_zeros, df_zeros)
         b_ind, c_ind, u_ind = down_s.GetIndices()
         self.assertEqual(len(b_ind), len(df_zeros))
 
     def test_underflow(self):
         df_minus_ones = pd.DataFrame(-1 * np.ones((1000, 2)),
-                                     columns=["pt_uncalib", "abs_eta_uncalib"])
+                                     columns=["pt_btagJes", "absEta_btagJes"])
         down_s = UnderSampling(df_minus_ones, df_minus_ones, df_minus_ones)
         b_ind, c_ind, u_ind = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
@@ -45,7 +45,7 @@ class UnderSamplingTestCase(unittest.TestCase):
 
     def test_overflow(self):
         df_minus_ones = pd.DataFrame(1e10 * np.ones((1000, 2)),
-                                     columns=["pt_uncalib", "abs_eta_uncalib"])
+                                     columns=["pt_btagJes", "absEta_btagJes"])
         down_s = UnderSampling(df_minus_ones, df_minus_ones, df_minus_ones)
         b_ind, c_ind, u_ind = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
@@ -150,17 +150,22 @@ class PreprocessingTestCuts(unittest.TestCase):
         self.config_file = os.path.join(os.path.dirname(__file__),
                                         "test_preprocess_config.yaml")
         self.config = Configuration(self.config_file)
-        self.jets = pd.DataFrame({"secondaryVtx_m": [2e3, 2.6e4, 2.7e4, 2.4e4,
-                                                     np.nan, np.nan, 25, 30e4,
-                                                     np.nan, 0],
-                                  "secondaryVtx_E": [2001, 26001, 1e9, 1.5e8,
-                                                     5, np.nan, np.nan, np.nan,
-                                                     4e8, 0],
-                                  "HadronConeExclTruthLabelID": [5, 5, 5, 5,
-                                                                 4, 4, 4,
-                                                                 0, 0, 0],
-                                  "GhostBHadronsFinalPt": 5e3 * np.ones(10),
-                                  "pt_uncalib": 5.2e3 * np.ones(10),
+        self.jets = pd.DataFrame(
+            {
+                "JetFitterSecondaryVertex_mass":
+                    [2e3, 2.6e4, 2.7e4, 2.4e4,
+                     np.nan, np.nan, 25, 30e4,
+                     np.nan, 0],
+                "JetFitterSecondaryVertex_energy":
+                    [2001, 26001, 1e9, 1.5e8,
+                     5, np.nan, np.nan, np.nan,
+                     4e8, 0],
+                "HadronConeExclTruthLabelID":
+                    [5, 5, 5, 5,
+                     4, 4, 4,
+                     0, 0, 0],
+                "GhostBHadronsFinalPt": 5e3 * np.ones(10),
+                "pt_btagJes": 5.2e3 * np.ones(10),
                                   })
         self.pass_ttbar = np.array([1., 0., 0., 0., 1., 1., 1., 0., 0., 1.])
 
@@ -182,7 +187,7 @@ class PreprocessingTestCuts(unittest.TestCase):
     def test_cuts_passing_Zprime_inverted_pt(self):
         jets = self.jets.copy()
         jets["GhostBHadronsFinalPt"] *= 1e2
-        jets["pt_uncalib"] *= 1e2
+        jets["pt_btagJes"] *= 1e2
         indices_to_remove = GetCuts(jets.to_records(index=False),
                                     self.config, sample='Zprime')
         cut_result = np.ones(len(jets))
@@ -192,7 +197,7 @@ class PreprocessingTestCuts(unittest.TestCase):
     def test_cuts_exceed_pTmax_Zprime(self):
         jets = self.jets.copy()
         jets["GhostBHadronsFinalPt"] *= 1e5
-        jets["pt_uncalib"] *= 1e5
+        jets["pt_btagJes"] *= 1e5
         indices_to_remove = GetCuts(jets.to_records(index=False),
                                     self.config, sample='Zprime')
         cut_result = np.ones(len(jets))
@@ -202,19 +207,19 @@ class PreprocessingTestCuts(unittest.TestCase):
     def test_cuts_exceed_pTmax_ttbar(self):
         jets = self.jets.copy()
         jets["GhostBHadronsFinalPt"] *= 1e5
-        jets["pt_uncalib"] *= 1e5
+        jets["pt_btagJes"] *= 1e5
         indices_to_remove = GetCuts(jets.to_records(index=False),
                                     self.config, sample='ttbar')
         cut_result = np.ones(len(jets))
         np.put(cut_result, indices_to_remove, 0)
         self.assertTrue(np.array_equal(cut_result, np.zeros(len(jets))))
-
+        
     def test_cuts_bjets_exceed_pt_ttbar(self):
-        jets = pd.DataFrame({"secondaryVtx_m": [0, 0, 0],
-                             "secondaryVtx_E": [0, 0, 0],
+        jets = pd.DataFrame({"JetFitterSecondaryVertex_mass": [0, 0, 0],
+                             "JetFitterSecondaryVertex_energy": [0, 0, 0],
                              "HadronConeExclTruthLabelID": [5, 4, 0],
                              "GhostBHadronsFinalPt": 5e5 * np.ones(3),
-                             "pt_uncalib": 5e3 * np.ones(3)
+                             "pt_btagJes": 5e3 * np.ones(3)
                              })
         indices_to_remove = GetCuts(jets.to_records(index=False),
                                     self.config, sample='ttbar')
@@ -223,11 +228,11 @@ class PreprocessingTestCuts(unittest.TestCase):
         self.assertTrue(np.array_equal(cut_result, np.array([0, 1, 1])))
 
     def test_cuts_bjets_pass_pt_Zprime(self):
-        jets = pd.DataFrame({"secondaryVtx_m": [0, 0, 0],
-                             "secondaryVtx_E": [0, 0, 0],
+        jets = pd.DataFrame({"JetFitterSecondaryVertex_mass": [0, 0, 0],
+                             "JetFitterSecondaryVertex_energy": [0, 0, 0],
                              "HadronConeExclTruthLabelID": [5, 4, 0],
                              "GhostBHadronsFinalPt": 5e5 * np.ones(3),
-                             "pt_uncalib": 5e3 * np.ones(3)
+                             "pt_btagJes": 5e3 * np.ones(3)
                              })
         indices_to_remove = GetCuts(jets.to_records(index=False),
                                     self.config, sample='Zprime')

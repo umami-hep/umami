@@ -34,11 +34,11 @@ dict_file: "test.json"
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=
 Cuts:
-  secondaryVtx_m:
+  JetFitterSecondaryVertex_mass:
     operator: <
     condition: 25000
     NaNcheck: True
-  secondaryVtx_E:
+  JetFitterSecondaryVertex_energy:
     operator: <
     condition: 1e8
     NaNcheck: True

@@ -34,7 +34,7 @@ def GetParser():
                         help="Apllies scaling and shifting factors.")
     parser.add_argument('-w', '--write', action='store_true',
                         help="Shuffles sample and writes training sample and"
-                             "training labelsto disk")
+                             "training labels to disk")
     # the variable dictionary is always needed except for downsampling
     parser.add_argument('-v', '--var_dict', required=False, default=None,
                         help="Dictionary with input variables of tagger.",
@@ -42,7 +42,7 @@ def GetParser():
     args = parser.parse_args()
     need_var_dict = (args.scaling or args.apply_scales or args.write or not (
                      args.scaling or args.write or args.apply_scales or
-                     args.prepare_large or args.undersampling))
+                     args.undersampling))
 
     if need_var_dict and args.var_dict is None:
         parser.error('It is required to specify --var_dict [-v]')
@@ -115,7 +115,7 @@ def RunUndersampling(args, config):
                                       ], vec_tt_cjets])
         ujets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0
                                       ], vec_tt_ujets])
-        downs = upt.DownSampling(bjets, cjets, ujets)
+        downs = upt.UnderSampling(bjets, cjets, ujets)
         b_indices, c_indices, u_indices = downs.GetIndices()
 
         bjets = bjets[b_indices]
@@ -155,7 +155,7 @@ def RunUndersampling(args, config):
         # TODO: verify track handling
         # print("Plotting ...")
         # tp.MakePlots(b, u, c, plot_name=config.plot_name, option=str(x),
-        #              binning={"pt_uncalib": 200, "abs_eta_uncalib": 200})
+        #              binning={"pt_btagJes": 200, "absEta_btagJes": 200})
 
 
 def GetScaleDict(args, config):
