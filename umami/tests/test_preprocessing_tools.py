@@ -213,7 +213,7 @@ class PreprocessingTestCuts(unittest.TestCase):
         cut_result = np.ones(len(jets))
         np.put(cut_result, indices_to_remove, 0)
         self.assertTrue(np.array_equal(cut_result, np.zeros(len(jets))))
-        
+
     def test_cuts_bjets_exceed_pt_ttbar(self):
         jets = pd.DataFrame({"JetFitterSecondaryVertex_mass": [0, 0, 0],
                              "JetFitterSecondaryVertex_energy": [0, 0, 0],
