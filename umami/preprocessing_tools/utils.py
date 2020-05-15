@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import os
+import pandas as pd
 from dask.array.slicing import shuffle_slice
 from sklearn.preprocessing import LabelBinarizer
 
@@ -46,3 +49,81 @@ def GetBinaryLabels(df, column='label'):
     lb = LabelBinarizer()
     labels = np.array(df[column].compute().values)
     return lb.fit_transform(labels)
+
+
+def MakePlots(bjets, ujets, cjets, plot_name="plots/InfoPlot.pdf",
+              binning={"pt_btagJes": np.linspace(10000, 2000000, 200),
+                       "eta_btagJes": np.linspace(0, 2.5, 26)}):
+    """ Plots pt and eta distribution.
+    Parameters
+    ----------
+    TODO
+    bjets: array of b-jets
+    ujets: array of light jets 
+
+    Returns
+    -------
+    TODO
+    """
+
+    vars = ["pt_btagJes", "absEta_btagJes"]
+    # print(pd.DataFrame(bjets)["pt_btagJes"])
+    # print(bjets["eta_btagJes"])
+
+    for i, var in enumerate(vars):
+        plt.subplot(1, 2, i + 1)
+        plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 3),
+                             useMathText=True)
+        plt.hist([ujets[var], cjets[var], bjets[var]], binning[var],
+                 # weights=[arr_u['weight'], arr_c['weight'],
+                 #          np.ones(len(arr_b))],
+                 # color=['#4854C3', '#97BD8A', '#D20803'],
+                 # color=['#2ca02c', '#1f77b4', '#d62728'],
+                 color=['#2ca02c', '#ff7f0e', '#1f77b4'],
+                 # color=['forestgreen', 'mediumblue', 'r'],alpha=0.8,
+                 label=['ujets', 'cjets', 'bjets'], histtype='step',
+                 stacked=False, fill=False)
+        plt.yscale('log')
+        plt.title(var)
+        plt.legend()
+    plt.tight_layout()
+    if not os.path.exists(os.path.abspath("./plots")):
+        os.makedirs(os.path.abspath("./plots"))
+    plt.savefig(plot_name, transparent=True)
+    plt.close()
+
+
+def Plot_vars(bjets, cjets, ujets, plot_name="InfoPlot"):
+    """Creates plots of all variables and saves them."""
+    bjet = pd.DataFrame(bjets)
+    cjet = pd.DataFrame(cjets)
+    ujet = pd.DataFrame(ujets)
+    variablelist = list(bjet.columns.values)
+    print(variablelist)
+    print(len(variablelist))
+    variablelist.remove('label')
+    variablelist.remove('weight')
+    if 'category' in variablelist:
+        variablelist.remove('category')
+
+    plt.figure(figsize=(20, 60))
+    for i, var in enumerate(variablelist):
+        if "isDefaults" in var:
+            nbins = 2
+        else:
+            nbins = 50
+        plt.subplot(20, 5, i + 1)
+        plt.hist([ujet[var], cjet[var], bjet[var]], nbins,  # normed=1,
+                 weights=[ujet['weight'], cjet['weight'], bjet['weight']],
+                 # color=['#4854C3', '#97BD8A', '#D20803'],
+                 # color=['#2ca02c', '#1f77b4', '#d62728'],
+                 color=['#2ca02c', '#ff7f0e', '#1f77b4'],
+                 label=['ujets', 'cjets', 'bjets'], histtype='step',
+                 stacked=False, fill=False)
+        plt.yscale('log')
+        plt.title(var)
+        plt.legend()
+    plt.tight_layout()
+    plotname = "plots/%s_all_vars.pdf" % plot_name
+    print("save plot as", plotname)
+    plt.savefig(plotname, transparent=True)

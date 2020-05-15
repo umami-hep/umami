@@ -51,7 +51,8 @@ class Configuration(object):
                               f"{self.default_config[elem]}")
                 setattr(self, elem, self.default_config[elem])
 
-    def GetFileName(self, iteration=None, option=None, extension=".h5"):
+    def GetFileName(self, iteration=None, option=None, extension=".h5",
+                    custom_path=None):
         if option is None and iteration is None:
             return self.outfile_name
         out_file = self.outfile_name
@@ -62,6 +63,10 @@ class Configuration(object):
         else:
             inserttxt = f"-{option}-file-{iteration:.0f}"\
                         f"_{self.iterations:.0f}"
+        if custom_path is not None:
+            name_base = out_file.split("/")[-1]
+            idx = name_base.index(".h5")
+            return custom_path + name_base[:idx] + inserttxt + extension
 
         out_file = out_file[:idx] + inserttxt + extension
         return out_file
