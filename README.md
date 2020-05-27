@@ -55,7 +55,7 @@ There are several training and validation/test samples to produce. See below a l
 * ttbar (pT < 250 GeV)
     * b-jets
         ```
-        python ${SCRIPT}/create_hybrid.py --n_split 4 --even --bjets -Z ${ZPRIME} -t ${TTBAR} -n 10000000 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid-bjets_even_1_PFlow-merged.h5 --write_tracks 
+        python ${SCRIPT}/create_hybrid-large_files.py --n_split 4 --even --bjets -Z ${ZPRIME} -t ${TTBAR} -n 10000000 -c 1.0 -o ${FPATH}/hybrids/MC16d_hybrid-bjets_even_1_PFlow-merged.h5 --write_tracks 
         ```
     * c-jets
         ```
