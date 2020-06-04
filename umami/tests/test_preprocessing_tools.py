@@ -44,9 +44,9 @@ class UnderSamplingTestCase(unittest.TestCase):
         self.assertEqual(u_ind.size, 0)
 
     def test_overflow(self):
-        df_minus_ones = pd.DataFrame(1e10 * np.ones((1000, 2)),
-                                     columns=["pt_btagJes", "absEta_btagJes"])
-        down_s = UnderSampling(df_minus_ones, df_minus_ones, df_minus_ones)
+        df_large = pd.DataFrame(1e10 * np.ones((1000, 2)),
+                                columns=["pt_btagJes", "absEta_btagJes"])
+        down_s = UnderSampling(df_large, df_large, df_large)
         b_ind, c_ind, u_ind = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
         self.assertEqual(c_ind.size, 0)

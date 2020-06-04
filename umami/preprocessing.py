@@ -108,7 +108,7 @@ def RunUndersampling(args, config):
             tnp_tt_c = np.delete(tnp_tt_c, indices_toremove_cjets, 0)
             tnp_tt_u = np.delete(tnp_tt_u, indices_toremove_ujets, 0)
 
-        print("starting downsampling")
+        print("starting undersampling")
         bjets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5
                                       ], vec_tt_bjets])
         cjets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 4
@@ -151,11 +151,19 @@ def RunUndersampling(args, config):
             h5f.create_dataset('utrk', data=utrk)
 
         h5f.close()
-        # TODO: Implement plotting
         # TODO: verify track handling
-        # print("Plotting ...")
-        # tp.MakePlots(b, u, c, plot_name=config.plot_name, option=str(x),
-        #              binning={"pt_btagJes": 200, "absEta_btagJes": 200})
+        print("Plotting ...")
+        plot_name = config.GetFileName(x + 1, option="downsampled-pt_eta",
+                                       extension=".pdf", custom_path="plots/")
+        upt.MakePlots(bjets, cjets, ujets, plot_name=plot_name,
+                      binning={"pt_btagJes":  downs.pt_bins,
+                               "absEta_btagJes": downs.eta_bins})
+        plot_name = config.GetFileName(x + 1, extension=".pdf",
+                                       option="downsampled-pt_eta-wider_bins",
+                                       custom_path="plots/")
+        upt.MakePlots(bjets, cjets, ujets, plot_name=plot_name,
+                      binning={"pt_btagJes":  200,
+                               "absEta_btagJes": 20})
 
 
 def GetScaleDict(args, config):
