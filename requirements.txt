@@ -24,3 +24,4 @@ pytest
 flake8
 partd
 mlxtend
+zarr

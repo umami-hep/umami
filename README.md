@@ -9,6 +9,10 @@ Installation
 ```
 singularity exec docker://gitlab-registry.cern.ch/mguth/umami/umami-cpu:latest bash
 ```
+besides the CPU image, there is also a GPU image available which is especially useful for the training step
+```
+singularity exec --nv docker://gitlab-registry.cern.ch/mguth/umami/umami-gpu:latest bash
+```
 
 ### Manual installation
 
