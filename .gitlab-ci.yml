@@ -21,7 +21,7 @@ linter:
 build_img_gpu:
   stage: build
   variables:
-    FROM: tensorflow/tensorflow:latest-gpu-py3
+    FROM: tensorflow/tensorflow:latest-gpu
     TAG: latest
     IMAGE_NAME: umami-gpu
     CI_REGISTRY: gitlab-registry.cern.ch
@@ -37,7 +37,7 @@ build_img_gpu:
 build_img_cpu:
   stage: build
   variables:
-    FROM: tensorflow/tensorflow:latest-py3
+    FROM: tensorflow/tensorflow:latest
     TAG: latest
     IMAGE_NAME: umami-cpu
     CI_REGISTRY: gitlab-registry.cern.ch
