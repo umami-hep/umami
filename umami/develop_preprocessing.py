@@ -1,3 +1,8 @@
+"""
+Developing area for new preprocessing chain using dask
+Das has the problem that it coudln't deal with the tracks properly
+so the functions with dask are pushed to here
+"""
 import umami.preprocessing_tools as upt
 import h5py
 import numpy as np
@@ -33,8 +38,8 @@ def GetParser():
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument('-u', '--undersampling', action='store_true',
                         help="Runs undersampling.")
-    # action.add_argument('--weighting', action='store_true',
-    #                     help="Runs weighting.")
+    action.add_argument('--weighting', action='store_true',
+                        help="Runs weighting.")
     action.add_argument('-s', '--scaling', action='store_true',
                         help="Retrieves scaling and shifting factors.")
     action.add_argument('-a', '--apply_scales', action='store_true',
@@ -46,8 +51,10 @@ def GetParser():
     return args
 
 
-def RunUndersampling(args, config):
-    """Applies required cuts to the samples and applies the downsampling."""
+
+
+def RunWeighting(args, config):
+    """Applies required cuts to the samples and applies the weighting."""
     N_list = upt.GetNJetsPerIteration(config)
     # TODO: switch to dask
 
@@ -104,144 +111,70 @@ def RunUndersampling(args, config):
             tnp_tt_c = np.delete(tnp_tt_c, indices_toremove_cjets, 0)
             tnp_tt_u = np.delete(tnp_tt_u, indices_toremove_ujets, 0)
 
-        print("starting undersampling")
+        print("starting weight calculation")
         bjets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5
                                       ], vec_tt_bjets])
         cjets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 4
                                       ], vec_tt_cjets])
         ujets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0
                                       ], vec_tt_ujets])
-        downs = upt.UnderSampling(bjets, cjets, ujets)
-        b_indices, c_indices, u_indices = downs.GetIndices()
+        weights = upt.Weighting2D(bjets, cjets, ujets)
+        weights.GetWeights()
+        # b_indices, c_indices, u_indices = downs.GetIndices()
 
-        bjets = bjets[b_indices]
-        cjets = cjets[c_indices]
-        ujets = ujets[u_indices]
+        # bjets = bjets[b_indices]
+        # cjets = cjets[c_indices]
+        # ujets = ujets[u_indices]
 
-        if args.tracks:
-            btrk = np.concatenate([tnp_Zprime[
-                vec_Z["HadronConeExclTruthLabelID"] == 5], tnp_tt_b])[
-                    b_indices]
-            ctrk = np.concatenate([tnp_Zprime[
-                vec_Z["HadronConeExclTruthLabelID"] == 4], tnp_tt_c])[
-                    c_indices]
-            utrk = np.concatenate([tnp_Zprime[
-                vec_Z["HadronConeExclTruthLabelID"] == 0], tnp_tt_u])[
-                    u_indices]
+        # if args.tracks:
+        #     btrk = np.concatenate([tnp_Zprime[
+        #         vec_Z["HadronConeExclTruthLabelID"] == 5], tnp_tt_b])[
+        #             b_indices]
+        #     ctrk = np.concatenate([tnp_Zprime[
+        #         vec_Z["HadronConeExclTruthLabelID"] == 4], tnp_tt_c])[
+        #             c_indices]
+        #     utrk = np.concatenate([tnp_Zprime[
+        #         vec_Z["HadronConeExclTruthLabelID"] == 0], tnp_tt_u])[
+        #             u_indices]
 
-        ttfrac = float(len(bjets[bjets["category"] == 1]) + len(
-            cjets[cjets["category"] == 1]) + len(
-                ujets[ujets["category"] == 1])) / float(len(bjets) + len(
-                    cjets) + len(ujets))
-        print("ttbar fraction:", round(ttfrac, 2))
+        # ttfrac = float(len(bjets[bjets["category"] == 1]) + len(
+        #     cjets[cjets["category"] == 1]) + len(
+        #         ujets[ujets["category"] == 1])) / float(len(bjets) + len(
+        #             cjets) + len(ujets))
+        # print("ttbar fraction:", round(ttfrac, 2))
 
-        out_file = config.GetFileName(x + 1, option="downsampled")
-        print("saving file:", out_file)
-        h5f = h5py.File(out_file, 'w')
-        h5f.create_dataset('bjets', data=bjets)
-        h5f.create_dataset('cjets', data=cjets)
-        h5f.create_dataset('ujets', data=ujets)
-        if args.tracks:
-            h5f.create_dataset('btrk', data=btrk)
-            h5f.create_dataset('ctrk', data=ctrk)
-            h5f.create_dataset('utrk', data=utrk)
+        # out_file = config.GetFileName(x + 1, option="downsampled")
+        # print("saving file:", out_file)
+        # h5f = h5py.File(out_file, 'w')
+        # h5f.create_dataset('bjets', data=bjets)
+        # h5f.create_dataset('cjets', data=cjets)
+        # h5f.create_dataset('ujets', data=ujets)
+        # if args.tracks:
+        #     h5f.create_dataset('btrk', data=btrk)
+        #     h5f.create_dataset('ctrk', data=ctrk)
+        #     h5f.create_dataset('utrk', data=utrk)
 
-        h5f.close()
-        # TODO: verify track handling
-        print("Plotting ...")
-        plot_name = config.GetFileName(x + 1, option="downsampled-pt_eta",
-                                       extension=".pdf", custom_path="plots/")
-        upt.MakePlots(bjets, cjets, ujets, plot_name=plot_name,
-                      binning={"pt_btagJes":  downs.pt_bins,
-                               "absEta_btagJes": downs.eta_bins})
-        plot_name = config.GetFileName(x + 1, extension=".pdf",
-                                       option="downsampled-pt_eta-wider_bins",
-                                       custom_path="plots/")
-        upt.MakePlots(bjets, cjets, ujets, plot_name=plot_name,
-                      binning={"pt_btagJes":  200,
-                               "absEta_btagJes": 20})
-
-
-def GetScaleDict(args, config):
-    """
-    Calculates the scaling, shifting and default values and saves them to json.
-    The calculation is done only on the first iteration.
-    """
-    # TODO: switch to dask
-    # TODO: find good way to get file names, breaks if no iterations
-    input_file = config.GetFileName(iteration=1, option='downsampled')
-    print(input_file)
-    infile_all = h5py.File(input_file, 'r')
-
-    with open(args.var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
-
-    var_list = variable_config["train_variables"]
-
-    bjets = pd.DataFrame(infile_all['bjets'][:][var_list])
-    cjets = pd.DataFrame(infile_all['cjets'][:][var_list])
-    ujets = pd.DataFrame(infile_all['ujets'][:][var_list])
-    X = pd.concat([bjets, cjets, ujets])
-    del bjets, cjets, ujets
-
-    X.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-    print("Retrieving scaling and shifting values for the jet variables")
-
-    scale_dict = []
-    for var in X.columns.values:
-        if var in [variable_config["label"], 'weight', 'category']:
-            continue
-        elif 'isDefaults' in var:
-            # no scaling and shifting is applied to the check variables
-            scale_dict.append(upt.dict_in(var, 0., 1., None))
-        else:
-            dict_entry = upt.GetScales(
-                vec=X[var].values,
-                # TODO: implement weights
-                w=np.ones(len(X)), varname=var,
-                custom_defaults_vars=variable_config["custom_defaults_vars"])
-            scale_dict.append(upt.dict_in(*dict_entry))
-
-    scale_dict_trk = {}
-    if args.tracks:
-        print("Retrieving scaling and shifting values for the track variables")
-        logNormVars = variable_config["track_train_variables"]["logNormVars"]
-        jointNormVars = variable_config["track_train_variables"][
-            "jointNormVars"]
-        trkVars = logNormVars + jointNormVars
-
-        btrks = np.asarray(infile_all['btrk'][:])
-        ctrks = np.asarray(infile_all['ctrk'][:])
-        utrks = np.asarray(infile_all['utrk'][:])
-
-        trks = np.concatenate((utrks, ctrks, btrks))
-
-        X_trk_train = np.stack([np.nan_to_num(trks[v])for v in trkVars],
-                               axis=-1)
-
-        mask = ~ np.all(X_trk_train == 0, axis=-1)
-
-        eps = 1e-8
-
-        # Take the log of the desired variables
-        for i, v in enumerate(logNormVars):
-            X_trk_train[:, :, i][mask] = np.log(X_trk_train[:, :, i][mask] +
-                                                eps)
-
-        scale_dict_trk = upt.ScaleTracks(X_trk_train[:, :, :],
-                                         logNormVars+jointNormVars)
-
-    # save scale/shift dictionary to json file
-    scale_dict = {"jets": scale_dict, "tracks": scale_dict_trk}
-    with open(config.dict_file, 'w') as outfile:
-        json.dump(scale_dict, outfile, indent=4)
-    print("saved scale dictionary as", config.dict_file)
+        # h5f.close()
+        # # TODO: verify track handling
+        # print("Plotting ...")
+        # plot_name = config.GetFileName(x + 1, option="downsampled-pt_eta",
+        #                               extension=".pdf", custom_path="plots/")
+        # upt.MakePlots(bjets, cjets, ujets, plot_name=plot_name,
+        #               binning={"pt_btagJes":  downs.pt_bins,
+        #                        "absEta_btagJes": downs.eta_bins})
+        # plot_name = config.GetFileName(x + 1, extension=".pdf",
+        #                                option="downsampled-pt_eta-wider_bins",
+        #                                custom_path="plots/")
+        # upt.MakePlots(bjets, cjets, ujets, plot_name=plot_name,
+        #               binning={"pt_btagJes":  200,
+        #                        "absEta_btagJes": 20})
 
 
-def ApplyScalesTrksNumpy(args, config, iteration=1):
+def ApplyScalesTrksDask(args, config):
     print("Track scaling")
-    input_file = config.GetFileName(iteration=iteration, option='downsampled')
+    input_files = [config.GetFileName(iteration=x+1, option='downsampled') for
+                   x in range(1)]
+                #    x in range(config.iterations)]
     print(input_files)
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -251,12 +184,12 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
     jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
     trkVars = noNormVars + logNormVars + jointNormVars
 
-    dsets = [h5py.File(input_file, 'r')['/btrk'][:]]
-    dsets.append(h5py.File(input_file, 'r')['/ctrk'][:])
-    dsets.append([h5py.File(input_file, 'r')['/utrk'][:])
-    arrays = [np.asarray(dset) for dset in dsets]
+    dsets = [h5py.File(fn, 'r')['/btrk'][:] for fn in input_files]
+    dsets += [h5py.File(fn, 'r')['/ctrk'][:] for fn in input_files]
+    dsets += [h5py.File(fn, 'r')['/utrk'][:] for fn in input_files]
+    arrays = [da.from_array(dset) for dset in dsets]
     print("concatenate all datasets")
-    trks = np.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
+    trks = da.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
     print("concatenated")
 
     with open(config.dict_file, 'r') as infile:
@@ -265,69 +198,73 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
     var_arr_list = []
     for var in trkVars:
         if var in logNormVars:
-            x = np.log(trks[var])
+            x = da.log(trks[var])
         else:
             x = trks[var]
         if var in logNormVars:
             x -= scale_dict[var]["shift"]
             x /= scale_dict[var]["scale"]
         elif var in jointNormVars:
-            x = np.where(x == 0, x, x - scale_dict[var]["shift"])
-            x = np.where(x == 0, x, x / scale_dict[var]["scale"])
-        var_arr_list.append(np.nan_to_num(x))
+            x = da.where(x == 0, x, x - scale_dict[var]["shift"])
+            x = da.where(x == 0, x, x / scale_dict[var]["scale"])
+        var_arr_list.append(da.nan_to_num(x))
 
     d_arr = np.stack(var_arr_list, axis=-1)
-    out_file = config.GetFileName(option='preprocessed', iteration=iteration)
-    print("saving file:", out_file)
-    with h5py.File(out_file, 'a') as h5file:
-        h5file.create_dataset('trks', data=d_arr)
+    return d_arr
+    df_len = len(d_arr)
+    np.random.seed(42)
+    index = np.random.choice(df_len, df_len, replace=False)
+    d_arr = da.slicing.shuffle_slice(d_arr, index)
+    return da.slicing.shuffle_slice(d_arr, index)
 
 
-def ApplyScalesNumpy(args, config, iteration=1):
+def ApplyScalesDask(args, config):
     """
-        Apply the scaling and shifting to dataset using numpy
+        Apply the scaling and shifting to dataset
     """
-    input_file = config.GetFileName(iteration=iteration, option='downsampled')
+    input_files = [config.GetFileName(iteration=x+1, option='downsampled') for
+                   x in range(config.iterations)]
 
-    jets = h5py.File(input_file, 'r')['/bjets'][:]
-    jets = pd.DataFrame(
-        np.concatenate([h5py.File(input_file, 'r')['/bjets'][:],
-                        h5py.File(input_file, 'r')['/cjets'][:],
-                        h5py.File(input_file, 'r')['/ujets'][:]]))
+    dsets = [h5py.File(fn, 'r')['/bjets'][:] for fn in input_files]
+    dsets += [h5py.File(fn, 'r')['/cjets'][:] for fn in input_files]
+    dsets += [h5py.File(fn, 'r')['/ujets'][:] for fn in input_files]
+    arrays = [da.from_array(dset) for dset in dsets]
+    x = da.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
+    df = x.to_dask_dataframe()
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
     variables = variable_config["train_variables"]
     variables += variable_config["spectator_variables"]
     variables += [variable_config["label"], 'weight', 'category']
-    if 'weight' not in jets.columns.values:
-        jets['weight'] = np.ones(len(jets))
-    jets = jets[variables]
-    jets = jets.replace([np.inf, -np.inf], np.nan)
+    # df_len = len(df)
+    if 'weight' not in df.columns.values:
+        # df['weight'] = dd.from_array(np.ones(df_len))
+        # TODO: ugly workaround, but if not used a lot of NaNs are appended
+        # instead of ones (see also https://stackoverflow.com/questions/46923274/appending-new-column-to-dask-dataframe?rq=1) # noqa
+        df['weight'] = df["category"] * 0 + 1
+    df = df[variables]
+    df = df.replace([np.inf, -np.inf], np.nan)
     with open(config.dict_file, 'r') as infile:
         scale_dict = json.load(infile)['jets']
     print("Replacing default values.")
     default_dict = upt.Gen_default_dict(scale_dict)
-    jets = jets.fillna(default_dict)
+    df = df.fillna(default_dict)
     # var_list = variable_config["train_variables"]
     print("Applying scaling and shifting.")
     for elem in scale_dict:
         if 'isDefaults' in elem['name']:
             continue
         else:
-            jets[elem['name']] -= elem['shift']
-            jets[elem['name']] /= elem['scale']
+            df[elem['name']] -= elem['shift']
+            df[elem['name']] /= elem['scale']
 
-    out_file = config.GetFileName(option='preprocessed', iteration=iteration)
+    out_file = config.GetFileName(option='preprocessed')
     print("Saving file:", out_file)
-    with h5py.File(out_file, 'w') as h5file:
-        h5file.create_dataset('jets', data=jets.to_records(index=False))
+    df.to_hdf(out_file, '/jets')
+    if args.tracks:
+        print("INFO: Tracks are not treated in this step, they will ne added"
+              "in the 'write' step.")
 
-
-def ApplyScales(args, config):
-    for iteration in range(1, config.iterations + 1):
-        ApplyScalesNumpy(args, config, iteration)
-        if args.tracks:
-            ApplyScalesTrksNumpy(args, config, iteration)
 
 
 def WriteTrainSample(args, config):
@@ -385,12 +322,13 @@ if __name__ == '__main__':
     # ApplyScalesTrksDask(args, config)
     # print("test")
     # ApplyScalesTrksNumpy(args, config)
-    # ApplyScalesNumpy(args, config, 1)
-    # exit(0)
+    ApplyScalesNumpy(args, config, 1)
+    exit(0)
 
     # TODO: properly implement switching between weighting and undersampling
-    # if args.weighting:
-    #     RunWeighting(args, config)
+    if args.weighting:
+        RunWeighting(args, config)
+        exit(0)
     if args.undersampling:
         RunUndersampling(args, config)
     if args.scaling:

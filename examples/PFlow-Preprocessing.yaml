@@ -2,11 +2,12 @@ parameters:
   # file path
   file_path: &file_path /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids
 # amount of b-jets which are used
-# njets: 1e4
+# njets: 1e5
 njets: 5.5e6
 # fraction of ttbar jets wrt. Z'
 ttbar_frac: 0.65
-# outputfiles are split into 6
+# outputfiles are split into 5
+# iterations: 1
 iterations: 5
 # pT cut for hybrid creation (for light and c-jets)
 pTcut: 2.5e5
@@ -26,7 +27,8 @@ f_tt_cjets:
 f_tt_ujets:
   path: *file_path
   file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-outfile_name: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-22M.h5
+# outfile_name: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-22M.h5
+outfile_name: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-test.h5
 plot_name: PFlow_ext-hybrid
 
 # Dictfile for the scaling and shifting (json)
@@ -36,11 +38,11 @@ dict_file: "examples/PFlow-scale_dict-22M.json"
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=
 Cuts:
-  secondaryVtx_m:
+  JetFitterSecondaryVertex_mass:
     operator: <
     condition: 25000
     NaNcheck: True
-  secondaryVtx_E:
+  JetFitterSecondaryVertex_energy:
     operator: <
     condition: 1e8
     NaNcheck: True
