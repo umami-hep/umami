@@ -253,7 +253,7 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
 
     dsets = [h5py.File(input_file, 'r')['/btrk'][:]]
     dsets.append(h5py.File(input_file, 'r')['/ctrk'][:])
-    dsets.append([h5py.File(input_file, 'r')['/utrk'][:])
+    dsets.append(h5py.File(input_file, 'r')['/utrk'][:])
     arrays = [np.asarray(dset) for dset in dsets]
     print("concatenate all datasets")
     trks = np.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
