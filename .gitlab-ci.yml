@@ -54,7 +54,7 @@
 push_to_hub_cpu:
 #   stage: publish
   # require: build
-  image: matthewfeickert/skopeo-docker:latest
+  image: matthewfeickert/skopeo-docker:skopeo0.1.42
   variables:
     USER: btagging
     IMAGE: umami-cpu
