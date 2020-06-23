@@ -170,7 +170,7 @@ def GetScaleDict(args, config):
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
-    var_list = variable_config["train_variables"]
+    var_list = variable_config["train_variables"][:]
 
     bjets = pd.DataFrame(infile_all['bjets'][:][var_list])
     cjets = pd.DataFrame(infile_all['cjets'][:][var_list])
@@ -290,8 +290,8 @@ def ApplyScalesNumpy(args, config, iteration=1):
                         h5py.File(input_file, 'r')['/ujets'][:]]))
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
-    variables = variable_config["train_variables"]
-    variables += variable_config["spectator_variables"]
+    variables = variable_config["train_variables"][:]
+    variables += variable_config["spectator_variables"][:]
     variables += [variable_config["label"], 'weight', 'category']
     if 'weight' not in jets.columns.values:
         jets['weight'] = np.ones(len(jets))
