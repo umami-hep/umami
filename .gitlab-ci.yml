@@ -1,58 +1,58 @@
-# stages:
-#   - test
-#   - build
-#   - publish
+stages:
+  - test
+  - build
+  - publish
 
-# unittest:
-#   stage: test
-#   image: python:3.7
-#   script:
-#     - pip install -r requirements.txt
-#     - pytest ./umami/tests/ -v
+unittest:
+  stage: test
+  image: python:3.7
+  script:
+    - pip install -r requirements.txt
+    - pytest ./umami/tests/ -v
 
-# linter:
-#   stage: test
-#   image: python:3.7-slim
-#   allow_failure: true
-#   script:
-#     - pip install flake8
-#     - flake8 ./umami
+linter:
+  stage: test
+  image: python:3.7-slim
+  allow_failure: true
+  script:
+    - pip install flake8
+    - flake8 ./umami
 
-# build_img_gpu:
-#   stage: build
-#   variables:
-#     FROM: tensorflow/tensorflow:latest-gpu
-#     TAG: latest
-#     IMAGE_NAME: umami-gpu
-#     CI_REGISTRY: gitlab-registry.cern.ch
-#     TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/${IMAGE_NAME}:${TAG}'
-#   script:
-#     # The script gets overwritten in jobs tagged docker-image-build
-#     - ignore
-#   tags:
-#     - docker-image-build
-#   only:
-#     - master
+build_img_gpu:
+  stage: build
+  variables:
+    FROM: tensorflow/tensorflow:latest-gpu
+    TAG: latest
+    IMAGE_NAME: umami-gpu
+    CI_REGISTRY: gitlab-registry.cern.ch
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/${IMAGE_NAME}:${TAG}'
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
+  only:
+    - master
 
-# build_img_cpu:
-#   stage: build
-#   variables:
-#     FROM: tensorflow/tensorflow:latest
-#     TAG: latest
-#     IMAGE_NAME: umami-cpu
-#     CI_REGISTRY: gitlab-registry.cern.ch
-#     TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/${IMAGE_NAME}:${TAG}'
-#   script:
-#     # The script gets overwritten in jobs tagged docker-image-build
-#     - ignore
-#   tags:
-#     - docker-image-build
-#   only:
-#     - master
+build_img_cpu:
+  stage: build
+  variables:
+    FROM: tensorflow/tensorflow:latest
+    TAG: latest
+    IMAGE_NAME: umami-cpu
+    CI_REGISTRY: gitlab-registry.cern.ch
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/${IMAGE_NAME}:${TAG}'
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
+  only:
+    - master
 
 
 push_to_hub_cpu:
-#   stage: publish
+  stage: publish
   # require: build
   image: matthewfeickert/skopeo-docker:skopeo0.1.42
   variables:
@@ -69,19 +69,19 @@ push_to_hub_cpu:
     - master
 
 
-# push_to_hub_gpu:
-#   stage: publish
-#   # require: build
-#   image: matthewfeickert/skopeo-docker:latest
-#   variables:
-#     USER: btagging
-#     IMAGE: umami-gpu
-#   script:
-#     # Tag the images with their respective alias tags
-#     - /home/docker/skopeo copy
-#       --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
-#       --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
-#       docker://${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${IMAGE}:latest
-#       docker://${USER}/${IMAGE}:latest
-#   only:
-#     - master
+push_to_hub_gpu:
+  stage: publish
+  # require: build
+  image: matthewfeickert/skopeo-docker:skopeo0.1.42
+  variables:
+    USER: btagging
+    IMAGE: umami-gpu
+  script:
+    # Tag the images with their respective alias tags
+    - /home/docker/skopeo copy
+      --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
+      --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
+      docker://${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${IMAGE}:latest
+      docker://${USER}/${IMAGE}:latest
+  only:
+    - master
