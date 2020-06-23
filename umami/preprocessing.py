@@ -1,17 +1,13 @@
 import umami.preprocessing_tools as upt
 import h5py
 import numpy as np
-from numpy.lib.recfunctions import append_fields
+from numpy.lib.recfunctions import append_fields, structured_to_unstructured
+from numpy.lib.recfunctions import repack_fields
 import pandas as pd
 import argparse
 import yaml
 from umami.tools import yaml_loader
 import json
-import dask.array as da
-import dask.dataframe as dd
-import dask
-
-dask.config.set({'temporary_directory': '/tmp'})
 
 
 def GetParser():
@@ -25,28 +21,23 @@ def GetParser():
                         "hybrid sample.")
     parser.add_argument('-t', '--tracks', action='store_true',
                         help="Stores also track information.")
-    # possible job options for the different preprocessing steps
-    parser.add_argument('-u', '--undersampling', action='store_true',
-                        help="Runs undersampling.")
-    parser.add_argument('-s', '--scaling', action='store_true',
-                        help="Retrieves scaling and shifting factors.")
-    parser.add_argument('-a', '--apply_scales', action='store_true',
-                        help="Apllies scaling and shifting factors.")
-    parser.add_argument('-w', '--write', action='store_true',
-                        help="Shuffles sample and writes training sample and"
-                             "training labels to disk")
-    # the variable dictionary is always needed except for downsampling
-    parser.add_argument('-v', '--var_dict', required=False, default=None,
+    parser.add_argument('-v', '--var_dict', required=True, default=None,
                         help="Dictionary with input variables of tagger.",
                         type=str)
+    # possible job options for the different preprocessing steps
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-u', '--undersampling', action='store_true',
+                        help="Runs undersampling.")
+    # action.add_argument('--weighting', action='store_true',
+    #                     help="Runs weighting.")
+    action.add_argument('-s', '--scaling', action='store_true',
+                        help="Retrieves scaling and shifting factors.")
+    action.add_argument('-a', '--apply_scales', action='store_true',
+                        help="Apllies scaling and shifting factors.")
+    action.add_argument('-w', '--write', action='store_true',
+                        help="Shuffles sample and writes training sample and"
+                             "training labels to disk")
     args = parser.parse_args()
-    need_var_dict = (args.scaling or args.apply_scales or args.write or not (
-                     args.scaling or args.write or args.apply_scales or
-                     args.undersampling))
-
-    if need_var_dict and args.var_dict is None:
-        parser.error('It is required to specify --var_dict [-v]')
-
     return args
 
 
@@ -167,10 +158,13 @@ def RunUndersampling(args, config):
 
 
 def GetScaleDict(args, config):
-    # TODO: switch to dask
-    config = upt.Configuration(args.config_file)
+    """
+    Calculates the scaling, shifting and default values and saves them to json.
+    The calculation is done only on the first iteration.
+    """
     # TODO: find good way to get file names, breaks if no iterations
     input_file = config.GetFileName(iteration=1, option='downsampled')
+    print(input_file)
     infile_all = h5py.File(input_file, 'r')
 
     with open(args.var_dict, "r") as conf:
@@ -186,7 +180,7 @@ def GetScaleDict(args, config):
 
     X.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    print("Retrieving scaling and shifting values")
+    print("Retrieving scaling and shifting values for the jet variables")
 
     scale_dict = []
     for var in X.columns.values:
@@ -203,96 +197,186 @@ def GetScaleDict(args, config):
                 custom_defaults_vars=variable_config["custom_defaults_vars"])
             scale_dict.append(upt.dict_in(*dict_entry))
 
+    scale_dict_trk = {}
+    if args.tracks:
+        print("Retrieving scaling and shifting values for the track variables")
+        logNormVars = variable_config["track_train_variables"]["logNormVars"]
+        jointNormVars = variable_config["track_train_variables"][
+            "jointNormVars"]
+        trkVars = logNormVars + jointNormVars
+
+        btrks = np.asarray(infile_all['btrk'][:])
+        ctrks = np.asarray(infile_all['ctrk'][:])
+        utrks = np.asarray(infile_all['utrk'][:])
+
+        trks = np.concatenate((utrks, ctrks, btrks))
+
+        X_trk_train = np.stack([np.nan_to_num(trks[v])for v in trkVars],
+                               axis=-1)
+
+        mask = ~ np.all(X_trk_train == 0, axis=-1)
+
+        eps = 1e-8
+
+        # Take the log of the desired variables
+        for i, v in enumerate(logNormVars):
+            X_trk_train[:, :, i][mask] = np.log(X_trk_train[:, :, i][mask] +
+                                                eps)
+
+        scale_dict_trk = upt.ScaleTracks(X_trk_train[:, :, :],
+                                         logNormVars+jointNormVars)
+
     # save scale/shift dictionary to json file
+    scale_dict = {"jets": scale_dict, "tracks": scale_dict_trk}
     with open(config.dict_file, 'w') as outfile:
         json.dump(scale_dict, outfile, indent=4)
     print("saved scale dictionary as", config.dict_file)
 
 
-def ApplyScales(args, config):
-    """
-        Apply the scaling and shifting to dataset
-    """
-    input_files = [config.GetFileName(iteration=x+1, option='downsampled') for
-                   x in range(config.iterations)]
+def ApplyScalesTrksNumpy(args, config, iteration=1):
+    print("Track scaling")
+    input_file = config.GetFileName(iteration=iteration, option='downsampled')
+    print(input_file)
+    with open(args.var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
 
-    dsets = [h5py.File(fn, 'r')['/bjets'][:] for fn in input_files]
-    dsets += [h5py.File(fn, 'r')['/cjets'][:] for fn in input_files]
-    dsets += [h5py.File(fn, 'r')['/ujets'][:] for fn in input_files]
-    arrays = [da.from_array(dset) for dset in dsets]
-    x = da.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
-    df = x.to_dask_dataframe()
+    noNormVars = variable_config["track_train_variables"]["noNormVars"]
+    logNormVars = variable_config["track_train_variables"]["logNormVars"]
+    jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
+    trkVars = noNormVars + logNormVars + jointNormVars
+
+    dsets = [h5py.File(input_file, 'r')['/btrk'][:]]
+    dsets.append(h5py.File(input_file, 'r')['/ctrk'][:])
+    dsets.append(h5py.File(input_file, 'r')['/utrk'][:])
+    arrays = [np.asarray(dset) for dset in dsets]
+    print("concatenate all datasets")
+    trks = np.concatenate(arrays, axis=0)
+    print("concatenated")
+
+    with open(config.dict_file, 'r') as infile:
+        scale_dict = json.load(infile)["tracks"]
+
+    var_arr_list = []
+    for var in trkVars:
+        if var in logNormVars:
+            x = np.log(trks[var])
+        else:
+            x = trks[var]
+        if var in logNormVars:
+            x -= scale_dict[var]["shift"]
+            x /= scale_dict[var]["scale"]
+        elif var in jointNormVars:
+            x = np.where(x == 0, x, x - scale_dict[var]["shift"])
+            x = np.where(x == 0, x, x / scale_dict[var]["scale"])
+        var_arr_list.append(np.nan_to_num(x))
+
+    d_arr = np.stack(var_arr_list, axis=-1)
+    out_file = config.GetFileName(option='preprocessed', iteration=iteration)
+    print("saving file:", out_file)
+    with h5py.File(out_file, 'a') as h5file:
+        h5file.create_dataset('trks', data=d_arr)
+
+
+def ApplyScalesNumpy(args, config, iteration=1):
+    """
+        Apply the scaling and shifting to dataset using numpy
+    """
+    input_file = config.GetFileName(iteration=iteration, option='downsampled')
+
+    jets = h5py.File(input_file, 'r')['/bjets'][:]
+    jets = pd.DataFrame(
+        np.concatenate([h5py.File(input_file, 'r')['/bjets'][:],
+                        h5py.File(input_file, 'r')['/cjets'][:],
+                        h5py.File(input_file, 'r')['/ujets'][:]]))
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
     variables = variable_config["train_variables"][:]
     variables += variable_config["spectator_variables"][:]
     variables += [variable_config["label"], 'weight', 'category']
-    # df_len = len(df)
-    if 'weight' not in df.columns.values:
-        # df['weight'] = dd.from_array(np.ones(df_len))
-        # TODO: ugly workaround, but if not used a lot of NaNs are appended
-        # instad of ones (see also https://stackoverflow.com/questions/46923274/appending-new-column-to-dask-dataframe?rq=1) # noqa
-        df['weight'] = df["category"] * 0 + 1
-    df = df[variables]
-    df = df.replace([np.inf, -np.inf], np.nan)
+    if 'weight' not in jets.columns.values:
+        jets['weight'] = np.ones(len(jets))
+    jets = jets[variables]
+    jets = jets.replace([np.inf, -np.inf], np.nan)
     with open(config.dict_file, 'r') as infile:
-        scale_dict = json.load(infile)
+        scale_dict = json.load(infile)['jets']
     print("Replacing default values.")
     default_dict = upt.Gen_default_dict(scale_dict)
-    df = df.fillna(default_dict)
+    jets = jets.fillna(default_dict)
     # var_list = variable_config["train_variables"]
     print("Applying scaling and shifting.")
     for elem in scale_dict:
         if 'isDefaults' in elem['name']:
             continue
         else:
-            df[elem['name']] -= elem['shift']
-            df[elem['name']] /= elem['scale']
+            jets[elem['name']] -= elem['shift']
+            jets[elem['name']] /= elem['scale']
 
-    out_file = config.GetFileName(option='preprocessed')
+    out_file = config.GetFileName(option='preprocessed', iteration=iteration)
     print("Saving file:", out_file)
-    df.to_hdf(out_file, '/jets')
+    with h5py.File(out_file, 'w') as h5file:
+        h5file.create_dataset('jets', data=jets.to_records(index=False))
+
+
+def ApplyScales(args, config):
+    for iteration in range(1, config.iterations + 1):
+        ApplyScalesNumpy(args, config, iteration)
+        if args.tracks:
+            ApplyScalesTrksNumpy(args, config, iteration)
 
 
 def WriteTrainSample(args, config):
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
+    input_files = [config.GetFileName(
+        option='preprocessed', iteration=it) for it in range(
+            1, config.iterations + 1)]
 
-    in_file = config.GetFileName(option='preprocessed')
-    df = dd.read_hdf(in_file, '/jets')
-    # df = dd.from_pandas(df.head(1000), npartitions=3)
-    df_len = len(df)
-
-    print("Calculating binary labels.")
-    labels = upt.GetBinaryLabels(df, variable_config['label'])
-    np.random.seed(42)
-    np.random.shuffle(labels)
-
+    size, ranges = upt.get_size(input_files)
     out_file = config.GetFileName(option='preprocessed_shuffled')
-    print("Saving labels to", out_file)
-    with h5py.File(out_file, 'w') as f:
-        f.create_dataset('/Y_train', data=labels, compression="gzip")
-    del labels
-
-    print("Shuffling sample")
-    d_arr = upt.ShuffleDataFrame(df[variable_config['train_variables'][:]],
-                                 df_len=df_len)
     print("Saving sample to", out_file)
-    with h5py.File(out_file, 'a') as f:
-        d = f.require_dataset('/X_train', shape=d_arr.shape,
-                              dtype=d_arr.dtype)
-        da.store(d_arr, d, compression='lzf')
+    with h5py.File(out_file, 'w') as output:
+        for i, file in enumerate(input_files):
+            print("Start processing file", i+1, "of", len(input_files))
+            with h5py.File(file, 'r') as in_file:
+                jets = in_file['/jets'][:]
+                labels = upt.GetBinaryLabels(jets[variable_config['label']])
+                np.random.seed(42)
+                np.random.shuffle(labels)
+
+                weights = jets['weight']
+                np.random.seed(42)
+                np.random.shuffle(weights)
+
+                jets = repack_fields(jets[variable_config[
+                    'train_variables'][:]])
+                jets = structured_to_unstructured(jets)
+                np.random.seed(42)
+                np.random.shuffle(jets)
+
+                if i == 0:
+                    source = {"X_train": jets[:1], "Y_train": labels[:1],
+                              "weight": weights[:1]}
+                    if args.tracks:
+                        source["X_trk_train"] = in_file['/trks'][:1]
+                    upt.create_datasets(output, source, size)
+
+                output["X_train"][ranges[file][0]:ranges[file][1]] = jets[:]
+                output["Y_train"][ranges[file][0]:ranges[file][1]] = labels[:]
+                output["weight"][ranges[file][0]:ranges[file][1]] = weights[:]
+
+                if args.tracks:
+                    print("adding tracks")
+                    trks = in_file['/trks'][:]
+                    np.random.seed(42)
+                    np.random.shuffle(trks)
+                    output["X_trk_train"][ranges[
+                        file][0]:ranges[file][1]] = trks
 
 
 if __name__ == '__main__':
     args = GetParser()
     config = upt.Configuration(args.config_file)
-    if not (args.undersampling or args.scaling or args.apply_scales or
-            args.write):
-        args.undersampling = True
-        args.scaling = True
-        args.apply_scales = True
-        args.write = True
+
     if args.undersampling:
         RunUndersampling(args, config)
     if args.scaling:

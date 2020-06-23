@@ -25,3 +25,4 @@ flake8
 partd
 mlxtend
 zarr
+graphviz

@@ -27,7 +27,6 @@ class UnderSampling(object):
         binnumbers_c, _, stat_c = self.GetBins(self.cjets)
         binnumbers_u, _, stat_u = self.GetBins(self.ujets)
         min_count_per_bin = np.amin([stat_b, stat_c, stat_u], axis=0)
-
         bjet_indices = []
         cjet_indices = []
         ujet_indices = []
@@ -46,6 +45,73 @@ class UnderSampling(object):
         return np.sort(np.concatenate(bjet_indices)),\
             np.sort(np.concatenate(cjet_indices)),\
             np.sort(np.concatenate(ujet_indices))
+
+    def GetBins(self, df):
+        statistic, xedges, yedges, binnumber = binned_statistic_2d(
+            x=df[self.pT_var_name],
+            y=df[self.eta_var_name],
+            values=df[self.pT_var_name],
+            statistic='count', bins=[self.pt_bins, self.eta_bins])
+
+        bins_indices_flat_2d = np.indices(self.nbins - 1) + 1
+        bins_indices_flat = np.ravel_multi_index(
+            bins_indices_flat_2d, self.nbins + 1).flatten()
+
+        return binnumber, bins_indices_flat, statistic.flatten()
+
+
+class Weighting2D(object):
+    """Alternatively to the UnderSampling approach, the 2D weighting can be
+       used to prepare the training dataset. It makes sure
+       that in each pT/eta bin each category has the same weight.
+       This is especially suited if not enough statistics is available.
+    """
+
+    def __init__(self, bjets, cjets, ujets):
+        super(Weighting2D, self).__init__()
+        self.bjets = bjets
+        self.cjets = cjets
+        self.ujets = ujets
+        self.pt_bins = np.concatenate((np.linspace(0, 600000, 351),
+                                       np.linspace(650000, 6000000, 84)))
+        self.eta_bins = np.linspace(0, 2.5, 10)
+        self.pt_bins = np.linspace(0, 6000000, 3)
+        self.eta_bins = np.linspace(0, 2.5, 3)
+        self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
+        self.pT_var_name = 'pt_btagJes'
+        self.eta_var_name = 'absEta_btagJes'
+        self.rnd_seed = 42
+
+    def GetWeights(self):
+        """"Retrieves the weights for the sample."""
+        binnumbers_b, ind_b, stat_b = self.GetBins(self.bjets)
+        binnumbers_c, _, stat_c = self.GetBins(self.cjets)
+        binnumbers_u, _, stat_u = self.GetBins(self.ujets)
+
+        # Using the b-jet distribution as reference
+        # print(self.bjets)
+        print(stat_b)
+        # bin_weights_u = np.divide(stat_u, stat_b)
+        bin_weights_c = np.divide(stat_c, stat_b)
+        # bin_weights_b = np.ones(len(stat_b))
+        print(bin_weights_c)
+        # for elem, count in zip(ind_b, min_count_per_bin):
+        #     np.random.seed(self.rnd_seed)
+        #     bjet_indices.append(np.random.choice(np.where(
+        #  binnumbers_b == elem)
+        #                         [0], int(count), replace=False))
+        #     np.random.seed(self.rnd_seed)
+        #     cjet_indices.append(np.random.choice(np.where(
+        # binnumbers_c == elem)
+        #                         [0], int(count), replace=False))
+        #     np.random.seed(self.rnd_seed)
+        #     ujet_indices.append(np.random.choice(np.where(
+        # binnumbers_u == elem)
+        #                         [0], int(count), replace=False))
+
+        # return np.sort(np.concatenate(bjet_indices)),\
+        #     np.sort(np.concatenate(cjet_indices)),\
+        #     np.sort(np.concatenate(ujet_indices))
 
     def GetBins(self, df):
         statistic, xedges, yedges, binnumber = binned_statistic_2d(
