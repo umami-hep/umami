@@ -60,7 +60,7 @@ push_to_hub_cpu:
     IMAGE: umami-cpu
   script:
     # Tag the images with their respective alias tags
-    - /home/docker/skopeo copy
+    - copy
       --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
       --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
       docker://${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${IMAGE}:latest
