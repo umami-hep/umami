@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import h5py
 import tempfile
-from umami.preprocessing_tools import check_size, get_size, create_datasets
+from umami.preprocessing_tools import check_size, get_size
 
 
 class Check_SizeTestCase(unittest.TestCase):

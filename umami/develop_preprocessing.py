@@ -7,15 +7,14 @@ import umami.preprocessing_tools as upt
 import h5py
 import numpy as np
 from numpy.lib.recfunctions import append_fields
-import pandas as pd
 import argparse
 import yaml
 from umami.tools import yaml_loader
 import json
 import dask.array as da
-import dask.dataframe as dd
+# import dask.dataframe as dd
 import dask
-from dask.distributed import Client
+# from dask.distributed import Client
 
 dask.config.set({'temporary_directory': '/tmp'})
 
@@ -49,8 +48,6 @@ def GetParser():
                              "training labels to disk")
     args = parser.parse_args()
     return args
-
-
 
 
 def RunWeighting(args, config):
@@ -174,7 +171,7 @@ def ApplyScalesTrksDask(args, config):
     print("Track scaling")
     input_files = [config.GetFileName(iteration=x+1, option='downsampled') for
                    x in range(1)]
-                #    x in range(config.iterations)]
+    #    x in range(config.iterations)]
     print(input_files)
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -188,8 +185,9 @@ def ApplyScalesTrksDask(args, config):
     dsets += [h5py.File(fn, 'r')['/ctrk'][:] for fn in input_files]
     dsets += [h5py.File(fn, 'r')['/utrk'][:] for fn in input_files]
     arrays = [da.from_array(dset) for dset in dsets]
+    # Concatenate arrays along first axis
+    trks = da.concatenate(arrays, axis=0)
     print("concatenate all datasets")
-    trks = da.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
     print("concatenated")
 
     with open(config.dict_file, 'r') as infile:
@@ -266,10 +264,9 @@ def ApplyScalesDask(args, config):
               "in the 'write' step.")
 
 
-
 def WriteTrainSample(args, config):
-    with open(args.var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    # with open(args.var_dict, "r") as conf:
+    #     variable_config = yaml.load(conf, Loader=yaml_loader)
 
     # in_file = config.GetFileName(option='preprocessed')
     # df = dd.read_hdf(in_file, '/jets')
@@ -322,18 +319,19 @@ if __name__ == '__main__':
     # ApplyScalesTrksDask(args, config)
     # print("test")
     # ApplyScalesTrksNumpy(args, config)
-    ApplyScalesNumpy(args, config, 1)
+    # ApplyScalesNumpy(args, config, 1)
+    ApplyScalesDask(args, config)
     exit(0)
 
     # TODO: properly implement switching between weighting and undersampling
     if args.weighting:
         RunWeighting(args, config)
         exit(0)
-    if args.undersampling:
-        RunUndersampling(args, config)
-    if args.scaling:
-        GetScaleDict(args, config)
-    if args.apply_scales:
-        ApplyScales(args, config)
-    if args.write:
-        WriteTrainSample(args, config)
+    # if args.undersampling:
+    #     RunUndersampling(args, config)
+    # if args.scaling:
+    #     GetScaleDict(args, config)
+    # if args.apply_scales:
+    #     ApplyScales(args, config)
+    # if args.write:
+    #     WriteTrainSample(args, config)

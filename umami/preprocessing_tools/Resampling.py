@@ -91,19 +91,22 @@ class Weighting2D(object):
         # Using the b-jet distribution as reference
         # print(self.bjets)
         print(stat_b)
-        bin_weights_u = np.divide(stat_u, stat_b)
+        # bin_weights_u = np.divide(stat_u, stat_b)
         bin_weights_c = np.divide(stat_c, stat_b)
-        bin_weights_b = np.ones(len(stat_b))
+        # bin_weights_b = np.ones(len(stat_b))
         print(bin_weights_c)
         # for elem, count in zip(ind_b, min_count_per_bin):
         #     np.random.seed(self.rnd_seed)
-        #     bjet_indices.append(np.random.choice(np.where(binnumbers_b == elem)
+        #     bjet_indices.append(np.random.choice(np.where(
+        #  binnumbers_b == elem)
         #                         [0], int(count), replace=False))
         #     np.random.seed(self.rnd_seed)
-        #     cjet_indices.append(np.random.choice(np.where(binnumbers_c == elem)
+        #     cjet_indices.append(np.random.choice(np.where(
+        # binnumbers_c == elem)
         #                         [0], int(count), replace=False))
         #     np.random.seed(self.rnd_seed)
-        #     ujet_indices.append(np.random.choice(np.where(binnumbers_u == elem)
+        #     ujet_indices.append(np.random.choice(np.where(
+        # binnumbers_u == elem)
         #                         [0], int(count), replace=False))
 
         # return np.sort(np.concatenate(bjet_indices)),\
