@@ -47,6 +47,9 @@ def GetBinaryLabels(df, column='label'):
     ndarray:    containing binary label with shape (len(df), n_classes)
     """
     lb = LabelBinarizer()
+    if type(df) is np.ndarray:
+        return lb.fit_transform(df)
+
     labels = np.array(df[column].compute().values)
     return lb.fit_transform(labels)
 

@@ -1,18 +1,13 @@
 import umami.preprocessing_tools as upt
 import h5py
 import numpy as np
-from numpy.lib.recfunctions import append_fields
+from numpy.lib.recfunctions import append_fields, structured_to_unstructured
+from numpy.lib.recfunctions import repack_fields
 import pandas as pd
 import argparse
 import yaml
 from umami.tools import yaml_loader
 import json
-import dask.array as da
-import dask.dataframe as dd
-import dask
-from dask.distributed import Client
-
-dask.config.set({'temporary_directory': '/tmp'})
 
 
 def GetParser():
@@ -167,7 +162,6 @@ def GetScaleDict(args, config):
     Calculates the scaling, shifting and default values and saves them to json.
     The calculation is done only on the first iteration.
     """
-    # TODO: switch to dask
     # TODO: find good way to get file names, breaks if no iterations
     input_file = config.GetFileName(iteration=1, option='downsampled')
     print(input_file)
@@ -242,7 +236,7 @@ def GetScaleDict(args, config):
 def ApplyScalesTrksNumpy(args, config, iteration=1):
     print("Track scaling")
     input_file = config.GetFileName(iteration=iteration, option='downsampled')
-    print(input_files)
+    print(input_file)
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
@@ -256,7 +250,7 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
     dsets.append(h5py.File(input_file, 'r')['/utrk'][:])
     arrays = [np.asarray(dset) for dset in dsets]
     print("concatenate all datasets")
-    trks = np.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
+    trks = np.concatenate(arrays, axis=0)
     print("concatenated")
 
     with open(config.dict_file, 'r') as infile:
@@ -333,64 +327,56 @@ def ApplyScales(args, config):
 def WriteTrainSample(args, config):
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
+    input_files = [config.GetFileName(
+        option='preprocessed', iteration=it) for it in range(
+            1, config.iterations + 1)]
 
-    # in_file = config.GetFileName(option='preprocessed')
-    # df = dd.read_hdf(in_file, '/jets')
-    # # df = dd.from_pandas(df.head(1000), npartitions=3)
-    # df_len = len(df)
+    size, ranges = upt.get_size(input_files)
+    out_file = config.GetFileName(option='preprocessed_shuffled')
+    print("Saving sample to", out_file)
+    with h5py.File(out_file, 'w') as output:
+        for i, file in enumerate(input_files):
+            print("Start processing file", i+1, "of", len(input_files))
+            with h5py.File(file, 'r') as in_file:
+                jets = in_file['/jets'][:]
+                labels = upt.GetBinaryLabels(jets[variable_config['label']])
+                np.random.seed(42)
+                np.random.shuffle(labels)
 
-    # print("Calculating binary labels.")
-    # labels = upt.GetBinaryLabels(df, variable_config['label'])
-    # np.random.seed(42)
-    # np.random.shuffle(labels)
+                weights = jets['weight']
+                np.random.seed(42)
+                np.random.shuffle(weights)
 
-    out_file = config.GetFileName(option='preprocessed_shuffled_test')
-    # print("Saving labels to", out_file)
-    # with h5py.File(out_file, 'w') as f:
-    #     f.create_dataset('/Y_train', data=labels, compression="gzip")
-    # del labels
+                jets = repack_fields(jets[variable_config[
+                    'train_variables'][:]])
+                jets = structured_to_unstructured(jets)
+                np.random.seed(42)
+                np.random.shuffle(jets)
 
-    # print("Shuffling sample")
-    # d_arr = upt.ShuffleDataFrame(df[variable_config['train_variables'][:]],
-    #                              df_len=df_len)
-    # print("Saving sample to", out_file)
-    # with h5py.File(out_file, 'a') as f:
-    #     d = f.require_dataset('/X_train', shape=d_arr.shape,
-    #                           dtype=d_arr.dtype)
-    #     da.store(d_arr, d, compression='lzf')
+                if i == 0:
+                    source = {"X_train": jets[:1], "Y_train": labels[:1],
+                              "weight": weights[:1]}
+                    if args.tracks:
+                        source["X_trk_train"] = in_file['/trks'][:1]
+                    upt.create_datasets(output, source, size)
 
-    # client = Client(n_workers=4, processes=False, memory_limit='8GB')
-    if args.tracks:
-        print("Scaling and saving tracks")
-        d_arr = ApplyScalesTrksDask(args, config)
-        print("Saving sample to", out_file)
-        # chunks = d_arr.chunks
-        # print(d_arr.chunks)
-        # with h5py.File(out_file, 'a') as f:
-        # d_arr = d_arr.compute()
-        # client.shutdown()
-        from dask.diagnostics import ProgressBar
-        with h5py.File(out_file, 'w') as f:
-            d = f.require_dataset('/X_trk_train', shape=d_arr.shape,
-                                  dtype=d_arr.dtype)
-            print("storing date... \n this will take a while ...")
-            with ProgressBar():
-                da.store(d_arr, d, compression='lzf')  # , memory_limit='55GB')
+                output["X_train"][ranges[file][0]:ranges[file][1]] = jets[:]
+                output["Y_train"][ranges[file][0]:ranges[file][1]] = labels[:]
+                output["weight"][ranges[file][0]:ranges[file][1]] = weights[:]
+
+                if args.tracks:
+                    print("adding tracks")
+                    trks = in_file['/trks'][:]
+                    np.random.seed(42)
+                    np.random.shuffle(trks)
+                    output["X_trk_train"][ranges[
+                        file][0]:ranges[file][1]] = trks
 
 
 if __name__ == '__main__':
     args = GetParser()
     config = upt.Configuration(args.config_file)
-    # TEST setup
-    # ApplyScalesTrksDask(args, config)
-    # print("test")
-    # ApplyScalesTrksNumpy(args, config)
-    # ApplyScalesNumpy(args, config, 1)
-    # exit(0)
 
-    # TODO: properly implement switching between weighting and undersampling
-    # if args.weighting:
-    #     RunWeighting(args, config)
     if args.undersampling:
         RunUndersampling(args, config)
     if args.scaling:
