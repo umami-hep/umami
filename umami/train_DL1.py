@@ -23,12 +23,9 @@ def GetParser():
                         help="Name of the training config file")
     parser.add_argument('-e', '--epochs', default=300, type=int, help="Number\
         of trainng epochs.")
-    parser.add_argument('-t', '--tracks', action='store_true',
-                        help="Stores also track information.")
     # TODO: implementng vr_overlap
     parser.add_argument('--vr_overlap', action='store_true', help='''Option to
                         enable vr overlap removall for validation sets.''')
-    # possible job options for the different preprocessing steps
     parser.add_argument('-p', '--performance_check', action='store_true',
                         help="Performs performance check - can be run during"
                         " training")
@@ -83,7 +80,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     model, batch_size = NN_model(train_config, (X_valid.shape[1],))
     reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.8, patience=3,
                                   verbose=1, mode='auto',
-                                  cooldown=5, min_lr=0.00001)
+                                  cooldown=5, min_lr=0.000001)
     # reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5,
     #                               min_lr=0.00001)
     my_callback = utt.MyCallback(model_name=train_config.model_name,
@@ -114,49 +111,12 @@ def TrainLargeFile(args, train_config, preprocess_config):
     print("Models saved:", train_config.model_name)
 
 
-def RunPerformanceCheck(train_config):
-    print("Running performance check.")
-    variables = ["HadronConeExclTruthLabelID", "DL1r_pb", "DL1r_pc", "DL1r_pu"]
-    df = pd.DataFrame(
-        h5py.File(train_config.validation_file, 'r')['/jets'][:][variables])
-    df.query('HadronConeExclTruthLabelID <= 5', inplace=True)
-    df.replace({'HadronConeExclTruthLabelID': {4: 1, 5: 2}}, inplace=True)
-    y_true = GetBinaryLabels(df['HadronConeExclTruthLabelID'].values)
-    c_rej, u_rej = utt.GetRejection(
-        df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
-        y_true)
-
-    dictfile = f"{train_config.model_name}/DictFile.json"
-    df_results = pd.read_json(dictfile)
-    plot_dir = f"{train_config.model_name}/plots"
-    print("saving plots to", plot_dir)
-    os.makedirs(plot_dir, exist_ok=True)
-    plot_name = f"{plot_dir}/rej-plot_val.pdf"
-    utt.PlotRejPerEpoch(df_results, plot_name, c_rej, u_rej,
-                        labels={"c_rej": r"c-rej. - $t\bar{t}$",
-                                "u_rej": r"l-rej. - $t\bar{t}$"})
-
-    if train_config.add_validation_file is not None:
-        plot_name = f"{plot_dir}/rej-plot_val_add.pdf"
-        utt.PlotRejPerEpoch(df_results, plot_name,  # c_rej, u_rej,
-                            rej_keys={"c_rej": "c_rej_add",
-                                      "u_rej": "u_rej_add"},
-                            labels={"c_rej": r"c-rej. - ext. $Z'$",
-                                    "u_rej": r"l-rej. - ext. $Z'$"})
-
-    plot_name = f"{plot_dir}/loss-plot.pdf"
-    utt.PlotLosses(df_results, plot_name)
-
-    plot_name = f"{plot_dir}/accuracy-plot.pdf"
-    utt.PlotAccuracies(df_results, plot_name)
-
-
 if __name__ == '__main__':
     args = GetParser()
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
 
     if args. performance_check:
-        RunPerformanceCheck(train_config)
+        utt.RunPerformanceCheck(train_config)
     else:
         TrainLargeFile(args, train_config, preprocess_config)

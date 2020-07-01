@@ -4,6 +4,8 @@ import h5py
 import yaml
 import numpy as np
 import pandas as pd
+from keras import backend as K
+from keras.layers import Layer
 from tensorflow.keras.callbacks import Callback
 from umami.tools import yaml_loader
 from umami.preprocessing_tools import GetBinaryLabels, Gen_default_dict
@@ -61,6 +63,7 @@ class MyCallback(Callback):
                                                 batch_size=5000)
         y_pred = self.model.predict(self.X_valid, batch_size=5000)
         c_rej, u_rej = GetRejection(y_pred, self.Y_valid)
+        print("c-rej:", c_rej, "u-rej:", u_rej)
         add_loss, add_acc, c_rej_add, u_rej_add = None, None, None, None
         if self.X_valid_add is not None:
             add_loss, add_acc = self.model.evaluate(self.X_valid_add,
@@ -118,3 +121,78 @@ def GetTestSample(input_file, var_dict, preprocess_config):
             jets[elem['name']] /= elem['scale']
 
     return jets.values, labels
+
+
+def GetTestSampleTrks(input_file, var_dict, preprocess_config):
+    """
+        Apply the scaling and shifting to dataset using numpy
+    """
+    print("Loading validation data tracks")
+    nJets = int(3e5)
+    with open(var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
+    labels = h5py.File(input_file, 'r')['/jets'][:nJets][
+        variable_config['label']]
+    indices_toremove = np.where(labels > 5)[0]
+    labels = np.delete(labels, indices_toremove, 0)
+
+    labels = GetBinaryLabels(labels)
+
+    noNormVars = variable_config["track_train_variables"]["noNormVars"]
+    logNormVars = variable_config["track_train_variables"]["logNormVars"]
+    jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
+    trkVars = noNormVars + logNormVars + jointNormVars
+
+    trks = np.asarray(h5py.File(input_file, 'r')['/tracks'][:nJets])
+    trks = np.delete(trks, indices_toremove, 0)
+
+    with open(preprocess_config.dict_file, 'r') as infile:
+        scale_dict = json.load(infile)['tracks']
+
+    var_arr_list = []
+    for var in trkVars:
+        if var in logNormVars:
+            x = np.log(trks[var])
+        else:
+            x = trks[var]
+        if var in logNormVars:
+            x -= scale_dict[var]["shift"]
+            x /= scale_dict[var]["scale"]
+        elif var in jointNormVars:
+            x = np.where(x == 0, x, x - scale_dict[var]["shift"])
+            x = np.where(x == 0, x, x / scale_dict[var]["scale"])
+        var_arr_list.append(np.nan_to_num(x))
+
+    return np.stack(var_arr_list, axis=-1), labels
+
+
+class Sum(Layer):
+    """
+    Simple sum layer.
+    The tricky bits are getting masking to work properly, but given
+    that time distributed dense layers _should_ compute masking on their
+    own.
+
+    Author: Dan Guest
+    https://github.com/dguest/flow-network/blob/master/SumLayer.py
+
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.supports_masking = True
+
+    def build(self, input_shape):
+        pass
+
+    def call(self, x, mask=None):
+        if mask is not None:
+            x = x * K.cast(mask, K.dtype(x))[:, :, None]
+        return K.sum(x, axis=1)
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0], input_shape[2]
+
+    def compute_mask(self, inputs, mask):
+        return None
+
