@@ -14,7 +14,7 @@ besides the CPU image, there is also a GPU image available which is especially u
 singularity exec --nv docker://gitlab-registry.cern.ch/mguth/umami/umami-gpu:latest bash
 ```
 
-### Manual installation
+### Environment setup
 
 you can check out this repository via `git clone` and then run
 ```python setupy.py install```

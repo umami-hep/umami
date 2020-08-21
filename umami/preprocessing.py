@@ -133,13 +133,13 @@ def RunUndersampling(args, config):
         out_file = config.GetFileName(x + 1, option="downsampled")
         print("saving file:", out_file)
         h5f = h5py.File(out_file, 'w')
-        h5f.create_dataset('bjets', data=bjets)
-        h5f.create_dataset('cjets', data=cjets)
-        h5f.create_dataset('ujets', data=ujets)
+        h5f.create_dataset('bjets', data=bjets, compression='gzip')
+        h5f.create_dataset('cjets', data=cjets, compression='gzip')
+        h5f.create_dataset('ujets', data=ujets, compression='gzip')
         if args.tracks:
-            h5f.create_dataset('btrk', data=btrk)
-            h5f.create_dataset('ctrk', data=ctrk)
-            h5f.create_dataset('utrk', data=utrk)
+            h5f.create_dataset('btrk', data=btrk, compression='gzip')
+            h5f.create_dataset('ctrk', data=ctrk, compression='gzip')
+            h5f.create_dataset('utrk', data=utrk, compression='gzip')
 
         h5f.close()
         # TODO: verify track handling
@@ -274,7 +274,8 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
     out_file = config.GetFileName(option='preprocessed', iteration=iteration)
     print("saving file:", out_file)
     with h5py.File(out_file, 'a') as h5file:
-        h5file.create_dataset('trks', data=d_arr)
+        h5file.create_dataset('trks', data=d_arr, compression='gzip')
+        # TODO: Add plotting
 
 
 def ApplyScalesNumpy(args, config, iteration=1):
@@ -283,7 +284,6 @@ def ApplyScalesNumpy(args, config, iteration=1):
     """
     input_file = config.GetFileName(iteration=iteration, option='downsampled')
 
-    jets = h5py.File(input_file, 'r')['/bjets'][:]
     jets = pd.DataFrame(
         np.concatenate([h5py.File(input_file, 'r')['/bjets'][:],
                         h5py.File(input_file, 'r')['/cjets'][:],
@@ -314,7 +314,9 @@ def ApplyScalesNumpy(args, config, iteration=1):
     out_file = config.GetFileName(option='preprocessed', iteration=iteration)
     print("Saving file:", out_file)
     with h5py.File(out_file, 'w') as h5file:
-        h5file.create_dataset('jets', data=jets.to_records(index=False))
+        h5file.create_dataset('jets', data=jets.to_records(index=False),
+                              compression='gzip')
+    # TODO: Add plotting
 
 
 def ApplyScales(args, config):

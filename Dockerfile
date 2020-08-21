@@ -9,14 +9,17 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
+COPY . /umami
+
 RUN apt-get update && \
     apt-get install -y git debconf-utils h5utils && \
     echo "krb5-config krb5-config/add_servers_realm string CERN.CH" | debconf-set-selections && \
     echo "krb5-config krb5-config/default_realm string CERN.CH" | debconf-set-selections && \
     apt-get install -y krb5-user && \
-    apt-get install -y vim emacs less screen graphviz python3-tk wget
+    apt-get install -y vim emacs less screen graphviz python3-tk wget && \
+    cd /umami && \
+    python setup.py install
 
-COPY . /umami
 WORKDIR /umami
 
 RUN python /umami/setup.py install 

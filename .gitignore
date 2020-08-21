@@ -4,6 +4,8 @@ __pycache__
 *.ipynb_checkpoints
 *.h5
 *.pdf
+*.png
+*.svg
 *.log
 doc/*
 .eggs/
