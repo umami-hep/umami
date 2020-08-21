@@ -53,11 +53,23 @@ build_img_cpu:
 
 build_img_tag_cpu:
   stage: image_build
-  image: gitlab-registry.cern.ch/ci-tools/docker-image-builder:no_kaniko
   variables:
     FROM: tensorflow/tensorflow:latest
     TAG: latest
     TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  tags:
+    - docker-image-build
+  script:
+    - ignore
+  only:
+    - tags
+
+build_img_tag_gpu:
+  stage: image_build
+  variables:
+    FROM: tensorflow/tensorflow:latest-gpu
+    TAG: latest
+    TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu
   tags:
     - docker-image-build
   script:
