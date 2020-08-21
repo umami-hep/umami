@@ -18,6 +18,7 @@ def GetRejection(y_pred, y_true, target_beff=0.77, cfrac=0.018):
     b_jets = y_pred[y_true == b_index]
     c_jets = y_pred[y_true == c_index]
     u_jets = y_pred[y_true == u_index]
+
     add_small = 1e-10
     bscores = np.log(
         (b_jets[:, b_index] + add_small) /
@@ -94,12 +95,83 @@ class MyCallback(Callback):
             self.log.close()
 
 
-def GetTestSample(input_file, var_dict, preprocess_config):
+class MyCallbackUmami(Callback):
+    def __init__(self, X_valid=0, Y_valid=0, log_file=None, verbose=False,
+                 model_name='test', X_valid_add=None, Y_valid_add=None,
+                 X_valid_trk=None):
+        self.X_valid = X_valid
+        self.X_valid_trk = X_valid_trk
+        self.Y_valid = Y_valid
+        self.X_valid_add = X_valid_add
+        self.Y_valid_add = Y_valid_add
+        self.result = []
+        self.log = open(log_file, 'w') if log_file else None
+        self.verbose = verbose
+        self.model_name = model_name
+        os.system("mkdir -p %s" % self.model_name)
+        self.dict_list = []
+
+    def on_epoch_end(self, epoch, logs=None):
+        self.model.save('%s/model_epoch%i.h5' % (self.model_name, epoch))
+        loss, dips_loss, umami_loss, dips_accuracy,\
+            umami_accuracy = self.model.evaluate([self.X_valid_trk,
+                                                  self.X_valid],
+                                                 self.Y_valid,
+                                                 batch_size=5000)
+        # loss: - dips_loss: - umami_loss: - dips_accuracy:  - umami_accuracy:
+        y_pred_dips, y_pred_umami = self.model.predict([self.X_valid_trk,
+                                                        self.X_valid],
+                                                       batch_size=5000)
+        c_rej_dips, u_rej_dips = GetRejection(y_pred_dips, self.Y_valid)
+        c_rej_umami, u_rej_umami = GetRejection(y_pred_umami, self.Y_valid)
+        print("Dips:", "c-rej:", c_rej_dips, "u-rej:", u_rej_dips)
+        print("Umami:", "c-rej:", c_rej_umami, "u-rej:", u_rej_umami)
+        # add_loss, add_acc, c_rej_add, u_rej_add = None, None, None, None
+        # if self.X_valid_add is not None:
+        #     add_loss, add_acc = self.model.evaluate(self.X_valid_add,
+        #                                             self.Y_valid_add,
+        #                                             batch_size=5000)
+        #     y_pred_add = self.model.predict(self.X_valid_add,
+        # batch_size=5000)
+        #     c_rej_add, u_rej_add = GetRejection(y_pred_add, self.Y_valid_add)
+        dict_epoch = {
+            "epoch": epoch,
+            "loss": logs['loss'],
+            "dips_loss": logs['dips_loss'],
+            "umami_loss": logs['umami_loss'],
+            "dips_acc": logs['dips_accuracy'],
+            "umami_acc": logs['umami_accuracy'],
+            "val_loss": loss,
+            "dips_val_loss": dips_loss,
+            "umami_val_loss": umami_loss,
+            "dips_val_acc": dips_accuracy,
+            "umami_val_acc": umami_accuracy,
+            "c_rej_dips": c_rej_dips,
+            "c_rej_umami": c_rej_umami,
+            "u_rej_dips": u_rej_dips,
+            "u_rej_umami": u_rej_umami
+            # "val_loss_add": add_loss if add_loss else None,
+            # "val_accuracy_add": add_acc if add_acc else None,
+            # "c_rej_add": c_rej_add if c_rej_add else None,
+            # "u_rej_add": u_rej_add if u_rej_add else None
+        }
+
+        self.dict_list.append(dict_epoch)
+        with open('%s/DictFile.json' % self.model_name, 'w') as outfile:
+            json.dump(self.dict_list, outfile, indent=4)
+
+    def on_train_end(self, logs=None):
+        if self.log:
+            self.log.close()
+
+
+def GetTestSample(input_file, var_dict, preprocess_config,
+                  nJets=int(3e5)):
     """
         Apply the scaling and shifting to dataset using numpy
     """
 
-    jets = pd.DataFrame(h5py.File(input_file, 'r')['/jets'][:])
+    jets = pd.DataFrame(h5py.File(input_file, 'r')['/jets'][:nJets])
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
     jets.query(f"{variable_config['label']} <= 5", inplace=True)
@@ -119,16 +191,15 @@ def GetTestSample(input_file, var_dict, preprocess_config):
         else:
             jets[elem['name']] -= elem['shift']
             jets[elem['name']] /= elem['scale']
-
     return jets.values, labels
 
 
-def GetTestSampleTrks(input_file, var_dict, preprocess_config):
+def GetTestSampleTrks(input_file, var_dict, preprocess_config,
+                      nJets=int(3e5)):
     """
         Apply the scaling and shifting to dataset using numpy
     """
     print("Loading validation data tracks")
-    nJets = int(3e5)
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
     labels = h5py.File(input_file, 'r')['/jets'][:nJets][
@@ -195,4 +266,3 @@ class Sum(Layer):
 
     def compute_mask(self, inputs, mask):
         return None
-
