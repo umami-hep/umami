@@ -1,6 +1,6 @@
 stages:
   - test
-  - build
+  - image_build
   - publish
 
 unittest:
@@ -19,7 +19,7 @@ linter:
     - flake8 ./umami
 
 build_img_gpu:
-  stage: build
+  stage: image_build
   variables:
     FROM: tensorflow/tensorflow:latest-gpu
     TAG: latest
@@ -35,7 +35,7 @@ build_img_gpu:
     - master
 
 build_img_cpu:
-  stage: build
+  stage: image_build
   variables:
     FROM: tensorflow/tensorflow:latest
     TAG: latest
@@ -49,6 +49,22 @@ build_img_cpu:
     - docker-image-build
   only:
     - master
+
+
+build_img_tag_cpu:
+  stage: image_build
+  image: gitlab-registry.cern.ch/ci-tools/docker-image-builder:no_kaniko
+  variables:
+    FROM: tensorflow/tensorflow:latest
+    TAG: latest
+    TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  tags:
+    - docker-image-build
+  script:
+    - ignore
+  only:
+    - tags
+
 
 
 push_to_hub_cpu:
