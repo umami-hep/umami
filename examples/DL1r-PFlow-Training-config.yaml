@@ -2,7 +2,9 @@ model_name: DL1r-PFlow_new-taggers-stats-22M
 preprocess_config: examples/PFlow-Preprocessing.yaml
 train_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled_test.h5
 validation_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-odd_1_PFlow-no_pTcuts-file_0.h5 
+test_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-odd_1_PFlow-no_pTcuts-file_1.h5 
 add_validation_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+add_test_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
 var_dict: umami/configs/DL1r_Variables.yaml
 NN_structure:  
     lr: 0.01
