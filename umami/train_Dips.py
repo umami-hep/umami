@@ -3,7 +3,6 @@ import argparse
 
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 
 from keras.layers import BatchNormalization, TimeDistributed, Dropout
 from keras.layers import Dense, Input, Masking
@@ -12,7 +11,6 @@ from keras.optimizers import Adam
 from keras import layers
 from keras import activations
 from tensorflow.keras.callbacks import ReduceLROnPlateau
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 import umami.train_tools as utt
 from umami.train_tools import Sum
@@ -155,7 +153,7 @@ def Dips(args, train_config, preprocess_config):
              epochs=nEpochs,
              #  validation_data=(X_valid, Y_valid),
              #  callbacks=[earlyStop, dips_mChkPt, reduce_lr],
-            #  callbacks=[reduce_lr],
+             #  callbacks=[reduce_lr],
              callbacks=[reduce_lr, my_callback],
              steps_per_epoch=len(Y_train) / batch_size,
              use_multiprocessing=True,
@@ -181,11 +179,6 @@ def Dips(args, train_config, preprocess_config):
     # plt.title('DIPS')
 
     # plt.savefig('dips/plots/dips-loss.pdf', transparent=True)
-
-
-
-
-
 
 
 if __name__ == '__main__':

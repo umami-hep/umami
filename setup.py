@@ -11,7 +11,8 @@ from setuptools import setup
 
 setup(name='umami',
       version='0.0.0',  # Also change in module
-      packages=["umami", "umami.tests"],
+      packages=["umami", "umami.tests", "umami.train_tools", "umami.tools",
+                "umami.preprocessing_tools"],
       install_requires=["h5py",
                         "numpy",
                         "matplotlib",

@@ -3,6 +3,9 @@ stages:
   - image_build
   - publish
 
+variables:
+  - GIT_SUBMODULE_STRATEGY: recursive
+
 unittest:
   stage: test
   image: python:3.7
