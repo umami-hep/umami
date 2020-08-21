@@ -5,13 +5,13 @@
 ### Docker image
 
 ```bash
-singularity exec docker://gitlab-registry.cern.ch/mguth/umami/umami:latest bash
+singularity exec docker://gitlab-registry.cern.ch/mguth/umami:latest bash
 ```
 
 besides the CPU image, there is also a GPU image available which is especially useful for the training step
 
 ```bash
-singularity exec --nv docker://gitlab-registry.cern.ch/mguth/umami/umami:latest-gpu bash
+singularity exec --nv docker://gitlab-registry.cern.ch/mguth/umami:latest-gpu bash
 ```
 
 ### Manual setup
@@ -23,15 +23,18 @@ python setupy.py install
 ```
 
 this will install the umami package
-if you want to modify the code you should install it via
+
+If you want to modify the code you should run instead
 
 ```bash
 python setupy.py develop
 ```
 
+which creates a symlink to the repository.
+
 ## Testing & Linter
 
-The unit test you can run via
+The unit test you can be run via
 
 ```bash
 pytest ./umami/tests/ -v
@@ -42,6 +45,11 @@ In order to run the code style checker `flake8` use the following command
 ```bash
 flake8 ./umami
 ```
+
+## DL1r instructions
+
+If you want to train or evaluate DL1r please follow the [DL1r-instructions](docs/DL1r-instructions.md).
+
 
 ## Preprocessing
 
@@ -115,4 +123,4 @@ Since the double b-jets represent only a fraction of the jets, they can be filte
 
 ## MC Samples
 
-The full list of MC samples are located under [docs/MC-Samples.md](https://gitlab.cern.ch/mguth/umami/-/blob/master/docs/MC-Samples.md).
+The full list of MC samples are located under [docs/MC-Samples.md](docs/MC-Samples.md).
