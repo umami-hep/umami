@@ -82,6 +82,46 @@ def PlotAccuracies(df_results, plot_name,):
     plt.clf()
 
 
+def PlotLossesUmami(df_results, plot_name,):
+    applyATLASstyle(mtp)
+    plt.plot(df_results['epoch'], df_results['umami_loss'],
+             label='training loss umami - downsampled hybrid sample')
+    plt.plot(df_results['epoch'], df_results['umami_val_loss'],
+             label='val loss umami - ttbar sample')
+    plt.plot(df_results['epoch'], df_results['dips_loss'],
+             label='training loss dips - downsampled hybrid sample')
+    plt.plot(df_results['epoch'], df_results['dips_val_loss'],
+             label='val loss dips - ttbar sample')
+    # plt.plot(df_results['epoch'], df_results['val_loss_add'],
+    #          label="validation loss - Z' sample")
+    plt.legend()
+    plt.xlabel('Epoch')
+    plt.ylabel('loss')
+    plt.savefig(plot_name, transparent=True)
+    plt.cla()
+    plt.clf()
+
+
+def PlotAccuraciesUmami(df_results, plot_name,):
+    applyATLASstyle(mtp)
+    plt.plot(df_results['epoch'], df_results['umami_acc'],
+             label='training acc umami - downsampled hybrid sample')
+    plt.plot(df_results['epoch'], df_results['umami_val_acc'],
+             label='val acc umami - ttbar sample')
+    plt.plot(df_results['epoch'], df_results['dips_acc'],
+             label='training acc dips - downsampled hybrid sample')
+    plt.plot(df_results['epoch'], df_results['dips_val_acc'],
+             label='val acc dips - ttbar sample')
+    # plt.plot(df_results['epoch'], df_results['val_accuracy_add'],
+    #          label="validation accuracy - Z' sample")
+    plt.legend()
+    plt.xlabel('Epoch')
+    plt.ylabel('loss')
+    plt.savefig(plot_name, transparent=True)
+    plt.cla()
+    plt.clf()
+
+
 def RunPerformanceCheck(train_config, compare_tagger=True,
                         tagger_comp_var=["DL1r_pu", "DL1r_pc", "DL1r_pb"],
                         comp_tagger_name='DL1r'):
@@ -124,3 +164,58 @@ def RunPerformanceCheck(train_config, compare_tagger=True,
 
     plot_name = f"{plot_dir}/accuracy-plot.pdf"
     PlotAccuracies(df_results, plot_name)
+
+
+def RunPerformanceCheckUmami(train_config, compare_tagger=True,
+                             tagger_comp_var=["DL1r_pu", "DL1r_pc", "DL1r_pb"],
+                             comp_tagger_name='DL1r'):
+    print("Running performance check.")
+    c_rej, u_rej = None, None
+    if compare_tagger:
+        variables = ["HadronConeExclTruthLabelID"]
+        variables += tagger_comp_var[:]
+        df = pd.DataFrame(
+            h5py.File(train_config.validation_file, 'r')['/jets'][:][
+                variables])
+        df.query('HadronConeExclTruthLabelID <= 5', inplace=True)
+        df.replace({'HadronConeExclTruthLabelID': {4: 1, 5: 2}}, inplace=True)
+        y_true = GetBinaryLabels(df['HadronConeExclTruthLabelID'].values)
+        c_rej, u_rej = GetRejection(
+            df[tagger_comp_var[:]].values,
+            y_true)
+
+    dictfile = f"{train_config.model_name}/DictFile.json"
+    df_results = pd.read_json(dictfile)
+    plot_dir = f"{train_config.model_name}/plots"
+    print("saving plots to", plot_dir)
+    os.makedirs(plot_dir, exist_ok=True)
+    if comp_tagger_name == "RNNIP":
+        plot_name = f"{plot_dir}/rej-plot_val_dips.pdf"
+        PlotRejPerEpoch(df_results, plot_name, c_rej, u_rej,
+                        labels={"c_rej": r"c-rej. - $t\bar{t}$",
+                                "u_rej": r"l-rej. - $t\bar{t}$"},
+                        rej_keys={"c_rej": "c_rej_dips",
+                                  "u_rej": "u_rej_dips"},
+                        comp_tagger_name=comp_tagger_name)
+    else:
+        plot_name = f"{plot_dir}/rej-plot_val_umami.pdf"
+        PlotRejPerEpoch(df_results, plot_name, c_rej, u_rej,
+                        labels={"c_rej": r"c-rej. - $t\bar{t}$",
+                                "u_rej": r"l-rej. - $t\bar{t}$"},
+                        rej_keys={"c_rej": "c_rej_umami",
+                                  "u_rej": "u_rej_umami"},
+                        comp_tagger_name=comp_tagger_name)
+
+    # if train_config.add_validation_file is not None:
+    #     plot_name = f"{plot_dir}/rej-plot_val_add.pdf"
+    #     PlotRejPerEpoch(df_results, plot_name,  # c_rej, u_rej,
+    #                     rej_keys={"c_rej": "c_rej_add",
+    #                               "u_rej": "u_rej_add"},
+    #                     labels={"c_rej": r"c-rej. - ext. $Z'$",
+    #                             "u_rej": r"l-rej. - ext. $Z'$"})
+
+    plot_name = f"{plot_dir}/loss-plot.pdf"
+    PlotLossesUmami(df_results, plot_name)
+
+    plot_name = f"{plot_dir}/accuracy-plot.pdf"
+    PlotAccuraciesUmami(df_results, plot_name)
