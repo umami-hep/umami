@@ -44,7 +44,7 @@ There are two different labeling available, the ```HadronConeExclTruthLabelID```
 | 44            | double c-jets   | 
 | 55            | double b-jets   | 
 
-For the ```HadronConeExclTruthLabelID``` labeling, the categories `4` and `44` as well as `5` and `55` are combined.
+For the ```HadronConeExclTruthLabelID``` labeling, the categories `4` and `44` as well as `5`, `54` and `55` are combined.
 
 ### Ntuple preparation for b-,c- & light-jets
 These jets are taken from ttbar and Z' events.
