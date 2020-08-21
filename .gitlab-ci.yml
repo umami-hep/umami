@@ -75,7 +75,8 @@ build_img_tag_gpu:
 
 push_to_hub_cpu:
   stage: publish
-  image: matthewfeickert/skopeo-docker:latest
+  # require: build
+  image: matthewfeickert/skopeo-docker:skopeo0.1.42
   variables:
     USER: btagging
     IMAGE: umami
@@ -91,7 +92,8 @@ push_to_hub_cpu:
 
 push_to_hub_gpu:
   stage: publish
-  image: matthewfeickert/skopeo-docker:latest
+  # require: build
+  image: matthewfeickert/skopeo-docker:skopeo0.1.42
   variables:
     USER: btagging
     IMAGE: umami
