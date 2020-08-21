@@ -22,10 +22,7 @@ build_img_gpu:
   stage: image_build
   variables:
     FROM: tensorflow/tensorflow:latest-gpu
-    TAG: latest
-    IMAGE_NAME: umami-gpu
-    CI_REGISTRY: gitlab-registry.cern.ch
-    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/${IMAGE_NAME}:${TAG}'
+    TO: $CI_REGISTRY_IMAGE:latest-gpu
   script:
     # The script gets overwritten in jobs tagged docker-image-build
     - ignore
@@ -38,10 +35,7 @@ build_img_cpu:
   stage: image_build
   variables:
     FROM: tensorflow/tensorflow:latest
-    TAG: latest
-    IMAGE_NAME: umami-cpu
-    CI_REGISTRY: gitlab-registry.cern.ch
-    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/${IMAGE_NAME}:${TAG}'
+    TO: $CI_REGISTRY_IMAGE:latest
   script:
     # The script gets overwritten in jobs tagged docker-image-build
     - ignore
@@ -85,13 +79,12 @@ push_to_hub_cpu:
   image: matthewfeickert/skopeo-docker:skopeo0.1.42
   variables:
     USER: btagging
-    IMAGE: umami-cpu
+    IMAGE: umami
   script:
-    # Tag the images with their respective alias tags
     - /home/docker/skopeo copy
       --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
       --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
-      docker://${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${IMAGE}:latest
+      docker://$CI_REGISTRY_IMAGE:latest
       docker://${USER}/${IMAGE}:latest
   only:
     - master
@@ -103,13 +96,42 @@ push_to_hub_gpu:
   image: matthewfeickert/skopeo-docker:skopeo0.1.42
   variables:
     USER: btagging
-    IMAGE: umami-gpu
+    IMAGE: umami
   script:
-    # Tag the images with their respective alias tags
     - /home/docker/skopeo copy
       --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
       --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
-      docker://${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}/${IMAGE}:latest
-      docker://${USER}/${IMAGE}:latest
+      docker://$CI_REGISTRY_IMAGE:latest-gpu
+      docker://${USER}/${IMAGE}:latest-gpu
   only:
     - master
+
+push_to_hub_tag:
+  stage: publish
+  image: matthewfeickert/skopeo-docker:latest
+  variables:
+    USER: btagging
+    IMAGE: umami
+  script:
+    - /home/docker/skopeo copy
+      --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
+      --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
+      docker://$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+      docker://${USER}/${IMAGE}:$CI_COMMIT_REF_SLUG
+  only:
+    - tags
+
+push_to_hub_gpu_tag:
+  stage: publish
+  image: matthewfeickert/skopeo-docker:latest
+  variables:
+    USER: btagging
+    IMAGE: umami
+  script:
+    - /home/docker/skopeo copy
+      --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
+      --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
+      docker://$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu
+      docker://${USER}/${IMAGE}:$CI_COMMIT_REF_SLUG-gpu
+  only:
+    - tags
