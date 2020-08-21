@@ -1,14 +1,13 @@
 import h5py
 import argparse
 import os
-import pandas as pd
 import tensorflow as tf
 from keras.layers import BatchNormalization
 from keras.optimizers import Adam
 from keras.models import Model
 from keras.layers import Dense, Activation, Input, Dropout
 from tensorflow.keras.callbacks import ReduceLROnPlateau
-from umami.preprocessing_tools import Configuration, GetBinaryLabels
+from umami.preprocessing_tools import Configuration
 import umami.train_tools as utt
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 
