@@ -36,9 +36,9 @@ def plotROCRatio(teffs, beffs, labels, title='', text='',
     '''
     # set ylabel
     if ylabel == "light":
-        ylabel = 'Light-Flavour Jet Rejection ($1/\epsilon_{l}$)'  # noqa
+        ylabel = r'Light-Flavour Jet Rejection ($1/\epsilon_{l}$)'
     elif ylabel == "c":
-        ylabel = '$c$-Jet Rejection ($1/\epsilon_{c}$)'  # noqa
+        ylabel = r'$c$-Jet Rejection ($1/\epsilon_{c}$)'
 
     # The points that I'm going to c.f. the ratio over
 #     xx = np.linspace(0.6,1,101)

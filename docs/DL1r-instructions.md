@@ -110,4 +110,16 @@ this will write out plots for the light- and c-rejection per epoch.
 
 ## Performance Evaluation
 
-Finally we can evaluate our model. These script are in very work in progress state.
+Finally we can evaluate our model. These scripts are in very work in progress state.
+
+You first need to choose which epoch you want to use for the evaluation (easiest by looking at the performance plots vs. epochs) and then run
+
+```bash
+python umami/evaluate_model.py -c examples/DL1r-PFlow-Training-config.yaml -e 230 --dl1
+```
+ 
+Next you need to adapt the plotting config file [comparison_dl1.yaml](examples/comparison_dl1.yaml) providing the epoch and model name. The plots can then be retrieved running the following command
+
+```bash
+python umami/plotting-DL1.py -c examples/comparison_dl1.yaml 
+```
