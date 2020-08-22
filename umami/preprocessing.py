@@ -18,7 +18,7 @@ def GetParser():
     parser.add_argument('-c', '--config_file', type=str,
                         required=True,
                         help="Enter the name of the config file to create the"
-                        "hybrid sample.")
+                        " hybrid sample.")
     parser.add_argument('-t', '--tracks', action='store_true',
                         help="Stores also track information.")
     parser.add_argument('-v', '--var_dict', required=True, default=None,
@@ -36,7 +36,7 @@ def GetParser():
                         help="Apllies scaling and shifting factors.")
     action.add_argument('-w', '--write', action='store_true',
                         help="Shuffles sample and writes training sample and"
-                             "training labels to disk")
+                             " training labels to disk")
     args = parser.parse_args()
     return args
 
