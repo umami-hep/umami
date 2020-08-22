@@ -1,0 +1,81 @@
+label: HadronConeExclTruthLabelID
+train_variables:
+  - absEta_btagJes
+  - pt_btagJes
+  - JetFitter_mass
+  - JetFitter_isDefaults
+  - JetFitter_energyFraction
+  - JetFitter_significance3d
+  - JetFitter_nVTX
+  - JetFitter_nSingleTracks
+  - JetFitter_nTracksAtVtx
+  - JetFitter_N2Tpair
+  - JetFitter_deltaR
+  - SV1_NGTinSvx
+  - SV1_masssvx
+  - SV1_isDefaults
+  - SV1_N2Tpair
+  - SV1_efracsvx
+  - SV1_deltaR
+  - SV1_Lxy
+  - SV1_L3d
+  - SV1_significance3d
+  - IP2D_bu
+  - IP2D_isDefaults
+  - IP2D_bc
+  - IP2D_cu
+  - IP3D_bu
+  - IP3D_isDefaults
+  - IP3D_bc
+  - IP3D_cu
+  - JetFitterSecondaryVertex_nTracks
+  - JetFitterSecondaryVertex_isDefaults
+  - JetFitterSecondaryVertex_mass
+  - JetFitterSecondaryVertex_energy
+  - JetFitterSecondaryVertex_energyFraction
+  - JetFitterSecondaryVertex_displacement3d
+  - JetFitterSecondaryVertex_displacement2d
+  - JetFitterSecondaryVertex_maximumTrackRelativeEta
+  - JetFitterSecondaryVertex_minimumTrackRelativeEta
+  - JetFitterSecondaryVertex_averageTrackRelativeEta
+  - maximumTrackRelativeEta
+  - minimumTrackRelativeEta
+  - averageTrackRelativeEta
+
+  # useful variables which might want to be kept but being used for training
+spectator_variables:
+  - DL1r_pb
+  - DL1r_pu
+
+custom_defaults_vars:
+  JetFitter_energyFraction: 0
+  JetFitter_significance3d: 0
+  JetFitter_nVTX: -1
+  JetFitter_nSingleTracks: -1
+  JetFitter_nTracksAtVtx: -1
+  JetFitter_N2Tpair: -1
+  SV1_N2Tpair: -1
+  SV1_NGTinSvx: -1
+  SV1_efracsvx: 0
+  JetFitterSecondaryVertex_nTracks: 0
+  JetFitterSecondaryVertex_energyFraction: 0
+
+track_train_variables:
+  noNormVars: 
+    - IP3D_signed_d0_significance
+    - IP3D_signed_z0_significance
+    - numberOfInnermostPixelLayerHits
+    - numberOfNextToInnermostPixelLayerHits
+    - numberOfInnermostPixelLayerSharedHits
+    - numberOfInnermostPixelLayerSplitHits
+    - numberOfPixelSharedHits
+    - numberOfPixelSplitHits
+    - numberOfSCTSharedHits
+    - btagIp_d0
+    - btagIp_z0SinTheta
+    logNormVars:
+    - ptfrac
+    - dr
+  jointNormVars:
+    - numberOfPixelHits
+    - numberOfSCTHits
