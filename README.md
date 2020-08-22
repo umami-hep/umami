@@ -55,7 +55,7 @@ If you want to train or evaluate DL1r please follow the [DL1r-instructions](docs
 
 For the training of umami the ntuples are used as specified in the section [MC Samples](#mc-samples).
 
-Training ntuples are produced using the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) which dumps them directly into hdf5 files. The finished ntuples are also listed in the table in the section [MC Samples](#mc-samples).
+Training ntuples are produced using the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) which dumps them directly into hdf5 files. The finished ntuples are also listed in the table in the file [MC-Samples.md](docs/MC-Samples.md).
 
 There are two different labeling available, the `HadronConeExclTruthLabelID` and the `HadronConeExclExtendedTruthLabelID` which includes extended jet categories:
 
@@ -120,7 +120,3 @@ The above script will output several files per sample which can be merged using 
 The double b-jets will be taken from Znunu and Zmumu samples.
 
 Since the double b-jets represent only a fraction of the jets, they can be filtered out using the [`merge_ntuples.py`](https://gitlab.cern.ch/mguth/hdf5_manipulator/blob/master/merge_ntuples.py) script from the [hdf5-manipulator](https://gitlab.cern.ch/mguth/hdf5_manipulator).
-
-## MC Samples
-
-The full list of MC samples are located under [docs/MC-Samples.md](docs/MC-Samples.md).
