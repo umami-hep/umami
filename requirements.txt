@@ -26,4 +26,3 @@ partd
 mlxtend
 zarr
 graphviz
-nnfwtbn
