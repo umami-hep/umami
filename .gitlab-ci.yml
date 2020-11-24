@@ -21,7 +21,7 @@ linter:
 build_img_gpu:
   stage: image_build
   variables:
-    FROM: tensorflow/tensorflow:latest-gpu
+    FROM: tensorflow/tensorflow:2.1.2-gpu
     TO: $CI_REGISTRY_IMAGE:latest-gpu
   script:
     # The script gets overwritten in jobs tagged docker-image-build
@@ -34,7 +34,7 @@ build_img_gpu:
 build_img_cpu:
   stage: image_build
   variables:
-    FROM: tensorflow/tensorflow:latest
+    FROM: tensorflow/tensorflow:2.1.2
     TO: $CI_REGISTRY_IMAGE:latest
   script:
     # The script gets overwritten in jobs tagged docker-image-build
