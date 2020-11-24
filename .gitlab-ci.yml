@@ -3,6 +3,9 @@ stages:
   - image_build
   - publish
 
+variables:
+  TFTAG: 2.3.0
+
 unittest:
   stage: test
   image: python:3.7
@@ -21,7 +24,7 @@ linter:
 build_img_gpu:
   stage: image_build
   variables:
-    FROM: tensorflow/tensorflow:2.1.2-gpu
+    FROM: tensorflow/tensorflow:$TFTAG-gpu
     TO: $CI_REGISTRY_IMAGE:latest-gpu
   script:
     # The script gets overwritten in jobs tagged docker-image-build
@@ -34,7 +37,7 @@ build_img_gpu:
 build_img_cpu:
   stage: image_build
   variables:
-    FROM: tensorflow/tensorflow:2.1.2
+    FROM: tensorflow/tensorflow:$TFTAG
     TO: $CI_REGISTRY_IMAGE:latest
   script:
     # The script gets overwritten in jobs tagged docker-image-build
@@ -48,7 +51,7 @@ build_img_cpu:
 build_img_tag_cpu:
   stage: image_build
   variables:
-    FROM: tensorflow/tensorflow:latest
+    FROM: tensorflow/tensorflow:$TFTAG
     TAG: latest
     TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   tags:
@@ -61,7 +64,7 @@ build_img_tag_cpu:
 build_img_tag_gpu:
   stage: image_build
   variables:
-    FROM: tensorflow/tensorflow:latest-gpu
+    FROM: tensorflow/tensorflow:$TFTAG-gpu
     TAG: latest
     TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu
   tags:
