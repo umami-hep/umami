@@ -5,13 +5,13 @@
 ### Docker image
 
 ```bash
-singularity exec docker://gitlab-registry.cern.ch/mguth/umami:latest bash
+singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami:latest bash
 ```
 
 besides the CPU image, there is also a GPU image available which is especially useful for the training step
 
 ```bash
-singularity exec --nv docker://gitlab-registry.cern.ch/mguth/umami:latest-gpu bash
+singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami:latest-gpu bash
 ```
 
 ### Manual setup
