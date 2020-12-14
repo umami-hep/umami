@@ -71,11 +71,11 @@ track_train_variables:
     - numberOfPixelSharedHits
     - numberOfPixelSplitHits
     - numberOfSCTSharedHits
-    - btagIp_d0
-    - btagIp_z0SinTheta
-    logNormVars:
+  logNormVars:
     - ptfrac
     - dr
   jointNormVars:
     - numberOfPixelHits
     - numberOfSCTHits
+    - btagIp_d0
+    - btagIp_z0SinTheta

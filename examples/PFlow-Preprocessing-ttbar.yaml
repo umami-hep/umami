@@ -60,7 +60,3 @@ Cuts:
     operator: <
     condition: 600
     NaNcheck: True
-  softMuon_momentumBalanceSignificance:
-    operator: <
-    condition: 4000
-    NaNcheck: True

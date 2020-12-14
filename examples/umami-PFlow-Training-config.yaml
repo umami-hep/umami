@@ -1,0 +1,18 @@
+model_name: umami_model_default
+preprocess_config: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/examples/PFlow-Preprocessing-DESY.yaml
+train_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
+validation_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid_odd_1_PFlow-no_pTcuts-file_0.h5
+test_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid_odd_1_PFlow-no_pTcuts-file_1.h5
+add_validation_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+add_test_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+var_dict: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/umami/configs/Umami_Variables.yaml
+NN_structure:  
+    lr: 0.01
+    batch_size: 15000
+    # DIPS structure
+    DIPS_ppm_units: [100, 100, 128]
+    DIPS_dense_units: [100, 100, 100, 30]
+    # These are the layers that will be concatenated with the last layer of DIPS_dense_uits
+    intermediate_units: [72]
+    # DL1 structure
+    DL1_units: [57, 60, 48, 36, 24, 12, 6]

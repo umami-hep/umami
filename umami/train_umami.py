@@ -61,19 +61,14 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
     dropout = 0
     nClasses = 3
 
-    batch_size = 2560
-    # batch_size = 15600
-    # batch_size = 65600
-
-    ppm_sizes_int = [100, 100, 128]
-    dense_sizes_int = [100, 100, 100, 30]
+    NN_structure = train_config.NN_structure
 
     trk_inputs = Input(shape=input_shape)
 
     masked_inputs = Masking(mask_value=0)(trk_inputs)
     tdd = masked_inputs
 
-    for i, phi_nodes in enumerate(ppm_sizes_int):
+    for i, phi_nodes in enumerate(NN_structure["DIPS_ppm_units"]):
         tdd = TimeDistributed(Dense(phi_nodes, activation='linear'),
                               name=f"Phi{i}_Dense")(tdd)
         if batch_norm:
@@ -88,8 +83,12 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
     # This is where the magic happens... sum up the track features!
     F = Sum(name="Sum")(tdd)
 
-    for j, (F_nodes, p) in enumerate(zip(dense_sizes_int, [dropout] *
-                                         len(dense_sizes_int[:-1])+[0])):
+    for j, (F_nodes, p) in enumerate(
+        zip(
+            NN_structure["DIPS_dense_units"],
+            [dropout] * len(NN_structure["DIPS_dense_units"][:-1]) + [0],
+        )
+    ):
 
         F = Dense(F_nodes, activation='linear', name=f"F{j}_Dense")(F)
         if batch_norm:
@@ -102,20 +101,20 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
 
     # Input layer
     jet_inputs = Input(shape=(njet_features,))
-    # number of nodes in the different hidden layers
-    l_units = [57, 60, 48, 36, 24, 12, 6]
 
-    # adding a firt Dense layer for DL1
-    x = Dense(units=72, activation="linear",
-              kernel_initializer='glorot_uniform')(jet_inputs)
-    x = BatchNormalization()(x)
-    x = layers.Activation('relu')(x)
+    # adding the intermediate dense layers for DL1
+    x = jet_inputs
+    for unit in NN_structure["intermediate_units"]:
+        x = Dense(units=unit, activation="linear",
+                  kernel_initializer='glorot_uniform')(x)
+        x = BatchNormalization()(x)
+        x = layers.Activation('relu')(x)
 
     # Concatenate the inputs
     x = layers.concatenate([F, x])
 
     # loop to initialise the hidden layers
-    for unit in l_units:
+    for unit in NN_structure["DL1_units"]:
         x = Dense(units=unit, activation="linear",
                   kernel_initializer='glorot_uniform')(x)
         x = BatchNormalization()(x)
@@ -128,7 +127,7 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
                   outputs=[dips_output, jet_output])
     umami.summary()
 
-    model_optimizer = Adam(lr=0.01)
+    model_optimizer = Adam(lr=NN_structure["lr"])
     umami.compile(
         loss='categorical_crossentropy',
         optimizer=model_optimizer,
@@ -136,7 +135,7 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
     )
 
     # dips.summary()
-    return umami, batch_size
+    return umami, NN_structure["batch_size"]
 
 
 def Umami(args, train_config, preprocess_config):
@@ -149,23 +148,20 @@ def Umami(args, train_config, preprocess_config):
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config)
-    print("length")
-    print(np.shape(X_valid))
-    X_valid = X_valid[:, :41]
-    print(np.shape(X_valid))
 
     assert np.equal(Y_valid, Y_valid_trk).all()
 
     file = h5py.File(train_config.train_file, 'r')
-    Ntrain = 6000000
-    # Ntrain = 60000
-    X_trk_train = file['X_trk_train'][:Ntrain]
-    X_train = file['X_train'][:Ntrain, :41]
-    Y_train = file['Y_train'][:Ntrain]
+    X_trk_train = file['X_trk_train']
+    X_train = file['X_train']
+    Y_train = file['Y_train']
     nJets, nTrks, nFeatures = X_trk_train.shape
     nJets, nDim = Y_train.shape
     njet_features = X_train.shape[1]
-    umami, batch_size = Umami_model(input_shape=(nTrks, nFeatures),
+    print(f"nJets: {nJets}, nTrks: {nTrks}")
+    print(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
+    umami, batch_size = Umami_model(train_config=train_config,
+                                    input_shape=(nTrks, nFeatures),
                                     njet_features=njet_features)
 
     train_dataset = tf.data.Dataset.from_generator(
@@ -183,7 +179,7 @@ def Umami(args, train_config, preprocess_config):
                                   verbose=1, mode='auto',
                                   cooldown=5, min_lr=0.000001)
     my_callback = utt.MyCallbackUmami(
-        model_name="umami_model",
+        model_name=train_config.model_name,
         X_valid=X_valid,
         X_valid_trk=X_valid_trk,
         Y_valid=Y_valid

@@ -15,3 +15,5 @@ examples/*.sh
 build/*
 dist/*
 plots/*
+env/*
+.vscode/*
