@@ -107,7 +107,7 @@ deploying_docs:
   script:
     - deploy-eos
   only:
-    - master@atlas-flavor-tagging-tools/algorithms/Umami
+    - master@atlas-flavor-tagging-tools/algorithms/umami
 
 
 push_to_hub_cpu:
@@ -124,7 +124,7 @@ push_to_hub_cpu:
       docker://$CI_REGISTRY_IMAGE:latest
       docker://${USER}/${IMAGE}:latest
   only:
-    - master
+    - master@atlas-flavor-tagging-tools/algorithms/umami
 
 
 push_to_hub_gpu:
@@ -141,7 +141,7 @@ push_to_hub_gpu:
       docker://$CI_REGISTRY_IMAGE:latest-gpu
       docker://${USER}/${IMAGE}:latest-gpu
   only:
-    - master
+    - master@atlas-flavor-tagging-tools/algorithms/umami
 
 push_to_hub_tag:
   stage: publish
@@ -156,7 +156,7 @@ push_to_hub_tag:
       docker://$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
       docker://${USER}/${IMAGE}:$CI_COMMIT_REF_SLUG
   only:
-    - tags
+    - tags@atlas-flavor-tagging-tools/algorithms/umami
 
 push_to_hub_gpu_tag:
   stage: publish
@@ -171,4 +171,4 @@ push_to_hub_gpu_tag:
       docker://$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu
       docker://${USER}/${IMAGE}:$CI_COMMIT_REF_SLUG-gpu
   only:
-    - tags
+    - tags@atlas-flavor-tagging-tools/algorithms/umami
