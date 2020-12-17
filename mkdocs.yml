@@ -1,0 +1,33 @@
+site_name: Umami documentation
+site_description: Documentation for Umami
+site_author: Umami team
+site_url: https://umami-docs.web.cern.ch
+
+repo_name: GitLab
+repo_url: https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami
+edit_uri: 'tree/master/docs'
+
+theme:
+    name: material
+    palette:
+        scheme: preference
+        primary: indigo
+        accent: indigo
+    font:
+        text: Roboto
+        code: Roboto Mono
+    logo:
+        icon: 'science'
+
+nav:
+    - Home: index.md
+    - Installation: installation.md
+    - Development: development.md
+    - MC samples: mc-samples.md
+    - Preprocessing: preprocessing.md
+    - Running DL1r: DL1r-instructions.md
+    - Running Dips: Dips-instructions.md
+    - Running Umami: Umami-instructions.md
+
+plugins:
+    - search

@@ -27,7 +27,7 @@ def GetParser():
                         required=True,
                         help="Name of the training config file")
     parser.add_argument('-e', '--epochs', default=300, type=int, help="Number\
-        of trainng epochs.")
+        of training epochs.")
     # TODO: implementng vr_overlap
     parser.add_argument('--vr_overlap', action='store_true', help='''Option to
                         enable vr overlap removall for validation sets.''')
