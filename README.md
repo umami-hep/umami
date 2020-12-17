@@ -1,5 +1,7 @@
 # Umami
 
+[![Umami docs](https://img.shields.io/badge/info-documentation-informational)]((https://umami-docs.web.cern.ch/umami-docs/))
+
 ## Installation
 
 ### Docker image
