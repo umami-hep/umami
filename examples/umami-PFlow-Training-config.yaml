@@ -1,4 +1,4 @@
-model_name: umami_model_default
+model_name: umami_dev
 preprocess_config: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/examples/PFlow-Preprocessing-DESY.yaml
 train_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
 validation_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid_odd_1_PFlow-no_pTcuts-file_0.h5
@@ -16,3 +16,5 @@ NN_structure:
     intermediate_units: [72]
     # DL1 structure
     DL1_units: [57, 60, 48, 36, 24, 12, 6]
+    # total loss = loss(umami) + dips_loss_weight * loss(dips)
+    dips_loss_weight: 1
