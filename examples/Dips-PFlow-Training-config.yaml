@@ -14,14 +14,14 @@ test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-e
 add_test_file: None
 
 # Path to Variable dicts used in preprocessing
-var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/packages/umami/umami/configs/Dips_Variables.yaml
+var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
 
 # Values for the neural network
 NN_structure:
     # NN Training parameters
     lr: 0.01
     batch_size: 15000
-    epochs: 50
+    epochs: 10
 
     # Dropout rate. If = 0, dropout is disabled
     dropout: 0
