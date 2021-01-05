@@ -1,12 +1,16 @@
 model_name: dips
-preprocess_config: examples/PFlow-Preprocessing.yaml
-train_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled_test.h5
-validation_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-odd_1_PFlow-no_pTcuts-file_0.h5 
-add_validation_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
-var_dict: umami/configs/DL1r_Variables.yaml
+preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/configs/PFlow-Preprocessing.yaml
+train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
+validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
+add_validation_file: None
+test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
+add_test_file: None
+var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/configs/DL1r_Variables.yaml
 NN_structure:  
     lr: 0.01
+    # DIPS structure
+    ppm_sizes: [100, 100, 128]
+    dense_sizes: [100, 100, 100, 30]
     batch_size: 15000
-    activations: ["relu", "relu", "relu", "relu", "relu", "relu", "relu", "relu"]
-    units: [256, 128, 60, 48, 36, 24, 12, 6] 
+    epochs: 50
 

@@ -1,13 +1,12 @@
 parameters:
   # file path
-  file_path: &file_path /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids
+  file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids
 # amount of b-jets which are used
 # njets: 1e5
 njets: 5.5e6
 # fraction of ttbar jets wrt. Z'
 ttbar_frac: 0.65
 # outputfiles are split into 5
-# iterations: 1
 iterations: 5
 # pT cut for hybrid creation (for light and c-jets)
 pTcut: 2.5e5
@@ -27,12 +26,11 @@ f_tt_cjets:
 f_tt_ujets:
   path: *file_path
   file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-# outfile_name: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-22M.h5
-outfile_name: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-test.h5
+outfile_name: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid_70-test.h5
 plot_name: PFlow_ext-hybrid
 
 # Dictfile for the scaling and shifting (json)
-dict_file: "examples/PFlow-scale_dict-22M.json"
+dict_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/scale_dicts/PFlow-scale_dict-22M.json"
 
 
 # cut definitions to be applied to remove outliers
@@ -61,4 +59,8 @@ Cuts:
   softMuon_scatteringNeighbourSignificance:
     operator: <
     condition: 600
+    NaNcheck: True
+  softMuon_momentumBalanceSignificance:
+    operator: <
+    condition: 4000
     NaNcheck: True
