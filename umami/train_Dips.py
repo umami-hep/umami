@@ -54,17 +54,22 @@ class generator:
 
 
 def Dips_model(train_config=None, input_shape=None):
-    batch_norm = True
-    dropout = 0
-    nClasses = 3
-
+    # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
 
+    # Set NN options
+    batch_norm = NN_structure["Batch_Normalisation"]
+    dropout = NN_structure["dropout"]
+    nClasses = NN_structure["nClasses"]
+
+    # Set the track input
     trk_inputs = Input(shape=input_shape)
 
+    # Masking the missing tracks
     masked_inputs = Masking(mask_value=0)(trk_inputs)
     tdd = masked_inputs
 
+    # Define the TimeDistributed layers for the different tracks
     for i, phi_nodes in enumerate(NN_structure["ppm_sizes"]):
 
         tdd = TimeDistributed(Dense(phi_nodes, activation='linear'),
@@ -81,6 +86,7 @@ def Dips_model(train_config=None, input_shape=None):
     # This is where the magic happens... sum up the track features!
     F = Sum(name="Sum")(tdd)
 
+    # Define the main dips structure
     for j, (F_nodes, p) in enumerate(
         zip(
             NN_structure["dense_sizes"],
@@ -95,10 +101,12 @@ def Dips_model(train_config=None, input_shape=None):
             F = Dropout(rate=p, name=f"F{j}_Dropout")(F)
         F = layers.Activation(activations.relu, name=f"F{j}_ReLU")(F)
 
+    # Set output and activation function
     output = Dense(nClasses, activation='softmax', name="Jet_class")(F)
     dips = Model(inputs=trk_inputs, outputs=output)
 
     # dips.summary()
+    # Set optimier and loss
     model_optimizer = Adam(lr=NN_structure["lr"])
     dips.compile(
         loss='categorical_crossentropy',
@@ -109,22 +117,27 @@ def Dips_model(train_config=None, input_shape=None):
 
 
 def Dips(args, train_config, preprocess_config):
+    # Laod the tracks
     X_valid, Y_valid = utt.GetTestSampleTrks(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config)
+        preprocess_config=preprocess_config
+    )
 
+    # Define X- and Y Train and set shapes
     file = h5py.File(train_config.train_file, 'r')
     X_train = file['X_trk_train']
     Y_train = file['Y_train']
     nJets, nTrks, nFeatures = X_train.shape
     nJets, nDim = Y_train.shape
 
+    # Init dips model
     dips, batch_size, epochs = Dips_model(
         train_config=train_config,
         input_shape=(nTrks, nFeatures)
     )
 
+    # Get training set from generator
     train_dataset = tf.data.Dataset.from_generator(
         generator(X_train, Y_train, batch_size),
         (tf.float32, tf.float32),
@@ -132,16 +145,20 @@ def Dips(args, train_config, preprocess_config):
          tf.TensorShape([None, nDim]))
     ).repeat()
 
+    # Check if epochs is set via argparser or not
     if args.epochs is None:
         nEpochs = epochs
 
+    # If not, use epochs from config file
     else:
         nEpochs = args.epochs
 
+    # Set EarlyStopping as callback
     earlyStop = EarlyStopping(
         monitor='val_loss', verbose=True, patience=10
     )
 
+    # Set ModelCheckpoint as callback
     dips_mChkPt = ModelCheckpoint(
         'dips/dips_model_{epoch:02d}.h5',
         monitor='val_loss',
@@ -151,6 +168,7 @@ def Dips(args, train_config, preprocess_config):
         save_weights_only=False
     )
 
+    # Set ReduceLROnPlateau as callback
     reduce_lr = ReduceLROnPlateau(
         monitor='loss', factor=0.8,
         patience=3,
@@ -158,11 +176,13 @@ def Dips(args, train_config, preprocess_config):
         cooldown=5, min_lr=0.000001
     )
 
+    # Set my_callback as callback. Writes history infromation
+    # to json file
     my_callback = utt.MyCallback(
         model_name=train_config.model_name,
         X_valid=X_valid,
         Y_valid=Y_valid
-        )
+    )
 
     print("Start training")
 
