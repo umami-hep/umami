@@ -8,6 +8,7 @@ from keras.layers import BatchNormalization, TimeDistributed, Dropout
 from keras.layers import Dense, Input, Masking
 from keras.models import Model
 from keras.optimizers import Adam
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras import layers
 from keras import activations
 from tensorflow.keras.callbacks import ReduceLROnPlateau
@@ -15,7 +16,6 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau
 import umami.train_tools as utt
 from umami.train_tools import Sum
 from umami.preprocessing_tools import Configuration
-import pickle as pkl
 # from plottingFunctions import sigBkgEff
 
 
@@ -66,7 +66,7 @@ def Dips_model(train_config=None, input_shape=None):
     tdd = masked_inputs
 
     for i, phi_nodes in enumerate(NN_structure["ppm_sizes"]):
-    
+
         tdd = TimeDistributed(Dense(phi_nodes, activation='linear'),
                               name=f"Phi{i}_Dense")(tdd)
         if batch_norm:
@@ -115,7 +115,6 @@ def Dips(args, train_config, preprocess_config):
         preprocess_config=preprocess_config)
 
     file = h5py.File(train_config.train_file, 'r')
-    Ntrain = 6000000
     X_train = file['X_trk_train']
     Y_train = file['Y_train']
     nJets, nTrks, nFeatures = X_train.shape
@@ -167,7 +166,7 @@ def Dips(args, train_config, preprocess_config):
 
     print("Start training")
 
-    dips_hist = dips.fit(
+    dips.fit(
         train_dataset,
         epochs=nEpochs,
         validation_data=(X_valid, Y_valid),
