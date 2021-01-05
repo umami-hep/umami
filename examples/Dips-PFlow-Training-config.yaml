@@ -1,16 +1,39 @@
+# Set modelname and path to Pflow preprocessing config file
 model_name: dips
 preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
+
+# Add training file
 train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
+
+# Add validation files
 validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
 add_validation_file: None
+
+# Add test files
 test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
 add_test_file: None
+
+# Path to Variable dicts used in preprocessing
 var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/packages/umami/umami/configs/Dips_Variables.yaml
-NN_structure:  
+
+# Values for the neural network
+NN_structure:
+    # NN Training parameters
     lr: 0.01
-    # DIPS structure
-    ppm_sizes: [100, 100, 128]
-    dense_sizes: [100, 100, 100, 30]
     batch_size: 15000
     epochs: 50
 
+    # Dropout rate. If = 0, dropout is disabled
+    dropout: 0
+
+    # Number of output classes
+    nClasses: 3
+
+    # Decide if Batch Normalisation is used
+    Batch_Normalisation: True
+
+    # Structure of the dense layers for each track
+    ppm_sizes: [100, 100, 128]
+
+    # Structure of the dense layers after summing up the track outputs
+    dense_sizes: [100, 100, 100, 30]
