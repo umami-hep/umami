@@ -15,6 +15,7 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau
 import umami.train_tools as utt
 from umami.train_tools import Sum
 from umami.preprocessing_tools import Configuration
+import pickle as pkl
 # from plottingFunctions import sigBkgEff
 
 
@@ -26,7 +27,7 @@ def GetParser():
     parser.add_argument('-c', '--config_file', type=str,
                         required=True,
                         help="Name of the training config file")
-    parser.add_argument('-e', '--epochs', default=300, type=int, help="Number\
+    parser.add_argument('-e', '--epochs', type=int, help="Number\
         of trainng epochs.")
     # TODO: implementng vr_overlap
     parser.add_argument('--vr_overlap', action='store_true', help='''Option to
@@ -57,20 +58,15 @@ def Dips_model(train_config=None, input_shape=None):
     dropout = 0
     nClasses = 3
 
-    batch_size = 256
-    # batch_size = 15600
-    # batch_size = 65600
-
-    ppm_sizes_int = [100, 100, 128]
-    dense_sizes_int = [100, 100, 100]
+    NN_structure = train_config.NN_structure
 
     trk_inputs = Input(shape=input_shape)
 
     masked_inputs = Masking(mask_value=0)(trk_inputs)
     tdd = masked_inputs
 
-    for i, phi_nodes in enumerate(ppm_sizes_int):
-
+    for i, phi_nodes in enumerate(NN_structure["ppm_sizes"]):
+    
         tdd = TimeDistributed(Dense(phi_nodes, activation='linear'),
                               name=f"Phi{i}_Dense")(tdd)
         if batch_norm:
@@ -85,8 +81,12 @@ def Dips_model(train_config=None, input_shape=None):
     # This is where the magic happens... sum up the track features!
     F = Sum(name="Sum")(tdd)
 
-    for j, (F_nodes, p) in enumerate(zip(dense_sizes_int, [dropout] *
-                                         len(dense_sizes_int[:-1])+[0])):
+    for j, (F_nodes, p) in enumerate(
+        zip(
+            NN_structure["dense_sizes"],
+            [dropout] * len(NN_structure["dense_sizes"][:-1]) + [0],
+        )
+    ):
 
         F = Dense(F_nodes, activation='linear', name=f"F{j}_Dense")(F)
         if batch_norm:
@@ -99,11 +99,13 @@ def Dips_model(train_config=None, input_shape=None):
     dips = Model(inputs=trk_inputs, outputs=output)
 
     # dips.summary()
-    model_optimizer = Adam(lr=0.01)
-    dips.compile(loss='categorical_crossentropy', optimizer=model_optimizer,
-                 #  optimizer='adam',
-                 metrics=['accuracy'])
-    return dips, batch_size
+    model_optimizer = Adam(lr=NN_structure["lr"])
+    dips.compile(
+        loss='categorical_crossentropy',
+        optimizer=model_optimizer,
+        metrics=['accuracy']
+    )
+    return dips, NN_structure["batch_size"], NN_structure["epochs"]
 
 
 def Dips(args, train_config, preprocess_config):
@@ -114,13 +116,15 @@ def Dips(args, train_config, preprocess_config):
 
     file = h5py.File(train_config.train_file, 'r')
     Ntrain = 6000000
-    # Ntrain = 600000
-    X_train = file['X_trk_train'][:Ntrain]
-    Y_train = file['Y_train'][:Ntrain]
+    X_train = file['X_trk_train']
+    Y_train = file['Y_train']
     nJets, nTrks, nFeatures = X_train.shape
     nJets, nDim = Y_train.shape
 
-    dips, batch_size = Dips_model(input_shape=(nTrks, nFeatures))
+    dips, batch_size, epochs = Dips_model(
+        train_config=train_config,
+        input_shape=(nTrks, nFeatures)
+    )
 
     train_dataset = tf.data.Dataset.from_generator(
         generator(X_train, Y_train, batch_size),
@@ -129,45 +133,51 @@ def Dips(args, train_config, preprocess_config):
          tf.TensorShape([None, nDim]))
     ).repeat()
 
-    nEpochs = args.epochs
+    if args.epochs is None:
+        nEpochs = epochs
 
-    # earlyStop = EarlyStopping(monitor='val_loss', verbose=True, patience=10)
+    else:
+        nEpochs = args.epochs
 
-    # dips_mChkPt = ModelCheckpoint('dips/dips_model_{epoch:02d}.h5',
-    #                               monitor='val_loss',
-    #                               verbose=True,
-    #                               save_best_only=False,
-    #                               validation_batch_size=15000,
-    #                               save_weights_only=False)
-    reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.8, patience=3,
-                                  verbose=1, mode='auto',
-                                  cooldown=5, min_lr=0.000001)
+    earlyStop = EarlyStopping(
+        monitor='val_loss', verbose=True, patience=10
+    )
+
+    dips_mChkPt = ModelCheckpoint(
+        'dips/dips_model_{epoch:02d}.h5',
+        monitor='val_loss',
+        verbose=True,
+        save_best_only=False,
+        validation_batch_size=batch_size,
+        save_weights_only=False
+    )
+
+    reduce_lr = ReduceLROnPlateau(
+        monitor='loss', factor=0.8,
+        patience=3,
+        verbose=1, mode='auto',
+        cooldown=5, min_lr=0.000001
+    )
+
     my_callback = utt.MyCallback(
-        model_name="dips",
+        model_name=train_config.model_name,
         X_valid=X_valid,
         Y_valid=Y_valid
         )
 
     print("Start training")
-    dips.fit(train_dataset,
-             epochs=nEpochs,
-             #  validation_data=(X_valid, Y_valid),
-             #  callbacks=[earlyStop, dips_mChkPt, reduce_lr],
-             #  callbacks=[reduce_lr],
-             callbacks=[reduce_lr, my_callback],
-             steps_per_epoch=len(Y_train) / batch_size,
-             use_multiprocessing=True,
-             workers=8
-             )
-# dips_hist = dips.fit(train_dataset,
-    #                      epochs=nEpochs,
-    #                     #  validation_data=(X_valid, Y_valid),
-    #                      #  callbacks=[earlyStop, dips_mChkPt, reduce_lr],
-    #                      callbacks=[reduce_lr, my_callback],
-    #                      steps_per_epoch=len(Y_train) / batch_size,
-    #                      use_multiprocessing=True,
-    #                      workers=8
-    #                      )
+
+    dips_hist = dips.fit(
+        train_dataset,
+        epochs=nEpochs,
+        validation_data=(X_valid, Y_valid),
+        callbacks=[earlyStop, dips_mChkPt, reduce_lr, my_callback],
+        # callbacks=[reduce_lr, my_callback],
+        # callbacks=[reduce_lr],
+        steps_per_epoch=len(Y_train) / batch_size,
+        use_multiprocessing=True,
+        workers=8
+    )
 
     # epochs = np.arange(1, len(dips_hist.history['loss'])+1)
 
@@ -185,7 +195,7 @@ if __name__ == '__main__':
     args = GetParser()
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
-    if args. performance_check:
+    if args.performance_check:
         utt.RunPerformanceCheck(train_config, compare_tagger=True,
                                 tagger_comp_var=["rnnip_pu", "rnnip_pc",
                                                  "rnnip_pb"],
