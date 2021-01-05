@@ -1,11 +1,11 @@
 model_name: dips
-preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/configs/PFlow-Preprocessing.yaml
+preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
 train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
 validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
 add_validation_file: None
 test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
 add_test_file: None
-var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/configs/DL1r_Variables.yaml
+var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/packages/umami/umami/configs/Dips_Variables.yaml
 NN_structure:  
     lr: 0.01
     # DIPS structure
