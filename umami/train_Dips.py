@@ -198,18 +198,6 @@ def Dips(args, train_config, preprocess_config):
         workers=8
     )
 
-    # epochs = np.arange(1, len(dips_hist.history['loss'])+1)
-
-    # plt.plot(epochs, dips_hist.history['loss'], label='training')
-    # # plt.plot(epochs, dips_hist.history['val_loss'], label='validation')
-    # plt.xlabel('epochs', fontsize=14)
-    # plt.ylabel('cross-entropy loss', fontsize=14)
-    # plt.legend()
-    # plt.title('DIPS')
-
-    # plt.savefig('dips/plots/dips-loss.pdf', transparent=True)
-
-
 if __name__ == '__main__':
     args = GetParser()
     train_config = utt.Configuration(args.config_file)
