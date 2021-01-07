@@ -65,27 +65,28 @@ The configurations for the preprocessing are defined in the config file [PFlow-P
 1. Running the undersampling
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --undersampling
+preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml --undersampling
 ```
 
 2. Retrieving scaling and shifting factors
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --scaling
+preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml --scaling
 ```
 
 3. Applying shifting and scaling factors
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --apply_scales
+preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml --apply_scales
 ```
 
 4. Shuffling the samples and writing the samples to disk
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --write
+preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml --write
 ```
 
+With the `-t` option, the track informations are saved and `-v` is used to give the yaml file with the used variables to the program.
 The training Variables for DIPS are defined in [Dips_Variables.yaml](configs/Dips_Variables.yaml).
 
 If you don't want to process them all you can use the already processed samples uploaded to rucio in the dataset `user.mguth:user.mguth.dl1r.trainsamples`.
