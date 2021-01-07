@@ -198,6 +198,7 @@ def Dips(args, train_config, preprocess_config):
         workers=8
     )
 
+
 if __name__ == '__main__':
     args = GetParser()
     train_config = utt.Configuration(args.config_file)
