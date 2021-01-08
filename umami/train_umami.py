@@ -132,25 +132,28 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
         loss='categorical_crossentropy',
         loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
         optimizer=model_optimizer,
-        metrics=['accuracy']
+        metrics=['accuracy'],
     )
 
-    # dips.summary()
     return umami, NN_structure["batch_size"]
 
 
 def Umami(args, train_config, preprocess_config):
-    X_valid_trk, Y_valid_trk = utt.GetTestSampleTrks(
-        input_file=train_config.validation_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config)
-
-    X_valid, Y_valid = utt.GetTestSample(
-        input_file=train_config.validation_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config)
-
-    assert np.equal(Y_valid, Y_valid_trk).all()
+    X_valid, X_valid_trk, Y_valid = utt.GetTestFile(
+        train_config.validation_file,
+        train_config.var_dict,
+        preprocess_config,
+        nJets=int(3e5),
+    )
+    X_valid_add, Y_valid_add, X_valid_trk_add = None, None, None
+    if train_config.add_validation_file is not None:
+        X_valid_add, X_valid_trk_add, Y_valid_add = utt.GetTestFile(
+            train_config.add_validation_file,
+            train_config.var_dict,
+            preprocess_config,
+            nJets=int(3e5),
+        )
+        assert X_valid.shape[1] == X_valid_add.shape[1]
 
     file = h5py.File(train_config.train_file, 'r')
     X_trk_train = file['X_trk_train']
@@ -183,44 +186,30 @@ def Umami(args, train_config, preprocess_config):
         model_name=train_config.model_name,
         X_valid=X_valid,
         X_valid_trk=X_valid_trk,
-        Y_valid=Y_valid
+        Y_valid=Y_valid,
+        X_valid_add=X_valid_add,
+        X_valid_trk_add=X_valid_trk_add,
+        Y_valid_add=Y_valid_add,
     )
 
+    # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
     print("Start training")
     umami.fit(train_dataset,
               epochs=nEpochs,
-              #  validation_data=(X_valid, Y_valid),
-              #  callbacks=[earlyStop, dips_mChkPt, reduce_lr],
-              #  callbacks=[reduce_lr],
               callbacks=[reduce_lr, my_callback],
               steps_per_epoch=len(Y_train) / batch_size,
               use_multiprocessing=True,
-              workers=8
+              workers=8,
               )
-# dips_hist = dips.fit(train_dataset,
-    #                      epochs=nEpochs,
-    #                     #  validation_data=(X_valid, Y_valid),
-    #                      #  callbacks=[earlyStop, dips_mChkPt, reduce_lr],
-    #                      callbacks=[reduce_lr, my_callback],
-    #                      steps_per_epoch=len(Y_train) / batch_size,
-    #                      use_multiprocessing=True,
-    #                      workers=8
-    #                      )
-
-    # epochs = np.arange(1, len(dips_hist.history['loss'])+1)
-
-    # plt.plot(epochs, dips_hist.history['loss'], label='training')
-    # # plt.plot(epochs, dips_hist.history['val_loss'], label='validation')
-    # plt.xlabel('epochs', fontsize=14)
-    # plt.ylabel('cross-entropy loss', fontsize=14)
-    # plt.legend()
-    # plt.title('DIPS')
-
-    # plt.savefig('dips/plots/dips-loss.pdf', transparent=True)
 
 
 if __name__ == '__main__':
     args = GetParser()
+
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
     if args.performance_check:
