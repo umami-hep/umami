@@ -6,12 +6,12 @@ preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/pack
 train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
 
 # Add validation files
-validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
-add_validation_file: None
+validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
 
 # Add test files
-test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
-add_test_file: None
+test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+add_test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
 
 # Path to Variable dicts used in preprocessing
 var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
