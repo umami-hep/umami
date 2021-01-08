@@ -1,3 +1,4 @@
+from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 from scipy.interpolate import pchip
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
@@ -125,13 +126,13 @@ def plotROCRatio(teffs, beffs, labels, title='', text='',
                              color=color, alpha=0.5, zorder=1)
 
     # Add axes, titels and the legend
-    ax2.set_xlabel('$b$-efficiency', fontsize=12, horizontalalignment='right',
+    ax2.set_xlabel('$b$-jet efficiency',
+                   fontsize=12,
+                   horizontalalignment='right',
                    x=1.0)
     ax1.set_ylabel(ylabel, fontsize=12, horizontalalignment='right', y=1.0)
     ax1.set_yscale('log')
     ax2.set_ylabel(rlabel, labelpad=labelpad, fontsize=12)
-    ax1.text(xmin, ymax, text, horizontalalignment='left',
-             verticalalignment='bottom')
     ax1.set_title(title)
     ax2.grid()
     ax1.grid()
@@ -152,6 +153,7 @@ def plotROCRatio(teffs, beffs, labels, title='', text='',
     ax1.legend(handles=custom_lines, loc='best', fontsize=legFontSize,
                ncol=legcols)  # , title="DL1r")
 
+    makeATLAStag(ax1, fig, "Internal Simulation", text)
     # plt.tight_layout()
     if len(tag) != 0:
         plt.savefig('{}/{}/rocRatio_{}.pdf'.format(figDir, subDir, tag),

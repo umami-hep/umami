@@ -12,8 +12,8 @@ def applyATLASstyle(mtp):
 
     import matplotlib.font_manager as font_manager
     font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
-    font_list = font_manager.createFontList(font_files)
-    font_manager.fontManager.ttflist.extend(font_list)
+    for f in font_files:
+        font_manager.FontManager.addfont(font_manager.fontManager, path=f)
     # mtp.rcParams['font.family'] = 'Arial'
     # mtp.rcParams['font.family'] = 'TeX Gyre Heros'
     mtp.rcParams['font.size'] = 10
@@ -45,7 +45,7 @@ def applyATLASstyle(mtp):
     # mtp.rcParams['mathtext.cal'] = 'TeX Gyre Heros:italic'
     # mtp.rcParams['mathtext.tt'] = 'TeX Gyre Heros'
     mtp.rcParams['axes.unicode_minus'] = False
-    mtp.rcParams['pdf.fonttype'] = 42
+    mtp.rcParams['pdf.fonttype'] = 3
     # mtp.rcParams["axes.axisbelow"] = False
 
 
