@@ -97,16 +97,22 @@ After all the files are ready we can start with the training. The config file fo
 
 It contains the information about the neural network architecture and the training as well as about the files for training, validation and testing.
 
-To run the training, use the following command
+Before starting the training, you need to set some paths for the umami package to find all the tools. Change to the umami dir and run the `setup.py`.
+
+```bash
+python setup.py install
+```
+
+After that, you can switch to the folder `umami/umami` and run the training, using the following command
 
 ```bash
 train_Dips.py -c examples/Dips-PFlow-Training-config.yaml
 ```
 
-You can check the performance of your model during the training via
+The results after each epoch will be saved to the `umami/umami/dips/` folder. If you want instant performance checks of the model after each epoch during the training, you can use
 
 ```bash
 train_Dips.py -c examples/Dips-PFlow-Training-config.yaml -p
 ```
 
-this will write out plots for the light- and c-rejection per epoch.
+which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/dips/plots/`.
