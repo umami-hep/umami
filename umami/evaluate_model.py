@@ -167,7 +167,7 @@ def EvaluateModelDips(
 ):
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     print("Evaluating", model_file)
-    X_test, X_test_trk, Y_test = utt.GetTestFile(
+    _, X_test_trk, Y_test = utt.GetTestFile(
         test_file, train_config.var_dict, preprocess_config, nJets=args.nJets
     )
     with CustomObjectScope({"Sum": Sum}):
