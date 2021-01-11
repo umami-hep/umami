@@ -27,7 +27,7 @@ setup(name='umami',
       test_suite='umami.tests',
       scripts=["umami/preprocessing.py",
                "umami/train_DL1.py", "umami/train_Dips.py",
-               "umami/train_umami.py"],
+               "umami/train_umami.py", "umami/evaluate_model.py"],
       description='Machine learning based flavour tagging training framework.',
       url="https://gitlab.cern.ch/mguth/umami"
       )
