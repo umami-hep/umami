@@ -117,12 +117,25 @@ def Dips_model(train_config=None, input_shape=None):
 
 
 def Dips(args, train_config, preprocess_config):
-    # Laod the tracks
+    # Load the validation tracks
     X_valid, Y_valid = utt.GetTestSampleTrks(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config
     )
+
+    # Load the extra validation tracks if defined.
+    # If not, set it to none
+    if train_config.add_validation_file is not None:
+        X_valid_add, Y_valid_add = utt.GetTestSampleTrks(
+            input_file=train_config.add_validation_file,
+            var_dict=train_config.var_dict,
+            preprocess_config=preprocess_config
+        )
+
+    else:
+        X_valid_add = None
+        Y_valid_add = None
 
     # Define X- and Y Train and set shapes
     file = h5py.File(train_config.train_file, 'r')
@@ -176,12 +189,14 @@ def Dips(args, train_config, preprocess_config):
         cooldown=5, min_lr=0.000001
     )
 
-    # Set my_callback as callback. Writes history infromation
-    # to json file
+    # Set my_callback as callback. Writes history information
+    # to json file.
     my_callback = utt.MyCallback(
         model_name=train_config.model_name,
         X_valid=X_valid,
-        Y_valid=Y_valid
+        Y_valid=Y_valid,
+        X_valid_add=X_valid_add,
+        Y_valid_add=Y_valid_add
     )
 
     print("Start training")
