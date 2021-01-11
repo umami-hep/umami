@@ -116,3 +116,19 @@ train_Dips.py -c examples/Dips-PFlow-Training-config.yaml -p
 ```
 
 which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/dips/plots/`.
+
+## Evaluating the results
+
+After the training is over, the different epochs can be evaluated with ROC plots and confusion matrices using the build-in scripts. Before plotting these, the model needs to be evaluated using the `umami/evaluate_model.py`. 
+
+```bash
+evaluate_model.py -c examples/Dips-PFlow-Training-config.yaml -e 5 --dips
+```
+
+The 5 gives the epoch which is to evaluate. It will produce .h5 files with the evaluations. After, the `umami/plotting_umami.py` script can be used to plot the results. To do this, use the following command.
+
+```bash
+plotting_umami.py -c examples/plotting_umami_config_dips.yaml -o dips_eval_plots
+```
+
+The `-o` option defines the name of the output directory. It will be added to the model folder where also the results are saved. The config file used here is a special plotting config which defines which plots will be generated and how they are labeled.
