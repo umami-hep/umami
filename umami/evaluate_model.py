@@ -373,7 +373,7 @@ if __name__ == "__main__":
         )
 
         if train_config.add_test_file is not None:
-            EvaluateModelDL1(
+            EvaluateModelDips(
                 args,
                 train_config,
                 preprocess_config,
