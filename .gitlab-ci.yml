@@ -5,7 +5,7 @@ stages:
   - publish
 
 variables:
-  TFTAG: 2.3.0
+  TFTAG: 2.4.0
 
 unittest:
   stage: test
