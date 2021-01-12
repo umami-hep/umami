@@ -120,7 +120,7 @@ You first need to choose which epoch you want to use for the evaluation (easiest
 python umami/evaluate_model.py -c examples/DL1r-PFlow-Training-config.yaml -e 230 --dl1
 ```
 
-Next you need to adapt the plotting config file [plotting_umami_config_DL1r.yaml](examples/plotting_umami_config_DL1r.yaml) providing the epoch and model name. The plots can then be retrieved running the following command
+Next you need to adapt the plotting config file [plotting_umami_config_DL1r.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_umami_config_DL1r.yaml) providing the epoch and model name. The plots can then be retrieved running the following command
 
 ```bash
 python umami/plotting_umami.py -c examples/plotting_umami_config_DL1r.yaml
