@@ -41,9 +41,6 @@ train_variables:
   - maximumTrackRelativeEta
   - minimumTrackRelativeEta
   - averageTrackRelativeEta
-  - rnnip_pb
-  - rnnip_pc
-  - rnnip_pu
 
   # useful variables which might want to be kept but being used for training
 spectator_variables:
