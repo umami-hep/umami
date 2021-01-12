@@ -143,7 +143,7 @@ def Dips(args, train_config, preprocess_config):
         Y_valid_add = None
 
     # Load the training file
-    print(f"Load training data tracks")
+    print("Load training data tracks")
     file = h5py.File(train_config.train_file, 'r')
     X_train = file['X_trk_train']
     Y_train = file['Y_train']
