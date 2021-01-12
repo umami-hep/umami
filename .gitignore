@@ -14,7 +14,7 @@ examples/*.json
 examples/*.sh
 build/*
 dist/*
-dips/*
+umami/dips/*
 plots/*
 env/*
 .vscode/*
