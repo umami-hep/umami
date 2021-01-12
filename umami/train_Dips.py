@@ -117,11 +117,15 @@ def Dips_model(train_config=None, input_shape=None):
 
 
 def Dips(args, train_config, preprocess_config):
+    # Load NN Structure and training parameter from file
+    NN_structure = train_config.NN_structure
+
     # Load the validation tracks
     X_valid, Y_valid = utt.GetTestSampleTrks(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config
+        preprocess_config=preprocess_config,
+        nJets=int(NN_structure["nJets_val"])
     )
 
     # Load the extra validation tracks if defined.
@@ -130,19 +134,30 @@ def Dips(args, train_config, preprocess_config):
         X_valid_add, Y_valid_add = utt.GetTestSampleTrks(
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
-            preprocess_config=preprocess_config
+            preprocess_config=preprocess_config,
+            nJets=int(NN_structure["nJets_val"])
         )
 
     else:
         X_valid_add = None
         Y_valid_add = None
 
-    # Define X- and Y Train and set shapes
+    # Load the training file
+    print(f"Load training data tracks")
     file = h5py.File(train_config.train_file, 'r')
     X_train = file['X_trk_train']
     Y_train = file['Y_train']
+
+    # Use the number of jets set in the config file for training
+    X_train = X_train[:int(NN_structure["nJets_train"])]
+    Y_train = Y_train[:int(NN_structure["nJets_train"])]
+
+    # Get the shapes for training
     nJets, nTrks, nFeatures = X_train.shape
     nJets, nDim = Y_train.shape
+
+    # Print how much jets are used
+    print(f"Number of Jets used for training: {nJets}")
 
     # Init dips model
     dips, batch_size, epochs = Dips_model(

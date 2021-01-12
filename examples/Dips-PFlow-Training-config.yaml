@@ -22,6 +22,8 @@ NN_structure:
     lr: 0.01
     batch_size: 15000
     epochs: 10
+    nJets_train: 6e6
+    nJets_val: 3e5
 
     # Dropout rate. If = 0, dropout is disabled
     dropout: 0
