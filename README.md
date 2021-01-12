@@ -18,7 +18,7 @@ singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tool
 
 ### Manual setup
 
-ALternatively you can also check out this repository via `git clone` and then run
+Alternatively you can also check out this repository via `git clone` and then run
 
 ```bash
 python setupy.py install
