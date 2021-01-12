@@ -2,7 +2,7 @@ parameters:
   # Path where the preprocessed files should be saved
   file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids
 
-# Number of jets that are used
+# Amount of b-jets which are used
 njets: 5.5e6
 
 # Fraction of ttbar jets wrt. Z'
