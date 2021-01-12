@@ -58,9 +58,9 @@ The above script will output several files per sample, to not run into memory is
 
 ## Preprocessing
 
-After the preparation of the samples, the next step is the processing for the training itself which is done with the script [preprocessing.py](../preprocessing.py).
+After the preparation of the samples, the next step is the processing for the training itself which is done with the script [preprocessing.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py).
 
-The configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](../examples/PFlow-Preprocessing.yaml), you need to adapt it to your needs especially the `file_path`. To run the Proprocessing for the ttbar-only files, just change to ```PFlow-Preprocessing-ttbar.yaml```.
+The configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml), you need to adapt it to your needs especially the `file_path`. To run the Proprocessing for the ttbar-only files, just change to `PFlow-Preprocessing-ttbar.yaml`.
 
 1. Running the undersampling
 
@@ -87,7 +87,7 @@ preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml 
 ```
 
 With the `-t` option, the track informations are saved and `-v` is used to give the yaml file with the used variables to the program.
-The training Variables for DIPS are defined in [Dips_Variables.yaml](configs/Dips_Variables.yaml).
+The training Variables for DIPS are defined in [Dips_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/Dips_Variables.yaml).
 
 If you don't want to process them all you can use the already processed samples uploaded to rucio in the dataset `user.mguth:user.mguth.dl1r.trainsamples`.
 
