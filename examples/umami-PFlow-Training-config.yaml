@@ -8,7 +8,7 @@ add_test_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16
 var_dict: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/umami/configs/Umami_Variables.yaml
 NN_structure:  
     lr: 0.01
-    batch_size: 15000
+    batch_size: 5000
     # DIPS structure
     DIPS_ppm_units: [100, 100, 128]
     DIPS_dense_units: [100, 100, 100, 30]

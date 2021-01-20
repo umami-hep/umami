@@ -1,15 +1,17 @@
+#!/usr/bin/env python
+
 import h5py
 import argparse
 
-import numpy as np
 import tensorflow as tf
 
 from keras.layers import BatchNormalization, TimeDistributed, Dropout
 from keras.layers import Dense, Input, Masking
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.optimizers import Adam
 from keras import layers
 from keras import activations
+from keras.utils import CustomObjectScope
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 
 import umami.train_tools as utt
@@ -39,20 +41,44 @@ def GetParser():
 
 
 class generator:
+
+    # How many jets should be loaded into memory
+    chunk_size = 1e6
+
     def __init__(self, X, X_trk, Y, batch_size):
         self.x = X
         self.x_trk = X_trk
         self.y = Y
         self.batch_size = batch_size
+        self.n_jets = len(self.y)
+        self.length = int(self.n_jets/self.batch_size)
+        self.step_size = self.batch_size * int(generator.chunk_size
+                                               / self.batch_size)
+
+    def load_in_memory(self, part=0):
+        print("\nloading in memory", part+1, "/",
+              1+self.n_jets//self.step_size)
+        self.x_in_mem = self.x[self.step_size*part:self.step_size*(part+1)]
+        self.x_trk_in_mem = self.x_trk[self.step_size*part:
+                                       self.step_size*(part+1)]
+        self.y_in_mem = self.y[self.step_size*part:self.step_size*(part+1)]
 
     def __call__(self):
-        length = int(np.ceil(len(self.x) / float(self.batch_size)))
-        for idx in range(length):
-            batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
-            batch_x_trk = self.x_trk[idx * self.batch_size:(idx + 1) *
-                                     self.batch_size]
-            batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
-            # yield (batch_x, batch_x_trk, batch_y)
+        self.load_in_memory()
+        n = 1
+        small_step = 0
+        for idx in range(self.length):
+            if (idx + 1) * self.batch_size > self.step_size * n:
+                self.load_in_memory(n)
+                n += 1
+                small_step = 0
+            batch_x = self.x_in_mem[small_step*self.batch_size:
+                                    (1+small_step)*self.batch_size]
+            batch_x_trk = self.x_trk_in_mem[small_step*self.batch_size:
+                                            (1+small_step)*self.batch_size]
+            batch_y = self.y_in_mem[small_step*self.batch_size:
+                                    (1+small_step)*self.batch_size]
+            small_step += 1
             yield {"input_1": batch_x_trk, "input_2": batch_x}, batch_y
 
 
@@ -135,7 +161,7 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
         metrics=['accuracy'],
     )
 
-    return umami, NN_structure["batch_size"]
+    return umami
 
 
 def Umami(args, train_config, preprocess_config):
@@ -164,18 +190,24 @@ def Umami(args, train_config, preprocess_config):
     njet_features = X_train.shape[1]
     print(f"nJets: {nJets}, nTrks: {nTrks}")
     print(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
-    umami, batch_size = Umami_model(train_config=train_config,
-                                    input_shape=(nTrks, nFeatures),
-                                    njet_features=njet_features)
+    if "model_file" in train_config.config:
+        print(f"Loading model from: {train_config.config['model_file']}")
+        with CustomObjectScope({"Sum": Sum}):
+            umami = load_model(train_config.config["model_file"])
+    else:
+        umami = Umami_model(train_config=train_config,
+                            input_shape=(nTrks, nFeatures),
+                            njet_features=njet_features)
 
     train_dataset = tf.data.Dataset.from_generator(
-        generator(X_train, X_trk_train, Y_train, batch_size),
+        generator(X_train, X_trk_train, Y_train,
+                  train_config.NN_structure["batch_size"]),
         output_types=({"input_1": tf.float32, "input_2": tf.float32},
                       tf.float32),
         output_shapes=({"input_1": tf.TensorShape([None, nTrks, nFeatures]),
                         "input_2": tf.TensorShape([None, njet_features])},
                        tf.TensorShape([None, nDim]))
-    ).repeat()
+    ).repeat().prefetch(3)
 
     nEpochs = args.epochs
 
@@ -197,7 +229,7 @@ def Umami(args, train_config, preprocess_config):
     umami.fit(train_dataset,
               epochs=nEpochs,
               callbacks=[reduce_lr, my_callback],
-              steps_per_epoch=len(Y_train) / batch_size,
+              steps_per_epoch=nJets / train_config.NN_structure["batch_size"],
               use_multiprocessing=True,
               workers=8,
               )
