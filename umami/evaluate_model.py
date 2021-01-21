@@ -20,12 +20,19 @@ def GetParser():
     )
 
     parser.add_argument(
-        '-c', '--config_file', type=str, required=True,
+        '-c',
+        '--config_file',
+        type=str,
+        required=True,
         help="Name of the training config file"
     )
 
     parser.add_argument(
-        '-e', '--epoch', required=True, type=int,
+        '-e',
+        '--epoch',
+        type=int,
+        required=True,
+        default=None,
         help="Epoch which should be evaluated."
     )
 
@@ -34,17 +41,21 @@ def GetParser():
     #                     toenable vr overlap removall for validation sets.''')
 
     parser.add_argument(
-        '--dl1', action='store_true',
+        '--dl1',
+        action='store_true',
         help="Evaluating DL1 like tagger with one loss."
     )
 
     parser.add_argument(
-        '--dips', action='store_true',
+        '--dips',
+        action='store_true',
         help="Evaluating Dips tagger with one loss."
     )
 
     parser.add_argument(
-        '--nJets', type=int, default=None,
+        '--nJets',
+        type=int,
+        default=None,
         help='''Number of jets used for the testing. By default it will
         use all available jets in the test files.'''
     )
@@ -165,6 +176,7 @@ def EvaluateModel(
 def EvaluateModelDips(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
+
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     print("Evaluating", model_file)
     _, X_test_trk, Y_test = utt.GetTestFile(
@@ -364,6 +376,7 @@ if __name__ == "__main__":
             )
 
     elif args.dips:
+        print('Start evaluating DIPS with ttbar...')
         EvaluateModelDips(
             args,
             train_config,
@@ -373,6 +386,7 @@ if __name__ == "__main__":
         )
 
         if train_config.add_test_file is not None:
+            print('Start evaluating DIPS with Zprime...')
             EvaluateModelDips(
                 args,
                 train_config,

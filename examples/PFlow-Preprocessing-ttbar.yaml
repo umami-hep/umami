@@ -1,31 +1,47 @@
 parameters:
-  # file path
+  # Path where the preprocessed files should be saved
   file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids
-# amount of b-jets which are used
-# njets: 1e4
-njets: 1.5e5
-# fraction of ttbar jets wrt. Z'
+
+# Amount of b-jets which are used
+njets: 5.5e6
+
+# Fraction of ttbar jets wrt. Z'
 ttbar_frac: 1.0
+
 # outputfiles are split into 6
-iterations: 1
+iterations: 5
+
 # pT cut for hybrid creation (for light and c-jets)
 pTcut: 2.5e10
+
 # pT cut for b-jets
 bhad_pTcut: 2.5e10
+
 # upper pT limit for all jets
 pT_max: False
+
+# Name of the output files for the different jets
+# ZPrime (Mixed)
 f_z:
   path: *file_path
   file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
+
+# ttbar (b)
 f_tt_bjets:
   path: *file_path
   file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+
+# ttbar (c)
 f_tt_cjets:
   path: *file_path
   file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
+
+# ttbar (u)
 f_tt_ujets:
   path: *file_path
   file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
+
+# Name of the output file from the preprocessing
 outfile_name: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-ttbar.h5
 plot_name: PFlow_ext-ttbar
 
@@ -59,8 +75,4 @@ Cuts:
   softMuon_scatteringNeighbourSignificance:
     operator: <
     condition: 600
-    NaNcheck: True
-  softMuon_momentumBalanceSignificance:
-    operator: <
-    condition: 4000
     NaNcheck: True

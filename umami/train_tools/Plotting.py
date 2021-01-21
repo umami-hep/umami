@@ -12,11 +12,14 @@ from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 PLOT_LABEL = "\n$\\sqrt{s}=13$ TeV, PFlow jets"
 
 
-def PlotRejPerEpoch(df_results, plot_name, c_rej=None, u_rej=None,
-                    rej_keys={"c_rej": "c_rej", "u_rej": "u_rej"},
-                    labels={"c_rej": r"$c$-rej. - val. sample",
-                            "u_rej": "light-rej. - val. sample"},
-                    comp_tagger_name='DL1r'):
+def PlotRejPerEpoch(
+    df_results, plot_name, c_rej=None, u_rej=None,
+    rej_keys={"c_rej": "c_rej", "u_rej": "u_rej"},
+    labels={"c_rej": r"$c$-rej. - val. sample",
+            "u_rej": "light-rej. - val. sample"},
+    comp_tagger_name='DL1r', target_beff=0.77,
+    fc_value=0.018
+):
     applyATLASstyle(mtp)
     fig, ax1 = plt.subplots(constrained_layout=True)
 
@@ -47,10 +50,16 @@ def PlotRejPerEpoch(df_results, plot_name, c_rej=None, u_rej=None,
 
     ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    makeATLAStag(plt.gca(),
-                 plt.gcf(),
-                 "Internal Simulation",
-                 PLOT_LABEL+"\nfc=0.018")
+    makeATLAStag(
+        plt.gca(),
+        plt.gcf(),
+        "Internal Simulation",
+        (
+            PLOT_LABEL
+            + "\nfc={}".format(fc_value)
+            + ", WP={:02d}%".format(int(target_beff * 100))
+        )
+    )
     fig.legend(ncol=1, loc=(0.6, 0.1))
     plt.savefig(plot_name, transparent=True)
     plt.cla()
@@ -153,7 +162,10 @@ def RunPerformanceCheck(train_config, compare_tagger=True,
         y_true = GetBinaryLabels(df['HadronConeExclTruthLabelID'].values)
         c_rej, u_rej = GetRejection(
             df[tagger_comp_var[:]].values,
-            y_true)
+            y_true,
+            train_config.Eval_parameters_validation["WP_b"],
+            train_config.Eval_parameters_validation["fc_value"]
+        )
 
     dictfile = f"{train_config.model_name}/DictFile.json"
     df_results = pd.read_json(dictfile)
@@ -161,18 +173,26 @@ def RunPerformanceCheck(train_config, compare_tagger=True,
     print("saving plots to", plot_dir)
     os.makedirs(plot_dir, exist_ok=True)
     plot_name = f"{plot_dir}/rej-plot_val.pdf"
-    PlotRejPerEpoch(df_results, plot_name, c_rej, u_rej,
-                    labels={"c_rej": r"$c$-rej. - $t\bar{t}$",
-                            "u_rej": r"light-rej. - $t\bar{t}$"},
-                    comp_tagger_name=comp_tagger_name)
+    PlotRejPerEpoch(
+        df_results, plot_name, c_rej, u_rej,
+        labels={"c_rej": r"$c$-rej. - $t\bar{t}$",
+                "u_rej": r"light-rej. - $t\bar{t}$"},
+        comp_tagger_name=comp_tagger_name,
+        target_beff=train_config.Eval_parameters_validation["WP_b"],
+        fc_value=train_config.Eval_parameters_validation["fc_value"]
+    )
 
     if train_config.add_validation_file is not None:
         plot_name = f"{plot_dir}/rej-plot_val_add.pdf"
-        PlotRejPerEpoch(df_results, plot_name,  # c_rej, u_rej,
-                        rej_keys={"c_rej": "c_rej_add",
-                                  "u_rej": "u_rej_add"},
-                        labels={"c_rej": r"$c$-rej. - ext. $Z'$",
-                                "u_rej": r"light-rej. - ext. $Z'$"})
+        PlotRejPerEpoch(
+            df_results, plot_name,  # c_rej, u_rej,
+            rej_keys={"c_rej": "c_rej_add",
+                      "u_rej": "u_rej_add"},
+            labels={"c_rej": r"$c$-rej. - ext. $Z'$",
+                    "u_rej": r"light-rej. - ext. $Z'$"},
+            target_beff=train_config.Eval_parameters_validation["WP_b"],
+            fc_value=train_config.Eval_parameters_validation["fc_value"]
+        )
 
     plot_name = f"{plot_dir}/loss-plot.pdf"
     PlotLosses(df_results, plot_name)
@@ -197,7 +217,10 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
         y_true = GetBinaryLabels(df['HadronConeExclTruthLabelID'].values)
         c_rej, u_rej = GetRejection(
             df[tagger_comp_var[:]].values,
-            y_true)
+            y_true,
+            train_config.Eval_parameters_validation["WP_b"],
+            train_config.Eval_parameters_validation["fc_value"]
+        )
 
     dictfile = f"{train_config.model_name}/DictFile.json"
     df_results = pd.read_json(dictfile)
@@ -206,20 +229,29 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
     os.makedirs(plot_dir, exist_ok=True)
     if comp_tagger_name == "RNNIP":
         plot_name = f"{plot_dir}/rej-plot_val_dips.pdf"
-        PlotRejPerEpoch(df_results, plot_name, c_rej, u_rej,
-                        labels={"c_rej": r"$c$-rej. - $t\bar{t}$",
-                                "u_rej": r"light-rej. - $t\bar{t}$"},
-                        rej_keys={"c_rej": "c_rej_dips",
-                                  "u_rej": "u_rej_dips"},
-                        comp_tagger_name=comp_tagger_name)
+        PlotRejPerEpoch(
+            df_results, plot_name, c_rej, u_rej,
+            labels={"c_rej": r"$c$-rej. - $t\bar{t}$",
+                    "u_rej": r"light-rej. - $t\bar{t}$"},
+            rej_keys={"c_rej": "c_rej_dips",
+                      "u_rej": "u_rej_dips"},
+            comp_tagger_name=comp_tagger_name,
+            target_beff=train_config.Eval_parameters_validation["WP_b"],
+            fc_value=train_config.Eval_parameters_validation["fc_value"]
+        )
+
     else:
         plot_name = f"{plot_dir}/rej-plot_val_umami.pdf"
-        PlotRejPerEpoch(df_results, plot_name, c_rej, u_rej,
-                        labels={"c_rej": r"$c$-rej. - $t\bar{t}$",
-                                "u_rej": r"light-rej. - $t\bar{t}$"},
-                        rej_keys={"c_rej": "c_rej_umami",
-                                  "u_rej": "u_rej_umami"},
-                        comp_tagger_name=comp_tagger_name)
+        PlotRejPerEpoch(
+            df_results, plot_name, c_rej, u_rej,
+            labels={"c_rej": r"$c$-rej. - $t\bar{t}$",
+                    "u_rej": r"light-rej. - $t\bar{t}$"},
+            rej_keys={"c_rej": "c_rej_umami",
+                      "u_rej": "u_rej_umami"},
+            comp_tagger_name=comp_tagger_name,
+            target_beff=train_config.Eval_parameters_validation["WP_b"],
+            fc_value=train_config.Eval_parameters_validation["fc_value"]
+        )
 
     if train_config.add_validation_file is not None:
         c_rej, u_rej = None, None
@@ -235,24 +267,36 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
             y_true = GetBinaryLabels(df['HadronConeExclTruthLabelID'].values)
             c_rej, u_rej = GetRejection(
                 df[tagger_comp_var[:]].values,
-                y_true)
+                y_true,
+                train_config.Eval_parameters_validation["WP_b"],
+                train_config.Eval_parameters_validation["fc_value"]
+            )
 
         if comp_tagger_name == "RNNIP":
             plot_name = f"{plot_dir}/rej-plot_val_add_dips.pdf"
-            PlotRejPerEpoch(df_results, plot_name, c_rej, u_rej,
-                            labels={"c_rej": r"$c$-rej. - ext. $Z'$",
-                                    "u_rej": r"light-rej. - ext. $Z'$"},
-                            rej_keys={"c_rej": "c_rej_dips_add",
-                                      "u_rej": "u_rej_dips_add"},
-                            comp_tagger_name=comp_tagger_name)
+            PlotRejPerEpoch(
+                df_results, plot_name, c_rej, u_rej,
+                labels={"c_rej": r"$c$-rej. - ext. $Z'$",
+                        "u_rej": r"light-rej. - ext. $Z'$"},
+                rej_keys={"c_rej": "c_rej_dips_add",
+                          "u_rej": "u_rej_dips_add"},
+                comp_tagger_name=comp_tagger_name,
+                target_beff=train_config.Eval_parameters_validation["WP_b"],
+                fc_value=train_config.Eval_parameters_validation["fc_value"]
+            )
+
         else:
             plot_name = f"{plot_dir}/rej-plot_val_add_umami.pdf"
-            PlotRejPerEpoch(df_results, plot_name, c_rej, u_rej,
-                            labels={"c_rej": r"$c$-rej. - ext. $Z'$",
-                                    "u_rej": r"light-rej. - ext. $Z'$"},
-                            rej_keys={"c_rej": "c_rej_umami_add",
-                                      "u_rej": "u_rej_umami_add"},
-                            comp_tagger_name=comp_tagger_name)
+            PlotRejPerEpoch(
+                df_results, plot_name, c_rej, u_rej,
+                labels={"c_rej": r"$c$-rej. - ext. $Z'$",
+                        "u_rej": r"light-rej. - ext. $Z'$"},
+                rej_keys={"c_rej": "c_rej_umami_add",
+                          "u_rej": "u_rej_umami_add"},
+                comp_tagger_name=comp_tagger_name,
+                target_beff=train_config.Eval_parameters_validation["WP_b"],
+                fc_value=train_config.Eval_parameters_validation["fc_value"]
+            )
 
     plot_name = f"{plot_dir}/loss-plot.pdf"
     PlotLossesUmami(df_results, plot_name)

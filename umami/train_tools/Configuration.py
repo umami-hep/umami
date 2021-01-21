@@ -20,7 +20,8 @@ class Configuration(object):
     def GetConfiguration(self):
         config_items = ["model_name", "preprocess_config", "train_file",
                         "validation_file", "var_dict", "NN_structure",
-                        "add_validation_file", "test_file", "add_test_file"]
+                        "add_validation_file", "test_file", "add_test_file",
+                        "Eval_parameters"]
         for item in config_items:
             if item in self.config:
                 setattr(self, item, self.config[item])

@@ -125,7 +125,8 @@ After the training is over, the different epochs can be evaluated with ROC plots
 evaluate_model.py -c examples/Dips-PFlow-Training-config.yaml -e 5 --dips
 ```
 
-The 5 gives the epoch which is to evaluate. It will produce .h5 files with the evaluations. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. To do this, use the following command.
+The `-e` options (here `5`) allows to set the training epoch which should be evaluated. It can be passed via command line or defined in the [plotting_umami_config_dips.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_umami_config_dips.yaml). Take notice that the command line option will overwrite the epoch in [plotting_umami_config_dips.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_umami_config_dips.yaml). The `--dips` option defines that the dips tagger is used.
+It will produce .h5 files with the evaluations. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. To do this, use the following command.
 
 ```bash
 plotting_umami.py -c examples/plotting_umami_config_dips.yaml -o dips_eval_plots

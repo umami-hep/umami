@@ -21,7 +21,7 @@ singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tool
 Alternatively you can also check out this repository via `git clone` and then run
 
 ```bash
-python setupy.py install
+python setup.py install
 ```
 
 this will install the umami package
@@ -29,7 +29,7 @@ this will install the umami package
 If you want to modify the code you should run instead
 
 ```bash
-python setupy.py develop
+python setup.py develop
 ```
 
 which creates a symlink to the repository.
@@ -52,6 +52,9 @@ flake8 ./umami
 
 If you want to train or evaluate DL1r please follow the [DL1r-instructions](docs/DL1r-instructions.md).
 
+## DIPS instructions
+
+If you want to train or evaluate DIPS please follow the [DIPS-instructions](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/Dips-instructions.md)
 
 ## Preprocessing
 

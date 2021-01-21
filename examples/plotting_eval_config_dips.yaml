@@ -1,14 +1,20 @@
+# Evaluation parameters
+Eval_parameters:
+  Path_to_models_dir: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami
+  model_name: dips_lr_0.01_bs_5000_epoch_200_nTrainJets_6e6
+  epoch: 182
+
 # Dips, ttbar
 scores_Dips_ttbar:
   type: "scores"
-  evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-5.h5"
+  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
-  text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample"
+  text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
 
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
-  evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-5.h5"
+  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
   data_set_name: "ttbar"
   prediction_labels: ["dips_pu", "dips_pc", "dips_pb"] # For umami use umami_pX or dips_pX. The order matters!
 
@@ -16,12 +22,12 @@ Dips_light_flavour_ttbar:
   type: "ROC"
   models_to_plot:
     dl1r: # The name here has no impact on anything.
-      evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-rej_per_eff-5.h5"
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "ttbar"
       label: "Dips"
       df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
     current_dl1r:
-      evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-rej_per_eff-5.h5"
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "ttbar"
       label: "recommended RNNIP"
       df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
@@ -29,18 +35,18 @@ Dips_light_flavour_ttbar:
     ymax: 5000.
     ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018"
 
 Dips_c_flavour_ttbar:
   type: "ROC"
   models_to_plot:
     dl1r:
-      evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-rej_per_eff-5.h5"
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "ttbar"
       label: "Dips"
       df_key: "dips_crej"
     current_dl1r:
-      evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-rej_per_eff-5.h5"
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "ttbar"
       label: "recommended RNNIP"
       df_key: "rnnip_crej"
@@ -48,20 +54,20 @@ Dips_c_flavour_ttbar:
     ymax: 100.
     ylabel: "c"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018"
 
 
 # Dips, zpext
 scores_Dips_zpext:
   type: "scores"
-  evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-5.h5"
+  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
   data_set_name: "zpext" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
-  text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample"
+  text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample"
 
 confusion_matrix_Dips_zpext:
   type: "confusion_matrix"
-  evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-5.h5"
+  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
   data_set_name: "zpext"
   prediction_labels: ["dips_pu", "dips_pc", "dips_pb"] # For umami use umami_pX or dips_pX. The order matters!
 
@@ -69,12 +75,12 @@ Dips_light_flavour_zpext:
   type: "ROC"
   models_to_plot:
     dl1r: # The name here has no impact on anything.
-      evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-rej_per_eff-5.h5"
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "zpext"
       label: "Dips"
       df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
     current_dl1r:
-      evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-rej_per_eff-5.h5"
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "zpext"
       label: "recommended RNNIP"
       df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
@@ -82,18 +88,18 @@ Dips_light_flavour_zpext:
     ymax: 5000.
     ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample, fc=0.018"
 
 Dips_c_flavour_zpext:
   type: "ROC"
   models_to_plot:
     dl1r:
-      evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-rej_per_eff-5.h5"
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "zpext"
       label: "Dips"
       df_key: "dips_crej"
     current_dl1r:
-      evaluation_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips/results/results-rej_per_eff-5.h5"
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "zpext"
       label: "recommended RNNIP"
       df_key: "rnnip_crej"
@@ -101,4 +107,4 @@ Dips_c_flavour_zpext:
     ymax: 100.
     ylabel: "c"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample, fc=0.018"
