@@ -35,6 +35,7 @@ def GetParser():
         required=True,
         help="Name of the plot config file",
     )
+
     parser.add_argument(
         "-f",
         "--format",
@@ -42,6 +43,7 @@ def GetParser():
         default="pdf",
         help="file extension for the plots",
     )
+
     parser.add_argument(
         "-o",
         "--output_directory",
@@ -49,14 +51,19 @@ def GetParser():
         default="umami_plotting_plots",
         help="Name of the directory in which the plots will be saved.",
     )
+
     args = parser.parse_args()
     return args
 
 
-def plot_ROC(plot_name, plot_config):
+def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
     teffs = []
     beffs = []
     labels = []
+
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
     if "nTest" not in plot_config["plot_settings"].keys():
         nTest_provided = False
         plot_config["plot_settings"]["nTest"] = []
@@ -65,9 +72,18 @@ def plot_ROC(plot_name, plot_config):
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         print("model", model_name)
-        model_config["df_results_eff_rej"] = pd.read_hdf(
-            model_config["evaluation_file"], model_config["data_set_name"]
-        )
+        if model_config["evaluation_file"] is None:
+            model_config["df_results_eff_rej"] = pd.read_hdf(
+                eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5",
+                model_config["data_set_name"]
+            )
+
+        else:
+            model_config["df_results_eff_rej"] = pd.read_hdf(
+                plot_config["evaluation_file"],
+                model_config["data_set_name"]
+            )
+
         model_config["rej_rates"] = (
             1.0 / model_config["df_results_eff_rej"][model_config["df_key"]]
         )
@@ -81,7 +97,10 @@ def plot_ROC(plot_name, plot_config):
             "binomialErrors" in plot_config["plot_settings"]
             and plot_config["plot_settings"]["binomialErrors"]
         ):
-            h5_file = h5py.File(model_config["evaluation_file"], "r")
+            h5_file = h5py.File(
+                eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5",
+                "r"
+            )
             plot_config["plot_settings"]["nTest"].append(
                 h5_file.attrs["N_test"]
             )
@@ -96,13 +115,24 @@ def plot_ROC(plot_name, plot_config):
     )
 
 
-def plot_confusion_matrix(plot_name, plot_config):
+def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     from mlxtend.evaluate import confusion_matrix
     from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
 
-    df_results = pd.read_hdf(
-        plot_config["evaluation_file"], plot_config["data_set_name"]
-    )
+    if plot_config["evaluation_file"] is None:
+        df_results = pd.read_hdf(
+            eval_file_dir + f'/results-{eval_epoch}.h5',
+            plot_config["data_set_name"]
+        )
+
+    else:
+        df_results = pd.read_hdf(
+            plot_config["evaluation_file"],
+            plot_config["data_set_name"]
+        )
+
     y_target = df_results["labels"]
     y_predicted = np.argmax(
         df_results[plot_config["prediction_labels"]].values, axis=1
@@ -122,10 +152,22 @@ def plot_confusion_matrix(plot_name, plot_config):
     plt.savefig(plot_name, transparent=True)
 
 
-def plot_score(plot_name, plot_config):
-    df_results = pd.read_hdf(
-        plot_config["evaluation_file"], plot_config["data_set_name"]
-    )
+def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    if plot_config["evaluation_file"] is None:
+        df_results = pd.read_hdf(
+            eval_file_dir + f'/results-{eval_epoch}.h5',
+            plot_config["data_set_name"]
+        )
+
+    else:
+        df_results = pd.read_hdf(
+            plot_config["evaluation_file"],
+            plot_config["data_set_name"]
+        )
+
     df_results["discs"] = GetScore(
         *[df_results[pX] for pX in plot_config["prediction_labels"]]
     )
@@ -153,27 +195,63 @@ def plot_score(plot_name, plot_config):
     plt.savefig(plot_name, transparent=True)
 
 
-def SetUpPlots(plotting_config, plot_directory, format):
+def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
+    # Extract the eval parameters
+    eval_params = plotting_config["Eval_parameters"]
+
+    # Iterate over the different plots which are to be plotted
     for plot_name, plot_config in plotting_config.items():
+
+        # Skip Eval parameters
+        if plot_name == 'Eval_parameters':
+            continue
+
+        # Define the path to the new plot
         print("Processing:", plot_name)
         save_plot_to = os.path.join(plot_directory, plot_name + "." + format)
 
+        # Check for plot type and use the needed function
         if plot_config["type"] == "ROC":
-            plot_ROC(save_plot_to, plot_config)
+            plot_ROC(
+                save_plot_to, plot_config, eval_params, eval_file_dir
+            )
+
         elif plot_config["type"] == "confusion_matrix":
-            plot_confusion_matrix(save_plot_to, plot_config)
+            plot_confusion_matrix(
+                save_plot_to, plot_config, eval_params, eval_file_dir
+            )
+
         elif plot_config["type"] == "scores":
-            plot_score(save_plot_to, plot_config)
+            plot_score(
+                save_plot_to, plot_config, eval_params, eval_file_dir
+            )
 
         print("saved plot as:", save_plot_to)
 
 
 def main(args):
+    # Open and load the config files used in the eval process
     with open(args.config_file) as yaml_config:
         plotting_config = yaml.load(yaml_config, Loader=FullLoader)
-    plot_directory = os.path.join(os.getcwd(), args.output_directory)
+
+    # Define the output dir and make it
+    plot_directory = os.path.join(
+        plotting_config["Eval_parameters"]["Path_to_models_dir"],
+        plotting_config["Eval_parameters"]["model_name"],
+        args.output_directory
+    )
+
     os.makedirs(plot_directory, exist_ok=True)
-    SetUpPlots(plotting_config, plot_directory, args.format)
+
+    # Define the path to the results from the model defined in train_config
+    eval_file_dir = os.path.join(
+        plotting_config["Eval_parameters"]["Path_to_models_dir"],
+        plotting_config["Eval_parameters"]["model_name"],
+        "results"
+    )
+
+    # Start plotting
+    SetUpPlots(plotting_config, plot_directory, eval_file_dir, args.format)
 
 
 if __name__ == "__main__":

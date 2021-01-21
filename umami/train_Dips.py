@@ -21,20 +21,38 @@ from umami.preprocessing_tools import Configuration
 
 def GetParser():
     """Argument parser for Preprocessing script."""
-    parser = argparse.ArgumentParser(description="Preprocessing command line"
-                                     "options.")
+    parser = argparse.ArgumentParser(
+        description="Preprocessing command line options."
+    )
 
-    parser.add_argument('-c', '--config_file', type=str,
-                        required=True,
-                        help="Name of the training config file")
-    parser.add_argument('-e', '--epochs', type=int, help="Number\
-        of trainng epochs.")
+    parser.add_argument(
+        '-c',
+        '--config_file',
+        type=str,
+        required=True,
+        help="Name of the training config file"
+    )
+
+    parser.add_argument(
+        '-e',
+        '--epochs',
+        type=int,
+        help="Number of trainng epochs."
+    )
+
     # TODO: implementng vr_overlap
-    parser.add_argument('--vr_overlap', action='store_true', help='''Option to
-                        enable vr overlap removall for validation sets.''')
-    parser.add_argument('-p', '--performance_check', action='store_true',
-                        help="Performs performance check - can be run during"
-                        " training")
+    parser.add_argument(
+        '--vr_overlap',
+        action='store_true',
+        help='Option to enable vr overlap removall for validation sets.'
+    )
+
+    parser.add_argument(
+        '-p', '--performance_check',
+        action='store_true',
+        help="Performs performance check - can be run during training"
+    )
+
     args = parser.parse_args()
     return args
 
@@ -72,16 +90,27 @@ def Dips_model(train_config=None, input_shape=None):
     # Define the TimeDistributed layers for the different tracks
     for i, phi_nodes in enumerate(NN_structure["ppm_sizes"]):
 
-        tdd = TimeDistributed(Dense(phi_nodes, activation='linear'),
-                              name=f"Phi{i}_Dense")(tdd)
+        tdd = TimeDistributed(
+            Dense(phi_nodes, activation='linear'),
+            name=f"Phi{i}_Dense"
+        )(tdd)
+
         if batch_norm:
-            tdd = TimeDistributed(BatchNormalization(),
-                                  name=f"Phi{i}_BatchNormalization")(tdd)
+            tdd = TimeDistributed(
+                BatchNormalization(),
+                name=f"Phi{i}_BatchNormalization"
+            )(tdd)
+
         if dropout != 0:
-            tdd = TimeDistributed(Dropout(rate=dropout),
-                                  name=f"Phi{i}_Dropout")(tdd)
-        tdd = TimeDistributed(layers.Activation(
-            activations.relu), name=f"Phi{i}_ReLU")(tdd)
+            tdd = TimeDistributed(
+                Dropout(rate=dropout),
+                name=f"Phi{i}_Dropout"
+            )(tdd)
+
+        tdd = TimeDistributed(
+            layers.Activation(activations.relu),
+            name=f"Phi{i}_ReLU"
+        )(tdd)
 
     # This is where the magic happens... sum up the track features!
     F = Sum(name="Sum")(tdd)
@@ -149,8 +178,9 @@ def Dips(args, train_config, preprocess_config):
     Y_train = file['Y_train']
 
     # Use the number of jets set in the config file for training
-    X_train = X_train[:int(NN_structure["nJets_train"])]
-    Y_train = Y_train[:int(NN_structure["nJets_train"])]
+    if NN_structure["nJets_train"] is not None:
+        X_train = X_train[:int(NN_structure["nJets_train"])]
+        Y_train = Y_train[:int(NN_structure["nJets_train"])]
 
     # Get the shapes for training
     nJets, nTrks, nFeatures = X_train.shape
@@ -188,7 +218,7 @@ def Dips(args, train_config, preprocess_config):
 
     # Set ModelCheckpoint as callback
     dips_mChkPt = ModelCheckpoint(
-        'dips/dips_model_{epoch:02d}.h5',
+        f'{train_config.model_name}' + '/dips_model_{epoch:02d}.h5',
         monitor='val_loss',
         verbose=True,
         save_best_only=False,
@@ -215,14 +245,14 @@ def Dips(args, train_config, preprocess_config):
     )
 
     print("Start training")
-
     dips.fit(
         train_dataset,
         epochs=nEpochs,
         validation_data=(X_valid, Y_valid),
         callbacks=[earlyStop, dips_mChkPt, reduce_lr, my_callback],
+        # callbacks=[dips_mChkPt, reduce_lr, my_callback],
         # callbacks=[reduce_lr, my_callback],
-        # callbacks=[reduce_lr],
+        # callbacks=[my_callback],
         steps_per_epoch=len(Y_train) / batch_size,
         use_multiprocessing=True,
         workers=8

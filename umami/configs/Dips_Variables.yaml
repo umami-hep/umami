@@ -77,3 +77,5 @@ track_train_variables:
   jointNormVars:
     - numberOfPixelHits
     - numberOfSCTHits
+    - btagIp_d0
+    - btagIp_z0SinTheta
