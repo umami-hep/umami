@@ -245,6 +245,10 @@ def GetTestSample(input_file, var_dict, preprocess_config,
     jets = jets.fillna(default_dict)
     print("Applying scaling and shifting.")
     for elem in scale_dict:
+        if elem['name'] not in variables:
+            print(elem['name'],
+                  "in scale dict but not in variable config.")
+            continue
         if 'isDefaults' in elem['name']:
             continue
         else:
