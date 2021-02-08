@@ -257,6 +257,7 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
         scale_dict = json.load(infile)["tracks"]
 
     var_arr_list = []
+    trk_mask = ~np.isnan(trks["ptfrac"])
     for var in trkVars:
         if var in logNormVars:
             x = np.log(trks[var])
@@ -266,8 +267,8 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
             x -= scale_dict[var]["shift"]
             x /= scale_dict[var]["scale"]
         elif var in jointNormVars:
-            x = np.where(x == 0, x, x - scale_dict[var]["shift"])
-            x = np.where(x == 0, x, x / scale_dict[var]["scale"])
+            x = np.where(trk_mask, x - scale_dict[var]["shift"], x)
+            x = np.where(trk_mask, x / scale_dict[var]["scale"], x)
         var_arr_list.append(np.nan_to_num(x))
 
     d_arr = np.stack(var_arr_list, axis=-1)

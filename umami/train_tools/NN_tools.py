@@ -284,6 +284,7 @@ def GetTestSampleTrks(input_file, var_dict, preprocess_config,
         scale_dict = json.load(infile)['tracks']
 
     var_arr_list = []
+    trk_mask = ~np.isnan(trks["ptfrac"])
     for var in trkVars:
         if var in logNormVars:
             x = np.log(trks[var])
@@ -293,8 +294,8 @@ def GetTestSampleTrks(input_file, var_dict, preprocess_config,
             x -= scale_dict[var]["shift"]
             x /= scale_dict[var]["scale"]
         elif var in jointNormVars:
-            x = np.where(x == 0, x, x - scale_dict[var]["shift"])
-            x = np.where(x == 0, x, x / scale_dict[var]["scale"])
+            x = np.where(trk_mask, x - scale_dict[var]["shift"], x)
+            x = np.where(trk_mask, x / scale_dict[var]["scale"], x)
         var_arr_list.append(np.nan_to_num(x))
 
     return np.stack(var_arr_list, axis=-1), labels
