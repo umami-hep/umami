@@ -1,0 +1,9 @@
+
+build_docs:
+  stage: integration_test
+  image: python:3.7-slim
+  script:
+    - echo 'test'
+  only:
+    - master@atlas-flavor-tagging-tools/algorithms/umami
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami

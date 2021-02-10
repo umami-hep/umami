@@ -1,0 +1,33 @@
+
+build_docs:
+  stage: docs_build
+  image: gitlab-registry.cern.ch/authoring/documentation/mkdocs:stable
+  script:
+      - mkdocs build --strict --clean --site-dir www
+      - echo -e "AddDefaultCharset UTF-8\nSSLRequireSSL\n" > www/.htaccess
+  before_script:
+  - "" # overwrite default, do nothing
+  artifacts:
+      paths:
+          - www
+      expire_in: 1 hour
+  only:
+    - master
+
+# deploy the website to EOS, but only for master branch of main repository
+#     see https://gitlab.cern.ch/ci-tools/ci-web-deployer/
+deploying_docs:
+  stage: publish
+  needs:
+    - build_docs
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer
+  variables:
+    METHOD: xrdcp
+    EOS_PATH: "/eos/user/u/umamibot/www"
+    CI_OUTPUT_DIR: "www/"
+  before_script:
+    - "" # overwrite default, do nothing
+  script:
+    - deploy-eos
+  only:
+    - master@atlas-flavor-tagging-tools/algorithms/umami
