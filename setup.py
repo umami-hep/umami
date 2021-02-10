@@ -35,7 +35,8 @@ setup(
         "umami/train_Dips.py",
         "umami/train_umami.py",
         "umami/evaluate_model.py",
-        "umami/plotting_umami.py"
+        "umami/plotting_umami.py",
+        "umami/plotting_epoch_performance.py",
     ],
     description='Machine learning based flavour tagging training framework.',
     url="https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami"

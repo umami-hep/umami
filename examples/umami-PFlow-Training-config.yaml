@@ -6,6 +6,8 @@ test_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_tt
 add_validation_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
 add_test_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
 var_dict: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/umami/configs/Umami_Variables.yaml
+# Certain low level algorithms can be excluded, namely: "SV1", "IP2D", "IP3D"
+exclude: []
 NN_structure:  
     lr: 0.01
     batch_size: 5000
@@ -18,3 +20,11 @@ NN_structure:
     DL1_units: [57, 60, 48, 36, 24, 12, 6]
     # total loss = loss(umami) + dips_loss_weight * loss(dips)
     dips_loss_weight: 1
+
+Eval_parameters_validation:
+    # Number of jets used for each validation sample. Set this to 0 if you have memory problems
+    n_jets: 100000
+    fc_value: 0.018
+    WP_b: 0.77
+    # fc_value and WP_b are autmoatically added to the plot label
+    plot_label: "\n$\\sqrt{s}=13$ TeV, PFlow jets"

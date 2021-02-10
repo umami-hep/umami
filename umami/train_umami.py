@@ -3,6 +3,9 @@
 import h5py
 import argparse
 
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 import tensorflow as tf
 
 from keras.layers import BatchNormalization, TimeDistributed, Dropout
@@ -11,13 +14,10 @@ from keras.models import Model, load_model
 from keras.optimizers import Adam
 from keras import layers
 from keras import activations
-from keras.utils import CustomObjectScope
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 
 import umami.train_tools as utt
-from umami.train_tools import Sum
 from umami.preprocessing_tools import Configuration
-# from plottingFunctions import sigBkgEff
 
 
 def GetParser():
@@ -33,9 +33,6 @@ def GetParser():
     # TODO: implementng vr_overlap
     parser.add_argument('--vr_overlap', action='store_true', help='''Option to
                         enable vr overlap removall for validation sets.''')
-    parser.add_argument('-p', '--performance_check', action='store_true',
-                        help="Performs performance check - can be run during"
-                        " training")
     args = parser.parse_args()
     return args
 
@@ -43,7 +40,7 @@ def GetParser():
 class generator:
 
     # How many jets should be loaded into memory
-    chunk_size = 1e6
+    chunk_size = 5e5
 
     def __init__(self, X, X_trk, Y, batch_size):
         self.x = X
@@ -107,7 +104,7 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
             activations.relu), name=f"Phi{i}_ReLU")(tdd)
 
     # This is where the magic happens... sum up the track features!
-    F = Sum(name="Sum")(tdd)
+    F = utt.Sum(name="Sum")(tdd)
 
     for j, (F_nodes, p) in enumerate(
         zip(
@@ -163,27 +160,17 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
 
     return umami
 
-
 def Umami(args, train_config, preprocess_config):
-    X_valid, X_valid_trk, Y_valid = utt.GetTestFile(
-        train_config.validation_file,
-        train_config.var_dict,
-        preprocess_config,
-        nJets=int(3e5),
-    )
-    X_valid_add, Y_valid_add, X_valid_trk_add = None, None, None
-    if train_config.add_validation_file is not None:
-        X_valid_add, X_valid_trk_add, Y_valid_add = utt.GetTestFile(
-            train_config.add_validation_file,
-            train_config.var_dict,
-            preprocess_config,
-            nJets=int(3e5),
-        )
-        assert X_valid.shape[1] == X_valid_add.shape[1]
+    val_data_dict=None
+    if train_config.Eval_parameters_validation["n_jets"]>0:
+        val_data_dict=utt.load_validation_data(train_config, preprocess_config, train_config.Eval_parameters_validation["n_jets"])
 
+    exclude=[]
+    if "exclude" in train_config.config:
+        exclude=train_config.config["exclude"]
     file = h5py.File(train_config.train_file, 'r')
     X_trk_train = file['X_trk_train']
-    X_train = file['X_train']
+    X_train = file['X_train'][:, utt.get_jet_feature_indicies(exclude=exclude)]
     Y_train = file['Y_train']
     nJets, nTrks, nFeatures = X_trk_train.shape
     nJets, nDim = Y_train.shape
@@ -192,8 +179,15 @@ def Umami(args, train_config, preprocess_config):
     print(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
     if "model_file" in train_config.config:
         print(f"Loading model from: {train_config.config['model_file']}")
-        with CustomObjectScope({"Sum": Sum}):
-            umami = load_model(train_config.config["model_file"])
+        umami = load_model(train_config.config["model_file"], {"Sum": utt.Sum}, compile=False)
+        NN_structure = train_config.NN_structure
+        model_optimizer = Adam(lr=NN_structure["lr"])
+        umami.compile(
+            loss='categorical_crossentropy',
+            loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
+            optimizer=model_optimizer,
+            metrics=['accuracy'],
+        )
     else:
         umami = Umami_model(train_config=train_config,
                             input_shape=(nTrks, nFeatures),
@@ -216,12 +210,10 @@ def Umami(args, train_config, preprocess_config):
                                   cooldown=5, min_lr=0.000001)
     my_callback = utt.MyCallbackUmami(
         model_name=train_config.model_name,
-        X_valid=X_valid,
-        X_valid_trk=X_valid_trk,
-        Y_valid=Y_valid,
-        X_valid_add=X_valid_add,
-        X_valid_trk_add=X_valid_trk_add,
-        Y_valid_add=Y_valid_add,
+        val_data_dict=val_data_dict,
+        target_beff=train_config.Eval_parameters_validation["WP_b"],
+        charm_fraction=train_config.Eval_parameters_validation["fc_value"],
+        dict_file_name=utt.get_validation_dict_name(**train_config.Eval_parameters_validation, dir_name=train_config.model_name)
     )
 
     # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
@@ -244,11 +236,4 @@ if __name__ == '__main__':
 
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
-    if args.performance_check:
-        utt.RunPerformanceCheckUmami(train_config, compare_tagger=True,
-                                     tagger_comp_var=["rnnip_pu", "rnnip_pc",
-                                                      "rnnip_pb"],
-                                     comp_tagger_name="RNNIP")
-        utt.RunPerformanceCheckUmami(train_config, compare_tagger=True)
-    else:
-        Umami(args, train_config, preprocess_config)
+    Umami(args, train_config, preprocess_config)

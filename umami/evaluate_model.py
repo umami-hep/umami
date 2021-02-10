@@ -8,7 +8,7 @@ from keras.models import load_model
 from keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
-from umami.train_tools import Sum
+from umami.evaluation_tools.PlottingFunctions import GetScore
 from umami.preprocessing_tools import Configuration
 # from plottingFunctions import sigBkgEff
 
@@ -59,17 +59,22 @@ def GetParser():
         help='''Number of jets used for the testing. By default it will
         use all available jets in the test files.'''
     )
+    parser.add_argument(
+        '--beff',
+        type=float,
+        default=0.77,
+        help='b efficiency used for the charm fraction scan'
+    )
+    parser.add_argument(
+        '--cfrac',
+        type=float,
+        default=0.018,
+        help='charm fraction used for the b efficiency scan. The charm fraction for the recommended taggers are not affected by this! They are 0.018 / 0.08 for DL1r / RNNIP.'
+    )
 
     args = parser.parse_args()
     return args
 
-
-def GetScore(pb, pc, pu, fc=0.018):
-    pb = pb.astype('float64')
-    pc = pc.astype('float64')
-    pu = pu.astype('float64')
-    add_small = 1e-10
-    return np.log((pb + add_small) / ((1. - fc) * pu + fc * pc + add_small))
 
 
 def EvaluateModel(
@@ -77,10 +82,13 @@ def EvaluateModel(
 ):
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     print("Evaluating", model_file)
+    exclude=[]
+    if "exclude" in train_config.config:
+        exclude=train_config.config["exclude"]
     X_test, X_test_trk, Y_test = utt.GetTestFile(
-        test_file, train_config.var_dict, preprocess_config, nJets=args.nJets
+        test_file, train_config.var_dict, preprocess_config, nJets=args.nJets, exclude=exclude
     )
-    with CustomObjectScope({"Sum": Sum}):
+    with CustomObjectScope({"Sum": utt.Sum}):
         model = load_model(model_file)
 
     pred_dips, pred_umami = model.predict(
@@ -116,8 +124,10 @@ def EvaluateModel(
         f"{train_config.model_name}/results/results-{args.epoch}.h5",
         data_set_name)
 
+    x_axis_granularity = 100
+
     print("calculating rejections per efficiency")
-    b_effs = np.linspace(0.39, 1, 150)
+    b_effs = np.linspace(0.39, 1, x_axis_granularity)
     crej_arr_umami = []
     urej_arr_umami = []
     crej_arr_dips = []
@@ -129,11 +139,11 @@ def EvaluateModel(
 
     for eff in b_effs:
         crej_i, urej_i = utt.GetRejection(pred_umami, Y_test, target_beff=eff,
-                                          cfrac=0.018)
+                                          cfrac=args.cfrac)
         crej_arr_umami.append(crej_i)
         urej_arr_umami.append(urej_i)
         crej_i, urej_i = utt.GetRejection(pred_dips, Y_test, target_beff=eff,
-                                          cfrac=0.018)
+                                          cfrac=args.cfrac)
         crej_arr_dips.append(crej_i)
         urej_arr_dips.append(urej_i)
         crej_i, urej_i = utt.GetRejection(df[["DL1r_pu", "DL1r_pc",
@@ -149,6 +159,44 @@ def EvaluateModel(
         crej_arr_rnnip.append(crej_i)
         urej_arr_rnnip.append(urej_i)
 
+    print("calculating rejections per fc")
+    fc_values = np.linspace(0.001, 0.1, x_axis_granularity)
+
+
+    crej_arr_umami_cfrac = []
+    urej_arr_umami_cfrac = []
+    crej_arr_dips_cfrac = []
+    urej_arr_dips_cfrac = []
+    crej_arr_dl1r_cfrac = []
+    urej_arr_dl1r_cfrac = []
+    crej_arr_rnnip_cfrac = []
+    urej_arr_rnnip_cfrac = []
+
+    for fc in fc_values:
+        crej_i, urej_i = utt.GetRejection(pred_umami, Y_test, target_beff=args.beff,
+                                          cfrac=fc)
+        crej_arr_umami_cfrac.append(crej_i)
+        urej_arr_umami_cfrac.append(urej_i)
+        crej_i, urej_i = utt.GetRejection(pred_dips, Y_test, target_beff=args.beff,
+                                          cfrac=fc)
+        crej_arr_dips_cfrac.append(crej_i)
+        urej_arr_dips_cfrac.append(urej_i)
+
+        crej_dl1r, urej_dl1r = utt.GetRejection(df[["DL1r_pu", "DL1r_pc",
+                                                "DL1r_pb"]].values,
+                                            Y_test, target_beff=args.beff,
+                                            cfrac=fc)
+        crej_arr_dl1r_cfrac.append(crej_dl1r)
+        urej_arr_dl1r_cfrac.append(urej_dl1r)
+
+        crej_rnnip, urej_rnnip = utt.GetRejection(df[["rnnip_pu", "rnnip_pc",
+                                                "rnnip_pb"]].values,
+                                            Y_test, target_beff=args.beff,
+                                            cfrac=fc)
+        crej_arr_rnnip_cfrac.append(crej_rnnip)
+        urej_arr_rnnip_cfrac.append(urej_rnnip)
+
+
     df_eff_rej = pd.DataFrame({
         "beff": b_effs,
         "umami_crej": crej_arr_umami,
@@ -158,7 +206,16 @@ def EvaluateModel(
         "dl1r_crej": crej_arr_dl1r,
         "dl1r_urej": urej_arr_dl1r,
         "rnnip_crej": crej_arr_rnnip,
-        "rnnip_urej": urej_arr_rnnip
+        "rnnip_urej": urej_arr_rnnip,
+        "fc_values": fc_values,
+        "dl1r_cfrac_crej" : crej_arr_dl1r_cfrac,
+        "dl1r_cfrac_urej" : urej_arr_dl1r_cfrac,
+        "rnnip_cfrac_crej" : crej_arr_rnnip_cfrac,
+        "rnnip_cfrac_urej" : urej_arr_rnnip_cfrac,
+        "umami_cfrac_crej" : crej_arr_umami_cfrac,
+        "umami_cfrac_urej" : urej_arr_umami_cfrac,
+        "dips_cfrac_crej" : crej_arr_dips_cfrac,
+        "dips_cfrac_urej" : urej_arr_dips_cfrac,
     })
     df_eff_rej.to_hdf(f"{train_config.model_name}/results/results-rej_per_eff"
                       f"-{args.epoch}.h5", data_set_name)
@@ -182,7 +239,7 @@ def EvaluateModelDips(
     _, X_test_trk, Y_test = utt.GetTestFile(
         test_file, train_config.var_dict, preprocess_config, nJets=args.nJets
     )
-    with CustomObjectScope({"Sum": Sum}):
+    with CustomObjectScope({"Sum": utt.Sum}):
         model = load_model(model_file)
 
     pred_dips = model.predict(
