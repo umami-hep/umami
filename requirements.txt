@@ -27,3 +27,4 @@ mlxtend
 zarr
 graphviz
 tensorflow
+coverage
