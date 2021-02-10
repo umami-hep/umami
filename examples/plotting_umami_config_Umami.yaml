@@ -1,307 +1,427 @@
+# Evaluation parameters, these are global parmeters defining the default evaluation file.
+Eval_parameters:
+  Path_to_models_dir: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/24_1_umami_dlw_1_lt22M/
+  model_name: umami_looseTrack_22M
+  epoch: 249
+
 # Umami, ttbar
 scores_Umami_ttbar: # Each item on this level defines one plot. The name of this key is later used for the name of the output file.
   type: "scores" # which plot to make
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-4.h5" # output file from evaluate_model.py
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["umami_pb", "umami_pc", "umami_pu"] # For umami use umami_pX or dips_pX
   text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample"
 
 confusion_matrix_Umami_ttbar:
   type: "confusion_matrix"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-4.h5"
   data_set_name: "ttbar"
   prediction_labels: ["umami_pu", "umami_pc", "umami_pb"] # For umami use umami_pX or dips_pX. The order matters!
 
-
-Umami_light_flavour_ttbar:
+# Scanning b-eff, comparing Umami and DL1r, ttbar
+beff_scan_tagger_compare_umami:
   type: "ROC"
   models_to_plot:
-    dl1r: # The name here has no impact on anything.
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+    dl1r_ttbar_urej: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "Umami"
+      label: "DL1r u-rej"
+      df_key: "dl1r_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_urej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Umami u-rej"
       df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+    dl1r_ttbar_crej: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "recommended DL1r"
-      df_key: "dl1r_urej" # This is the rejection rate of the currently recommended DL1r tagger
+      label: "DL1r c-rej"
+      df_key: "dl1r_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_crej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Umami c-rej"
+      df_key: "umami_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
     ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$, $f_{c}=0.018$"
+    which_axis: ["left",  "left", "right",  "right"]
+    colors: ["red", "red", "blue", "blue"]
+    styles: ["-","--","-","--"]
+    ratio_id: [1,1,2,2]
+    set_logy: false
+    ylabel_right: "c"
+    ycolor: "red"
+    ycolor_right: "blue"
+    xmin: 0.6
 
-
-
-Umami_c_flavour_ttbar:
+# Scanning b-eff, comparing Dips and RNNIP
+beff_scan_tagger_compare_dips:
   type: "ROC"
   models_to_plot:
-    dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+    dl1r_ttbar_urej: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "Umami"
-      df_key: "umami_crej"
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+      label: "RNNIP u-rej"
+      df_key: "rnnip_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_urej: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "recommended DL1r"
-      df_key: "dl1r_crej"
-  plot_settings:
-    ymax: 100.
-    ylabel: "c"
+      label: "Dips u-rej"
+      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    dl1r_ttbar_crej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "RNNIP c-rej"
+      df_key: "rnnip_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_crej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Dips c-rej"
+      df_key: "dips_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+    ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$, $f_{c}=0.018$"
+    which_axis: ["left",  "left", "right",  "right"]
+    colors: ["red", "red", "blue", "blue"]
+    styles: ["-","--","-","--"]
+    ratio_id: [1,1,2,2]
+    set_logy: false
+    ylabel_right: "c"
+    ycolor: "red"
+    ycolor_right: "blue"
+    xmin: 0.6
+
+# Scanning b-eff, comparing Umami and Dips, ttbar
+beff_scan_tagger_compare_umami_dips:
+  type: "ROC"
+  models_to_plot:
+    dl1r_ttbar_urej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Dips u-rej"
+      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_urej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Umami u-rej"
+      df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    dl1r_ttbar_crej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Dips c-rej"
+      df_key: "dips_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_crej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Umami c-rej"
+      df_key: "umami_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+    ylabel: "light"
+    binomialErrors: true
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$, f_{c}=0.018"
+    which_axis: ["left",  "left", "right",  "right"]
+    colors: ["red", "red", "blue", "blue"]
+    styles: ["-","--","-","--"]
+    ratio_id: [1,1,2,2]
+    set_logy: false
+    ylabel_right: "c"
+    ycolor: "red"
+    ycolor_right: "blue"
+    xmin: 0.6
+
+# Scanning b-eff, comparing Umami and DL1r, zpext
+beff_scan_tagger_compare_umami_zpext:
+  type: "ROC"
+  models_to_plot:
+    dl1r_zpext_urej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "DL1r u-rej"
+      df_key: "dl1r_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_zpext_urej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "Umami u-rej"
+      df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    dl1r_zpext_crej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "DL1r c-rej"
+      df_key: "dl1r_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_zpext_crej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "Umami c-rej"
+      df_key: "umami_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+    ylabel: "light"
+    binomialErrors: true
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, $Z'$ ext., f_{c}=0.018"
+    which_axis: ["left",  "left", "right",  "right"]
+    colors: ["red", "red", "blue", "blue"]
+    styles: ["-","--","-","--"]
+    ratio_id: [1,1,2,2]
+    set_logy: false
+    ylabel_right: "c"
+    ycolor: "red"
+    ycolor_right: "blue"
+    xmin: 0.6
+
+# Scanning b-eff, comparing Dips and RNNIP
+beff_scan_tagger_compare_dips_zpext:
+  type: "ROC"
+  models_to_plot:
+    dl1r_zpext_urej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "RNNIP u-rej"
+      df_key: "rnnip_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_zpext_urej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "Dips u-rej"
+      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    dl1r_zpext_crej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "RNNIP c-rej"
+      df_key: "rnnip_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_zpext_crej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "Dips c-rej"
+      df_key: "dips_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+    ylabel: "light"
+    binomialErrors: true
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, $Z'$ ext., f_{c}=0.018"
+    which_axis: ["left",  "left", "right",  "right"]
+    colors: ["red", "red", "blue", "blue"]
+    styles: ["-","--","-","--"]
+    ratio_id: [1,1,2,2]
+    set_logy: false
+    ylabel_right: "c"
+    ycolor: "red"
+    ycolor_right: "blue"
+    xmin: 0.6
+
+# Scanning b-eff, comparing Umami and Dips, zpext
+beff_scan_tagger_compare_umami_Dips_zpext:
+  type: "ROC"
+  models_to_plot:
+    dl1r_zpext_urej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "Dips u-rej"
+      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_zpext_urej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "Umami u-rej"
+      df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    dl1r_zpext_crej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "Dips c-rej"
+      df_key: "dips_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_zpext_crej: # The name here has no impact on anything.
+      data_set_name: "zpext"
+      label: "Umami c-rej"
+      df_key: "umami_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+    ylabel: "light"
+    binomialErrors: true
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, $Z'$ ext., f_{c}=0.018"
+    which_axis: ["left",  "left", "right",  "right"]
+    colors: ["red", "red", "blue", "blue"]
+    styles: ["-","--","-","--"]
+    ratio_id: [1,1,2,2]
+    set_logy: false
+    ylabel_right: "c"
+    ycolor: "red"
+    ycolor_right: "blue"
+    xmin: 0.6
+
 
 # Dips, ttbar
 scores_Dips_ttbar:
   type: "scores"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-4.h5"
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
   text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample"
 
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-4.h5"
   data_set_name: "ttbar"
   prediction_labels: ["dips_pu", "dips_pc", "dips_pb"] # For umami use umami_pX or dips_pX. The order matters!
 
-
-Dips_light_flavour_ttbar:
-  type: "ROC"
-  models_to_plot:
-    dl1r: # The name here has no impact on anything.
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "ttbar"
-      label: "Dips"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "ttbar"
-      label: "recommended RNNIP"
-      df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
-  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
-    ylabel: "light"
-    binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
-
-
-
-Dips_c_flavour_ttbar:
-  type: "ROC"
-  models_to_plot:
-    dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "ttbar"
-      label: "Dips"
-      df_key: "dips_crej"
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "ttbar"
-      label: "recommended RNNIP"
-      df_key: "rnnip_crej"
-  plot_settings:
-    ymax: 100.
-    ylabel: "c"
-    binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
 
 
 
 # Umami, zpext
 scores_Umami_zpext:
   type: "scores"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-4.h5"
   data_set_name: "zpext" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["umami_pb", "umami_pc", "umami_pu"] # For umami use umami_pX or dips_pX
   text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample"
 
 confusion_matrix_Umami_zpext:
   type: "confusion_matrix"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-4.h5"
   data_set_name: "zpext"
   prediction_labels: ["umami_pu", "umami_pc", "umami_pb"] # For umami use umami_pX or dips_pX. The order matters!
-
-
-Umami_light_flavour_zpext:
-  type: "ROC"
-  models_to_plot:
-    dl1r: # The name here has no impact on anything.
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "zpext"
-      label: "Umami"
-      df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "zpext"
-      label: "recommended DL1r"
-      df_key: "dl1r_urej" # This is the rejection rate of the currently recommended DL1r tagger
-  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
-    ylabel: "light"
-    binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample, fc=0.018"
-
-
-
-Umami_c_flavour_zpext:
-  type: "ROC"
-  models_to_plot:
-    dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "zpext"
-      label: "Umami"
-      df_key: "umami_crej"
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "zpext"
-      label: "recommended DL1r"
-      df_key: "dl1r_crej"
-  plot_settings:
-    ymax: 100.
-    ylabel: "c"
-    binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample, fc=0.018"
-
 
 
 # Dips, zpext
 scores_Dips_zpext:
   type: "scores"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-4.h5"
   data_set_name: "zpext" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
   text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample"
 
 confusion_matrix_Dips_zpext:
   type: "confusion_matrix"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-4.h5"
   data_set_name: "zpext"
   prediction_labels: ["dips_pu", "dips_pc", "dips_pb"] # For umami use umami_pX or dips_pX. The order matters!
 
 
-Dips_light_flavour_zpext:
+
+
+
+
+# Scanning b-eff, comparing ttbar and zpext
+beff_scan:
   type: "ROC"
   models_to_plot:
-    dl1r: # The name here has no impact on anything.
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+    umami_zpext_urej: # The name here has no impact on anything.
       data_set_name: "zpext"
-      label: "Dips"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+      label: "Umami u-rej, zpext"
+      df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_urej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Umami u-rej, ttbar"
+      df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_zpext_crej: # The name here has no impact on anything.
       data_set_name: "zpext"
-      label: "recommended RNNIP"
-      df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
+      label: "Umami c-rej, zpext"
+      df_key: "umami_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_crej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Umami c-rej, ttbar"
+      df_key: "umami_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
     ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, f_{c}=0.018"
+    which_axis: ["left",  "left", "right",  "right"]
+    colors: ["red", "red", "blue", "blue"]
+    styles: ["-","--","-","--"]
+    ratio_id: [1,1,2,2]
+    set_logy: true
+    ylabel_right: "c"
+    ycolor: "red"
+    ycolor_right: "blue"
+    xmin: 0.6
 
-
-
-Dips_c_flavour_zpext:
+# Scanning charm fraction
+charm_scan:
   type: "ROC"
   models_to_plot:
-    dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+    umami_zpext_urej: # The name here has no impact on anything.
       data_set_name: "zpext"
-      label: "Dips"
-      df_key: "dips_crej"
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+      label: "Umami u-rej, zpext"
+      x_values_key: "fc_values"
+      df_key: "umami_cfrac_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_urej: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "Umami u-rej, ttbar"
+      x_values_key: "fc_values"
+      df_key: "umami_cfrac_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_zpext_crej: # The name here has no impact on anything.
       data_set_name: "zpext"
-      label: "recommended RNNIP"
-      df_key: "rnnip_crej"
-  plot_settings:
-    ymax: 100.
-    ylabel: "c"
-    binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample, fc=0.018"
-
-
-
-# Comparing Umami and Dips
-Umami_Dips_light_flavour_ttbar:
-  type: "ROC"
-  models_to_plot:
-    dl1r: # The name here has no impact on anything.
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
+      label: "Umami c-rej, zpext"
+      x_values_key: "fc_values"
+      df_key: "umami_cfrac_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    umami_ttbar_crej: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "Dips"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "ttbar"
-      label: "Umami"
-      df_key: "umami_urej" # This is the rejection rate of the currently recommended DL1r tagger
+      label: "Umami c-rej, ttbar"
+      x_values_key: "fc_values"
+      df_key: "umami_cfrac_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
     ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, b-eff=77%"
+    which_axis: ["left",  "left", "right",  "right"]
+    colors: ["red", "red", "blue", "blue"]
+    styles: ["-","--","-","--"]
+    ratio_id: [1,1,2,2]
+    set_logy: true
+    ylabel_right: "c"
+    x_label: "charm fraction"
+    ycolor: "red"
+    ycolor_right: "blue"
+
+# Comparing different trainings
+
+# ## Scanning b-eff
+# ttbar_tagger_compare_light:
+#   type: "ROC"
+#   models_to_plot:
+#     umami_ttbar_urej_lt: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "Umami u-rej"
+#       x_values_key: "beff"
+#       df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#     umami_ttbar_urej_lt_xIP2D: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "Umami (no IP2D) u-rej"
+#       x_values_key: "beff"
+#       df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#       evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/26_1_umami_exclude_IP2D_lt22M/umami_looseTrack_22M/results/results-rej_per_eff-231.h5"
+#     umami_ttbar_urej_lt_xIP3D: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "Umami (no IP3D) u-rej"
+#       x_values_key: "beff"
+#       df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#       evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/26_1_umami_exclude_IP3D_lt22M/umami_looseTrack_22M/results/results-rej_per_eff-249.h5"
+#     umami_ttbar_urej_lt_xSV1: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "Umami (no SV1) u-rej"
+#       x_values_key: "beff"
+#       df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#       evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/26_1_umami_exclude_SV1_lt22M/umami_looseTrack_22M/results/results-rej_per_eff-232.h5"
+#   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+#     ylabel: "light"
+#     binomialErrors: true
+#     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$, f_{c}=0.018"
+#     set_logy: false
+#     x_label: "b-efficiency"
+#     xmin: 0.6
 
 
-
-Umami_Dips_c_flavour_ttbar:
-  type: "ROC"
-  models_to_plot:
-    dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "ttbar"
-      label: "Dips"
-      df_key: "dips_crej"
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "ttbar"
-      label: "Umami"
-      df_key: "umami_crej"
-  plot_settings:
-    ymax: 100.
-    ylabel: "c"
-    binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
-
-
-Umami_Dips_light_flavour_zpext:
-  type: "ROC"
-  models_to_plot:
-    dl1r: # The name here has no impact on anything.
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "zpext"
-      label: "Dips"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "zpext"
-      label: "Umami"
-      df_key: "umami_urej" # This is the rejection rate of the currently recommended DL1r tagger
-  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
-    ylabel: "light"
-    binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample, fc=0.018"
-
-
-
-Umami_Dips_c_flavour_zpext:
-  type: "ROC"
-  models_to_plot:
-    dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "zpext"
-      label: "Dips"
-      df_key: "dips_crej"
-    current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/local_umami_22M/umami_22M/results/results-rej_per_eff-4.h5"
-      data_set_name: "zpext"
-      label: "Umami"
-      df_key: "umami_crej"
-  plot_settings:
-    ymax: 100.
-    ylabel: "c"
-    binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$Z'$ test sample, fc=0.018"
+# ## Scanning charm fraction
+# ttbar_tagger_compare:
+#   type: "ROC"
+#   models_to_plot:
+#     umami_ttbar_urej: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "Umami u-rej"
+#       x_values_key: "fc_values"
+#       df_key: "umami_cfrac_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#       evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/15_1_umami_22M_continued/umami_22M/results/results-rej_per_eff-99.h5"
+#     umami_ttbar_crej: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "Umami c-rej"
+#       x_values_key: "fc_values"
+#       df_key: "umami_cfrac_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#       evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/15_1_umami_22M_continued/umami_22M/results/results-rej_per_eff-99.h5"
+#     umami_lt_ttbar_urej: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "Umami (loose track) u-rej"
+#       x_values_key: "fc_values"
+#       df_key: "umami_cfrac_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#     umami_lt_ttbar_crej: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "Umami (loose track) c-rej"
+#       x_values_key: "fc_values"
+#       df_key: "umami_cfrac_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#     dl1r_lt_ttbar_urej: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "DL1r u-rej"
+#       x_values_key: "fc_values"
+#       df_key: "dl1r_cfrac_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#     dl1r_lt_ttbar_crej: # The name here has no impact on anything.
+#       data_set_name: "ttbar"
+#       label: "DL1r c-rej"
+#       x_values_key: "fc_values"
+#       df_key: "dl1r_cfrac_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+#   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+#     ylabel: "light"
+#     binomialErrors: true
+#     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$, b-eff=77%"
+#     which_axis: ["left",  "right", "left",  "right", "left", "right"]
+#     colors: ["red", "blue", "red", "blue", "red", "blue"]
+#     styles: ["-","-","--","--",":",":"]
+#     ratio_id: [1,2,1,2,1,2]
+#     set_logy: false
+#     ylabel_right: "c"
+#     x_label: "charm fraction"
+#     ycolor: "red"
+#     ycolor_right: "blue"

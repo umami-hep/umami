@@ -4,12 +4,9 @@ import h5py
 import matplotlib as mtp
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-from umami.tools import applyATLASstyle
+from umami.tools import applyATLASstyle, makeATLAStag
 from umami.preprocessing_tools import GetBinaryLabels
 from umami.train_tools import GetRejection
-from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
-
-PLOT_LABEL = "\n$\\sqrt{s}=13$ TeV, PFlow jets"
 
 
 def PlotRejPerEpoch(
@@ -18,8 +15,7 @@ def PlotRejPerEpoch(
     labels={"c_rej": r"$c$-rej. - val. sample",
             "u_rej": "light-rej. - val. sample"},
     comp_tagger_name='DL1r', target_beff=0.77,
-    fc_value=0.018
-):
+    fc_value=0.018, plot_label = "\n$\\sqrt{s}=13$ TeV, PFlow jets"):
     applyATLASstyle(mtp)
     fig, ax1 = plt.subplots(constrained_layout=True)
 
@@ -55,7 +51,7 @@ def PlotRejPerEpoch(
         plt.gcf(),
         "Internal Simulation",
         (
-            PLOT_LABEL
+            plot_label
             + "\nfc={}".format(fc_value)
             + ", WP={:02d}%".format(int(target_beff * 100))
         )
@@ -66,7 +62,7 @@ def PlotRejPerEpoch(
     plt.clf()
 
 
-def PlotLosses(df_results, plot_name,):
+def PlotLosses(df_results, plot_name, plot_label = "\n$\\sqrt{s}=13$ TeV, PFlow jets"):
     applyATLASstyle(mtp)
     plt.plot(df_results['epoch'], df_results['loss'],
              label='training loss - downsampled hybrid sample')
@@ -74,7 +70,7 @@ def PlotLosses(df_results, plot_name,):
              label=r'validation loss - $t\bar{t}$ sample')
     plt.plot(df_results['epoch'], df_results['val_loss_add'],
              label=r"validation loss - ext. $Z'$ sample")
-    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", PLOT_LABEL)
+    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", plot_label)
     plt.legend()
     plt.xlabel('Epoch', fontsize=14, horizontalalignment='right', x=1.0)
     plt.ylabel('Loss')
@@ -83,7 +79,7 @@ def PlotLosses(df_results, plot_name,):
     plt.clf()
 
 
-def PlotAccuracies(df_results, plot_name,):
+def PlotAccuracies(df_results, plot_name, plot_label = "\n$\\sqrt{s}=13$ TeV, PFlow jets"):
     applyATLASstyle(mtp)
     plt.plot(df_results['epoch'], df_results['acc'],
              label='training accuracy - downsampled hybrid sample')
@@ -91,7 +87,7 @@ def PlotAccuracies(df_results, plot_name,):
              label=r'validation accuracy - $t\bar{t}$ sample')
     plt.plot(df_results['epoch'], df_results['val_accuracy_add'],
              label=r"validation accuracy - ext. $Z'$ sample")
-    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", PLOT_LABEL)
+    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", plot_label)
     plt.legend()
     plt.xlabel('Epoch', fontsize=14, horizontalalignment='right', x=1.0)
     plt.ylabel('Accuracy')
@@ -100,7 +96,7 @@ def PlotAccuracies(df_results, plot_name,):
     plt.clf()
 
 
-def PlotLossesUmami(df_results, plot_name,):
+def PlotLossesUmami(df_results, plot_name, plot_label = "\n$\\sqrt{s}=13$ TeV, PFlow jets"):
     applyATLASstyle(mtp)
     plt.plot(df_results['epoch'], df_results['umami_loss'],
              label='training loss UMAMI - downsampled hybrid sample')
@@ -114,7 +110,7 @@ def PlotLossesUmami(df_results, plot_name,):
              label=r"val loss UMAMI - ext. $Z'$ sample")
     plt.plot(df_results['epoch'], df_results['dips_val_loss_add'],
              label=r"val loss DIPS - ext. $Z'$ sample")
-    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", PLOT_LABEL)
+    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", plot_label)
     plt.legend()
     plt.xlabel('Epoch', fontsize=14, horizontalalignment='right', x=1.0)
     plt.ylabel('Loss')
@@ -123,7 +119,7 @@ def PlotLossesUmami(df_results, plot_name,):
     plt.clf()
 
 
-def PlotAccuraciesUmami(df_results, plot_name,):
+def PlotAccuraciesUmami(df_results, plot_name, plot_label = "\n$\\sqrt{s}=13$ TeV, PFlow jets"):
     applyATLASstyle(mtp)
     plt.plot(df_results['epoch'], df_results['umami_acc'],
              label='training acc UMAMI - downsampled hybrid sample')
@@ -137,7 +133,7 @@ def PlotAccuraciesUmami(df_results, plot_name,):
              label=r"val acc UMAMI - ext. $Z'$ sample")
     plt.plot(df_results['epoch'], df_results['dips_val_acc_add'],
              label=r"val acc DIPS - ext. $Z'$ sample")
-    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", PLOT_LABEL)
+    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", plot_label)
     plt.legend()
     plt.xlabel('Epoch', fontsize=14, horizontalalignment='right', x=1.0)
     plt.ylabel('Accuracy')
@@ -150,6 +146,10 @@ def RunPerformanceCheck(train_config, compare_tagger=True,
                         tagger_comp_var=["DL1r_pu", "DL1r_pc", "DL1r_pb"],
                         comp_tagger_name='DL1r'):
     print("Running performance check.")
+    WP_b=train_config.Eval_parameters_validation["WP_b"]
+    fc_value=train_config.Eval_parameters_validation["fc_value"]
+    plot_label=train_config.Eval_parameters_validation["plot_label"]
+
     c_rej, u_rej = None, None
     if compare_tagger:
         variables = ["HadronConeExclTruthLabelID"]
@@ -163,8 +163,8 @@ def RunPerformanceCheck(train_config, compare_tagger=True,
         c_rej, u_rej = GetRejection(
             df[tagger_comp_var[:]].values,
             y_true,
-            train_config.Eval_parameters_validation["WP_b"],
-            train_config.Eval_parameters_validation["fc_value"]
+            WP_b,
+            fc_value
         )
 
     dictfile = f"{train_config.model_name}/DictFile.json"
@@ -178,8 +178,9 @@ def RunPerformanceCheck(train_config, compare_tagger=True,
         labels={"c_rej": r"$c$-rej. - $t\bar{t}$",
                 "u_rej": r"light-rej. - $t\bar{t}$"},
         comp_tagger_name=comp_tagger_name,
-        target_beff=train_config.Eval_parameters_validation["WP_b"],
-        fc_value=train_config.Eval_parameters_validation["fc_value"]
+        target_beff=WP_b,
+        fc_value=fc_value,
+        plot_label=plot_label
     )
 
     if train_config.add_validation_file is not None:
@@ -190,21 +191,28 @@ def RunPerformanceCheck(train_config, compare_tagger=True,
                       "u_rej": "u_rej_add"},
             labels={"c_rej": r"$c$-rej. - ext. $Z'$",
                     "u_rej": r"light-rej. - ext. $Z'$"},
-            target_beff=train_config.Eval_parameters_validation["WP_b"],
-            fc_value=train_config.Eval_parameters_validation["fc_value"]
+            target_beff=WP_b,
+            fc_value=fc_value,
+            plot_label=plot_label
         )
 
     plot_name = f"{plot_dir}/loss-plot.pdf"
-    PlotLosses(df_results, plot_name)
+    PlotLosses(df_results, plot_name, plot_label=plot_label)
 
     plot_name = f"{plot_dir}/accuracy-plot.pdf"
-    PlotAccuracies(df_results, plot_name)
+    PlotAccuracies(df_results, plot_name, plot_label=plot_label)
+
 
 
 def RunPerformanceCheckUmami(train_config, compare_tagger=True,
                              tagger_comp_var=["DL1r_pu", "DL1r_pc", "DL1r_pb"],
-                             comp_tagger_name='DL1r'):
+                             comp_tagger_name='DL1r', WP_b=0.77, fc=0.018, dict_file_name=None):
     print("Running performance check.")
+    plot_label=train_config.Eval_parameters_validation["plot_label"]
+    recommended_fc_values={
+        "DL1r":0.018,
+        "RNNIP":0.08
+    }
     c_rej, u_rej = None, None
     if compare_tagger:
         variables = ["HadronConeExclTruthLabelID"]
@@ -218,12 +226,11 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
         c_rej, u_rej = GetRejection(
             df[tagger_comp_var[:]].values,
             y_true,
-            train_config.Eval_parameters_validation["WP_b"],
-            train_config.Eval_parameters_validation["fc_value"]
+            WP_b,
+            recommended_fc_values[comp_tagger_name]
         )
 
-    dictfile = f"{train_config.model_name}/DictFile.json"
-    df_results = pd.read_json(dictfile)
+    df_results = pd.read_json(dict_file_name)
     plot_dir = f"{train_config.model_name}/plots"
     print("saving plots to", plot_dir)
     os.makedirs(plot_dir, exist_ok=True)
@@ -236,8 +243,9 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
             rej_keys={"c_rej": "c_rej_dips",
                       "u_rej": "u_rej_dips"},
             comp_tagger_name=comp_tagger_name,
-            target_beff=train_config.Eval_parameters_validation["WP_b"],
-            fc_value=train_config.Eval_parameters_validation["fc_value"]
+            target_beff=WP_b,
+            fc_value=fc,
+            plot_label=plot_label
         )
 
     else:
@@ -249,8 +257,9 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
             rej_keys={"c_rej": "c_rej_umami",
                       "u_rej": "u_rej_umami"},
             comp_tagger_name=comp_tagger_name,
-            target_beff=train_config.Eval_parameters_validation["WP_b"],
-            fc_value=train_config.Eval_parameters_validation["fc_value"]
+            target_beff=WP_b,
+            fc_value=fc,
+            plot_label=plot_label
         )
 
     if train_config.add_validation_file is not None:
@@ -268,8 +277,8 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
             c_rej, u_rej = GetRejection(
                 df[tagger_comp_var[:]].values,
                 y_true,
-                train_config.Eval_parameters_validation["WP_b"],
-                train_config.Eval_parameters_validation["fc_value"]
+                WP_b,
+                recommended_fc_values[comp_tagger_name]
             )
 
         if comp_tagger_name == "RNNIP":
@@ -281,8 +290,9 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
                 rej_keys={"c_rej": "c_rej_dips_add",
                           "u_rej": "u_rej_dips_add"},
                 comp_tagger_name=comp_tagger_name,
-                target_beff=train_config.Eval_parameters_validation["WP_b"],
-                fc_value=train_config.Eval_parameters_validation["fc_value"]
+                target_beff=WP_b,
+                fc_value=fc,
+                plot_label=plot_label
             )
 
         else:
@@ -294,12 +304,29 @@ def RunPerformanceCheckUmami(train_config, compare_tagger=True,
                 rej_keys={"c_rej": "c_rej_umami_add",
                           "u_rej": "u_rej_umami_add"},
                 comp_tagger_name=comp_tagger_name,
-                target_beff=train_config.Eval_parameters_validation["WP_b"],
-                fc_value=train_config.Eval_parameters_validation["fc_value"]
+                target_beff=WP_b,
+                fc_value=fc,
+                plot_label=plot_label
             )
 
     plot_name = f"{plot_dir}/loss-plot.pdf"
-    PlotLossesUmami(df_results, plot_name)
+    PlotLossesUmami(df_results, plot_name, plot_label=plot_label)
 
     plot_name = f"{plot_dir}/accuracy-plot.pdf"
-    PlotAccuraciesUmami(df_results, plot_name)
+    PlotAccuraciesUmami(df_results, plot_name, plot_label=plot_label)
+
+def plot_validation(train_config, beff, cfrac, dict_file_name):
+    RunPerformanceCheckUmami(
+        train_config,
+        compare_tagger=True,
+        tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
+        comp_tagger_name="RNNIP",
+        WP_b=beff,
+        fc=cfrac,
+        dict_file_name=dict_file_name
+    )
+    RunPerformanceCheckUmami(train_config, compare_tagger=True,
+        WP_b=beff,
+        fc=cfrac,
+        dict_file_name=dict_file_name
+    )

@@ -18,7 +18,7 @@ import yaml
 from yaml.loader import FullLoader
 import umami.evaluation_tools as uet
 import matplotlib.pyplot as plt
-from umami.evaluate_model import GetScore
+from umami.evaluation_tools.PlottingFunctions import GetScore
 from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 
 
@@ -72,7 +72,7 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         print("model", model_name)
-        if model_config["evaluation_file"] is None:
+        if ("evaluation_file" not in model_config) or (model_config["evaluation_file"] is None):
             model_config["df_results_eff_rej"] = pd.read_hdf(
                 eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5",
                 model_config["data_set_name"]
@@ -80,7 +80,7 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
 
         else:
             model_config["df_results_eff_rej"] = pd.read_hdf(
-                plot_config["evaluation_file"],
+                model_config["evaluation_file"],
                 model_config["data_set_name"]
             )
 
@@ -88,7 +88,10 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
             1.0 / model_config["df_results_eff_rej"][model_config["df_key"]]
         )
 
-        teffs.append(model_config["df_results_eff_rej"]["beff"][:150])
+        x_values="beff"
+        if "x_values_key" in model_config:
+            x_values=model_config["x_values_key"]
+        teffs.append(model_config["df_results_eff_rej"][x_values])
         beffs.append(model_config["rej_rates"])
         labels.append(model_config["label"])
 
@@ -105,6 +108,8 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
                 h5_file.attrs["N_test"]
             )
             h5_file.close()
+        else:
+            plot_config["plot_settings"]["nTest"]=0
 
     uet.plotROCRatio(
         teffs=teffs,
@@ -121,7 +126,7 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
-    if plot_config["evaluation_file"] is None:
+    if ("evaluation_file" not in plot_config) or (plot_config["evaluation_file"] is None):
         df_results = pd.read_hdf(
             eval_file_dir + f'/results-{eval_epoch}.h5',
             plot_config["data_set_name"]
@@ -150,13 +155,14 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     )
     plt.tight_layout()
     plt.savefig(plot_name, transparent=True)
+    plt.close()
 
 
 def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
-    if plot_config["evaluation_file"] is None:
+    if ("evaluation_file" not in plot_config) or (plot_config["evaluation_file"] is None):
         df_results = pd.read_hdf(
             eval_file_dir + f'/results-{eval_epoch}.h5',
             plot_config["data_set_name"]
@@ -193,6 +199,7 @@ def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
     makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", text)
     plt.tight_layout()
     plt.savefig(plot_name, transparent=True)
+    plt.close()
 
 
 def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
