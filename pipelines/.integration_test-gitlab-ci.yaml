@@ -1,9 +1,13 @@
-
 test_ci:
   stage: integration_test
-  image: python:3.7-slim
+  image: $CI_REGISTRY_IMAGE:latest
   script:
-    - echo 'test'
+    - pytest ./umami/tests/integration/ -v
   only:
     - master@atlas-flavor-tagging-tools/algorithms/umami
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - plots

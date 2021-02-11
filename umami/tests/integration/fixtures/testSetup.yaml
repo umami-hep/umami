@@ -1,0 +1,14 @@
+data_url: 'https://umami-docs.web.cern.ch/umami-docs/ci/'
+
+test_preprocessing:
+    data_subfolder: 'preprocessing'
+    config: 'examples/PFlow-Preprocessing.yaml'
+    var_dict_dl1r: 'umami/configs/DL1r_Variables.yaml'
+    var_dict_dips: 'umami/configs/Dips_Variables.yaml'
+    var_dict_umami: 'umami/configs/Umami_Variables.yaml'
+    testdir: '/tmp/umami/preprocessing'
+    files:
+        - MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+        - MC16d_hybrid-cjets_even_1_PFlow-merged.h5
+        - MC16d_hybrid-ext_even_0_PFlow-merged.h5
+        - MC16d_hybrid-ujets_even_1_PFlow-merged.h5
