@@ -1,0 +1,286 @@
+{
+    "jets": [
+        {
+            "name": "absEta_btagJes",
+            "shift": 0.9178059924309648,
+            "scale": 0.6329371338294476,
+            "default": 0.9178059924309648
+        },
+        {
+            "name": "pt_btagJes",
+            "shift": 600718.1529392081,
+            "scale": 1030343.2598402606,
+            "default": 600718.1529392081
+        },
+        {
+            "name": "JetFitter_mass",
+            "shift": 2628.160882388017,
+            "scale": 1980.8293155557026,
+            "default": 2628.160879014427
+        },
+        {
+            "name": "JetFitter_isDefaults",
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        },
+        {
+            "name": "JetFitter_energyFraction",
+            "shift": 0.30407330748918066,
+            "scale": 0.33879318994959623,
+            "default": 0
+        },
+        {
+            "name": "JetFitter_significance3d",
+            "shift": 10.158343398602046,
+            "scale": 16.26022339906894,
+            "default": 0
+        },
+        {
+            "name": "JetFitter_nVTX",
+            "shift": 0.17393347300462386,
+            "scale": 0.9952030168003537,
+            "default": -1
+        },
+        {
+            "name": "JetFitter_nSingleTracks",
+            "shift": 0.18880049174108063,
+            "scale": 1.1956075804735955,
+            "default": -1
+        },
+        {
+            "name": "JetFitter_nTracksAtVtx",
+            "shift": 1.021242697706289,
+            "scale": 2.0726252741632196,
+            "default": -1
+        },
+        {
+            "name": "JetFitter_N2Tpair",
+            "shift": 2.853156317059087,
+            "scale": 7.352188004606731,
+            "default": -1
+        },
+        {
+            "name": "JetFitter_deltaR",
+            "shift": 0.0588695006067881,
+            "scale": 0.05094528841967241,
+            "default": 0.05886950108653467
+        },
+        {
+            "name": "SV1_NGTinSvx",
+            "shift": 0.7763785091973633,
+            "scale": 2.5882391012520474,
+            "default": -1
+        },
+        {
+            "name": "SV1_masssvx",
+            "shift": 2006.8990437449295,
+            "scale": 753.3696395759655,
+            "default": 2006.8990364941976
+        },
+        {
+            "name": "SV1_isDefaults",
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        },
+        {
+            "name": "SV1_N2Tpair",
+            "shift": 0.9771338645048284,
+            "scale": 3.9137581177227383,
+            "default": -1
+        },
+        {
+            "name": "SV1_efracsvx",
+            "shift": 0.1979814998290201,
+            "scale": 0.308124842346449,
+            "default": 0
+        },
+        {
+            "name": "SV1_deltaR",
+            "shift": 0.0621984006943246,
+            "scale": 0.10161890335612567,
+            "default": 0.06219840104195302
+        },
+        {
+            "name": "SV1_Lxy",
+            "shift": 14.730605950644735,
+            "scale": 13.895406090527064,
+            "default": 14.730605723839435
+        },
+        {
+            "name": "SV1_L3d",
+            "shift": 24.5967939198283,
+            "scale": 26.059339706478866,
+            "default": 24.596793551539278
+        },
+        {
+            "name": "SV1_significance3d",
+            "shift": 29.74542419927027,
+            "scale": 23.62576291396458,
+            "default": 29.745424073276666
+        },
+        {
+            "name": "IP2D_bu",
+            "shift": 0.10376364874350298,
+            "scale": 5.120098401504246,
+            "default": 0.10376364876178952
+        },
+        {
+            "name": "IP2D_isDefaults",
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        },
+        {
+            "name": "IP2D_bc",
+            "shift": -1.1313243011247207,
+            "scale": 2.669094948573187,
+            "default": -1.1313243013006167
+        },
+        {
+            "name": "IP2D_cu",
+            "shift": 1.2270190056164823,
+            "scale": 2.7509497962346336,
+            "default": 1.2270190066922222
+        },
+        {
+            "name": "IP3D_bu",
+            "shift": 0.29018567162469616,
+            "scale": 5.756068332614096,
+            "default": 0.29018567171354126
+        },
+        {
+            "name": "IP3D_isDefaults",
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        },
+        {
+            "name": "IP3D_bc",
+            "shift": -1.1836643273520444,
+            "scale": 3.1251304171003995,
+            "default": -1.1836643274134322
+        },
+        {
+            "name": "IP3D_cu",
+            "shift": 1.4710096929626102,
+            "scale": 3.070299812699034,
+            "default": 1.4710096924613627
+        },
+        {
+            "name": "JetFitterSecondaryVertex_nTracks",
+            "shift": 1.2270644231637038,
+            "scale": 1.2717503585733172,
+            "default": 0
+        },
+        {
+            "name": "JetFitterSecondaryVertex_isDefaults",
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        },
+        {
+            "name": "JetFitterSecondaryVertex_mass",
+            "shift": 688.5091619472215,
+            "scale": 642.3767881246121,
+            "default": 688.5091655301497
+        },
+        {
+            "name": "JetFitterSecondaryVertex_energy",
+            "shift": 110533.16635753092,
+            "scale": 799736.3666981177,
+            "default": 110533.16758965515
+        },
+        {
+            "name": "JetFitterSecondaryVertex_energyFraction",
+            "shift": 0.15188951160863068,
+            "scale": 0.21470963471089577,
+            "default": 0
+        },
+        {
+            "name": "JetFitterSecondaryVertex_displacement3d",
+            "shift": 22.712680208933943,
+            "scale": 36.82454450484794,
+            "default": 22.7126798826716
+        },
+        {
+            "name": "JetFitterSecondaryVertex_displacement2d",
+            "shift": 12.899224195518698,
+            "scale": 18.685991961260413,
+            "default": 12.899224149459688
+        },
+        {
+            "name": "JetFitterSecondaryVertex_maximumTrackRelativeEta",
+            "shift": 4.318259708996527,
+            "scale": 1.0409762248274772,
+            "default": 4.31825970521838
+        },
+        {
+            "name": "JetFitterSecondaryVertex_minimumTrackRelativeEta",
+            "shift": 3.788365825539743,
+            "scale": 0.9365495569299177,
+            "default": 3.788365817286972
+        },
+        {
+            "name": "JetFitterSecondaryVertex_averageTrackRelativeEta",
+            "shift": 4.05125866800708,
+            "scale": 0.945083645271854,
+            "default": 4.051258723847441
+        },
+        {
+            "name": "maximumTrackRelativeEta",
+            "shift": 5.192101980097313,
+            "scale": 1.2248473951904952,
+            "default": 5.192101980099211
+        },
+        {
+            "name": "minimumTrackRelativeEta",
+            "shift": 2.3377980729596826,
+            "scale": 0.5235373084067296,
+            "default": 2.337798072956174
+        },
+        {
+            "name": "averageTrackRelativeEta",
+            "shift": 3.3723328124511687,
+            "scale": 0.7050419508943957,
+            "default": 3.372332812451253
+        },
+        {
+            "name": "rnnip_pb",
+            "shift": 0.38778186251987873,
+            "scale": 0.34529737259385573,
+            "default": 0.38778186251987873
+        },
+        {
+            "name": "rnnip_pc",
+            "shift": 0.16499769195088476,
+            "scale": 0.11951780956060383,
+            "default": 0.16499769195088476
+        },
+        {
+            "name": "rnnip_pu",
+            "shift": 0.44722041589136086,
+            "scale": 0.34296050219330965,
+            "default": 0.44722041589136086
+        }
+    ],
+    "tracks": {
+        "ptfrac": {
+            "shift": -3.8170812129974365,
+            "scale": 1.6188899278640747
+        },
+        "dr": {
+            "shift": -2.7719616889953613,
+            "scale": 1.050353765487671
+        },
+        "numberOfPixelHits": {
+            "shift": 4.027118682861328,
+            "scale": 0.857079029083252
+        },
+        "numberOfSCTHits": {
+            "shift": 8.077427864074707,
+            "scale": 1.3678557872772217
+        }
+    }
+}

@@ -6,8 +6,13 @@ from numpy.lib.recfunctions import repack_fields
 import pandas as pd
 import argparse
 import yaml
-from umami.tools import yaml_loader
 import json
+import sys
+import os
+from umami.tools import yaml_loader
+from pprint import pprint
+from glob import glob
+from tqdm import tqdm
 
 
 def GetParser():
@@ -21,11 +26,21 @@ def GetParser():
                         " hybrid sample.")
     parser.add_argument('-t', '--tracks', action='store_true',
                         help="Stores also track information.")
-    parser.add_argument('-v', '--var_dict', required=True, default=None,
+    parser.add_argument('-v', '--var_dict', default=None,
                         help="Dictionary with input variables of tagger.",
                         type=str)
+    parser.add_argument('--sample', default=None,
+                        help='Choose sample type for hybrid sample preparation'
+                             ' and merging.')
+    parser.add_argument('--shuffle_array', action='store_true',
+                        help='Shuffle output arrays in hybrid sample'
+                             ' preparation.')
     # possible job options for the different preprocessing steps
     action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument('-p', '--prepare', action='store_true',
+                        help='Prepares hybrid sample (choose sample type).')
+    action.add_argument('-m', '--merge', action='store_true',
+                        help="Merge hybrid samples as defined in config file.")
     action.add_argument('-u', '--undersampling', action='store_true',
                         help="Runs undersampling.")
     # action.add_argument('--weighting', action='store_true',
@@ -39,6 +54,258 @@ def GetParser():
                              " training labels to disk")
     args = parser.parse_args()
     return args
+
+
+def RunPreparation(args, config):
+    """Process ttbar and Zprime ntuples and create hybrid samples.
+    These hybrid samples are created by filling the jets below a
+    certain pt threshold from ttbar events (filtered by jet flavour)
+    and taking the jets above the threshold from the Zprime sample.
+
+    Typically, the required set of hybrid samples consists of
+    training samples and testing samples.
+    The training samples are:
+
+    - ttbar: b-jets
+    - ttbar: c-jets
+    - ttbar: u-jets
+    - zprime (not filtered by jet flavour)
+
+    The validation and testing samples are:
+
+    - ttbar (not filtered by jet flavour)
+    - zprime (not filtered by jet flavour)
+
+    The properties of the samples are configured in the config file, using
+    the information provided via the property "preparation".
+    Here, the path to the ttbar and zprime ntuple files are provided via
+    the keyword "ntuples":
+
+    ```
+# content of config file
+preparation:
+  ntuples:
+    ttbar:
+      path: <path to ntuples>
+      file_pattern: output_1.h5/*.h5
+    zprime:
+      path: <path to ntuples>
+      file_pattern: output_2.h5/*.h5
+    ```
+
+    For each training sample, an entry via the keyword "samples" is provided
+    which specifies the respective properties of the sample:
+
+    ```
+# content of config file
+preparation:
+  samples:
+    training_ttbar_bjets:     # sample name (choice of user)
+      type: ttbar             # sample type (either 'ttbar' or 'zprime)
+      category: bjets         # flavour category, only for ttbar
+                              # ('bjets', 'cjets', 'ujets')
+      n_jets: 10000000        # number of jets to be processed
+      parity: even            # event number of stored events,
+                              # useful for separating training
+                              # and test datasets
+                              # ('even' or 'odd')
+      n_split: 10             # number of output files to reduce memory
+                              # output files must be merged
+      pt_cut: true            # apply the pt cut for b-jets as an
+                              # upper or lower cut
+                              # depends on sample type (ttbar / zprime)
+      f_output:               # where to store hybrid samples
+        path: <path to output directory>
+        file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+
+# pT cut for b-jets
+bhad_pTcut: 2.5e5
+    ```
+
+    The user needs to provide the sample name using the `--sample` argument,
+    then the associated sample will be processed.
+    """
+    # check if sample is provided, otherwise exit
+    if not args.sample:
+        print("Please provide --sample to prepare hybrid samples")
+        sys.exit(1)
+
+    # set up sample
+    samples = config.preparation['samples']
+    try:
+        sample = samples[args.sample]
+    except KeyError:
+        print(f"Warning: sample \"{args.sample}\" not in config file!")
+        print(f"Samples contained in config file \"{args.config_file}\":")
+        pprint(samples)
+        return
+    sample_type = sample.get('type')
+    sample_category = sample.get('category', None)
+    index_parity = sample.get('parity', None)
+    pt_cut = float(config.bhad_pTcut) if sample.get('pt_cut', False) else None
+    n_jets = int(sample.get('n_jets', 0))
+    n_split = int(sample.get('n_split', 1))
+    output_path = sample.get('f_output')['path']
+    output_file = os.path.join(output_path, sample.get('f_output')['file'])
+
+    # set up ntuples
+    ntuples = config.preparation['ntuples']
+    ntuple_path = ntuples.get(sample['type'])['path']
+    ntuple_file_pattern = ntuples.get(sample['type'])['file_pattern']
+    ntuples = glob(os.path.join(ntuple_path, ntuple_file_pattern))
+
+    # bookkeeping variables for running over the ntuples
+    jets = None
+    jets_per_file = n_jets // n_split
+    jets_loaded = 0
+    jets_saved = 0
+    file_count = 0
+    n_jets_to_get = n_jets
+
+    # ensure output path exists
+    os.system(f"mkdir -p {output_path}")
+
+    # run over ntuples to extract jets (and potentially also tracks)
+    print("Processing ntuples...")
+    pbar = tqdm(total=n_jets)
+    for i, filename in enumerate(ntuples):
+        if n_jets <= 0:
+            break
+        if jets is None:
+            # iteration over first ntuple
+            # (jets and tracks arrays are created for the first time)
+            jets, tracks = upt.get_jets(filename, n_jets,
+                                        sample_type, sample_category,
+                                        index_parity, args.tracks, pt_cut)
+            pbar.update(jets.size)
+        else:
+            # iterations over second and following ntuples
+            add_jets, add_tracks = upt.get_jets(filename, n_jets_to_get,
+                                                sample_type, sample_category,
+                                                index_parity, args.tracks,
+                                                pt_cut)
+            pbar.update(add_jets.size)
+            jets = np.concatenate([jets, add_jets])
+            del add_jets
+            if add_tracks is not None:
+                tracks = np.concatenate([tracks, add_tracks])
+                del add_tracks
+        jets_loaded = jets.size + jets_saved
+        n_jets_to_get = n_jets - jets_loaded
+
+        writeToFile = (len(jets) > jets_per_file or
+                       n_jets_to_get <= 0 or
+                       i == (len(ntuples) - 1))
+        if writeToFile:
+            if args.shuffle_array:
+                pbar.write("Shuffling array")
+                rng_state = np.random.get_state()
+                np.random.shuffle(jets)
+                if args.tracks:
+                    np.random.set_state(rng_state)
+                    np.random.shuffle(tracks)
+            output_file_intermediate = output_file.replace(
+                ".h5", f"-file_{file_count}.h5")
+            pbar.write("Writing output file: " + output_file_intermediate)
+            with h5py.File(output_file_intermediate, 'w') as out_file:
+                out_file.create_dataset('jets', data=jets,
+                                        compression='gzip')
+                if args.tracks:
+                    out_file.create_dataset('tracks', data=tracks,
+                                            compression='gzip')
+            jets_saved += len(jets)
+            jets = None
+            tracks = None
+            file_count += 1
+
+        if n_jets_to_get <= 0:
+            break
+    pbar.close()
+    if n_jets_to_get > 0:
+        print("WARNING: Not enough selected jets from files,"
+              " only " + jets_loaded)
+
+
+def RunMerging(args, config):
+    """Merge hybrid samples which have been prepared using a split value > 1 to
+    single files which are required to run the preprocessing steps.
+
+    Typically, the training datasets are split in several files to
+    reduce the memory strain of the workstation.
+    These outputs need to be combined into single files.
+
+    The merging step is configured using the config file.
+    Here, the information required for merging is provided as
+    additional parameters via the keyword "ntuples":
+
+    ```
+# content of config file
+preparation:
+  samples:
+    training_ttbar_bjets:       # sample name (choice of user)
+      [...]
+      n_split: 10               # number of output files
+                                # produced in preparation step
+      f_output:                 # path to the input for merging
+        path: <path to output directory>
+        file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+      merge_output: f_tt_bjets  # where to store the merged ntuples
+                                # either explicit path or
+                                # name of config property providing path
+f_tt_bjets:
+  path: <path to merged hybrid sample>
+  file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+    ```
+
+    The user needs to provide the sample name using the `--sample` argument,
+    then the files associated to the sample will be merged.
+    """
+    # check if sample is provided, otherwise exit
+    if not args.sample:
+        print("Please provide --sample to prepare hybrid samples")
+        sys.exit(1)
+
+    # set up sample
+    samples = config.preparation['samples']
+    try:
+        sample = samples[args.sample]
+    except KeyError:
+        print(f"Warning: sample \"{args.sample}\" not in config file!")
+        print(f"Samples contained in config file \"{args.config_file}\":")
+        pprint(samples)
+        return
+
+    # collect input files for merging step:
+    # use split output files of hybrid sample preparation
+    input_file_template = os.path.join(
+        sample.get('f_output')['path'],
+        sample.get('f_output')['file'])
+    n_split = int(sample.get('n_split', 1))
+    if n_split > 1:
+        input_file_template = input_file_template.replace(".h5", "-file_*.h5")
+    input_files = glob(input_file_template)
+    # check if merge_output points to a property of the config file.
+    # otherwise assume an explicit path has been provided
+    try:
+        output_file = getattr(config, sample.get('merge_output'))
+    except AttributeError:
+        output_file = sample.get('merge_output')
+    output_path = os.path.dirname(output_file)
+
+    # ensure output path exists
+    os.system(f"mkdir -p {output_path}")
+
+    # merge input files to output file
+    output = h5py.File(output_file, 'w')
+    size, ranges = upt.get_size(input_files)
+    upt.create_datasets(output, input_files[0], size)
+
+    print(f"Merging {len(input_files)} hybrid samples...")
+    for f in tqdm(sorted(input_files)):
+        tqdm.write(f"Processing sample {f}")
+        upt.add_data(f, output, ranges[f])
+    output.close()
+    print(f"Merged hybrid samples output written to {output_file}")
 
 
 def RunUndersampling(args, config):
@@ -163,6 +430,12 @@ def GetScaleDict(args, config):
     The calculation is done only on the first iteration.
     """
     # TODO: find good way to get file names, breaks if no iterations
+
+    # check if var_dict is provided, otherwise exit
+    if not args.var_dict:
+        print("Provide --var_dict to retrieve scaling and shifting factors")
+        sys.exit(1)
+
     input_file = config.GetFileName(iteration=1, option='downsampled')
     print(input_file)
     infile_all = h5py.File(input_file, 'r')
@@ -234,6 +507,9 @@ def GetScaleDict(args, config):
 
 
 def ApplyScalesTrksNumpy(args, config, iteration=1):
+    if not args.var_dict:
+        print("Provide --var_dict to apply scaling and shifting factors")
+        sys.exit(1)
     print("Track scaling")
     input_file = config.GetFileName(iteration=iteration, option='downsampled')
     print(input_file)
@@ -283,6 +559,10 @@ def ApplyScalesNumpy(args, config, iteration=1):
     """
         Apply the scaling and shifting to dataset using numpy
     """
+    if not args.var_dict:
+        print("Provide --var_dict to apply scaling and shifting factors")
+        sys.exit(1)
+
     input_file = config.GetFileName(iteration=iteration, option='downsampled')
 
     jets = pd.DataFrame(
@@ -328,6 +608,9 @@ def ApplyScales(args, config):
 
 
 def WriteTrainSample(args, config):
+    if not args.var_dict:
+        print("Please provide --var_dict to write training samples")
+        sys.exit(1)
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
     input_files = [config.GetFileName(
@@ -380,6 +663,10 @@ if __name__ == '__main__':
     args = GetParser()
     config = upt.Configuration(args.config_file)
 
+    if args.prepare:
+        RunPreparation(args, config)
+    if args.merge:
+        RunMerging(args, config)
     if args.undersampling:
         RunUndersampling(args, config)
     if args.scaling:

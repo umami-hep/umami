@@ -60,6 +60,8 @@ Alternatively, you can retrieve the image from the GitLab container registry
 singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami:latest bash
 ```
 
+#### Launching containers with GPU support using Singularity (lxplus/institute cluster)
+
 The image with GPU support can be run with the command (note that singularity requires the `--nv` argument to provide the GPU resources within the container):
 ```bash
 singularity exec --nv docker://btagging/umami:latest-gpu bash

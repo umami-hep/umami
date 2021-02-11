@@ -1,0 +1,147 @@
+parameters:
+  # ntuple path
+  ntuple_path: &ntuple_path /nfs/dust/atlas/user/pgadow/ftag/data/ntuples/
+  # hybrid sample path
+  sample_path: &sample_path /nfs/dust/atlas/user/pgadow/ftag/data/processed/20210107-defaulttracks/hybrid/
+  # file path
+  file_path: &file_path /nfs/dust/atlas/user/pgadow/ftag/data/processed/20210107-defaulttracks/merged/
+
+preparation:
+  ntuples:
+    ttbar:
+      path: *ntuple_path
+      file_pattern: user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2020-02-14-T232210-R26303_output.h5/*.h5
+    zprime:
+      path: *ntuple_path
+      file_pattern: user.mguth.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2020-02-15-T225316-R8334_output.h5/*.h5
+
+  samples:
+    training_ttbar_bjets:
+      type: ttbar
+      category: bjets
+      n_jets: 10000000
+      parity: even
+      n_split: 10
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+      merge_output: f_tt_bjets
+
+    training_ttbar_cjets:
+      type: ttbar
+      category: cjets
+      n_jets: 12745953
+      parity: even
+      n_split: 13
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
+      merge_output: f_tt_cjets
+
+    training_ttbar_ujets:
+      type: ttbar
+      category: ujets
+      n_jets: 20000000
+      parity: even
+      n_split: 20
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
+      merge_output: f_tt_ujets
+
+    training_zprime:
+      type: zprime
+      n_jets: 9593092
+      parity: even
+      split: 2
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
+      merge_output: f_z
+
+    testing_ttbar:
+      type: ttbar
+      n_jets: 4000000
+      parity: odd
+      n_split: 2
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
+
+    testing_zprime:
+      type: zprime
+      n_jets: 4000000
+      parity: odd
+      n_split: 2
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
+
+# amount of b-jets which are used in the pre-resampling,
+# can change after applying resampling in the hybrid sample creation
+njets: 5.5e6
+# fraction of ttbar jets wrt. Z'
+# can change after applying resampling in the hybrid sample creation
+ttbar_frac: 0.65
+# outputfiles are split into 5
+# iterations: 1
+iterations: 5
+# pT cut for hybrid creation (for light and c-jets)
+pTcut: 2.5e5
+# pT cut for b-jets
+bhad_pTcut: 2.5e5
+# upper pT limit for all jets
+pT_max: False
+f_z:
+  path: *file_path
+  file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
+f_tt_bjets:
+  path: *file_path
+  file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+f_tt_cjets:
+  path: *file_path
+  file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
+f_tt_ujets:
+  path: *file_path
+  file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
+outfile_name: /nfs/dust/atlas/user/pgadow/ftag/data/processed/20201216-defaulttracks/output/PFlow-hybrid_70-test.h5
+plot_name: PFlow_ext-hybrid
+
+# Dictfile for the scaling and shifting (json)
+dict_file: "examples/PFlow-scale_dict-22M.json"
+
+# cut definitions to be applied to remove outliers
+# possible operators: <, ==, >, >=, <=
+Cuts:
+  JetFitterSecondaryVertex_mass:
+    operator: <
+    condition: 25000
+    NaNcheck: True
+  JetFitterSecondaryVertex_energy:
+    operator: <
+    condition: 1e8
+    NaNcheck: True
+  JetFitter_deltaR:
+    operator: <
+    condition: 0.6
+    NaNcheck: True
+  softMuon_pt:
+    operator: <
+    condition: 0.5e9
+    NaNcheck: True
+  softMuon_momentumBalanceSignificance:
+    operator: <
+    condition: 50
+    NaNcheck: True
+  softMuon_scatteringNeighbourSignificance:
+    operator: <
+    condition: 600
+    NaNcheck: True
+  softMuon_momentumBalanceSignificance:
+    operator: <
+    condition: 4000
+    NaNcheck: True

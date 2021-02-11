@@ -26,3 +26,6 @@ outfile_name: Null
 plot_name: Null
 Cuts: Null
 dict_file: Null
+preparation:
+  ntuples: Null
+  samples: Null

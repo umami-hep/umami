@@ -25,7 +25,7 @@ setup(
     #     "tables",
     #     "pandas",
     #     "tensorflow",
-    #     "keras"                 
+    #     "keras"
     # ],
     include_package_data=True,
     test_suite='umami.tests',
