@@ -1,6 +1,11 @@
 parameters:
   # file path
   file_path: &file_path ./
+
+preparation:
+  ntuples: None
+  samples: None
+
 # amount of b-jets which are used
 njets: 5e6
 # fraction of ttbar jets wrt. Z'

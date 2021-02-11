@@ -14,81 +14,61 @@ The training ntuples are produced using the [training-dataset-dumper](https://gi
 After the previous step the ntuples need to be further processed. We use an undersampling approach to achieve the same pt and eta distribution for all three flavour categories.
 In order to reduce the memory usage we first extract the 3 jet categories separately since e.g. c-jets only make up 8% of the ttbar sample.
 
-This processing can be done using the script [`create_hybrid-large_files.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/blob/master/create_hybrid-large_files.py)
+This processing can be done using the preprocessing capabilities of Umami via the [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py) script.
 
+Please refer to the [documentation on preprocessing](preprocessing.md) for additional information.
+Note, that for running DL1r no tracks have to be stored in the output hybrid sample. Therefore, the `--tracks` argument can be omitted.
 
-There are several training and validation/test samples to produce. See below a list of all the necessary ones
+There are several training and validation/test samples to produce. See below a list of all the necessary ones:
 
 ##### Training Samples (even EventNumber)
 
-`{TTBAR}` are the names of the ttbar-files retrieved from the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) which can be passed with wildcards and the same for Z' `${ZPRIME}`.
-
 * ttbar (pT < 250 GeV)
     * b-jets
-        ```bash
-        python create_hybrid-large_files.py --n_split 4 --even --bjets -Z ${ZPRIME} -t ${TTBAR} -n 10000000 -c 1.0 -o ${FPATH}/MC16d_hybrid-bjets_even_1_PFlow-merged.h5
-        ```
     * c-jets
-        ```bash
-        python create_hybrid-large_files.py --n_split 4 --even --cjets -Z ${ZPRIME} -t ${TTBAR} -n 12745953 -c 1.0 -o ${FPATH}/MC16d_hybrid-cjets_even_1_PFlow-merged.h5
-        ```
     * light-jets
-        ```bash
-        python create_hybrid-large_files.py --n_split 5 --even --ujets -Z ${ZPRIME} -t ${TTBAR} -n 20000000 -c 1.0 -o ${FPATH}/MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-        ```
 * Z' (pT > 250 GeV) -> extended Z'
     * b, c, light-jets combined
-        ```bash
-        python create_hybrid-large_files.py --even -Z ${ZPRIME} -t ${TTBAR} -n 9593092 -c 0.0 -o ${FPATH}/MC16d_hybrid-ext_even_0_PFlow-merged.h5
-        ```
 
 
 ##### Validation and Test Samples (odd EventNumber)
 
 * ttbar
-    ```
-    python create_hybrid-large_files.py --n_split 2 --odd --no_cut -Z ${ZPRIME} -t ${TTBAR} -n 4000000 -c 1.0 -o ${FPATH}/MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
-    ```
 * Z' (extended and standard)
-    ```
-    python create_hybrid-large_files.py --n_split 2 --odd --no_cut -Z ${ZPRIME} -t ${TTBAR} -n 4000000 -c 0.0 -o ${FPATH}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
-    ```
 
-The above script will output several files per sample, to not run into memory issues, which can be merged using the [`merge_big.py`](https://gitlab.cern.ch/mguth/hdf5_manipulator/blob/master/merge_big.py) script.
+### Preprocessing
 
-## Preprocessing
+After you produced these samples during the preparation step and merged the output files, you can run the
+preprocessing remaining four stages:
 
-After the preparation of the samples, the next step is the processing for the training itself which is done with the script [preprocessing.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/preprocessing.py).
-
-The configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml), you need to adapt it to your needs especially the `file_path`.
 
 1. Running the undersampling
 
-```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --undersampling
+preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/DL1r_Variables.yaml --undersampling
 ```
 
 2. Retrieving scaling and shifting factors
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --scaling
+preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/DL1r_Variables.yaml --scaling
 ```
 
 3. Applying shifting and scaling factors
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --apply_scales
+preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/DL1r_Variables.yaml --apply_scales
 ```
 
 4. Shuffling the samples and writing the samples to disk
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --write
+preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/DL1r_Variables.yaml --write
 ```
 
 The training Variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
 
-If you don't want to process them all you can use the already processed samples uploaded to rucio in the dataset `user.mguth:user.mguth.dl1r.trainsamples`.
+If you don't want to process them all you can use the already processed samples uploaded to rucio in the dataset `user.mguth:user.mguth.dl1r.trainsamples`. Note, that in this case you need to supply the associated[dictionary with scaling factors](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/assets/PFlow-scale_dict-22M.json) by hand, which is otherwise creating during the preprocessing.
+
 
 ## Training
 

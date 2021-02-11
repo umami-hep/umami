@@ -18,6 +18,8 @@ class PreprocessingTestParser(unittest.TestCase):
 
     @mock.patch('argparse.ArgumentParser.parse_args',
                 return_value=argparse.Namespace(config_file=config_file,
+                                                prepare=False,
+                                                merge=False,
                                                 undersampling=False,
                                                 scaling=True,
                                                 apply_scales=False,
