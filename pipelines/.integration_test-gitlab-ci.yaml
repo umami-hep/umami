@@ -1,5 +1,5 @@
 
-build_docs:
+test_ci:
   stage: integration_test
   image: python:3.7-slim
   script:
