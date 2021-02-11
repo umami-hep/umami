@@ -14,3 +14,15 @@ yaml_loader.add_implicit_resolver(
     |[-+]?\\.(?:inf|Inf|INF)
     |\\.(?:nan|NaN|NAN))$''', re.X),
     list(u'-+0123456789.'))
+
+
+def replaceLineInFile(file, key, newLine):
+    filedata = ''
+    with open(file, 'r') as f :
+        for line in f:
+            if key in line:
+                line = newLine + '\n'
+            filedata += line
+
+    with open(file, 'w') as f:
+        f.write(filedata)

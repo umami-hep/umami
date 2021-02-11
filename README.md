@@ -38,10 +38,22 @@ which creates a symlink to the repository.
 
 ## Testing & Linter
 
-The unit test you can be run via
+The test suite can be run via
 
 ```bash
 pytest ./umami/tests/ -v
+```
+
+If you want to only run unit tests, this can be done via
+
+```bash
+pytest ./umami/tests/unit/ -v
+```
+
+and the integration test similarly via
+
+```bash
+pytest ./umami/tests/integration/ -v
 ```
 
 In order to run the code style checker `flake8` use the following command
