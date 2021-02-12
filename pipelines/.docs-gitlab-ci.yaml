@@ -1,6 +1,6 @@
 
 build_docs:
-  stage: docs_build
+  stage: builds
   image: gitlab-registry.cern.ch/authoring/documentation/mkdocs:stable
   script:
       - mkdocs build --strict --clean --site-dir www

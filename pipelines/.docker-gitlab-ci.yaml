@@ -1,21 +1,56 @@
+# Tag of TensorFlow base image
+# https://pypi.org/project/tensorflow/#history
+variables:
+  TFTAG: 2.4.0
 
-build_img_gpu:
-  stage: image_build
+# ----------------------------------------------------------------------------
+# Umami base + Umami images: only get built on master
+#                            (see below for tags)
+# ----------------------------------------------------------------------------
+
+build_umamibase_cpu:
+  stage: image_build_umamibase
   variables:
-    FROM: tensorflow/tensorflow:$TFTAG-gpu
-    TO: $CI_REGISTRY_IMAGE:latest-gpu
+    DOCKER_FILE: docker/umamibase/Dockerfile
+    FROM: tensorflow/tensorflow:$TFTAG
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
   script:
     # The script gets overwritten in jobs tagged docker-image-build
     - ignore
   tags:
     - docker-image-build
   only:
-    - master
+    refs:
+      - master
+    changes:
+      - docker/umamibase/*
+      - requirements.txt
 
-build_img_cpu:
-  stage: image_build
+build_umamibase_gpu:
+  stage: builds
   variables:
-    FROM: tensorflow/tensorflow:$TFTAG
+    DOCKER_FILE: docker/umamibase/Dockerfile
+    FROM: tensorflow/tensorflow:$TFTAG-gpu
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
+  only:
+    refs:
+      - master
+    changes:
+      - docker/umamibase/*
+      - requirements.txt
+
+
+# Umami images: use base image as a foundation to speed up build process
+build_umami_cpu:
+  stage: image_build_umami
+  variables:
+    DOCKER_FILE: docker/umami/Dockerfile
+    FROM: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
     TO: $CI_REGISTRY_IMAGE:latest
   script:
     # The script gets overwritten in jobs tagged docker-image-build
@@ -25,11 +60,84 @@ build_img_cpu:
   only:
     - master
 
-
-build_img_tag_cpu:
-  stage: image_build
+build_umami_gpu:
+  stage: image_build_umami
   variables:
+    DOCKER_FILE: docker/umami/Dockerfile
+    FROM: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
+    TO: $CI_REGISTRY_IMAGE:latest-gpu
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
+  only:
+    - master
+
+
+# ----------------------------------------------------------------------------
+# Umami base + Umami images: temporary images for merge request tests
+# only CPU images are considered for the CI tests
+# (gitlab runners don't have GPUs (yet) ...)
+# indicated by "MR-" in their tag
+# ----------------------------------------------------------------------------
+
+# Base images for merge requests (MRs): used for tests in MRs,
+# will be deleted on regular basis from the gitlab registry
+# as they are only used for tests in the MR pipeline
+build_umamibase_cpu_MR:
+  stage: image_build_umamibase
+  variables:
+    DOCKER_FILE: docker/umamibase/Dockerfile
     FROM: tensorflow/tensorflow:$TFTAG
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+
+
+# ----------------------------------------------------------------------------
+# Umami base + Umami images: builds for tags
+# ----------------------------------------------------------------------------
+
+build_umamibase_cpu_TAG:
+  stage: image_build_umamibase
+  variables:
+    DOCKER_FILE: docker/umamibase/Dockerfile
+    FROM: tensorflow/tensorflow:$TFTAG
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:$CI_COMMIT_REF_SLUG-base'
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
+  only:
+    - tags
+
+build_umamibase_gpu_TAG:
+  stage: image_build_umamibase
+  variables:
+    DOCKER_FILE: docker/umamibase/Dockerfile
+    FROM: tensorflow/tensorflow:$TFTAG-gpu
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:$CI_COMMIT_REF_SLUG-base-gpu'
+  script:
+    # The script gets overwritten in jobs tagged docker-image-build
+    - ignore
+  tags:
+    - docker-image-build
+  only:
+    - tags
+
+
+build_umami_cpu_TAG:
+  stage: image_build_umami
+  variables:
+    DOCKER_FILE: docker/umami/Dockerfile
+    FROM: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:$CI_COMMIT_REF_SLUG-base'
     TAG: latest
     TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   tags:
@@ -39,10 +147,11 @@ build_img_tag_cpu:
   only:
     - tags
 
-build_img_tag_gpu:
-  stage: image_build
+build_umami_gpu_TAG:
+  stage: image_build_umami
   variables:
-    FROM: tensorflow/tensorflow:$TFTAG-gpu
+    DOCKER_FILE: docker/umami/Dockerfile
+    FROM: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:$CI_COMMIT_REF_SLUG-base-gpu'
     TAG: latest
     TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu
   tags:
@@ -51,6 +160,12 @@ build_img_tag_gpu:
     - ignore
   only:
     - tags
+
+
+# ----------------------------------------------------------------------------
+# Publishing:
+# copies of the images built in gitlab CI/CD will be deployed to Docker Hub
+# ----------------------------------------------------------------------------
 
 push_to_hub_cpu:
   stage: publish

@@ -1,13 +1,9 @@
-FROM tensorflow/tensorflow:latest-gpu-py3
+FROM UPDATED_IN_GITLAB_CI_JOB
 
 ## ensure locale is set during build
 ENV LANG C.UTF-8
 
 ARG DEBIAN_FRONTEND=noninteractive
-
-COPY requirements.txt .
-
-RUN pip install -r requirements.txt
 
 RUN apt-get update && \
     apt-get install -y git debconf-utils h5utils && \
@@ -16,7 +12,6 @@ RUN apt-get update && \
     apt-get install -y krb5-user && \
     apt-get install -y vim emacs less screen graphviz python3-tk wget 
 
-COPY . /umami
-WORKDIR /umami
+COPY requirements.txt .
 
-RUN cd /umami && python setup.py install
+RUN pip install -r requirements.txt
