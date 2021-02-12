@@ -11,12 +11,13 @@ class UnderSampling(object):
         self.bjets = bjets
         self.cjets = cjets
         self.ujets = ujets
-        self.pt_bins = np.concatenate((np.linspace(0, 600000, 351),
-                                       np.linspace(650000, 6000000, 84)))
+        self.pt_bins = np.concatenate(
+            (np.linspace(0, 600000, 351), np.linspace(650000, 6000000, 84))
+        )
         self.eta_bins = np.linspace(0, 2.5, 10)
         self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
-        self.pT_var_name = 'pt_btagJes'
-        self.eta_var_name = 'absEta_btagJes'
+        self.pT_var_name = "pt_btagJes"
+        self.eta_var_name = "absEta_btagJes"
         self.rnd_seed = 42
 
     def GetIndices(self):
@@ -33,38 +34,58 @@ class UnderSampling(object):
 
         for elem, count in zip(ind_b, min_count_per_bin):
             np.random.seed(self.rnd_seed)
-            bjet_indices.append(np.random.choice(np.where(binnumbers_b == elem)
-                                [0], int(count), replace=False))
+            bjet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_b == elem)[0],
+                    int(count),
+                    replace=False,
+                )
+            )
             np.random.seed(self.rnd_seed)
-            cjet_indices.append(np.random.choice(np.where(binnumbers_c == elem)
-                                [0], int(count), replace=False))
+            cjet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_c == elem)[0],
+                    int(count),
+                    replace=False,
+                )
+            )
             np.random.seed(self.rnd_seed)
-            ujet_indices.append(np.random.choice(np.where(binnumbers_u == elem)
-                                [0], int(count), replace=False))
+            ujet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_u == elem)[0],
+                    int(count),
+                    replace=False,
+                )
+            )
 
-        return np.sort(np.concatenate(bjet_indices)),\
-            np.sort(np.concatenate(cjet_indices)),\
-            np.sort(np.concatenate(ujet_indices))
+        return (
+            np.sort(np.concatenate(bjet_indices)),
+            np.sort(np.concatenate(cjet_indices)),
+            np.sort(np.concatenate(ujet_indices)),
+        )
 
     def GetBins(self, df):
         statistic, xedges, yedges, binnumber = binned_statistic_2d(
             x=df[self.pT_var_name],
             y=df[self.eta_var_name],
             values=df[self.pT_var_name],
-            statistic='count', bins=[self.pt_bins, self.eta_bins])
+            statistic="count",
+            bins=[self.pt_bins, self.eta_bins],
+        )
 
         bins_indices_flat_2d = np.indices(self.nbins - 1) + 1
         bins_indices_flat = np.ravel_multi_index(
-            bins_indices_flat_2d, self.nbins + 1).flatten()
+            bins_indices_flat_2d, self.nbins + 1
+        ).flatten()
 
         return binnumber, bins_indices_flat, statistic.flatten()
 
 
 class Weighting2D(object):
     """Alternatively to the UnderSampling approach, the 2D weighting can be
-       used to prepare the training dataset. It makes sure
-       that in each pT/eta bin each category has the same weight.
-       This is especially suited if not enough statistics is available.
+    used to prepare the training dataset. It makes sure
+    that in each pT/eta bin each category has the same weight.
+    This is especially suited if not enough statistics is available.
     """
 
     def __init__(self, bjets, cjets, ujets):
@@ -72,14 +93,15 @@ class Weighting2D(object):
         self.bjets = bjets
         self.cjets = cjets
         self.ujets = ujets
-        self.pt_bins = np.concatenate((np.linspace(0, 600000, 351),
-                                       np.linspace(650000, 6000000, 84)))
+        self.pt_bins = np.concatenate(
+            (np.linspace(0, 600000, 351), np.linspace(650000, 6000000, 84))
+        )
         self.eta_bins = np.linspace(0, 2.5, 10)
         self.pt_bins = np.linspace(0, 6000000, 3)
         self.eta_bins = np.linspace(0, 2.5, 3)
         self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
-        self.pT_var_name = 'pt_btagJes'
-        self.eta_var_name = 'absEta_btagJes'
+        self.pT_var_name = "pt_btagJes"
+        self.eta_var_name = "absEta_btagJes"
         self.rnd_seed = 42
 
     def GetWeights(self):
@@ -118,11 +140,14 @@ class Weighting2D(object):
             x=df[self.pT_var_name],
             y=df[self.eta_var_name],
             values=df[self.pT_var_name],
-            statistic='count', bins=[self.pt_bins, self.eta_bins])
+            statistic="count",
+            bins=[self.pt_bins, self.eta_bins],
+        )
 
         bins_indices_flat_2d = np.indices(self.nbins - 1) + 1
         bins_indices_flat = np.ravel_multi_index(
-            bins_indices_flat_2d, self.nbins + 1).flatten()
+            bins_indices_flat_2d, self.nbins + 1
+        ).flatten()
 
         return binnumber, bins_indices_flat, statistic.flatten()
 
@@ -130,9 +155,10 @@ class Weighting2D(object):
 def GetNJetsPerIteration(config):
     if config.iterations == 0:
         raise ValueError("The iterations have to be >=1 and not 0.")
-    if config.ttbar_frac > 0.:
-        nZ = (int(config.njets) * 3 * (1 / config.ttbar_frac - 1)
-              ) // config.iterations
+    if config.ttbar_frac > 0.0:
+        nZ = (
+            int(config.njets) * 3 * (1 / config.ttbar_frac - 1)
+        ) // config.iterations
         ncjets = int(2.3 * config.njets) // config.iterations
         nujets = int(2.7 * config.njets) // config.iterations
         njets = int(config.njets) // config.iterations
@@ -142,11 +168,12 @@ def GetNJetsPerIteration(config):
 
     N_list = []
     for x in range(config.iterations + 1):
-        N_dict = {"nZ": int(nZ * x),
-                  "nbjets": int(njets * x),
-                  "ncjets": int(ncjets * x),
-                  "nujets": int(nujets * x)
-                  }
+        N_dict = {
+            "nZ": int(nZ * x),
+            "nbjets": int(njets * x),
+            "ncjets": int(ncjets * x),
+            "nujets": int(nujets * x),
+        }
         N_list.append(N_dict)
     return N_list
 
@@ -174,15 +201,19 @@ def GetScales(vec, w, varname, custom_defaults_vars):
 
 def dict_in(varname, average, std, default):
     """Creates dictionary entry containing scale and shift parameters."""
-    return {"name": varname, "shift": average, "scale": std,
-            "default": default}
+    return {
+        "name": varname,
+        "shift": average,
+        "scale": std,
+        "default": default,
+    }
 
 
 def Gen_default_dict(scale_dict):
     """Generates default value dictionary from scale/shift dictionary."""
     default_dict = {}
     for elem in scale_dict:
-        if 'isDefaults' in elem['name']:
+        if "isDefaults" in elem["name"]:
             continue
-        default_dict[elem['name']] = elem['default']
+        default_dict[elem["name"]] = elem["default"]
     return default_dict

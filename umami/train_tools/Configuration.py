@@ -1,4 +1,5 @@
 import yaml
+
 from umami.tools import yaml_loader
 
 
@@ -18,13 +19,22 @@ class Configuration(object):
             self.config = yaml.load(conf, Loader=yaml_loader)
 
     def GetConfiguration(self):
-        config_items = ["model_name", "preprocess_config", "train_file",
-                        "validation_file", "var_dict", "NN_structure",
-                        "add_validation_file", "test_file", "add_test_file",
-                        "Eval_parameters_validation"]
+        config_items = [
+            "model_name",
+            "preprocess_config",
+            "train_file",
+            "validation_file",
+            "var_dict",
+            "NN_structure",
+            "add_validation_file",
+            "test_file",
+            "add_test_file",
+            "Eval_parameters_validation",
+        ]
         for item in config_items:
             if item in self.config:
                 setattr(self, item, self.config[item])
             else:
-                raise KeyError(f"You need to specify {item} in your"
-                               " config file!")
+                raise KeyError(
+                    f"You need to specify {item} in your" " config file!"
+                )

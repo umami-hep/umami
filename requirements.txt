@@ -21,7 +21,6 @@ xarray
 netcdf4
 h5netcdf
 pytest
-flake8
 partd
 mlxtend
 zarr
@@ -29,3 +28,7 @@ graphviz
 tensorflow
 tqdm
 coverage
+isort
+flake8
+black
+pre-commit

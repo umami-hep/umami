@@ -40,6 +40,14 @@ python setup.py develop
 
 which creates a symlink to the repository.
 
+If you want to commit changes it is recommended to install the pre-commit hooks by doing the following:
+
+```bash
+pre-commit install
+```
+
+This will run isort, black and flake8 on staged python files when commiting
+
 ## Testing & Linter
 
 The test suite can be run via

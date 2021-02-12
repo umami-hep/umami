@@ -1,19 +1,21 @@
 """
 Helper functions to creating hybrid hdf5 samples from ttbar and Zprime ntuples
 """
+import logging
+
 import h5py
 import numpy as np
-import logging
 
 
 def get_jets(
-        filename,
-        n_jets,
-        sample_type,
-        sample_category=None,
-        eventnumber_parity=None,
-        write_tracks=False,
-        pt_cut=None):
+    filename,
+    n_jets,
+    sample_type,
+    sample_category=None,
+    eventnumber_parity=None,
+    write_tracks=False,
+    pt_cut=None,
+):
     """Helper function to extract jet and track information from a h5 ntuple.
     The function can be used to create hybrid samples from ttbar
     and Zprime input ntuples. The hybrid samples are created from jets in
@@ -38,53 +40,55 @@ def get_jets(
     """
     b_pdgid = 5
 
-    logging.debug('Opening file ' + filename)
-    data_set = h5py.File(filename, 'r')
-    jets = data_set['jets']
-    logging.debug(f'Total number of jets in file: {jets.size}')
+    logging.debug("Opening file " + filename)
+    data_set = h5py.File(filename, "r")
+    jets = data_set["jets"]
+    logging.debug(f"Total number of jets in file: {jets.size}")
     if write_tracks:
-        tracks = data_set['tracks']
-        logging.debug(f'Total number of tracks in file: {tracks.size}')
+        tracks = data_set["tracks"]
+        logging.debug(f"Total number of tracks in file: {tracks.size}")
 
     # define event number parity rejection
     # (for splitting data in training and testing sets)
-    if eventnumber_parity == 'even':
-        parity_rejection = (jets['eventNumber'] % 2) == 1
-    elif eventnumber_parity == 'odd':
-        parity_rejection = (jets['eventNumber'] % 2) == 0
+    if eventnumber_parity == "even":
+        parity_rejection = (jets["eventNumber"] % 2) == 1
+    elif eventnumber_parity == "odd":
+        parity_rejection = (jets["eventNumber"] % 2) == 0
     else:
         parity_rejection = False
 
     # define category rejection (only relevant for ttbar sample)
-    if sample_type == 'ttbar' and sample_category == 'bjets':
-        category_rejection = jets['HadronConeExclTruthLabelID'] != b_pdgid
-    elif sample_type == 'ttbar' and sample_category == 'cjets':
-        category_rejection = jets['HadronConeExclTruthLabelID'] != 4
-    elif sample_type == 'ttbar' and sample_category == 'ujets':
-        category_rejection = jets['HadronConeExclTruthLabelID'] != 0
+    if sample_type == "ttbar" and sample_category == "bjets":
+        category_rejection = jets["HadronConeExclTruthLabelID"] != b_pdgid
+    elif sample_type == "ttbar" and sample_category == "cjets":
+        category_rejection = jets["HadronConeExclTruthLabelID"] != 4
+    elif sample_type == "ttbar" and sample_category == "ujets":
+        category_rejection = jets["HadronConeExclTruthLabelID"] != 0
     else:
         category_rejection = False
 
     # define pt cut rejection
-    if sample_type == 'ttbar' and pt_cut:
-        pt_cut_rejection = \
-            ((abs(jets['HadronConeExclTruthLabelID']) == b_pdgid) &
-             (jets['GhostBHadronsFinalPt'] > pt_cut)) | \
-            ((abs(jets['HadronConeExclTruthLabelID']) < b_pdgid) &
-             (jets['pt_btagJes'] > pt_cut))
-    elif sample_type == 'zprime' and pt_cut:
-        pt_cut_rejection = \
-            ((abs(jets['HadronConeExclTruthLabelID']) == b_pdgid) &
-             (jets['GhostBHadronsFinalPt'] < pt_cut)) | \
-            ((abs(jets['HadronConeExclTruthLabelID']) < b_pdgid) &
-             (jets['pt_btagJes'] < pt_cut))
+    if sample_type == "ttbar" and pt_cut:
+        pt_cut_rejection = (
+            (abs(jets["HadronConeExclTruthLabelID"]) == b_pdgid)
+            & (jets["GhostBHadronsFinalPt"] > pt_cut)
+        ) | (
+            (abs(jets["HadronConeExclTruthLabelID"]) < b_pdgid)
+            & (jets["pt_btagJes"] > pt_cut)
+        )
+    elif sample_type == "zprime" and pt_cut:
+        pt_cut_rejection = (
+            (abs(jets["HadronConeExclTruthLabelID"]) == b_pdgid)
+            & (jets["GhostBHadronsFinalPt"] < pt_cut)
+        ) | (
+            (abs(jets["HadronConeExclTruthLabelID"]) < b_pdgid)
+            & (jets["pt_btagJes"] < pt_cut)
+        )
     else:
         pt_cut_rejection = False
 
     indices_to_remove = np.where(
-        parity_rejection |
-        category_rejection |
-        pt_cut_rejection
+        parity_rejection | category_rejection | pt_cut_rejection
     )[0]
 
     del parity_rejection
