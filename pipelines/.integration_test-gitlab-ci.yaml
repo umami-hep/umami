@@ -1,6 +1,6 @@
 integration_test_preprocessing:
   stage: integration_test
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umamibase:latest'
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
   script:
     - python setup.py develop
     - pytest ./umami/tests/integration/test_preprocessing.py  -v
