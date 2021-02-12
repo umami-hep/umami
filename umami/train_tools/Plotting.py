@@ -46,6 +46,9 @@ def PlotRejPerEpoch(
 
     ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
 
+    ax1.set_ylim(top=ax1.get_ylim()[1] * 1.2)
+    ax2.set_ylim(top=ax2.get_ylim()[1] * 1.2)
+
     makeATLAStag(
         plt.gca(),
         plt.gcf(),
@@ -72,6 +75,8 @@ def PlotLosses(df_results, plot_name, plot_label = "\n$\\sqrt{s}=13$ TeV, PFlow 
              label=r"validation loss - ext. $Z'$ sample")
     makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", plot_label)
     plt.legend()
+    ymin, ymax = plt.ylim()
+    plt.ylim(ymin=ymin, ymax=1.1 * ymax)
     plt.xlabel('Epoch', fontsize=14, horizontalalignment='right', x=1.0)
     plt.ylabel('Loss')
     plt.savefig(plot_name, transparent=True)
@@ -89,6 +94,8 @@ def PlotAccuracies(df_results, plot_name, plot_label = "\n$\\sqrt{s}=13$ TeV, PF
              label=r"validation accuracy - ext. $Z'$ sample")
     makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", plot_label)
     plt.legend()
+    ymin, ymax = plt.ylim()
+    plt.ylim(ymin=ymin, ymax=1.1 * ymax)
     plt.xlabel('Epoch', fontsize=14, horizontalalignment='right', x=1.0)
     plt.ylabel('Accuracy')
     plt.savefig(plot_name, transparent=True)

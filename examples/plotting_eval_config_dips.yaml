@@ -1,8 +1,8 @@
 # Evaluation parameters
 Eval_parameters:
   Path_to_models_dir: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami
-  model_name: dips_lr_0.01_bs_5000_epoch_200_nTrainJets_6e6
-  epoch: 182
+  model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
+  epoch: 59
 
 # Dips, ttbar
 scores_Dips_ttbar:
@@ -21,39 +21,41 @@ confusion_matrix_Dips_ttbar:
 Dips_light_flavour_ttbar:
   type: "ROC"
   models_to_plot:
-    dl1r: # The name here has no impact on anything.
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
+    current_dl1r:
+      data_set_name: "ttbar"
+      label: "Recommended RNNIP"
+      df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
+    dips: # The name here has no impact on anything.
       data_set_name: "ttbar"
       label: "Dips"
       df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    current_dl1r:
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
-      data_set_name: "ttbar"
-      label: "recommended RNNIP"
-      df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
     ylabel: "light"
     binomialErrors: true
+    xmin: 0.6
+    ymax: 10000
+    colors: ["orange", "blue"]
     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018"
 
 Dips_c_flavour_ttbar:
   type: "ROC"
   models_to_plot:
+    current_dl1r:
+      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
+      data_set_name: "ttbar"
+      label: "Recommended RNNIP"
+      df_key: "rnnip_crej"
     dl1r:
       evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "ttbar"
       label: "Dips"
       df_key: "dips_crej"
-    current_dl1r:
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
-      data_set_name: "ttbar"
-      label: "recommended RNNIP"
-      df_key: "rnnip_crej"
   plot_settings:
-    ymax: 100.
     ylabel: "c"
     binomialErrors: true
+    xmin: 0.6
+    ymax: 10000
+    colors: ["orange", "blue"]
     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018"
 
 
@@ -74,37 +76,47 @@ confusion_matrix_Dips_zpext:
 Dips_light_flavour_zpext:
   type: "ROC"
   models_to_plot:
-    dl1r: # The name here has no impact on anything.
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
+    current_dl1r:
+      data_set_name: "zpext"
+      label: "Recommended RNNIP"
+      df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
+    dips: # The name here has no impact on anything.
       data_set_name: "zpext"
       label: "Dips"
       df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    current_dl1r:
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
-      data_set_name: "zpext"
-      label: "recommended RNNIP"
-      df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
     ylabel: "light"
     binomialErrors: true
+    xmin: 0.6
+    ymax: 10000
+    colors: ["orange", "blue"]
     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample, fc=0.018"
 
 Dips_c_flavour_zpext:
   type: "ROC"
   models_to_plot:
-    dl1r:
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
+    current_dl1r:
+      data_set_name: "zpext"
+      label: "Recommended RNNIP"
+      df_key: "rnnip_crej"
+    dips:
       data_set_name: "zpext"
       label: "Dips"
       df_key: "dips_crej"
-    current_dl1r:
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
-      data_set_name: "zpext"
-      label: "recommended RNNIP"
-      df_key: "rnnip_crej"
   plot_settings:
-    ymax: 100.
     ylabel: "c"
     binomialErrors: true
+    xmin: 0.6
+    ymax: 10000
+    colors: ["orange", "blue"]
     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample, fc=0.018"
+
+Dips_saliency_b_WP77_passed_ttbar:
+  type: "saliency"
+  data_set_name: "ttbar"
+  title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who passed WP = 77% \n with exactly 8 tracks"
+  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
+  WP: 0.77
+  # u=0, c=1, b=2
+  flavor: 2
+  passed: True

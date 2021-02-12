@@ -4,6 +4,7 @@ from matplotlib import gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
+import keras.backend as K
 
 
 def eff_err(x, N):
@@ -17,6 +18,39 @@ def GetScore(pb, pc, pu, fc=0.018):
     add_small = 1e-10
     return np.log((pb + add_small) / ((1. - fc) * pu + fc * pc + add_small))
 
+
+def discriminant_output_shape(input_shape):
+    shape = list(input_shape)
+    assert len(shape) == 2  # only valid for 2D tensors
+    return (shape[0],)
+
+
+def get_gradients(model, X, nJets):
+    """
+    Calculating the gradients with respect to the input variables.
+    Note that only Keras backend functions can be used here because
+    the gradients are tensorflow tensors and are not compatible with
+    numpy.
+    """
+    gradients = K.gradients(model.output, model.inputs)
+
+    input_tensors = model.inputs + [K.learning_phase()]
+    compute_gradients = K.function(inputs=input_tensors, outputs=gradients)
+
+    # Pass in the cts and categorical inputs, as well as the learning phase
+    # (0 for test mode)
+    gradients = compute_gradients([X[:nJets], 0])
+
+    return gradients[0]
+
+
+def getDiscriminant(x, fc=0.018):
+    """
+    This method returns the score of the input (like GetScore)
+    but calculated with the Keras Backend due to conflicts of
+    numpy functions inside a layer in a keras model.
+    """
+    return K.log(x[:, 2] / (fc * x[:, 1] + (1 - fc) * x[:, 0]))
 
 
 def plotROCRatio(teffs, beffs, labels, title='', text='',

@@ -45,13 +45,29 @@ def GetParser():
                         help="Runs undersampling.")
     # action.add_argument('--weighting', action='store_true',
     #                     help="Runs weighting.")
-    action.add_argument('-s', '--scaling', action='store_true',
-                        help="Retrieves scaling and shifting factors.")
-    action.add_argument('-a', '--apply_scales', action='store_true',
-                        help="Apllies scaling and shifting factors.")
-    action.add_argument('-w', '--write', action='store_true',
-                        help="Shuffles sample and writes training sample and"
-                             " training labels to disk")
+
+    action.add_argument(
+        '-s',
+        '--scaling',
+        action='store_true',
+        help="Retrieves scaling and shifting factors."
+    )
+
+    action.add_argument(
+        '-a',
+        '--apply_scales',
+        action='store_true',
+        help="Apllies scaling and shifting factors."
+    )
+
+    action.add_argument(
+        '-w',
+        '--write',
+        action='store_true',
+        help='''Shuffles sample and writes training sample and
+        training labels to disk'''
+    )
+
     args = parser.parse_args()
     return args
 

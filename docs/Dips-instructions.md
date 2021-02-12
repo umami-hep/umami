@@ -105,11 +105,11 @@ After the training is over, the different epochs can be evaluated with ROC plots
 evaluate_model.py -c examples/Dips-PFlow-Training-config.yaml -e 5 --dips
 ```
 
-The `-e` options (here `5`) allows to set the training epoch which should be evaluated. It can be passed via command line or defined in the [plotting_umami_config_dips.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_umami_config_dips.yaml). Take notice that the command line option will overwrite the epoch in [plotting_umami_config_dips.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_umami_config_dips.yaml). The `--dips` option defines that the dips tagger is used.
+The `-e` options (here `5`) allows to set the training epoch which should be evaluated. The `--dips` option defines that the dips tagger is used.
 It will produce .h5 files with the evaluations. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. To do this, use the following command.
 
 ```bash
-plotting_umami.py -c examples/plotting_umami_config_dips.yaml -o dips_eval_plots
+plotting_umami.py -c examples/plotting_eval_config_dips.yaml -o dips_eval_plots
 ```
 
-The `-o` option defines the name of the output directory. It will be added to the model folder where also the results are saved. The config file used here is a special plotting config which defines which plots will be generated and how they are labeled.
+The `-o` option defines the name of the output directory. It will be added to the model folder where also the results are saved. The config file used here is a special plotting config which defines which plots will be generated and how they are labeled. Also in the [plotting_eval_config_dips.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_eval_config_dips.yaml) config file is a set of evaluation parameters. The path to the directory where the models are saved needs to be filled. Also the name and the epoch of the model which is to be evaluated needs to be filled.

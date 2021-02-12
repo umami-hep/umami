@@ -1,20 +1,20 @@
 import h5py
 import argparse
 
-import numpy as np
 import tensorflow as tf
 
 from keras.layers import BatchNormalization, TimeDistributed, Dropout
 from keras.layers import Dense, Input, Masking
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint
 from keras import layers
 from keras import activations
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 
 import umami.train_tools as utt
 from umami.train_tools import Sum
+from keras.utils import CustomObjectScope
 from umami.preprocessing_tools import Configuration
 # from plottingFunctions import sigBkgEff
 
@@ -58,16 +58,39 @@ def GetParser():
 
 
 class generator:
+    # How many jets should be loaded into memory
+    chunk_size = 1e6
+
     def __init__(self, X, Y, batch_size):
         self.x = X
         self.y = Y
         self.batch_size = batch_size
+        self.n_jets = len(self.y)
+        self.length = int(self.n_jets/self.batch_size)
+        self.step_size = self.batch_size * int(
+            generator.chunk_size / self.batch_size
+        )
+
+    def load_in_memory(self, part=0):
+        print("\nloading in memory", part+1, "/",
+              1+self.n_jets//self.step_size)
+        self.x_in_mem = self.x[self.step_size*part:self.step_size*(part+1)]
+        self.y_in_mem = self.y[self.step_size*part:self.step_size*(part+1)]
 
     def __call__(self):
-        length = int(np.ceil(len(self.x) / float(self.batch_size)))
-        for idx in range(length):
-            batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
-            batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
+        self.load_in_memory()
+        n = 1
+        small_step = 0
+        for idx in range(self.length):
+            if (idx + 1) * self.batch_size > self.step_size * n:
+                self.load_in_memory(n)
+                n += 1
+                small_step = 0
+            batch_x = self.x_in_mem[small_step*self.batch_size:
+                                    (1+small_step)*self.batch_size]
+            batch_y = self.y_in_mem[small_step*self.batch_size:
+                                    (1+small_step)*self.batch_size]
+            small_step += 1
             yield (batch_x, batch_y)
 
 
@@ -142,7 +165,7 @@ def Dips_model(train_config=None, input_shape=None):
         optimizer=model_optimizer,
         metrics=['accuracy']
     )
-    return dips, NN_structure["batch_size"], NN_structure["epochs"]
+    return dips, NN_structure["epochs"]
 
 
 def Dips(args, train_config, preprocess_config):
@@ -189,19 +212,29 @@ def Dips(args, train_config, preprocess_config):
     # Print how much jets are used
     print(f"Number of Jets used for training: {nJets}")
 
-    # Init dips model
-    dips, batch_size, epochs = Dips_model(
-        train_config=train_config,
-        input_shape=(nTrks, nFeatures)
-    )
+    if "model_file" in train_config.config:
+        # Load DIPS model from file
+        print(f"Loading model from: {train_config['model_file']}")
+        with CustomObjectScope({"Sum": Sum}):
+            dips = load_model(train_config['model_file'])
+
+        # Load epoch from train_config
+        epochs = train_config.NN_structure["epochs"]
+
+    else:
+        # Init dips model
+        dips, epochs = Dips_model(
+            train_config=train_config,
+            input_shape=(nTrks, nFeatures)
+        )
 
     # Get training set from generator
     train_dataset = tf.data.Dataset.from_generator(
-        generator(X_train, Y_train, batch_size),
+        generator(X_train, Y_train, train_config.NN_structure["batch_size"]),
         (tf.float32, tf.float32),
         (tf.TensorShape([None, nTrks, nFeatures]),
          tf.TensorShape([None, nDim]))
-    ).repeat()
+    ).repeat().prefetch(3)
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
@@ -211,18 +244,13 @@ def Dips(args, train_config, preprocess_config):
     else:
         nEpochs = args.epochs
 
-    # Set EarlyStopping as callback
-    earlyStop = EarlyStopping(
-        monitor='val_loss', verbose=True, patience=10
-    )
-
     # Set ModelCheckpoint as callback
     dips_mChkPt = ModelCheckpoint(
         f'{train_config.model_name}' + '/dips_model_{epoch:02d}.h5',
         monitor='val_loss',
         verbose=True,
         save_best_only=False,
-        validation_batch_size=batch_size,
+        validation_batch_size=train_config.NN_structure["batch_size"],
         save_weights_only=False
     )
 
@@ -249,11 +277,10 @@ def Dips(args, train_config, preprocess_config):
         train_dataset,
         epochs=nEpochs,
         validation_data=(X_valid, Y_valid),
-        callbacks=[earlyStop, dips_mChkPt, reduce_lr, my_callback],
-        # callbacks=[dips_mChkPt, reduce_lr, my_callback],
+        callbacks=[dips_mChkPt, reduce_lr, my_callback],
         # callbacks=[reduce_lr, my_callback],
         # callbacks=[my_callback],
-        steps_per_epoch=len(Y_train) / batch_size,
+        steps_per_epoch=nJets / train_config.NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8
     )

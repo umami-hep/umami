@@ -4,13 +4,20 @@ import os
 
 import numpy as np
 import pandas as pd
-from keras.models import load_model
+from keras.models import load_model, Model
 from keras.utils import CustomObjectScope
+from keras.layers import Lambda
+import tensorflow as tf
+import pickle
 
 import umami.train_tools as utt
 from umami.evaluation_tools.PlottingFunctions import GetScore
+from umami.evaluation_tools.PlottingFunctions import discriminant_output_shape
+from umami.evaluation_tools.PlottingFunctions import get_gradients
+from umami.evaluation_tools.PlottingFunctions import getDiscriminant
 from umami.preprocessing_tools import Configuration
 # from plottingFunctions import sigBkgEff
+tf.compat.v1.disable_eager_execution()
 
 
 def GetParser():
@@ -32,7 +39,6 @@ def GetParser():
         '--epoch',
         type=int,
         required=True,
-        default=None,
         help="Epoch which should be evaluated."
     )
 
@@ -59,22 +65,25 @@ def GetParser():
         help='''Number of jets used for the testing. By default it will
         use all available jets in the test files.'''
     )
+
     parser.add_argument(
         '--beff',
         type=float,
         default=0.77,
         help='b efficiency used for the charm fraction scan'
     )
+
     parser.add_argument(
         '--cfrac',
         type=float,
         default=0.018,
-        help='charm fraction used for the b efficiency scan. The charm fraction for the recommended taggers are not affected by this! They are 0.018 / 0.08 for DL1r / RNNIP.'
+        help='''charm fraction used for the b efficiency scan.
+        The charm fraction for the recommended taggers are not
+        affected by this! They are 0.018 / 0.08 for DL1r / RNNIP.'''
     )
 
     args = parser.parse_args()
     return args
-
 
 
 def EvaluateModel(
@@ -82,11 +91,12 @@ def EvaluateModel(
 ):
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     print("Evaluating", model_file)
-    exclude=[]
+    exclude = []
     if "exclude" in train_config.config:
-        exclude=train_config.config["exclude"]
+        exclude = train_config.config["exclude"]
     X_test, X_test_trk, Y_test = utt.GetTestFile(
-        test_file, train_config.var_dict, preprocess_config, nJets=args.nJets, exclude=exclude
+        test_file, train_config.var_dict, preprocess_config,
+        nJets=args.nJets, exclude=exclude
     )
     with CustomObjectScope({"Sum": utt.Sum}):
         model = load_model(model_file)
@@ -162,7 +172,6 @@ def EvaluateModel(
     print("calculating rejections per fc")
     fc_values = np.linspace(0.001, 0.1, x_axis_granularity)
 
-
     crej_arr_umami_cfrac = []
     urej_arr_umami_cfrac = []
     crej_arr_dips_cfrac = []
@@ -173,29 +182,30 @@ def EvaluateModel(
     urej_arr_rnnip_cfrac = []
 
     for fc in fc_values:
-        crej_i, urej_i = utt.GetRejection(pred_umami, Y_test, target_beff=args.beff,
-                                          cfrac=fc)
+        crej_i, urej_i = utt.GetRejection(
+            pred_umami, Y_test, target_beff=args.beff, cfrac=fc
+        )
         crej_arr_umami_cfrac.append(crej_i)
         urej_arr_umami_cfrac.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(pred_dips, Y_test, target_beff=args.beff,
-                                          cfrac=fc)
+        crej_i, urej_i = utt.GetRejection(
+            pred_dips, Y_test, target_beff=args.beff, cfrac=fc
+        )
         crej_arr_dips_cfrac.append(crej_i)
         urej_arr_dips_cfrac.append(urej_i)
 
-        crej_dl1r, urej_dl1r = utt.GetRejection(df[["DL1r_pu", "DL1r_pc",
-                                                "DL1r_pb"]].values,
-                                            Y_test, target_beff=args.beff,
-                                            cfrac=fc)
+        crej_dl1r, urej_dl1r = utt.GetRejection(
+            df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
+            Y_test, target_beff=args.beff, cfrac=fc
+        )
         crej_arr_dl1r_cfrac.append(crej_dl1r)
         urej_arr_dl1r_cfrac.append(urej_dl1r)
 
-        crej_rnnip, urej_rnnip = utt.GetRejection(df[["rnnip_pu", "rnnip_pc",
-                                                "rnnip_pb"]].values,
-                                            Y_test, target_beff=args.beff,
-                                            cfrac=fc)
+        crej_rnnip, urej_rnnip = utt.GetRejection(
+            df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
+            Y_test, target_beff=args.beff, cfrac=fc
+        )
         crej_arr_rnnip_cfrac.append(crej_rnnip)
         urej_arr_rnnip_cfrac.append(urej_rnnip)
-
 
     df_eff_rej = pd.DataFrame({
         "beff": b_effs,
@@ -208,17 +218,20 @@ def EvaluateModel(
         "rnnip_crej": crej_arr_rnnip,
         "rnnip_urej": urej_arr_rnnip,
         "fc_values": fc_values,
-        "dl1r_cfrac_crej" : crej_arr_dl1r_cfrac,
-        "dl1r_cfrac_urej" : urej_arr_dl1r_cfrac,
-        "rnnip_cfrac_crej" : crej_arr_rnnip_cfrac,
-        "rnnip_cfrac_urej" : urej_arr_rnnip_cfrac,
-        "umami_cfrac_crej" : crej_arr_umami_cfrac,
-        "umami_cfrac_urej" : urej_arr_umami_cfrac,
-        "dips_cfrac_crej" : crej_arr_dips_cfrac,
-        "dips_cfrac_urej" : urej_arr_dips_cfrac,
+        "dl1r_cfrac_crej": crej_arr_dl1r_cfrac,
+        "dl1r_cfrac_urej": urej_arr_dl1r_cfrac,
+        "rnnip_cfrac_crej": crej_arr_rnnip_cfrac,
+        "rnnip_cfrac_urej": urej_arr_rnnip_cfrac,
+        "umami_cfrac_crej": crej_arr_umami_cfrac,
+        "umami_cfrac_urej": urej_arr_umami_cfrac,
+        "dips_cfrac_crej": crej_arr_dips_cfrac,
+        "dips_cfrac_urej": urej_arr_dips_cfrac,
     })
-    df_eff_rej.to_hdf(f"{train_config.model_name}/results/results-rej_per_eff"
-                      f"-{args.epoch}.h5", data_set_name)
+
+    df_eff_rej.to_hdf(
+        f"{train_config.model_name}/results/results-rej_per_eff"
+        f"-{args.epoch}.h5", data_set_name
+    )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
@@ -233,28 +246,63 @@ def EvaluateModel(
 def EvaluateModelDips(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
+    # Set number of nJets for testing
+    if args.nJets is None:
+        nJets_test = int(train_config.NN_structure["nJets_val"])
 
+    else:
+        nJets_test = args.nJets
+
+    # Set up the exlusion of lower level taggers
+    exclude = []
+    if "exclude" in train_config.config:
+        exclude = train_config.config["exclude"]
+
+    # Define model path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     print("Evaluating", model_file)
+
+    # Get the testfile with the needed configs
     _, X_test_trk, Y_test = utt.GetTestFile(
-        test_file, train_config.var_dict, preprocess_config, nJets=args.nJets
+        test_file, train_config.var_dict,
+        preprocess_config, nJets=nJets_test,
+        exclude=exclude
     )
+
+    # Load pretrained model
     with CustomObjectScope({"Sum": utt.Sum}):
         model = load_model(model_file)
 
+    # Get predictions from trained model
     pred_dips = model.predict(
-        X_test_trk, batch_size=5000, verbose=0
+        X_test_trk,
+        batch_size=train_config.NN_structure["batch_size"],
+        verbose=0
     )
+
+    # Setting y_true
     y_true = np.argmax(Y_test, axis=1)
+
+    # Define the index values for the different flavours
     b_index, c_index, u_index = 2, 1, 0
-    variables = ['absEta_btagJes', 'pt_btagJes', 'DL1r_pb', 'DL1r_pc',
-                 'DL1r_pu', 'rnnip_pb', 'rnnip_pc', 'rnnip_pu',
-                 'HadronConeExclTruthLabelID']
+
+    # Define the needed extra variables
+    variables = [
+        'absEta_btagJes', 'pt_btagJes', 'DL1r_pb', 'DL1r_pc',
+        'DL1r_pu', 'rnnip_pb', 'rnnip_pc', 'rnnip_pu',
+        'HadronConeExclTruthLabelID'
+    ]
+
+    # Load the test data
     df = pd.DataFrame(
-        h5py.File(test_file, 'r')['/jets'][:args.nJets][
-            variables])
+        h5py.File(test_file, 'r')['/jets'][:nJets_test][variables]
+    )
     print("Jets used for testing:", len(df))
+
+    # Define the jets used
     df.query('HadronConeExclTruthLabelID <= 5', inplace=True)
+
+    # Fill the new dataframe with the evaluated parameters
     df_discs = pd.DataFrame({
         "dips_pb": pred_dips[:, b_index],
         "dips_pc": pred_dips[:, c_index],
@@ -265,12 +313,14 @@ def EvaluateModelDips(
         "disc_DL1r": GetScore(df["DL1r_pb"], df["DL1r_pc"], df["DL1r_pu"]),
         "disc_rnnip": GetScore(df["rnnip_pb"], df["rnnip_pc"], df["rnnip_pu"],
                                fc=0.08)
-        })
+    })
 
+    # Create results dir and .h5 file
     os.system(f"mkdir -p {train_config.model_name}/results")
     df_discs.to_hdf(
         f"{train_config.model_name}/results/results-{args.epoch}.h5",
-        data_set_name)
+        data_set_name
+    )
 
     print("calculating rejections per efficiency")
     b_effs = np.linspace(0.39, 1, 150)
@@ -282,20 +332,24 @@ def EvaluateModelDips(
     urej_arr_rnnip = []
 
     for eff in b_effs:
-        crej_i, urej_i = utt.GetRejection(pred_dips, Y_test, target_beff=eff,
-                                          cfrac=0.018)
+        crej_i, urej_i = utt.GetRejection(
+            pred_dips, Y_test,
+            target_beff=eff, cfrac=0.018
+        )
         crej_arr_dips.append(crej_i)
         urej_arr_dips.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(df[["DL1r_pu", "DL1r_pc",
-                                              "DL1r_pb"]].values,
-                                          Y_test, target_beff=eff,
-                                          cfrac=0.018)
+        crej_i, urej_i = utt.GetRejection(
+            df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
+            Y_test, target_beff=eff,
+            cfrac=0.018
+        )
         crej_arr_dl1r.append(crej_i)
         urej_arr_dl1r.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(df[["rnnip_pu", "rnnip_pc",
-                                              "rnnip_pb"]].values,
-                                          Y_test, target_beff=eff,
-                                          cfrac=0.08)
+        crej_i, urej_i = utt.GetRejection(
+            df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
+            Y_test, target_beff=eff,
+            cfrac=0.08
+        )
         crej_arr_rnnip.append(crej_i)
         urej_arr_rnnip.append(urej_i)
 
@@ -319,6 +373,81 @@ def EvaluateModelDips(
         "a")
     f.attrs["N_test"] = len(df)
     f.close()
+
+    # Cut off last layer of the model for saliency maps
+    cutted_model = model.layers[-1].output
+
+    # Define the last node for the discriminant output
+    disc = Lambda(
+        getDiscriminant, output_shape=discriminant_output_shape
+    )(cutted_model)
+
+    # Define the computation graph for the model
+    model = Model(model.inputs, disc)
+
+    # Define boolean mask to filter placeholder tracks
+    boolMask = (np.sum(X_test_trk, axis=-1) != 0).astype(bool)
+
+    # Define the number of true tracks per jet as a mask
+    nTrks = np.sum(boolMask, axis=-1)
+
+    # Get score for the dips prediction
+    Db = GetScore(
+        pb=pred_dips[:, b_index],
+        pc=pred_dips[:, c_index],
+        pu=pred_dips[:, u_index]
+    )
+
+    # Init small dict
+    map_dict = {}
+
+    # Iterate over different beff, jet flavours and passed options
+    for target_beff in [60, 70, 77, 85]:
+        for jet_flavour in [0, 1, 2]:
+            for PassBool in [True, False]:
+
+                # Get the Db value for a specific flavour
+                Db_flavour = Db[Y_test[:, jet_flavour].astype(bool)]
+
+                # Get the cutvalue for the specific WP
+                cutvalue = np.percentile(
+                    Db_flavour, (100 - target_beff)
+                )
+
+                # Set PassBool masking
+                if PassBool is True:
+                    mask = (Y_test[:, jet_flavour].astype(bool))
+                    mask = mask & (nTrks == 8)
+                    mask = mask & (Db > cutvalue)
+
+                elif PassBool is False:
+                    mask = (Y_test[:, jet_flavour].astype(bool))
+                    mask = mask & (nTrks == 8)
+                    mask = mask & (Db < cutvalue)
+
+                # Get gradient map
+                gradient_map = get_gradients(
+                    model, X_test_trk[mask], 15000
+                )
+
+                # Turn gradient map for plotting
+                gradient_map = np.swapaxes(gradient_map, 1, 2)
+
+                # Mean over the jets
+                gradient_map = np.mean(gradient_map, axis=0)
+
+                map_dict.update({
+                    f"{target_beff}_{jet_flavour}_{PassBool}": gradient_map
+                })
+
+    # Create results dir and .h5 ile
+    os.system(f"mkdir -p {train_config.model_name}/results")
+    with open(
+        f"{train_config.model_name}/results/saliency_{args.epoch}" +
+        f"_{data_set_name}.pkl",
+        'wb'
+    ) as f:
+        pickle.dump(map_dict, f)
 
 
 def EvaluateModelDL1(
