@@ -14,8 +14,10 @@ def check_size(data):
     sizes = [d.shape[0] for d in data.values()]
 
     if max(sizes) != min(sizes):
-        raise ValueError("Each dataset within a file must have the "
-                         "same number of entries!")
+        raise ValueError(
+            "Each dataset within a file must have the "
+            "same number of entries!"
+        )
 
     return sizes[0]
 
@@ -62,7 +64,7 @@ def get_size(filelist):
     ranges = {}
 
     for f in filelist:
-        data = h5py.File(f, 'r')
+        data = h5py.File(f, "r")
         size = check_size(data)
         ranges[f] = [total_size, total_size + size]
         total_size = total_size + size
@@ -84,14 +86,15 @@ def create_datasets(output, source, size):
     # check if 'source' is a dict, otherwise assume it is a path to a hdf5 file
     close_file = False
     if not type(source) == dict and type(source) == str:
-        source = h5py.File(source, 'r')
+        source = h5py.File(source, "r")
         close_file = True
 
     for key in source:
         shape = list(source[key].shape)
         shape[0] = size
-        output.create_dataset(key, shape, dtype=source[key].dtype,
-                              compression='gzip')
+        output.create_dataset(
+            key, shape, dtype=source[key].dtype, compression="gzip"
+        )
     if close_file:
         source.close()
 
@@ -107,11 +110,11 @@ def add_data(source, output, range):
     # check if 'source' is a dict, otherwise assume it is a path to a hdf5 file
     close_file = False
     if not type(source) == dict and type(source) == str:
-        source = h5py.File(source, 'r')
+        source = h5py.File(source, "r")
         close_file = True
     check_keys(source, output)
     check_shapes(source, output)
     for key in source:
-        output[key][range[0]:range[1]] = source[key]
+        output[key][range[0] : range[1]] = source[key]
     if close_file:
         source.close()

@@ -1,4 +1,5 @@
 import yaml
+
 from umami.tools import yaml_loader
 
 
@@ -19,11 +20,17 @@ class Configuration(object):
             self.config = yaml.load(conf, Loader=yaml_loader)
 
     def GetConfiguration(self):
-        config_items = ["models", "labels", "compare_to_dl1r",
-                        "compare_to_rnnip", "plot_name"]
+        config_items = [
+            "models",
+            "labels",
+            "compare_to_dl1r",
+            "compare_to_rnnip",
+            "plot_name",
+        ]
         for item in config_items:
             if item in self.config:
                 setattr(self, item, self.config[item])
             else:
-                raise KeyError(f"You need to specify {item} in your"
-                               " config file!")
+                raise KeyError(
+                    f"You need to specify {item} in your" " config file!"
+                )

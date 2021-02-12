@@ -8,14 +8,17 @@ to install the package.
 
 from setuptools import setup
 
-
 setup(
-    name='umami',
-    version='0.0.0',  # Also change in module
+    name="umami",
+    version="0.0.0",  # Also change in module
     packages=[
-        "umami", "umami.tests", "umami.train_tools", "umami.tools",
-        "umami.preprocessing_tools", "umami.tools.PyATLASstyle",
-        "umami.evaluation_tools"
+        "umami",
+        "umami.tests",
+        "umami.train_tools",
+        "umami.tools",
+        "umami.preprocessing_tools",
+        "umami.tools.PyATLASstyle",
+        "umami.evaluation_tools",
     ],
     # install_requires=[
     #     "h5py",
@@ -28,7 +31,7 @@ setup(
     #     "keras"
     # ],
     include_package_data=True,
-    test_suite='umami.tests',
+    test_suite="umami.tests",
     scripts=[
         "umami/preprocessing.py",
         "umami/train_DL1.py",
@@ -38,6 +41,6 @@ setup(
         "umami/plotting_umami.py",
         "umami/plotting_epoch_performance.py",
     ],
-    description='Machine learning based flavour tagging training framework.',
-    url="https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami"
+    description="Machine learning based flavour tagging training framework.",
+    url="https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami",
 )

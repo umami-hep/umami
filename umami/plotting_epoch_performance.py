@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import argparse
+import os
 
 import tensorflow as tf
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
-
-import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
@@ -51,10 +50,10 @@ def GetParser():
         "--dict",
         type=str,
         default=None,
-        help='''Name of the json file which should be plotted. With
+        help="""Name of the json file which should be plotted. With
         this option the validation metrics are NOT calculated! Only
         the available values are plotted. This also means that
-        --cfrac, --beff and --nJets have no impact on anything!''',
+        --cfrac, --beff and --nJets have no impact on anything!""",
     )
 
     args = parser.parse_args()
@@ -72,8 +71,7 @@ def main(args, train_config, preprocess_config):
 
     else:
         output_file_name = utt.calc_validation_metrics(
-            train_config, preprocess_config, args.beff,
-            args.cfrac, args.nJets
+            train_config, preprocess_config, args.beff, args.cfrac, args.nJets
         )
         beff = args.beff
         cfrac = args.cfrac

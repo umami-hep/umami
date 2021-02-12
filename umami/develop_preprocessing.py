@@ -3,49 +3,83 @@ Developing area for new preprocessing chain using dask
 Das has the problem that it coudln't deal with the tracks properly
 so the functions with dask are pushed to here
 """
-import umami.preprocessing_tools as upt
-import h5py
-import numpy as np
-from numpy.lib.recfunctions import append_fields
 import argparse
-import yaml
-from umami.tools import yaml_loader
 import json
-import dask.array as da
+
 # import dask.dataframe as dd
 import dask
+import dask.array as da
+import h5py
+import numpy as np
+import yaml
+from numpy.lib.recfunctions import append_fields
+
+import umami.preprocessing_tools as upt
+from umami.tools import yaml_loader
+
 # from dask.distributed import Client
 
-dask.config.set({'temporary_directory': '/tmp'})
+dask.config.set({"temporary_directory": "/tmp"})
 
 
 def GetParser():
     """Argument parser for Preprocessing script."""
-    parser = argparse.ArgumentParser(description="Preprocessing command line"
-                                     "options.")
+    parser = argparse.ArgumentParser(
+        description="Preprocessing command line" "options."
+    )
 
-    parser.add_argument('-c', '--config_file', type=str,
-                        required=True,
-                        help="Enter the name of the config file to create the"
-                        "hybrid sample.")
-    parser.add_argument('-t', '--tracks', action='store_true',
-                        help="Stores also track information.")
-    parser.add_argument('-v', '--var_dict', required=True, default=None,
-                        help="Dictionary with input variables of tagger.",
-                        type=str)
+    parser.add_argument(
+        "-c",
+        "--config_file",
+        type=str,
+        required=True,
+        help="Enter the name of the config file to create the"
+        "hybrid sample.",
+    )
+    parser.add_argument(
+        "-t",
+        "--tracks",
+        action="store_true",
+        help="Stores also track information.",
+    )
+    parser.add_argument(
+        "-v",
+        "--var_dict",
+        required=True,
+        default=None,
+        help="Dictionary with input variables of tagger.",
+        type=str,
+    )
     # possible job options for the different preprocessing steps
     action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument('-u', '--undersampling', action='store_true',
-                        help="Runs undersampling.")
-    action.add_argument('--weighting', action='store_true',
-                        help="Runs weighting.")
-    action.add_argument('-s', '--scaling', action='store_true',
-                        help="Retrieves scaling and shifting factors.")
-    action.add_argument('-a', '--apply_scales', action='store_true',
-                        help="Apllies scaling and shifting factors.")
-    action.add_argument('-w', '--write', action='store_true',
-                        help="Shuffles sample and writes training sample and"
-                             "training labels to disk")
+    action.add_argument(
+        "-u",
+        "--undersampling",
+        action="store_true",
+        help="Runs undersampling.",
+    )
+    action.add_argument(
+        "--weighting", action="store_true", help="Runs weighting."
+    )
+    action.add_argument(
+        "-s",
+        "--scaling",
+        action="store_true",
+        help="Retrieves scaling and shifting factors.",
+    )
+    action.add_argument(
+        "-a",
+        "--apply_scales",
+        action="store_true",
+        help="Apllies scaling and shifting factors.",
+    )
+    action.add_argument(
+        "-w",
+        "--write",
+        action="store_true",
+        help="Shuffles sample and writes training sample and"
+        "training labels to disk",
+    )
     args = parser.parse_args()
     return args
 
@@ -56,43 +90,72 @@ def RunWeighting(args, config):
     # TODO: switch to dask
 
     # initialise input files (they are not yet loaded to memory)
-    f_Z = h5py.File(config.f_z, 'r')
-    f_tt_bjets = h5py.File(config.f_tt_bjets, 'r')
-    f_tt_cjets = h5py.File(config.f_tt_cjets, 'r')
-    f_tt_ujets = h5py.File(config.f_tt_ujets, 'r')
+    f_Z = h5py.File(config.f_z, "r")
+    f_tt_bjets = h5py.File(config.f_tt_bjets, "r")
+    f_tt_cjets = h5py.File(config.f_tt_cjets, "r")
+    f_tt_ujets = h5py.File(config.f_tt_ujets, "r")
 
     for x in range(config.iterations):
         print("Iteration", x + 1, "of", config.iterations)
-        vec_Z = f_Z['jets'][N_list[x]["nZ"]:N_list[x + 1]["nZ"]]
-        vec_Z = append_fields(vec_Z, "category",
-                              np.zeros(len(vec_Z)),
-                              dtypes='<f4', asrecarray=True)
-        vec_tt_bjets = f_tt_bjets['jets'][N_list[x]["nbjets"]:N_list[x + 1]
-                                          ["nbjets"]]
-        vec_tt_bjets = append_fields(vec_tt_bjets, "category",
-                                     np.ones(len(vec_tt_bjets)),
-                                     dtypes='<f4', asrecarray=True)
-        vec_tt_cjets = f_tt_cjets['jets'][N_list[x]["ncjets"]:N_list[x + 1]
-                                          ["ncjets"]]
-        vec_tt_cjets = append_fields(vec_tt_cjets, "category",
-                                     np.ones(len(vec_tt_cjets)),
-                                     dtypes='<f4', asrecarray=True)
-        vec_tt_ujets = f_tt_ujets['jets'][N_list[x]["nujets"]:N_list[x + 1]
-                                          ["nujets"]]
-        vec_tt_ujets = append_fields(vec_tt_ujets, "category",
-                                     np.ones(len(vec_tt_ujets)),
-                                     dtypes='<f4', asrecarray=True)
+        vec_Z = f_Z["jets"][N_list[x]["nZ"] : N_list[x + 1]["nZ"]]
+        vec_Z = append_fields(
+            vec_Z,
+            "category",
+            np.zeros(len(vec_Z)),
+            dtypes="<f4",
+            asrecarray=True,
+        )
+        vec_tt_bjets = f_tt_bjets["jets"][
+            N_list[x]["nbjets"] : N_list[x + 1]["nbjets"]
+        ]
+        vec_tt_bjets = append_fields(
+            vec_tt_bjets,
+            "category",
+            np.ones(len(vec_tt_bjets)),
+            dtypes="<f4",
+            asrecarray=True,
+        )
+        vec_tt_cjets = f_tt_cjets["jets"][
+            N_list[x]["ncjets"] : N_list[x + 1]["ncjets"]
+        ]
+        vec_tt_cjets = append_fields(
+            vec_tt_cjets,
+            "category",
+            np.ones(len(vec_tt_cjets)),
+            dtypes="<f4",
+            asrecarray=True,
+        )
+        vec_tt_ujets = f_tt_ujets["jets"][
+            N_list[x]["nujets"] : N_list[x + 1]["nujets"]
+        ]
+        vec_tt_ujets = append_fields(
+            vec_tt_ujets,
+            "category",
+            np.ones(len(vec_tt_ujets)),
+            dtypes="<f4",
+            asrecarray=True,
+        )
         if args.tracks:
-            tnp_Zprime = np.asarray(f_Z['tracks'][N_list[x]["nZ"]:N_list[x + 1]
-                                                  ["nZ"]])
-            tnp_tt_b = np.asarray(f_tt_bjets['tracks'][N_list[x]["nbjets"]:
-                                  N_list[x + 1]["nbjets"]])
-            tnp_tt_c = np.asarray(f_tt_cjets['tracks'][N_list[x]["ncjets"]:
-                                  N_list[x + 1]["ncjets"]])
-            tnp_tt_u = np.asarray(f_tt_ujets['tracks'][N_list[x]["nujets"]:
-                                  N_list[x + 1]["nujets"]])
+            tnp_Zprime = np.asarray(
+                f_Z["tracks"][N_list[x]["nZ"] : N_list[x + 1]["nZ"]]
+            )
+            tnp_tt_b = np.asarray(
+                f_tt_bjets["tracks"][
+                    N_list[x]["nbjets"] : N_list[x + 1]["nbjets"]
+                ]
+            )
+            tnp_tt_c = np.asarray(
+                f_tt_cjets["tracks"][
+                    N_list[x]["ncjets"] : N_list[x + 1]["ncjets"]
+                ]
+            )
+            tnp_tt_u = np.asarray(
+                f_tt_ujets["tracks"][
+                    N_list[x]["nujets"] : N_list[x + 1]["nujets"]
+                ]
+            )
 
-        indices_toremove_Zprime = upt.GetCuts(vec_Z, config, 'Zprime')
+        indices_toremove_Zprime = upt.GetCuts(vec_Z, config, "Zprime")
         indices_toremove_bjets = upt.GetCuts(vec_tt_bjets, config)
         indices_toremove_cjets = upt.GetCuts(vec_tt_cjets, config)
         indices_toremove_ujets = upt.GetCuts(vec_tt_ujets, config)
@@ -109,12 +172,15 @@ def RunWeighting(args, config):
             tnp_tt_u = np.delete(tnp_tt_u, indices_toremove_ujets, 0)
 
         print("starting weight calculation")
-        bjets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5
-                                      ], vec_tt_bjets])
-        cjets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 4
-                                      ], vec_tt_cjets])
-        ujets = np.concatenate([vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0
-                                      ], vec_tt_ujets])
+        bjets = np.concatenate(
+            [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5], vec_tt_bjets]
+        )
+        cjets = np.concatenate(
+            [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 4], vec_tt_cjets]
+        )
+        ujets = np.concatenate(
+            [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0], vec_tt_ujets]
+        )
         weights = upt.Weighting2D(bjets, cjets, ujets)
         weights.GetWeights()
         # b_indices, c_indices, u_indices = downs.GetIndices()
@@ -169,8 +235,10 @@ def RunWeighting(args, config):
 
 def ApplyScalesTrksDask(args, config):
     print("Track scaling")
-    input_files = [config.GetFileName(iteration=x+1, option='downsampled') for
-                   x in range(1)]
+    input_files = [
+        config.GetFileName(iteration=x + 1, option="downsampled")
+        for x in range(1)
+    ]
     #    x in range(config.iterations)]
     print(input_files)
     with open(args.var_dict, "r") as conf:
@@ -181,16 +249,16 @@ def ApplyScalesTrksDask(args, config):
     jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
     trkVars = noNormVars + logNormVars + jointNormVars
 
-    dsets = [h5py.File(fn, 'r')['/btrk'][:] for fn in input_files]
-    dsets += [h5py.File(fn, 'r')['/ctrk'][:] for fn in input_files]
-    dsets += [h5py.File(fn, 'r')['/utrk'][:] for fn in input_files]
+    dsets = [h5py.File(fn, "r")["/btrk"][:] for fn in input_files]
+    dsets += [h5py.File(fn, "r")["/ctrk"][:] for fn in input_files]
+    dsets += [h5py.File(fn, "r")["/utrk"][:] for fn in input_files]
     arrays = [da.from_array(dset) for dset in dsets]
     # Concatenate arrays along first axis
     trks = da.concatenate(arrays, axis=0)
     print("concatenate all datasets")
     print("concatenated")
 
-    with open(config.dict_file, 'r') as infile:
+    with open(config.dict_file, "r") as infile:
         scale_dict = json.load(infile)["tracks"]
 
     var_arr_list = []
@@ -218,14 +286,16 @@ def ApplyScalesTrksDask(args, config):
 
 def ApplyScalesDask(args, config):
     """
-        Apply the scaling and shifting to dataset
+    Apply the scaling and shifting to dataset
     """
-    input_files = [config.GetFileName(iteration=x+1, option='downsampled') for
-                   x in range(config.iterations)]
+    input_files = [
+        config.GetFileName(iteration=x + 1, option="downsampled")
+        for x in range(config.iterations)
+    ]
 
-    dsets = [h5py.File(fn, 'r')['/bjets'][:] for fn in input_files]
-    dsets += [h5py.File(fn, 'r')['/cjets'][:] for fn in input_files]
-    dsets += [h5py.File(fn, 'r')['/ujets'][:] for fn in input_files]
+    dsets = [h5py.File(fn, "r")["/bjets"][:] for fn in input_files]
+    dsets += [h5py.File(fn, "r")["/cjets"][:] for fn in input_files]
+    dsets += [h5py.File(fn, "r")["/ujets"][:] for fn in input_files]
     arrays = [da.from_array(dset) for dset in dsets]
     x = da.concatenate(arrays, axis=0)  # Concatenate arrays along first axis
     df = x.to_dask_dataframe()
@@ -233,35 +303,37 @@ def ApplyScalesDask(args, config):
         variable_config = yaml.load(conf, Loader=yaml_loader)
     variables = variable_config["train_variables"]
     variables += variable_config["spectator_variables"]
-    variables += [variable_config["label"], 'weight', 'category']
+    variables += [variable_config["label"], "weight", "category"]
     # df_len = len(df)
-    if 'weight' not in df.columns.values:
+    if "weight" not in df.columns.values:
         # df['weight'] = dd.from_array(np.ones(df_len))
         # TODO: ugly workaround, but if not used a lot of NaNs are appended
         # instead of ones (see also https://stackoverflow.com/questions/46923274/appending-new-column-to-dask-dataframe?rq=1) # noqa
-        df['weight'] = df["category"] * 0 + 1
+        df["weight"] = df["category"] * 0 + 1
     df = df[variables]
     df = df.replace([np.inf, -np.inf], np.nan)
-    with open(config.dict_file, 'r') as infile:
-        scale_dict = json.load(infile)['jets']
+    with open(config.dict_file, "r") as infile:
+        scale_dict = json.load(infile)["jets"]
     print("Replacing default values.")
     default_dict = upt.Gen_default_dict(scale_dict)
     df = df.fillna(default_dict)
     # var_list = variable_config["train_variables"]
     print("Applying scaling and shifting.")
     for elem in scale_dict:
-        if 'isDefaults' in elem['name']:
+        if "isDefaults" in elem["name"]:
             continue
         else:
-            df[elem['name']] -= elem['shift']
-            df[elem['name']] /= elem['scale']
+            df[elem["name"]] -= elem["shift"]
+            df[elem["name"]] /= elem["scale"]
 
-    out_file = config.GetFileName(option='preprocessed')
+    out_file = config.GetFileName(option="preprocessed")
     print("Saving file:", out_file)
-    df.to_hdf(out_file, '/jets')
+    df.to_hdf(out_file, "/jets")
     if args.tracks:
-        print("INFO: Tracks are not treated in this step, they will ne added"
-              "in the 'write' step.")
+        print(
+            "INFO: Tracks are not treated in this step, they will ne added"
+            "in the 'write' step."
+        )
 
 
 def WriteTrainSample(args, config):
@@ -278,7 +350,7 @@ def WriteTrainSample(args, config):
     # np.random.seed(42)
     # np.random.shuffle(labels)
 
-    out_file = config.GetFileName(option='preprocessed_shuffled_test')
+    out_file = config.GetFileName(option="preprocessed_shuffled_test")
     # print("Saving labels to", out_file)
     # with h5py.File(out_file, 'w') as f:
     #     f.create_dataset('/Y_train', data=labels, compression="gzip")
@@ -304,15 +376,17 @@ def WriteTrainSample(args, config):
         # d_arr = d_arr.compute()
         # client.shutdown()
         from dask.diagnostics import ProgressBar
-        with h5py.File(out_file, 'w') as f:
-            d = f.require_dataset('/X_trk_train', shape=d_arr.shape,
-                                  dtype=d_arr.dtype)
+
+        with h5py.File(out_file, "w") as f:
+            d = f.require_dataset(
+                "/X_trk_train", shape=d_arr.shape, dtype=d_arr.dtype
+            )
             print("storing date... \n this will take a while ...")
             with ProgressBar():
-                da.store(d_arr, d, compression='lzf')  # , memory_limit='55GB')
+                da.store(d_arr, d, compression="lzf")  # , memory_limit='55GB')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = GetParser()
     config = upt.Configuration(args.config_file)
     # TEST setup

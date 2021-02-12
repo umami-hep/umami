@@ -1,13 +1,14 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from dask.array.slicing import shuffle_slice
 from sklearn.preprocessing import LabelBinarizer
 
 
 def ShuffleDataFrame(df, seed=42, df_len=None, return_array=True):
-    """ Shuffles dask DataFrame.
+    """Shuffles dask DataFrame.
     Parameters
     ----------
     df: dask DataFrame to be shuffled
@@ -35,8 +36,8 @@ def ShuffleDataFrame(df, seed=42, df_len=None, return_array=True):
     return d_arr.to_dask_dataframe(df.columns)
 
 
-def GetBinaryLabels(df, column='label'):
-    """ Transforms labels to binary labels
+def GetBinaryLabels(df, column="label"):
+    """Transforms labels to binary labels
     Parameters
     ----------
     df: dask DataFrame
@@ -54,10 +55,17 @@ def GetBinaryLabels(df, column='label'):
     return lb.fit_transform(labels)
 
 
-def MakePlots(bjets, ujets, cjets, plot_name="plots/InfoPlot.pdf",
-              binning={"pt_btagJes": np.linspace(10000, 2000000, 200),
-                       "eta_btagJes": np.linspace(0, 2.5, 26)}):
-    """ Plots pt and eta distribution.
+def MakePlots(
+    bjets,
+    ujets,
+    cjets,
+    plot_name="plots/InfoPlot.pdf",
+    binning={
+        "pt_btagJes": np.linspace(10000, 2000000, 200),
+        "eta_btagJes": np.linspace(0, 2.5, 26),
+    },
+):
+    """Plots pt and eta distribution.
     Parameters
     ----------
     TODO
@@ -75,18 +83,24 @@ def MakePlots(bjets, ujets, cjets, plot_name="plots/InfoPlot.pdf",
 
     for i, var in enumerate(vars):
         plt.subplot(1, 2, i + 1)
-        plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 3),
-                             useMathText=True)
-        plt.hist([ujets[var], cjets[var], bjets[var]], binning[var],
-                 # weights=[arr_u['weight'], arr_c['weight'],
-                 #          np.ones(len(arr_b))],
-                 # color=['#4854C3', '#97BD8A', '#D20803'],
-                 # color=['#2ca02c', '#1f77b4', '#d62728'],
-                 color=['#2ca02c', '#ff7f0e', '#1f77b4'],
-                 # color=['forestgreen', 'mediumblue', 'r'],alpha=0.8,
-                 label=['ujets', 'cjets', 'bjets'], histtype='step',
-                 stacked=False, fill=False)
-        plt.yscale('log')
+        plt.ticklabel_format(
+            style="sci", axis="x", scilimits=(0, 3), useMathText=True
+        )
+        plt.hist(
+            [ujets[var], cjets[var], bjets[var]],
+            binning[var],
+            # weights=[arr_u['weight'], arr_c['weight'],
+            #          np.ones(len(arr_b))],
+            # color=['#4854C3', '#97BD8A', '#D20803'],
+            # color=['#2ca02c', '#1f77b4', '#d62728'],
+            color=["#2ca02c", "#ff7f0e", "#1f77b4"],
+            # color=['forestgreen', 'mediumblue', 'r'],alpha=0.8,
+            label=["ujets", "cjets", "bjets"],
+            histtype="step",
+            stacked=False,
+            fill=False,
+        )
+        plt.yscale("log")
         plt.title(var)
         plt.legend()
     plt.tight_layout()
@@ -104,10 +118,10 @@ def Plot_vars(bjets, cjets, ujets, plot_name="InfoPlot"):
     variablelist = list(bjet.columns.values)
     print(variablelist)
     print(len(variablelist))
-    variablelist.remove('label')
-    variablelist.remove('weight')
-    if 'category' in variablelist:
-        variablelist.remove('category')
+    variablelist.remove("label")
+    variablelist.remove("weight")
+    if "category" in variablelist:
+        variablelist.remove("category")
 
     plt.figure(figsize=(20, 60))
     for i, var in enumerate(variablelist):
@@ -116,14 +130,19 @@ def Plot_vars(bjets, cjets, ujets, plot_name="InfoPlot"):
         else:
             nbins = 50
         plt.subplot(20, 5, i + 1)
-        plt.hist([ujet[var], cjet[var], bjet[var]], nbins,  # normed=1,
-                 weights=[ujet['weight'], cjet['weight'], bjet['weight']],
-                 # color=['#4854C3', '#97BD8A', '#D20803'],
-                 # color=['#2ca02c', '#1f77b4', '#d62728'],
-                 color=['#2ca02c', '#ff7f0e', '#1f77b4'],
-                 label=['ujets', 'cjets', 'bjets'], histtype='step',
-                 stacked=False, fill=False)
-        plt.yscale('log')
+        plt.hist(
+            [ujet[var], cjet[var], bjet[var]],
+            nbins,  # normed=1,
+            weights=[ujet["weight"], cjet["weight"], bjet["weight"]],
+            # color=['#4854C3', '#97BD8A', '#D20803'],
+            # color=['#2ca02c', '#1f77b4', '#d62728'],
+            color=["#2ca02c", "#ff7f0e", "#1f77b4"],
+            label=["ujets", "cjets", "bjets"],
+            histtype="step",
+            stacked=False,
+            fill=False,
+        )
+        plt.yscale("log")
         plt.title(var)
         plt.legend()
     plt.tight_layout()
@@ -133,7 +152,7 @@ def Plot_vars(bjets, cjets, ujets, plot_name="InfoPlot"):
 
 
 def ScaleTracks(data, var_names, scale_dict=None, mask_value=0):
-    '''
+    """
     Args:
     -----
         data: a numpy array of shape (nJets, nTrks, nFeatures)
@@ -149,33 +168,33 @@ def ScaleTracks(data, var_names, scale_dict=None, mask_value=0):
         scaling dictionary, if scale_dict was None
 
     Reference: https://github.com/mickypaganini/RNNIP/blob/master/dataprocessing.py#L235-L319  # noqa
-    '''
+    """
 
     # Track variables
     # data has shape nJets,nTrks,nFeatures,so to sort out the mask,
     # we need to find where the value is masked for a track over
     # all it's features
     # mask has shape nJets,nTrks
-    mask = ~ np.all(data == mask_value, axis=-1)
+    mask = ~np.all(data == mask_value, axis=-1)
 
     if scale_dict is None:
         scale_dict = {}
         for v, name in enumerate(var_names):
-            print(f'Scaling feature {v + 1} of {len(var_names)} ({name}).')
+            print(f"Scaling feature {v + 1} of {len(var_names)} ({name}).")
             f = data[:, :, v]
             slc = f[mask]
             m, s = slc.mean(), slc.std()
-            scale_dict[name] = {'shift': float(m), 'scale': float(s)}
+            scale_dict[name] = {"shift": float(m), "scale": float(s)}
 
         return scale_dict
 
     else:
         for v, name in enumerate(var_names):
-            print(f'Scaling feature {v + 1} of {len(var_names)} ({name}).')
+            print(f"Scaling feature {v + 1} of {len(var_names)} ({name}).")
             f = data[:, :, v]
             slc = f[mask]
-            m = scale_dict[name]['shift']
-            s = scale_dict[name]['scale']
+            m = scale_dict[name]["shift"]
+            s = scale_dict[name]["scale"]
             slc -= m
             slc /= s
-            data[:, :, v][mask] = slc.astype('float32')
+            data[:, :, v][mask] = slc.astype("float32")

@@ -9,20 +9,22 @@ This script works on the output of the evaluate_model.py script
 and has to be specified in the config file as 'evaluation_file'.
 """
 
-import h5py
 import argparse
 import os
+import pickle
+
+import h5py
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yaml
-from yaml.loader import FullLoader
-import umami.evaluation_tools as uet
-import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from yaml.loader import FullLoader
+
+import umami.evaluation_tools as uet
+import umami.tools.PyATLASstyle.PyATLASstyle as pas
 from umami.evaluation_tools.PlottingFunctions import GetScore
 from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
-import umami.tools.PyATLASstyle.PyATLASstyle as pas
-import pickle
 
 
 def GetParser():
@@ -75,19 +77,17 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         print("model", model_name)
-        if (
-            ("evaluation_file" not in model_config) or
-            (model_config["evaluation_file"] is None)
+        if ("evaluation_file" not in model_config) or (
+            model_config["evaluation_file"] is None
         ):
             model_config["df_results_eff_rej"] = pd.read_hdf(
                 eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5",
-                model_config["data_set_name"]
+                model_config["data_set_name"],
             )
 
         else:
             model_config["df_results_eff_rej"] = pd.read_hdf(
-                model_config["evaluation_file"],
-                model_config["data_set_name"]
+                model_config["evaluation_file"], model_config["data_set_name"]
             )
 
         model_config["rej_rates"] = (
@@ -107,8 +107,7 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
             and plot_config["plot_settings"]["binomialErrors"]
         ):
             h5_file = h5py.File(
-                eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5",
-                "r"
+                eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
             )
             plot_config["plot_settings"]["nTest"].append(
                 h5_file.attrs["N_test"]
@@ -122,31 +121,28 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
         beffs=beffs,
         labels=labels,
         plot_name=plot_name,
-        **plot_config["plot_settings"]
+        **plot_config["plot_settings"],
     )
 
 
-def plot_confusion_matrix(
-    plot_name, plot_config, eval_params, eval_file_dir
-):
+def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     from mlxtend.evaluate import confusion_matrix
     from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
+
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
-    if (
-        ("evaluation_file" not in plot_config) or
-        (plot_config["evaluation_file"] is None)
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
     ):
         df_results = pd.read_hdf(
-            eval_file_dir + f'/results-{eval_epoch}.h5',
-            plot_config["data_set_name"]
+            eval_file_dir + f"/results-{eval_epoch}.h5",
+            plot_config["data_set_name"],
         )
 
     else:
         df_results = pd.read_hdf(
-            plot_config["evaluation_file"],
-            plot_config["data_set_name"]
+            plot_config["evaluation_file"], plot_config["data_set_name"]
         )
 
     y_target = df_results["labels"]
@@ -173,19 +169,17 @@ def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
-    if (
-        ("evaluation_file" not in plot_config) or
-        (plot_config["evaluation_file"] is None)
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
     ):
         df_results = pd.read_hdf(
-            eval_file_dir + f'/results-{eval_epoch}.h5',
-            plot_config["data_set_name"]
+            eval_file_dir + f"/results-{eval_epoch}.h5",
+            plot_config["data_set_name"],
         )
 
     else:
         df_results = pd.read_hdf(
-            plot_config["evaluation_file"],
-            plot_config["data_set_name"]
+            plot_config["evaluation_file"], plot_config["data_set_name"]
         )
 
     df_results["discs"] = GetScore(
@@ -206,8 +200,8 @@ def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
         label=["b-jets", "c-jets", "l-jets"],
     )
     plt.legend()
-    plt.xlabel(u"$D_{b}$")
-    text = ''
+    plt.xlabel("$D_{b}$")
+    text = ""
     if "text" in plot_config:
         text = plot_config["text"]
     makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", text)
@@ -217,10 +211,14 @@ def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
 
 
 def plot_saliency_maps(
-    plot_name, plot_config, eval_params, eval_file_dir,
-    fs=14, xlabel='Tracks sorted by $s_{d0}$',
-    firstTag='Internal Simulation',
-    secondTag=r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets"
+    plot_name,
+    plot_config,
+    eval_params,
+    eval_file_dir,
+    fs=14,
+    xlabel="Tracks sorted by $s_{d0}$",
+    firstTag="Internal Simulation",
+    secondTag=r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets",
 ):
     # Get parameters to determine gradient map
     eval_epoch = int(eval_params["epoch"])
@@ -233,59 +231,59 @@ def plot_saliency_maps(
 
     if plot_config["evaluation_file"] is None:
         with open(
-            eval_file_dir + f'/saliency_{eval_epoch}_{df_name}.pkl',
-            'rb'
+            eval_file_dir + f"/saliency_{eval_epoch}_{df_name}.pkl", "rb"
         ) as f:
             maps_dict = pickle.load(f)
 
-    gradient_map = maps_dict[
-        f"{target_beff}_{jet_flavour}_{PassBool}"
-    ]
+    gradient_map = maps_dict[f"{target_beff}_{jet_flavour}_{PassBool}"]
 
     colorScale = np.max(np.abs(gradient_map))
-    cmaps = ['RdBu', 'PuOr', 'PiYG']
+    cmaps = ["RdBu", "PuOr", "PiYG"]
 
     nFeatures = gradient_map.shape[0]
-    fig = plt.figure(
-        figsize=(0.7 * nFixedTrks, 0.7 * nFeatures)
-    )
+    fig = plt.figure(figsize=(0.7 * nFixedTrks, 0.7 * nFeatures))
 
     im = plt.imshow(
-        gradient_map, cmap=cmaps[jet_flavour],
-        origin='lower', vmin=-colorScale, vmax=colorScale
+        gradient_map,
+        cmap=cmaps[jet_flavour],
+        origin="lower",
+        vmin=-colorScale,
+        vmax=colorScale,
     )
 
     plt.xticks(
-        np.arange(nFixedTrks),
-        np.arange(1, nFixedTrks + 1),
-        fontsize=fs
+        np.arange(nFixedTrks), np.arange(1, nFixedTrks + 1), fontsize=fs
     )
 
     plt.xlabel(xlabel, fontsize=fs)
-    plt.xlim(-0.5, nFixedTrks-0.5)
+    plt.xlim(-0.5, nFixedTrks - 0.5)
 
     # ylabels. Order must be the same as in the Vardict
     yticklabels = [
-        '$s_{d0}$', '$s_{z0}$',
-        'PIX1 hits', 'IBL hits',
-        'shared IBL hits', 'split IBL hits',
-        'shared pixel hits', 'split pixel hits', 'shared SCT hits',
-        r'$\log \ p_T^{frac}$', r'$\log \ \Delta R$',
-        'nPixHits', 'nSCTHits',
-        '$d_0$', r'$z_0 \sin \theta$',
+        "$s_{d0}$",
+        "$s_{z0}$",
+        "PIX1 hits",
+        "IBL hits",
+        "shared IBL hits",
+        "split IBL hits",
+        "shared pixel hits",
+        "split pixel hits",
+        "shared SCT hits",
+        r"$\log \ p_T^{frac}$",
+        r"$\log \ \Delta R$",
+        "nPixHits",
+        "nSCTHits",
+        "$d_0$",
+        r"$z_0 \sin \theta$",
     ]
 
-    plt.yticks(
-        np.arange(nFeatures),
-        yticklabels[:nFeatures]
-    )
+    plt.yticks(np.arange(nFeatures), yticklabels[:nFeatures])
 
     plt.title(title, fontsize=fs)
 
     ax = plt.gca()
     pas.makeATLAStag(
-        ax, fig, first_tag=firstTag,
-        second_tag=secondTag, ymax=.925
+        ax, fig, first_tag=firstTag, second_tag=secondTag, ymax=0.925
     )
 
     # Plot colorbar and set size to graph size
@@ -294,9 +292,7 @@ def plot_saliency_maps(
     plt.colorbar(im, cax=cax)
 
     # Save the figure
-    plt.savefig(
-        plot_name, transparent=True, bbox_inches='tight'
-    )
+    plt.savefig(plot_name, transparent=True, bbox_inches="tight")
 
 
 def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
@@ -307,21 +303,19 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
     for plot_name, plot_config in plotting_config.items():
 
         # Skip Eval parameters
-        if plot_name == 'Eval_parameters':
+        if plot_name == "Eval_parameters":
             continue
 
         # Define the path to the new plot
         print("Processing:", plot_name)
         save_plot_to = os.path.join(
             plot_directory,
-            plot_name + "_{}".format(int(eval_params["epoch"])) + "." + format
+            plot_name + "_{}".format(int(eval_params["epoch"])) + "." + format,
         )
 
         # Check for plot type and use the needed function
         if plot_config["type"] == "ROC":
-            plot_ROC(
-                save_plot_to, plot_config, eval_params, eval_file_dir
-            )
+            plot_ROC(save_plot_to, plot_config, eval_params, eval_file_dir)
 
         elif plot_config["type"] == "confusion_matrix":
             plot_confusion_matrix(
@@ -329,9 +323,7 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
             )
 
         elif plot_config["type"] == "scores":
-            plot_score(
-                save_plot_to, plot_config, eval_params, eval_file_dir
-            )
+            plot_score(save_plot_to, plot_config, eval_params, eval_file_dir)
 
         elif plot_config["type"] == "saliency":
             plot_saliency_maps(
@@ -350,7 +342,7 @@ def main(args):
     plot_directory = os.path.join(
         plotting_config["Eval_parameters"]["Path_to_models_dir"],
         plotting_config["Eval_parameters"]["model_name"],
-        args.output_directory
+        args.output_directory,
     )
 
     os.makedirs(plot_directory, exist_ok=True)
@@ -359,7 +351,7 @@ def main(args):
     eval_file_dir = os.path.join(
         plotting_config["Eval_parameters"]["Path_to_models_dir"],
         plotting_config["Eval_parameters"]["model_name"],
-        "results"
+        "results",
     )
 
     # Start plotting
