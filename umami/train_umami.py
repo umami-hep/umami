@@ -1,11 +1,7 @@
 #!/usr/bin/env python
-
 import h5py
 import argparse
 
-import os
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 import tensorflow as tf
 
 from keras.layers import BatchNormalization, TimeDistributed, Dropout
@@ -18,6 +14,9 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 
 def GetParser():
@@ -160,14 +159,19 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
 
     return umami
 
-def Umami(args, train_config, preprocess_config):
-    val_data_dict=None
-    if train_config.Eval_parameters_validation["n_jets"]>0:
-        val_data_dict=utt.load_validation_data(train_config, preprocess_config, train_config.Eval_parameters_validation["n_jets"])
 
-    exclude=[]
+def Umami(args, train_config, preprocess_config):
+    val_data_dict = None
+    if train_config.Eval_parameters_validation["n_jets"] > 0:
+        val_data_dict = utt.load_validation_data(
+            train_config, preprocess_config,
+            train_config.Eval_parameters_validation["n_jets"]
+        )
+
+    exclude = []
     if "exclude" in train_config.config:
-        exclude=train_config.config["exclude"]
+        exclude = train_config.config["exclude"]
+
     file = h5py.File(train_config.train_file, 'r')
     X_trk_train = file['X_trk_train']
     X_train = file['X_train'][:, utt.get_jet_feature_indicies(exclude=exclude)]
@@ -179,12 +183,16 @@ def Umami(args, train_config, preprocess_config):
     print(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
     if "model_file" in train_config.config:
         print(f"Loading model from: {train_config.config['model_file']}")
-        umami = load_model(train_config.config["model_file"], {"Sum": utt.Sum}, compile=False)
+        umami = load_model(
+            train_config.config["model_file"], {"Sum": utt.Sum}, compile=False
+        )
         NN_structure = train_config.NN_structure
         model_optimizer = Adam(lr=NN_structure["lr"])
         umami.compile(
             loss='categorical_crossentropy',
-            loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
+            loss_weights={
+                "dips": NN_structure["dips_loss_weight"], "umami": 1
+            },
             optimizer=model_optimizer,
             metrics=['accuracy'],
         )
@@ -213,7 +221,10 @@ def Umami(args, train_config, preprocess_config):
         val_data_dict=val_data_dict,
         target_beff=train_config.Eval_parameters_validation["WP_b"],
         charm_fraction=train_config.Eval_parameters_validation["fc_value"],
-        dict_file_name=utt.get_validation_dict_name(**train_config.Eval_parameters_validation, dir_name=train_config.model_name)
+        dict_file_name=utt.get_validation_dict_name(
+            **train_config.Eval_parameters_validation,
+            dir_name=train_config.model_name
+        )
     )
 
     # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")

@@ -1,33 +1,35 @@
 # Set modelname and path to Pflow preprocessing config file
-model_name: dips_lr_0.01_bs_15000_epoch_150_nTrainJets_Full
+model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
 preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
 
 # Add training file
-train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
+train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid-Loose-preprocessed_shuffled.h5
 
 # Add validation files
 # ttbar val
-validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-Loose-no_pTcuts-file_0.h5
 
 # zprime val
-add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-Loose-no_pTcuts-file_0.h5
 
 # Add test files
 # ttbar test
-test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
+test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-Loose-no_pTcuts-file_1.h5
 
 # zprime test
-add_test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+add_test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-Loose-no_pTcuts-file_1.h5
 
 # Path to Variable dict used in preprocessing
 var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
 
+exclude: []
+
 # Values for the neural network
 NN_structure:
     # NN Training parameters
-    lr: 0.01
+    lr: 0.001
     batch_size: 15000
-    epochs: 150
+    epochs: 200
 
     # Number of jets used for training
     # To use all: Fill nothing
