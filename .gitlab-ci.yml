@@ -1,12 +1,10 @@
 stages:
   - test
+  - image_build_umamibase
   - integration_test
-  - image_build
-  - docs_build
+  - builds
+  - image_build_umami
   - publish
-
-variables:
-  TFTAG: 2.4.0
 
 unittest:
   stage: test
