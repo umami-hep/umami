@@ -280,7 +280,7 @@ def EvaluateModelDips(
 ):
     # Set number of nJets for testing
     if args.nJets is None:
-        nJets_test = int(train_config.NN_structure["nJets_val"])
+        nJets_test = int(train_config.Eval_parameters_validation["n_jets"])
 
     else:
         nJets_test = args.nJets
@@ -365,8 +365,10 @@ def EvaluateModelDips(
         data_set_name,
     )
 
+    x_axis_granularity = 100
+
     print("calculating rejections per efficiency")
-    b_effs = np.linspace(0.39, 1, 150)
+    b_effs = np.linspace(0.39, 1, x_axis_granularity)
     crej_arr_dips = []
     urej_arr_dips = []
     crej_arr_dl1r = []
@@ -376,7 +378,7 @@ def EvaluateModelDips(
 
     for eff in b_effs:
         crej_i, urej_i = utt.GetRejection(
-            pred_dips, Y_test, target_beff=eff, cfrac=0.018
+            pred_dips, Y_test, target_beff=eff, cfrac=args.cfrac
         )
         crej_arr_dips.append(crej_i)
         urej_arr_dips.append(urej_i)
@@ -397,6 +399,41 @@ def EvaluateModelDips(
         crej_arr_rnnip.append(crej_i)
         urej_arr_rnnip.append(urej_i)
 
+    print("calculating rejections per fc")
+    fc_values = np.linspace(0.001, 0.1, x_axis_granularity)
+
+    crej_arr_dips_cfrac = []
+    urej_arr_dips_cfrac = []
+    crej_arr_dl1r_cfrac = []
+    urej_arr_dl1r_cfrac = []
+    crej_arr_rnnip_cfrac = []
+    urej_arr_rnnip_cfrac = []
+
+    for fc in fc_values:
+        crej_i, urej_i = utt.GetRejection(
+            pred_dips, Y_test, target_beff=args.beff, cfrac=fc
+        )
+        crej_arr_dips_cfrac.append(crej_i)
+        urej_arr_dips_cfrac.append(urej_i)
+
+        crej_dl1r, urej_dl1r = utt.GetRejection(
+            df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
+            Y_test,
+            target_beff=args.beff,
+            cfrac=fc,
+        )
+        crej_arr_dl1r_cfrac.append(crej_dl1r)
+        urej_arr_dl1r_cfrac.append(urej_dl1r)
+
+        crej_rnnip, urej_rnnip = utt.GetRejection(
+            df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
+            Y_test,
+            target_beff=args.beff,
+            cfrac=fc,
+        )
+        crej_arr_rnnip_cfrac.append(crej_rnnip)
+        urej_arr_rnnip_cfrac.append(urej_rnnip)
+
     df_eff_rej = pd.DataFrame(
         {
             "beff": b_effs,
@@ -406,8 +443,16 @@ def EvaluateModelDips(
             "dl1r_urej": urej_arr_dl1r,
             "rnnip_crej": crej_arr_rnnip,
             "rnnip_urej": urej_arr_rnnip,
+            "fc_values": fc_values,
+            "dl1r_cfrac_crej": crej_arr_dl1r_cfrac,
+            "dl1r_cfrac_urej": urej_arr_dl1r_cfrac,
+            "rnnip_cfrac_crej": crej_arr_rnnip_cfrac,
+            "rnnip_cfrac_urej": urej_arr_rnnip_cfrac,
+            "dips_cfrac_crej": crej_arr_dips_cfrac,
+            "dips_cfrac_urej": urej_arr_dips_cfrac,
         }
     )
+
     df_eff_rej.to_hdf(
         f"{train_config.model_name}/results/results-rej_per_eff"
         f"-{args.epoch}.h5",

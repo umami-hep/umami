@@ -289,7 +289,11 @@ def plot_saliency_maps(
     # Plot colorbar and set size to graph size
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
-    plt.colorbar(im, cax=cax)
+    colorbar = plt.colorbar(im, cax=cax)
+    colorbar.ax.set_title(
+        r'$\frac{\partial D_{b}}{\partial x_{ik}}$',
+        size=1.5 * fs
+    )
 
     # Save the figure
     plt.savefig(plot_name, transparent=True, bbox_inches="tight")
