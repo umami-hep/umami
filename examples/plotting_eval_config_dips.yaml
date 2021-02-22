@@ -7,14 +7,12 @@ Eval_parameters:
 # Dips, ttbar
 scores_Dips_ttbar:
   type: "scores"
-  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
   text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
 
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
-  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
   data_set_name: "ttbar"
   prediction_labels: ["dips_pu", "dips_pc", "dips_pb"] # For umami use umami_pX or dips_pX. The order matters!
 
@@ -33,20 +31,19 @@ Dips_light_flavour_ttbar:
     ylabel: "light"
     binomialErrors: true
     xmin: 0.6
-    ymax: 10000
+    ymax: 1e5
     colors: ["orange", "blue"]
+    figsize: [7, 6] # [width, hight]
     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018"
 
 Dips_c_flavour_ttbar:
   type: "ROC"
   models_to_plot:
     current_dl1r:
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
       data_set_name: "ttbar"
       label: "Recommended RNNIP"
       df_key: "rnnip_crej"
-    dl1r:
-      evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
+    dips:
       data_set_name: "ttbar"
       label: "Dips"
       df_key: "dips_crej"
@@ -54,22 +51,21 @@ Dips_c_flavour_ttbar:
     ylabel: "c"
     binomialErrors: true
     xmin: 0.6
-    ymax: 10000
+    ymax: 1000
     colors: ["orange", "blue"]
+    figsize: [7, 6] # [width, hight]
     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018"
 
 
 # Dips, zpext
 scores_Dips_zpext:
   type: "scores"
-  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
   data_set_name: "zpext" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
   text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample"
 
 confusion_matrix_Dips_zpext:
   type: "confusion_matrix"
-  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
   data_set_name: "zpext"
   prediction_labels: ["dips_pu", "dips_pc", "dips_pb"] # For umami use umami_pX or dips_pX. The order matters!
 
@@ -88,8 +84,9 @@ Dips_light_flavour_zpext:
     ylabel: "light"
     binomialErrors: true
     xmin: 0.6
-    ymax: 10000
+    ymax: 1000
     colors: ["orange", "blue"]
+    figsize: [7, 6] # [width, hight]
     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample, fc=0.018"
 
 Dips_c_flavour_zpext:
@@ -107,8 +104,9 @@ Dips_c_flavour_zpext:
     ylabel: "c"
     binomialErrors: true
     xmin: 0.6
-    ymax: 10000
+    ymax: 100
     colors: ["orange", "blue"]
+    figsize: [7, 6] # [width, hight]
     text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample, fc=0.018"
 
 Dips_saliency_b_WP77_passed_ttbar:

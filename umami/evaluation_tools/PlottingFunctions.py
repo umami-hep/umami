@@ -74,6 +74,7 @@ def plotROCRatio(
     nTest=0,
     plot_name=None,
     alabel=None,
+    figsize=None,
     legcols=2,
     labelpad=None,
     which_axis="left",
@@ -135,7 +136,13 @@ def plotROCRatio(
 
     # Define the figure with two subplots of unequal sizes
     axis_dict = {}
-    fig = plt.figure(figsize=(8.27 * 0.8, 11.69 * 0.8))
+
+    if figsize is None:
+        fig = plt.figure(figsize=(8.27 * 0.8, 11.69 * 0.8))
+
+    else:
+        fig = plt.figure(figsize=(figsize[0], figsize[1]))
+
     gs = gridspec.GridSpec(8, 1, figure=fig)
     axis_dict["left"] = {}
     axis_dict["left"]["top"] = fig.add_subplot(gs[:5, 0])

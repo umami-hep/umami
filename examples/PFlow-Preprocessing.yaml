@@ -1,14 +1,100 @@
 parameters:
-  # Path where the preprocessed files should be saved
-  file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids
+  # Path where the ntuples are saved
+  ntuple_path: &ntuple_path /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/
 
-# Amount of b-jets which are used
+  # Path where the hybrid samples will be saved
+  sample_path: &sample_path /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/
+
+  # Path where the merged and ready-to-train samples are saved
+  file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/
+
+preparation:
+  ntuples:
+    ttbar:
+      path: *ntuple_path
+      file_pattern: user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2020-02-14-T232210-R26303_output.h5/*.h5
+
+    zprime:
+      path: *ntuple_path
+      file_pattern: user.mguth.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2020-02-15-T225316-R8334_output.h5/*.h5
+
+  samples:
+    training_ttbar_bjets:
+      type: ttbar
+      category: bjets
+      n_jets: 10e6
+      parity: even
+      n_split: 10
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+      merge_output: f_tt_bjets
+
+    training_ttbar_cjets:
+      type: ttbar
+      category: cjets
+      # Number of c jets available in MC16d 
+      n_jets: 12745953
+      parity: even
+      n_split: 13
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
+      merge_output: f_tt_cjets
+
+    training_ttbar_ujets:
+      type: ttbar
+      category: ujets
+      n_jets: 20e6
+      parity: even
+      n_split: 20
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
+      merge_output: f_tt_ujets
+
+    training_zprime:
+      type: zprime
+      n_jets: 9593092
+      parity: even
+      split: 2
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
+      merge_output: f_z
+
+    testing_ttbar:
+      type: ttbar
+      n_jets: 4e6
+      parity: odd
+      n_split: 2
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
+
+    testing_zprime:
+      type: zprime
+      n_jets: 4e6
+      parity: odd
+      n_split: 2
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
+
+# amount of b-jets from ttbar which are used in the pre-resampling,
+# can change after applying resampling in the hybrid sample creation
 njets: 5.5e6
 
-# Fraction of ttbar jets wrt. Z'
+# fraction of ttbar jets wrt. Z'
+# can change after applying resampling in the hybrid sample creation
 ttbar_frac: 0.65
 
-# The output files are splitted into this number of files
+# outputfiles are split into 5
+# iterations: 1
 iterations: 5
 
 # pT cut for hybrid creation (for light and c-jets)
@@ -43,11 +129,10 @@ f_tt_ujets:
 
 # Name of the output file from the preprocessing
 outfile_name: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid.h5
-plot_name: PFlow_ext-hybrid_Loose
+plot_name: PFlow_ext-hybrid
 
 # Dictfile for the scaling and shifting (json)
 dict_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/scale_dicts/PFlow-scale_dict-22M.json"
-
 
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=

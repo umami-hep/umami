@@ -35,9 +35,6 @@ NN_structure:
     # To use all: Fill nothing
     nJets_train:
 
-    # Number of jets used for valiadation
-    nJets_val: 3e5
-
     # Dropout rate. If = 0, dropout is disabled
     dropout: 0
 
@@ -55,7 +52,14 @@ NN_structure:
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
+    # Number of jets used for validation
+    n_jets: 3e5
+
+    # Charm fraction value used for evaluation
     fc_value: 0.018
+
+    # b Working point used in the evaluation
     WP_b: 0.77
+
     # fc_value and WP_b are autmoatically added to the plot label
     plot_label: "\n$\\sqrt{s}=13$ TeV, PFlow jets"

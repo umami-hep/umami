@@ -184,13 +184,14 @@ def Dips_model(train_config=None, input_shape=None):
 def Dips(args, train_config, preprocess_config):
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
+    Val_params = train_config.Eval_parameters_validation
 
     # Load the validation tracks
     X_valid, Y_valid = utt.GetTestSampleTrks(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
-        nJets=int(NN_structure["nJets_val"]),
+        nJets=int(Val_params["nJets_val"])
     )
 
     # Load the extra validation tracks if defined.
@@ -200,7 +201,7 @@ def Dips(args, train_config, preprocess_config):
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
-            nJets=int(NN_structure["nJets_val"]),
+            nJets=int(Val_params["nJets_val"])
         )
 
     else:
