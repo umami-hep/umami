@@ -28,6 +28,7 @@ nav:
     - Running DL1r: DL1r-instructions.md
     - Running Dips: Dips-instructions.md
     - Running Umami: Umami-instructions.md
+    - LWTNN Conversion:  LWTNN-conversion.md
 
 plugins:
     - search
