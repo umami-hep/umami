@@ -79,9 +79,14 @@ To test if the created model is properly working you can use the [training-datas
     "pt_cut": 20000,
     "n_tracks_to_save": 40,
     "track_sort_order": "d0_significance",
-    "track_pt_minimum": 1000,
-    "track_d0_maximum": 1,
-    "track_z0_maximum": 1.5,
+    "track_selection": {
+        "pt_minimum": 1000,
+        "d0_maximum": 1.0,
+        "z0_maximum": 1.5,
+        "si_hits_minimum": 7,
+        "si_holes_maximum": 2,
+        "pix_holes_maximum": 1
+    },
     "dl2_configs": [
         {
             "nn_file_path": "DIPS-model.json",
