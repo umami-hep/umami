@@ -17,7 +17,7 @@ In order to reduce the memory usage we first extract the 3 jet categories separa
 This processing can be done using the preprocessing capabilities of Umami via the [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py) script.
 
 Please refer to the [documentation on preprocessing](preprocessing.md) for additional information.
-Note, that for running DL1r no tracks have to be stored in the output hybrid sample. Therefore, the `--tracks` argument can be omitted.
+Note, that for running Dips tracks have to be stored in the output hybrid sample. Therefore, the `--tracks` argument needs to be set.
 
 There are several training and validation/test samples to produce. See below a list of all the necessary ones:
 
@@ -40,36 +40,34 @@ There are several training and validation/test samples to produce. See below a l
 
 After the preparation of the samples, the next step is the processing for the training itself which is done with the script [preprocessing.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py).
 
-The configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml), you need to adapt it to your needs especially the `file_path`. To run the Proprocessing for the ttbar-only files, just change to `PFlow-Preprocessing-ttbar.yaml`.
+The configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml), you need to adapt it to your needs especially the `file_path`.
 
 1. Running the undersampling
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml --undersampling
+preprocessing.py -c ${EXAMPLES}/PFlow-Preprocessing.yaml --var_dict ${CONFIGS}/Dips_Variables.yaml --undersampling --tracks
 ```
 
 2. Retrieving scaling and shifting factors
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml --scaling
+preprocessing.py -c ${EXAMPLES}/PFlow-Preprocessing.yaml --var_dict ${CONFIGS}/Dips_Variables.yaml --scaling --tracks
 ```
 
 3. Applying shifting and scaling factors
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml --apply_scales
+preprocessing.py -c ${EXAMPLES}/PFlow-Preprocessing.yaml --var_dict ${CONFIGS}/Dips_Variables.yaml --apply_scales --tracks
 ```
 
 4. Shuffling the samples and writing the samples to disk
 
 ```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml -t -v Dips_Variables.yaml --write
+preprocessing.py -c ${EXAMPLES}/PFlow-Preprocessing.yaml --var_dict ${CONFIGS}/Dips_Variables.yaml --write --tracks
 ```
 
-With the `-t` option, the track informations are saved and `-v` is used to give the yaml file with the used variables to the program.
-The training Variables for DIPS are defined in [Dips_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/Dips_Variables.yaml).
-
-If you don't want to process them all you can use the already processed samples uploaded to rucio in the dataset `user.mguth:user.mguth.dl1r.trainsamples`. Note, that in this case you need to supply the associated[dictionary with scaling factors](assets/PFlow-scale_dict-22M.json) by hand, which is otherwise creating during the preprocessing.
+With the `--tracks` option, the track informations are saved and `--var_dict` is used to give the yaml file with the used variables to the program.
+The training variables for DIPS are defined in [Dips_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/Dips_Variables.yaml).
 
 ## Training
 
@@ -86,30 +84,30 @@ python setup.py install
 After that, you can switch to the folder `umami/umami` and run the training, using the following command
 
 ```bash
-train_Dips.py -c examples/Dips-PFlow-Training-config.yaml
+train_Dips.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml
 ```
 
-The results after each epoch will be saved to the `umami/umami/dips/` folder. If you want instant performance checks of the model after each epoch during the training, you can use
+The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). If you want instant performance checks of the model after each epoch during the training, you can use
 
 ```bash
-train_Dips.py -c examples/Dips-PFlow-Training-config.yaml -p
+plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips
 ```
 
-which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/dips/plots/`.
+which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. The `--dips` option defines that the dips tagger is used.
 
 ## Evaluating the results
 
-After the training is over, the different epochs can be evaluated with ROC plots and confusion matrices using the build-in scripts. Before plotting these, the model needs to be evaluated using the [evaluate_model.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py).
+After the training is over, the different epochs can be evaluated with ROC plots, output scores, saliency maps and confusion matrices using the build-in scripts. Before plotting these, the model needs to be evaluated using the [evaluate_model.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py).
 
 ```bash
-evaluate_model.py -c examples/Dips-PFlow-Training-config.yaml -e 5 --dips
+evaluate_model.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips -e 5
 ```
 
 The `-e` options (here `5`) allows to set the training epoch which should be evaluated. The `--dips` option defines that the dips tagger is used.
-It will produce .h5 files with the evaluations. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. To do this, use the following command.
+It will produce .h5 and .pkl files with the evaluations which will be saved in the model folder in an extra folder called `results/`. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. To do this, use the following command.
 
 ```bash
-plotting_umami.py -c examples/plotting_eval_config_dips.yaml -o dips_eval_plots
+plotting_umami.py -c ${EXAMPLES}/plotting_eval_config_dips.yaml -o dips_eval_plots
 ```
 
 The `-o` option defines the name of the output directory. It will be added to the model folder where also the results are saved. The config file used here is a special plotting config which defines which plots will be generated and how they are labeled. Also in the [plotting_eval_config_dips.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_eval_config_dips.yaml) config file is a set of evaluation parameters. The path to the directory where the models are saved needs to be filled. Also the name and the epoch of the model which is to be evaluated needs to be filled.
