@@ -9,7 +9,10 @@ scores_Dips_ttbar:
   type: "scores"
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
-  text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+  plot_settings:
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample"
+    AtlasTag: "Simulation, Work In Progress"
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
 
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
@@ -25,16 +28,18 @@ Dips_light_flavour_ttbar:
       df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
     dips: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "Dips"
+      label: "DIPS"
       df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
     ylabel: "light"
     binomialErrors: true
-    xmin: 0.6
-    ymax: 1e5
+    xmin: 0.5
+    ymax: 1000000
     colors: ["orange", "blue"]
     figsize: [7, 6] # [width, hight]
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
+    AtlasTag: "Simulation, Work In Progress"
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
 
 Dips_c_flavour_ttbar:
   type: "ROC"
@@ -45,16 +50,18 @@ Dips_c_flavour_ttbar:
       df_key: "rnnip_crej"
     dips:
       data_set_name: "ttbar"
-      label: "Dips"
+      label: "DIPS"
       df_key: "dips_crej"
   plot_settings:
     ylabel: "c"
     binomialErrors: true
-    xmin: 0.6
+    xmin: 0.5
     ymax: 1000
     colors: ["orange", "blue"]
     figsize: [7, 6] # [width, hight]
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
+    AtlasTag: "Simulation, Work In Progress"
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
 
 
 # Dips, zpext
@@ -62,7 +69,10 @@ scores_Dips_zpext:
   type: "scores"
   data_set_name: "zpext" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
-  text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample"
+  plot_settings:
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample"
+    AtlasTag: "Simulation, Work In Progress"
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
 
 confusion_matrix_Dips_zpext:
   type: "confusion_matrix"
@@ -78,16 +88,18 @@ Dips_light_flavour_zpext:
       df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
     dips: # The name here has no impact on anything.
       data_set_name: "zpext"
-      label: "Dips"
+      label: "DIPS"
       df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
     ylabel: "light"
     binomialErrors: true
-    xmin: 0.6
+    xmin: 0.5
     ymax: 1000
     colors: ["orange", "blue"]
     figsize: [7, 6] # [width, hight]
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Validation Sample, fc=0.018"
+    AtlasTag: "Simulation, Work In Progress"
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
 
 Dips_c_flavour_zpext:
   type: "ROC"
@@ -98,23 +110,39 @@ Dips_c_flavour_zpext:
       df_key: "rnnip_crej"
     dips:
       data_set_name: "zpext"
-      label: "Dips"
+      label: "DIPS"
       df_key: "dips_crej"
   plot_settings:
     ylabel: "c"
     binomialErrors: true
-    xmin: 0.6
+    xmin: 0.5
     ymax: 100
     colors: ["orange", "blue"]
     figsize: [7, 6] # [width, hight]
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample, fc=0.018"
+    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Validation Sample, fc=0.018"
+    AtlasTag: "Simulation, Work In Progress"
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
 
 Dips_saliency_b_WP77_passed_ttbar:
   type: "saliency"
-  data_set_name: "ttbar"
-  title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who passed WP = 77% \n with exactly 8 tracks"
-  evaluation_file: # Can be set manual. Overwrites the global eval parameters for this plot
-  WP: 0.77
-  # u=0, c=1, b=2
-  flavor: 2
-  passed: True
+  plot_settings:
+    data_set_name: "ttbar"
+    title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who passed WP = 77% \n with exactly 8 tracks"
+    target_beff: 0.77
+    # u=0, c=1, b=2
+    jet_flavour: 2
+    PassBool: True
+    AtlasTag: "Simulation, Work In Progress"
+    FlipAxis: True
+
+Dips_saliency_b_WP77_failed_ttbar:
+  type: "saliency"
+  plot_settings:
+    data_set_name: "ttbar"
+    title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who failed WP = 77% \n with exactly 8 tracks"
+    target_beff: 0.77
+    # u=0, c=1, b=2
+    jet_flavour: 2
+    PassBool: False
+    AtlasTag: "Simulation, Work In Progress"
+    FlipAxis: True

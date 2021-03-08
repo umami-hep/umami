@@ -6,10 +6,12 @@ from umami.train_tools.NN_tools import (
     GetTestSample,
     GetTestSampleTrks,
     MyCallback,
+    MyCallbackDips,
     MyCallbackUmami,
     Sum,
     calc_validation_metrics,
     evaluate_model,
+    evaluate_model_dips,
     get_jet_feature_indicies,
     get_parameters_from_validation_dict_name,
     get_validation_dict_name,
@@ -22,4 +24,5 @@ from umami.train_tools.Plotting import (
     RunPerformanceCheck,
     RunPerformanceCheckUmami,
     plot_validation,
+    plot_validation_dips,
 )

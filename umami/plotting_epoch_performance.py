@@ -56,6 +56,12 @@ def GetParser():
         --cfrac, --beff and --nJets have no impact on anything!""",
     )
 
+    parser.add_argument(
+        "--dips",
+        action="store_true",
+        help="Setting the model epoch performance to dips.",
+    )
+
     args = parser.parse_args()
     return args
 
@@ -76,9 +82,15 @@ def main(args, train_config, preprocess_config):
         beff = args.beff
         cfrac = args.cfrac
 
-    utt.plot_validation(
-        train_config, beff, cfrac, dict_file_name=output_file_name
-    )
+    if args.dips:
+        utt.plot_validation_dips(
+            train_config, beff, cfrac, dict_file_name=output_file_name
+        )
+
+    else:
+        utt.plot_validation(
+            train_config, beff, cfrac, dict_file_name=output_file_name
+        )
 
 
 if __name__ == "__main__":
