@@ -1,10 +1,13 @@
 import os
 
+import matplotlib as mtp
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from dask.array.slicing import shuffle_slice
 from sklearn.preprocessing import LabelBinarizer
+
+from umami.tools import applyATLASstyle, makeATLAStag
 
 
 def ShuffleDataFrame(df, seed=42, df_len=None, return_array=True):
@@ -53,6 +56,87 @@ def GetBinaryLabels(df, column="label"):
 
     labels = np.array(df[column].compute().values)
     return lb.fit_transform(labels)
+
+
+def MakePresentationPlots(
+    bjets,
+    ujets,
+    cjets,
+    plots_path="plots/",
+    binning={
+        "pt_btagJes": np.linspace(10000, 2000000, 200),
+        "eta_btagJes": np.linspace(0, 2.5, 26),
+    },
+    Log=True,
+):
+    """Plots pt and eta distribution as nice plots for
+    presentation.
+
+    Parameters
+    ----------
+    bjets: array of b-jets
+    ujets: array of light jets
+    cjets: array of c-jets
+
+    Returns
+    -------
+    Save nice plots of pt and eta to plots_path
+    """
+
+    var_list = ["pt_btagJes", "absEta_btagJes"]
+
+    for var in var_list:
+        applyATLASstyle(mtp)
+        plt.figure()
+
+        plt.hist(
+            [ujets[var] / 1000, cjets[var] / 1000, bjets[var] / 1000],
+            binning[var],
+            color=["#2ca02c", "#ff7f0e", "#1f77b4"],
+            label=["Light Jets", r"$c$-Jets", r"$b$-Jets"],
+            histtype="step",
+            stacked=False,
+            fill=False,
+        )
+
+        if Log is True:
+            plt.yscale("log")
+            ymin, ymax = plt.ylim()
+
+            if var == "pt_btagJes":
+                plt.ylim(ymin=ymin, ymax=100 * ymax)
+
+            else:
+                plt.ylim(ymin=ymin, ymax=10 * ymax)
+
+        elif Log is False:
+            ymin, ymax = plt.ylim()
+            plt.ylim(ymin=ymin, ymax=1.2 * ymax)
+
+        if var == "pt_btagJes":
+            plt.xlabel(r"$p_T$ in GeV")
+
+        elif var == "absEta_btagJes":
+            plt.xlabel(r"$\eta$")
+
+        else:
+            plt.xlabel(var)
+
+        plt.ylabel(r"Number of Jets")
+        plt.legend(loc="upper right")
+
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag="Internal Simulation",
+            second_tag=r"$\sqrt{s}$ = 13 TeV, Combined $t\bar{t} + $ ext. $Z'$ PFlow Jets",
+            ymax=0.9,
+        )
+
+        plt.tight_layout()
+        plt.savefig(plots_path + "{}.pdf".format(var))
+        plt.close()
+        plt.clf()
 
 
 def MakePlots(

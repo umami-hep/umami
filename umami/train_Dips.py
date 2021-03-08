@@ -191,7 +191,7 @@ def Dips(args, train_config, preprocess_config):
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
-        nJets=int(Val_params["nJets_val"])
+        nJets=int(Val_params["n_jets"]),
     )
 
     # Load the extra validation tracks if defined.
@@ -201,7 +201,7 @@ def Dips(args, train_config, preprocess_config):
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
-            nJets=int(Val_params["nJets_val"])
+            nJets=int(Val_params["n_jets"]),
         )
 
     else:
@@ -286,14 +286,25 @@ def Dips(args, train_config, preprocess_config):
         min_lr=0.000001,
     )
 
+    # Forming a dict for Callback
+    val_data_dict = {
+        "X_valid": X_valid,
+        "Y_valid": Y_valid,
+        "X_valid_add": X_valid_add,
+        "Y_valid_add": Y_valid_add,
+    }
+
     # Set my_callback as callback. Writes history information
     # to json file.
-    my_callback = utt.MyCallback(
+    my_callback = utt.MyCallbackUmami(
         model_name=train_config.model_name,
-        X_valid=X_valid,
-        Y_valid=Y_valid,
-        X_valid_add=X_valid_add,
-        Y_valid_add=Y_valid_add,
+        val_data_dict=val_data_dict,
+        target_beff=train_config.Eval_parameters_validation["WP_b"],
+        charm_fraction=train_config.Eval_parameters_validation["fc_value"],
+        dict_file_name=utt.get_validation_dict_name(
+            **train_config.Eval_parameters_validation,
+            dir_name=train_config.model_name,
+        ),
     )
 
     print("Start training")
@@ -312,14 +323,11 @@ def Dips(args, train_config, preprocess_config):
 
 if __name__ == "__main__":
     args = GetParser()
+
+    gpus = tf.config.experimental.list_physical_devices("GPU")
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
-    if args.performance_check:
-        utt.RunPerformanceCheck(
-            train_config,
-            compare_tagger=True,
-            tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
-            comp_tagger_name="RNNIP",
-        )
-    else:
-        Dips(args, train_config, preprocess_config)
+    Dips(args, train_config, preprocess_config)

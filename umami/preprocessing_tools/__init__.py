@@ -21,6 +21,7 @@ from umami.preprocessing_tools.Resampling import (
 from umami.preprocessing_tools.utils import (
     GetBinaryLabels,
     MakePlots,
+    MakePresentationPlots,
     ScaleTracks,
     ShuffleDataFrame,
 )

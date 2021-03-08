@@ -549,6 +549,19 @@ def RunUndersampling(args, config):
             plot_name=plot_name,
             binning={"pt_btagJes": 200, "absEta_btagJes": 20},
         )
+        plot_name_clean = config.GetFileName(
+            x + 1,
+            extension="",
+            option="downsampled-pt_eta-wider_bins",
+            custom_path="plots/",
+        )
+        upt.MakePresentationPlots(
+            bjets=bjets,
+            ujets=ujets,
+            cjets=cjets,
+            plots_path=plot_name_clean,
+            binning={"pt_btagJes": 200, "absEta_btagJes": 20},
+        )
 
 
 def GetScaleDict(args, config):

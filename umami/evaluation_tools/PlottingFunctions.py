@@ -1,9 +1,13 @@
+import pickle
+
 import keras.backend as K
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import pchip
 
+import umami.tools.PyATLASstyle.PyATLASstyle as pas
 from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 
 
@@ -61,6 +65,7 @@ def plotROCRatio(
     text="",
     ylabel="Background rejection",
     tag="",
+    AtlasTag="Internal Simulation",
     figDir="../figures",
     subDir="mc16d",
     styles=None,
@@ -78,6 +83,7 @@ def plotROCRatio(
     legcols=2,
     labelpad=None,
     which_axis="left",
+    WorkingPoints=None,
     x_label="$b$-jet efficiency",
     ylabel_right=None,
     ratio_id=0,
@@ -152,6 +158,32 @@ def plotROCRatio(
     if "right" in which_axis:
         axis_dict["right"] = {}
         axis_dict["right"]["top"] = axis_dict["left"]["top"].twinx()
+
+    if WorkingPoints is not None:
+        for WP in WorkingPoints:
+            axis_dict["left"]["top"].axvline(
+                x=WP,
+                ymax=0.65,
+                color="red",
+                linestyle="dashed",
+                linewidth=1.0,
+            )
+
+            axis_dict["left"]["ratio"].axvline(
+                x=WP, color="red", linestyle="dashed", linewidth=1.0
+            )
+
+            # Set the number above the line
+            axis_dict["left"]["top"].annotate(
+                text="{}%".format(int(WP * 100)),
+                xy=(WP, 0.79),
+                xytext=(WP, 0.79),
+                textcoords="offset points",
+                xycoords=("data", "figure fraction"),
+                ha="center",
+                va="bottom",
+                size=10,
+            )
 
     lines = []
     f0_ratio = {}
@@ -275,9 +307,7 @@ def plotROCRatio(
         ncol=legcols,
     )  # , title="DL1r")
 
-    makeATLAStag(
-        axis_dict["left"]["top"], fig, "Internal Simulation", text, ymax=0.8
-    )
+    makeATLAStag(axis_dict["left"]["top"], fig, AtlasTag, text, ymax=0.9)
     plt.tight_layout()
     if len(tag) != 0:
         plt.savefig(
@@ -289,3 +319,127 @@ def plotROCRatio(
         plt.savefig(plot_name, transparent=True)
     plt.close()
     # plt.show()
+
+
+def plotSaliency(
+    plot_name,
+    FileDir,
+    epoch,
+    data_set_name,
+    title,
+    target_beff=0.77,
+    jet_flavour=2,
+    PassBool=True,
+    nFixedTrks=8,
+    fs=14,
+    xlabel="Tracks sorted by $s_{d0}$",
+    AtlasTag="Internal Simulation",
+    SecondTag=r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets",
+    FlipAxis=False,
+):
+    # Transform to percent
+    target_beff = 100 * target_beff
+
+    # Little Workaround
+    AtlasTag = " " + AtlasTag
+
+    with open(FileDir + f"/saliency_{epoch}_{data_set_name}.pkl", "rb") as f:
+        maps_dict = pickle.load(f)
+
+    gradient_map = maps_dict[
+        "{}_{}_{}".format(int(target_beff), jet_flavour, PassBool)
+    ]
+
+    colorScale = np.max(np.abs(gradient_map))
+    cmaps = ["RdBu", "PuOr", "PiYG"]
+
+    nFeatures = gradient_map.shape[0]
+
+    if FlipAxis is True:
+        fig = plt.figure(figsize=(0.7 * nFeatures, 0.7 * nFixedTrks))
+        gradient_map = np.swapaxes(gradient_map, 0, 1)
+
+        plt.yticks(
+            np.arange(nFixedTrks), np.arange(1, nFixedTrks + 1), fontsize=fs
+        )
+
+        plt.ylabel(xlabel, fontsize=fs)
+        plt.ylim(-0.5, nFixedTrks - 0.5)
+
+        # ylabels. Order must be the same as in the Vardict
+        xticklabels = [
+            "$s_{d0}$",
+            "$s_{z0}$",
+            "PIX1 hits",
+            "IBL hits",
+            "shared IBL hits",
+            "split IBL hits",
+            "shared pixel hits",
+            "split pixel hits",
+            "shared SCT hits",
+            r"$\log \ p_T^{frac}$",
+            r"$\log \ \Delta R$",
+            "nPixHits",
+            "nSCTHits",
+            "$d_0$",
+            r"$z_0 \sin \theta$",
+        ]
+
+        plt.xticks(np.arange(nFeatures), xticklabels[:nFeatures], rotation=45)
+
+    else:
+        fig = plt.figure(figsize=(0.7 * nFixedTrks, 0.7 * nFeatures))
+
+        plt.xticks(
+            np.arange(nFixedTrks), np.arange(1, nFixedTrks + 1), fontsize=fs
+        )
+
+        plt.xlabel(xlabel, fontsize=fs)
+        plt.xlim(-0.5, nFixedTrks - 0.5)
+
+        # ylabels. Order must be the same as in the Vardict
+        yticklabels = [
+            "$s_{d0}$",
+            "$s_{z0}$",
+            "PIX1 hits",
+            "IBL hits",
+            "shared IBL hits",
+            "split IBL hits",
+            "shared pixel hits",
+            "split pixel hits",
+            "shared SCT hits",
+            r"$\log \ p_T^{frac}$",
+            r"$\log \ \Delta R$",
+            "nPixHits",
+            "nSCTHits",
+            "$d_0$",
+            r"$z_0 \sin \theta$",
+        ]
+
+        plt.yticks(np.arange(nFeatures), yticklabels[:nFeatures])
+
+    im = plt.imshow(
+        gradient_map,
+        cmap=cmaps[jet_flavour],
+        origin="lower",
+        vmin=-colorScale,
+        vmax=colorScale,
+    )
+
+    plt.title(title, fontsize=fs)
+
+    ax = plt.gca()
+    pas.makeATLAStag(
+        ax, fig, first_tag=AtlasTag, second_tag=SecondTag, ymax=0.925
+    )
+
+    # Plot colorbar and set size to graph size
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    colorbar = plt.colorbar(im, cax=cax)
+    colorbar.ax.set_title(
+        r"$\frac{\partial D_{b}}{\partial x_{ik}}$", size=1.5 * fs
+    )
+
+    # Save the figure
+    plt.savefig(plot_name, transparent=True, bbox_inches="tight")

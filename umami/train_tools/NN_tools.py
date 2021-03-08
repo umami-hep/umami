@@ -18,7 +18,7 @@ from umami.tools import yaml_loader
 def get_validation_dict_name(WP_b, fc_value, n_jets, dir_name, plot_label=""):
     return os.path.join(
         dir_name,
-        f"validation_WP{str(WP_b).replace('.','p')}_fc{str(fc_value).replace('.','p')}_{n_jets}jets_Dict.json",
+        f"validation_WP{str(WP_b).replace('.','p')}_fc{str(fc_value).replace('.','p')}_{int(n_jets)}jets_Dict.json",
     )
 
 
@@ -163,6 +163,55 @@ def setup_output_directory(dir_name):
         )
     else:
         outdir.mkdir()
+
+
+class MyCallbackDips(Callback):
+    def __init__(
+        self,
+        val_data_dict=None,
+        log_file=None,
+        verbose=False,
+        model_name="test",
+        target_beff=0.77,
+        charm_fraction=0.018,
+        dict_file_name="DictFile.json",
+    ):
+        self.val_data_dict = val_data_dict
+        self.target_beff = target_beff
+        self.charm_fraction = charm_fraction
+        self.result = []
+        self.log = open(log_file, "w") if log_file else None
+        self.verbose = verbose
+        self.model_name = model_name
+        setup_output_directory(self.model_name)
+        self.dict_list = []
+        self.dict_file_name = dict_file_name
+
+    def on_epoch_end(self, epoch, logs=None):
+        self.model.save(f"{self.model_name}/model_epoch{epoch}.h5")
+        dict_epoch = {
+            "epoch": epoch,
+            "learning_rate": logs["lr"].item(),
+            "loss": logs["loss"],
+            "acc": logs["accuracy"],
+        }
+        if self.val_data_dict:
+            result_dict = evaluate_model_dips(
+                self.model,
+                self.val_data_dict,
+                self.target_beff,
+                self.charm_fraction,
+            )
+            # Once we use python >=3.9 (see https://www.python.org/dev/peps/pep-0584/#specification) switch to the following: dict_epoch |= result_dict
+            dict_epoch = {**dict_epoch, **result_dict}
+
+        self.dict_list.append(dict_epoch)
+        with open(self.dict_file_name, "w") as outfile:
+            json.dump(self.dict_list, outfile, indent=4)
+
+    def on_train_end(self, logs=None):
+        if self.log:
+            self.log.close()
 
 
 class MyCallbackUmami(Callback):
@@ -470,6 +519,72 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
         "c_rej_umami_add": c_rej_umami_add,
         "u_rej_dips_add": u_rej_dips_add,
         "u_rej_umami_add": u_rej_umami_add,
+    }
+    return result_dict
+
+
+def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
+    loss, accuracy = model.evaluate(
+        data_dict["X_valid_trk"],
+        data_dict["Y_valid"],
+        batch_size=5000,
+        use_multiprocessing=True,
+        workers=8,
+        verbose=0,
+    )
+
+    y_pred_dips = model.predict(
+        data_dict["X_valid_trk"],
+        batch_size=5000,
+        use_multiprocessing=True,
+        workers=8,
+        verbose=0,
+    )
+
+    c_rej, u_rej = GetRejection(
+        y_pred_dips, data_dict["Y_valid"], target_beff, cfrac
+    )
+
+    print("Dips:", "c-rej:", c_rej, "u-rej:", u_rej)
+
+    (
+        loss_add,
+        accuracy_add,
+        c_rej_add,
+        u_rej_add,
+    ) = (None, None, None, None)
+
+    if data_dict["X_valid_add"] is not None:
+        loss_add, accuracy_add = model.evaluate(
+            data_dict["X_valid_trk_add"],
+            data_dict["Y_valid_add"],
+            batch_size=5000,
+            use_multiprocessing=True,
+            workers=8,
+            verbose=0,
+        )
+
+        y_pred_add = model.predict(
+            data_dict["X_valid_trk_add"],
+            batch_size=5000,
+            use_multiprocessing=True,
+            workers=8,
+            verbose=0,
+        )
+
+        c_rej_add, u_rej_add = GetRejection(
+            y_pred_add, data_dict["Y_valid_add"], target_beff, cfrac
+        )
+
+    result_dict = {
+        "val_loss": loss,
+        "val_acc": accuracy,
+        "val_loss_add": loss_add,
+        "val_acc_add": accuracy_add,
+        "c_rej": c_rej,
+        "u_rej": u_rej,
+        "c_rej_add": c_rej_add,
+        "u_rej_add": u_rej_add,
     }
     return result_dict
 
