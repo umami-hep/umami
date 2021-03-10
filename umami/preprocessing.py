@@ -214,7 +214,7 @@ def RunPreparation(args, config):
     n_jets_to_get = n_jets
 
     # ensure output path exists
-    os.system(f"mkdir -p {output_path}")
+    os.makedirs(output_path, exist_ok=True)
 
     # run over ntuples to extract jets (and potentially also tracks)
     print("Processing ntuples...")
@@ -347,10 +347,10 @@ def RunMerging(args, config):
     input_file_template = os.path.join(
         sample.get("f_output")["path"], sample.get("f_output")["file"]
     )
-    n_split = int(sample.get("n_split", 1))
-    if n_split > 1:
-        input_file_template = input_file_template.replace(".h5", "-file_*.h5")
+
+    input_file_template = input_file_template.replace(".h5", "-file_*.h5")
     input_files = glob(input_file_template)
+
     # check if merge_output points to a property of the config file.
     # otherwise assume an explicit path has been provided
     try:
@@ -360,7 +360,7 @@ def RunMerging(args, config):
     output_path = os.path.dirname(output_file)
 
     # ensure output path exists
-    os.system(f"mkdir -p {output_path}")
+    os.makedirs(output_path, exist_ok=True)
 
     # merge input files to output file
     output = h5py.File(output_file, "w")
@@ -647,6 +647,7 @@ def GetScaleDict(args, config):
 
     # save scale/shift dictionary to json file
     scale_dict = {"jets": scale_dict, "tracks": scale_dict_trk}
+    os.makedirs(os.path.dirname(config.dict_file), exist_ok=True)
     with open(config.dict_file, "w") as outfile:
         json.dump(scale_dict, outfile, indent=4)
     print("saved scale dictionary as", config.dict_file)

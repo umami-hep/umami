@@ -60,7 +60,7 @@ preparation:
       type: zprime
       n_jets: 9593092
       parity: even
-      split: 2
+      n_split: 2
       pt_cut: true
       f_output:
         path: *sample_path
