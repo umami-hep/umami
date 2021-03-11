@@ -170,7 +170,9 @@ def Dips_model(train_config=None, input_shape=None):
     output = Dense(nClasses, activation="softmax", name="Jet_class")(F)
     dips = Model(inputs=trk_inputs, outputs=output)
 
-    # dips.summary()
+    # Print Dips model summary
+    dips.summary()
+
     # Set optimier and loss
     model_optimizer = Adam(lr=NN_structure["lr"])
     dips.compile(
@@ -296,13 +298,15 @@ def Dips(args, train_config, preprocess_config):
 
     # Set my_callback as callback. Writes history information
     # to json file.
-    my_callback = utt.MyCallbackUmami(
+    my_callback = utt.MyCallbackDips(
         model_name=train_config.model_name,
         val_data_dict=val_data_dict,
         target_beff=train_config.Eval_parameters_validation["WP_b"],
         charm_fraction=train_config.Eval_parameters_validation["fc_value"],
         dict_file_name=utt.get_validation_dict_name(
-            **train_config.Eval_parameters_validation,
+            WP_b=train_config.Eval_parameters_validation["WP_b"],
+            fc_value=train_config.Eval_parameters_validation["fc_value"],
+            n_jets=train_config.Eval_parameters_validation["n_jets"],
             dir_name=train_config.model_name,
         ),
     )

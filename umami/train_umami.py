@@ -299,7 +299,9 @@ def Umami(args, train_config, preprocess_config):
         target_beff=train_config.Eval_parameters_validation["WP_b"],
         charm_fraction=train_config.Eval_parameters_validation["fc_value"],
         dict_file_name=utt.get_validation_dict_name(
-            **train_config.Eval_parameters_validation,
+            WP_b=train_config.Eval_parameters_validation["WP_b"],
+            fc_value=train_config.Eval_parameters_validation["fc_value"],
+            n_jets=train_config.Eval_parameters_validation["n_jets"],
             dir_name=train_config.model_name,
         ),
     )

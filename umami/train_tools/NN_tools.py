@@ -15,7 +15,7 @@ from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
 from umami.tools import yaml_loader
 
 
-def get_validation_dict_name(WP_b, fc_value, n_jets, dir_name, plot_label=""):
+def get_validation_dict_name(WP_b, fc_value, n_jets, dir_name):
     return os.path.join(
         dir_name,
         f"validation_WP{str(WP_b).replace('.','p')}_fc{str(fc_value).replace('.','p')}_{int(n_jets)}jets_Dict.json",
@@ -403,6 +403,42 @@ def load_validation_data(train_config, preprocess_config, nJets: int):
     return val_data_dict
 
 
+def load_validation_data_dips(train_config, preprocess_config, nJets: int):
+    exclude = []
+    if "exclude" in train_config.config:
+        exclude = train_config.config["exclude"]
+    val_data_dict = {}
+    (_, val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestFile(
+        train_config.validation_file,
+        train_config.var_dict,
+        preprocess_config,
+        nJets=nJets,
+        exclude=exclude,
+    )
+    (
+        val_data_dict["X_valid_add"],
+        val_data_dict["Y_valid_add"],
+        val_data_dict["X_valid_trk_add"],
+    ) = (None, None, None)
+    if train_config.add_validation_file is not None:
+        (
+            _,
+            val_data_dict["X_valid_add"],
+            val_data_dict["Y_valid_add"],
+        ) = GetTestFile(
+            train_config.add_validation_file,
+            train_config.var_dict,
+            preprocess_config,
+            nJets=nJets,
+            exclude=exclude,
+        )
+        assert (
+            val_data_dict["X_valid"].shape[1]
+            == val_data_dict["X_valid_add"].shape[1]
+        )
+    return val_data_dict
+
+
 def GetTestFile(
     file: str,
     var_dict: str,
@@ -525,7 +561,7 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
 
 def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
     loss, accuracy = model.evaluate(
-        data_dict["X_valid_trk"],
+        data_dict["X_valid"],
         data_dict["Y_valid"],
         batch_size=5000,
         use_multiprocessing=True,
@@ -534,7 +570,7 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
     )
 
     y_pred_dips = model.predict(
-        data_dict["X_valid_trk"],
+        data_dict["X_valid"],
         batch_size=5000,
         use_multiprocessing=True,
         workers=8,
@@ -556,7 +592,7 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
 
     if data_dict["X_valid_add"] is not None:
         loss_add, accuracy_add = model.evaluate(
-            data_dict["X_valid_trk_add"],
+            data_dict["X_valid_add"],
             data_dict["Y_valid_add"],
             batch_size=5000,
             use_multiprocessing=True,
@@ -565,7 +601,7 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
         )
 
         y_pred_add = model.predict(
-            data_dict["X_valid_trk_add"],
+            data_dict["X_valid_add"],
             batch_size=5000,
             use_multiprocessing=True,
             workers=8,
@@ -596,6 +632,8 @@ def calc_validation_metrics(
     cfrac=0.018,
     nJets=300000,
 ):
+    Eval_parameters = train_config.Eval_parameters_validation
+
     val_data_dict = load_validation_data(
         train_config, preprocess_config, nJets
     )
@@ -606,7 +644,9 @@ def calc_validation_metrics(
     ]
     with open(
         get_validation_dict_name(
-            **train_config.Eval_parameters_validation,
+            WP_b=Eval_parameters["WP_b"],
+            fc_value=Eval_parameters["fc_value"],
+            n_jets=Eval_parameters["n_jets"],
             dir_name=train_config.model_name,
         ),
         "r",
@@ -631,6 +671,65 @@ def calc_validation_metrics(
             result_dict[k] = v
         results.append(result_dict)
         del umami
+
+    results = sorted(results, key=lambda x: x["epoch"])
+
+    output_file_path = get_validation_dict_name(
+        target_beff, cfrac, nJets, train_config.model_name
+    )
+    with open(output_file_path, "w") as outfile:
+        json.dump(results, outfile, indent=4)
+
+    return output_file_path
+
+
+def calc_validation_metrics_dips(
+    train_config,
+    preprocess_config,
+    target_beff=0.77,
+    cfrac=0.018,
+    nJets=300000,
+):
+    Eval_parameters = train_config.Eval_parameters_validation
+
+    val_data_dict = load_validation_data_dips(
+        train_config, preprocess_config, nJets
+    )
+    training_output = [
+        os.path.join(train_config.model_name, f)
+        for f in os.listdir(train_config.model_name)
+        if "model_epoch" in f
+    ]
+    with open(
+        get_validation_dict_name(
+            WP_b=Eval_parameters["WP_b"],
+            fc_value=Eval_parameters["fc_value"],
+            n_jets=Eval_parameters["n_jets"],
+            dir_name=train_config.model_name,
+        ),
+        "r",
+    ) as training_out_json:
+        training_output_list = json.load(training_out_json)
+
+    results = []
+    for n, model_file in enumerate(training_output):
+        print(f"Working on {n+1}/{len(training_output)} input files")
+        result_dict = {}
+        epoch = int(
+            model_file[model_file.find("epoch") + 5 : model_file.find(".h5")]
+        )
+        for train_epoch in training_output_list:
+            if epoch == train_epoch["epoch"]:
+                result_dict = train_epoch
+
+        dips = load_model(model_file, {"Sum": Sum})
+        val_result_dict = evaluate_model_dips(
+            dips, val_data_dict, target_beff, cfrac
+        )
+        for k, v in val_result_dict.items():
+            result_dict[k] = v
+        results.append(result_dict)
+        del dips
 
     results = sorted(results, key=lambda x: x["epoch"])
 

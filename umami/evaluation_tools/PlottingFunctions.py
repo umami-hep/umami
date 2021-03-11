@@ -3,6 +3,7 @@ import pickle
 import keras.backend as K
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib import gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import pchip
@@ -62,10 +63,12 @@ def plotROCRatio(
     beffs,
     labels,
     title="",
-    text="",
     ylabel="Background rejection",
     tag="",
+    UseAtlasTag=True,
     AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",
+    yAxisAtlasTag=0.9,
     figDir="../figures",
     subDir="mc16d",
     styles=None,
@@ -307,7 +310,15 @@ def plotROCRatio(
         ncol=legcols,
     )  # , title="DL1r")
 
-    makeATLAStag(axis_dict["left"]["top"], fig, AtlasTag, text, ymax=0.9)
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=axis_dict["left"]["top"],
+            fig=fig,
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
     plt.tight_layout()
     if len(tag) != 0:
         plt.savefig(
@@ -333,8 +344,10 @@ def plotSaliency(
     nFixedTrks=8,
     fs=14,
     xlabel="Tracks sorted by $s_{d0}$",
+    UseAtlasTag=True,
     AtlasTag="Internal Simulation",
     SecondTag=r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets",
+    yAxisAtlasTag=0.925,
     FlipAxis=False,
 ):
     # Transform to percent
@@ -429,9 +442,15 @@ def plotSaliency(
     plt.title(title, fontsize=fs)
 
     ax = plt.gca()
-    pas.makeATLAStag(
-        ax, fig, first_tag=AtlasTag, second_tag=SecondTag, ymax=0.925
-    )
+
+    if UseAtlasTag is True:
+        pas.makeATLAStag(
+            ax,
+            fig,
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
 
     # Plot colorbar and set size to graph size
     divider = make_axes_locatable(ax)
@@ -443,3 +462,205 @@ def plotSaliency(
 
     # Save the figure
     plt.savefig(plot_name, transparent=True, bbox_inches="tight")
+
+
+def plot_score(
+    plot_name,
+    plot_config,
+    eval_params,
+    eval_file_dir,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    WorkingPoints=None,
+    nBins=50,
+    yAxisIncrease=1.3,
+    yAxisAtlasTag=0.9,
+):
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    # Read file, change to specific file if defined
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
+    ):
+        df_results = pd.read_hdf(
+            eval_file_dir + f"/results-{eval_epoch}.h5",
+            plot_config["data_set_name"],
+        )
+
+    else:
+        df_results = pd.read_hdf(
+            plot_config["evaluation_file"], plot_config["data_set_name"]
+        )
+
+    # Calculate the scores for the NN outputs
+    df_results["discs"] = GetScore(
+        *[df_results[pX] for pX in plot_config["prediction_labels"]]
+    )
+
+    # Clear the figure and init a new one
+    plt.clf()
+    fig = plt.figure()
+    ax = fig.gca()
+
+    # Define the length of b, c, and light
+    len_b = len(df_results.query("labels==2"))
+    len_c = len(df_results.query("labels==1"))
+    len_u = len(df_results.query("labels==0"))
+
+    # Calculate the hists and bin edges for errorbands
+    counts_b, bins_b = np.histogram(
+        df_results.query("labels==2")["discs"], bins=nBins
+    )
+
+    counts_c, bins_c = np.histogram(
+        df_results.query("labels==1")["discs"],
+        # Use the calculated binning to ensure its equal
+        bins=bins_b,
+    )
+
+    counts_u, bins_u = np.histogram(
+        df_results.query("labels==0")["discs"],
+        # Use the calculated binning to ensure its equal
+        bins=bins_b,
+    )
+
+    # Calculate the bin centers
+    bincentres = [
+        (bins_b[i] + bins_b[i + 1]) / 2.0 for i in range(len(bins_b) - 1)
+    ]
+
+    # Calculate poisson uncertainties and lower bands
+    unc_b = np.sqrt(counts_b) / len_b
+    band_lower_b = counts_b / len_b - unc_b
+
+    unc_c = np.sqrt(counts_c) / len_c
+    band_lower_c = counts_c / len_c - unc_c
+
+    unc_u = np.sqrt(counts_u) / len_u
+    band_lower_u = counts_u / len_u - unc_u
+
+    # Hist the scores and their corresponding errors
+    plt.hist(
+        x=bins_b[:-1],
+        bins=bins_b,
+        weights=(counts_b / len_b),
+        histtype="step",
+        linewidth=2.0,
+        color="C0",
+        stacked=False,
+        fill=False,
+        label=r"$b$-jets",
+    )
+
+    plt.hist(
+        x=bincentres,
+        bins=bins_b,
+        bottom=band_lower_b,
+        weights=unc_b * 2,
+        fill=False,
+        hatch="/////",
+        linewidth=0,
+        edgecolor="#666666",
+    )
+
+    plt.hist(
+        x=bins_c[:-1],
+        bins=bins_c,
+        weights=counts_c / len_c,
+        histtype="step",
+        linewidth=2.0,
+        color="C1",
+        stacked=False,
+        fill=False,
+        label=r"$c$-jets",
+    )
+
+    plt.hist(
+        x=bincentres,
+        bins=bins_c,
+        bottom=band_lower_c,
+        weights=unc_c * 2,
+        fill=False,
+        hatch="/////",
+        linewidth=0,
+        edgecolor="#666666",
+    )
+
+    plt.hist(
+        x=bins_u[:-1],
+        bins=bins_u,
+        weights=counts_u / len_u,
+        histtype="step",
+        linewidth=2.0,
+        color="C2",
+        stacked=False,
+        fill=False,
+        label=r"light-flavour jets",
+    )
+
+    plt.hist(
+        x=bincentres,
+        bins=bins_u,
+        bottom=band_lower_u,
+        weights=unc_u * 2,
+        fill=False,
+        hatch="/////",
+        linewidth=0,
+        edgecolor="#666666",
+        label="stat. unc.",
+    )
+
+    # Increase ymax so atlas tag don't cut plot
+    ymin, ymax = plt.ylim()
+    plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
+
+    # Set WP vertical lines if given in config
+    if WorkingPoints is not None:
+
+        # Iterate over WPs
+        for WP in WorkingPoints:
+
+            # Calculate x value of WP line
+            x_value = np.percentile(
+                df_results.query("labels==2")["discs"], (1 - WP) * 100
+            )
+
+            # Draw WP line
+            plt.vlines(
+                x=x_value,
+                ymin=ymin,
+                ymax=WP * ymax,
+                colors="C3",
+                linestyles="dashed",
+                linewidth=1.0,
+            )
+
+            # Set the number above the line
+            ax.annotate(
+                "{}%".format(int(WP * 100)),
+                xy=(x_value, WP * ymax),
+                xytext=(x_value, WP * ymax),
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+                size=10,
+            )
+
+    plt.legend()
+    plt.xlabel("$D_{b}$")
+    plt.ylabel("Normalised Number of Jets")
+
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    plt.tight_layout()
+    plt.savefig(plot_name, transparent=True)
+    plt.close()

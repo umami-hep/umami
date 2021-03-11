@@ -24,7 +24,9 @@ def PlotRejPerEpoch(
     comp_tagger_name="DL1r",
     target_beff=0.77,
     fc_value=0.018,
-    plot_label="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
 ):
     applyATLASstyle(mtp)
     fig, ax1 = plt.subplots(constrained_layout=True)
@@ -83,17 +85,19 @@ def PlotRejPerEpoch(
     ax1.set_ylim(top=ax1.get_ylim()[1] * 1.2)
     ax2.set_ylim(top=ax2.get_ylim()[1] * 1.2)
 
-    makeATLAStag(
-        ax=plt.gca(),
-        fig=plt.gcf(),
-        first_tag="Internal Simulation",
-        second_tag=(
-            plot_label
-            + "\nfc={}".format(fc_value)
-            + ", WP={:02d}%".format(int(target_beff * 100))
-        ),
-        ymax=0.9,
-    )
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=(
+                SecondTag
+                + "\nfc={}".format(fc_value)
+                + ", WP={:02d}%".format(int(target_beff * 100))
+            ),
+            ymax=0.9,
+        )
+
     fig.legend(ncol=1, loc=(0.6, 0.75))
     plt.savefig(plot_name, transparent=True)
     plt.cla()
@@ -101,7 +105,12 @@ def PlotRejPerEpoch(
 
 
 def PlotLosses(
-    df_results, plot_name, plot_label="\n$\\sqrt{s}=13$ TeV, PFlow jets"
+    df_results,
+    plot_name,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    plot_datatype="",
 ):
     applyATLASstyle(mtp)
     plt.plot(
@@ -119,13 +128,16 @@ def PlotLosses(
         df_results["val_loss_add"],
         label=r"validation loss - ext. $Z'$ sample",
     )
-    makeATLAStag(
-        ax=plt.gca(),
-        fig=plt.gcf(),
-        first_tag="Internal Simulation",
-        second_tag=plot_label,
-        ymax=0.75,
-    )
+
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=0.75,
+        )
+
     plt.legend(loc="upper right")
     ymin, ymax = plt.ylim()
     plt.ylim(ymin=ymin, ymax=1.2 * ymax)
@@ -137,7 +149,12 @@ def PlotLosses(
 
 
 def PlotAccuracies(
-    df_results, plot_name, plot_label="\n$\\sqrt{s}=13$ TeV, PFlow jets"
+    df_results,
+    plot_name,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    plot_datatype="",
 ):
     applyATLASstyle(mtp)
     plt.plot(
@@ -155,13 +172,16 @@ def PlotAccuracies(
         df_results["val_accuracy_add"],
         label=r"validation accuracy - ext. $Z'$ sample",
     )
-    makeATLAStag(
-        ax=plt.gca(),
-        fig=plt.gcf(),
-        first_tag="Internal Simulation",
-        second_tag=plot_label,
-        ymax=0.75,
-    )
+
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=0.75,
+        )
+
     plt.legend(loc="upper right")
     ymin, ymax = plt.ylim()
     plt.ylim(ymin=ymin, ymax=1.2 * ymax)
@@ -173,7 +193,12 @@ def PlotAccuracies(
 
 
 def PlotLossesUmami(
-    df_results, plot_name, plot_label="\n$\\sqrt{s}=13$ TeV, PFlow jets"
+    df_results,
+    plot_name,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    plot_datatype="",
 ):
     applyATLASstyle(mtp)
     plt.plot(
@@ -206,7 +231,15 @@ def PlotLossesUmami(
         df_results["dips_val_loss_add"],
         label=r"val loss DIPS - ext. $Z'$ sample",
     )
-    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", plot_label)
+
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+        )
+
     plt.legend()
     plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
     plt.ylabel("Loss")
@@ -216,7 +249,12 @@ def PlotLossesUmami(
 
 
 def PlotAccuraciesUmami(
-    df_results, plot_name, plot_label="\n$\\sqrt{s}=13$ TeV, PFlow jets"
+    df_results,
+    plot_name,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    plot_datatype="",
 ):
     applyATLASstyle(mtp)
     plt.plot(
@@ -249,7 +287,15 @@ def PlotAccuraciesUmami(
         df_results["dips_val_acc_add"],
         label=r"val acc DIPS - ext. $Z'$ sample",
     )
-    makeATLAStag(plt.gca(), plt.gcf(), "Internal Simulation", plot_label)
+
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+        )
+
     plt.legend()
     plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
     plt.ylabel("Accuracy")
@@ -268,7 +314,8 @@ def RunPerformanceCheck(
     dict_file_name=None,
 ):
     print("Running performance check.")
-    plot_label = train_config.Eval_parameters_validation["plot_label"]
+    Eval_parameters = train_config.Eval_parameters_validation
+    plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
     recommended_fc_values = {"DL1r": 0.018, "RNNIP": 0.08}
     c_rej, u_rej = None, None
     if compare_tagger:
@@ -292,7 +339,7 @@ def RunPerformanceCheck(
     print("saving plots to", plot_dir)
     os.makedirs(plot_dir, exist_ok=True)
     if comp_tagger_name == "RNNIP":
-        plot_name = f"{plot_dir}/rej-plot_val.pdf"
+        plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
         PlotRejPerEpoch(
             df_results=df_results,
             plot_name=plot_name,
@@ -306,7 +353,9 @@ def RunPerformanceCheck(
             comp_tagger_name=comp_tagger_name,
             target_beff=WP_b,
             fc_value=fc,
-            plot_label=plot_label,
+            UseAtlasTag=Eval_parameters["UseAtlasTag"],
+            AtlasTag=Eval_parameters["AtlasTag"],
+            SecondTag=Eval_parameters["SecondTag"],
         )
 
     if train_config.add_validation_file is not None:
@@ -332,7 +381,7 @@ def RunPerformanceCheck(
             )
 
         if comp_tagger_name == "RNNIP":
-            plot_name = f"{plot_dir}/rej-plot_val_add.pdf"
+            plot_name = f"{plot_dir}/rej-plot_val_add.{plot_datatype}"
             PlotRejPerEpoch(
                 df_results,
                 plot_name,
@@ -349,14 +398,28 @@ def RunPerformanceCheck(
                 comp_tagger_name=comp_tagger_name,
                 target_beff=WP_b,
                 fc_value=fc,
-                plot_label=plot_label,
+                UseAtlasTag=Eval_parameters["UseAtlasTag"],
+                AtlasTag=Eval_parameters["AtlasTag"],
+                SecondTag=Eval_parameters["SecondTag"],
             )
 
-    plot_name = f"{plot_dir}/loss-plot.pdf"
-    PlotLosses(df_results, plot_name, plot_label=plot_label)
+    plot_name = f"{plot_dir}/loss-plot.{plot_datatype}"
+    PlotLosses(
+        df_results,
+        plot_name,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
+    )
 
-    plot_name = f"{plot_dir}/accuracy-plot.pdf"
-    PlotAccuracies(df_results, plot_name, plot_label=plot_label)
+    plot_name = f"{plot_dir}/accuracy-plot.{plot_datatype}"
+    PlotAccuracies(
+        df_results,
+        plot_name,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
+    )
 
 
 def RunPerformanceCheckUmami(
@@ -369,7 +432,8 @@ def RunPerformanceCheckUmami(
     dict_file_name=None,
 ):
     print("Running performance check.")
-    plot_label = train_config.Eval_parameters_validation["plot_label"]
+    Eval_parameters = train_config.Eval_parameters_validation
+    plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
     recommended_fc_values = {"DL1r": 0.018, "RNNIP": 0.08}
     c_rej, u_rej = None, None
     if compare_tagger:
@@ -393,7 +457,7 @@ def RunPerformanceCheckUmami(
     print("saving plots to", plot_dir)
     os.makedirs(plot_dir, exist_ok=True)
     if comp_tagger_name == "RNNIP":
-        plot_name = f"{plot_dir}/rej-plot_val_dips.pdf"
+        plot_name = f"{plot_dir}/rej-plot_val_dips.{plot_datatype}"
         PlotRejPerEpoch(
             df_results,
             plot_name,
@@ -407,11 +471,13 @@ def RunPerformanceCheckUmami(
             comp_tagger_name=comp_tagger_name,
             target_beff=WP_b,
             fc_value=fc,
-            plot_label=plot_label,
+            UseAtlasTag=Eval_parameters["UseAtlasTag"],
+            AtlasTag=Eval_parameters["AtlasTag"],
+            SecondTag=Eval_parameters["SecondTag"],
         )
 
     else:
-        plot_name = f"{plot_dir}/rej-plot_val_umami.pdf"
+        plot_name = f"{plot_dir}/rej-plot_val_umami.{plot_datatype}"
         PlotRejPerEpoch(
             df_results,
             plot_name,
@@ -425,7 +491,9 @@ def RunPerformanceCheckUmami(
             comp_tagger_name=comp_tagger_name,
             target_beff=WP_b,
             fc_value=fc,
-            plot_label=plot_label,
+            UseAtlasTag=Eval_parameters["UseAtlasTag"],
+            AtlasTag=Eval_parameters["AtlasTag"],
+            SecondTag=Eval_parameters["SecondTag"],
         )
 
     if train_config.add_validation_file is not None:
@@ -451,7 +519,7 @@ def RunPerformanceCheckUmami(
             )
 
         if comp_tagger_name == "RNNIP":
-            plot_name = f"{plot_dir}/rej-plot_val_add_dips.pdf"
+            plot_name = f"{plot_dir}/rej-plot_val_add_dips.{plot_datatype}"
             PlotRejPerEpoch(
                 df_results,
                 plot_name,
@@ -468,11 +536,13 @@ def RunPerformanceCheckUmami(
                 comp_tagger_name=comp_tagger_name,
                 target_beff=WP_b,
                 fc_value=fc,
-                plot_label=plot_label,
+                UseAtlasTag=Eval_parameters["UseAtlasTag"],
+                AtlasTag=Eval_parameters["AtlasTag"],
+                SecondTag=Eval_parameters["SecondTag"],
             )
 
         else:
-            plot_name = f"{plot_dir}/rej-plot_val_add_umami.pdf"
+            plot_name = f"{plot_dir}/rej-plot_val_add_umami.{plot_datatype}"
             PlotRejPerEpoch(
                 df_results,
                 plot_name,
@@ -489,14 +559,28 @@ def RunPerformanceCheckUmami(
                 comp_tagger_name=comp_tagger_name,
                 target_beff=WP_b,
                 fc_value=fc,
-                plot_label=plot_label,
+                UseAtlasTag=Eval_parameters["UseAtlasTag"],
+                AtlasTag=Eval_parameters["AtlasTag"],
+                SecondTag=Eval_parameters["SecondTag"],
             )
 
-    plot_name = f"{plot_dir}/loss-plot.pdf"
-    PlotLossesUmami(df_results, plot_name, plot_label=plot_label)
+    plot_name = f"{plot_dir}/loss-plot.{plot_datatype}"
+    PlotLossesUmami(
+        df_results,
+        plot_name,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
+    )
 
-    plot_name = f"{plot_dir}/accuracy-plot.pdf"
-    PlotAccuraciesUmami(df_results, plot_name, plot_label=plot_label)
+    plot_name = f"{plot_dir}/accuracy-plot.{plot_datatype}"
+    PlotAccuraciesUmami(
+        df_results,
+        plot_name,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
+    )
 
 
 def plot_validation(train_config, beff, cfrac, dict_file_name):

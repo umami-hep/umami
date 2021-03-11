@@ -93,7 +93,13 @@ The results after each epoch will be saved to the `umami/umami/MODELNAME/` folde
 plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips
 ```
 
-which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. The `--dips` option defines that the dips tagger is used.
+which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. The `--dips` option defines that the dips tagger is used. In this form, the performance measurments, like light- and c-rejection, will be recalculated using the working point, the `fc` value and the number of validation jets defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). If you don't want to recalculate it, you can give the path to the exisiting dict with the option `--dict`. For example:
+
+```bash
+plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips --dict dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full/validation_WP0p77_fc0p018_300000jets_Dict.json
+```
+
+Here, the `plotting_epoch_performance.py` will get the working point, `fc` value and number of validation jets from the filename. It will not recalculate something. The values are taken for labels in the plots.
 
 ## Evaluating the results
 

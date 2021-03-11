@@ -27,4 +27,4 @@ Eval_parameters_validation:
     fc_value: 0.018
     WP_b: 0.77
     # fc_value and WP_b are autmoatically added to the plot label
-    plot_label: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
