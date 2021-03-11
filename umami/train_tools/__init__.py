@@ -10,6 +10,7 @@ from umami.train_tools.NN_tools import (
     MyCallbackUmami,
     Sum,
     calc_validation_metrics,
+    calc_validation_metrics_dips,
     evaluate_model,
     evaluate_model_dips,
     get_jet_feature_indicies,

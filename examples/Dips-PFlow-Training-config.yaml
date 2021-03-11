@@ -61,5 +61,12 @@ Eval_parameters_validation:
     # b Working point used in the evaluation
     WP_b: 0.77
 
+    # Enable/Disable atlas tag
+    UseAtlasTag: True
+
     # fc_value and WP_b are autmoatically added to the plot label
-    plot_label: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # Set the datatype of the plots
+    plot_datatype: "pdf"

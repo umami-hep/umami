@@ -76,11 +76,27 @@ def main(args, train_config, preprocess_config):
         cfrac = parameters["fc_value"]
 
     else:
-        output_file_name = utt.calc_validation_metrics(
-            train_config, preprocess_config, args.beff, args.cfrac, args.nJets
-        )
-        beff = args.beff
-        cfrac = args.cfrac
+        if args.dips:
+            output_file_name = utt.calc_validation_metrics_dips(
+                train_config,
+                preprocess_config,
+                args.beff,
+                args.cfrac,
+                args.nJets,
+            )
+            beff = args.beff
+            cfrac = args.cfrac
+
+        else:
+            output_file_name = utt.calc_validation_metrics(
+                train_config,
+                preprocess_config,
+                args.beff,
+                args.cfrac,
+                args.nJets,
+            )
+            beff = args.beff
+            cfrac = args.cfrac
 
     if args.dips:
         utt.plot_validation_dips(

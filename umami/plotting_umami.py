@@ -20,8 +20,6 @@ import yaml
 from yaml.loader import FullLoader
 
 import umami.evaluation_tools as uet
-from umami.evaluation_tools.PlottingFunctions import GetScore
-from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 
 
 def GetParser():
@@ -162,105 +160,6 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     plt.close()
 
 
-def plot_score(
-    plot_name,
-    plot_config,
-    eval_params,
-    eval_file_dir,
-    AtlasTag="Internal Simulation",
-    text="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
-    WorkingPoints=None,
-):
-    # Get the epoch which is to be evaluated
-    eval_epoch = int(eval_params["epoch"])
-
-    if ("evaluation_file" not in plot_config) or (
-        plot_config["evaluation_file"] is None
-    ):
-        df_results = pd.read_hdf(
-            eval_file_dir + f"/results-{eval_epoch}.h5",
-            plot_config["data_set_name"],
-        )
-
-    else:
-        df_results = pd.read_hdf(
-            plot_config["evaluation_file"], plot_config["data_set_name"]
-        )
-
-    df_results["discs"] = GetScore(
-        *[df_results[pX] for pX in plot_config["prediction_labels"]]
-    )
-
-    plt.clf()
-    fig = plt.figure()
-    ax = fig.gca()
-    plt.hist(
-        [
-            df_results.query("labels==2")["discs"],
-            df_results.query("labels==1")["discs"],
-            df_results.query("labels==0")["discs"],
-        ],
-        50,
-        histtype="step",
-        stacked=False,
-        fill=False,
-        density=1,
-        label=[r"$b$-Jets", r"$c$-Jets", "Light Jets"],
-    )
-
-    # Increase ymax so atlas tag don't cut plot
-    ymin, ymax = plt.ylim()
-    plt.ylim(ymin=ymin, ymax=1.3 * ymax)
-
-    # Set WP vertical lines if given in config
-    if WorkingPoints is not None:
-
-        # Iterate over WPs
-        for WP in WorkingPoints:
-
-            # Calculate x value of WP line
-            x_value = np.percentile(
-                df_results.query("labels==2")["discs"], (1 - WP) * 100
-            )
-
-            # Draw WP line
-            plt.vlines(
-                x=x_value,
-                ymin=ymin,
-                ymax=WP * ymax,
-                colors="gray",
-                linestyles="dashed",
-                linewidth=1.0,
-            )
-
-            # Set the number above the line
-            ax.annotate(
-                "{}%".format(int(WP * 100)),
-                xy=(x_value, WP * ymax),
-                xytext=(x_value, WP * ymax),
-                textcoords="offset points",
-                ha="center",
-                va="bottom",
-                size=10,
-            )
-
-    plt.legend()
-    plt.xlabel("$D_{b}$")
-    plt.ylabel("Normalised Number of Jets")
-
-    makeATLAStag(
-        ax=plt.gca(),
-        fig=plt.gcf(),
-        first_tag=AtlasTag,
-        second_tag=text,
-        ymax=0.9,
-    )
-
-    plt.tight_layout()
-    plt.savefig(plot_name, transparent=True)
-    plt.close()
-
-
 def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
     # Extract the eval parameters
     eval_params = plotting_config["Eval_parameters"]
@@ -297,7 +196,7 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
             )
 
         elif plot_config["type"] == "scores":
-            plot_score(
+            uet.plot_score(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
