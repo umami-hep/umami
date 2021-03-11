@@ -400,12 +400,10 @@ Cuts:
 * ttbar
     ```bash
     preprocessing.py --config <path to config file> --sample testing_ttbar --tracks --prepare
-    preprocessing.py --config <path to config file> --sample testing_ttbar --tracks --merge
     ```
 * Z' (extended and standard)
     ```bash
     preprocessing.py --config <path to config file> --sample testing_zprime --tracks --prepare
-    preprocessing.py --config <path to config file> --sample testing_zprime --tracks --merge
     ```
 
 ### Preprocessing for hybrid sample creation
