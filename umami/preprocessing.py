@@ -289,7 +289,7 @@ def RunPreparation(args, config):
     if n_jets_to_get > 0:
         print(
             "WARNING: Not enough selected jets from files,"
-            " only " + jets_loaded
+            " only ", jets_loaded
         )
 
 
