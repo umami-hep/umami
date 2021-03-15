@@ -169,7 +169,7 @@ def PlotAccuracies(
     )
     plt.plot(
         df_results["epoch"],
-        df_results["val_accuracy_add"],
+        df_results["val_acc_add"],
         label=r"validation accuracy - ext. $Z'$ sample",
     )
 

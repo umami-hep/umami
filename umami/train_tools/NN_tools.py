@@ -716,7 +716,7 @@ def calc_validation_metrics_dips(
         print(f"Working on {n+1}/{len(training_output)} input files")
         result_dict = {}
         epoch = int(
-            model_file[model_file.find("epoch") + 5 : model_file.find(".h5")]
+            model_file[model_file.rfind("epoch") + 5 : model_file.find(".h5")]
         )
         for train_epoch in training_output_list:
             if epoch == train_epoch["epoch"]:
