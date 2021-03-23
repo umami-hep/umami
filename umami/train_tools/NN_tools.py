@@ -450,14 +450,14 @@ def GetTestFile(
         input_file=file,
         var_dict=var_dict,
         preprocess_config=preprocess_config,
-        nJets=nJets,
+        nJets=int(nJets),
     )
 
     X, Y = GetTestSample(
         input_file=file,
         var_dict=var_dict,
         preprocess_config=preprocess_config,
-        nJets=nJets,
+        nJets=int(nJets),
         exclude=exclude,
     )
 

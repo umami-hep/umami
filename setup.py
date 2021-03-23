@@ -19,6 +19,7 @@ setup(
         "umami.preprocessing_tools",
         "umami.tools.PyATLASstyle",
         "umami.evaluation_tools",
+        "umami.validation_dumper_tools",
     ],
     # install_requires=[
     #     "h5py",

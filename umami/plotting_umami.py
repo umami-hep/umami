@@ -20,6 +20,7 @@ import yaml
 from yaml.loader import FullLoader
 
 import umami.evaluation_tools as uet
+import umami.validation_dumper_tools as uvdt
 
 
 def GetParser():
@@ -210,6 +211,20 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
                 FileDir=eval_file_dir,
                 epoch=int(eval_params["epoch"]),
                 **plot_config["plot_settings"],
+            )
+
+        elif plot_config["type"] == "dumper_validation":
+            uvdt.plot_dumper_evaluation(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+                **plot_config["plot_settings"],
+            )
+
+        else:
+            raise NameError(
+                "Plot type {} is not supported".format(plot_config["type"])
             )
 
         print(

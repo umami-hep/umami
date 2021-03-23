@@ -167,3 +167,13 @@ Dips_saliency_b_WP77_failed_ttbar:
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.925
+
+Dumper_Validation:
+  type: "dumper_validation"
+  plot_settings:
+    nBins: 20 # Number of bins
+    yAxisIncrease: 100 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
