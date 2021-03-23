@@ -112,3 +112,148 @@ To test if the created model is properly working you can use the [training-datas
     }
 }
 ```
+
+To run DIPS within the dumper, we need the [r22 Branch](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/tree/r22) or we need to change the AnalysisBase version in the [setup.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/setup.sh#L21) to `asetup AnalysisBase,22.2.12,latest`.   
+
+To run the dumper with DIPS on the grid, we need to add the path of the model file and the model itself to the job [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/grid/submit.sh). Here we need to add the DIPS model path like the configs model path to the script. Also we need to give `prun` the model file as an `--extFile`, due to its size. Also you need to avoid absolute paths in the [Config File](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/configs/single-b-tag/EMPFlow.json) or the grid job will fail. Add these paths to the [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/grid/submit.sh).
+
+This can look like this for example:
+```
+#!/usr/bin/env bash
+
+# This script should not be sourced, we don't need anything in here to
+# propigate to the surrounding environment.
+if [[ $- == *i* ]] ; then
+    echo "Don't source me!" >&2
+    return 1
+else
+  # set the shell to exit if there's an error (-e), and to error if
+  # there's an unset variable (-u)
+    set -eu
+fi
+
+
+##########################
+# Real things start here #
+##########################
+
+###################################################
+# Part 1: variables you you _might_ need to change
+###################################################
+#
+# Users's grid name
+GRID_NAME=${RUCIO_ACCOUNT-${USER}}
+#
+# This job's tag (the current expression is something random)
+BATCH_TAG=$(date +%F-T%H%M%S)-R${RANDOM}
+# BATCH_TAG=v0
+
+DEFAULT_CONFIG=EMPFlow_loose.json
+# DEFAULT_CONFIG=TrackJets.json
+
+DEFAULT_DIPS_LOOSE=DIPS-model-loose.json
+
+INPUT_DATASETS=(
+    mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_s3126_r12305_p4364
+)
+
+######################################################
+# Part 2: variables you probably don't have to change
+######################################################
+#
+# Build a zip of the files we're going to submit
+ZIP=job.tgz
+#
+# This is the subdirectory we submit from
+SUBMIT_DIR=submit
+#
+# This is where all the source files are
+BASE=$(pwd)/training-dataset-dumper
+#
+# Configuration file stuff
+DEFAULT_CONFIG_PATH=${BASE}/configs/single-b-tag/${DEFAULT_CONFIG}
+DEFAULT_DIPS_LOOSE_PATH=${BASE}/configs/single-b-tag/${DEFAULT_DIPS_LOOSE}
+
+###################################################
+# Part 3: prep the submit area
+###################################################
+#
+echo "preping submit area"
+if [[ -d ${SUBMIT_DIR} ]]; then
+    echo "removing old submit directory"
+    rm -rf ${SUBMIT_DIR}
+fi
+mkdir ${SUBMIT_DIR}
+CONFIG_PATH=${1-${DEFAULT_CONFIG_PATH}}
+DIPS_LOOSE_PATH=${1-${DEFAULT_DIPS_LOOSE_PATH}}
+echo "using config file ${CONFIG_PATH}"
+echo "using Dips file ${DIPS_LOOSE_PATH}"
+cp ${CONFIG_PATH} ${SUBMIT_DIR}
+cp ${DIPS_LOOSE_PATH} ${SUBMIT_DIR}
+# make sure we send files that the configuration depends on too
+cp ${DEFAULT_CONFIG_PATH%/*}/*-variables.json ${SUBMIT_DIR}
+cd ${SUBMIT_DIR}
+
+
+##########################################
+# Part 4: build a tarball of the job
+###########################################
+#
+# Check to make sure you've properly set up the environemnt: if you
+# haven't sourced the setup script in the build directory the grid
+# submission will fail, so we check here before doing any work.
+if ! type dump-single-btag &> /dev/null ; then
+    echo "You haven't sourced x86*/setup.sh, job will fail!" >&2
+    echo "quitting..." >&2
+    exit 1
+fi
+#
+echo "making tarball of local files: ${ZIP}" >&2
+#
+# The --outTarBall, --noSubmit, and --useAthenaPackages arguments are
+# important. The --outDS and --exec don't matter at all here, they are
+# just placeholders to keep panda from complianing.
+prun --outTarBall=${ZIP} --noSubmit --useAthenaPackages\
+     --exec "ls"\
+     --outDS user.${GRID_NAME}.x\
+     --extFile ${DEFAULT_DIPS_LOOSE}
+
+##########################################
+# Part 5: loop over datasets and submit
+##########################################
+
+# Loop over all inputs
+echo "submitting for ${#INPUT_DATASETS[*]} datasets"
+#
+for DS in ${INPUT_DATASETS[*]}
+do
+   # This regex extracts the DSID from the input dataset name, so
+   # that we can give the output dataset a unique name. It's not
+   # pretty: ideally we'd just suffix our input dataset name with
+   # another tag. But thanks to insanely long job options names we
+   # use in the generation stage we're running out of space for
+   # everything else.
+   DSID=$(sed -r 's/[^\.]*\.([0-9]{6,8})\..*/\1/' <<< ${DS})
+   #
+   # Build the full output dataset name
+   CONFIG_FILE=${CONFIG_PATH##*/}
+   DIPS_LOOSE_FILE=${DIPS_LOOSE_PATH##*/}
+   TAGS=$(cut -d . -f 6 <<< ${DS}).${CONFIG_FILE%.*}
+   OUT_DS=user.${GRID_NAME}.${DSID}.btagTraining.${TAGS}.${BATCH_TAG}
+   #
+   # Now submit. The script we're running expects one argument per
+   # input dataset, whereas %IN gives us comma separated files, so we
+   # have to run it through `tr`.
+   #
+   echo "Submitting for ${GRID_NAME} on ${DS} -> ${OUT_DS}"
+   prun --exec "dump-single-btag %IN -s -c ${CONFIG_FILE}"\
+        --outDS ${OUT_DS} --inDS ${DS}\
+        --useAthenaPackages --inTarBall=${ZIP}\
+        --outputs output.h5\
+        --noEmail > ${OUT_DS}.log 2>&1 &
+   sleep 1
+
+done
+wait
+
+```
