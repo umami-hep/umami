@@ -1,0 +1,14 @@
+# Add train_config filepath
+train_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/Dips-PFlow-Training-config.yaml
+
+# Add preprocess_config with which the used model is trained
+preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
+
+# Path to Variable dict used in preprocessing
+var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
+
+# File to test the dips integration in the dumper
+test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/test/
+
+# Path to model dirs
+model_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full/dips_model_59.h5
