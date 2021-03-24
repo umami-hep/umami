@@ -73,7 +73,7 @@ def get_jets(
             (abs(jets["HadronConeExclTruthLabelID"]) == b_pdgid)
             & (jets["GhostBHadronsFinalPt"] > pt_cut)
         ) | (
-            (abs(jets["HadronConeExclTruthLabelID"]) < b_pdgid)
+            (abs(jets["HadronConeExclTruthLabelID"]) != b_pdgid)
             & (jets["pt_btagJes"] > pt_cut)
         )
     elif sample_type == "zprime" and pt_cut:
@@ -81,7 +81,7 @@ def get_jets(
             (abs(jets["HadronConeExclTruthLabelID"]) == b_pdgid)
             & (jets["GhostBHadronsFinalPt"] < pt_cut)
         ) | (
-            (abs(jets["HadronConeExclTruthLabelID"]) < b_pdgid)
+            (abs(jets["HadronConeExclTruthLabelID"]) != b_pdgid)
             & (jets["pt_btagJes"] < pt_cut)
         )
     else:
