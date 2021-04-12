@@ -285,22 +285,16 @@ def EvaluateModelDips(
     else:
         nJets_test = args.nJets
 
-    # Set up the exlusion of lower level taggers
-    exclude = []
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
-
     # Define model path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     print("Evaluating", model_file)
 
     # Get the testfile with the needed configs
-    _, X_test_trk, Y_test = utt.GetTestFile(
+    X_test_trk, Y_test = utt.GetTestSampleTrks(
         test_file,
         train_config.var_dict,
         preprocess_config,
         nJets=nJets_test,
-        exclude=exclude,
     )
 
     # Load pretrained model
@@ -348,6 +342,12 @@ def EvaluateModelDips(
             "dips_pb": pred_dips[:, b_index],
             "dips_pc": pred_dips[:, c_index],
             "dips_pu": pred_dips[:, u_index],
+            "rnnip_pb": df["rnnip_pb"],
+            "rnnip_pc": df["rnnip_pc"],
+            "rnnip_pu": df["rnnip_pu"],
+            "DL1r_pb": df["DL1r_pb"],
+            "DL1r_pc": df["DL1r_pc"],
+            "DL1r_pu": df["DL1r_pu"],
             "pt": df["pt_btagJes"],
             "eta": df["absEta_btagJes"],
             "labels": y_true,
@@ -469,6 +469,7 @@ def EvaluateModelDips(
     f.attrs["N_test"] = len(df)
     f.close()
 
+    print("Calculate gradients for inputs")
     # Cut off last layer of the model for saliency maps
     cutted_model = model.layers[-1].output
 
@@ -695,6 +696,26 @@ if __name__ == "__main__":
                 preprocess_config,
                 train_config.add_test_file,
                 "zpext",
+            )
+
+        if train_config.comparison_file is not None:
+            print("Start evaluating DIPS on comparison ttbar...")
+            EvaluateModelDips(
+                args,
+                train_config,
+                preprocess_config,
+                train_config.comparison_file,
+                "ttbar_comparison",
+            )
+
+        if train_config.add_comparison_file is not None:
+            print("Start evaluating DIPS on comparison Zprime...")
+            EvaluateModelDips(
+                args,
+                train_config,
+                preprocess_config,
+                train_config.add_comparison_file,
+                "zpext_comparison",
             )
 
     else:

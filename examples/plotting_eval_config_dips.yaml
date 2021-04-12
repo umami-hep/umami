@@ -18,6 +18,20 @@ scores_Dips_ttbar:
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
+# rnnip, ttbar
+scores_rnnip_ttbar:
+  type: "scores"
+  data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
+  prediction_labels: ["rnnip_pb", "rnnip_pc", "rnnip_pu"] # For umami use umami_pX or dips_pX or DL1r_pX or rnnip_pX. ORDER IS IMPORTANT
+  plot_settings:
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
+    nBins: 50 # Number of bins
+    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
   data_set_name: "ttbar"
@@ -26,20 +40,28 @@ confusion_matrix_Dips_ttbar:
 Dips_light_flavour_ttbar:
   type: "ROC"
   models_to_plot:
-    current_dl1r:
+    rnnip_r21:
       data_set_name: "ttbar"
-      label: "Recommended RNNIP"
-      df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
-    dips: # The name here has no impact on anything.
+      label: "Recommended RNNIP R21"
+      df_key: "rnnip_urej"
+    rnnip_r22:
+      data_set_name: "ttbar_comparison"
+      label: "Recommended RNNIP R22"
+      df_key: "rnnip_urej"
+    dips_r21: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "DIPS"
+      label: "DIPS R21"
+      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+    dips_r22: # The name here has no impact on anything.
+      data_set_name: "ttbar_comparison"
+      label: "DIPS R22"
       df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
     ylabel: "light"
     binomialErrors: True
     xmin: 0.5
     ymax: 1000000
-    colors: ["orange", "blue"]
+    colors:
     figsize: [7, 6] # [width, hight]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     UseAtlasTag: True # Enable/Disable AtlasTag
@@ -50,20 +72,28 @@ Dips_light_flavour_ttbar:
 Dips_c_flavour_ttbar:
   type: "ROC"
   models_to_plot:
-    current_dl1r:
+    rnnip_r21:
       data_set_name: "ttbar"
-      label: "Recommended RNNIP"
+      label: "Recommended RNNIP R21"
       df_key: "rnnip_crej"
-    dips:
+    rnnip_r22:
+      data_set_name: "ttbar_comparison"
+      label: "Recommended RNNIP R22"
+      df_key: "rnnip_crej"
+    dips_r21:
       data_set_name: "ttbar"
-      label: "DIPS"
+      label: "DIPS R21"
       df_key: "dips_crej"
+    dips_r22: # The name here has no impact on anything.
+      data_set_name: "ttbar_comparison"
+      label: "DIPS R22"
+      df_key: "dips_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
   plot_settings:
     ylabel: "c"
     binomialErrors: True
     xmin: 0.5
     ymax: 1000
-    colors: ["orange", "blue"]
+    colors:
     figsize: [7, 6] # [width, hight]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     UseAtlasTag: True # Enable/Disable AtlasTag

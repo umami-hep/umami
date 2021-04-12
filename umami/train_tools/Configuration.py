@@ -30,6 +30,8 @@ class Configuration(object):
             "test_file",
             "add_test_file",
             "Eval_parameters_validation",
+            "comparison_file",
+            "add_comparison_file",
         ]
         for item in config_items:
             if item in self.config:
