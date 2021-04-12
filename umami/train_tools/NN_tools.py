@@ -152,7 +152,7 @@ class MyCallback(Callback):
 def setup_output_directory(dir_name):
     outdir = Path(dir_name)
     if outdir.is_dir():
-        print("Removing model*.5 and *.json files.")
+        print("Removing model*.h5 and *.json files.")
         for model_file in outdir.glob("model*.h5"):
             model_file.unlink()
         for model_file in outdir.glob("*.json"):
