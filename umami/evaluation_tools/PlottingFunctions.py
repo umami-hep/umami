@@ -133,6 +133,10 @@ def plotROCRatio(
         styles = ["-" for i in teffs]
     if colors is None:
         colors = ["C{}".format(i) for i in range(len(teffs))]
+        colors_WP = "C{}".format(len(colors) + 1)
+
+    else:
+        colors_WP = "red"
 
     if type(nTest) != list:
         nTest = [nTest] * len(teffs)
@@ -167,13 +171,13 @@ def plotROCRatio(
             axis_dict["left"]["top"].axvline(
                 x=WP,
                 ymax=0.65,
-                color="red",
+                color=colors_WP,
                 linestyle="dashed",
                 linewidth=1.0,
             )
 
             axis_dict["left"]["ratio"].axvline(
-                x=WP, color="red", linestyle="dashed", linewidth=1.0
+                x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
             )
 
             # Set the number above the line

@@ -34,6 +34,14 @@ def GetParser():
         help="Evaluating Dips tagger.",
     )
 
+    parser.add_argument(
+        "-s",
+        "--save",
+        action="store_true",
+        help="""Saving the probabilities from DL2-DIPS and
+        normal DIPS in .csv""",
+    )
+
     args = parser.parse_args()
     return args
 
@@ -202,17 +210,19 @@ def EvaluateDumperDips(dc_config):
         ]
     ]
 
-    # Create results folder to save csv
-    models_dirname = os.path.dirname(model_file)
-    ResultsDir = models_dirname + "/results"
-    if not os.path.isdir(ResultsDir):
-        os.makedirs(ResultsDir)
+    if args.save:
+        # Create results folder to save csv
+        models_dirname = os.path.dirname(model_file)
+        ResultsDir = models_dirname + "/results"
+        if not os.path.isdir(ResultsDir):
+            os.makedirs(ResultsDir)
 
-    # Define final filepath
-    FilePath = ResultsDir + "/dumper_val.csv"
+        # Define final filepath
+        FilePath = ResultsDir + "/dumper_val.csv"
 
-    # Save selected df to csv
-    df.to_csv(FilePath)
+        # Save selected df to csv
+        df.to_csv(FilePath)
+        print(f"File saved to {FilePath}")
 
 
 if __name__ == "__main__":
