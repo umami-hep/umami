@@ -668,3 +668,355 @@ def plot_score(
     plt.tight_layout()
     plt.savefig(plot_name, transparent=True)
     plt.close()
+
+
+def plot_score_comparison(
+    df_list,
+    prediction_labels,
+    model_labels,
+    plot_name,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    tag="",
+    WorkingPoints=None,
+    nBins=50,
+    figsize=None,
+    labelpad=None,
+    legFontSize=10,
+    RatioType="Ratio",
+    which_axis="left",
+    x_label=r"$D_b$",
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    ycolor="black",
+    ycolor_right="black",
+    title=None,
+    ylabel="Normalised Number of Jets",
+    yAxisIncrease=1.3,
+    yAxisAtlasTag=0.9,
+):
+    # Calculate the scores for the NN outputs
+    for df_results in df_list:
+        df_results["discs"] = GetScore(
+            *[df_results[pX] for pX in prediction_labels]
+        )
+
+    if type(which_axis) != list:
+        which_axis = [which_axis] * len(df_list)
+
+    # Define the figure with two subplots of unequal sizes
+    axis_dict = {}
+
+    if figsize is None:
+        fig = plt.figure(figsize=(8.27 * 0.8, 11.69 * 0.8))
+
+    else:
+        fig = plt.figure(figsize=(figsize[0], figsize[1]))
+
+    gs = gridspec.GridSpec(8, 1, figure=fig)
+    axis_dict["left"] = {}
+    axis_dict["left"]["top"] = fig.add_subplot(gs[:6, 0])
+    axis_dict["left"]["ratio"] = fig.add_subplot(
+        gs[6:, 0], sharex=axis_dict["left"]["top"]
+    )
+    if "right" in which_axis:
+        axis_dict["right"] = {}
+        axis_dict["right"]["top"] = axis_dict["left"]["top"].twinx()
+
+    # Get binning for the plot
+    _, Binning = np.histogram(
+        df_list[0].query("labels==2")["discs"], bins=nBins
+    )
+
+    # Calculate the bin centers
+    bincentres = [
+        (Binning[i] + Binning[i + 1]) / 2.0 for i in range(len(Binning) - 1)
+    ]
+
+    # Init bincout dict for ratio calculation
+    bincounts = {}
+
+    linestyles = ["solid", "dashed"]
+    for i, (df_results, linestyle, which_a) in enumerate(
+        zip(df_list, linestyles, which_axis)
+    ):
+        # Define the length of b, c, and light
+        len_b = len(df_results.query("labels==2"))
+        len_c = len(df_results.query("labels==1"))
+        len_u = len(df_results.query("labels==0"))
+
+        # Calculate the hists and bin edges for errorbands
+        counts_b, bins_b = np.histogram(
+            df_results.query("labels==2")["discs"],
+            # Use the calculated binning to ensure its equal
+            bins=Binning,
+        )
+
+        counts_c, bins_c = np.histogram(
+            df_results.query("labels==1")["discs"],
+            # Use the calculated binning to ensure its equal
+            bins=Binning,
+        )
+
+        counts_u, bins_u = np.histogram(
+            df_results.query("labels==0")["discs"],
+            # Use the calculated binning to ensure its equal
+            bins=Binning,
+        )
+
+        # Calculate poisson uncertainties and lower bands
+        unc_b = np.sqrt(counts_b) / len_b
+        band_lower_b = counts_b / len_b - unc_b
+
+        unc_c = np.sqrt(counts_c) / len_c
+        band_lower_c = counts_c / len_c - unc_c
+
+        unc_u = np.sqrt(counts_u) / len_u
+        band_lower_u = counts_u / len_u - unc_u
+
+        hist_counts_b, _, _ = axis_dict[which_a]["top"].hist(
+            x=bins_b[:-1],
+            bins=bins_b,
+            weights=(counts_b / len_b),
+            histtype="step",
+            linewidth=2.0,
+            linestyle=linestyle,
+            color="C0",
+            stacked=False,
+            fill=False,
+            label=r"$b$-jets {}".format(model_labels[i]),
+        )
+
+        axis_dict[which_a]["top"].hist(
+            x=bincentres,
+            bins=bins_b,
+            bottom=band_lower_b,
+            weights=unc_b * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+        )
+
+        hist_counts_c, _, _ = axis_dict[which_a]["top"].hist(
+            x=bins_c[:-1],
+            bins=bins_c,
+            weights=counts_c / len_c,
+            histtype="step",
+            linewidth=2.0,
+            linestyle=linestyle,
+            color="C1",
+            stacked=False,
+            fill=False,
+            label=r"$c$-jets {}".format(model_labels[i]),
+        )
+
+        axis_dict[which_a]["top"].hist(
+            x=bincentres,
+            bins=bins_c,
+            bottom=band_lower_c,
+            weights=unc_c * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+        )
+
+        hist_counts_u, _, _ = axis_dict[which_a]["top"].hist(
+            x=bins_u[:-1],
+            bins=bins_u,
+            weights=counts_u / len_u,
+            histtype="step",
+            linewidth=2.0,
+            linestyle=linestyle,
+            color="C2",
+            stacked=False,
+            fill=False,
+            label=r"light-flavour jets {}".format(model_labels[i]),
+        )
+
+        if i == 0:
+            axis_dict[which_a]["top"].hist(
+                x=bincentres,
+                bins=bins_u,
+                bottom=band_lower_u,
+                weights=unc_u * 2,
+                fill=False,
+                hatch="/////",
+                linewidth=0,
+                edgecolor="#666666",
+                label="stat. unc.",
+            )
+
+        else:
+            axis_dict[which_a]["top"].hist(
+                x=bincentres,
+                bins=bins_u,
+                bottom=band_lower_u,
+                weights=unc_u * 2,
+                fill=False,
+                hatch="/////",
+                linewidth=0,
+                edgecolor="#666666",
+            )
+
+        bincounts.update({"b{}".format(i): hist_counts_b})
+        bincounts.update({"c{}".format(i): hist_counts_c})
+        bincounts.update({"u{}".format(i): hist_counts_u})
+
+    # Start ratio plot
+    for i, (flavor, color) in enumerate(zip(["b", "c", "u"], [0, 1, 2])):
+        if RatioType == "Ratio":
+            axis_dict["left"]["ratio"].step(
+                x=Binning[:-1],
+                y=np.divide(
+                    bincounts["{}{}".format(flavor, 1)],
+                    bincounts["{}{}".format(flavor, 0)],
+                    out=np.ones(
+                        bincounts["{}{}".format(flavor, 1)].shape, dtype=float
+                    )
+                    * bincounts["{}{}".format(flavor, 1)]
+                    + 1,
+                    where=(bincounts["{}{}".format(flavor, 0)] != 0),
+                ),
+                color="C{}".format(color),
+            )
+
+        elif RatioType == "Absolute":
+            axis_dict["left"]["ratio"].step(
+                x=Binning[:-1],
+                y=bincounts["{}{}".format(flavor, 1)]
+                - bincounts["{}{}".format(flavor, 0)],
+                color="C{}".format(color),
+            )
+
+    # Add black line at one
+    if RatioType == "Ratio":
+        axis_dict["left"]["ratio"].axhline(
+            y=1,
+            xmin=axis_dict["left"]["ratio"].get_xlim()[0],
+            xmax=axis_dict["left"]["ratio"].get_xlim()[1],
+            color="black",
+            alpha=0.5,
+        )
+
+    elif RatioType == "Absolute":
+        axis_dict["left"]["ratio"].axhline(
+            y=0,
+            xmin=axis_dict["left"]["ratio"].get_xlim()[0],
+            xmax=axis_dict["left"]["ratio"].get_xlim()[1],
+            color="black",
+            alpha=0.5,
+        )
+
+    # Add axes, titels and the legend
+    axis_dict["left"]["top"].set_ylabel(
+        ylabel, fontsize=12, horizontalalignment="right", y=1.0, color=ycolor
+    )
+    if title is not None:
+        axis_dict["left"]["top"].set_title(title)
+    axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
+    axis_dict["left"]["ratio"].set_xlabel(
+        x_label, fontsize=12, horizontalalignment="right", x=1.0
+    )
+    if RatioType == "Absolute":
+        axis_dict["left"]["ratio"].set_ylabel(
+            "{} - {}".format(model_labels[1], model_labels[0]),
+            labelpad=labelpad,
+            fontsize=12,
+        )
+
+    elif RatioType == "Ratio":
+        axis_dict["left"]["ratio"].set_ylabel(
+            "{} / {}".format(model_labels[1], model_labels[0]),
+            labelpad=labelpad,
+            fontsize=12,
+        )
+
+    plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
+
+    if xmin is not None:
+        axis_dict["left"]["top"].set_xlim(left=xmin)
+    if xmax is not None:
+        axis_dict["left"]["top"].set_xlim(right=xmax)
+    if ymin is not None:
+        axis_dict["left"]["top"].set_ylim(left=ymin)
+    if ymax is not None:
+        axis_dict["left"]["top"].set_ylim(right=ymax)
+
+    left_y_limits = axis_dict["left"]["top"].get_ylim()
+    axis_dict["left"]["top"].set_ylim(
+        left_y_limits[0], left_y_limits[1] * yAxisIncrease
+    )
+
+    axis_dict["left"]["top"].legend(
+        loc="best",
+        fontsize=legFontSize,
+        ncol=2,
+    )  # , title="DL1r")
+
+    # Set WP vertical lines if given in config
+    if WorkingPoints is not None:
+
+        # Iterate over WPs
+        for WP in WorkingPoints:
+
+            # Calculate x value of WP line
+            x_value = np.percentile(
+                df_list[0].query("labels==2")["discs"], (1 - WP) * 100
+            )
+
+            # Draw WP line
+            axis_dict["left"]["top"].axvline(
+                x=x_value,
+                ymin=0,
+                ymax=0.75 * WP,
+                color="C3",
+                linestyle="dashed",
+                linewidth=1.0,
+            )
+
+            # Draw WP line
+            axis_dict["left"]["ratio"].axvline(
+                x=x_value,
+                ymin=0,
+                ymax=1,
+                color="C3",
+                linestyle="dashed",
+                linewidth=1.0,
+            )
+
+            # Set the number above the line
+            axis_dict["left"]["top"].annotate(
+                "{}%".format(int(WP * 100)),
+                xy=(
+                    x_value,
+                    0.75 * WP * axis_dict["left"]["top"].get_ylim()[1],
+                ),
+                xytext=(
+                    x_value,
+                    0.75 * WP * axis_dict["left"]["top"].get_ylim()[1],
+                ),
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+                size=10,
+            )
+
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=axis_dict["left"]["top"],
+            fig=fig,
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    plt.tight_layout()
+    if plot_name is not None:
+        plt.savefig(plot_name, transparent=True)
+    plt.close()
+    # plt.show()

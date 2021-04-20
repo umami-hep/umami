@@ -161,6 +161,47 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     plt.close()
 
 
+def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
+    # Init dataframe list
+    df_list = []
+    model_labels = []
+
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    for model_name, model_config in plot_config["models_to_plot"].items():
+        print("model", model_name)
+        if ("evaluation_file" not in model_config) or (
+            model_config["evaluation_file"] is None
+        ):
+            df_results = pd.read_hdf(
+                eval_file_dir + f"/results-{eval_epoch}.h5",
+                model_config["data_set_name"],
+            )
+
+        else:
+            df_results = pd.read_hdf(
+                plot_config["evaluation_file"], plot_config["data_set_name"]
+            )
+
+        df_list.append(df_results)
+        model_labels.append(model_config["label"])
+
+    if len(df_list) > 2:
+        raise ValueError(
+            "Too many models for comparison plot! Only 2 are allowed"
+        )
+
+    else:
+        uet.plot_score_comparison(
+            df_list=df_list,
+            prediction_labels=plot_config["prediction_labels"],
+            model_labels=model_labels,
+            plot_name=plot_name,
+            **plot_config["plot_settings"],
+        )
+
+
 def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
     # Extract the eval parameters
     eval_params = plotting_config["Eval_parameters"]
@@ -222,6 +263,13 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
                 **plot_config["plot_settings"],
             )
 
+        elif plot_config["type"] == "scores_comparison":
+            score_comparison(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+            )
         else:
             raise NameError(
                 "Plot type {} is not supported".format(plot_config["type"])

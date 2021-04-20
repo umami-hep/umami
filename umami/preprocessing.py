@@ -471,6 +471,22 @@ def RunUndersampling(args, config):
         ujets = np.concatenate(
             [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0], vec_tt_ujets]
         )
+
+        # Plots pt and eta before downsampling
+        plot_name_clean = config.GetFileName(
+            x + 1,
+            extension="",
+            option="pt_eta-wider_bins",
+            custom_path="plots/",
+        )
+        upt.MakePresentationPlots(
+            bjets=bjets,
+            ujets=ujets,
+            cjets=cjets,
+            plots_path=plot_name_clean,
+            binning={"pt_btagJes": 200, "absEta_btagJes": 20},
+        )
+
         downs = upt.UnderSampling(bjets, cjets, ujets)
         b_indices, c_indices, u_indices = downs.GetIndices()
 

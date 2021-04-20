@@ -86,17 +86,116 @@ def MakePresentationPlots(
     var_list = ["pt_btagJes", "absEta_btagJes"]
 
     for var in var_list:
+        # Get number of flavours
+        N_b = len(bjets[var])
+        N_c = len(cjets[var])
+        N_u = len(ujets[var])
+
+        # Calculate Binning and counts for plotting
+        counts_b, Bins_b = np.histogram(
+            bjets[var] / 1000,
+            bins=binning[var],
+        )
+
+        # Calculate Binning and counts for plotting
+        counts_c, Bins_c = np.histogram(
+            cjets[var] / 1000,
+            bins=binning[var],
+        )
+
+        # Calculate Binning and counts for plotting
+        counts_u, Bins_u = np.histogram(
+            ujets[var] / 1000,
+            bins=binning[var],
+        )
+
+        # Calculate the bin centers
+        bincentres = [
+            (Bins_b[i] + Bins_b[i + 1]) / 2.0 for i in range(len(Bins_b) - 1)
+        ]
+
+        # Calculate poisson uncertainties and lower bands
+        unc_b = np.sqrt(counts_b) / N_b
+        band_lower_b = counts_b / N_b - unc_b
+
+        # Calculate poisson uncertainties and lower bands
+        unc_c = np.sqrt(counts_c) / N_c
+        band_lower_c = counts_c / N_c - unc_c
+
+        # Calculate poisson uncertainties and lower bands
+        unc_u = np.sqrt(counts_u) / N_u
+        band_lower_u = counts_u / N_u - unc_u
+
         applyATLASstyle(mtp)
         plt.figure()
 
         plt.hist(
-            [ujets[var] / 1000, cjets[var] / 1000, bjets[var] / 1000],
-            binning[var],
-            color=["#2ca02c", "#ff7f0e", "#1f77b4"],
-            label=["Light Jets", r"$c$-Jets", r"$b$-Jets"],
+            x=Bins_b[:-1],
+            bins=Bins_b,
+            weights=(counts_b / N_b),
             histtype="step",
+            linewidth=1.0,
+            color="C0",
             stacked=False,
             fill=False,
+            label=r"$b$-jets",
+        )
+
+        plt.hist(
+            x=bincentres,
+            bins=Bins_b,
+            bottom=band_lower_b,
+            weights=unc_b * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+        )
+
+        plt.hist(
+            x=Bins_c[:-1],
+            bins=Bins_c,
+            weights=(counts_c / N_c),
+            histtype="step",
+            linewidth=1.0,
+            color="C1",
+            stacked=False,
+            fill=False,
+            label=r"$c$-jets",
+        )
+
+        plt.hist(
+            x=bincentres,
+            bins=Bins_c,
+            bottom=band_lower_c,
+            weights=unc_c * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+        )
+
+        plt.hist(
+            x=Bins_u[:-1],
+            bins=Bins_u,
+            weights=(counts_u / N_u),
+            histtype="step",
+            linewidth=1.0,
+            color="C2",
+            stacked=False,
+            fill=False,
+            label=r"light-jets",
+        )
+
+        plt.hist(
+            x=bincentres,
+            bins=Bins_u,
+            bottom=band_lower_u,
+            weights=unc_u * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
         )
 
         if Log is True:
@@ -115,6 +214,7 @@ def MakePresentationPlots(
 
         if var == "pt_btagJes":
             plt.xlabel(r"$p_T$ in GeV")
+            plt.xlim(right=6500)
 
         elif var == "absEta_btagJes":
             plt.xlabel(r"$\eta$")
@@ -134,7 +234,9 @@ def MakePresentationPlots(
         )
 
         plt.tight_layout()
-        plt.savefig(plots_path + "{}.pdf".format(var))
+        if not os.path.exists(os.path.abspath("./plots")):
+            os.makedirs(os.path.abspath("./plots"))
+        plt.savefig(f"{plots_path}{var}.pdf")
         plt.close()
         plt.clf()
 
