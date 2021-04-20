@@ -1,6 +1,6 @@
 # Instructions to train DL1r with the umami framework
 
-The following instructions are meant to give a guidline how to reproduce the DL1r results obtained in the last [retraining campaign](http://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PLOTS/FTAG-2019-005/). It is focused on the PFlow training.
+The following instructions are meant to give a guideline how to reproduce the DL1r results obtained in the last [retraining campaign](http://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PLOTS/FTAG-2019-005/). It is focused on the PFlow training.
 
 
 ## Sample Preparation
@@ -67,7 +67,10 @@ preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/D
 
 The training Variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
 
-If you don't want to process them all you can use the already processed samples uploaded to rucio in the dataset `user.mguth:user.mguth.dl1r.trainsamples`. Note, that in this case you need to supply the associated[dictionary with scaling factors](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/assets/PFlow-scale_dict-22M.json) by hand, which is otherwise creating during the preprocessing.
+If you don't want to process them all yourself, you can use the already preprocessed samples uploaded to rucio in the datasets `user.mdraguet.dl1r.R21.PFlow` for DL1r or `user.mdraguet.dl1d.R21.PFlow` for DL1d (RNNIP replaced by DIPS). Note that you need to download both the datasets and the associated dictionary with scaling factors (+ the dictionary of variable). There are two test samples available: an hybrid (ttbar + Z'-ext) and a Z'-ext solely. Each should be manually cut in 2 to get a test and validation file. The data comes from:
+- mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_FTAG1.e6337_s3126_r10201_p4060
+- mc16_13TeV.427081.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_FTAG1.e6928_e5984_s3126_r10201_r10210_p4060
+
 
 
 ## Training
@@ -82,13 +85,13 @@ To run the training, use the following command
 train_DL1.py -c examples/DL1r-PFlow-Training-config.yaml
 ```
 
-You can check the performance of your model during the training via
+The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). If you want instant performance checks of the model after each epoch during the training, you can use
 
 ```bash
-train_DL1.py -c examples/DL1r-PFlow-Training-config.yaml -p
+plotting_epoch_performance.py -c examples/DL1r-PFlow-Training-config.yaml --dl1
 ```
 
-this will write out plots for the light- and c-rejection per epoch.
+which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. In this form, the performance measurements, like light- and c-rejection, will be recalculated using the working point, the `fc` value and the number of validation jets defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). 
 
 ## Performance Evaluation
 

@@ -338,7 +338,7 @@ def RunPerformanceCheck(
     plot_dir = f"{train_config.model_name}/plots"
     print("saving plots to", plot_dir)
     os.makedirs(plot_dir, exist_ok=True)
-    if comp_tagger_name == "RNNIP":
+    if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
         plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
         PlotRejPerEpoch(
             df_results=df_results,
@@ -380,7 +380,7 @@ def RunPerformanceCheck(
                 recommended_fc_values[comp_tagger_name],
             )
 
-        if comp_tagger_name == "RNNIP":
+        if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
             plot_name = f"{plot_dir}/rej-plot_val_add.{plot_datatype}"
             PlotRejPerEpoch(
                 df_results,

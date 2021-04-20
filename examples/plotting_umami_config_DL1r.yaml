@@ -1,13 +1,21 @@
+# Evaluation parameters
+Eval_parameters:
+  Path_to_models_dir: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/new_DL1r_22M/
+  model_name: DL1r_22M
+  epoch: 10
+
+
 scores_DL1r: # Each item on this level defines one plot. The name of this key is later used for the name of the output file.
   type: "scores"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/new_DL1r_22M/DL1r_22M/results/results-199.h5" # output file from evaluate_model.py
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
   prediction_labels: ["pb", "pc", "pu"] # For umami use umami_pX or dips_pX
   text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample"
+  plot_settings:  # All options of the score plot can be changed here
+    UseAtlasTag: True # Enable/Disable AtlasTag
+
 
 confusion_matrix_DL1r:
   type: "confusion_matrix"
-  evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/new_DL1r_22M/DL1r_22M/results/results-199.h5"
   data_set_name: "ttbar"
   prediction_labels: ["pu", "pc", "pb"] # For umami use umami_pX or dips_pX. The order matters!
 
@@ -16,12 +24,10 @@ DL1r_light_flavour:
   type: "ROC"
   models_to_plot:
     dl1r: # The name here has no impact on anything.
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/new_DL1r_22M/DL1r_22M/results/results-rej_per_eff-199.h5"
       data_set_name: "ttbar"
       label: "DL1r 22M"
       df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
     current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/new_DL1r_22M/DL1r_22M/results/results-rej_per_eff-199.h5"
       data_set_name: "ttbar"
       label: "recommended DL1r"
       df_key: "dl1r_urej" # This is the rejection rate of the currently recommended DL1r tagger
@@ -32,17 +38,14 @@ DL1r_light_flavour:
     text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
 
 
-
 DL1r_c_flavour:
   type: "ROC"
   models_to_plot:
     dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/new_DL1r_22M/DL1r_22M/results/results-rej_per_eff-199.h5"
       data_set_name: "ttbar"
       label: "DL1r 22M"
       df_key: "umami_crej"
     current_dl1r:
-      evaluation_file: "/nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/new_DL1r_22M/DL1r_22M/results/results-rej_per_eff-199.h5"
       data_set_name: "ttbar"
       label: "recommended DL1r"
       df_key: "dl1r_crej"
