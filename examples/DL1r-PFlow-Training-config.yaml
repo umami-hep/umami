@@ -1,10 +1,31 @@
+# Set modelname and path to Pflow preprocessing config file
 model_name: DL1r-PFlow_new-taggers-stats-22M
 preprocess_config: examples/PFlow-Preprocessing.yaml
+
+# Add training file
 train_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled_test.h5
+
+# Add validation files
+# ttbar val
 validation_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-odd_1_PFlow-no_pTcuts-file_0.h5 
-test_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-odd_1_PFlow-no_pTcuts-file_1.h5 
+# zprime val
 add_validation_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+
+# Add test files
+# ttbar test
+test_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-odd_1_PFlow-no_pTcuts-file_1.h5 
+# zprime test
 add_test_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+
+# comparison file ttbar
+comparison_file: 
+
+# comparison file zprime
+add_comparison_file:
+
+exclude: []
+
+# Path to Variable dict used in preprocessing
 var_dict: umami/configs/DL1r_Variables.yaml
 NN_structure:  
     lr: 0.01
@@ -12,3 +33,23 @@ NN_structure:
     activations: ["relu", "relu", "relu", "relu", "relu", "relu", "relu", "relu"]
     units: [256, 128, 60, 48, 36, 24, 12, 6] 
 
+# Eval parameters for validation evaluation while training
+Eval_parameters_validation:
+    # Number of jets used for validation
+    n_jets: 3e5
+
+    # Charm fraction value used for evaluation
+    fc_value: 0.018
+
+    # b Working point used in the evaluation
+    WP_b: 0.77
+
+    # Enable/Disable atlas tag
+    UseAtlasTag: True
+
+    # fc_value and WP_b are autmoatically added to the plot label
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # Set the datatype of the plots
+    plot_datatype: "pdf"

@@ -135,7 +135,7 @@ class MyCallback(Callback):
             "c_rej": c_rej,
             "u_rej": u_rej,
             "val_loss_add": add_loss if add_loss else None,
-            "val_accuracy_add": add_acc if add_acc else None,
+            "val_acc_add": add_acc if add_acc else None,
             "c_rej_add": c_rej_add if c_rej_add else None,
             "u_rej_add": u_rej_add if u_rej_add else None,
         }
@@ -266,39 +266,48 @@ class MyCallbackUmami(Callback):
             self.log.close()
 
 
-def get_jet_feature_indicies(exclude: list = []):
-    indicies = list(range(41))
-    algo_indicies = {
-        "SV1": range(8, 17),
-        "IP2D": range(17, 21),
-        "IP3D": range(21, 25),
-    }
+def get_jet_feature_indices(variable_header: dict, exclude=None):
+    """
+    Deletes from the jet samples the keys listed in exclude
+    Example of algorithm keys: SV1 or JetFitter
+    Works for both sub-aglorithm and variables
+    """
+    excluded_variables = []
+    if exclude is None:
+        variables = [i for j in variable_header for i in variable_header[j]]
+        return variables, excluded_variables
+    missing_header = []
     for exclude_this in exclude:
-        if exclude_this in algo_indicies:
-            print(
-                f"INFO: Excluding {exclude_this} from the jet feature inputs!"
-            )
-            for index in algo_indicies[exclude_this]:
-                indicies.remove(index)
+        if exclude_this in variable_header:
+            excluded_variables.extend(variable_header[exclude_this])
+            variable_header.pop(exclude_this, None)
         else:
-            print(f"ERROR: Can't find {exclude_this} in {algo_indicies}!")
-            exit(1)
-    return indicies
+            missing_header.append(exclude_this)
+    variables = [i for j in variable_header for i in variable_header[j]]
+    # If elements in exclude are not headers, check if they aren't variables
+    for exclude_that in missing_header:
+        if exclude_that in variables:
+            excluded_variables.append(exclude_that)
+            variables.remove(exclude_that)
+        else:
+            print("Variables to exclude not found: ", exclude_that)
+    return variables, excluded_variables
 
 
 def GetTestSample(
-    input_file, var_dict, preprocess_config, nJets=int(3e5), exclude=[]
+    input_file, var_dict, preprocess_config, nJets=int(3e5), exclude=None
 ):
     """
     Apply the scaling and shifting to dataset using numpy
     """
-
     jets = pd.DataFrame(h5py.File(input_file, "r")["/jets"][:nJets])
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
     jets.query(f"{variable_config['label']} <= 5", inplace=True)
     labels = GetBinaryLabels(jets[variable_config["label"]].values)
-    variables = variable_config["train_variables"]
+    variables, excluded_variables = get_jet_feature_indices(
+        variable_config["train_variables"], exclude
+    )
     jets = jets[variables]
     jets = jets.replace([np.inf, -np.inf], np.nan)
     with open(preprocess_config.dict_file, "r") as infile:
@@ -309,14 +318,22 @@ def GetTestSample(
     print("Applying scaling and shifting.")
     for elem in scale_dict:
         if elem["name"] not in variables:
-            print(elem["name"], "in scale dict but not in variable config.")
+            if elem["name"] in excluded_variables:
+                print(
+                    elem["name"],
+                    "has been excluded from variable config (is in scale dict).",
+                )
+            else:
+                print(
+                    elem["name"], "in scale dict but not in variable config."
+                )
             continue
         if "isDefaults" in elem["name"]:
             continue
         else:
             jets[elem["name"]] -= elem["shift"]
             jets[elem["name"]] /= elem["scale"]
-    return jets.values[:, get_jet_feature_indicies(exclude)], labels
+    return jets, labels
 
 
 def GetTestSampleTrks(input_file, var_dict, preprocess_config, nJets=int(3e5)):
@@ -364,7 +381,7 @@ def GetTestSampleTrks(input_file, var_dict, preprocess_config, nJets=int(3e5)):
 
 
 def load_validation_data(train_config, preprocess_config, nJets: int):
-    exclude = []
+    exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
     val_data_dict = {}
@@ -404,7 +421,7 @@ def load_validation_data(train_config, preprocess_config, nJets: int):
 
 
 def load_validation_data_dips(train_config, preprocess_config, nJets: int):
-    exclude = []
+    exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
     val_data_dict = {}

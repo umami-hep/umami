@@ -42,12 +42,6 @@ def GetParser():
         help="""Option to
                         enable vr overlap removall for validation sets.""",
     )
-    parser.add_argument(
-        "-p",
-        "--performance_check",
-        action="store_true",
-        help="Performs performance check - can be run during" " training",
-    )
     args = parser.parse_args()
     return args
 
@@ -88,10 +82,15 @@ def NN_model(train_config, input_shape):
 
 def TrainLargeFile(args, train_config, preprocess_config):
     print("Loading validation data (training data will be loaded per batch)")
+    exclude = None
+    if "exclude" in train_config.config:
+        exclude = train_config.config["exclude"]
+
     X_valid, Y_valid = utt.GetTestSample(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
+        exclude=exclude,
     )
 
     X_valid_add, Y_valid_add = None, None
@@ -100,6 +99,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
+            exclude=exclude,
         )
         assert X_valid.shape[1] == X_valid_add.shape[1]
 
@@ -151,8 +151,4 @@ if __name__ == "__main__":
     args = GetParser()
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
-
-    if args.performance_check:
-        utt.RunPerformanceCheck(train_config)
-    else:
-        TrainLargeFile(args, train_config, preprocess_config)
+    TrainLargeFile(args, train_config, preprocess_config)

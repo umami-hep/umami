@@ -288,8 +288,7 @@ def RunPreparation(args, config):
     pbar.close()
     if n_jets_to_get > 0:
         print(
-            "WARNING: Not enough selected jets from files,"
-            " only ", jets_loaded
+            "WARNING: Not enough selected jets from files, only ", jets_loaded
         )
 
 
@@ -583,7 +582,8 @@ def GetScaleDict(args, config):
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
-    var_list = variable_config["train_variables"][:]
+    variables_header = variable_config["train_variables"]
+    var_list = [i for j in variables_header for i in variables_header[j]]
 
     bjets = pd.DataFrame(infile_all["bjets"][:][var_list])
     cjets = pd.DataFrame(infile_all["cjets"][:][var_list])
@@ -723,7 +723,9 @@ def ApplyScalesNumpy(args, config, iteration=1):
     )
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
-    variables = variable_config["train_variables"][:]
+
+    variables_header = variable_config["train_variables"]
+    variables = [i for j in variables_header for i in variables_header[j]]
     variables += variable_config["spectator_variables"][:]
     variables += [variable_config["label"], "weight", "category"]
     if "weight" not in jets.columns.values:
@@ -773,6 +775,10 @@ def WriteTrainSample(args, config):
 
     size, ranges = upt.get_size(input_files)
     out_file = config.GetFileName(option="preprocessed_shuffled")
+
+    variables_header = variable_config["train_variables"]
+    variables = [i for j in variables_header for i in variables_header[j]]
+
     print("Saving sample to", out_file)
     with h5py.File(out_file, "w") as output:
         for i, file in enumerate(input_files):
@@ -787,9 +793,7 @@ def WriteTrainSample(args, config):
                 np.random.seed(42)
                 np.random.shuffle(weights)
 
-                jets = repack_fields(
-                    jets[variable_config["train_variables"][:]]
-                )
+                jets = repack_fields(jets[variables])
                 jets = structured_to_unstructured(jets)
                 np.random.seed(42)
                 np.random.shuffle(jets)

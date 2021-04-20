@@ -62,51 +62,64 @@ def GetParser():
         help="Setting the model epoch performance to dips.",
     )
 
+    parser.add_argument(
+        "--dl1",
+        action="store_true",
+        help="Setting the model epoch performance to DL1.",
+    )
+
     args = parser.parse_args()
     return args
 
 
 def main(args, train_config, preprocess_config):
-    if args.dict:
-        output_file_name = args.dict
-        parameters = utt.get_parameters_from_validation_dict_name(
-            output_file_name
+    if args.dl1:
+        dictfile = f"{train_config.model_name}/DictFile.json"
+        utt.RunPerformanceCheck(
+            train_config,
+            dict_file_name=dictfile,
         )
-        beff = parameters["WP_b"]
-        cfrac = parameters["fc_value"]
-
     else:
-        if args.dips:
-            output_file_name = utt.calc_validation_metrics_dips(
-                train_config,
-                preprocess_config,
-                args.beff,
-                args.cfrac,
-                args.nJets,
+        if args.dict:
+            output_file_name = args.dict
+            parameters = utt.get_parameters_from_validation_dict_name(
+                output_file_name
             )
-            beff = args.beff
-            cfrac = args.cfrac
+            beff = parameters["WP_b"]
+            cfrac = parameters["fc_value"]
 
         else:
-            output_file_name = utt.calc_validation_metrics(
-                train_config,
-                preprocess_config,
-                args.beff,
-                args.cfrac,
-                args.nJets,
+            if args.dips:
+                output_file_name = utt.calc_validation_metrics_dips(
+                    train_config,
+                    preprocess_config,
+                    args.beff,
+                    args.cfrac,
+                    args.nJets,
+                )
+                beff = args.beff
+                cfrac = args.cfrac
+
+            else:
+                output_file_name = utt.calc_validation_metrics(
+                    train_config,
+                    preprocess_config,
+                    args.beff,
+                    args.cfrac,
+                    args.nJets,
+                )
+                beff = args.beff
+                cfrac = args.cfrac
+
+        if args.dips:
+            utt.plot_validation_dips(
+                train_config, beff, cfrac, dict_file_name=output_file_name
             )
-            beff = args.beff
-            cfrac = args.cfrac
 
-    if args.dips:
-        utt.plot_validation_dips(
-            train_config, beff, cfrac, dict_file_name=output_file_name
-        )
-
-    else:
-        utt.plot_validation(
-            train_config, beff, cfrac, dict_file_name=output_file_name
-        )
+        else:
+            utt.plot_validation(
+                train_config, beff, cfrac, dict_file_name=output_file_name
+            )
 
 
 if __name__ == "__main__":

@@ -49,13 +49,6 @@ def GetParser():
         help="Option to enable vr overlap removall for validation sets.",
     )
 
-    parser.add_argument(
-        "-p",
-        "--performance_check",
-        action="store_true",
-        help="Performs performance check - can be run during training",
-    )
-
     args = parser.parse_args()
     return args
 
