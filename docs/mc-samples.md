@@ -92,9 +92,18 @@ In addition there are the Z+jets (Z->mumu/nunu) samples for the bb extension
 |Zmumu |  | mc16_13TeV.364112.Sherpa_221_NNPDF30NNLO_Zmumu_MAXHTPTV500_1000.deriv.DAOD_FTAG1.e5271_s3126_r10724_p4062 | mc16_13TeV.364112.Sherpa_221_NNPDF30NNLO_Zmumu_MAXHTPTV500_1000.recon.AOD.e5271_s3126_r10724 |
 |Zmumu |  | mc16_13TeV.364113.Sherpa_221_NNPDF30NNLO_Zmumu_MAXHTPTV1000_E_CMS.deriv.DAOD_FTAG1.e5271_s3126_r10724_p4062 | mc16_13TeV.364113.Sherpa_221_NNPDF30NNLO_Zmumu_MAXHTPTV1000_E_CMS.recon.AOD.e5271_s3126_r10724 |
 
+## Release 22 Samples
+
+| Sample | h5 ntuples | h5 ntuples (looser track selection)   |  FTAG1 derivations| AOD |
+| ------------- | ---------------- | ---------------- | ---------------- | ---------------- |
+|ttbar | user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow.2021-04-20-T171450-R16994_output.h5 | user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.e6337_s3126_r12305_r12253_r12305_p4441 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_s3126_r12305_r12253_r12305 |
+|Z' Extended (With QSPI, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3582_r12305_r12253_r12305_r12298_p4441.EMPFlow.2021-04-20-T171450-R16994_output.h5 | user.alfroch.800030.btagTraining.e7954_s3582_r12305_r12253_r12305_r12298_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5| mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.e7954_s3582_r12305_r12253_r12305_r12298_p4441 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.merge.AOD.e7954_s3582_r12305_r12253_r12305_r12298 |
+|Z' Extended (No QSPI, No shower weights) | user.alfroch.427081.btagTraining.e6928_s3126_r12305_r12253_r12305_p4441.EMPFlow.2021-04-20-T171450-R16994_output.h5 | user.alfroch.427081.btagTraining.e6928_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5| mc16_13TeV.427081.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e6928_s3126_r12305_r12253_r12305_p4441 | mc16_13TeV.427081.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime_Extended.recon.AOD.e6928_s3126_r12305_r12253_r12305 |
+|Z' Extended (No QSPI, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3126_r12305_r12253_r12305_p4441.EMPFlow.2021-04-20-T171450-R16994_output.h5 | user.alfroch.800030.btagTraining.e7954_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5| mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3126_r12305_r12253_r12305_p4441 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.recon.AOD.e7954_s3126_r12305_r12253_r12305 |
 
 # Ntuples on the different clusters
 
 ntuples on slac cluster: `/u/ki/nhartman/gpfs/public/btag_hdf5/umami-stdTrkCuts`
 
-ntuples on Freiburg cluster: `/work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/`
+R21 ntuples on Freiburg cluster: `/work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/`    
+R22 ntuples on Freiburg cluster: `/work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4441/`

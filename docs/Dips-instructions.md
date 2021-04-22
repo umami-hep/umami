@@ -110,10 +110,4 @@ evaluate_model.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips -e 5
 ```
 
 The `-e` options (here `5`) allows to set the training epoch which should be evaluated. The `--dips` option defines that the dips tagger is used.
-It will produce .h5 and .pkl files with the evaluations which will be saved in the model folder in an extra folder called `results/`. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. To do this, use the following command.
-
-```bash
-plotting_umami.py -c ${EXAMPLES}/plotting_eval_config_dips.yaml -o dips_eval_plots
-```
-
-The `-o` option defines the name of the output directory. It will be added to the model folder where also the results are saved. The config file used here is a special plotting config which defines which plots will be generated and how they are labeled. Also in the [plotting_eval_config_dips.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_eval_config_dips.yaml) config file is a set of evaluation parameters. The path to the directory where the models are saved needs to be filled. Also the name and the epoch of the model which is to be evaluated needs to be filled.
+It will produce .h5 and .pkl files with the evaluations which will be saved in the model folder in an extra folder called `results/`. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. For an explanation, look in the [plotting_umami documentation](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting_umami.md)
