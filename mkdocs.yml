@@ -29,7 +29,7 @@ nav:
     - Running Dips: Dips-instructions.md
     - Running Umami: Umami-instructions.md
     - LWTNN Conversion:  LWTNN-conversion.md
-    - Plotting evaluated Results: Plotting_Umami.md
+    - Plotting evaluated Results: plotting_umami.md
 
 plugins:
     - search
