@@ -22,6 +22,8 @@ Consequently, any changes you make to the code are directly picked up.
 python setup.py develop
 ```
 
+On certain clusters `Singularity` might be configured such that it is not writable and `python setup.py develop` will fail. In this case you need to set your `PYTHONPATH` to e.g. the current directory (`export PYTHONPATH=$PWD:$PYTHONPATH`) and choose the current folder also as install directory via `python setup.py develop --install-dir .`. It can then also happen that you are getting a weird error with `RecursionError: maximum recursion depth exceeded in comparison`, then you need to clean up your repository via ` rm -rf umami.egg-*`.
+
 ### Docker container
 You can run Umami in a [Docker container](https://www.docker.com/resources/what-container). This is the most convenient way and ensures that you are not required to install any dependencies as those are already included in the Docker image.
 
