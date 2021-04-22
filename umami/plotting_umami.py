@@ -148,7 +148,7 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     cm = confusion_matrix(
         y_target=y_target, y_predicted=y_predicted, binary=False
     )
-    class_names = ["light", "c", "b"]
+    class_names = ["b", "c", "light"]
     mlxtend_plot_cm(
         conf_mat=cm,
         colorbar=True,
@@ -200,6 +200,52 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
             plot_name=plot_name,
             **plot_config["plot_settings"],
         )
+
+
+def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir):
+    # Init label and dataframe list
+    df_list = []
+    model_labels = []
+    prediction_labels_list = []
+    fc_list = []
+
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    for model_name, model_config in plot_config["models_to_plot"].items():
+        print("model", model_name)
+        if ("evaluation_file" not in model_config) or (
+            model_config["evaluation_file"] is None
+        ):
+            df_results = pd.read_hdf(
+                eval_file_dir + f"/results-{eval_epoch}.h5",
+                model_config["data_set_name"],
+            )
+
+        else:
+            df_results = pd.read_hdf(
+                plot_config["evaluation_file"], plot_config["data_set_name"]
+            )
+
+        if "fc" in model_config and model_config["fc"] is not None:
+            fc_list.append(model_config["fc"])
+
+        df_list.append(df_results)
+        model_labels.append(model_config["label"])
+        prediction_labels_list.append(model_config["prediction_labels"])
+
+    # Check if all models
+    if (len(fc_list) != len(df_list)) and (len(fc_list) != 0):
+        raise KeyError("You need to give all or no model a fc value!")
+
+    uet.plotPtDependence(
+        df_list=df_list,
+        prediction_labels=prediction_labels_list,
+        model_labels=model_labels,
+        plot_name=plot_name,
+        fc_list=fc_list,
+        **plot_config["plot_settings"],
+    )
 
 
 def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
@@ -270,6 +316,15 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
                 eval_params=eval_params,
                 eval_file_dir=eval_file_dir,
             )
+
+        elif plot_config["type"] == "pT_vs_eff":
+            plot_pT_vs_eff(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+            )
+
         else:
             raise NameError(
                 "Plot type {} is not supported".format(plot_config["type"])
