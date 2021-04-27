@@ -121,6 +121,146 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
+def plot_ROCvsVar(plot_name, plot_config, eval_params, eval_file_dir):
+    """
+    "flat_eff": bool whether to plot a flat b-efficiency as a function of var
+    "efficiency": the targeted efficiency
+    "variable": which variable to plot the efficiency as a function of.
+    "max_variable": maximum value of the range of variable.
+    "min_variable": minimum value of the range of variable.
+    "nbin": number of bin to use
+    """
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
+    ):
+        df_results = pd.read_hdf(
+            eval_file_dir + f"/results-{eval_epoch}.h5",
+            plot_config["data_set_name"],
+        )
+    else:
+        df_results = pd.read_hdf(
+            plot_config["evaluation_file"], plot_config["data_set_name"]
+        )
+    # Whether to fix the b-efficiency in each bin of the variable analysed
+    flat_eff = False
+    if "flat_eff" in plot_config and plot_config["flat_eff"] is True:
+        flat_eff = True
+
+    if (
+        "variable" not in plot_config
+        or plot_config["variable"] not in df_results
+    ):
+        print(
+            "Forgot to specify a variable that is contained in the dataframe"
+        )
+        print("Defaulting to pT")
+        plot_config["variable"] = "pt"
+
+    if "prediction_labels" not in plot_config:
+        print("Forgot to specify the prediction labels")
+
+    fc = 0.018
+    if "fc" in plot_config:
+        fc = plot_config["fc"]
+
+    df_results["bscore"] = uet.GetScore(
+        *[df_results[pX] for pX in plot_config["prediction_labels"]], fc=fc
+    )
+
+    max_given, min_given, nbin_given = False, False, False
+    if "max_variable" in plot_config:
+        max_given = True
+    if "min_variable" in plot_config:
+        min_given = True
+    if "nbin" in plot_config:
+        nbin_given = True
+
+    xticksval = None
+    xticks = None
+
+    if plot_config["variable"] == "pt":
+        maxval = 6000000
+        minval = 10000
+        nbin = 100
+        xticksval = [10, 1.5e3, 3e3, 4.5e3, 6e3]
+        xticks = [
+            r"$10$",
+            r"$1.5 \times 10^3$",
+            r"$3 \times  10^3$",
+            r"$4.5 \times 10^3$",
+            r"$6 \times 10^3$",
+        ]
+
+    elif plot_config["variable"] == "eta":
+        maxval = 2.5
+        minval = 0
+        nbin = 20
+
+    elif plot_config["variable"] == "actualInteractionsPerCrossing":
+        maxval = 81
+        minval = 0
+        nbin = 82
+
+    else:  # No special range
+        maxval = df_results[plot_config["variable"]].max()
+        minval = df_results[plot_config["variable"]].min()
+        nbin = 100
+
+    if max_given:
+        maxval = plot_config["max_variable"]
+        if plot_config["variable"] == "pt":
+            maxval = maxval * 1000
+    if min_given:
+        minval = plot_config["min_variable"]
+        if plot_config["variable"] == "pt":
+            minval = minval * 1000
+    if nbin_given:
+        nbin = plot_config["nbin"]
+
+    var_bins = np.linspace(minval, maxval, nbin)
+
+    if "var_bins" in plot_config:
+        var_bins = np.asarray(plot_config["var_bins"])
+        if plot_config["variable"] == "pt":
+            var_bins = var_bins * 1000
+
+    if flat_eff:
+        df_results["btag"] = uet.FlatEfficiencyPerBin(
+            df_results,
+            "bscore",
+            plot_config["variable"],
+            var_bins,
+            wp=plot_config["efficiency"] / 100,
+        )
+    else:
+        cutvalue = np.percentile(
+            df_results["bscore"],
+            100.0 * (1.0 - plot_config["efficiency"] / 100.0),
+        )
+        df_results["btag"] = (
+            df_results[plot_config["score_variable"]] > cutvalue
+        ) * 1
+
+    if "xticksval" in plot_config:
+        xticksval = plot_config["xticksval"]
+    if "xticks" in plot_config:
+        xticks = plot_config["xticks"]
+
+    uet.plotEfficiencyVariable(
+        plot_name=plot_name,
+        df=df_results,
+        variable=plot_config["variable"],
+        var_bins=var_bins,
+        fc=fc,
+        efficiency=plot_config["efficiency"],
+        xticksval=xticksval,
+        xticks=xticks,
+        **plot_config["plot_settings"],
+    )
+
+
 def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     from mlxtend.evaluate import confusion_matrix
     from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
@@ -319,6 +459,14 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
 
         elif plot_config["type"] == "pT_vs_eff":
             plot_pT_vs_eff(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+            )
+
+        elif plot_config["type"] == "ROCvsVar":
+            plot_ROCvsVar(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,

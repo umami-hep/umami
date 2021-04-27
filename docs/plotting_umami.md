@@ -303,6 +303,75 @@ For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]`
 
 `alpha`, Float: The Alpha value of the plots.   
 
+#### Variable vs Efficiency
+Plot the b-tag efficiency for b, c, and light jets (+ optionaly tau jets) versus a given variable (not just pT). The variables must be included in the results h5 files from the evaluation step.
+
+```yaml
+eff_vs_pt_:
+  type: "ROCvsVar"
+  data_set_name: "ttbar"
+  flat_eff: True 
+  efficiency: 70 
+  fc: 0.018
+  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] 
+  variable: pt   
+  max_variable: 150
+  min_variable: 10 
+  nbin: 100 
+  var_bins: [20, 30, 40, 50, 75, 100, 150, 250]
+  xticksval: [20, 50, 100, 150, 200, 250]
+  xticks: ["", "$50$", "$100$", "$150$", "$200$", "$250$"]
+  plot_settings:
+    xlabel: "$p_T$ [GeV]"
+    minor_ticks_frequency: 10
+    UseAtlasTag: True
+    AtlasTag: "Internal"
+    SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+    ThirdTag: "Flat efficiency DL1r"
+```
+`flat_eff` bool: whether to use a flat b-tag b-jet efficiency per variable bin or a global one.
+
+`efficiency`int: the desired b-jet b-tag efficiency in percent
+
+`fc`: float (optional): the fc value to use
+
+`prediction_labels`, List: A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`.   
+For DIPS: `["dips_pb", "dips_pc", "dips_pu"]`   
+For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]`   
+For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]`   
+For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]`   
+
+`variable` string: a variable contained in the h5 result file from `evaluate.py` (e.g., "pt"). 
+Note! pt variable is automatically transformed in GeV (divide by 1000)!
+
+`max_variable` float (optional): the maximum value to be considered for variable in the binning
+Note! For pt, value of variable is in GeV.
+
+`max_variable` float (optional): the minimum value to be considered for variable in the binning
+Note! For pt, value of variable is in GeV.
+
+`nbin` int (optional - default 100): the number of bin to be considered for variable in the binning
+
+`var_bins` list of float (optional): the bins to use for variable. Overrides the three parameters above
+
+`xticksval` list of float (optional): main ticks positions.
+Note! For pt, values are in GeV.
+
+`xticks` list of string: the ticks to write. Requires `xticksval` to work.
+
+`xlabel` string: to write as name of the x label
+
+`minor_ticks_frequency`: frequency of the minor ticks to draw
+Note! For pt, values are in GeV.
+
+`UseAtlasTag`, Bool: Decide if the ATLAS Tag is printed in the upper left corner of the plot or not.   
+
+`AtlasTag`, String: The first line of text right behind the 'ATLAS'.   
+
+`SecondTag`, String: Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag.
+
+`ThirdTag`, String: Write this text on the upepr left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. 
+
 ### Executing the Script
 The script can be executed by using the following command:
 

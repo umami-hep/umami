@@ -54,3 +54,52 @@ DL1r_c_flavour:
     ylabel: "c"
     binomialErrors: true
     text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+
+
+# Example of a pt vs efficiency plot in a small pT region
+eff_vs_pt_small:
+  type: "ROCvsVar"
+  evaluation_file:  # from evaluation
+  data_set_name: "ttbar"
+  flat_eff: True # bool whether to plot a flat b-efficiency as a function of var
+  efficiency: 70 # the targeted efficiency
+  fc: 0.018
+  prediction_labels: ["pb", "pc", "pu"] # the prediction label to use 
+  variable: pt   # which variable to plot the efficiency as a function of. 
+  max_variable: 1500000 #maximum value of the range of variable.
+  min_variable: 10000 #minimum value of the range of variable.
+  nbin: 100 #number of bin to use
+  var_bins: [20000, 30000, 40000, 50000, 75000, 100000, 150000, 250000]
+  xticksval: [20, 50, 100, 150, 200, 250]
+  xticks: ["", "$50$", "$100$", "$150$", "$200$", "$250$"]
+  plot_settings:
+    add_text: "Flat efficiency \n DL1r, $\\epsilon_b$ = 70$\\%$"
+    xlabel: "$p_T$ [GeV]"
+    minor_ticks_frequency: 10
+    UseAtlasTag: True
+    AtlasTag: "Internal"
+    SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+    ThirdTag: "Flat efficiency DL1r"
+
+
+# Example of a pt vs efficiency plot in a large pT region
+eff_vs_pt_large:
+  type: "ROCvsVar"
+  evaluation_file:  # from evaluation
+  data_set_name: "ttbar"
+  flat_eff: True #bool whether to plot a flat b-efficiency as a function of var
+  efficiency: 70 #the targeted efficiency
+  prediction_labels: ["pb", "pc", "pu"] # the prediction label to use 
+  variable: pt   #which variable to plot the efficiency as a function of. 
+  max_variable: 5000000 #maximum value of the range of variable.
+  min_variable: 200000 #minimum value of the range of variable.
+  nbin: 15 #number of bin to use
+  xticksval: [200, 1000, 2000, 3000, 4000, 5000]
+  xticks: ["", "$1000$", "$2000$", "$3000$", "$4000$", "$5000$"]
+  plot_settings:
+    xlabel: "$p_T$ [GeV]"
+    minor_ticks_frequency: 200
+    UseAtlasTag: True
+    AtlasTag: "Internal"
+    SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+    ThirdTag: "Flat efficiency DL1r"
