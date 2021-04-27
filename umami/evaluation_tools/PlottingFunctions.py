@@ -9,7 +9,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import pchip
 
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
-from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 
 
 def eff_err(x, N):
@@ -22,6 +21,53 @@ def GetScore(pb, pc, pu, fc=0.018):
     pu = pu.astype("float64")
     add_small = 1e-10
     return np.log((pb + add_small) / ((1.0 - fc) * pu + fc * pc + add_small))
+
+
+def GetCutDiscriminant(pb, pc, pu, ptau=None, fc=0.018, wp=0.7):
+    """
+    Return the cut value on the b-discrimant to reach desired WP
+    (working point).
+    pb, pc, and pu (ptau) are the proba for the b-jets.
+    """
+    bscore = GetScore(pb, pc, pu, ptau=ptau, fc=fc)
+    cutvalue = np.percentile(bscore, 100.0 * (1.0 - wp))
+    return cutvalue
+
+
+def FlatEfficiencyPerBin(df, predictions, variable, var_bins, wp=0.7):
+    """
+    For each bin in var_bins of variable, cuts the score in
+    bscore to get the desired WP (working point)
+    df must (at least) contain the following columns:
+        - bscore
+        - value of variable
+        - labels (with the true labels)
+    Creates a column 'btag' with the tagged (1/0) info in df.
+
+    Note: labels indicate in fact the column in Y_true, so:
+        - labels = 3 for taus,
+        - labels = 2 for b,
+        - labels = 1 for c,
+        - labels = 0 for u.
+    """
+    df["btag"] = 0
+    for i in range(len(var_bins) - 1):
+        index_jets_in_bin = (var_bins[i] <= df[variable]) & (
+            df[variable] < var_bins[i + 1]
+        )
+        df_in_bin = df[index_jets_in_bin]
+        if len(df_in_bin) == 0:
+            continue
+        bscores_b_in_bin = df_in_bin[df_in_bin["labels"] == 2]["bscore"]
+        if len(bscores_b_in_bin) == 0:
+            continue
+        # print("There are {} b-jets in bin {}".format(len(bscores_b_in_bin), var_bins[i]))
+        cutvalue_in_bin = np.percentile(bscores_b_in_bin, 100.0 * (1.0 - wp))
+        df.loc[index_jets_in_bin, ["btag"]] = (
+            df_in_bin["bscore"] > cutvalue_in_bin
+        ) * 1
+
+    return df["btag"]
 
 
 def discriminant_output_shape(input_shape):
@@ -56,6 +102,344 @@ def getDiscriminant(x, fc=0.018):
     numpy functions inside a layer in a keras model.
     """
     return K.log(x[:, 2] / (fc * x[:, 1] + (1 - fc) * x[:, 0]))
+
+
+def plotEfficiencyVariable(
+    plot_name,
+    df,
+    variable,
+    var_bins,
+    fc=0.018,
+    efficiency=0.70,
+    include_taus=False,
+    centralise_bins=True,
+    xticksval=None,
+    xticks=None,
+    minor_ticks_frequency=None,
+    xlogscale=False,
+    xlabel=None,
+    UseAtlasTag=True,
+    AtlasTag="Internal",
+    SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$",
+    ThirdTag="DL1r",
+):
+    """
+    For a given variable (string) in the panda dataframe df, plot:
+    - the b-eff in b, c, and light jets as a function of variable
+                 (discretised in bins as indicated by var_bins input)
+    - the variable distribution.
+
+    The efficiency is computed from score. e.g., for the recommended DL1r
+    at 70% WP:
+        score = (data["disc_DL1r"]> 3.245)*1
+
+    Entry i and i+1 in var_bins define a bin of the variable.
+
+    df must at least contain columns with names:
+    - variable
+    - labels (2 for b, 1 for c, 0 for u, and optionally 3 for taus)
+    - btag (with value 1 for b-tagged jets and 0 for others)
+
+    Option centralise_bins can be used if the variable is made of
+    integer so that datapoints are centralised to int value
+
+    Note: to get a flat efficiency plot, you need to produce a 'btag' column
+    in df using FlatEfficiencyPerBin (defined above).
+    """
+    data = df.copy()
+    total_var = []
+    b_lst, b_err_list = [], []
+    c_lst, c_err_list = [], []
+    u_lst, u_err_list = [], []
+    t_lst, t_err_list = [], []
+
+    for i in range(len(var_bins) - 1):
+        df_in_bin = data[
+            (var_bins[i] <= data[variable])
+            & (data[variable] < var_bins[i + 1])
+        ]
+        total_b_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 2])
+        total_c_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 1])
+        total_u_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 0])
+        total_t_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 3])
+        df_in_bin = df_in_bin.query("btag == 1")
+        total_in_bin = (
+            total_b_tag_in_bin + total_c_tag_in_bin + total_u_tag_in_bin
+        )
+        if include_taus:
+            total_in_bin += total_t_tag_in_bin
+
+        if total_in_bin == 0:
+            total_var.append(0)
+            u_lst.append(1e5)
+            u_err_list.append(1)
+            c_lst.append(1e5)
+            c_err_list.append(1)
+            b_lst.append(1e5)
+            b_err_list.append(1)
+            t_lst.append(1e5)
+            t_err_list.append(1)
+        else:
+            total_var.append(total_in_bin)
+            index, counts = np.unique(
+                df_in_bin["labels"].values, return_counts=True
+            )
+            in_b, in_c, in_u, in_t = False, False, False, False
+            for item, count in zip(index, counts):
+                if item == 0:
+                    eff = count / total_u_tag_in_bin
+                    u_lst.append(eff)
+                    u_err_list.append(eff_err(eff, total_u_tag_in_bin))
+                    in_u = True
+                elif item == 1:
+                    eff = count / total_c_tag_in_bin
+                    c_lst.append(eff)
+                    c_err_list.append(eff_err(eff, total_c_tag_in_bin))
+                    in_c = True
+                elif item == 2:
+                    eff = count / total_b_tag_in_bin
+                    b_lst.append(eff)
+                    b_err_list.append(eff_err(eff, total_b_tag_in_bin))
+                    in_b = True
+                elif item == 3:
+                    eff = count / total_u_tag_in_bin
+                    t_lst.append(eff)
+                    t_err_list.append(eff_err(eff, total_t_tag_in_bin))
+                    in_t = True
+                else:
+                    print("Invaled value of index from labels: ", item)
+            if not (in_u):
+                u_lst.append(1e5)
+                u_err_list.append(1)
+            if not (in_c):
+                c_lst.append(1e5)
+                c_err_list.append(1)
+            if not (in_b):
+                b_lst.append(1e5)
+                b_err_list.append(1)
+            if not (in_t):
+                t_lst.append(1e5)
+                t_err_list.append(1)
+    if plot_name[-4:] == ".pdf":
+        plot_name = plot_name[:-4]
+
+    if xlabel is None:
+        xlabel = variable
+        if variable == "actualInteractionsPerCrossing":
+            xlabel = "Actual interactions per bunch crossing"
+        elif variable == "pt":
+            xlabel = r"$p_T$ [GeV]"
+
+    ThirdTag = (
+        ThirdTag
+        + "\n"
+        + "$\\epsilon_b$ = {}%, $f_c$ = {}".format(efficiency, fc)
+    )
+    # Divide pT values to express in GeV, not MeV
+    if variable == "pt":
+        var_bins = var_bins / 1000
+
+    x_value, x_err = [], []
+    for i in range(len(var_bins[:-1])):
+        if centralise_bins:
+            x_value.append((var_bins[i] + var_bins[i + 1]) / 2)
+        else:
+            x_value.append(var_bins[i])
+        x_err.append(abs(var_bins[i] - var_bins[i + 1]) / 2)
+
+    x_label = var_bins
+    if xticksval is not None:
+        trimmed_label_val = xticksval
+        trimmed_label = xticksval
+        if xticksval is not None:
+            trimmed_label = xticks
+    else:
+        trimmed_label = []
+        trimmed_label_val = []
+        selected_indices = [int((len(x_label) - 1) / 4) * i for i in range(5)]
+        if len(x_label) > 5:
+            for i in range(len(x_label)):
+                if i in selected_indices:
+                    trimmed_label.append(
+                        np.format_float_scientific(x_label[i], precision=3)
+                    )
+                    trimmed_label_val.append(x_label[i])
+        else:
+            trimmed_label = x_label
+            trimmed_label_val = x_label
+
+    # First plot: variable
+    fig, ax1 = plt.subplots()
+    ax1.ticklabel_format(
+        style="sci", axis="y", scilimits=(0, 3), useMathText=True
+    )
+    ax1.ticklabel_format(
+        style="sci", axis="x", scilimits=(0, 3), useMathText=True
+    )
+    ax1.errorbar(x=x_value, y=total_var, xerr=x_err, fmt="o", markersize=2.0)
+    ax1.set_ylabel(r"Count")
+    if xlogscale:
+        ax1.set_xscale("log")
+        if xticks is not None:
+            ax1.set_xticks(trimmed_label_val)
+            ax1.set_xticklabels(trimmed_label)
+    else:
+        ax1.set_xticks(trimmed_label_val)
+        ax1.set_xticklabels(trimmed_label)
+        ax1.set_xlim(trimmed_label_val[0], trimmed_label_val[-1])
+    ax1.set_xlabel(xlabel)
+    if minor_ticks_frequency is not None:
+        ax1.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
+    ax_r = ax1.secondary_yaxis("right")
+    ax_t = ax1.secondary_xaxis("top")
+    ax_r.set_yticklabels([])
+    if xlogscale:
+        ax_t.set_xscale("log")
+        if xticks is not None:
+            ax_t.set_xticks(trimmed_label_val)
+    else:
+        ax_t.set_xticks(trimmed_label_val)
+    if minor_ticks_frequency is not None:
+        ax_t.xaxis.set_minor_locator(
+            plt.MultipleLocator(minor_ticks_frequency)
+        )
+    ax_t.set_xticklabels([])
+    ax_r.tick_params(axis="y", direction="in", which="both")
+    ax_t.tick_params(axis="x", direction="in", which="both")
+    ax1.grid(color="grey", linestyle="--", linewidth=0.5)
+    if UseAtlasTag:
+        pas.makeATLAStag(ax1, fig, AtlasTag, SecondTag, xmin=0.7, ymax=0.88)
+    ax1.text(
+        0.05,
+        0.815,
+        ThirdTag,
+        verticalalignment="bottom",
+        horizontalalignment="left",
+        transform=ax1.transAxes,
+        color="Black",
+        fontsize=10,
+        linespacing=1.7,
+    )
+    fig.tight_layout()
+    plt.savefig(plot_name + "_distr.pdf", transparent=True, dpi=200)
+    plt.close()
+
+    # Second plot: efficiency
+    fig, ax = plt.subplots()
+    ax.ticklabel_format(
+        style="sci", axis="x", scilimits=(0, 3), useMathText=True
+    )
+    ax.ticklabel_format(
+        style="sci", axis="y", scilimits=(0, 3), useMathText=True
+    )
+    ax.axhline(y=1, color="#696969", linestyle="-", zorder=1)
+    ax.errorbar(
+        x=x_value,
+        y=b_lst,
+        yerr=b_err_list,
+        xerr=x_err,
+        label=r"$b$-jets",
+        fmt="o",
+        markersize=2.0,
+        markeredgecolor="#1f77b4",
+        markerfacecolor="#1f77b4",
+        c="#1f77b4",
+        alpha=1,
+        zorder=10,
+    )
+    ax.errorbar(
+        x=x_value,
+        y=c_lst,
+        yerr=c_err_list,
+        xerr=x_err,
+        label=r"$c$-jets",
+        fmt="s",
+        markersize=2.0,
+        markeredgecolor="#ff7f0e",
+        markerfacecolor="#ff7f0e",
+        c="#ff7f0e",
+        alpha=1,
+        zorder=9,
+    )
+    ax.errorbar(
+        x=x_value,
+        y=u_lst,
+        yerr=u_err_list,
+        xerr=x_err,
+        label=r"$l$-jets",
+        fmt="o",
+        markersize=2.0,
+        markeredgecolor="#2ca02c",
+        markerfacecolor="#2ca02c",
+        c="#2ca02c",
+        alpha=0.7,
+        zorder=8,
+    )
+    if include_taus:
+        ax.errorbar(
+            x=x_value,
+            y=t_lst,
+            yerr=u_err_list,
+            xerr=x_err,
+            label=r"$\tau$-jets",
+            fmt="s",
+            markersize=2.0,
+            markeredgecolor="#7c5295",
+            markerfacecolor="#7c5295",
+            c="#7c5295",
+            alpha=0.7,
+            zorder=7,
+        )
+    if xlogscale:
+        ax.set_xscale("log")
+        if xticks is not None:
+            ax.set_xticks(trimmed_label_val)
+            ax.set_xticklabels(trimmed_label)
+    else:
+        ax.set_xticks(trimmed_label_val)
+        ax.set_xticklabels(trimmed_label)
+        ax.set_xlim(trimmed_label_val[0], trimmed_label_val[-1])
+    ax.set_yscale("log")
+    ax.set_ylim(1e-4, 2e1)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(r"Efficiency")
+    if minor_ticks_frequency is not None:
+        ax.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
+    ax_r = ax.secondary_yaxis("right")
+    ax_t = ax.secondary_xaxis("top")
+    ax_r.set_yticklabels([])
+    if xlogscale:
+        ax_t.set_xscale("log")
+        if xticks is not None:
+            ax_t.set_xticks(trimmed_label_val)
+    else:
+        ax_t.set_xticks(trimmed_label_val)
+    if minor_ticks_frequency is not None:
+        ax_t.xaxis.set_minor_locator(
+            plt.MultipleLocator(minor_ticks_frequency)
+        )
+    ax_t.set_xticklabels([])
+    ax_r.set_yscale("log")
+    ax_r.tick_params(axis="y", direction="in", which="both")
+    ax_t.tick_params(axis="x", direction="in", which="both")
+    ax.grid(color="grey", linestyle="--", linewidth=0.5)
+    ax.legend(loc="upper right")
+    if UseAtlasTag:
+        pas.makeATLAStag(ax, fig, AtlasTag, SecondTag, xmin=0.57, ymax=0.88)
+    ax.text(
+        0.05,
+        0.815,
+        ThirdTag,
+        verticalalignment="bottom",
+        horizontalalignment="left",
+        transform=ax.transAxes,
+        color="Black",
+        fontsize=10,
+        linespacing=1.7,
+    )
+    fig.tight_layout()
+    plt.savefig(plot_name + "_efficiency.pdf", transparent=True, dpi=200)
+    plt.close()
 
 
 def plotPtDependence(
@@ -418,7 +802,7 @@ def plotPtDependence(
 
     if fc_default is True:
         if UseAtlasTag is True:
-            makeATLAStag(
+            pas.makeATLAStag(
                 ax=axis_dict["left"]["top"],
                 fig=fig,
                 first_tag=AtlasTag,
@@ -432,7 +816,7 @@ def plotPtDependence(
 
     elif fc_default is False:
         if UseAtlasTag is True:
-            makeATLAStag(
+            pas.makeATLAStag(
                 ax=axis_dict["left"]["top"],
                 fig=fig,
                 first_tag=AtlasTag,
@@ -705,7 +1089,7 @@ def plotROCRatio(
     )  # , title="DL1r")
 
     if UseAtlasTag is True:
-        makeATLAStag(
+        pas.makeATLAStag(
             ax=axis_dict["left"]["top"],
             fig=fig,
             first_tag=AtlasTag,
@@ -1047,7 +1431,7 @@ def plot_score(
     plt.ylabel("Normalised Number of Jets")
 
     if UseAtlasTag is True:
-        makeATLAStag(
+        pas.makeATLAStag(
             ax=plt.gca(),
             fig=plt.gcf(),
             first_tag=AtlasTag,
@@ -1397,7 +1781,7 @@ def plot_score_comparison(
             )
 
     if UseAtlasTag is True:
-        makeATLAStag(
+        pas.makeATLAStag(
             ax=axis_dict["left"]["top"],
             fig=fig,
             first_tag=AtlasTag,
