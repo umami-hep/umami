@@ -67,7 +67,7 @@ preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/D
 
 The training Variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
 
-If you don't want to process them all yourself, you can use the already preprocessed samples uploaded to rucio in the datasets `user.mdraguet.dl1r.R21.PFlow` for DL1r or `user.mdraguet.dl1d.R21.PFlow` for DL1d (RNNIP replaced by DIPS). Note that you need to download both the datasets and the associated dictionary with scaling factors (+ the dictionary of variable). There are two test samples available: an hybrid (ttbar + Z'-ext) and a Z'-ext solely. Each should be manually cut in 2 to get a test and validation file. The data comes from:
+If you don't want to process them all yourself, you can use the already preprocessed samples uploaded to rucio in the datasets `user.mdraguet.dl1r.R21.PFlowJets` for DL1r or `user.mdraguet.dl1d.R21.PFlowJets` for DL1d (RNNIP replaced by DIPS). Note that you need to download both the datasets and the associated dictionary with scaling factors (+ the dictionary of variable). There are two test samples available: an hybrid (ttbar + Z'-ext) and a Z'-ext solely. Each should be manually cut in 2 to get a test and validation file. The data comes from:
 - mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_FTAG1.e6337_s3126_r10201_p4060
 - mc16_13TeV.427081.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_FTAG1.e6928_e5984_s3126_r10201_r10210_p4060
 
