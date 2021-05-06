@@ -86,7 +86,7 @@ preparation:
 njets: 5.5e6
 # fraction of ttbar jets wrt. Z'
 # can change after applying resampling in the hybrid sample creation
-ttbar_frac: 0.70
+ttbar_frac: 0.65
 # Whether or not to enforce the ttbar fraction above
 enforce_ttbar_frac: False
 
