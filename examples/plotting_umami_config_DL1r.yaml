@@ -3,21 +3,24 @@ Eval_parameters:
   Path_to_models_dir: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/new_DL1r_22M/
   model_name: DL1r_22M
   epoch: 10
-
+  bool_use_taus: False
 
 scores_DL1r: # Each item on this level defines one plot. The name of this key is later used for the name of the output file.
   type: "scores"
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  prediction_labels: ["pb", "pc", "pu"] # For umami use umami_pX or dips_pX
-  text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample"
+  # To include taus, add "ptau" as the last entry
+  prediction_labels: ["pb", "pc", "pu"] # For umami use umami_pX or dips_pX. 
   plot_settings:  # All options of the score plot can be changed here
     UseAtlasTag: True # Enable/Disable AtlasTag
-
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
 confusion_matrix_DL1r:
   type: "confusion_matrix"
   data_set_name: "ttbar"
-  prediction_labels: ["pu", "pc", "pb"] # For umami use umami_pX or dips_pX. The order matters!
+   # To include taus, add "ptau" as the last entry
+  prediction_labels: ["pb", "pc", "pu"] # For umami use umami_pX or dips_pX. The order matters!
 
 
 DL1r_light_flavour:
@@ -35,7 +38,7 @@ DL1r_light_flavour:
     ymax: 5000.
     ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
 
 
 DL1r_c_flavour:
@@ -53,9 +56,11 @@ DL1r_c_flavour:
     ymax: 100.
     ylabel: "c"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
 
-
+# To do a DL1r_t_flavour ROC plot: 
+# Same as above with umami_trej and dl1r_trej (replace "c" flavour by "t").
+    
 # Example of a pt vs efficiency plot in a small pT region
 eff_vs_pt_small:
   type: "ROCvsVar"
@@ -73,12 +78,11 @@ eff_vs_pt_small:
   xticksval: [20, 50, 100, 150, 200, 250]
   xticks: ["", "$50$", "$100$", "$150$", "$200$", "$250$"]
   plot_settings:
-    add_text: "Flat efficiency \n DL1r, $\\epsilon_b$ = 70$\\%$"
     xlabel: "$p_T$ [GeV]"
     minor_ticks_frequency: 10
     UseAtlasTag: True
     AtlasTag: "Internal"
-    SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
     ThirdTag: "Flat efficiency DL1r"
 
 
@@ -101,5 +105,15 @@ eff_vs_pt_large:
     minor_ticks_frequency: 200
     UseAtlasTag: True
     AtlasTag: "Internal"
-    SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
     ThirdTag: "Flat efficiency DL1r"
+
+plot_scan_frac_tau_ZP:
+type: "FracScan"
+evaluation_file:  # from evaluation
+data_set_name: "zpext"
+label: "umami_taurej"
+plot_settings:
+  UseAtlasTag: True
+  AtlasTag: "Internal Simulations"
+  SecondTag: "DL1d, $\\sqrt{s}$ = 13 TeV, $Z'$"

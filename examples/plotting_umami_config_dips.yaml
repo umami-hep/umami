@@ -3,6 +3,7 @@ Eval_parameters:
   Path_to_models_dir: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami
   model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
   epoch: 59
+  bool_use_taus: False
 
 # Dips, ttbar
 scores_Dips_ttbar:
@@ -815,7 +816,7 @@ eff_vs_pt_small:
     minor_ticks_frequency: 10
     UseAtlasTag: True
     AtlasTag: "Internal"
-    SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
     ThirdTag: "Flat efficiency DIPS"
 
 
@@ -838,5 +839,5 @@ eff_vs_pt_large:
     minor_ticks_frequency: 200
     UseAtlasTag: True
     AtlasTag: "Internal"
-    SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
     ThirdTag: "Flat efficiency DIPS"

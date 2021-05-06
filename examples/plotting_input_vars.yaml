@@ -1,8 +1,59 @@
-var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
 test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-Loose-no_pTcuts-file_1.h5
+test_file_Zext: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_ext_100_PFlow-Loose-no_pTcuts-file_1.h5
 comparison_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4364_val/user.alfroch.410470.btagTraining.e6337_s3126_r12305_p4364.EMPFlow_loose.2021-03-22-T161653-R7891_output.h5/user.alfroch.24633320._000002.output.h5
 nJets: 250000
-plot_settings:
+
+plot_settings_jets:
+  var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/DL1r_Variables.yaml
+  plot_type: "pdf"
+  UseAtlasTag: True
+  AtlasTag: "Internal Simulation"
+  SecondTag: "$\\sqrt{s}$ = 13 TeV,"
+  yAxisAtlasTag: 0.925
+  yAxisIncrease: 10
+  output_directory: "input_vars_jets"
+  bool_use_taus: True
+  figsize: [6, 6]
+  special_param_jets:
+    IP2D_cu:
+      lim_left: -30
+      lim_right: 30                        
+    IP2D_bu:   
+      lim_left: -30
+      lim_right: 30                          
+    IP2D_bc:  
+      lim_left: -30
+      lim_right: 30                           
+    IP3D_cu:   
+      lim_left: -30
+      lim_right: 30                          
+    IP3D_bu:  
+      lim_left: -30
+      lim_right: 30                         
+    IP3D_bc:     
+      lim_left: -30
+      lim_right: 30
+    SV1_NGTinSvx:
+      lim_left: 0
+      lim_right: 19 
+    JetFitterSecondaryVertex_nTracks:
+      lim_left: 0
+      lim_right: 17  
+    JetFitter_nTracksAtVtx:
+      lim_left: 0
+      lim_right: 19 
+    JetFitter_nSingleTracks:
+      lim_left: 0
+      lim_right: 18
+    JetFitter_nVTX:
+      lim_left: 0
+      lim_right: 6
+    JetFitter_N2Tpair:
+      lim_left: 0
+      lim_right: 200
+
+plot_settings_tracks:
+  var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
   sorting_variable: "ptfrac"
   nLeading:
   plot_type: "pdf"
@@ -13,7 +64,53 @@ plot_settings:
   yAxisIncrease: 10
   output_directory: "input_vars_trks"
 
-binning:
+binning_jets:
+  IP2D_cu                           : 100
+  IP2D_bu                           : 100
+  IP2D_bc                           : 100
+  IP2D_isDefaults                   : 2
+  IP3D_cu                           : 100
+  IP3D_bu                           : 100
+  IP3D_bc                           : 100
+  IP3D_isDefaults                   : 2
+  JetFitter_mass                    : 100       
+  JetFitter_energyFraction          : 100
+  JetFitter_significance3d          : 100
+  JetFitter_deltaR                  : 100
+  JetFitter_nVTX                    : 7
+  JetFitter_nSingleTracks           : 19
+  JetFitter_nTracksAtVtx            : 20
+  JetFitter_N2Tpair                 : 201
+  JetFitter_isDefaults              : 2
+  JetFitterSecondaryVertex_minimumTrackRelativeEta: 11
+  JetFitterSecondaryVertex_averageTrackRelativeEta: 11
+  JetFitterSecondaryVertex_maximumTrackRelativeEta: 11
+  JetFitterSecondaryVertex_maximumAllJetTrackRelativeEta : 11
+  JetFitterSecondaryVertex_minimumAllJetTrackRelativeEta : 11
+  JetFitterSecondaryVertex_averageAllJetTrackRelativeEta : 11
+  JetFitterSecondaryVertex_displacement2d : 100
+  JetFitterSecondaryVertex_displacement3d : 100
+  JetFitterSecondaryVertex_mass           : 100
+  JetFitterSecondaryVertex_energy         : 100
+  JetFitterSecondaryVertex_energyFraction : 100
+  JetFitterSecondaryVertex_isDefaults     : 2
+  JetFitterSecondaryVertex_nTracks        : 18
+  pt_btagJes                        : 100
+  absEta_btagJes                    : 100
+  SV1_Lxy                           : 100
+  SV1_N2Tpair                       : 8
+  SV1_NGTinSvx                      : 20
+  SV1_masssvx                       : 100
+  SV1_efracsvx                      : 100
+  SV1_significance3d                : 100
+  SV1_deltaR                        : 10
+  SV1_L3d                           : 100
+  SV1_isDefaults                    : 2
+  rnnip_pb                          : 50
+  rnnip_pc                          : 50
+  rnnip_pu                          : 50
+
+binning_tracks:
   IP3D_signed_d0_significance: 100
   IP3D_signed_z0_significance: 100
   numberOfInnermostPixelLayerHits: 2
@@ -34,3 +131,4 @@ flavors:
   b: 5
   c: 4
   u: 0
+  tau: 15

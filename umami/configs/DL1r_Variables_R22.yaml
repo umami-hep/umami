@@ -3,6 +3,7 @@ train_variables:
   JetKinematics:
     - absEta_btagJes
     - pt_btagJes
+ #   - actualInteractionsPerCrossing
   JetFitter:
     - JetFitter_isDefaults
     - JetFitter_mass

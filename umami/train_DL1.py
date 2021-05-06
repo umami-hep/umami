@@ -51,6 +51,8 @@ def GetParser():
 
 
 def NN_model(train_config, input_shape):
+    bool_use_taus = train_config.bool_use_taus
+    n_units_end = 4 if bool_use_taus else 3
     NN_config = train_config.NN_structure
     inputs = Input(shape=input_shape)
     x = inputs
@@ -65,7 +67,9 @@ def NN_model(train_config, input_shape):
         if "dropout_rate" in NN_config:
             x = Dropout(NN_config["dropout_rate"][i])(x)
     predictions = Dense(
-        units=3, activation="softmax", kernel_initializer="glorot_uniform"
+        units=n_units_end,
+        activation="softmax",
+        kernel_initializer="glorot_uniform",
     )(x)
 
     model = Model(inputs=inputs, outputs=predictions)
@@ -82,6 +86,10 @@ def NN_model(train_config, input_shape):
 
 def TrainLargeFile(args, train_config, preprocess_config):
     print("Loading validation data (training data will be loaded per batch)")
+    bool_use_taus = (
+        train_config.bool_use_taus and preprocess_config.bool_process_taus
+    )
+    print("Using bool_use_taus = ", bool_use_taus)
     exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
@@ -90,15 +98,18 @@ def TrainLargeFile(args, train_config, preprocess_config):
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
+        nJets=int(5e5),
+        use_taus=bool_use_taus,
         exclude=exclude,
     )
-
     X_valid_add, Y_valid_add = None, None
     if train_config.add_validation_file is not None:
         X_valid_add, Y_valid_add = utt.GetTestSample(
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
+            nJets=int(5e5),
+            use_taus=bool_use_taus,
             exclude=exclude,
         )
         assert X_valid.shape[1] == X_valid_add.shape[1]
@@ -121,12 +132,18 @@ def TrainLargeFile(args, train_config, preprocess_config):
         Y_valid=Y_valid,
         X_valid_add=X_valid_add,
         Y_valid_add=Y_valid_add,
+        include_taus=bool_use_taus,
+        eval_config=train_config.Eval_parameters_validation,
     )
     callbacks = [reduce_lr, my_callback]
     file = h5py.File(train_config.train_file, "r")
     X_train = file["X_train"]
     Y_train = file["Y_train"]
-
+    (X_train, Y_train) = (
+        utt.filter_taus(X_train, Y_train)
+        if not (bool_use_taus)
+        else (X_train, Y_train)
+    )
     # create the training datasets
     # examples taken from https://adventuresinmachinelearning.com/tensorflow-dataset-tutorial/  # noqa
     dx_train = tf.data.Dataset.from_tensor_slices(X_train)

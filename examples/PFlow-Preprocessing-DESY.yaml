@@ -19,7 +19,7 @@ preparation:
     training_ttbar_bjets:
       type: ttbar
       category: bjets
-      n_jets: 10000000
+      n_jets: 10e6
       parity: even
       n_split: 10
       pt_cut: true
@@ -43,7 +43,7 @@ preparation:
     training_ttbar_ujets:
       type: ttbar
       category: ujets
-      n_jets: 20000000
+      n_jets: 20e6
       parity: even
       n_split: 20
       pt_cut: true
@@ -65,7 +65,7 @@ preparation:
 
     testing_ttbar:
       type: ttbar
-      n_jets: 4000000
+      n_jets: 4e6
       parity: odd
       n_split: 2
       f_output:
@@ -74,7 +74,7 @@ preparation:
 
     testing_zprime:
       type: zprime
-      n_jets: 4000000
+      n_jets: 4e6
       parity: odd
       n_split: 2
       f_output:
@@ -86,7 +86,10 @@ preparation:
 njets: 5.5e6
 # fraction of ttbar jets wrt. Z'
 # can change after applying resampling in the hybrid sample creation
-ttbar_frac: 0.65
+ttbar_frac: 0.70
+# Whether or not to enforce the ttbar fraction above
+enforce_ttbar_frac: False
+
 # outputfiles are split into 5
 # iterations: 1
 iterations: 5
@@ -96,6 +99,13 @@ pTcut: 2.5e5
 bhad_pTcut: 2.5e5
 # upper pT limit for all jets
 pT_max: False
+# set to true if taus are to be included in preprocessing - Not supported in DIPS yet
+bool_process_taus: False
+
+# Define undersampling method used. Valid are "count", "weight", and "count_bcl_weight_tau"
+# Last case only applied if taus are included. Default is "count".
+# See RunUndersampling in preprocessing for more info
+sampling_method: count
 f_z:
   path: *file_path
   file: MC16d_hybrid-ext_even_0_PFlow-merged.h5

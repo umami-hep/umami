@@ -15,8 +15,13 @@ from umami.preprocessing_tools.Resampling import (
     GetNJetsPerIteration,
     GetScales,
     UnderSampling,
+    UnderSamplingProp,
     Weighting2D,
     dict_in,
+    EnforceFraction,
+    RunStatSamples,
+    RunSampling,
+
 )
 from umami.preprocessing_tools.utils import (
     GetBinaryLabels,

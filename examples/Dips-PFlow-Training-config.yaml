@@ -28,6 +28,8 @@ add_comparison_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p436
 # Path to Variable dict used in preprocessing
 var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
 
+bool_use_taus: False
+
 exclude: []
 
 # Values for the neural network

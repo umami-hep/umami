@@ -15,21 +15,51 @@ def eff_err(x, N):
     return np.sqrt(x * (1 - x) / N)
 
 
-def GetScore(pb, pc, pu, fc=0.018):
+def GetScore(pb, pc, pu, ptau=None, fc=0.018, ftau=None):
     pb = pb.astype("float64")
     pc = pc.astype("float64")
     pu = pu.astype("float64")
     add_small = 1e-10
+    if ptau is not None:
+        if ftau is None:
+            flight = 1 - fc
+            ftau = flight
+        else:
+            flight = 1 - fc - ftau
+        ptau = ptau.astype("float64")
+        return np.log(
+            (pb + add_small)
+            / (flight * pu + ftau * ptau + fc * pc + add_small)
+        )
     return np.log((pb + add_small) / ((1.0 - fc) * pu + fc * pc + add_small))
 
 
-def GetCutDiscriminant(pb, pc, pu, ptau=None, fc=0.018, wp=0.7):
+def GetScoreC(pb, pc, pu, ptau=None, fb=0.2, ftau=None):
+    pb = pb.astype("float64")
+    pc = pc.astype("float64")
+    pu = pu.astype("float64")
+    add_small = 1e-10
+    if ptau is not None:
+        if ftau is None:
+            flight = 1 - fb
+            ftau = flight
+        else:
+            flight = 1 - fb - ftau
+        ptau = ptau.astype("float64")
+        return np.log(
+            (pc + add_small)
+            / (flight * pu + ftau * ptau + fb * pb + add_small)
+        )
+    return np.log((pc + add_small) / ((1.0 - fb) * pu + fb * pb + add_small))
+
+
+def GetCutDiscriminant(pb, pc, pu, ptau=None, fc=0.018, ftau=None, wp=0.7):
     """
     Return the cut value on the b-discrimant to reach desired WP
     (working point).
     pb, pc, and pu (ptau) are the proba for the b-jets.
     """
-    bscore = GetScore(pb, pc, pu, ptau=ptau, fc=fc)
+    bscore = GetScore(pb, pc, pu, ptau=ptau, fc=fc, ftau=ftau)
     cutvalue = np.percentile(bscore, 100.0 * (1.0 - wp))
     return cutvalue
 
@@ -37,7 +67,7 @@ def GetCutDiscriminant(pb, pc, pu, ptau=None, fc=0.018, wp=0.7):
 def FlatEfficiencyPerBin(df, predictions, variable, var_bins, wp=0.7):
     """
     For each bin in var_bins of variable, cuts the score in
-    bscore to get the desired WP (working point)
+    predictions column to get the desired WP (working point)
     df must (at least) contain the following columns:
         - bscore
         - value of variable
@@ -58,13 +88,13 @@ def FlatEfficiencyPerBin(df, predictions, variable, var_bins, wp=0.7):
         df_in_bin = df[index_jets_in_bin]
         if len(df_in_bin) == 0:
             continue
-        bscores_b_in_bin = df_in_bin[df_in_bin["labels"] == 2]["bscore"]
+        bscores_b_in_bin = df_in_bin[df_in_bin["labels"] == 2][predictions]
         if len(bscores_b_in_bin) == 0:
             continue
         # print("There are {} b-jets in bin {}".format(len(bscores_b_in_bin), var_bins[i]))
         cutvalue_in_bin = np.percentile(bscores_b_in_bin, 100.0 * (1.0 - wp))
         df.loc[index_jets_in_bin, ["btag"]] = (
-            df_in_bin["bscore"] > cutvalue_in_bin
+            df_in_bin[predictions] > cutvalue_in_bin
         ) * 1
 
     return df["btag"]
@@ -100,6 +130,7 @@ def getDiscriminant(x, fc=0.018):
     This method returns the score of the input (like GetScore)
     but calculated with the Keras Backend due to conflicts of
     numpy functions inside a layer in a keras model.
+    Note: not yet compatible with taus
     """
     return K.log(x[:, 2] / (fc * x[:, 1] + (1 - fc) * x[:, 0]))
 
@@ -110,6 +141,7 @@ def plotEfficiencyVariable(
     variable,
     var_bins,
     fc=0.018,
+    ftau=None,
     efficiency=0.70,
     include_taus=False,
     centralise_bins=True,
@@ -124,24 +156,38 @@ def plotEfficiencyVariable(
     ThirdTag="DL1r",
 ):
     """
-    For a given variable (string) in the panda dataframe df, plot:
-    - the b-eff in b, c, and light jets as a function of variable
+    For a given variable (string) in the panda dataframe df, plots:
+    - the b-eff of b, c, and light jets as a function of variable
                  (discretised in bins as indicated by var_bins input)
     - the variable distribution.
 
-    The efficiency is computed from score. e.g., for the recommended DL1r
-    at 70% WP:
-        score = (data["disc_DL1r"]> 3.245)*1
+    The following options are needed:
+    - plot_name: the full path + the start of the name of the plot.
+    - df: panda dataframe with columns
+        - The efficiency is computed from the btag column of df.
+        - variable (next parameter)
+        - labels (2 for b, 1 for c, 0 for u, and 3 for taus)
+    - variable: String giving the variable to use in df
+    - var_bins: numpy array listing the bins of variable
+        Entry i and i+1 in var_bins define bin i of the variable.
 
-    Entry i and i+1 in var_bins define a bin of the variable.
-
-    df must at least contain columns with names:
-    - variable
-    - labels (2 for b, 1 for c, 0 for u, and optionally 3 for taus)
-    - btag (with value 1 for b-tagged jets and 0 for others)
-
-    Option centralise_bins can be used if the variable is made of
-    integer so that datapoints are centralised to int value
+    The following options are optional:
+    - fc: the charm fraction used to compute the score (btag)
+    - ftau: the tau fraction used to compute the score (btag)
+    - efficiency: the working point (b tagging). NOT IN PERCENT
+    - include_taus: boolean whether to plot taus or not
+    - centralise_bins: boolean to centralise point in the bins
+    - xticksval: list of ticks values (must agree with the one below)
+    - xticks: list of ticks (must agree with the one above)
+    - minor_ticks_frequency: int,
+                    if given, sets the frequency of minor ticks
+    - xlogscale: boolean, whether to set the x-axis in log-scale.
+    - xlabel: String: label to use for the x-axis.
+    - UseAtlasTag: boolean, whether to use the ATLAS tag or not.
+    - AtlasTag: string: tag to attached to ATLAS
+    - SecondTag: string: second line of the ATLAS tag.
+    - ThirdTag: tag on the top left of the plot, indicate model
+        and fractions used.
 
     Note: to get a flat efficiency plot, you need to produce a 'btag' column
     in df using FlatEfficiencyPerBin (defined above).
@@ -151,7 +197,7 @@ def plotEfficiencyVariable(
     b_lst, b_err_list = [], []
     c_lst, c_err_list = [], []
     u_lst, u_err_list = [], []
-    t_lst, t_err_list = [], []
+    tau_lst, tau_err_list = [], []
 
     for i in range(len(var_bins) - 1):
         df_in_bin = data[
@@ -161,13 +207,13 @@ def plotEfficiencyVariable(
         total_b_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 2])
         total_c_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 1])
         total_u_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 0])
-        total_t_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 3])
+        total_tau_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 3])
         df_in_bin = df_in_bin.query("btag == 1")
         total_in_bin = (
             total_b_tag_in_bin + total_c_tag_in_bin + total_u_tag_in_bin
         )
         if include_taus:
-            total_in_bin += total_t_tag_in_bin
+            total_in_bin += total_tau_tag_in_bin
 
         if total_in_bin == 0:
             total_var.append(0)
@@ -177,14 +223,14 @@ def plotEfficiencyVariable(
             c_err_list.append(1)
             b_lst.append(1e5)
             b_err_list.append(1)
-            t_lst.append(1e5)
-            t_err_list.append(1)
+            tau_lst.append(1e5)
+            tau_err_list.append(1)
         else:
             total_var.append(total_in_bin)
             index, counts = np.unique(
                 df_in_bin["labels"].values, return_counts=True
             )
-            in_b, in_c, in_u, in_t = False, False, False, False
+            in_b, in_c, in_u, in_tau = False, False, False, False
             for item, count in zip(index, counts):
                 if item == 0:
                     eff = count / total_u_tag_in_bin
@@ -202,10 +248,10 @@ def plotEfficiencyVariable(
                     b_err_list.append(eff_err(eff, total_b_tag_in_bin))
                     in_b = True
                 elif item == 3:
-                    eff = count / total_u_tag_in_bin
-                    t_lst.append(eff)
-                    t_err_list.append(eff_err(eff, total_t_tag_in_bin))
-                    in_t = True
+                    eff = count / total_tau_tag_in_bin
+                    tau_lst.append(eff)
+                    tau_err_list.append(eff_err(eff, total_tau_tag_in_bin))
+                    in_tau = True
                 else:
                     print("Invaled value of index from labels: ", item)
             if not (in_u):
@@ -217,9 +263,9 @@ def plotEfficiencyVariable(
             if not (in_b):
                 b_lst.append(1e5)
                 b_err_list.append(1)
-            if not (in_t):
-                t_lst.append(1e5)
-                t_err_list.append(1)
+            if not (in_tau):
+                tau_lst.append(1e5)
+                tau_err_list.append(1)
     if plot_name[-4:] == ".pdf":
         plot_name = plot_name[:-4]
 
@@ -230,11 +276,20 @@ def plotEfficiencyVariable(
         elif variable == "pt":
             xlabel = r"$p_T$ [GeV]"
 
-    ThirdTag = (
-        ThirdTag
-        + "\n"
-        + "$\\epsilon_b$ = {}%, $f_c$ = {}".format(efficiency, fc)
-    )
+    if ftau is None:
+        ThirdTag = (
+            ThirdTag
+            + "\n"
+            + "$\\epsilon_b$ = {}%, $f_c$ = {}".format(efficiency, fc)
+        )
+    else:
+        ThirdTag = (
+            ThirdTag
+            + "\n"
+            + "$\\epsilon_b$ = {}%, $f_c$ = {}, $f_\tau$ = {}".format(
+                efficiency, fc, ftau
+            )
+        )
     # Divide pT values to express in GeV, not MeV
     if variable == "pt":
         var_bins = var_bins / 1000
@@ -378,10 +433,10 @@ def plotEfficiencyVariable(
     if include_taus:
         ax.errorbar(
             x=x_value,
-            y=t_lst,
-            yerr=u_err_list,
+            y=tau_lst,
+            yerr=tau_err_list,
             xerr=x_err,
-            label=r"$\tau$-jets",
+            label="tau-jets",
             fmt="s",
             markersize=2.0,
             markeredgecolor="#7c5295",
@@ -425,7 +480,7 @@ def plotEfficiencyVariable(
     ax.grid(color="grey", linestyle="--", linewidth=0.5)
     ax.legend(loc="upper right")
     if UseAtlasTag:
-        pas.makeATLAStag(ax, fig, AtlasTag, SecondTag, xmin=0.57, ymax=0.88)
+        pas.makeATLAStag(ax, fig, AtlasTag, SecondTag, xmin=0.55, ymax=0.88)
     ax.text(
         0.05,
         0.815,
@@ -849,6 +904,7 @@ def plotROCRatio(
     colors=None,
     xmin=None,
     ymax=None,
+    ymin=None,
     legFontSize=10,
     rrange=None,
     rlabel="Ratio",
@@ -891,10 +947,18 @@ def plotROCRatio(
         ylabel = r"Light-Flavour Jet Rejection ($1/\epsilon_{l}$)"
     elif ylabel == "c":
         ylabel = r"$c$-Jet Rejection ($1/\epsilon_{c}$)"
+    elif ylabel == "t":
+        ylabel = r"Tau-Jet Rejection ($1/\epsilon_{\tau}$)"
+    elif ylabel == "b":
+        ylabel = r"$b$-Jet Rejection ($1/\epsilon_{b}$)"
     if ylabel_right == "light":
         ylabel_right = r"Light-Flavour Jet Rejection ($1/\epsilon_{l}$)"
     elif ylabel_right == "c":
         ylabel_right = r"$c$-Jet Rejection ($1/\epsilon_{c}$)"
+    elif ylabel_right == "t":
+        ylabel_right = r"Tau-Jet Rejection ($1/\epsilon_{\tau}$)"
+    elif ylabel_right == "b":
+        ylabel_right = r"$b$-Jet Rejection ($1/\epsilon_{b}$)"
 
     if binomialErrors and nTest == 0:
         print(
@@ -974,6 +1038,7 @@ def plotROCRatio(
 
         # Mask the points where there was no change in the signal eff
         dx = np.concatenate((np.ones(1), np.diff(teff)))
+
         # Also mask the rejections that are 0
         nonzero = (beff != 0) & (dx > 0)
         if xmin:
@@ -1025,7 +1090,7 @@ def plotROCRatio(
                 zorder=1,
             )
 
-    # Add axes, titels and the legend
+    # Add axes, titles and the legend
     axis_dict["left"]["top"].set_ylabel(
         ylabel, fontsize=12, horizontalalignment="right", y=1.0, color=ycolor
     )
@@ -1067,8 +1132,15 @@ def plotROCRatio(
     axis_dict["left"]["top"].set_xlim(teffs[0].iloc[0], teffs[0].iloc[-1])
     if xmin:
         axis_dict["left"]["top"].set_xlim(xmin, 1)
-    if ymax:
-        axis_dict["left"]["top"].set_ylim(1, ymax)
+
+    if ymax is not None:
+        if ymin is not None:
+            axis_dict["left"]["top"].set_ylim(ymin, ymax)
+        else:
+            axis_dict["left"]["top"].set_ylim(1, ymax)
+    elif ymin is not None:
+        _, top = axis_dict["left"]["top"].get_ylim()
+        axis_dict["left"]["top"].set_ylim(ymin, top)
 
     left_y_limits = axis_dict["left"]["top"].get_ylim()
     axis_dict["left"]["top"].set_ylim(left_y_limits[0], left_y_limits[1] * 1.2)
@@ -1257,6 +1329,8 @@ def plot_score(
 ):
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
+    bool_use_taus = eval_params["bool_use_taus"]
+    discriminant = plot_config["discriminant"]
 
     # Read file, change to specific file if defined
     if ("evaluation_file" not in plot_config) or (
@@ -1273,9 +1347,14 @@ def plot_score(
         )
 
     # Calculate the scores for the NN outputs
-    df_results["discs"] = GetScore(
-        *[df_results[pX] for pX in plot_config["prediction_labels"]]
-    )
+    if discriminant == "c":
+        df_results["discs"] = GetScoreC(
+            *[df_results[pX] for pX in plot_config["prediction_labels"]]
+        )
+    else:
+        df_results["discs"] = GetScore(
+            *[df_results[pX] for pX in plot_config["prediction_labels"]]
+        )
 
     # Clear the figure and init a new one
     plt.clf()
@@ -1286,6 +1365,8 @@ def plot_score(
     len_b = len(df_results.query("labels==2"))
     len_c = len(df_results.query("labels==1"))
     len_u = len(df_results.query("labels==0"))
+    if bool_use_taus:
+        len_tau = len(df_results.query("labels==3"))
 
     # Calculate the hists and bin edges for errorbands
     counts_b, bins_b = np.histogram(
@@ -1303,6 +1384,12 @@ def plot_score(
         # Use the calculated binning to ensure its equal
         bins=bins_b,
     )
+    if bool_use_taus:
+        counts_tau, bins_tau = np.histogram(
+            df_results.query("labels==3")["discs"],
+            # Use the calculated binning to ensure its equal
+            bins=bins_b,
+        )
 
     # Calculate the bin centers
     bincentres = [
@@ -1319,6 +1406,10 @@ def plot_score(
     unc_u = np.sqrt(counts_u) / len_u
     band_lower_u = counts_u / len_u - unc_u
 
+    if bool_use_taus:
+        unc_tau = np.sqrt(counts_tau) / len_tau
+        band_lower_tau = counts_tau / len_tau - unc_tau
+
     # Hist the scores and their corresponding errors
     plt.hist(
         x=bins_b[:-1],
@@ -1326,7 +1417,7 @@ def plot_score(
         weights=(counts_b / len_b),
         histtype="step",
         linewidth=2.0,
-        color="C0",
+        color="#1f77b4",
         stacked=False,
         fill=False,
         label=r"$b$-jets",
@@ -1349,7 +1440,7 @@ def plot_score(
         weights=counts_c / len_c,
         histtype="step",
         linewidth=2.0,
-        color="C1",
+        color="#ff7f0e",
         stacked=False,
         fill=False,
         label=r"$c$-jets",
@@ -1366,29 +1457,77 @@ def plot_score(
         edgecolor="#666666",
     )
 
-    plt.hist(
-        x=bins_u[:-1],
-        bins=bins_u,
-        weights=counts_u / len_u,
-        histtype="step",
-        linewidth=2.0,
-        color="C2",
-        stacked=False,
-        fill=False,
-        label=r"light-flavour jets",
-    )
+    if bool_use_taus:
+        plt.hist(
+            x=bins_u[:-1],
+            bins=bins_u,
+            weights=counts_u / len_u,
+            histtype="step",
+            linewidth=2.0,
+            color="#2ca02c",
+            stacked=False,
+            fill=False,
+            label=r"light-flavour jets",
+        )
 
-    plt.hist(
-        x=bincentres,
-        bins=bins_u,
-        bottom=band_lower_u,
-        weights=unc_u * 2,
-        fill=False,
-        hatch="/////",
-        linewidth=0,
-        edgecolor="#666666",
-        label="stat. unc.",
-    )
+        plt.hist(
+            x=bincentres,
+            bins=bins_u,
+            bottom=band_lower_u,
+            weights=unc_u * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+        )
+
+        plt.hist(
+            x=bins_tau[:-1],
+            bins=bins_tau,
+            weights=counts_tau / len_tau,
+            histtype="step",
+            linewidth=2.0,
+            color="#7c5295",
+            stacked=False,
+            fill=False,
+            label=r"tau-flavour jets",
+        )
+
+        plt.hist(
+            x=bincentres,
+            bins=bins_tau,
+            bottom=band_lower_tau,
+            weights=unc_tau * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+            label="stat. unc.",
+        )
+    else:
+        plt.hist(
+            x=bins_u[:-1],
+            bins=bins_u,
+            weights=counts_u / len_u,
+            histtype="step",
+            linewidth=2.0,
+            color="#2ca02c",
+            stacked=False,
+            fill=False,
+            label=r"light-flavour jets",
+        )
+
+        plt.hist(
+            x=bincentres,
+            bins=bins_u,
+            bottom=band_lower_u,
+            weights=unc_u * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+            label="stat. unc.",
+        )
 
     # Increase ymax so atlas tag don't cut plot
     ymin, ymax = plt.ylim()
@@ -1401,18 +1540,25 @@ def plot_score(
         for WP in WorkingPoints:
 
             # Calculate x value of WP line
-            x_value = np.percentile(
-                df_results.query("labels==2")["discs"], (1 - WP) * 100
-            )
+            if discriminant == "c":
+                x_value = np.percentile(
+                    df_results.query("labels==1")["discs"], (1 - WP) * 100
+                )
+                color = "#ff7f0e"
+            else:
+                x_value = np.percentile(
+                    df_results.query("labels==2")["discs"], (1 - WP) * 100
+                )
+                color = "#1f77b4"
 
             # Draw WP line
             plt.vlines(
                 x=x_value,
                 ymin=ymin,
                 ymax=WP * ymax,
-                colors="C3",
+                colors=color,
                 linestyles="dashed",
-                linewidth=1.0,
+                linewidth=2.0,
             )
 
             # Set the number above the line
@@ -1427,7 +1573,10 @@ def plot_score(
             )
 
     plt.legend()
-    plt.xlabel("$D_{b}$")
+    if discriminant == "c":
+        plt.xlabel("$D_{c}$")
+    else:
+        plt.xlabel("$D_{b}$")
     plt.ylabel("Normalised Number of Jets")
 
     if UseAtlasTag is True:
@@ -1449,6 +1598,8 @@ def plot_score_comparison(
     prediction_labels,
     model_labels,
     plot_name,
+    use_taus=False,
+    discriminant="b",
     UseAtlasTag=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
@@ -1474,9 +1625,19 @@ def plot_score_comparison(
 ):
     # Calculate the scores for the NN outputs
     for df_results in df_list:
-        df_results["discs"] = GetScore(
-            *[df_results[pX] for pX in prediction_labels]
-        )
+        if discriminant == "b":
+            df_results["discs"] = GetScore(
+                *[df_results[pX] for pX in prediction_labels]
+            )
+        elif discriminant == "c":
+            df_results["discs"] = GetScoreC(
+                *[df_results[pX] for pX in prediction_labels]
+            )
+            if x_label == r"$D_b$":
+                # Swap to c discriminant
+                x_label = r"$D_c$"
+        else:
+            raise ValueError("Unknown discriminant {}!".format(discriminant))
 
     if type(which_axis) != list:
         which_axis = [which_axis] * len(df_list)
@@ -1521,6 +1682,8 @@ def plot_score_comparison(
         len_b = len(df_results.query("labels==2"))
         len_c = len(df_results.query("labels==1"))
         len_u = len(df_results.query("labels==0"))
+        if use_taus:
+            len_tau = len(df_results.query("labels==3"))
 
         # Calculate the hists and bin edges for errorbands
         counts_b, bins_b = np.histogram(
@@ -1541,6 +1704,13 @@ def plot_score_comparison(
             bins=Binning,
         )
 
+        if use_taus:
+            counts_tau, bins_tau = np.histogram(
+                df_results.query("labels==3")["discs"],
+                # Use the calculated binning to ensure its equal
+                bins=Binning,
+            )
+
         # Calculate poisson uncertainties and lower bands
         unc_b = np.sqrt(counts_b) / len_b
         band_lower_b = counts_b / len_b - unc_b
@@ -1551,6 +1721,10 @@ def plot_score_comparison(
         unc_u = np.sqrt(counts_u) / len_u
         band_lower_u = counts_u / len_u - unc_u
 
+        if use_taus:
+            unc_tau = np.sqrt(counts_tau) / len_tau
+            band_lower_tau = counts_tau / len_tau - unc_tau
+
         hist_counts_b, _, _ = axis_dict[which_a]["top"].hist(
             x=bins_b[:-1],
             bins=bins_b,
@@ -1558,7 +1732,7 @@ def plot_score_comparison(
             histtype="step",
             linewidth=2.0,
             linestyle=linestyle,
-            color="C0",
+            color="#1f77b4",
             stacked=False,
             fill=False,
             label=r"$b$-jets {}".format(model_labels[i]),
@@ -1582,7 +1756,7 @@ def plot_score_comparison(
             histtype="step",
             linewidth=2.0,
             linestyle=linestyle,
-            color="C1",
+            color="#ff7f0e",
             stacked=False,
             fill=False,
             label=r"$c$-jets {}".format(model_labels[i]),
@@ -1606,13 +1780,13 @@ def plot_score_comparison(
             histtype="step",
             linewidth=2.0,
             linestyle=linestyle,
-            color="C2",
+            color="#2ca02c",
             stacked=False,
             fill=False,
             label=r"light-flavour jets {}".format(model_labels[i]),
         )
 
-        if i == 0:
+        if use_taus:
             axis_dict[which_a]["top"].hist(
                 x=bincentres,
                 bins=bins_u,
@@ -1622,27 +1796,86 @@ def plot_score_comparison(
                 hatch="/////",
                 linewidth=0,
                 edgecolor="#666666",
-                label="stat. unc.",
             )
 
+            hist_counts_tau, _, _ = axis_dict[which_a]["top"].hist(
+                x=bins_tau[:-1],
+                bins=bins_tau,
+                weights=counts_tau / len_tau,
+                histtype="step",
+                linewidth=2.0,
+                linestyle=linestyle,
+                color="#7c5295",
+                stacked=False,
+                fill=False,
+                label=r"tau-flavour jets {}".format(model_labels[i]),
+            )
+
+            if i == 0:
+                axis_dict[which_a]["top"].hist(
+                    x=bincentres,
+                    bins=bins_tau,
+                    bottom=band_lower_tau,
+                    weights=unc_tau * 2,
+                    fill=False,
+                    hatch="/////",
+                    linewidth=0,
+                    edgecolor="#666666",
+                    label="stat. unc.",
+                )
+
+            else:
+                axis_dict[which_a]["top"].hist(
+                    x=bincentres,
+                    bins=bins_tau,
+                    bottom=band_lower_tau,
+                    weights=unc_tau * 2,
+                    fill=False,
+                    hatch="/////",
+                    linewidth=0,
+                    edgecolor="#666666",
+                )
         else:
-            axis_dict[which_a]["top"].hist(
-                x=bincentres,
-                bins=bins_u,
-                bottom=band_lower_u,
-                weights=unc_u * 2,
-                fill=False,
-                hatch="/////",
-                linewidth=0,
-                edgecolor="#666666",
-            )
+            if i == 0:
+                axis_dict[which_a]["top"].hist(
+                    x=bincentres,
+                    bins=bins_u,
+                    bottom=band_lower_u,
+                    weights=unc_u * 2,
+                    fill=False,
+                    hatch="/////",
+                    linewidth=0,
+                    edgecolor="#666666",
+                    label="stat. unc.",
+                )
 
-        bincounts.update({"b{}".format(i): hist_counts_b})
-        bincounts.update({"c{}".format(i): hist_counts_c})
-        bincounts.update({"u{}".format(i): hist_counts_u})
+            else:
+                axis_dict[which_a]["top"].hist(
+                    x=bincentres,
+                    bins=bins_u,
+                    bottom=band_lower_u,
+                    weights=unc_u * 2,
+                    fill=False,
+                    hatch="/////",
+                    linewidth=0,
+                    edgecolor="#666666",
+                )
 
+        bincounts.update({f"b{i}": hist_counts_b})
+        bincounts.update({f"c{i}": hist_counts_c})
+        bincounts.update({f"u{i}": hist_counts_u})
+        if use_taus:
+            bincounts.update({f"tau{i}": hist_counts_tau})
+
+    if use_taus:
+        loop_list = zip(
+            ["b", "c", "u", "tau"],
+            ["#1f77b4", "#ff7f0e", "#2ca02c", "#7c5295"],
+        )
+    else:
+        loop_list = zip(["b", "c", "u"], ["#1f77b4", "#ff7f0e", "#2ca02c"])
     # Start ratio plot
-    for i, (flavor, color) in enumerate(zip(["b", "c", "u"], [0, 1, 2])):
+    for i, (flavor, color) in enumerate(loop_list):
         if RatioType == "Ratio":
             axis_dict["left"]["ratio"].step(
                 x=Binning[:-1],
@@ -1656,7 +1889,7 @@ def plot_score_comparison(
                     + 1,
                     where=(bincounts["{}{}".format(flavor, 0)] != 0),
                 ),
-                color="C{}".format(color),
+                color=color,
             )
 
         elif RatioType == "Absolute":
@@ -1664,7 +1897,7 @@ def plot_score_comparison(
                 x=Binning[:-1],
                 y=bincounts["{}{}".format(flavor, 1)]
                 - bincounts["{}{}".format(flavor, 0)],
-                color="C{}".format(color),
+                color=color,
             )
 
     # Add black line at one
@@ -1739,16 +1972,23 @@ def plot_score_comparison(
         for WP in WorkingPoints:
 
             # Calculate x value of WP line
-            x_value = np.percentile(
-                df_list[0].query("labels==2")["discs"], (1 - WP) * 100
-            )
+            if discriminant == "c":
+                x_value = np.percentile(
+                    df_list[0].query("labels==1")["discs"], (1 - WP) * 100
+                )
+                color = "#ff7f0e"
+            else:
+                x_value = np.percentile(
+                    df_list[0].query("labels==2")["discs"], (1 - WP) * 100
+                )
+                color = "#1f77b4"
 
             # Draw WP line
             axis_dict["left"]["top"].axvline(
                 x=x_value,
                 ymin=0,
                 ymax=0.75 * WP,
-                color="C3",
+                color=color,
                 linestyle="dashed",
                 linewidth=1.0,
             )
@@ -1758,7 +1998,7 @@ def plot_score_comparison(
                 x=x_value,
                 ymin=0,
                 ymax=1,
-                color="C3",
+                color=color,
                 linestyle="dashed",
                 linewidth=1.0,
             )
@@ -1794,3 +2034,83 @@ def plot_score_comparison(
         plt.savefig(plot_name, transparent=True)
     plt.close()
     # plt.show()
+
+
+def plotFractionScan(
+    data,
+    label,
+    plot_name,
+    x_val,
+    y_val,
+    UseAtlasTag=True,
+    AtlasTag="Internal",
+    SecondTag="$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$",
+):
+    if label == "umami_crej":
+        draw_label = r"$c$-Jet Rejection from b ($1/\epsilon_{c}$)"
+    elif label == "umami_urej":
+        draw_label = r"Light-Flavour Jet Rejection  from b ($1/\epsilon_{l}$)"
+    elif label == "umami_taurej":
+        draw_label = r"Tau-Jet Rejection  from b ($1/\epsilon_{\tau}$)"
+
+    elif label == "umami_brejC":
+        draw_label = r"$b$-Jet Rejection from c ($1/\epsilon_{b}$)"
+    elif label == "umami_urejC":
+        draw_label = r"Light-Jet Rejection from c ($1/\epsilon_{l}$)"
+    elif label == "umami_taurejC":
+        draw_label = r"Tau-Jet Rejection from c ($1/\epsilon_{\tau}$)"
+    else:
+        print("Problem")
+    # Take data from relevant columns:
+    x_data = data[x_val]
+    y_data = data[y_val]
+    z_data = data[label]
+
+    x_compact = np.unique(x_data)
+    y_compact = np.unique(y_data)
+    size_x = len(x_compact)
+    size_y = len(y_compact)
+    z_data_table = z_data.values.reshape((size_y, size_x))
+    fig, ax = plt.subplots()
+    plot = ax.imshow(
+        z_data_table,
+        cmap="RdBu",
+        interpolation="bilinear",
+        # extent = [x_compact[0], x_compact[-1], y_compact[-1], y_compact[0]],
+        aspect=size_x / size_y,
+    )
+    cbar = ax.figure.colorbar(plot, ax=ax)
+    cbar.ax.set_ylabel(draw_label, rotation=-90, va="bottom")
+
+    take_x = list(range(size_x))
+    take_y = list(range(size_y))
+    if size_x > 6:
+        frac = (size_x - 1) / 5
+        take_x = [int(i * frac) for i in range(6)]
+    if size_y > 6:
+        frac = (size_y - 1) / 5
+        take_y = [int(i * frac) for i in range(6)]
+    y_label = y_val
+    x_label = x_val
+    if x_val == "fraction_taus":
+        x_label = r"$f_\tau$"
+    if y_val == "fraction_c":
+        y_label = r"$f_c$"
+    elif y_val == "fraction_b":
+        y_label = r"$f_b$"
+    ax.set_xticks(take_x)
+    ax.set_yticks(take_y)
+    ax.set_xticklabels(np.around(x_compact[take_x], 3))
+    ax.set_yticklabels(np.around(y_compact[take_y], 3))
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+    ax.xaxis.set_label_position("top")
+
+    if UseAtlasTag:
+        pas.makeATLAStag(ax, fig, AtlasTag, SecondTag, xmin=0.05, ymax=0.1)
+
+    plt.tight_layout()
+    if plot_name is not None:
+        plt.savefig(plot_name, transparent=True)
+    plt.close()

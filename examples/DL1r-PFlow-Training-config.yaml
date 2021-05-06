@@ -27,6 +27,11 @@ exclude: []
 
 # Path to Variable dict used in preprocessing
 var_dict: umami/configs/DL1r_Variables.yaml
+Eval_parameters: None
+
+# Whether to use taus or not. Won't work if variable set to False in preprocessing
+bool_use_taus: False
+
 NN_structure:  
     lr: 0.01
     batch_size: 15000
@@ -41,8 +46,27 @@ Eval_parameters_validation:
     # Charm fraction value used for evaluation
     fc_value: 0.018
 
+    # B fraction value used for evaluation
+    fb_value: 0.2
+
+    # Tau fraction value used for evaluation (for c)
+    ftauforc_value: None
+
+    # # Tau fraction value used for evaluation (for b)
+    ftauforb_value: None
+
     # b Working point used in the evaluation
     WP_b: 0.77
+    # C Working point used in the evaluation
+    WP_c: 0.4
+
+    # Set minimum of accuracy plot y-axis
+    acc_ymin: 0.59
+    # Set maximum of accuracy plot y-axis
+    acc_ymax: 1.0
+
+    # A list to add available variables to the evaluation files
+    add_variables_eval: ["actualInteractionsPerCrossing"]
 
     # Enable/Disable atlas tag
     UseAtlasTag: True
@@ -53,3 +77,4 @@ Eval_parameters_validation:
 
     # Set the datatype of the plots
     plot_datatype: "pdf"
+

@@ -8,6 +8,7 @@ add_test_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16
 var_dict: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/umami/configs/Umami_Variables.yaml
 # Certain low level algorithms can be excluded, namely: "SV1", "IP2D", "IP3D"
 exclude: []
+bool_use_taus: False
 NN_structure:  
     lr: 0.01
     batch_size: 5000
