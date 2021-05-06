@@ -19,12 +19,14 @@ class Configuration(object):
 
     def GetConfiguration(self):
         config_items = [
-            "var_dict",
             "test_file",
+            "test_file_Zext",
             "comparison_file",
             "nJets",
-            "plot_settings",
-            "binning",
+            "plot_settings_jets",
+            "plot_settings_tracks",
+            "binning_jets",
+            "binning_tracks",
             "flavors",
         ]
         for item in config_items:

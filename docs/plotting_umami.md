@@ -7,13 +7,14 @@ The plotting_umami.py is used to plot the results of the evaluation script. Diff
 ### Yaml Config File
 **Important: The indentation in this .yaml is important due to the way the files are read by the script.**   
 A fully written one can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/examples/plotting_umami_config_dips.yaml).   
-The config file starts with the `Eval_parameters`. Here the `Path_to_models_dir` is set, where the models are saved. Also the `model_name` and the `epoch` which is to be plotted is set. For example, this can look like this:
+The config file starts with the `Eval_parameters`. Here the `Path_to_models_dir` is set, where the models are saved. Also the `model_name` and the `epoch` which is to be plotted is set. A boolean parameter can be set here to indicate whether to plot with taus included (requires to have train and preprocessed with taus). For example, this can look like this:
 
 ```yaml
 Eval_parameters:
   Path_to_models_dir: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami
   model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
   epoch: 59
+  bool_use_taus: False
 ```
 
 In the different available plots, there are options that are available in mostly all of them. So they will be explained next. For specific options, look at the comment in the section of the plot.   
@@ -44,6 +45,8 @@ For DIPS: `["dips_pb", "dips_pc", "dips_pu"]`
 For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]`   
 For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]`   
 For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]`  
+For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` 
+If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` 
 
 #### Scores
 Plotting the b-tagging discriminant scores for the different jet flavors. For example:
@@ -68,6 +71,8 @@ For DIPS: `["dips_pb", "dips_pc", "dips_pu"]`
 For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]`   
 For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]`   
 For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]`   
+For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` 
+If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` 
 
 `WorkingPoints`, List: The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP.   
 
@@ -113,6 +118,8 @@ For DIPS: `["dips_pb", "dips_pc", "dips_pu"]`
 For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]`   
 For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]`   
 For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]`   
+For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` 
+If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` 
 
 `dips_r21`, None: Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything.   
 
@@ -150,6 +157,7 @@ Dips_light_flavour_ttbar:
       label: "DIPS"
       df_key: "dips_urej"
   plot_settings:
+    xlabel: "$b$-jet efficiency"
     ylabel: "light"
     binomialErrors: True
     xmin: 0.5
@@ -166,7 +174,9 @@ Dips_light_flavour_ttbar:
 
 `label`, String: Label for the Legend in the plot.   
 
-`df_key`, String: Decide which rejection is plotted. The structure is like this: `model_Xrej`. The `X` defines the wanted rejection. `u` for light-, `c` for c-rejection.   
+`df_key`, String: Decide which rejection is plotted. The structure is like this: `model_Xrej`. The `X` defines the wanted rejection. `u` for light-, `c` for c-rejection, `t` for tau-rejection. Note: for DL1 only, the light-, tau-, and b- rejection from c-jets are also supported. The structure is then: `model_XrejC`, with `X` taking as value `u`, `t`, or `b`.   
+
+`xlabel:`, String (optional - default is "$b$-jet efficiency"): Set the xlabel.
 
 `ylabel:`, String: Set the ylabel of the X-rejection. For example: 'c' will output `c-flavor rejection`.   
 
@@ -270,6 +280,8 @@ For DIPS: `["dips_pb", "dips_pc", "dips_pu"]`
 For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]`   
 For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]`   
 For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]`   
+For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` 
+If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` 
 
 `bin_edges`, List: The pT bin edges that should be used. Don't forget the starting and the ending edge!   
 
@@ -340,8 +352,12 @@ For DIPS: `["dips_pb", "dips_pc", "dips_pu"]`
 For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]`   
 For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]`   
 For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]`   
+For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` 
+If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` 
 
 `variable` string: a variable contained in the h5 result file from `evaluate.py` (e.g., "pt"). 
+To include any non-standard variable in this h5, include them in the list of the parameter `add_variables_eval` in the training configuration ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml#L69))
+
 Note! pt variable is automatically transformed in GeV (divide by 1000)!
 
 `max_variable` float (optional): the maximum value to be considered for variable in the binning
@@ -371,6 +387,38 @@ Note! For pt, values are in GeV.
 `SecondTag`, String: Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag.
 
 `ThirdTag`, String: Write this text on the upepr left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. 
+
+#### Scanning fractions
+For DL1 with taus, the evaluation step of `evaluate.py` generates an extra h5 file giving the c/b, light, and tau rejection as a function of the c/b-fraction and the tau fraction. To produce the plot associated to this information, add (for example) this to the plotting config:
+
+```yaml
+plot_scan_frac_tau:
+  type: "FracScan"
+  evaluation_file:  # from evaluation
+  data_set_name: "ttbar"
+  label: "umami_taurej"
+  xlabel: "fraction_taus"
+  ylabel: "fraction_c"
+  plot_settings:
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulations"
+    SecondTag: "DL1r, $\\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+```
+
+`label` string: indicate the rejection to plot (u for light). Choose from: 
+For b-tagging: `["umami_crej", "umami_urej", "umami_taurej"]`   
+For c-tagging: `["umami_brejC", "umami_urejC", "umami_taurejC"]`  
+
+`xlabel` string: the label to use for the xscale of the plot (normally taus)
+
+`ylabel` string: the label to use for the yscale of the plot. 
+         Either `"fraction_c"`or `"fraction_b"` for c- and b-tagging
+
+`UseAtlasTag`, Bool: Decide if the ATLAS Tag is printed in the upper left corner of the plot or not.   
+
+`AtlasTag`, String: The first line of text right behind the 'ATLAS'.   
+
+`SecondTag`, String: Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. Don't add fc value here! Its automatically added also the WP.   
 
 ### Executing the Script
 The script can be executed by using the following command:

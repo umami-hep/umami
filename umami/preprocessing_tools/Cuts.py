@@ -47,7 +47,7 @@ def GetCuts(jets, config, sample="ttbar"):
 
         if config.pTcut is not None:
             indices_to_remove_xjets = np.where(
-                (jets["HadronConeExclTruthLabelID"] < 5)
+                (jets["HadronConeExclTruthLabelID"] != 5)
                 & (jets["pt_btagJes"] > config.pTcut)
             )[0]
             indices_to_remove.append(indices_to_remove_xjets)
@@ -64,7 +64,7 @@ def GetCuts(jets, config, sample="ttbar"):
 
         if config.pTcut is not None:
             indices_to_remove_xjets = np.where(
-                (jets["HadronConeExclTruthLabelID"] < 5)
+                (jets["HadronConeExclTruthLabelID"] != 5)
                 & (jets["pt_btagJes"] < config.pTcut)
             )[0]
             indices_to_remove.append(indices_to_remove_xjets)

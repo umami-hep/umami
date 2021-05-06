@@ -36,57 +36,114 @@ def get_parameters_from_validation_dict_name(dict_name):
     return parameters
 
 
-def GetRejection(y_pred, y_true, target_beff=0.77, cfrac=0.018):
-    """Calculates the c and light rejection for specific WP and c-fraction."""
-    b_index, c_index, u_index = 2, 1, 0
+def GetRejection(
+    y_pred,
+    y_true,
+    target_eff=0.77,
+    frac=0.018,
+    d_type="b",
+    taufrac=None,
+    use_taus=False,
+):
+    """
+    Calculates the rejections for specific WP and fraction.
+    Can perform b or c rejection depending on the value of
+    - d_type = "b" or "c"
+    If doing b (c) rejection, frac corresponds to fc (fb).
+    """
+    tau_index, b_index, c_index, u_index = 3, 2, 1, 0
     y_true = np.argmax(y_true, axis=1)
     b_jets = y_pred[y_true == b_index]
     c_jets = y_pred[y_true == c_index]
     u_jets = y_pred[y_true == u_index]
 
+    bool_b = False
+    main_flavour = c_jets
+    second_flavour = b_jets
+    if d_type == "b":
+        bool_b = True
+        main_flavour = b_jets
+        second_flavour = c_jets
+
+    ufrac = 1 - frac
+    if use_taus:
+        tau_jets = y_pred[y_true == tau_index]
+        if bool_b:
+            index_list = [b_index, c_index, u_index, tau_index]
+        else:
+            index_list = [c_index, b_index, u_index, tau_index]
+        if taufrac is None:
+            taufrac = 1 - frac
+        else:
+            ufrac = 1 - frac - taufrac
+    else:
+        if bool_b:
+            index_list = [b_index, c_index, u_index]
+        else:
+            index_list = [c_index, b_index, u_index]
+        taufrac = None
+
     add_small = 1e-10
-    bscores = np.log(
-        (b_jets[:, b_index] + add_small)
-        / (
-            cfrac * b_jets[:, c_index]
-            + (1 - cfrac) * b_jets[:, u_index]
-            + add_small
-        )
+
+    def frac_template(jet_flav, index=index_list):
+        """
+        Jet flav is the jet flavour used.
+        Index is a list with either:
+        - ["b_index", "c_index", "u_index"]
+        - ["b_index", "c_index", "u_index", "tau_index"]
+        - ["c_index", "b_index", "u_index"]
+        - ["c_index", "b_index", "u_index", "tau_index"]
+        First two for b tagging, second two for c tagging
+        """
+        if len(index) == 4:
+            frac_value = np.log(
+                (jet_flav[:, index[0]] + add_small)
+                / (
+                    frac * jet_flav[:, index[1]]
+                    + ufrac * jet_flav[:, index[2]]
+                    + taufrac * jet_flav[:, index[3]]
+                    + add_small
+                )
+            )
+        else:
+            frac_value = np.log(
+                (jet_flav[:, index[0]] + add_small)
+                / (
+                    frac * jet_flav[:, index[1]]
+                    + ufrac * jet_flav[:, index[2]]
+                    + add_small
+                )
+            )
+        return frac_value
+
+    disc_score = frac_template(main_flavour)
+    cutvalue = np.percentile(disc_score, 100.0 * (1.0 - target_eff))
+    # Starting rejection:
+    # Secondary flavour (c if b_type == "b", b otherwise)
+    second_eff = len(
+        second_flavour[frac_template(second_flavour) > cutvalue]
+    ) / float(len(second_flavour) + add_small)
+    # Light
+    light_eff = len(u_jets[frac_template(u_jets) > cutvalue]) / float(
+        len(u_jets) + add_small
     )
-    cutvalue = np.percentile(bscores, 100.0 * (1.0 - target_beff))
+    # Taus
+    if use_taus:
+        tau_eff = len(tau_jets[frac_template(tau_jets) > cutvalue]) / float(
+            len(tau_jets) + add_small
+        )
 
-    c_eff = len(
-        c_jets[
-            np.log(
-                (c_jets[:, b_index] + add_small)
-                / (
-                    cfrac * c_jets[:, c_index]
-                    + (1 - cfrac) * c_jets[:, u_index]
-                    + add_small
-                )
-            )
-            > cutvalue
-        ]
-    ) / float(len(c_jets) + add_small)
-    u_eff = len(
-        u_jets[
-            np.log(
-                (u_jets[:, b_index] + add_small)
-                / (
-                    cfrac * u_jets[:, c_index]
-                    + (1 - cfrac) * u_jets[:, u_index]
-                    + add_small
-                )
-            )
-            > cutvalue
-        ]
-    ) / float(len(u_jets) + add_small)
+    if second_eff == 0:
+        second_eff = -1
+    if light_eff == 0:
+        light_eff = -1
+    if use_taus and tau_eff == 0:
+        tau_eff = -1
 
-    if c_eff == 0:
-        c_eff = -1
-    if u_eff == 0:
-        u_eff = -1
-    return 1.0 / c_eff, 1.0 / u_eff
+    if use_taus:
+        return 1.0 / second_eff, 1.0 / light_eff, 1.0 / tau_eff
+    else:
+        return 1.0 / second_eff, 1.0 / light_eff
 
 
 class MyCallback(Callback):
@@ -99,17 +156,50 @@ class MyCallback(Callback):
         model_name="test",
         X_valid_add=None,
         Y_valid_add=None,
+        include_taus=False,
+        eval_config=None,
     ):
         self.X_valid = X_valid
         self.Y_valid = Y_valid
         self.X_valid_add = X_valid_add
         self.Y_valid_add = Y_valid_add
         self.result = []
+        self.include_taus = include_taus
         self.log = open(log_file, "w") if log_file else None
         self.verbose = verbose
         self.model_name = model_name
         setup_output_directory(self.model_name)
         self.dict_list = []
+        if eval_config is not None:
+            if (
+                "fc_value" in eval_config
+                and eval_config["fc_value"] is not None
+            ):
+                self.fc_value = eval_config["fc_value"]
+            else:
+                self.fc_value = 0.018
+            if (
+                "fb_value" in eval_config
+                and eval_config["fb_value"] is not None
+            ):
+                self.fb_value = eval_config["fb_value"]
+            else:
+                self.fb_value = 0.2
+            if include_taus:
+                if "ftauforb_value" in eval_config:
+                    self.ftauforb_value = eval_config["ftauforb_value"]
+                else:
+                    self.ftauforb_value = None
+                if "ftauforc_value" in eval_config:
+                    self.ftauforc_value = eval_config["ftauforc_value"]
+                else:
+                    self.ftauforc_value = None
+        else:
+            self.fc_value = 0.018
+            self.fb_value = 0.2
+            if include_taus:
+                self.ftauforb_value = None
+                self.ftauforc_value = None
 
     def on_epoch_end(self, epoch, logs=None):
         self.model.save("%s/model_epoch%i.h5" % (self.model_name, epoch))
@@ -117,15 +207,77 @@ class MyCallback(Callback):
             self.X_valid, self.Y_valid, batch_size=5000
         )
         y_pred = self.model.predict(self.X_valid, batch_size=5000)
-        c_rej, u_rej = GetRejection(y_pred, self.Y_valid)
-        print("c-rej:", c_rej, "u-rej:", u_rej)
+        if self.include_taus:
+            c_rej, u_rej, tau_rej = GetRejection(
+                y_pred,
+                self.Y_valid,
+                frac=self.fc_value,
+                taufrac=self.ftauforb_value,
+                use_taus=self.include_taus,
+            )
+            print("For b: c-rej:", c_rej, "u-rej:", u_rej, "tau-rej:", tau_rej)
+            b_rejC, u_rejC, tau_rejC = GetRejection(
+                y_pred,
+                self.Y_valid,
+                d_type="c",
+                frac=self.fb_value,
+                taufrac=self.ftauforc_value,
+                use_taus=self.include_taus,
+            )
+            print(
+                "For c: b-rej:", b_rejC, "u-rej:", u_rejC, "tau-rej:", tau_rejC
+            )
+        else:
+            c_rej, u_rej = GetRejection(
+                y_pred,
+                self.Y_valid,
+                frac=self.fc_value,
+            )
+            print("For b: c-rej:", c_rej, "u-rej:", u_rej)
+            b_rejC, u_rejC = GetRejection(
+                y_pred,
+                self.Y_valid,
+                d_type="c",
+                frac=self.fb_value,
+            )
+            print("For c: b-rej:", b_rejC, "u-rej:", u_rejC)
         add_loss, add_acc, c_rej_add, u_rej_add = None, None, None, None
+        b_rejC_add, u_rejC_add = None, None
+        if self.include_taus:
+            tau_rej_add, tau_rejC_add = None, None
+
         if self.X_valid_add is not None:
             add_loss, add_acc = self.model.evaluate(
                 self.X_valid_add, self.Y_valid_add, batch_size=5000
             )
             y_pred_add = self.model.predict(self.X_valid_add, batch_size=5000)
-            c_rej_add, u_rej_add = GetRejection(y_pred_add, self.Y_valid_add)
+
+            if self.include_taus:
+                c_rej_add, u_rej_add, tau_rej_add = GetRejection(
+                    y_pred_add,
+                    self.Y_valid_add,
+                    frac=self.fc_value,
+                    taufrac=self.ftauforb_value,
+                    use_taus=self.include_taus,
+                )
+                b_rejC_add, u_rejC_add, tau_rejC_add = GetRejection(
+                    y_pred_add,
+                    self.Y_valid_add,
+                    d_type="c",
+                    frac=self.fb_value,
+                    taufrac=self.ftauforc_value,
+                    use_taus=self.include_taus,
+                )
+            else:
+                c_rej_add, u_rej_add = GetRejection(
+                    y_pred_add, self.Y_valid_add, frac=self.fc_value
+                )
+                b_rejC_add, u_rejC_add = GetRejection(
+                    y_pred_add,
+                    self.Y_valid_add,
+                    d_type="c",
+                    frac=self.fb_value,
+                )
         dict_epoch = {
             "epoch": epoch,
             "loss": logs["loss"],
@@ -134,11 +286,20 @@ class MyCallback(Callback):
             "val_acc": val_acc,
             "c_rej": c_rej,
             "u_rej": u_rej,
+            "b_rejC": b_rejC,
+            "u_rejC": u_rejC,
             "val_loss_add": add_loss if add_loss else None,
             "val_acc_add": add_acc if add_acc else None,
             "c_rej_add": c_rej_add if c_rej_add else None,
             "u_rej_add": u_rej_add if u_rej_add else None,
+            "b_rejC_add": b_rejC_add,
+            "u_rejC_add": u_rejC_add,
         }
+        if self.include_taus:
+            dict_epoch["tau_rej"] = tau_rej
+            dict_epoch["tau_rej_add"] = tau_rej_add
+            dict_epoch["tau_rejC"] = tau_rejC
+            dict_epoch["tau_rejC_add"] = tau_rejC_add
 
         self.dict_list.append(dict_epoch)
         with open("%s/DictFile.json" % self.model_name, "w") as outfile:
@@ -266,6 +427,25 @@ class MyCallbackUmami(Callback):
             self.log.close()
 
 
+def filter_taus(train_set, test_set):
+    """
+    Small code to filter taus away from the training dataset
+    """
+    if test_set.shape[1] > 3:
+        # Use test set, which has the label, to remove those corresponding to taus in both sets
+        # Taus are fourth column (index 3), since label is 15 (after u, c, and b)
+        tau_indices = np.where(test_set[:, 3] == 1)[0]
+        train_set = np.delete(train_set, tau_indices, axis=0)
+        test_set = np.delete(test_set, tau_indices, axis=0)
+        test_set = np.delete(test_set, 3, axis=1)  # delete tau label column
+    else:
+        print(
+            "There does not seem to be any tau data, shape of test is: ",
+            test_set.shape[1],
+        )
+    return (train_set, test_set)
+
+
 def get_jet_feature_indices(variable_header: dict, exclude=None):
     """
     Deletes from the jet samples the keys listed in exclude
@@ -295,15 +475,26 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
 
 
 def GetTestSample(
-    input_file, var_dict, preprocess_config, nJets=int(3e5), exclude=None
+    input_file,
+    var_dict,
+    preprocess_config,
+    nJets=int(3e5),
+    exclude=[],
+    use_taus=False,
 ):
     """
     Apply the scaling and shifting to dataset using numpy
     """
+    print("Input file is ", input_file)
     jets = pd.DataFrame(h5py.File(input_file, "r")["/jets"][:nJets])
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
-    jets.query(f"{variable_config['label']} <= 5", inplace=True)
+    if use_taus:
+        jets.query(
+            f"{variable_config['label']} in [0, 4, 5, 15]", inplace=True
+        )
+    else:
+        jets.query(f"{variable_config['label']} <= 5", inplace=True)
     labels = GetBinaryLabels(jets[variable_config["label"]].values)
     variables, excluded_variables = get_jet_feature_indices(
         variable_config["train_variables"], exclude

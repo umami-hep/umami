@@ -30,6 +30,7 @@ class Configuration(object):
             "test_file",
             "add_test_file",
             "Eval_parameters_validation",
+            "bool_use_taus",
             "comparison_file",
             "add_comparison_file",
         ]

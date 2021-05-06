@@ -2,6 +2,8 @@
 njets: 5e6
 # fraction of ttbar jets wrt. Z'
 ttbar_frac: 0.65
+# Whether to enforce the above ttbar fraction in the final sample
+enforce_ttbar_frac: False
 # outputfiles are split into n iterations
 iterations: 2
 # pT cut for hybrid creation (for light and c-jets)
@@ -10,6 +12,9 @@ pTcut: 2.5e5
 bhad_pTcut: 2.5e5
 # upper pT limit for all jets
 pT_max: False
+# set to true if taus are to be included in preprocessing
+bool_process_taus: False
+sampling_method:  count
 f_z:
   path: Null
   file: Null
@@ -20,6 +25,9 @@ f_tt_cjets:
   path: Null
   file: Null
 f_tt_ujets:
+  path: Null
+  file: Null
+f_tt_taujets:
   path: Null
   file: Null
 outfile_name: Null

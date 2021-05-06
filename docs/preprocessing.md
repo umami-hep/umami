@@ -53,7 +53,7 @@ For the `HadronConeExclTruthLabelID` labelling, the categories `4` and `44` as w
 
 
 ## Ntuple preparation for b-,c- & light-jets
-The jets used for the training and validation of the taggers are taken from ttbar and Z' events.
+The jets used for the training and validation of the taggers are taken from ttbar and Z' events. Taus are now also supported and can be included in the preprocessing by setting the value of `bool_process_taus` to `True` and copying the instructions of the other flavours (replacing, for example, `c` by `tau`).
 
 After the ntuple production the samples have to be further processed using the Umami [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py) script. The preprocessing script is configured using a dedicated configuration file.
 See [`examples/PFlow-Preprocessing.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml) for an example of a preprocessing config file.
@@ -272,6 +272,18 @@ preparation:
         file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
       merge_output: f_tt_ujets
 
+    training_ttbar_taujets:
+      type: ttbar
+      category: taujets
+      n_jets: 12745953
+      parity: even
+      n_split: 5
+      pt_cut: true
+      f_output:
+        path: *sample_path
+        file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
+      merge_output: f_tt_taujets
+
     training_zprime:
       type: zprime
       n_jets: 9593092
@@ -302,12 +314,12 @@ preparation:
         file: MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
 
 # amount of b-jets which are used
-# njets: 1e5
 njets: 5.5e6
 # fraction of ttbar jets wrt. Z'
-ttbar_frac: 0.65
+ttbar_frac: 0.70
+# Whether or not to enforce the ttbar fraction above
+enforce_ttbar_frac: False
 # outputfiles are split into 5
-# iterations: 1
 iterations: 5
 # pT cut for hybrid creation (for light and c-jets)
 pTcut: 2.5e5
@@ -315,6 +327,12 @@ pTcut: 2.5e5
 bhad_pTcut: 2.5e5
 # upper pT limit for all jets
 pT_max: False
+# set to true if taus are to be included in preprocessing
+bool_process_taus: True
+# Define undersampling method used. Valid are "count", "weight", and "count_bcl_weight_tau"
+# Last case only applied if taus are included. Default is "count".
+# See RunUndersampling in preprocessing for more info
+sampling_method: count_bcl_weight_tau
 f_z:
   path: *file_path
   file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
@@ -327,6 +345,9 @@ f_tt_cjets:
 f_tt_ujets:
   path: *file_path
   file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
+f_tt_taujets:
+  path: *file_path
+  file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
 outfile_name: /nfs/dust/atlas/user/pgadow/ftag/data/processed/20201216-defaulttracks/output/PFlow-hybrid_70-test.h5
 plot_name: PFlow_ext-hybrid
 
@@ -387,8 +408,13 @@ Cuts:
         preprocessing.py --config <path to config file> --sample training_ttbar_ujets --tracks --prepare
         preprocessing.py --config <path to config file> --sample training_ttbar_ujets --tracks --merge
         ```
+    * tau-jets
+        ```bash
+        preprocessing.py --config <path to config file> --sample training_ttbar_taujets --tracks --prepare
+        preprocessing.py --config <path to config file> --sample training_ttbar_taujets --tracks --merge
+        ```
 * Z' (pT > 250 GeV) -> extended Z'
-    * b, c, light-jets combined
+    * b, c, light-jets (+taus) combined
         ```bash
         preprocessing.py --config <path to config file> --sample training_zprime --tracks --prepare
         preprocessing.py --config <path to config file> --sample training_zprime --tracks --merge

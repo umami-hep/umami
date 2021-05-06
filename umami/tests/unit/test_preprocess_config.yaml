@@ -10,6 +10,8 @@ preparation:
 njets: 5e6
 # fraction of ttbar jets wrt. Z'
 ttbar_frac: 0.7
+# Whether or not to enforce the ttbar fraction above
+enforce_ttbar_frac: False
 # outputfiles are split into 6
 iterations: 6
 # pT cut for hybrid creation (for light and c-jets)
@@ -18,6 +20,10 @@ pTcut: 1.25e5
 bhad_pTcut: 2.5e5
 # upper pT limit for all jets
 pT_max: 3e6
+# Whether to process taus
+bool_process_taus: False
+# Sampling method
+sampling_method: count
 f_z:
   path: *file_path
   file: dummy.h5
@@ -30,11 +36,15 @@ f_tt_cjets:
 f_tt_ujets:
   path: *file_path
   file: dummy.h5
+f_tt_taujets:
+  path: *file_path
+  file: dummy.h5
 outfile_name: dummy_out.h5
 plot_name: dummy_plot
 
 # Dictfile for the scaling and shifting (json)
 dict_file: "test.json"
+
 
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=

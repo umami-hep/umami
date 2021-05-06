@@ -49,7 +49,7 @@ class UnderSamplingTestCase(unittest.TestCase):
             np.zeros((1000, 2)), columns=["pt_btagJes", "absEta_btagJes"]
         )
         down_s = UnderSampling(df_zeros, df_zeros, df_zeros)
-        b_ind, c_ind, u_ind = down_s.GetIndices()
+        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
         self.assertEqual(len(b_ind), len(df_zeros))
 
     def test_underflow(self):
@@ -57,7 +57,7 @@ class UnderSamplingTestCase(unittest.TestCase):
             -1 * np.ones((1000, 2)), columns=["pt_btagJes", "absEta_btagJes"]
         )
         down_s = UnderSampling(df_minus_ones, df_minus_ones, df_minus_ones)
-        b_ind, c_ind, u_ind = down_s.GetIndices()
+        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
         self.assertEqual(c_ind.size, 0)
         self.assertEqual(u_ind.size, 0)
@@ -67,14 +67,14 @@ class UnderSamplingTestCase(unittest.TestCase):
             1e10 * np.ones((1000, 2)), columns=["pt_btagJes", "absEta_btagJes"]
         )
         down_s = UnderSampling(df_large, df_large, df_large)
-        b_ind, c_ind, u_ind = down_s.GetIndices()
+        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
         self.assertEqual(c_ind.size, 0)
         self.assertEqual(u_ind.size, 0)
 
     def test_equal_length(self):
         down_s = UnderSampling(self.df_bjets, self.df_cjets, self.df_ujets)
-        b_ind, c_ind, u_ind = down_s.GetIndices()
+        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
         self.assertEqual(len(b_ind), len(c_ind))
         self.assertEqual(len(b_ind), len(u_ind))
 

@@ -62,6 +62,7 @@ def MakePresentationPlots(
     bjets,
     ujets,
     cjets,
+    taujets=None,
     plots_path="plots/",
     binning={
         "pt_btagJes": np.linspace(10000, 2000000, 200),
@@ -90,24 +91,36 @@ def MakePresentationPlots(
         N_b = len(bjets[var])
         N_c = len(cjets[var])
         N_u = len(ujets[var])
+        if taujets is not None:
+            N_tau = len(taujets[var])
 
+        divide_val = 1
+        if var == "pt_btagJes":
+            divide_val = 1000
         # Calculate Binning and counts for plotting
         counts_b, Bins_b = np.histogram(
-            bjets[var] / 1000,
+            bjets[var] / divide_val,
             bins=binning[var],
         )
 
         # Calculate Binning and counts for plotting
         counts_c, Bins_c = np.histogram(
-            cjets[var] / 1000,
+            cjets[var] / divide_val,
             bins=binning[var],
         )
 
         # Calculate Binning and counts for plotting
         counts_u, Bins_u = np.histogram(
-            ujets[var] / 1000,
+            ujets[var] / divide_val,
             bins=binning[var],
         )
+
+        # Calculate Binning and counts for plotting
+        if taujets is not None:
+            counts_tau, Bins_tau = np.histogram(
+                taujets[var] / divide_val,
+                bins=binning[var],
+            )
 
         # Calculate the bin centers
         bincentres = [
@@ -126,16 +139,20 @@ def MakePresentationPlots(
         unc_u = np.sqrt(counts_u) / N_u
         band_lower_u = counts_u / N_u - unc_u
 
+        # Calculate poisson uncertainties and lower bands
+        if taujets is not None:
+            unc_tau = np.sqrt(counts_tau) / N_tau
+            band_lower_tau = counts_tau / N_tau - unc_tau
+
         applyATLASstyle(mtp)
         plt.figure()
-
         plt.hist(
             x=Bins_b[:-1],
             bins=Bins_b,
             weights=(counts_b / N_b),
             histtype="step",
             linewidth=1.0,
-            color="C0",
+            color="#1f77b4",
             stacked=False,
             fill=False,
             label=r"$b$-jets",
@@ -158,7 +175,7 @@ def MakePresentationPlots(
             weights=(counts_c / N_c),
             histtype="step",
             linewidth=1.0,
-            color="C1",
+            color="#ff7f0e",
             stacked=False,
             fill=False,
             label=r"$c$-jets",
@@ -181,7 +198,7 @@ def MakePresentationPlots(
             weights=(counts_u / N_u),
             histtype="step",
             linewidth=1.0,
-            color="C2",
+            color="#2ca02c",
             stacked=False,
             fill=False,
             label=r"light-jets",
@@ -197,6 +214,30 @@ def MakePresentationPlots(
             linewidth=0,
             edgecolor="#666666",
         )
+
+        if taujets is not None:
+            plt.hist(
+                x=Bins_tau[:-1],
+                bins=Bins_tau,
+                weights=(counts_tau / N_tau),
+                histtype="step",
+                linewidth=1.0,
+                color="#7c5295",
+                stacked=False,
+                fill=False,
+                label=r"tau-jets",
+            )
+
+            plt.hist(
+                x=bincentres,
+                bins=Bins_tau,
+                bottom=band_lower_tau,
+                weights=unc_tau * 2,
+                fill=False,
+                hatch="/////",
+                linewidth=0,
+                edgecolor="#666666",
+            )
 
         if Log is True:
             plt.yscale("log")
@@ -245,6 +286,7 @@ def MakePlots(
     bjets,
     ujets,
     cjets,
+    taujets=None,
     plot_name="plots/InfoPlot.pdf",
     binning={
         "pt_btagJes": np.linspace(10000, 2000000, 200),
@@ -267,28 +309,81 @@ def MakePlots(
     # print(pd.DataFrame(bjets)["pt_btagJes"])
     # print(bjets["eta_btagJes"])
 
+    bool_plot_taujets = taujets is not None
+    fig = plt.figure()
+    heights = [3, 1]
+    spec = fig.add_gridspec(ncols=2, nrows=2, height_ratios=heights)
     for i, var in enumerate(vars):
-        plt.subplot(1, 2, i + 1)
-        plt.ticklabel_format(
+        # plt.subplot(2, 2, i + 1)
+        ax = fig.add_subplot(spec[0, i])
+
+        ax.ticklabel_format(
             style="sci", axis="x", scilimits=(0, 3), useMathText=True
         )
-        plt.hist(
-            [ujets[var], cjets[var], bjets[var]],
-            binning[var],
-            # weights=[arr_u['weight'], arr_c['weight'],
-            #          np.ones(len(arr_b))],
-            # color=['#4854C3', '#97BD8A', '#D20803'],
-            # color=['#2ca02c', '#1f77b4', '#d62728'],
-            color=["#2ca02c", "#ff7f0e", "#1f77b4"],
-            # color=['forestgreen', 'mediumblue', 'r'],alpha=0.8,
-            label=["ujets", "cjets", "bjets"],
-            histtype="step",
-            stacked=False,
-            fill=False,
+        if bool_plot_taujets:
+            array_entries, bins, _ = ax.hist(
+                [taujets[var], ujets[var], cjets[var], bjets[var]],
+                binning[var],
+                color=["#7c5295", "#2ca02c", "#ff7f0e", "#1f77b4"],
+                label=["tau-jets", "ujets", "cjets", "bjets"],
+                histtype="step",
+                stacked=False,
+                fill=False,
+            )
+        else:
+            array_entries, bins, _ = ax.hist(
+                [ujets[var], cjets[var], bjets[var]],
+                binning[var],
+                color=["#2ca02c", "#ff7f0e", "#1f77b4"],
+                label=["ujets", "cjets", "bjets"],
+                histtype="step",
+                stacked=False,
+                fill=False,
+            )
+        ax.set_yscale("log")
+        ax.set_title(var)
+        ax.legend()
+
+        # Do ratios now:
+        ax = fig.add_subplot(spec[1, i])
+        ax.ticklabel_format(
+            style="sci", axis="x", scilimits=(0, 3), useMathText=True
         )
-        plt.yscale("log")
-        plt.title(var)
-        plt.legend()
+        b_data = array_entries[-1]
+        x_error = np.zeros((2, len(b_data)))
+        x_error[1, :] = bins[1] - bins[0]
+
+        if bool_plot_taujets:
+            with np.errstate(divide="ignore", invalid="ignore"):
+                ratio_taub = array_entries[0].astype(float) / b_data
+                ratio_ub = array_entries[1].astype(float) / b_data
+                ratio_cb = array_entries[2].astype(float) / b_data
+                ratio_ub[~np.isfinite(ratio_ub)] = 1000
+                ratio_cb[~np.isfinite(ratio_cb)] = 1000
+                ratio_taub[~np.isfinite(ratio_taub)] = 1000
+            ax.errorbar(
+                x=bins[:-1],
+                y=ratio_taub,
+                xerr=x_error,
+                fmt="none",
+                ecolor="#7c5295",
+            )
+        else:
+            with np.errstate(divide="ignore", invalid="ignore"):
+                ratio_ub = array_entries[0].astype(float) / b_data
+                ratio_cb = array_entries[1].astype(float) / b_data
+                ratio_ub[~np.isfinite(ratio_ub)] = 1000
+                ratio_cb[~np.isfinite(ratio_cb)] = 1000
+        ax.errorbar(
+            x=bins[:-1], y=ratio_ub, xerr=x_error, fmt="none", ecolor="#2ca02c"
+        )
+        ax.errorbar(
+            x=bins[:-1], y=ratio_cb, xerr=x_error, fmt="none", ecolor="#ff7f0e"
+        )
+        ax.set_ylabel("Ratio to b")
+        ax.set_ylim(bottom=-0.5, top=4.0)
+        ax.set_yticks([0, 1, 2, 3])
+        ax.grid(True)
     plt.tight_layout()
     if not os.path.exists(os.path.abspath("./plots")):
         os.makedirs(os.path.abspath("./plots"))

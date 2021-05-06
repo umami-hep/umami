@@ -13,6 +13,7 @@ from keras.utils import CustomObjectScope
 import umami.train_tools as utt
 from umami.evaluation_tools.PlottingFunctions import (
     GetScore,
+    GetScoreC,
     discriminant_output_shape,
     get_gradients,
     getDiscriminant,
@@ -167,28 +168,28 @@ def EvaluateModel(
 
     for eff in b_effs:
         crej_i, urej_i = utt.GetRejection(
-            pred_umami, Y_test, target_beff=eff, cfrac=args.cfrac
+            pred_umami, Y_test, target_eff=eff, frac=args.cfrac
         )
         crej_arr_umami.append(crej_i)
         urej_arr_umami.append(urej_i)
         crej_i, urej_i = utt.GetRejection(
-            pred_dips, Y_test, target_beff=eff, cfrac=args.cfrac
+            pred_dips, Y_test, target_eff=eff, frac=args.cfrac
         )
         crej_arr_dips.append(crej_i)
         urej_arr_dips.append(urej_i)
         crej_i, urej_i = utt.GetRejection(
             df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
             Y_test,
-            target_beff=eff,
-            cfrac=0.018,
+            target_eff=eff,
+            frac=0.018,
         )
         crej_arr_dl1r.append(crej_i)
         urej_arr_dl1r.append(urej_i)
         crej_i, urej_i = utt.GetRejection(
             df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
             Y_test,
-            target_beff=eff,
-            cfrac=0.08,
+            target_eff=eff,
+            frac=0.08,
         )
         crej_arr_rnnip.append(crej_i)
         urej_arr_rnnip.append(urej_i)
@@ -207,12 +208,12 @@ def EvaluateModel(
 
     for fc in fc_values:
         crej_i, urej_i = utt.GetRejection(
-            pred_umami, Y_test, target_beff=args.beff, cfrac=fc
+            pred_umami, Y_test, target_eff=args.beff, frac=fc
         )
         crej_arr_umami_cfrac.append(crej_i)
         urej_arr_umami_cfrac.append(urej_i)
         crej_i, urej_i = utt.GetRejection(
-            pred_dips, Y_test, target_beff=args.beff, cfrac=fc
+            pred_dips, Y_test, target_eff=args.beff, frac=fc
         )
         crej_arr_dips_cfrac.append(crej_i)
         urej_arr_dips_cfrac.append(urej_i)
@@ -220,8 +221,8 @@ def EvaluateModel(
         crej_dl1r, urej_dl1r = utt.GetRejection(
             df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
             Y_test,
-            target_beff=args.beff,
-            cfrac=fc,
+            target_eff=args.beff,
+            frac=fc,
         )
         crej_arr_dl1r_cfrac.append(crej_dl1r)
         urej_arr_dl1r_cfrac.append(urej_dl1r)
@@ -229,8 +230,8 @@ def EvaluateModel(
         crej_rnnip, urej_rnnip = utt.GetRejection(
             df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
             Y_test,
-            target_beff=args.beff,
-            cfrac=fc,
+            target_eff=args.beff,
+            frac=fc,
         )
         crej_arr_rnnip_cfrac.append(crej_rnnip)
         urej_arr_rnnip_cfrac.append(urej_rnnip)
@@ -378,23 +379,23 @@ def EvaluateModelDips(
 
     for eff in b_effs:
         crej_i, urej_i = utt.GetRejection(
-            pred_dips, Y_test, target_beff=eff, cfrac=args.cfrac
+            pred_dips, Y_test, target_eff=eff, frac=args.cfrac
         )
         crej_arr_dips.append(crej_i)
         urej_arr_dips.append(urej_i)
         crej_i, urej_i = utt.GetRejection(
             df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
             Y_test,
-            target_beff=eff,
-            cfrac=0.018,
+            target_eff=eff,
+            frac=0.018,
         )
         crej_arr_dl1r.append(crej_i)
         urej_arr_dl1r.append(urej_i)
         crej_i, urej_i = utt.GetRejection(
             df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
             Y_test,
-            target_beff=eff,
-            cfrac=0.08,
+            target_eff=eff,
+            frac=0.08,
         )
         crej_arr_rnnip.append(crej_i)
         urej_arr_rnnip.append(urej_i)
@@ -411,7 +412,7 @@ def EvaluateModelDips(
 
     for fc in fc_values:
         crej_i, urej_i = utt.GetRejection(
-            pred_dips, Y_test, target_beff=args.beff, cfrac=fc
+            pred_dips, Y_test, target_eff=args.beff, frac=fc
         )
         crej_arr_dips_cfrac.append(crej_i)
         urej_arr_dips_cfrac.append(urej_i)
@@ -419,8 +420,8 @@ def EvaluateModelDips(
         crej_dl1r, urej_dl1r = utt.GetRejection(
             df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
             Y_test,
-            target_beff=args.beff,
-            cfrac=fc,
+            target_eff=args.beff,
+            frac=fc,
         )
         crej_arr_dl1r_cfrac.append(crej_dl1r)
         urej_arr_dl1r_cfrac.append(urej_dl1r)
@@ -428,8 +429,8 @@ def EvaluateModelDips(
         crej_rnnip, urej_rnnip = utt.GetRejection(
             df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
             Y_test,
-            target_beff=args.beff,
-            cfrac=fc,
+            target_eff=args.beff,
+            frac=fc,
         )
         crej_arr_rnnip_cfrac.append(crej_rnnip)
         urej_arr_rnnip_cfrac.append(urej_rnnip)
@@ -546,19 +547,48 @@ def EvaluateModelDL1(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
-    print("Evaluating", model_file)
+
+    # Set fractions
+    fc_value = train_config.Eval_parameters_validation["fc_value"]
+    fb_value = train_config.Eval_parameters_validation["fb_value"]
+    if "ftauforb_value" in train_config.Eval_parameters_validation:
+        ftauforb_value = train_config.Eval_parameters_validation[
+            "ftauforb_value"
+        ]
+    else:
+        ftauforb_value = None
+    if "ftauforc_value" in train_config.Eval_parameters_validation:
+        ftauforc_value = train_config.Eval_parameters_validation[
+            "ftauforc_value"
+        ]
+    else:
+        ftauforc_value = None
+
+    # Manage taus
+    bool_use_taus = (
+        train_config.bool_use_taus and preprocess_config.bool_process_taus
+    )
+    if bool_use_taus:
+        print("Evaluating {} with taus".format(model_file))
+    else:
+        print("Evaluating", model_file)
+        ftauforc_value = None
+        ftauforb_value = None
+
     X_test, Y_test = utt.GetTestSample(
         input_file=test_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
         nJets=args.nJets,
+        use_taus=bool_use_taus,
     )
     # with CustomObjectScope({'Sum': Sum}):
     model = load_model(model_file)
 
     pred = model.predict(X_test, batch_size=5000, verbose=0)
     y_true = np.argmax(Y_test, axis=1)
-    b_index, c_index, u_index = 2, 1, 0
+    tau_index, b_index, c_index, u_index = 3, 2, 1, 0
+
     variables = [
         "absEta_btagJes",
         "pt_btagJes",
@@ -570,25 +600,119 @@ def EvaluateModelDL1(
         "rnnip_pu",
         "HadronConeExclTruthLabelID",
     ]
+    add_variables = train_config.Eval_parameters_validation[
+        "add_variables_eval"
+    ]
+    add_variables_available = None
+    if add_variables is not None:
+        available_variables = list(
+            pd.DataFrame(h5py.File(test_file, "r")["/jets"][:1][:]).columns
+        )
+        add_variables_available = []
+        for item in add_variables:
+            if item in available_variables:
+                add_variables_available.append(item)
+            else:
+                print("Variable '{}' not available".format(item))
+        variables.extend(add_variables_available)
+
     df = pd.DataFrame(
         h5py.File(test_file, "r")["/jets"][: args.nJets][variables]
     )
     print("Jets used for testing:", len(df))
-    df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-    df_discs = pd.DataFrame(
-        {
-            "pb": pred[:, b_index],
-            "pc": pred[:, c_index],
-            "pu": pred[:, u_index],
-            "pt": df["pt_btagJes"],
-            "eta": df["absEta_btagJes"],
-            "labels": y_true,
-            "disc_DL1r": GetScore(df["DL1r_pb"], df["DL1r_pc"], df["DL1r_pu"]),
-            "disc_rnnip": GetScore(
-                df["rnnip_pb"], df["rnnip_pc"], df["rnnip_pu"], fc=0.08
-            ),
-        }
-    )
+    if bool_use_taus:
+        df.query("HadronConeExclTruthLabelID in [0, 4, 5, 15]", inplace=True)
+        if "DL1r_ptau" not in df:
+            df["DL1r_ptau"] = 0
+        if "rnnip_ptau" not in df:
+            df["rnnip_ptau"] = 0
+        df_discs = pd.DataFrame(
+            {
+                "ptau": pred[:, tau_index],
+                "pb": pred[:, b_index],
+                "pc": pred[:, c_index],
+                "pu": pred[:, u_index],
+                "pt": df["pt_btagJes"],
+                "eta": df["absEta_btagJes"],
+                "labels": y_true,
+                "disc_DL1r": GetScore(
+                    df["DL1r_pb"],
+                    df["DL1r_pc"],
+                    df["DL1r_pu"],
+                    df["DL1r_ptau"],
+                    fc=fc_value,
+                    ftau=ftauforb_value,
+                ),
+                "disc_DL1rC": GetScoreC(
+                    df["DL1r_pb"],
+                    df["DL1r_pc"],
+                    df["DL1r_pu"],
+                    df["DL1r_ptau"],
+                    fb=fb_value,
+                    ftau=ftauforc_value,
+                ),
+                "disc_rnnip": GetScore(
+                    df["rnnip_pb"],
+                    df["rnnip_pc"],
+                    df["rnnip_pu"],
+                    df["rnnip_ptau"],
+                    fc=fc_value,
+                    ftau=ftauforb_value,
+                ),
+                "disc_rnnipC": GetScoreC(
+                    df["rnnip_pb"],
+                    df["rnnip_pc"],
+                    df["rnnip_pu"],
+                    df["rnnip_ptau"],
+                    fb=fb_value,
+                    ftau=ftauforc_value,
+                ),
+            }
+        )
+    else:
+        df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
+        df_discs = pd.DataFrame(
+            {
+                "pb": pred[:, b_index],
+                "pc": pred[:, c_index],
+                "pu": pred[:, u_index],
+                "pt": df["pt_btagJes"],
+                "eta": df["absEta_btagJes"],
+                "labels": y_true,
+                "disc_DL1r": GetScore(
+                    df["DL1r_pb"],
+                    df["DL1r_pc"],
+                    df["DL1r_pu"],
+                    fc=fc_value,
+                    ftau=ftauforb_value,
+                ),
+                "disc_DL1rC": GetScoreC(
+                    df["DL1r_pb"],
+                    df["DL1r_pc"],
+                    df["DL1r_pu"],
+                    fb=fb_value,
+                    ftau=ftauforc_value,
+                ),
+                "disc_rnnip": GetScore(
+                    df["rnnip_pb"],
+                    df["rnnip_pc"],
+                    df["rnnip_pu"],
+                    fc=fc_value,
+                    ftau=ftauforb_value,
+                ),
+                "disc_rnnipC": GetScoreC(
+                    df["rnnip_pb"],
+                    df["rnnip_pc"],
+                    df["rnnip_pu"],
+                    fb=fb_value,
+                    ftau=ftauforc_value,
+                ),
+            }
+        )
+    if add_variables_available is not None:
+        for item in add_variables_available:
+            print("Adding ", item)
+            df_discs[item] = df[item]
 
     os.system(f"mkdir -p {train_config.model_name}/results")
     df_discs.to_hdf(
@@ -598,53 +722,188 @@ def EvaluateModelDL1(
 
     print("calculating rejections per efficiency")
     b_effs = np.linspace(0.39, 1, 150)
+    c_effs = np.linspace(0.09, 1, 150)
     crej_arr = []
     urej_arr = []
     crej_arr_dl1r = []
     urej_arr_dl1r = []
     crej_arr_rnnip = []
     urej_arr_rnnip = []
+    brej_arrC = []
+    urej_arrC = []
+    brej_arr_dl1rC = []
+    urej_arr_dl1rC = []
+    brej_arr_rnnipC = []
+    urej_arr_rnnipC = []
+    if bool_use_taus:
+        taurej_arr = []
+        taurej_arr_dl1r = []
+        taurej_arr_rnnip = []
+        taurej_arrC = []
+        taurej_arr_dl1rC = []
+        taurej_arr_rnnipC = []
 
-    for eff in b_effs:
-        crej_i, urej_i = utt.GetRejection(
-            pred, Y_test, target_beff=eff, cfrac=0.018
-        )
+    for ind_eff, b_eff in enumerate(b_effs):
+        c_eff = c_effs[ind_eff]
+        if bool_use_taus:
+            crej_i, urej_i, taurej_i = utt.GetRejection(
+                pred,
+                Y_test,
+                target_eff=b_eff,
+                frac=fc_value,
+                taufrac=ftauforb_value,
+                use_taus=bool_use_taus,
+            )
+            brej_iC, urej_iC, taurej_iC = utt.GetRejection(
+                pred,
+                Y_test,
+                d_type="c",
+                target_eff=c_eff,
+                frac=fb_value,
+                taufrac=ftauforc_value,
+                use_taus=bool_use_taus,
+            )
+            taurej_arr.append(taurej_i)
+            taurej_arrC.append(taurej_iC)
+        else:
+            crej_i, urej_i = utt.GetRejection(
+                pred, Y_test, target_eff=b_eff, frac=fc_value
+            )
+            brej_iC, urej_iC = utt.GetRejection(
+                pred, Y_test, d_type="c", target_eff=c_eff, frac=fb_value
+            )
         crej_arr.append(crej_i)
         urej_arr.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(
-            df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
-            Y_test,
-            target_beff=eff,
-            cfrac=0.018,
-        )
+        brej_arrC.append(brej_iC)
+        urej_arrC.append(urej_iC)
+
+        if bool_use_taus:
+            crej_i, urej_i, taurej_i = utt.GetRejection(
+                df[["DL1r_pu", "DL1r_pc", "DL1r_pb", "DL1r_ptau"]].values,
+                Y_test,
+                target_eff=b_eff,
+                frac=fc_value,
+                taufrac=ftauforb_value,
+                use_taus=bool_use_taus,
+            )
+            brej_iC, urej_iC, taurej_iC = utt.GetRejection(
+                df[["DL1r_pu", "DL1r_pc", "DL1r_pb", "DL1r_ptau"]].values,
+                Y_test,
+                d_type="c",
+                target_eff=c_eff,
+                frac=fb_value,
+                taufrac=ftauforc_value,
+                use_taus=bool_use_taus,
+            )
+            taurej_arr_dl1r.append(taurej_i)
+            taurej_arr_dl1rC.append(taurej_iC)
+        else:
+            crej_i, urej_i = utt.GetRejection(
+                df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
+                Y_test,
+                target_eff=b_eff,
+                frac=fc_value,
+            )
+            brej_iC, urej_iC = utt.GetRejection(
+                df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
+                Y_test,
+                d_type="c",
+                target_eff=c_eff,
+                frac=fb_value,
+            )
         crej_arr_dl1r.append(crej_i)
         urej_arr_dl1r.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(
-            df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
-            Y_test,
-            target_beff=eff,
-            cfrac=0.08,
-        )
+        brej_arr_dl1rC.append(brej_iC)
+        urej_arr_dl1rC.append(urej_iC)
+
+        if bool_use_taus:
+            crej_i, urej_i, taurej_i = utt.GetRejection(
+                df[["rnnip_pu", "rnnip_pc", "rnnip_pb", "rnnip_ptau"]].values,
+                Y_test,
+                target_eff=b_eff,
+                frac=fc_value,
+                taufrac=ftauforb_value,
+                use_taus=bool_use_taus,
+            )
+            brej_iC, urej_iC, taurej_iC = utt.GetRejection(
+                df[["rnnip_pu", "rnnip_pc", "rnnip_pb", "rnnip_ptau"]].values,
+                Y_test,
+                d_type="c",
+                target_eff=c_eff,
+                frac=fb_value,
+                taufrac=ftauforc_value,
+                use_taus=bool_use_taus,
+            )
+            taurej_arr_rnnip.append(taurej_i)
+            taurej_arr_rnnipC.append(taurej_iC)
+        else:
+            crej_i, urej_i = utt.GetRejection(
+                df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
+                Y_test,
+                target_eff=b_eff,
+                frac=fc_value,
+            )
+            brej_iC, urej_iC = utt.GetRejection(
+                df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
+                Y_test,
+                d_type="c",
+                target_eff=c_eff,
+                frac=fb_value,
+            )
         crej_arr_rnnip.append(crej_i)
         urej_arr_rnnip.append(urej_i)
+        brej_arr_rnnipC.append(brej_iC)
+        urej_arr_rnnipC.append(urej_iC)
 
-    df_eff_rej = pd.DataFrame(
-        {
-            "beff": b_effs,
-            "umami_crej": crej_arr,
-            "umami_urej": urej_arr,
-            "dl1r_crej": crej_arr_dl1r,
-            "dl1r_urej": urej_arr_dl1r,
-            "rnnip_crej": crej_arr_rnnip,
-            "rnnip_urej": urej_arr_rnnip,
-        }
-    )
+    if bool_use_taus:
+        df_eff_rej = pd.DataFrame(
+            {
+                "beff": b_effs,
+                "ceff": c_effs,
+                "umami_crej": crej_arr,
+                "umami_urej": urej_arr,
+                "umami_taurej": taurej_arr,
+                "umami_brejC": brej_arrC,
+                "umami_urejC": urej_arrC,
+                "umami_taurejC": taurej_arrC,
+                "dl1r_crej": crej_arr_dl1r,
+                "dl1r_urej": urej_arr_dl1r,
+                "dl1r_taurej": taurej_arr_dl1r,
+                "dl1r_brejC": brej_arr_dl1rC,
+                "dl1r_urejC": urej_arr_dl1rC,
+                "dl1r_taurejC": taurej_arr_dl1rC,
+                "rnnip_crej": crej_arr_rnnip,
+                "rnnip_urej": urej_arr_rnnip,
+                "rnnip_taurej": taurej_arr_rnnip,
+                "rnnip_brejC": brej_arr_rnnipC,
+                "rnnip_urejC": urej_arr_rnnipC,
+                "rnnip_taurejC": taurej_arr_rnnipC,
+            }
+        )
+    else:
+        df_eff_rej = pd.DataFrame(
+            {
+                "beff": b_effs,
+                "ceff": c_effs,
+                "umami_crej": crej_arr,
+                "umami_urej": urej_arr,
+                "umami_brejC": brej_arrC,
+                "umami_urejC": urej_arrC,
+                "dl1r_crej": crej_arr_dl1r,
+                "dl1r_urej": urej_arr_dl1r,
+                "dl1r_brejC": brej_arr_dl1rC,
+                "dl1r_urejC": urej_arr_dl1rC,
+                "rnnip_crej": crej_arr_rnnip,
+                "rnnip_urej": urej_arr_rnnip,
+                "rnnip_brejC": brej_arr_rnnipC,
+                "rnnip_urejC": urej_arr_rnnipC,
+            }
+        )
     df_eff_rej.to_hdf(
         f"{train_config.model_name}/results/results-rej_per_eff"
         f"-{args.epoch}.h5",
         data_set_name,
     )
-
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binominal errors
     f = h5py.File(
@@ -654,6 +913,76 @@ def EvaluateModelDL1(
     )
     f.attrs["N_test"] = len(df)
     f.close()
+
+    if not bool_use_taus:
+        return
+
+    print("calculating rejections per frac for beff of 70% and ceff of 40%")
+    target_beff = 0.7
+    target_ceff = 0.4
+    # The first two must have same number of element
+    c_fracs = np.linspace(0.005, 0.1, 21)
+    b_fracs = np.linspace(0.1, 0.3, 21)
+    tau_fracs = np.linspace(0.005, 0.9, 41)
+    crej_arr = []
+    urej_arr = []
+    taurej_arr = []
+    brejC_arr = []
+    urejC_arr = []
+    taurejC_arr = []
+    fraction_taus = []
+    fraction_c = []
+    fraction_b = []
+    for ind, c_frac in enumerate(c_fracs):
+        b_frac = b_fracs[ind]
+        if ind % (len(c_fracs) // 5) == 0:
+            print("{} % done".format(ind // (len(c_fracs) // 5) * 20))
+        for tau_frac in tau_fracs:
+            crej_i, urej_i, taurej_i = utt.GetRejection(
+                pred,
+                Y_test,
+                target_eff=target_beff,
+                frac=c_frac,
+                taufrac=tau_frac,
+                use_taus=bool_use_taus,
+            )
+            brejC_i, urejC_i, taurejC_i = utt.GetRejection(
+                pred,
+                Y_test,
+                d_type="c",
+                target_eff=target_ceff,
+                frac=b_frac,
+                taufrac=tau_frac,
+                use_taus=bool_use_taus,
+            )
+            taurej_arr.append(taurej_i)
+            crej_arr.append(crej_i)
+            urej_arr.append(urej_i)
+            taurejC_arr.append(taurejC_i)
+            brejC_arr.append(brejC_i)
+            urejC_arr.append(urejC_i)
+            fraction_taus.append(tau_frac)
+            fraction_c.append(c_frac)
+            fraction_b.append(b_frac)
+
+    df_frac_rej = pd.DataFrame(
+        {
+            "fraction_c": fraction_c,
+            "fraction_b": fraction_b,
+            "fraction_taus": fraction_taus,
+            "umami_crej": crej_arr,
+            "umami_urej": urej_arr,
+            "umami_taurej": taurej_arr,
+            "umami_brejC": brejC_arr,
+            "umami_urejC": urejC_arr,
+            "umami_taurejC": taurejC_arr,
+        }
+    )
+    df_frac_rej.to_hdf(
+        f"{train_config.model_name}/results/results-rej_per_frac"
+        f"-{args.epoch}.h5",
+        data_set_name,
+    )
 
 
 if __name__ == "__main__":

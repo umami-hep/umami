@@ -26,7 +26,7 @@ def get_jets(
     :param n_jets: number of jets to be extracted from the ntuple
     :param sample_type: type of the sample (can be either 'ttbar' or 'zprime')
     :param sample_category: relevant for ttbar sample, type of jet flavour
-                            (can be 'bjets', 'cjets', or 'ujets')
+                            (can be 'bjets', 'cjets', 'ujets', or 'taujets')
     :param eventnumber_parity: choose to select only jets with associated
                                event number which is either 'even' or 'odd',
                                if not specified select all jets
@@ -64,6 +64,8 @@ def get_jets(
         category_rejection = jets["HadronConeExclTruthLabelID"] != 4
     elif sample_type == "ttbar" and sample_category == "ujets":
         category_rejection = jets["HadronConeExclTruthLabelID"] != 0
+    elif sample_type == "ttbar" and sample_category == "taujets":
+        category_rejection = jets["HadronConeExclTruthLabelID"] != 15
     else:
         category_rejection = False
 

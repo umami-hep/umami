@@ -91,8 +91,8 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
         )
 
         x_values = "beff"
-        if "x_values_key" in model_config:
-            x_values = model_config["x_values_key"]
+        if "x_values_key" in plot_config:
+            x_values = plot_config["x_values_key"]
         teffs.append(model_config["df_results_eff_rej"][x_values])
         beffs.append(model_config["rej_rates"])
         labels.append(model_config["label"])
@@ -132,6 +132,7 @@ def plot_ROCvsVar(plot_name, plot_config, eval_params, eval_file_dir):
     """
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
+    bool_use_taus = eval_params["bool_use_taus"]
     if ("evaluation_file" not in plot_config) or (
         plot_config["evaluation_file"] is None
     ):
@@ -162,11 +163,25 @@ def plot_ROCvsVar(plot_name, plot_config, eval_params, eval_file_dir):
         print("Forgot to specify the prediction labels")
 
     fc = 0.018
-    if "fc" in plot_config:
+    if "fc" in plot_config and plot_config["fc"] is not None:
         fc = plot_config["fc"]
 
+    if "ptau" in plot_config["prediction_labels"] and bool_use_taus:
+        bool_use_taus = True
+        ftau = 1 - fc
+        if "ftau" in plot_config and plot_config["ftau"] is not None:
+            ftau = plot_config["ftau"]
+    else:
+        bool_use_taus = False
+        if "ptau" in plot_config["prediction_labels"]:
+            plot_config["prediction_labels"].remove("ptau")
+        ftau = None
+
+    # Compute the score
     df_results["bscore"] = uet.GetScore(
-        *[df_results[pX] for pX in plot_config["prediction_labels"]], fc=fc
+        *[df_results[pX] for pX in plot_config["prediction_labels"]],
+        fc=fc,
+        ftau=ftau,
     )
 
     max_given, min_given, nbin_given = False, False, False
@@ -236,12 +251,10 @@ def plot_ROCvsVar(plot_name, plot_config, eval_params, eval_file_dir):
         )
     else:
         cutvalue = np.percentile(
-            df_results["bscore"],
+            df_results[df_results["labels"] == 2]["bscore"],
             100.0 * (1.0 - plot_config["efficiency"] / 100.0),
         )
-        df_results["btag"] = (
-            df_results[plot_config["score_variable"]] > cutvalue
-        ) * 1
+        df_results["btag"] = (df_results["bscore"] > cutvalue) * 1
 
     if "xticksval" in plot_config:
         xticksval = plot_config["xticksval"]
@@ -253,7 +266,9 @@ def plot_ROCvsVar(plot_name, plot_config, eval_params, eval_file_dir):
         df=df_results,
         variable=plot_config["variable"],
         var_bins=var_bins,
+        include_taus=bool_use_taus,
         fc=fc,
+        ftau=ftau,
         efficiency=plot_config["efficiency"],
         xticksval=xticksval,
         xticks=xticks,
@@ -267,6 +282,7 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
+    bool_use_taus = eval_params["bool_use_taus"]
 
     if ("evaluation_file" not in plot_config) or (
         plot_config["evaluation_file"] is None
@@ -275,7 +291,6 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
             eval_file_dir + f"/results-{eval_epoch}.h5",
             plot_config["data_set_name"],
         )
-
     else:
         df_results = pd.read_hdf(
             plot_config["evaluation_file"], plot_config["data_set_name"]
@@ -288,7 +303,14 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     cm = confusion_matrix(
         y_target=y_target, y_predicted=y_predicted, binary=False
     )
-    class_names = ["b", "c", "light"]
+    if bool_use_taus:
+        class_names = ["light", "c", "b", r"$\tau$"]
+    else:
+        class_names = [
+            "light",
+            "c",
+            "b",
+        ]
     mlxtend_plot_cm(
         conf_mat=cm,
         colorbar=True,
@@ -308,6 +330,11 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
+    bool_use_taus = eval_params["bool_use_taus"]
+
+    discriminant = "b"
+    if "discriminant" in plot_config:
+        discriminant = plot_config["discriminant"]
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         print("model", model_name)
@@ -331,13 +358,14 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
         raise ValueError(
             "Too many models for comparison plot! Only 2 are allowed"
         )
-
     else:
         uet.plot_score_comparison(
             df_list=df_list,
             prediction_labels=plot_config["prediction_labels"],
             model_labels=model_labels,
             plot_name=plot_name,
+            use_taus=bool_use_taus,
+            discriminant=discriminant,
             **plot_config["plot_settings"],
         )
 
@@ -384,6 +412,41 @@ def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir):
         model_labels=model_labels,
         plot_name=plot_name,
         fc_list=fc_list,
+        **plot_config["plot_settings"],
+    )
+
+
+def plot_fraction_scan(plot_name, plot_config, eval_params, eval_file_dir):
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
+    ):
+        df_results = pd.read_hdf(
+            eval_file_dir + f"/results-rej_per_frac-{eval_epoch}.h5",
+            plot_config["data_set_name"],
+        )
+    else:
+        df_results = pd.read_hdf(
+            plot_config["evaluation_file"], plot_config["data_set_name"]
+        )
+
+    # default values
+    y_values = "fraction_c"
+    x_values = "fraction_taus"
+    if "xlabel" in plot_config:
+        x_values = plot_config["xlabel"]
+    if "ylabel" in plot_config:
+        y_values = plot_config["ylabel"]
+    # labels.append(model_config["label"])
+
+    uet.plotFractionScan(
+        data=df_results,
+        label=plot_config["label"],
+        plot_name=plot_name,
+        x_val=x_values,
+        y_val=y_values,
         **plot_config["plot_settings"],
     )
 
@@ -467,6 +530,14 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
 
         elif plot_config["type"] == "ROCvsVar":
             plot_ROCvsVar(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+            )
+
+        elif plot_config["type"] == "FracScan":
+            plot_fraction_scan(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,

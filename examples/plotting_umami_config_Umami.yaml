@@ -3,6 +3,7 @@ Eval_parameters:
   Path_to_models_dir: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/24_1_umami_dlw_1_lt22M/
   model_name: umami_looseTrack_22M
   epoch: 249
+  bool_use_taus: False
 
 # Umami, ttbar
 scores_Umami_ttbar: # Each item on this level defines one plot. The name of this key is later used for the name of the output file.
@@ -14,7 +15,7 @@ scores_Umami_ttbar: # Each item on this level defines one plot. The name of this
 confusion_matrix_Umami_ttbar:
   type: "confusion_matrix"
   data_set_name: "ttbar"
-  prediction_labels: ["umami_pu", "umami_pc", "umami_pb"] # For umami use umami_pX or dips_pX. The order matters!
+  prediction_labels: ["umami_pb", "umami_pc", "umami_pu"] # For umami use umami_pX or dips_pX. The order matters!
 
 # Scanning b-eff, comparing Umami and DL1r, ttbar
 beff_scan_tagger_compare_umami:
@@ -259,7 +260,7 @@ scores_Dips_zpext:
 confusion_matrix_Dips_zpext:
   type: "confusion_matrix"
   data_set_name: "zpext"
-  prediction_labels: ["dips_pu", "dips_pc", "dips_pb"] # For umami use umami_pX or dips_pX. The order matters!
+  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX. The order matters!
 
 
 
@@ -289,7 +290,7 @@ beff_scan:
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
     ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, f_{c}=0.018"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, f_{c}=0.018"
     which_axis: ["left",  "left", "right",  "right"]
     colors: ["red", "red", "blue", "blue"]
     styles: ["-","--","-","--"]
@@ -327,7 +328,7 @@ charm_scan:
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
     ylabel: "light"
     binomialErrors: true
-    text: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, b-eff=77%"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets, b-eff=77%"
     which_axis: ["left",  "left", "right",  "right"]
     colors: ["red", "red", "blue", "blue"]
     styles: ["-","--","-","--"]

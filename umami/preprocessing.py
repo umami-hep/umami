@@ -120,6 +120,7 @@ def RunPreparation(args, config):
         - ttbar: b-jets
         - ttbar: c-jets
         - ttbar: u-jets
+        - ttbar: t-jets (taus, not tops)
         - zprime (not filtered by jet flavour)
 
         The validation and testing samples are:
@@ -154,7 +155,7 @@ def RunPreparation(args, config):
         training_ttbar_bjets:     # sample name (choice of user)
           type: ttbar             # sample type (either 'ttbar' or 'zprime)
           category: bjets         # flavour category, only for ttbar
-                                  # ('bjets', 'cjets', 'ujets')
+                                  # ('bjets', 'cjets', 'ujets', 'taujets')
           n_jets: 10000000        # number of jets to be processed
           parity: even            # event number of stored events,
                                   # useful for separating training
@@ -375,15 +376,53 @@ def RunMerging(args, config):
 
 
 def RunUndersampling(args, config):
-    """Applies required cuts to the samples and applies the downsampling."""
+    """
+    Applies required cuts to the samples and applies the downsampling.
+    The downsampling in this case takes as many jets of each flavour
+    per pT and eta bin.
+
+    Can optionnally run on taus (taujets, PID = 15) if the configuration,
+    contains:
+        bool_process_taus: True
+    Undersampling method is based on sampling_method value in config:
+    - 'sampling_method = count'  same number of flavour per bin
+    - 'sampling_method = weight' same distribution of total per bin
+                                 (e.g., 2% of b, 2% of l, ... in bin x)
+    - 'sampling_method = count_tau_weight' for count of flavour of b, l,
+                                 and c but weight for taus. All fixed to
+                                 same density distribution per bin.
+    WARNING: count sampling with upt.UnderSampling is not advised for tau,
+    given their small fraction in the data.
+    """
     N_list = upt.GetNJetsPerIteration(config)
     # TODO: switch to dask
+
+    take_taus = config.bool_process_taus
+    if config.sampling_method == "count":
+        sampling_method = "count"
+    elif config.sampling_method == "weight":
+        sampling_method = "weight"
+    elif config.sampling_method == "count_tau_weight" and take_taus:
+        # if no taus, is equivalent to using count
+        print(
+            "Undersampling based on weights, but then equalise counts of b, c, and l"
+        )
+        sampling_method = "count_bcl_weight_tau"
+    else:
+        print("Unspecified sampling method, default is count")
+        sampling_method = "count"
 
     # initialise input files (they are not yet loaded to memory)
     f_Z = h5py.File(config.f_z, "r")
     f_tt_bjets = h5py.File(config.f_tt_bjets, "r")
     f_tt_cjets = h5py.File(config.f_tt_cjets, "r")
     f_tt_ujets = h5py.File(config.f_tt_ujets, "r")
+
+    if take_taus:
+        f_tt_taujets = h5py.File(config.f_tt_taujets, "r")
+        N_list = upt.GetNJetsPerIteration(
+            config, f_tt_taujets["jets"].shape[0]
+        )
 
     for x in range(config.iterations):
         print("Iteration", x + 1, "of", config.iterations)
@@ -425,6 +464,17 @@ def RunUndersampling(args, config):
             dtypes="<f4",
             asrecarray=True,
         )
+        if take_taus:
+            vec_tt_taujets = f_tt_taujets["jets"][
+                N_list[x]["ntaujets"] : N_list[x + 1]["ntaujets"]
+            ]
+            vec_tt_taujets = append_fields(
+                vec_tt_taujets,
+                "category",
+                np.ones(len(vec_tt_taujets)),
+                dtypes="<f4",
+                asrecarray=True,
+            )
         if args.tracks:
             tnp_Zprime = np.asarray(
                 f_Z["tracks"][N_list[x]["nZ"] : N_list[x + 1]["nZ"]]
@@ -444,24 +494,37 @@ def RunUndersampling(args, config):
                     N_list[x]["nujets"] : N_list[x + 1]["nujets"]
                 ]
             )
+            if take_taus:
+                tnp_tt_tau = np.asarray(
+                    f_tt_taujets["tracks"][
+                        N_list[x]["ntaujets"] : N_list[x + 1]["ntaujets"]
+                    ]
+                )
 
         indices_toremove_Zprime = upt.GetCuts(vec_Z, config, "Zprime")
         indices_toremove_bjets = upt.GetCuts(vec_tt_bjets, config)
         indices_toremove_cjets = upt.GetCuts(vec_tt_cjets, config)
         indices_toremove_ujets = upt.GetCuts(vec_tt_ujets, config)
+        if take_taus:
+            indices_toremove_taujets = upt.GetCuts(vec_tt_taujets, config)
 
         vec_Z = np.delete(vec_Z, indices_toremove_Zprime, 0)
         vec_tt_bjets = np.delete(vec_tt_bjets, indices_toremove_bjets, 0)
         vec_tt_cjets = np.delete(vec_tt_cjets, indices_toremove_cjets, 0)
         vec_tt_ujets = np.delete(vec_tt_ujets, indices_toremove_ujets, 0)
+        if take_taus:
+            vec_tt_taujets = np.delete(
+                vec_tt_taujets, indices_toremove_taujets, 0
+            )
 
         if args.tracks:
             tnp_Zprime = np.delete(tnp_Zprime, indices_toremove_Zprime, 0)
             tnp_tt_b = np.delete(tnp_tt_b, indices_toremove_bjets, 0)
             tnp_tt_c = np.delete(tnp_tt_c, indices_toremove_cjets, 0)
             tnp_tt_u = np.delete(tnp_tt_u, indices_toremove_ujets, 0)
+            if take_taus:
+                tnp_tt_tau = np.delete(tnp_tt_tau, indices_toremove_taujets, 0)
 
-        print("starting undersampling")
         bjets = np.concatenate(
             [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5], vec_tt_bjets]
         )
@@ -471,6 +534,47 @@ def RunUndersampling(args, config):
         ujets = np.concatenate(
             [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0], vec_tt_ujets]
         )
+        if take_taus:
+            taujets = np.concatenate(
+                [
+                    vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 15],
+                    vec_tt_taujets,
+                ]
+            )
+        else:
+            taujets = None
+
+        # New
+        if args.tracks:
+            btrk = np.concatenate(
+                [
+                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 5],
+                    tnp_tt_b,
+                ]
+            )
+            ctrk = np.concatenate(
+                [
+                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 4],
+                    tnp_tt_c,
+                ]
+            )
+            utrk = np.concatenate(
+                [
+                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 0],
+                    tnp_tt_u,
+                ]
+            )
+            if take_taus:
+                tautrk = np.concatenate(
+                    [
+                        tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 15],
+                        tnp_tt_tau,
+                    ]
+                )
+            else:
+                tautrk = None
+        else:
+            btrk, ctrk, utrk, tautrk = None, None, None, None
 
         # Plots pt and eta before downsampling
         plot_name_clean = config.GetFileName(
@@ -483,43 +587,91 @@ def RunUndersampling(args, config):
             bjets=bjets,
             ujets=ujets,
             cjets=cjets,
+            taujets=taujets,
             plots_path=plot_name_clean,
             binning={"pt_btagJes": 200, "absEta_btagJes": 20},
         )
 
-        downs = upt.UnderSampling(bjets, cjets, ujets)
-        b_indices, c_indices, u_indices = downs.GetIndices()
+        print("starting undersampling")
 
-        bjets = bjets[b_indices]
-        cjets = cjets[c_indices]
-        ujets = ujets[u_indices]
+        # Do the sampling:
+        (
+            bjets,
+            cjets,
+            ujets,
+            taujets,
+            btrk,
+            ctrk,
+            utrk,
+            tautrk,
+            downs,
+        ) = upt.RunSampling(
+            bjets,
+            cjets,
+            ujets,
+            taujets,
+            btrk,
+            ctrk,
+            utrk,
+            tautrk,
+            sampling_method,
+            take_taus,
+            args.tracks,
+        )
+        # Print some statistics on the sample formed
+        statistics_dict = upt.RunStatSamples(bjets, cjets, ujets, taujets)
 
-        if args.tracks:
-            btrk = np.concatenate(
-                [
-                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 5],
-                    tnp_tt_b,
-                ]
-            )[b_indices]
-            ctrk = np.concatenate(
-                [
-                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 4],
-                    tnp_tt_c,
-                ]
-            )[c_indices]
-            utrk = np.concatenate(
-                [
-                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 0],
-                    tnp_tt_u,
-                ]
-            )[u_indices]
-
-        ttfrac = float(
-            len(bjets[bjets["category"] == 1])
-            + len(cjets[cjets["category"] == 1])
-            + len(ujets[ujets["category"] == 1])
-        ) / float(len(bjets) + len(cjets) + len(ujets))
-        print("ttbar fraction:", round(ttfrac, 2))
+        if config.enforce_ttbar_frac:
+            # If one wants to enforce the ttbar fraction demanded
+            # Normally not required, except if target number of jets is above total available
+            bjets, bindices = upt.EnforceFraction(
+                bjets, config.ttbar_frac, statistics_dict, label="b"
+            )
+            cjets, cindices = upt.EnforceFraction(
+                cjets, config.ttbar_frac, statistics_dict, label="c"
+            )
+            ujets, uindices = upt.EnforceFraction(
+                ujets, config.ttbar_frac, statistics_dict, label="u"
+            )
+            if take_taus:
+                taujets, tauindices = upt.EnforceFraction(
+                    taujets, config.ttbar_frac, statistics_dict, label="tau"
+                )
+            if args.tracks:
+                if bindices is not None:
+                    btrk = btrk[bindices]
+                if cindices is not None:
+                    ctrk = ctrk[cindices]
+                if uindices is not None:
+                    utrk = utrk[uindices]
+                if take_taus and tauindices is not None:
+                    tautrk = tautrk[tauindices]
+            # Need to re-sample to make sure flavours are still distributed as demanded.
+            # Do it separately for ttbar and Z', then concatenate.
+            (
+                bjets,
+                cjets,
+                ujets,
+                taujets,
+                btrk,
+                ctrk,
+                utrk,
+                tautrk,
+                _,
+            ) = upt.RunSampling(
+                bjets,
+                cjets,
+                ujets,
+                taujets,
+                btrk,
+                ctrk,
+                utrk,
+                tautrk,
+                sampling_method,
+                take_taus,
+                args.tracks,
+            )
+            statistics_dict = upt.RunStatSamples(bjets, cjets, ujets, taujets)
 
         out_file = config.GetFileName(x + 1, option="downsampled")
         print("saving file:", out_file)
@@ -527,10 +679,14 @@ def RunUndersampling(args, config):
         h5f.create_dataset("bjets", data=bjets, compression="gzip")
         h5f.create_dataset("cjets", data=cjets, compression="gzip")
         h5f.create_dataset("ujets", data=ujets, compression="gzip")
+        if take_taus:
+            h5f.create_dataset("taujets", data=taujets, compression="gzip")
         if args.tracks:
             h5f.create_dataset("btrk", data=btrk, compression="gzip")
             h5f.create_dataset("ctrk", data=ctrk, compression="gzip")
             h5f.create_dataset("utrk", data=utrk, compression="gzip")
+            if take_taus:
+                h5f.create_dataset("tautrk", data=tautrk, compression="gzip")
 
         h5f.close()
         # TODO: verify track handling
@@ -545,6 +701,7 @@ def RunUndersampling(args, config):
             bjets,
             cjets,
             ujets,
+            taujets,
             plot_name=plot_name,
             binning={
                 "pt_btagJes": downs.pt_bins,
@@ -561,6 +718,7 @@ def RunUndersampling(args, config):
             bjets,
             cjets,
             ujets,
+            taujets,
             plot_name=plot_name,
             binning={"pt_btagJes": 200, "absEta_btagJes": 20},
         )
@@ -571,9 +729,10 @@ def RunUndersampling(args, config):
             custom_path="plots/",
         )
         upt.MakePresentationPlots(
-            bjets=bjets,
-            ujets=ujets,
-            cjets=cjets,
+            bjets,
+            ujets,
+            cjets,
+            taujets,
             plots_path=plot_name_clean,
             binning={"pt_btagJes": 200, "absEta_btagJes": 20},
         )
@@ -594,6 +753,7 @@ def GetScaleDict(args, config):
     input_file = config.GetFileName(iteration=1, option="downsampled")
     print(input_file)
     infile_all = h5py.File(input_file, "r")
+    take_taus = config.bool_process_taus
 
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -604,7 +764,12 @@ def GetScaleDict(args, config):
     bjets = pd.DataFrame(infile_all["bjets"][:][var_list])
     cjets = pd.DataFrame(infile_all["cjets"][:][var_list])
     ujets = pd.DataFrame(infile_all["ujets"][:][var_list])
-    X = pd.concat([bjets, cjets, ujets])
+    if take_taus:
+        taujets = pd.DataFrame(infile_all["taujets"][:][var_list])
+        X = pd.concat([bjets, cjets, ujets, taujets])
+        del taujets
+    else:
+        X = pd.concat([bjets, cjets, ujets])
     del bjets, cjets, ujets
 
     X.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -640,8 +805,11 @@ def GetScaleDict(args, config):
         btrks = np.asarray(infile_all["btrk"][:])
         ctrks = np.asarray(infile_all["ctrk"][:])
         utrks = np.asarray(infile_all["utrk"][:])
-
-        trks = np.concatenate((utrks, ctrks, btrks))
+        if take_taus:
+            tautrks = np.asarray(infile_all["tautrk"][:])
+            trks = np.concatenate((tautrks, utrks, ctrks, btrks))
+        else:
+            trks = np.concatenate((utrks, ctrks, btrks))
 
         X_trk_train = np.stack(
             [np.nan_to_num(trks[v]) for v in trkVars], axis=-1
@@ -675,6 +843,7 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
         sys.exit(1)
     print("Track scaling")
     input_file = config.GetFileName(iteration=iteration, option="downsampled")
+    take_taus = config.bool_process_taus
     print(input_file)
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -687,6 +856,8 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
     dsets = [h5py.File(input_file, "r")["/btrk"][:]]
     dsets.append(h5py.File(input_file, "r")["/ctrk"][:])
     dsets.append(h5py.File(input_file, "r")["/utrk"][:])
+    if take_taus:
+        dsets.append(h5py.File(input_file, "r")["/tautrk"][:])
     arrays = [np.asarray(dset) for dset in dsets]
     print("concatenate all datasets")
     trks = np.concatenate(arrays, axis=0)
@@ -727,16 +898,29 @@ def ApplyScalesNumpy(args, config, iteration=1):
         sys.exit(1)
 
     input_file = config.GetFileName(iteration=iteration, option="downsampled")
+    take_taus = config.bool_process_taus
 
-    jets = pd.DataFrame(
-        np.concatenate(
-            [
-                h5py.File(input_file, "r")["/bjets"][:],
-                h5py.File(input_file, "r")["/cjets"][:],
-                h5py.File(input_file, "r")["/ujets"][:],
-            ]
+    if take_taus:
+        jets = pd.DataFrame(
+            np.concatenate(
+                [
+                    h5py.File(input_file, "r")["/bjets"][:],
+                    h5py.File(input_file, "r")["/cjets"][:],
+                    h5py.File(input_file, "r")["/ujets"][:],
+                    h5py.File(input_file, "r")["/taujets"][:],
+                ]
+            )
         )
-    )
+    else:
+        jets = pd.DataFrame(
+            np.concatenate(
+                [
+                    h5py.File(input_file, "r")["/bjets"][:],
+                    h5py.File(input_file, "r")["/cjets"][:],
+                    h5py.File(input_file, "r")["/ujets"][:],
+                ]
+            )
+        )
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 

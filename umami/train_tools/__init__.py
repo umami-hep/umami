@@ -13,6 +13,7 @@ from umami.train_tools.NN_tools import (
     calc_validation_metrics_dips,
     evaluate_model,
     evaluate_model_dips,
+    filter_taus,
     get_jet_feature_indices,
     get_parameters_from_validation_dict_name,
     get_validation_dict_name,
