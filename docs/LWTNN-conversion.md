@@ -3,9 +3,6 @@
 To run the models also within [ATHENA](https://gitlab.cern.ch/atlas/athena?nav_source=navbar), it is necessary to convert the keras models to `json` files compatible with [lwtnn](https://github.com/lwtnn/lwtnn).
 
 
-## DIPS
-
-For now there is only a workaround available, and needs to be generalised.
 
 To convert the architecture to the `json` format used by lwtnn, the script [kerasfunc2json.py](https://github.com/lwtnn/lwtnn/blob/master/converters/kerasfunc2json.py) will be used. The usage of this script is described as
 ```
@@ -39,29 +36,32 @@ Thus the `arch_file`, `hdf5_file` and `variables_file` need to be produced.
 
 To produce the json `variables_file` a script is provided which can be executed like
 ```
-python scripts/create_lwtnn_vardict.py -s <scale_dict-22M.json> -v umami/configs/Dips_Variables.yaml -o lwtnn_vars-dips.json -t DIPS -n tracks_ip3d_sd0sort
+python scripts/create_lwtnn_vardict.py -s <scale_dict.json> -v <Variables.yaml> -o lwtnn_vars.json -t <TAGGER>
 ```
 the `--sequence_name` or `-n` option defines the required track selection described in the follwing.
+Currently, 3 taggers are supported `DL1`, `DIPS` and `UMAMI`
+
 #### Track Selection
 
 There are different track selections [defined in Athena](https://gitlab.cern.ch/atlas/athena/blob/21.2/PhysicsAnalysis/JetTagging/FlavorTagDiscriminants/Root/DL2.cxx#L302-331) which can be used and are specified in the lwtnn json file with their definitions [here](https://gitlab.cern.ch/atlas/athena/-/blob/21.2/PhysicsAnalysis/JetTagging/FlavorTagDiscriminants/Root/DL2HighLevel.cxx#L148-156) together with the sort order of the tracks. The following options are usually used for DIPS:
-    * Standard: `tracks_ip3d_sd0sort`
-    * Loose: `tracks_dipsLoose202102_sd0sort`
+
+* Standard: `tracks_ip3d_sd0sort`
+* Loose: `tracks_dipsLoose202102_sd0sort`
 
 
 ### Architecture and Weight File
 Splitting the model into architecture `arch_file` and weight file `hdf5_file` can be done via
 
 ```
- python scripts/conv_lwtnn_model.py -m <model.h5> -o lwtnn_dips
+ python scripts/conv_lwtnn_model.py -m <model.h5> -o lwtnn_model
 ```
-This script will return two files which are in this case `architecture-lwtnn_dips.json` and `weights-lwtnn_dips.h5`
+This script will return two files which are in this case `architecture-lwtnn_model.json` and `weights-lwtnn_model.h5`
 
 ### Final JSON File
 Finally, the three produced files can be merged via [kerasfunc2json.py](https://github.com/lwtnn/lwtnn/blob/master/converters/kerasfunc2json.py) 
 
 ```
-python kerasfunc2json.py architecture-lwtnn_dips.json weights-lwtnn_dips.h5 lwtnn_vars-dips.json > DIPS-model.json
+python kerasfunc2json.py architecture-lwtnn_model.json weights-lwtnn_model.h5 lwtnn_vars.json > FINAL-model.json
 ```
 
 To test if the created model is properly working you can use the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and add the created model to a config (e.g. [EMPFlow.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/configs/single-b-tag/EMPFlow.json)). This can exemplarily look like
@@ -113,9 +113,9 @@ To test if the created model is properly working you can use the [training-datas
 }
 ```
 
-To run DIPS within the dumper, we need the [r22 Branch](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/tree/r22) or we need to change the AnalysisBase version in the [setup.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/setup.sh#L21) to `asetup AnalysisBase,22.2.12,latest`.   
+To run the taggers within the dumper, we need the [r22 Branch](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/tree/r22) or we need to change the AnalysisBase version in the [setup.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/setup.sh#L21) to `asetup AnalysisBase,22.2.12,latest`.
 
-To run the dumper with DIPS on the grid, we need to add the path of the model file and the model itself to the job [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/grid/submit.sh). Here we need to add the DIPS model path like the configs model path to the script. Also we need to give `prun` the model file as an `--extFile`, due to its size. Also you need to avoid absolute paths in the [Config File](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/configs/single-b-tag/EMPFlow.json) or the grid job will fail. Add these paths to the [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/grid/submit.sh).
+To run the dumper with the taggers on the grid, we need to add the path of the model file and the model itself to the job [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/grid/submit.sh). Here we need to add the model path like the configs model path to the script. Also we need to give `prun` the model file as an `--extFile`, due to its size. Also you need to avoid absolute paths in the [Config File](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/configs/single-b-tag/EMPFlow.json) or the grid job will fail. Add these paths to the [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/grid/submit.sh).
 
 This can look like this for example:
 ```
@@ -257,3 +257,5 @@ done
 wait
 
 ```
+
+After having the hdf5 ntuples produced, the script [`check_lwtnn-model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn_vardict.py) can be used to compare the athena evaluation with the keras evaluation. Typically, we are happy when the scores match within 1e-5.
