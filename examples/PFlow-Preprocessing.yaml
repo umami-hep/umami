@@ -103,7 +103,7 @@ njets: 5.5e6
 
 # fraction of ttbar jets wrt. Z'
 # can change after applying resampling in the hybrid sample creation
-ttbar_frac: 0.7
+ttbar_frac: 0.65
 
 # Whether or not to enforce the ttbar fraction above
 enforce_ttbar_frac: False
@@ -150,7 +150,7 @@ f_tt_ujets:
   path: *file_path
   file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
 
-# ttbar (t)
+# ttbar (tau)
 f_tt_taujets:
   path: *file_path
   file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
