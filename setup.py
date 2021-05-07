@@ -20,6 +20,7 @@ setup(
         "umami.tools.PyATLASstyle",
         "umami.evaluation_tools",
         "umami.validation_dumper_tools",
+        "umami.input_vars_tools",
     ],
     # install_requires=[
     #     "h5py",

@@ -508,7 +508,9 @@ def plotPtDependence(
     fc=0.018,
     Passed=True,
     Fixed_WP_Bin=False,
-    bin_edges=[20, 50, 90, 150, 300, 1000],
+    Same_WP_Cut_Comparison=False,
+    Same_WP_Cut_Comparison_Model=0,
+    bin_edges=[0, 20, 50, 90, 150, 300, 1000],
     WP_Line=False,
     figsize=None,
     Grid=False,
@@ -549,6 +551,12 @@ def plotPtDependence(
           the fc_list, this value is used for calculation
     - Passed: Select if the selected jets need to pass the discriminant WP cut
     - Fixed_WP_Bin: Calculate the WP cut on the discriminant per bin
+    - Same_WP_Cut_Comparison: Use the same cut value on the b-tagging
+                              discriminant for all models in the plot. Not works
+                              with Fixed_WP_Bin True.
+    - Same_WP_Cut_Comparison_Model: Model which cut is used in the Same WP Cut.
+                                    0 is the first defined, 1 the second and so
+                                    on.
     - bin_edges: As the name says, the edges of the bins used
     - WP_Line: Print a WP line in the upper plot
     - figsize: Size of the resulting figure
@@ -566,6 +574,8 @@ def plotPtDependence(
     - ymin: y axis minimum
     - ymax: y axis maximum
     - alpha: Value for visibility of the plot lines
+    - trans: Sets the transparicy of the background. If true, the background erased.
+             If False, the background is white
     """
     # Get the bins for the histogram
     pt_midpts = (np.asarray(bin_edges)[:-1] + np.asarray(bin_edges)[1:]) / 2.0
@@ -634,10 +644,30 @@ def plotPtDependence(
         truth_labels = df_results["labels"]
 
         if Fixed_WP_Bin is False:
-            # Calculate WP cutoff for b-disc
-            disc_cut = np.percentile(
-                df_results.query("labels==2")["discs"], (1 - WP) * 100
-            )
+            if Same_WP_Cut_Comparison is False:
+                # Calculate WP cutoff for b-disc
+                disc_cut = np.percentile(
+                    df_results.query("labels==2")["discs"], (1 - WP) * 100
+                )
+
+            elif (
+                Same_WP_Cut_Comparison is True
+                and i == Same_WP_Cut_Comparison_Model
+            ):
+                # Calc disc cut value for the wanted model
+                disc_cut = np.percentile(
+                    df_results.query("labels==2")["discs"], (1 - WP) * 100
+                )
+
+                # Set Value globally if its the specified model
+                disc_cut_all_models = disc_cut
+
+            elif (
+                Same_WP_Cut_Comparison is True
+                and i != Same_WP_Cut_Comparison_Model
+            ):
+                # Set disc_cut for all other models
+                disc_cut = disc_cut_all_models
 
         # Get jet pts
         jetPts = df_results["pt"] / 1000
@@ -1329,8 +1359,17 @@ def plot_score(
 ):
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
-    bool_use_taus = eval_params["bool_use_taus"]
-    discriminant = plot_config["discriminant"]
+    if "bool_use_taus" in eval_params:
+        bool_use_taus = eval_params["bool_use_taus"]
+
+    else:
+        bool_use_taus = False
+
+    if "discriminant" in plot_config:
+        discriminant = plot_config["discriminant"]
+
+    else:
+        discriminant = "b"
 
     # Read file, change to specific file if defined
     if ("evaluation_file" not in plot_config) or (
@@ -1595,7 +1634,7 @@ def plot_score(
 
 def plot_score_comparison(
     df_list,
-    prediction_labels,
+    prediction_labels_list,
     model_labels,
     plot_name,
     use_taus=False,
@@ -1624,7 +1663,9 @@ def plot_score_comparison(
     yAxisAtlasTag=0.9,
 ):
     # Calculate the scores for the NN outputs
-    for df_results in df_list:
+    for (df_results, prediction_labels) in zip(
+        df_list, prediction_labels_list
+    ):
         if discriminant == "b":
             df_results["discs"] = GetScore(
                 *[df_results[pX] for pX in prediction_labels]
@@ -1646,7 +1687,7 @@ def plot_score_comparison(
     axis_dict = {}
 
     if figsize is None:
-        fig = plt.figure(figsize=(8.27 * 0.8, 11.69 * 0.8))
+        fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
     else:
         fig = plt.figure(figsize=(figsize[0], figsize[1]))
