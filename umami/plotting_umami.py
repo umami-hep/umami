@@ -327,6 +327,7 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
     # Init dataframe list
     df_list = []
     model_labels = []
+    prediction_labels_list = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
@@ -353,6 +354,7 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
 
         df_list.append(df_results)
         model_labels.append(model_config["label"])
+        prediction_labels_list.append(model_config["prediction_labels"])
 
     if len(df_list) > 2:
         raise ValueError(
@@ -361,7 +363,7 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
     else:
         uet.plot_score_comparison(
             df_list=df_list,
-            prediction_labels=plot_config["prediction_labels"],
+            prediction_labels_list=prediction_labels_list,
             model_labels=model_labels,
             plot_name=plot_name,
             use_taus=bool_use_taus,
@@ -381,6 +383,9 @@ def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir):
     eval_epoch = int(eval_params["epoch"])
 
     for model_name, model_config in plot_config["models_to_plot"].items():
+        if model_name == "evaluation_file":
+            continue
+
         print("model", model_name)
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -392,7 +397,8 @@ def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir):
 
         else:
             df_results = pd.read_hdf(
-                plot_config["evaluation_file"], plot_config["data_set_name"]
+                model_config["evaluation_file"],
+                model_config["data_set_name"],
             )
 
         if "fc" in model_config and model_config["fc"] is not None:
