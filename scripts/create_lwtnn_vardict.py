@@ -121,9 +121,9 @@ def __run():
     if "dips" in args.tagger.lower():
 
         with open(args.scale_dict, "r") as f:
-            scale_dict = json.load(f)["tracks"]
+            scale_dict = json.load(f)
 
-        track_variables = GetJetVariables(scale_dict, variable_config)
+        track_variables = GetTrackVariables(scale_dict, variable_config)
 
         print("Found %i variables" % len(track_variables))
         inputs = {}
