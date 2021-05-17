@@ -109,11 +109,11 @@ eff_vs_pt_large:
     ThirdTag: "Flat efficiency DL1r"
 
 plot_scan_frac_tau_ZP:
-type: "FracScan"
-evaluation_file:  # from evaluation
-data_set_name: "zpext"
-label: "umami_taurej"
-plot_settings:
-  UseAtlasTag: True
-  AtlasTag: "Internal Simulations"
-  SecondTag: "DL1d, $\\sqrt{s}$ = 13 TeV, $Z'$"
+  type: "FracScan"
+  evaluation_file:  # from evaluation
+  data_set_name: "zpext"
+  label: "umami_taurej"
+  plot_settings:
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulations"
+    SecondTag: "DL1d, $\\sqrt{s}$ = 13 TeV, $Z'$"

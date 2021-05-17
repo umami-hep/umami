@@ -94,11 +94,17 @@ def TrainLargeFile(args, train_config, preprocess_config):
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
 
+    Val_params = train_config.Eval_parameters_validation
+    if "n_jets" in Val_params:
+        nJets = int(Val_params["n_jets"])
+    else:
+        nJets = int(5e5)
+
     X_valid, Y_valid = utt.GetTestSample(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
-        nJets=int(5e5),
+        nJets=nJets,
         use_taus=bool_use_taus,
         exclude=exclude,
     )
@@ -108,7 +114,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
-            nJets=int(5e5),
+            nJets=nJets,
             use_taus=bool_use_taus,
             exclude=exclude,
         )
