@@ -25,7 +25,6 @@ partd
 mlxtend
 zarr
 graphviz
-tensorflow
 tqdm
 coverage
 isort
