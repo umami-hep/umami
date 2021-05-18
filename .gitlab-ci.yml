@@ -21,6 +21,25 @@ linter:
     - pip install flake8
     - flake8 ./umami
 
+unittest_MR:
+  stage: test
+  image: python:3.7
+  script:
+    - pip install -r requirements.txt
+    - coverage run --source=. -m  pytest ./umami/tests/unit/ -v
+    - coverage report
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+
+linter_MR:
+  stage: test
+  image: python:3.7-slim
+  script:
+    - pip install flake8
+    - flake8 ./umami
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+
 include:
   - 'pipelines/.docker-gitlab-ci.yaml'
   - 'pipelines/.docs-gitlab-ci.yaml'
