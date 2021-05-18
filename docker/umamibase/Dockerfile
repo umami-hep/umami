@@ -2,6 +2,7 @@ FROM UPDATED_IN_GITLAB_CI_JOB
 
 ## ensure locale is set during build
 ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
 ARG DEBIAN_FRONTEND=noninteractive
 

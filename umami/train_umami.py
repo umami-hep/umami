@@ -5,8 +5,9 @@ import os
 import h5py
 import tensorflow as tf
 import yaml
-from keras import activations, layers
-from keras.layers import (
+from tensorflow.keras import activations, layers
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
     Dropout,
@@ -14,9 +15,8 @@ from keras.layers import (
     Masking,
     TimeDistributed,
 )
-from keras.models import Model, load_model
-from keras.optimizers import Adam
-from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.optimizers import Adam
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration

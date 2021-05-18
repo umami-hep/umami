@@ -6,10 +6,10 @@ import h5py
 import numpy as np
 import pandas as pd
 import yaml
-from keras import backend as K
-from keras.layers import Layer
-from keras.models import load_model
+from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import Callback
+from tensorflow.keras.layers import Layer
+from tensorflow.keras.models import load_model
 
 from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
 from umami.tools import yaml_loader

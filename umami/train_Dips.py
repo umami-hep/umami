@@ -2,9 +2,9 @@ import argparse
 
 import h5py
 import tensorflow as tf
-from keras import activations, layers
-from keras.callbacks import ModelCheckpoint
-from keras.layers import (
+from tensorflow.keras import activations, layers
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
     Dropout,
@@ -12,10 +12,9 @@ from keras.layers import (
     Masking,
     TimeDistributed,
 )
-from keras.models import Model, load_model
-from keras.optimizers import Adam
-from keras.utils import CustomObjectScope
-from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
