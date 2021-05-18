@@ -506,6 +506,7 @@ def plotPtDependence(
     WP=0.77,
     fc_list=[],
     fc=0.018,
+    SWP_label_list=[],
     Passed=True,
     Fixed_WP_Bin=False,
     Same_WP_Cut_Comparison=False,
@@ -582,6 +583,9 @@ def plotPtDependence(
     bin_widths = (np.asarray(bin_edges)[1:] - np.asarray(bin_edges)[:-1]) / 2.0
     Npts = pt_midpts.size
 
+    if Same_WP_Cut_Comparison is True:
+        SWP_Cut_Dict = {}
+
     # Get flavor indices
     b_index, c_index, u_index = 2, 1, 0
 
@@ -652,22 +656,22 @@ def plotPtDependence(
 
             elif (
                 Same_WP_Cut_Comparison is True
-                and i == Same_WP_Cut_Comparison_Model
+                and SWP_label_list[i] not in SWP_Cut_Dict
             ):
-                # Calc disc cut value for the wanted model
+                # Calc disc cut value for the SWP label model
                 disc_cut = np.percentile(
                     df_results.query("labels==2")["discs"], (1 - WP) * 100
                 )
 
-                # Set Value globally if its the specified model
-                disc_cut_all_models = disc_cut
+                # Set Value globally for the SWP label
+                SWP_Cut_Dict.update({SWP_label_list[i]: disc_cut})
 
             elif (
                 Same_WP_Cut_Comparison is True
-                and i != Same_WP_Cut_Comparison_Model
+                and SWP_label_list[i] in SWP_Cut_Dict
             ):
-                # Set disc_cut for all other models
-                disc_cut = disc_cut_all_models
+                # Set disc_cut for the model after its SWP label
+                disc_cut = SWP_Cut_Dict[SWP_label_list[i]]
 
         # Get jet pts
         jetPts = df_results["pt"] / 1000
@@ -696,12 +700,39 @@ def plotPtDependence(
                     num_mask = den_mask & (df_results["discs"] <= disc_cut)
 
             else:
+                # Setting pT mask for the selected bin to calculate
+                # the disc cut value fot the particular bin
                 pT_mask = (jetPts > pt_min) & (jetPts < pt_max)
 
-                disc_cut = np.percentile(
-                    df_results.query("labels==2")["discs"][pT_mask],
-                    (1 - WP) * 100,
-                )
+                # If SWP is used, calculate the disc cut for the model if
+                # its not added to the dict yet. If its already added,
+                # the value is loaded. If SWP is false, the disc value
+                # will be calculated for each of the models independently
+                if Same_WP_Cut_Comparison is False:
+                    disc_cut = np.percentile(
+                        df_results.query("labels==2")["discs"][pT_mask],
+                        (1 - WP) * 100,
+                    )
+
+                elif (
+                    Same_WP_Cut_Comparison is True
+                    and SWP_label_list[i] not in SWP_Cut_Dict
+                ):
+                    # Calc disc cut value for the SWP label model
+                    disc_cut = np.percentile(
+                        df_results.query("labels==2")["discs"][pT_mask],
+                        (1 - WP) * 100,
+                    )
+
+                    # Set Value globally for the SWP label
+                    SWP_Cut_Dict.update({SWP_label_list[i]: disc_cut})
+
+                elif (
+                    Same_WP_Cut_Comparison is True
+                    and SWP_label_list[i] in SWP_Cut_Dict
+                ):
+                    # Set disc_cut for the model after its SWP label
+                    disc_cut = SWP_Cut_Dict[SWP_label_list[i]]
 
                 # Cut on jets which passed the WP
                 if Passed is True:
@@ -730,6 +761,7 @@ def plotPtDependence(
             )
 
             # Calculate Ratio
+            # Check if its not the first model which is used as reference
             if i != 0:
                 effs_ratio = effs / ratio_eff["effs"]
                 yerr_ratio = (
@@ -762,6 +794,7 @@ def plotPtDependence(
                 else None
             )
 
+            # Plot the "hists"
             axis_dict["left"]["top"].errorbar(
                 pt_midpts,
                 rej,
@@ -774,6 +807,7 @@ def plotPtDependence(
             )
 
             # Calculate Ratio
+            # Check if its not the first model which is used as reference
             if i != 0:
                 rej_ratio = rej / ratio_eff["rej"]
                 yerr_ratio = (
@@ -809,12 +843,14 @@ def plotPtDependence(
     else:
         metric = "rejection"
 
+    # Set addition to y label if fixed WP bin is True
     if Fixed_WP_Bin is False:
         Fixed_WP_Label = "Inclusive"
 
     else:
         Fixed_WP_Label = ""
 
+    # Set flavor label for the y axis
     if flavor == b_index:
         flav_label = r"$b$-jet"
 
@@ -824,12 +860,14 @@ def plotPtDependence(
     elif flavor == u_index:
         flav_label = "light-flavour jet"
 
+    # Set y label
     axis_dict["left"]["top"].set_ylabel(
         f"{Fixed_WP_Label} {flav_label}-{metric}",
         horizontalalignment="right",
         y=1.0,
     )
 
+    # Set ratio y label
     axis_dict["left"]["ratio"].set_ylabel("Ratio")
 
     # Check for Logscale
@@ -852,6 +890,7 @@ def plotPtDependence(
     elif ymax is None:
         _, ymax = axis_dict["left"]["top"].get_ylim()
 
+    # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
     axis_dict["left"]["top"].set_ylim(bottom=ymin, top=yAxisIncrease * ymax)
 
     # Set WP Line
@@ -885,6 +924,7 @@ def plotPtDependence(
     # Define legend
     axis_dict["left"]["top"].legend(loc="upper right", ncol=2)
 
+    # Set the ATLAS Tag
     if fc_default is True:
         if UseAtlasTag is True:
             pas.makeATLAStag(
@@ -936,6 +976,7 @@ def plotROCRatio(
     ymax=None,
     ymin=None,
     legFontSize=10,
+    loc_legend="best",
     rrange=None,
     rlabel="Ratio",
     binomialErrors=False,
@@ -1185,7 +1226,7 @@ def plotROCRatio(
     axis_dict["left"]["top"].legend(
         handles=lines,
         labels=[line.get_label() for line in lines],
-        loc="best",
+        loc=loc_legend,
         fontsize=legFontSize,
         ncol=legcols,
     )  # , title="DL1r")
@@ -1637,7 +1678,7 @@ def plot_score_comparison(
     prediction_labels_list,
     model_labels,
     plot_name,
-    use_taus=False,
+    bool_use_taus=False,
     discriminant="b",
     UseAtlasTag=True,
     AtlasTag="Internal Simulation",
@@ -1648,7 +1689,10 @@ def plot_score_comparison(
     figsize=None,
     labelpad=None,
     legFontSize=10,
+    loc_legend="best",
+    ncol=2,
     RatioType="Ratio",
+    Ratio_Cut=None,
     which_axis="left",
     x_label=r"$D_b$",
     xmin=None,
@@ -1723,7 +1767,7 @@ def plot_score_comparison(
         len_b = len(df_results.query("labels==2"))
         len_c = len(df_results.query("labels==1"))
         len_u = len(df_results.query("labels==0"))
-        if use_taus:
+        if bool_use_taus:
             len_tau = len(df_results.query("labels==3"))
 
         # Calculate the hists and bin edges for errorbands
@@ -1745,7 +1789,7 @@ def plot_score_comparison(
             bins=Binning,
         )
 
-        if use_taus:
+        if bool_use_taus:
             counts_tau, bins_tau = np.histogram(
                 df_results.query("labels==3")["discs"],
                 # Use the calculated binning to ensure its equal
@@ -1762,7 +1806,7 @@ def plot_score_comparison(
         unc_u = np.sqrt(counts_u) / len_u
         band_lower_u = counts_u / len_u - unc_u
 
-        if use_taus:
+        if bool_use_taus:
             unc_tau = np.sqrt(counts_tau) / len_tau
             band_lower_tau = counts_tau / len_tau - unc_tau
 
@@ -1827,7 +1871,7 @@ def plot_score_comparison(
             label=r"light-flavour jets {}".format(model_labels[i]),
         )
 
-        if use_taus:
+        if bool_use_taus:
             axis_dict[which_a]["top"].hist(
                 x=bincentres,
                 bins=bins_u,
@@ -1905,10 +1949,10 @@ def plot_score_comparison(
         bincounts.update({f"b{i}": hist_counts_b})
         bincounts.update({f"c{i}": hist_counts_c})
         bincounts.update({f"u{i}": hist_counts_u})
-        if use_taus:
+        if bool_use_taus:
             bincounts.update({f"tau{i}": hist_counts_tau})
 
-    if use_taus:
+    if bool_use_taus:
         loop_list = zip(
             ["b", "c", "u", "tau"],
             ["#1f77b4", "#ff7f0e", "#2ca02c", "#7c5295"],
@@ -1984,6 +2028,11 @@ def plot_score_comparison(
             fontsize=12,
         )
 
+    if Ratio_Cut is not None:
+        axis_dict["left"]["ratio"].set_ylim(
+            bottom=Ratio_Cut[0], top=Ratio_Cut[1]
+        )
+
     plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
 
     if xmin is not None:
@@ -1991,9 +2040,9 @@ def plot_score_comparison(
     if xmax is not None:
         axis_dict["left"]["top"].set_xlim(right=xmax)
     if ymin is not None:
-        axis_dict["left"]["top"].set_ylim(left=ymin)
+        axis_dict["left"]["top"].set_ylim(bottom=ymin)
     if ymax is not None:
-        axis_dict["left"]["top"].set_ylim(right=ymax)
+        axis_dict["left"]["top"].set_ylim(top=ymax)
 
     left_y_limits = axis_dict["left"]["top"].get_ylim()
     axis_dict["left"]["top"].set_ylim(
@@ -2001,9 +2050,9 @@ def plot_score_comparison(
     )
 
     axis_dict["left"]["top"].legend(
-        loc="best",
+        loc=loc_legend,
         fontsize=legFontSize,
-        ncol=2,
+        ncol=ncol,
     )  # , title="DL1r")
 
     # Set WP vertical lines if given in config
@@ -2022,7 +2071,7 @@ def plot_score_comparison(
                 x_value = np.percentile(
                     df_list[0].query("labels==2")["discs"], (1 - WP) * 100
                 )
-                color = "#1f77b4"
+                color = "#FF0000"
 
             # Draw WP line
             axis_dict["left"]["top"].axvline(

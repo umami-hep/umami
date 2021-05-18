@@ -3,34 +3,43 @@ model_name: DL1r-PFlow_new-taggers-stats-22M
 preprocess_config: examples/PFlow-Preprocessing.yaml
 
 # Add training file
-train_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled_test.h5
+train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid-preprocessed_shuffled.h5
 
 # Add validation files
 # ttbar val
-validation_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-odd_1_PFlow-no_pTcuts-file_0.h5 
+validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+
 # zprime val
-add_validation_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
 
-# Add test files
-# ttbar test
-test_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-odd_1_PFlow-no_pTcuts-file_1.h5 
-# zprime test
-add_test_file: /work/ws/nemo/fr_mg1150-umami-0/ntuples-p3985/umami_default/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+ttbar_test_files:
+    ttbar_r21:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar"
 
-# comparison file ttbar
-comparison_file: 
+    ttbar_r22:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar_comparison"
 
-# comparison file zprime
-add_comparison_file:
+zpext_test_files:
+    zpext_r21: 
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext"
 
-exclude: []
+    zpext_r22:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext_comparison"
+
+    zpext_r22_no_QSP:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts_No_QSPI-file_1.h5
+        data_set_name: "zpext_comparison_no_QSP"
 
 # Path to Variable dict used in preprocessing
 var_dict: umami/configs/DL1r_Variables.yaml
-Eval_parameters: None
 
-# Whether to use taus or not. Won't work if variable set to False in preprocessing
 bool_use_taus: False
+
+exclude: []
 
 NN_structure:  
     lr: 0.01

@@ -1,29 +1,38 @@
 # Set modelname and path to Pflow preprocessing config file
-model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
+model_name: dips_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
 preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
 
 # Add training file
-train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid-Loose-preprocessed_shuffled.h5
+train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid-preprocessed_shuffled.h5
 
 # Add validation files
 # ttbar val
-validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-Loose-no_pTcuts-file_0.h5
+validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
 
 # zprime val
-add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-Loose-no_pTcuts-file_0.h5
+add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
 
-# Add test files
-# ttbar test
-test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-Loose-no_pTcuts-file_1.h5
+ttbar_test_files:
+    ttbar_r21:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar"
 
-# zprime test
-add_test_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-Loose-no_pTcuts-file_1.h5
+    ttbar_r22:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar_comparison"
 
-# comparison file ttbar
-comparison_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4364_val/user.alfroch.410470.btagTraining.e6337_s3126_r12305_p4364.EMPFlow_loose.2021-03-22-T161653-R7891_output.h5/user.alfroch.24633320._000002.output.h5
+zpext_test_files:
+    zpext_r21: 
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext"
 
-# comparison file zprime
-add_comparison_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4364_val/user.alfroch.800030.btagTraining.e7954_s3582_r12305_r12253_r12305_r12298_p4364.EMPFlow_loose.2021-03-23-T124717-R15069_output.h5/user.alfroch.24641686._000001.output.h5
+    zpext_r22:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext_comparison"
+
+    zpext_r22_no_QSP:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts_No_QSPI-file_1.h5
+        data_set_name: "zpext_comparison_no_QSP"
 
 # Path to Variable dict used in preprocessing
 var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
