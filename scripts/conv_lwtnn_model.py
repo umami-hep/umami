@@ -2,9 +2,9 @@
 architecture json files."""
 import argparse
 
-from keras.initializers import glorot_uniform
-from keras.models import load_model
-from keras.utils import CustomObjectScope
+from tensorflow.keras.initializers import glorot_uniform
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import CustomObjectScope
 
 from umami.train_tools import Sum
 

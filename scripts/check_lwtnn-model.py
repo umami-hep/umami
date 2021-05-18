@@ -3,8 +3,8 @@ import argparse
 import h5py
 import numpy as np
 import pandas as pd
-from keras.models import load_model
-from keras.utils import CustomObjectScope
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
 from umami.train_tools import Sum

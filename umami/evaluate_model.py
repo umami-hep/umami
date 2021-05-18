@@ -6,9 +6,9 @@ import h5py
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras.layers import Lambda
-from keras.models import Model, load_model
-from keras.utils import CustomObjectScope
+from tensorflow.keras.layers import Lambda
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
 from umami.evaluation_tools.PlottingFunctions import (
