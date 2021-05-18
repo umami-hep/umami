@@ -1,14 +1,34 @@
+# Set modelname and path to Pflow preprocessing config file
 model_name: umami_dev
 preprocess_config: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/examples/PFlow-Preprocessing-DESY.yaml
+
+# Add training file
 train_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
+
+# Add validation files
+# ttbar val
 validation_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid_odd_1_PFlow-no_pTcuts-file_0.h5
-test_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid_odd_1_PFlow-no_pTcuts-file_1.h5
+
+# zprime val
 add_validation_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
-add_test_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+
+ttbar_test_files:
+    ttbar_r21:
+        Path: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid_odd_1_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar"
+
+zpext_test_files:
+    zpext_r21: 
+        Path: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext"
+
+# Path to Variable dict used in preprocessing
 var_dict: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/umami/configs/Umami_Variables.yaml
-# Certain low level algorithms can be excluded, namely: "SV1", "IP2D", "IP3D"
-exclude: []
+
 bool_use_taus: False
+
+exclude: []
+
 NN_structure:  
     lr: 0.01
     batch_size: 5000

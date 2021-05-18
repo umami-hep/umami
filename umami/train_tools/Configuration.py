@@ -9,7 +9,6 @@ class Configuration(object):
     def __init__(self, yaml_config=None):
         super(Configuration, self).__init__()
         self.yaml_config = yaml_config
-        self.yaml_default_config = "configs/preprocessing_default_config.yaml"
         self.LoadConfigFile()
         self.GetConfiguration()
 
@@ -24,15 +23,13 @@ class Configuration(object):
             "preprocess_config",
             "train_file",
             "validation_file",
+            "add_validation_file",
             "var_dict",
             "NN_structure",
-            "add_validation_file",
-            "test_file",
-            "add_test_file",
             "Eval_parameters_validation",
             "bool_use_taus",
-            "comparison_file",
-            "add_comparison_file",
+            "ttbar_test_files",
+            "zpext_test_files",
         ]
         for item in config_items:
             if item in self.config:

@@ -990,76 +990,64 @@ if __name__ == "__main__":
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
     if args.dl1:
-        EvaluateModelDL1(
-            args,
-            train_config,
-            preprocess_config,
-            train_config.test_file,
-            "ttbar",
-        )
-
-        if train_config.add_test_file is not None:
+        print("Start evaluating DL1 with ttbar test files...")
+        for ttbar_models in train_config.ttbar_test_files:
             EvaluateModelDL1(
                 args,
                 train_config,
                 preprocess_config,
-                train_config.add_test_file,
-                "zpext",
+                train_config.ttbar_test_files[ttbar_models]["Path"],
+                train_config.ttbar_test_files[ttbar_models]["data_set_name"],
+            )
+
+        print("Start evaluating DL1 with Z' test files...")
+        for zpext_models in train_config.zpext_test_files:
+            EvaluateModelDL1(
+                args,
+                train_config,
+                preprocess_config,
+                train_config.zpext_test_files[zpext_models]["Path"],
+                train_config.zpext_test_files[zpext_models]["data_set_name"],
             )
 
     elif args.dips:
-        print("Start evaluating DIPS with ttbar...")
-        EvaluateModelDips(
-            args,
-            train_config,
-            preprocess_config,
-            train_config.test_file,
-            "ttbar",
-        )
-
-        if train_config.add_test_file is not None:
-            print("Start evaluating DIPS with Zprime...")
+        print("Start evaluating DIPS with ttbar test files...")
+        for ttbar_models in train_config.ttbar_test_files:
             EvaluateModelDips(
                 args,
                 train_config,
                 preprocess_config,
-                train_config.add_test_file,
-                "zpext",
+                train_config.ttbar_test_files[ttbar_models]["Path"],
+                train_config.ttbar_test_files[ttbar_models]["data_set_name"],
             )
 
-        if train_config.comparison_file is not None:
-            print("Start evaluating DIPS on comparison ttbar...")
+        print("Start evaluating DIPS with Z' test files...")
+        for zpext_models in train_config.zpext_test_files:
             EvaluateModelDips(
                 args,
                 train_config,
                 preprocess_config,
-                train_config.comparison_file,
-                "ttbar_comparison",
-            )
-
-        if train_config.add_comparison_file is not None:
-            print("Start evaluating DIPS on comparison Zprime...")
-            EvaluateModelDips(
-                args,
-                train_config,
-                preprocess_config,
-                train_config.add_comparison_file,
-                "zpext_comparison",
+                train_config.zpext_test_files[zpext_models]["Path"],
+                train_config.zpext_test_files[zpext_models]["data_set_name"],
             )
 
     else:
-        EvaluateModel(
-            args,
-            train_config,
-            preprocess_config,
-            train_config.test_file,
-            "ttbar",
-        )
-        if train_config.add_test_file is not None:
+        print("Start evaluating UMAMI with ttbar test files...")
+        for ttbar_models in train_config.ttbar_test_files:
             EvaluateModel(
                 args,
                 train_config,
                 preprocess_config,
-                train_config.add_test_file,
-                "zpext",
+                train_config.ttbar_test_files[ttbar_models]["Path"],
+                train_config.ttbar_test_files[ttbar_models]["data_set_name"],
+            )
+
+        print("Start evaluating UMAMI with Z' test files...")
+        for zpext_models in train_config.zpext_test_files:
+            EvaluateModel(
+                args,
+                train_config,
+                preprocess_config,
+                train_config.zpext_test_files[zpext_models]["Path"],
+                train_config.zpext_test_files[zpext_models]["data_set_name"],
             )

@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yaml
+from tqdm import tqdm
 from yaml.loader import FullLoader
 
 import umami.evaluation_tools as uet
@@ -53,11 +54,18 @@ def GetParser():
         help="Name of the directory in which the plots will be saved.",
     )
 
+    parser.add_argument(
+        "-p",
+        "--print_plotnames",
+        action="store_true",
+        help="Print the model names of the plots to the terminal.",
+    )
+
     args = parser.parse_args()
     return args
 
 
-def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
+def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
     teffs = []
     beffs = []
     labels = []
@@ -72,7 +80,9 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir):
         nTest_provided = True
 
     for model_name, model_config in plot_config["models_to_plot"].items():
-        print("model", model_name)
+        if print_model:
+            print("model", model_name)
+
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
         ):
@@ -323,7 +333,9 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     plt.close()
 
 
-def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
+def score_comparison(
+    plot_name, plot_config, eval_params, eval_file_dir, print_model
+):
     # Init dataframe list
     df_list = []
     model_labels = []
@@ -331,14 +343,31 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
-    bool_use_taus = eval_params["bool_use_taus"]
+
+    # Check if use taus is defined
+    if (
+        "bool_use_taus" not in eval_params
+        or eval_params["bool_use_taus"] is None
+    ):
+        bool_use_taus = False
+
+    else:
+        bool_use_taus = eval_params["bool_use_taus"]
 
     discriminant = "b"
-    if "discriminant" in plot_config:
+    if (
+        "discriminant" not in plot_config
+        or plot_config["discriminant"] is None
+    ):
+        discriminant = "b"
+
+    else:
         discriminant = plot_config["discriminant"]
 
     for model_name, model_config in plot_config["models_to_plot"].items():
-        print("model", model_name)
+        if print_model:
+            print("model", model_name)
+
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
         ):
@@ -366,18 +395,21 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir):
             prediction_labels_list=prediction_labels_list,
             model_labels=model_labels,
             plot_name=plot_name,
-            use_taus=bool_use_taus,
+            bool_use_taus=bool_use_taus,
             discriminant=discriminant,
             **plot_config["plot_settings"],
         )
 
 
-def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir):
+def plot_pT_vs_eff(
+    plot_name, plot_config, eval_params, eval_file_dir, print_model
+):
     # Init label and dataframe list
     df_list = []
     model_labels = []
     prediction_labels_list = []
     fc_list = []
+    SWP_label_list = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
@@ -386,7 +418,9 @@ def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir):
         if model_name == "evaluation_file":
             continue
 
-        print("model", model_name)
+        if print_model:
+            print("model", model_name)
+
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
         ):
@@ -404,6 +438,12 @@ def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir):
         if "fc" in model_config and model_config["fc"] is not None:
             fc_list.append(model_config["fc"])
 
+        if (
+            "SWP_label" in model_config
+            and model_config["SWP_label"] is not None
+        ):
+            SWP_label_list.append(model_config["SWP_label"])
+
         df_list.append(df_results)
         model_labels.append(model_config["label"])
         prediction_labels_list.append(model_config["prediction_labels"])
@@ -418,6 +458,7 @@ def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir):
         model_labels=model_labels,
         plot_name=plot_name,
         fc_list=fc_list,
+        SWP_label_list=SWP_label_list,
         **plot_config["plot_settings"],
     )
 
@@ -457,23 +498,47 @@ def plot_fraction_scan(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
-def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
+def SetUpPlots(
+    plotting_config, plot_directory, eval_file_dir, format, print_model
+):
     # Extract the eval parameters
     eval_params = plotting_config["Eval_parameters"]
 
+    # Extract the print epoch bool
+    if (
+        "epoch_to_name" not in plotting_config["Eval_parameters"]
+        or plotting_config["Eval_parameters"]["epoch_to_name"] is None
+    ):
+        epoch_to_name = True
+
+    else:
+        epoch_to_name = plotting_config["Eval_parameters"]["epoch_to_name"]
+
     # Iterate over the different plots which are to be plotted
-    for plot_name, plot_config in plotting_config.items():
+    for plot_name, plot_config in tqdm(plotting_config.items()):
 
         # Skip Eval parameters
         if plot_name == "Eval_parameters":
             continue
 
         # Define the path to the new plot
-        print("Processing:", plot_name)
-        save_plot_to = os.path.join(
-            plot_directory,
-            plot_name + "_{}".format(int(eval_params["epoch"])) + "." + format,
-        )
+        if print_model:
+            print("Processing:", plot_name)
+
+        if epoch_to_name:
+            save_plot_to = os.path.join(
+                plot_directory,
+                plot_name
+                + "_{}".format(int(eval_params["epoch"]))
+                + "."
+                + format,
+            )
+
+        else:
+            save_plot_to = os.path.join(
+                plot_directory,
+                plot_name + "." + format,
+            )
 
         # Check for plot type and use the needed function
         if plot_config["type"] == "ROC":
@@ -482,6 +547,7 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
                 plot_config=plot_config,
                 eval_params=eval_params,
                 eval_file_dir=eval_file_dir,
+                print_model=print_model,
             )
 
         elif plot_config["type"] == "confusion_matrix":
@@ -524,6 +590,7 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
                 plot_config=plot_config,
                 eval_params=eval_params,
                 eval_file_dir=eval_file_dir,
+                print_model=print_model,
             )
 
         elif plot_config["type"] == "pT_vs_eff":
@@ -532,6 +599,7 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
                 plot_config=plot_config,
                 eval_params=eval_params,
                 eval_file_dir=eval_file_dir,
+                print_model=print_model,
             )
 
         elif plot_config["type"] == "ROCvsVar":
@@ -555,11 +623,12 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format):
                 "Plot type {} is not supported".format(plot_config["type"])
             )
 
-        print(
-            "saved plot as:",
-            save_plot_to.replace(eval_params["Path_to_models_dir"], ""),
-            "\n",
-        )
+        if print_model:
+            print(
+                "saved plot as:",
+                save_plot_to.replace(eval_params["Path_to_models_dir"], ""),
+                "\n",
+            )
 
 
 def main(args):
@@ -584,7 +653,13 @@ def main(args):
     )
 
     # Start plotting
-    SetUpPlots(plotting_config, plot_directory, eval_file_dir, args.format)
+    SetUpPlots(
+        plotting_config,
+        plot_directory,
+        eval_file_dir,
+        args.format,
+        args.print_plotnames,
+    )
 
 
 if __name__ == "__main__":

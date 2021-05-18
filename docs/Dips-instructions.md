@@ -19,66 +19,114 @@ This processing can be done using the preprocessing capabilities of Umami via th
 Please refer to the [documentation on preprocessing](preprocessing.md) for additional information.
 Note, that for running Dips tracks have to be stored in the output hybrid sample. Therefore, the `--tracks` argument needs to be set.
 
-There are several training and validation/test samples to produce. See below a list of all the necessary ones:
-
-##### Training Samples (even EventNumber)
-
-* ttbar (pT < 250 GeV)
-    * b-jets
-    * c-jets
-    * light-jets
-* Z' (pT > 250 GeV) -> extended Z'
-    * b, c, light-jets combined
-
-
-##### Validation and Test Samples (odd EventNumber)
-
-* ttbar
-* Z' (extended and standard)
-
-## Preprocessing
-
-After the preparation of the samples, the next step is the processing for the training itself which is done with the script [preprocessing.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py).
-
-The configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml), you need to adapt it to your needs especially the `file_path`.
-
-1. Running the undersampling
-
-```
-preprocessing.py -c ${EXAMPLES}/PFlow-Preprocessing.yaml --var_dict ${CONFIGS}/Dips_Variables.yaml --undersampling --tracks
-```
-
-2. Retrieving scaling and shifting factors
-
-```
-preprocessing.py -c ${EXAMPLES}/PFlow-Preprocessing.yaml --var_dict ${CONFIGS}/Dips_Variables.yaml --scaling --tracks
-```
-
-3. Applying shifting and scaling factors
-
-```
-preprocessing.py -c ${EXAMPLES}/PFlow-Preprocessing.yaml --var_dict ${CONFIGS}/Dips_Variables.yaml --apply_scales --tracks
-```
-
-4. Shuffling the samples and writing the samples to disk
-
-```
-preprocessing.py -c ${EXAMPLES}/PFlow-Preprocessing.yaml --var_dict ${CONFIGS}/Dips_Variables.yaml --write --tracks
-```
-
-With the `--tracks` option, the track informations are saved and `--var_dict` is used to give the yaml file with the used variables to the program.
-The training variables for DIPS are defined in [Dips_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/Dips_Variables.yaml).
-
 ## Training
 
-After all the files are ready we can start with the training. The config file for the Dips training is [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml).
+After all the files are ready we can start with the training. The config file for the Dips training is [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). This will look for example like this:
 
-It contains the information about the neural network architecture and the training as well as about the files for training, validation and testing.
+```yaml
+# Set modelname and path to Pflow preprocessing config file
+model_name: dips_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
+preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
+
+# Add training file
+train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid-preprocessed_shuffled.h5
+
+# Add validation files
+# ttbar val
+validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+
+# zprime val
+add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+
+ttbar_test_files:
+    ttbar_r21:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar"
+
+    ttbar_r22:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar_comparison"
+
+zpext_test_files:
+    zpext_r21: 
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext"
+
+    zpext_r22:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext_comparison"
+
+    zpext_r22_no_QSP:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts_No_QSPI-file_1.h5
+        data_set_name: "zpext_comparison_no_QSP"
+
+# Path to Variable dict used in preprocessing
+var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
+
+bool_use_taus: False
+
+exclude: []
+
+# Values for the neural network
+NN_structure:
+    # NN Training parameters
+    lr: 0.001
+    batch_size: 15000
+    epochs: 200
+
+    # Number of jets used for training
+    # To use all: Fill nothing
+    nJets_train:
+
+    # Dropout rate. If = 0, dropout is disabled
+    dropout: 0
+
+    # Number of output classes
+    nClasses: 3
+
+    # Decide if Batch Normalisation is used
+    Batch_Normalisation: True
+
+    # Structure of the dense layers for each track
+    ppm_sizes: [100, 100, 128]
+
+    # Structure of the dense layers after summing up the track outputs
+    dense_sizes: [100, 100, 100, 30]
+
+# Eval parameters for validation evaluation while training
+Eval_parameters_validation:
+    # Number of jets used for validation
+    n_jets: 3e5
+
+    # Charm fraction value used for evaluation
+    fc_value: 0.018
+
+    # b Working point used in the evaluation
+    WP_b: 0.77
+
+    # Enable/Disable atlas tag
+    UseAtlasTag: True
+
+    # fc_value and WP_b are autmoatically added to the plot label
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # Set the datatype of the plots
+    plot_datatype: "pdf"
+```
+
+It contains the information about the neural network architecture and the training as well as about the files for training, validation and testing. Also evaluation parameters are given for the training evaluation which is performed by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script
 
 Before starting the training, you need to set some paths for the umami package to find all the tools. Change to the umami dir and run the `setup.py`.
 
 ```bash
 python setup.py install
+```
+
+Note that with the `install` setup, changes that are performed to the scripts after setup are not included! For development and usage of changes without resetup everything, use 
+
+```bash
+python setup.py develop
 ```
 
 After that, you can switch to the folder `umami/umami` and run the training, using the following command
@@ -93,7 +141,7 @@ The results after each epoch will be saved to the `umami/umami/MODELNAME/` folde
 plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips
 ```
 
-which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. The `--dips` option defines that the dips tagger is used. In this form, the performance measurments, like light- and c-rejection, will be recalculated using the working point, the `fc` value and the number of validation jets defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). If you don't want to recalculate it, you can give the path to the exisiting dict with the option `--dict`. For example:
+which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. The `--dips` option defines that the dips tagger is used. In this form, the performance measurements, like light- and c-rejection, will be recalculated using the working point, the `fc` value and the number of validation jets defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). If you don't want to recalculate it, you can give the path to the existing dict with the option `--dict`. For example:
 
 ```bash
 plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips --dict dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full/validation_WP0p77_fc0p018_300000jets_Dict.json
@@ -103,7 +151,7 @@ Here, the `plotting_epoch_performance.py` will get the working point, `fc` value
 
 ## Evaluating the results
 
-After the training is over, the different epochs can be evaluated with ROC plots, output scores, saliency maps and confusion matrices using the build-in scripts. Before plotting these, the model needs to be evaluated using the [evaluate_model.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py).
+After the training is over, the different epochs can be evaluated with ROC plots, output scores, saliency maps and confusion matrices etc. using the build-in scripts. Before plotting these, the model needs to be evaluated using the [evaluate_model.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py).
 
 ```bash
 evaluate_model.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips -e 5

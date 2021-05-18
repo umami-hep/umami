@@ -23,7 +23,10 @@ In the different available plots, there are options that are available in mostly
 
 `type`: This option specifies the plot function that is used.   
 
-`data_set_name`: Decides which evaluated dataset (or file) is used. Options are `ttbar` for the `test_file`, `zpext` for the `add_test_file`, `ttbar_comparison` for the `comparison_file` and `zpext_comparison` for the `add_comparison_file`.   
+`data_set_name`: Decides which evaluated dataset (or file) is used. This `data_set_name` are set in the `train_config` yaml file which is used in the evaluation of the model. There the different files are getting their own `data_set_name` which needs to be the same as here!
+
+
+Options are `ttbar` for the `test_file`, `zpext` for the `add_test_file`, `ttbar_comparison` for the `comparison_file` and `zpext_comparison` for the `add_comparison_file`.   
 
 `models_to_plot`: In the comparison plots, the models which are to be plotted needs to be defined in here. You can add as many models as you want. For example this can be used to plot the results of the different taggers in one plot.   
 
@@ -249,18 +252,22 @@ pT_vs_beff_zpext:
       data_set_name: "zpext"
       label: "Recommended RNNIP"
       prediction_labels: ["rnnip_pb", "rnnip_pc", "rnnip_pu"]
+      evaluation_file:
+      SWP_label: "rnnip"
     dips_r21:
       data_set_name: "zpext"
       label: "DIPS"
       prediction_labels: ["dips_pb", "dips_pc", "dips_pu"]
       evaluation_file:
+      SWP_label: "dips"
   plot_settings:
     bin_edges: [200, 500, 1000, 1500, 2000, 2500, 3000, 4000, 6000]
     flavor: 2
     WP: 0.77
     WP_Line: True
-    Fixed_WP_Bin: True
+    Fixed_WP_Bin: False
     binomialErrors: True
+    Same_WP_Cut_Comparison: True
     figsize: [7, 5]
     Log: False
     UseAtlasTag: True
@@ -272,11 +279,11 @@ pT_vs_beff_zpext:
     ymax:
     alpha: 0.7
 ```
-`dips_r21`, None: Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything.  
+`dips_r21`, None: Name of the model which is to be plotted. Don't affect anything. Just for you. You can change dips_r21 to anything.  
 
 `label`, String: Label for the Legend in the plot.   
 
-`prediction_labels`, List: A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`.   
+`prediction_labels`, List: A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are mainly built the same way, like `model_pX`.   
 For DIPS: `["dips_pb", "dips_pc", "dips_pu"]`   
 For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]`   
 For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]`   
@@ -284,7 +291,7 @@ For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]`
 For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` 
 If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` 
 
-`evaluation_file`, String: Add a path to a evaluation file here. This file will be used for the model instead of the one defined at the top. The `data_set_name` must be in the file!
+`evaluation_file`, String: Add a path to a evaluation file here. This file will be used for the model instead of the one defined at the top. The given `data_set_name` must be in the file!
 
 `bin_edges`, List: The pT bin edges that should be used. Don't forget the starting and the ending edge!   
 
@@ -294,11 +301,13 @@ If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]`
 
 `WP_Line`, Bool: Decide if a horizontal WP line at is added or not. (Only used for beff).   
 
-`Fixed_WP_Bin`, Bool: If True, the b-Tagging discriminant cut value for the given WP is not calculated over all bins but seperatly for each bin.   
+`Fixed_WP_Bin`, Bool: If True, the b-Tagging discriminant cut value for the given WP is not calculated over all bins but separately for each bin.   
 
 `binomialErrors`, Bool: Plot binomial errors to plot.   
 
-`figsize:`, List: A list of the width and hight of the plot.
+`Same_WP_Cut_Comparison`, Bool: For all models with the same `SWP_label`, one cut value for the b-tagging discriminant is used.
+
+`figsize:`, List: A list of the width and height of the plot.
 
 `Log`, Bool: Decide if the y axis is plotted as logarithmic or not.
 
