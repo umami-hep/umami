@@ -7,6 +7,7 @@ import pandas as pd
 from dask.array.slicing import shuffle_slice
 from sklearn.preprocessing import LabelBinarizer
 
+from umami.configuration import global_config
 from umami.tools import applyATLASstyle, makeATLAStag
 
 
@@ -65,8 +66,8 @@ def MakePresentationPlots(
     taujets=None,
     plots_path="plots/",
     binning={
-        "pt_btagJes": np.linspace(10000, 2000000, 200),
-        "eta_btagJes": np.linspace(0, 2.5, 26),
+        global_config.pTvariable: np.linspace(10000, 2000000, 200),
+        global_config.etavariable: np.linspace(0, 2.5, 26),
     },
     Log=True,
 ):
@@ -84,7 +85,7 @@ def MakePresentationPlots(
     Save nice plots of pt and eta to plots_path
     """
 
-    var_list = ["pt_btagJes", "absEta_btagJes"]
+    var_list = [global_config.pTvariable, global_config.etavariable]
 
     for var in var_list:
         # Get number of flavours
@@ -95,7 +96,7 @@ def MakePresentationPlots(
             N_tau = len(taujets[var])
 
         divide_val = 1
-        if var == "pt_btagJes":
+        if var == global_config.pTvariable:
             divide_val = 1000
         # Calculate Binning and counts for plotting
         counts_b, Bins_b = np.histogram(
@@ -243,7 +244,7 @@ def MakePresentationPlots(
             plt.yscale("log")
             ymin, ymax = plt.ylim()
 
-            if var == "pt_btagJes":
+            if var == global_config.pTvariable:
                 plt.ylim(ymin=ymin, ymax=100 * ymax)
 
             else:
@@ -253,11 +254,11 @@ def MakePresentationPlots(
             ymin, ymax = plt.ylim()
             plt.ylim(ymin=ymin, ymax=1.2 * ymax)
 
-        if var == "pt_btagJes":
+        if var == global_config.pTvariable:
             plt.xlabel(r"$p_T$ in GeV")
             plt.xlim(right=6500)
 
-        elif var == "absEta_btagJes":
+        elif var == global_config.etavariable:
             plt.xlabel(r"$\eta$")
 
         else:
@@ -289,8 +290,8 @@ def MakePlots(
     taujets=None,
     plot_name="plots/InfoPlot.pdf",
     binning={
-        "pt_btagJes": np.linspace(10000, 2000000, 200),
-        "eta_btagJes": np.linspace(0, 2.5, 26),
+        global_config.pTvariable: np.linspace(10000, 2000000, 200),
+        global_config.etavariable: np.linspace(0, 2.5, 26),
     },
 ):
     """Plots pt and eta distribution.
@@ -305,9 +306,9 @@ def MakePlots(
     TODO
     """
 
-    vars = ["pt_btagJes", "absEta_btagJes"]
-    # print(pd.DataFrame(bjets)["pt_btagJes"])
-    # print(bjets["eta_btagJes"])
+    vars = [global_config.pTvariable, global_config.etavariable]
+    # print(pd.DataFrame(bjets)[global_config.pTvariable])
+    # print(bjets[global_config.etavariable])
 
     bool_plot_taujets = taujets is not None
     fig = plt.figure()

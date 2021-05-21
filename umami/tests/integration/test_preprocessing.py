@@ -5,6 +5,7 @@ from subprocess import CalledProcessError, run
 
 import yaml
 
+from umami.configuration import global_config  # noqa: F401
 from umami.tools import replaceLineInFile, yaml_loader
 
 

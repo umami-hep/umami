@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.stats import binned_statistic_2d
 
+from umami.configuration import global_config
+
 
 class UnderSampling(object):
     """
@@ -20,8 +22,8 @@ class UnderSampling(object):
         )
         self.eta_bins = np.linspace(0, 2.5, 10)
         self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
-        self.pT_var_name = "pt_btagJes"
-        self.eta_var_name = "absEta_btagJes"
+        self.pT_var_name = global_config.pTvariable
+        self.eta_var_name = global_config.etavariable
         self.rnd_seed = 42
 
     def GetIndices(self):
@@ -132,8 +134,8 @@ class UnderSamplingProp(object):
         )
         self.eta_bins = np.linspace(0, 2.5, 10)
         self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
-        self.pT_var_name = "pt_btagJes"
-        self.eta_var_name = "absEta_btagJes"
+        self.pT_var_name = global_config.pTvariable
+        self.eta_var_name = global_config.etavariable
         self.rnd_seed = 42
 
     def GetIndices(self):
@@ -248,12 +250,12 @@ class Weighting2D(object):
         self.pt_bins = np.linspace(0, 6000000, 3)
         self.eta_bins = np.linspace(0, 2.5, 3)
         self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
-        self.pT_var_name = "pt_btagJes"
-        self.eta_var_name = "absEta_btagJes"
+        self.pT_var_name = global_config.pTvariable
+        self.eta_var_name = global_config.etavariable
         self.rnd_seed = 42
 
     def GetWeights(self):
-        """"Retrieves the weights for the sample."""
+        """ "Retrieves the weights for the sample."""
         binnumbers_b, ind_b, stat_b = self.GetBins(self.bjets)
         binnumbers_c, _, stat_c = self.GetBins(self.cjets)
         binnumbers_u, _, stat_u = self.GetBins(self.ujets)

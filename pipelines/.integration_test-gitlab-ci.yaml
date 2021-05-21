@@ -3,7 +3,7 @@ integration_test_preprocessing:
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py  -v
+    - pytest ./umami/tests/integration/test_preprocessing.py  -v --junitxml=report.xml
   only:
     - master
   artifacts:
@@ -11,13 +11,16 @@ integration_test_preprocessing:
     expire_in: 1 day
     paths:
       - plots
+    when: always
+    reports:
+      junit: report.xml
 
 integration_test_preprocessing_MR:
   stage: integration_test
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py  -v
+    - pytest ./umami/tests/integration/test_preprocessing.py  -v --junitxml=report.xml
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
@@ -25,3 +28,7 @@ integration_test_preprocessing_MR:
     expire_in: 1 day
     paths:
       - plots
+    when: always
+    reports:
+      junit: report.xml
+

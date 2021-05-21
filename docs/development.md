@@ -31,3 +31,15 @@ pre-commit install
 ```
 
 This will run `isort`, `black` and `flake8` on staged python files when commiting.
+
+
+## Global Configuration
+
+
+There is a [global configuration](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml) file which allows to set different global settings.
+
+| Option | Description |
+|--------|-------------|
+| `pTvariable`       |    Setting the name of the `pT` variable which is used in several places.         |
+|  `etavariable`      |      Setting the name of the `absolute eta` variable which is used in several places.        |
+|  `DebugLevel`      |      Defines the debug level. Possible values:  `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`      |

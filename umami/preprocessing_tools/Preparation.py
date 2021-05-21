@@ -6,6 +6,8 @@ import logging
 import h5py
 import numpy as np
 
+from umami.configuration import global_config
+
 
 def get_jets(
     filename,
@@ -76,7 +78,7 @@ def get_jets(
             & (jets["GhostBHadronsFinalPt"] > pt_cut)
         ) | (
             (abs(jets["HadronConeExclTruthLabelID"]) != b_pdgid)
-            & (jets["pt_btagJes"] > pt_cut)
+            & (jets[global_config.pTvariable] > pt_cut)
         )
     elif sample_type == "zprime" and pt_cut:
         pt_cut_rejection = (
@@ -84,7 +86,7 @@ def get_jets(
             & (jets["GhostBHadronsFinalPt"] < pt_cut)
         ) | (
             (abs(jets["HadronConeExclTruthLabelID"]) != b_pdgid)
-            & (jets["pt_btagJes"] < pt_cut)
+            & (jets[global_config.pTvariable] < pt_cut)
         )
     else:
         pt_cut_rejection = False
