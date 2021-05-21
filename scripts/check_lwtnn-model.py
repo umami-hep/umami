@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 import h5py
 import numpy as np
@@ -7,6 +8,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
+from umami.configuration import global_config  # noqa: F401
 from umami.train_tools import Sum
 
 
@@ -79,13 +81,14 @@ class config:
 
 def __run():
     args = GetParser()
+    logging.info(f"Opening input file {args.input}")
     with h5py.File(args.input, "r") as file:
         df = pd.DataFrame(file["jets"][:])
 
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
     preprocess_config = config(args.scale_dict)
 
-    print("Evaluating", args.model)
+    logging.info(f"Evaluating {args.model}")
 
     pred_model = None
     if "umami" in args.tagger.lower():
@@ -96,7 +99,7 @@ def __run():
             nJets=int(10e6),
             exclude=None,
         )
-        print("Evaluated jets:", len(Y_test))
+        logging.info(f"Evaluated jets: {len(Y_test)}")
         pred_dips, pred_umami = load_model_umami(
             args.model, X_test_trk, X_test_jet
         )
@@ -109,7 +112,7 @@ def __run():
             preprocess_config,
             nJets=int(10e6),
         )
-        print("Evaluated jets:", len(Y_test))
+        logging.info(f"Evaluated jets: {len(Y_test)}")
         with CustomObjectScope({"Sum": Sum}):
             model = load_model(args.model)
         pred_model = model.predict(X_test_trk, batch_size=5000, verbose=0)
@@ -122,7 +125,7 @@ def __run():
             nJets=int(10e6),
             exclude=None,
         )
-        print("Evaluated jets:", len(Y_test))
+        logging.info(f"Evaluated jets: {len(Y_test)}")
 
         with CustomObjectScope({"Sum": Sum}):
             model = load_model(args.model)
@@ -133,43 +136,44 @@ def __run():
         ntrks = trk_mask.sum(axis=1)
         df["ntrks"] = ntrks
     else:
-        df["ntrks"] = np.zeros(len(Y_test))
+        df["ntrks"] = -1 * np.ones(len(Y_test))
 
     df["eval_pu"] = pred_model[:, :1]
     df["eval_pc"] = pred_model[:, 1:2]
-    df["eval_pb"] = pred_model[:, 2:]
+    df["eval_pb"] = pred_model[:, 2:3]
 
     df["index"] = range(len(df))
 
     df["y"] = np.argmax(Y_test, axis=1)
-    print("Jets:", len(df))
+    logging.info(f"Jets: {len(df)}")
 
     evaluated = "eval_pu"
-    df_select = df.query(f"abs({evaluated}-{args.tagger}_pu)>1e-6")
+    df["diff"] = abs(df[evaluated] - df[f"{args.tagger}_pu"])
+    df_select = df.query("diff>1e-6")
     print(
         "Differences off 1e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query(f"abs({evaluated}-{args.tagger}_pu)>2e-6")
+    df_select = df.query("diff>2e-6")
     print(
         "Differences off 2e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query(f"abs({evaluated}-{args.tagger}_pu)>3e-6")
+    df_select = df.query("diff>3e-6")
     print(
         "Differences off 3e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query(f"abs({evaluated}-{args.tagger}_pu)>4e-6")
+    df_select = df.query("diff>4e-6")
     print(
         "Differences off 4e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query(f"abs({evaluated}-{args.tagger}_pu)>5e-6")
+    df_select = df.query("diff>5e-6")
     print(
         "Differences off 5e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query(f"abs({evaluated}-{args.tagger}_pu)>1e-5")
+    df_select = df.query("diff>1e-5")
     print(
         "Differences off 1e-5", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query(f"abs({evaluated}-{args.tagger}_pu)>1e-6")
+    df_select = df.query("diff>1e-6")
     df_select["diff"] = abs(
         df_select[evaluated] - df_select[f"{args.tagger}_pu"]
     )
@@ -190,7 +194,9 @@ def __run():
             ]
         ]
         # df_select.query("diff>1e-5", inplace=True)
-        df_select.to_csv(f"{args.output}.csv")
+        out_file = f"{args.output}.csv"
+        logging.info(f"Writing output file {out_file}")
+        df_select.to_csv(out_file, index=False)
 
 
 if __name__ == "__main__":

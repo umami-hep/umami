@@ -11,6 +11,7 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
+from umami.configuration import global_config
 from umami.evaluation_tools.PlottingFunctions import (
     GetScore,
     GetScoreC,
@@ -114,8 +115,8 @@ def EvaluateModel(
     y_true = np.argmax(Y_test, axis=1)
     b_index, c_index, u_index = 2, 1, 0
     variables = [
-        "absEta_btagJes",
-        "pt_btagJes",
+        global_config.etavariable,
+        global_config.pTvariable,
         "DL1r_pb",
         "DL1r_pc",
         "DL1r_pu",
@@ -137,8 +138,8 @@ def EvaluateModel(
             "dips_pb": pred_dips[:, b_index],
             "dips_pc": pred_dips[:, c_index],
             "dips_pu": pred_dips[:, u_index],
-            "pt": df["pt_btagJes"],
-            "eta": df["absEta_btagJes"],
+            "pt": df[global_config.pTvariable],
+            "eta": df[global_config.etavariable],
             "labels": y_true,
             "disc_DL1r": GetScore(df["DL1r_pb"], df["DL1r_pc"], df["DL1r_pu"]),
             "disc_rnnip": GetScore(
@@ -317,8 +318,8 @@ def EvaluateModelDips(
 
     # Define the needed extra variables
     variables = [
-        "absEta_btagJes",
-        "pt_btagJes",
+        global_config.etavariable,
+        global_config.pTvariable,
         "DL1r_pb",
         "DL1r_pc",
         "DL1r_pu",
@@ -349,8 +350,8 @@ def EvaluateModelDips(
             "DL1r_pb": df["DL1r_pb"],
             "DL1r_pc": df["DL1r_pc"],
             "DL1r_pu": df["DL1r_pu"],
-            "pt": df["pt_btagJes"],
-            "eta": df["absEta_btagJes"],
+            "pt": df[global_config.pTvariable],
+            "eta": df[global_config.etavariable],
             "labels": y_true,
             "disc_DL1r": GetScore(df["DL1r_pb"], df["DL1r_pc"], df["DL1r_pu"]),
             "disc_rnnip": GetScore(
@@ -590,8 +591,8 @@ def EvaluateModelDL1(
     tau_index, b_index, c_index, u_index = 3, 2, 1, 0
 
     variables = [
-        "absEta_btagJes",
-        "pt_btagJes",
+        global_config.etavariable,
+        global_config.pTvariable,
         "DL1r_pb",
         "DL1r_pc",
         "DL1r_pu",
@@ -632,8 +633,8 @@ def EvaluateModelDL1(
                 "pb": pred[:, b_index],
                 "pc": pred[:, c_index],
                 "pu": pred[:, u_index],
-                "pt": df["pt_btagJes"],
-                "eta": df["absEta_btagJes"],
+                "pt": df[global_config.pTvariable],
+                "eta": df[global_config.etavariable],
                 "labels": y_true,
                 "disc_DL1r": GetScore(
                     df["DL1r_pb"],
@@ -676,8 +677,8 @@ def EvaluateModelDL1(
                 "pb": pred[:, b_index],
                 "pc": pred[:, c_index],
                 "pu": pred[:, u_index],
-                "pt": df["pt_btagJes"],
-                "eta": df["absEta_btagJes"],
+                "pt": df[global_config.pTvariable],
+                "eta": df[global_config.etavariable],
                 "labels": y_true,
                 "disc_DL1r": GetScore(
                     df["DL1r_pb"],

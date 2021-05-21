@@ -5,6 +5,7 @@ import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 
+from umami.configuration import global_config
 from umami.preprocessing_tools import (
     Configuration,
     GetBinaryLabels,
@@ -27,26 +28,39 @@ class UnderSamplingTestCase(unittest.TestCase):
         """
         self.df_bjets = pd.DataFrame(
             {
-                "pt_btagJes": abs(np.random.normal(300000, 30000, 10000)),
-                "absEta_btagJes": abs(np.random.normal(1.25, 1, 10000)),
+                global_config.pTvariable: abs(
+                    np.random.normal(300000, 30000, 10000)
+                ),
+                global_config.etavariable: abs(
+                    np.random.normal(1.25, 1, 10000)
+                ),
             }
         )
         self.df_cjets = pd.DataFrame(
             {
-                "pt_btagJes": abs(np.random.normal(280000, 28000, 10000)),
-                "absEta_btagJes": abs(np.random.normal(1.4, 1, 10000)),
+                global_config.pTvariable: abs(
+                    np.random.normal(280000, 28000, 10000)
+                ),
+                global_config.etavariable: abs(
+                    np.random.normal(1.4, 1, 10000)
+                ),
             }
         )
         self.df_ujets = pd.DataFrame(
             {
-                "pt_btagJes": abs(np.random.normal(250000, 25000, 10000)),
-                "absEta_btagJes": abs(np.random.normal(1.0, 1, 10000)),
+                global_config.pTvariable: abs(
+                    np.random.normal(250000, 25000, 10000)
+                ),
+                global_config.etavariable: abs(
+                    np.random.normal(1.0, 1, 10000)
+                ),
             }
         )
 
     def test_zero_case(self):
         df_zeros = pd.DataFrame(
-            np.zeros((1000, 2)), columns=["pt_btagJes", "absEta_btagJes"]
+            np.zeros((1000, 2)),
+            columns=[global_config.pTvariable, global_config.etavariable],
         )
         down_s = UnderSampling(df_zeros, df_zeros, df_zeros)
         b_ind, c_ind, u_ind, _ = down_s.GetIndices()
@@ -54,7 +68,8 @@ class UnderSamplingTestCase(unittest.TestCase):
 
     def test_underflow(self):
         df_minus_ones = pd.DataFrame(
-            -1 * np.ones((1000, 2)), columns=["pt_btagJes", "absEta_btagJes"]
+            -1 * np.ones((1000, 2)),
+            columns=[global_config.pTvariable, global_config.etavariable],
         )
         down_s = UnderSampling(df_minus_ones, df_minus_ones, df_minus_ones)
         b_ind, c_ind, u_ind, _ = down_s.GetIndices()
@@ -64,7 +79,8 @@ class UnderSamplingTestCase(unittest.TestCase):
 
     def test_overflow(self):
         df_large = pd.DataFrame(
-            1e10 * np.ones((1000, 2)), columns=["pt_btagJes", "absEta_btagJes"]
+            1e10 * np.ones((1000, 2)),
+            columns=[global_config.pTvariable, global_config.etavariable],
         )
         down_s = UnderSampling(df_large, df_large, df_large)
         b_ind, c_ind, u_ind, _ = down_s.GetIndices()
@@ -202,7 +218,7 @@ class PreprocessingTestCuts(unittest.TestCase):
                 ],
                 "HadronConeExclTruthLabelID": [5, 5, 5, 5, 4, 4, 4, 0, 0, 0],
                 "GhostBHadronsFinalPt": 5e3 * np.ones(10),
-                "pt_btagJes": 5.2e3 * np.ones(10),
+                global_config.pTvariable: 5.2e3 * np.ones(10),
             }
         )
         self.pass_ttbar = np.array(
@@ -229,7 +245,7 @@ class PreprocessingTestCuts(unittest.TestCase):
     def test_cuts_passing_Zprime_inverted_pt(self):
         jets = self.jets.copy()
         jets["GhostBHadronsFinalPt"] *= 1e2
-        jets["pt_btagJes"] *= 1e2
+        jets[global_config.pTvariable] *= 1e2
         indices_to_remove = GetCuts(
             jets.to_records(index=False), self.config, sample="Zprime"
         )
@@ -240,7 +256,7 @@ class PreprocessingTestCuts(unittest.TestCase):
     def test_cuts_exceed_pTmax_Zprime(self):
         jets = self.jets.copy()
         jets["GhostBHadronsFinalPt"] *= 1e5
-        jets["pt_btagJes"] *= 1e5
+        jets[global_config.pTvariable] *= 1e5
         indices_to_remove = GetCuts(
             jets.to_records(index=False), self.config, sample="Zprime"
         )
@@ -251,7 +267,7 @@ class PreprocessingTestCuts(unittest.TestCase):
     def test_cuts_exceed_pTmax_ttbar(self):
         jets = self.jets.copy()
         jets["GhostBHadronsFinalPt"] *= 1e5
-        jets["pt_btagJes"] *= 1e5
+        jets[global_config.pTvariable] *= 1e5
         indices_to_remove = GetCuts(
             jets.to_records(index=False), self.config, sample="ttbar"
         )
@@ -266,7 +282,7 @@ class PreprocessingTestCuts(unittest.TestCase):
                 "JetFitterSecondaryVertex_energy": [0, 0, 0],
                 "HadronConeExclTruthLabelID": [5, 4, 0],
                 "GhostBHadronsFinalPt": 5e5 * np.ones(3),
-                "pt_btagJes": 5e3 * np.ones(3),
+                global_config.pTvariable: 5e3 * np.ones(3),
             }
         )
         indices_to_remove = GetCuts(
@@ -283,7 +299,7 @@ class PreprocessingTestCuts(unittest.TestCase):
                 "JetFitterSecondaryVertex_energy": [0, 0, 0],
                 "HadronConeExclTruthLabelID": [5, 4, 0],
                 "GhostBHadronsFinalPt": 5e5 * np.ones(3),
-                "pt_btagJes": 5e3 * np.ones(3),
+                global_config.pTvariable: 5e3 * np.ones(3),
             }
         )
         indices_to_remove = GetCuts(

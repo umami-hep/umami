@@ -11,8 +11,14 @@ unittest:
   image: python:3.7
   script:
     - pip install -r requirements.txt
-    - coverage run --source=. -m  pytest ./umami/tests/unit/ -v
+    - coverage run --source=. -m  pytest ./umami/tests/unit/ -v --junitxml=report.xml
     - coverage report
+    - coverage xml
+  artifacts:
+    when: always
+    reports:
+      cobertura: coverage.xml
+      junit: report.xml
 
 linter:
   stage: test
@@ -26,10 +32,16 @@ unittest_MR:
   image: python:3.7
   script:
     - pip install -r requirements.txt
-    - coverage run --source=. -m  pytest ./umami/tests/unit/ -v
+    - coverage run --source=. -m  pytest ./umami/tests/unit/ -v --junitxml=report.xml
     - coverage report
+    - coverage xml
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    when: always
+    reports:
+      cobertura: coverage.xml
+      junit: report.xml
 
 linter_MR:
   stage: test

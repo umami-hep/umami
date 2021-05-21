@@ -2,6 +2,8 @@ import operator
 
 import numpy as np
 
+from umami.configuration import global_config
+
 
 def GetCuts(jets, config, sample="ttbar"):
     # define operator dict to be able to call them via string from config
@@ -35,7 +37,7 @@ def GetCuts(jets, config, sample="ttbar"):
 
     if config.pT_max is not False:
         indices_to_remove.append(
-            np.where(jets["pt_btagJes"] > config.pT_max)[0]
+            np.where(jets[global_config.pTvariable] > config.pT_max)[0]
         )
     if sample == "ttbar":
         if config.bhad_pTcut is not None:
@@ -48,7 +50,7 @@ def GetCuts(jets, config, sample="ttbar"):
         if config.pTcut is not None:
             indices_to_remove_xjets = np.where(
                 (jets["HadronConeExclTruthLabelID"] != 5)
-                & (jets["pt_btagJes"] > config.pTcut)
+                & (jets[global_config.pTvariable] > config.pTcut)
             )[0]
             indices_to_remove.append(indices_to_remove_xjets)
 
@@ -65,7 +67,7 @@ def GetCuts(jets, config, sample="ttbar"):
         if config.pTcut is not None:
             indices_to_remove_xjets = np.where(
                 (jets["HadronConeExclTruthLabelID"] != 5)
-                & (jets["pt_btagJes"] < config.pTcut)
+                & (jets[global_config.pTvariable] < config.pTcut)
             )[0]
             indices_to_remove.append(indices_to_remove_xjets)
 

@@ -14,6 +14,7 @@ setup(
     packages=[
         "umami",
         "umami.tests",
+        "umami.configuration",
         "umami.train_tools",
         "umami.tools",
         "umami.preprocessing_tools",
