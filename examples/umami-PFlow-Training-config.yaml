@@ -32,6 +32,8 @@ exclude: []
 NN_structure:  
     lr: 0.01
     batch_size: 5000
+    epochs: 200
+    nJets_train:
     # DIPS structure
     DIPS_ppm_units: [100, 100, 128]
     DIPS_dense_units: [100, 100, 100, 30]

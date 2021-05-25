@@ -235,8 +235,16 @@ def Umami(args, train_config, preprocess_config):
     )
     file = h5py.File(train_config.train_file, "r")
     X_trk_train = file["X_trk_train"]
-    X_train = file["X_train"][:, variables]
+    X_train = file["X_train"]
     Y_train = file["Y_train"]
+
+    # Use the number of jets set in the config file for training
+    NN_structure = train_config.NN_structure
+    if NN_structure["nJets_train"] is not None:
+        X_trk_train = X_trk_train[: int(NN_structure["nJets_train"])]
+        X_train = X_train[: int(NN_structure["nJets_train"])]
+        Y_train = Y_train[: int(NN_structure["nJets_train"])]
+
     nJets, nTrks, nFeatures = X_trk_train.shape
     nJets, nDim = Y_train.shape
     njet_features = X_train.shape[1]
@@ -247,7 +255,6 @@ def Umami(args, train_config, preprocess_config):
         umami = load_model(
             train_config.config["model_file"], {"Sum": utt.Sum}, compile=False
         )
-        NN_structure = train_config.NN_structure
         model_optimizer = Adam(lr=NN_structure["lr"])
         umami.compile(
             loss="categorical_crossentropy",
@@ -289,7 +296,13 @@ def Umami(args, train_config, preprocess_config):
         .prefetch(3)
     )
 
-    nEpochs = args.epochs
+    # Check if epochs is set via argparser or not
+    if args.epochs is None:
+        nEpochs = NN_structure["epochs"]
+
+    # If not, use epochs from config file
+    else:
+        nEpochs = args.epochs
 
     reduce_lr = ReduceLROnPlateau(
         monitor="loss",

@@ -1,34 +1,217 @@
-integration_test_preprocessing:
-  stage: integration_test
+test_preprocessing_dips:
+  stage: integration_test_preprocessing
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py  -v --junitxml=report.xml
+    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips" -v --junitxml=report.xml 
   only:
     - master
   artifacts:
     name: "$CI_JOB_NAME"
     expire_in: 1 day
     paths:
-      - plots
-    when: always
+      - plots/
+      - preprocessing_dips/
     reports:
       junit: report.xml
 
-integration_test_preprocessing_MR:
-  stage: integration_test
+test_preprocessing_dl1r:
+  stage: integration_test_preprocessing
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  script:
+    - python setup.py develop
+    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r" -v --junitxml=report.xml 
+  only:
+    - master
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - plots/
+      - preprocessing_dl1r/
+    reports:
+      junit: report.xml
+
+test_preprocessing_umami:
+  stage: integration_test_preprocessing
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  script:
+    - python setup.py develop
+    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami" -v --junitxml=report.xml 
+  only:
+    - master
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - plots/
+      - preprocessing_umami/
+    reports:
+      junit: report.xml
+
+test_train_dips:
+  stage: integration_test_tagger
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  needs: ["test_preprocessing_dips"]
+  dependencies:
+    - test_preprocessing_dips
+  script:
+    - python setup.py develop
+    - pytest ./umami/tests/integration/test_train_dips.py -v --junitxml=report.xml
+  only:
+    - master
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - test_dips_model/
+    reports:
+      junit: report.xml
+
+test_train_dl1r:
+  stage: integration_test_tagger
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  needs: ["test_preprocessing_dl1r"]
+  dependencies:
+    - test_preprocessing_dl1r
+  script:
+    - python setup.py develop
+    - echo Here is no test yet!
+    # - pytest ./umami/tests/integration/test_train_dl1.py -v --junitxml=report.xml
+  only:
+    - master
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - test_dl1r_model/
+    # reports:
+    #   junit: report.xml
+
+test_train_umami:
+  stage: integration_test_tagger
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  needs: ["test_preprocessing_umami"]
+  dependencies:
+    - test_preprocessing_umami
+  script:
+    - python setup.py develop
+    - pytest ./umami/tests/integration/test_train_umami.py -v --junitxml=report.xml
+  only:
+    - master
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - test_umami_model/
+    reports:
+      junit: report.xml
+
+test_preprocessing_dips_MR:
+  stage: integration_test_preprocessing
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py  -v --junitxml=report.xml
+    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips" -v --junitxml=report.xml 
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
     name: "$CI_JOB_NAME"
     expire_in: 1 day
     paths:
-      - plots
-    when: always
+      - plots/
+      - preprocessing_dips/
     reports:
       junit: report.xml
 
+test_preprocessing_dl1r_MR:
+  stage: integration_test_preprocessing
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  script:
+    - python setup.py develop
+    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r" -v --junitxml=report.xml 
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - plots/
+      - preprocessing_dl1r/
+    reports:
+      junit: report.xml
+
+test_preprocessing_umami_MR:
+  stage: integration_test_preprocessing
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  script:
+    - python setup.py develop
+    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami" -v --junitxml=report.xml 
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - plots/
+      - preprocessing_umami/
+    reports:
+      junit: report.xml
+
+test_train_dips_MR:
+  stage: integration_test_tagger
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  needs: ["test_preprocessing_dips_MR"]
+  dependencies:
+    - test_preprocessing_dips_MR
+  script:
+    - python setup.py develop
+    - pytest ./umami/tests/integration/test_train_dips.py -v --junitxml=report.xml
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - test_dips_model/
+    reports:
+      junit: report.xml
+
+test_train_dl1r_MR:
+  stage: integration_test_tagger
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  needs: ["test_preprocessing_dl1r_MR"]
+  dependencies:
+    - test_preprocessing_dl1r_MR
+  script:
+    - python setup.py develop
+    - echo Here is no test yet!
+    # - pytest ./umami/tests/integration/test_train_dl1.py -v --junitxml=report.xml
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - test_dl1r_model/
+    # reports:
+    #   junit: report.xml
+
+test_train_umami_MR:
+  stage: integration_test_tagger
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  needs: ["test_preprocessing_umami_MR"]
+  dependencies:
+    - test_preprocessing_umami_MR
+  script:
+    - python setup.py develop
+    - pytest ./umami/tests/integration/test_train_umami.py -v --junitxml=report.xml
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    name: "$CI_JOB_NAME"
+    expire_in: 1 day
+    paths:
+      - test_umami_model/
+    reports:
+      junit: report.xml

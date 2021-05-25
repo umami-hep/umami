@@ -12,3 +12,25 @@ test_preprocessing:
         - MC16d_hybrid-cjets_even_1_PFlow-merged.h5
         - MC16d_hybrid-ext_even_0_PFlow-merged.h5
         - MC16d_hybrid-ujets_even_1_PFlow-merged.h5
+
+test_dips:
+    data_subfolder: 'dips'
+    model_name: 'test_dips_model'
+    config: 'examples/Dips-PFlow-Training-config.yaml'
+    preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
+    plotting_config: 'examples/plotting_umami_config_dips.yaml'
+    testdir: '/tmp/umami/dips'
+    files:
+        - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+        - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+
+test_umami:
+    data_subfolder: 'umami'
+    model_name: 'test_umami_model'
+    config: 'examples/umami-PFlow-Training-config.yaml'
+    preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
+    plotting_config: 'examples/plotting_umami_config_Umami.yaml'
+    testdir: '/tmp/umami/umami'
+    files:
+        - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+        - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5

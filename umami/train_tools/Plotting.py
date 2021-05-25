@@ -695,6 +695,147 @@ def RunPerformanceCheck(
     )
 
 
+def RunPerformanceCheckDips(
+    train_config,
+    compare_tagger=True,
+    tagger_comp_var=["DL1r_pu", "DL1r_pc", "DL1r_pb"],
+    comp_tagger_name="DL1r",
+    WP_b=0.77,
+    fc=0.018,
+    fb=0.2,
+    dict_file_name=None,
+):
+    print("Running performance check.")
+    Eval_parameters = train_config.Eval_parameters_validation
+    plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
+    recommended_fc_values = {"DL1r": 0.018, "RNNIP": 0.08}
+
+    if (
+        "fc_value" in Eval_parameters
+        and Eval_parameters["fc_value"] is not None
+    ):
+        fc = Eval_parameters["fc_value"]
+
+    if compare_tagger:
+        variables = ["HadronConeExclTruthLabelID"]
+        variables += tagger_comp_var[:]
+        df = pd.DataFrame(
+            h5py.File(train_config.validation_file, "r")["/jets"][:][variables]
+        )
+
+        df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
+        df.replace({"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True)
+
+        y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
+        c_rej, u_rej = GetRejection(
+            df[tagger_comp_var[:]].values,
+            y_true,
+            WP_b,
+            frac=recommended_fc_values[comp_tagger_name],
+        )
+
+    else:
+        c_rej, u_rej = None, None
+
+    df_results = pd.read_json(dict_file_name)
+    plot_dir = f"{train_config.model_name}/plots"
+    print("saving plots to", plot_dir)
+    os.makedirs(plot_dir, exist_ok=True)
+    if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
+        plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
+        PlotRejPerEpoch(
+            df_results=df_results,
+            plot_name=plot_name,
+            c_rej=c_rej,
+            u_rej=u_rej,
+            labels={
+                "c_rej": r"$c$-rej. - $t\bar{t}$",
+                "u_rej": r"light-rej. - $t\bar{t}$",
+            },
+            rej_keys={
+                "c_rej": "c_rej",
+                "u_rej": "u_rej",
+            },
+            comp_tagger_name=comp_tagger_name,
+            target_beff=WP_b,
+            fc_value=fc,
+            UseAtlasTag=Eval_parameters["UseAtlasTag"],
+            AtlasTag=Eval_parameters["AtlasTag"],
+            SecondTag=Eval_parameters["SecondTag"],
+        )
+
+    if train_config.add_validation_file is not None:
+        if compare_tagger:
+            variables = ["HadronConeExclTruthLabelID"]
+            variables += tagger_comp_var[:]
+            df = pd.DataFrame(
+                h5py.File(train_config.add_validation_file, "r")["/jets"][:][
+                    variables
+                ]
+            )
+
+            df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
+            df.replace(
+                {"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True
+            )
+            y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
+            c_rej, u_rej = GetRejection(
+                df[tagger_comp_var[:]].values,
+                y_true,
+                WP_b,
+                frac=recommended_fc_values[comp_tagger_name],
+            )
+        else:
+            c_rej, u_rej = None, None
+
+        if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
+            plot_name = f"{plot_dir}/rej-plot_val_add.{plot_datatype}"
+            PlotRejPerEpoch(
+                df_results,
+                plot_name,
+                c_rej=c_rej,
+                u_rej=u_rej,
+                labels={
+                    "c_rej": r"$c$-rej. - ext. $Z'$",
+                    "u_rej": r"light-rej. - ext. $Z'$",
+                },
+                rej_keys={
+                    "c_rej": "c_rej_add",
+                    "u_rej": "u_rej_add",
+                },
+                comp_tagger_name=comp_tagger_name,
+                target_beff=WP_b,
+                fc_value=fc,
+                UseAtlasTag=Eval_parameters["UseAtlasTag"],
+                AtlasTag=Eval_parameters["AtlasTag"],
+                SecondTag=Eval_parameters["SecondTag"],
+            )
+
+    plot_name = f"{plot_dir}/loss-plot.{plot_datatype}"
+    PlotLosses(
+        df_results,
+        plot_name,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
+    )
+    acc_ymin, acc_ymax = None, None
+    if "acc_ymin" in Eval_parameters:
+        acc_ymin = Eval_parameters["acc_ymin"]
+    if "acc_ymax" in Eval_parameters:
+        acc_ymax = Eval_parameters["acc_ymax"]
+    plot_name = f"{plot_dir}/accuracy-plot.{plot_datatype}"
+    PlotAccuracies(
+        df_results,
+        plot_name,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
+        ymin=acc_ymin,
+        ymax=acc_ymax,
+    )
+
+
 def RunPerformanceCheckUmami(
     train_config,
     compare_tagger=True,
@@ -882,7 +1023,7 @@ def plot_validation(train_config, beff, cfrac, dict_file_name):
 
 
 def plot_validation_dips(train_config, beff, cfrac, dict_file_name):
-    RunPerformanceCheck(
+    RunPerformanceCheckDips(
         train_config,
         compare_tagger=True,
         tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],

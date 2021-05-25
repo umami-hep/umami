@@ -21,13 +21,27 @@ yaml_loader.add_implicit_resolver(
 )
 
 
-def replaceLineInFile(file, key, newLine):
+def replaceLineInFile(file, key, newLine, only_first=False):
     filedata = ""
-    with open(file, "r") as f:
-        for line in f:
-            if key in line:
-                line = newLine + "\n"
-            filedata += line
 
-    with open(file, "w") as f:
-        f.write(filedata)
+    if only_first is True:
+        replacedLine = False
+        with open(file, "r") as f:
+            for line in f:
+                if key in line and not replacedLine:
+                    line = newLine + "\n"
+                    replacedLine = True
+                filedata += line
+
+        with open(file, "w") as f:
+            f.write(filedata)
+
+    else:
+        with open(file, "r") as f:
+            for line in f:
+                if key in line:
+                    line = newLine + "\n"
+                filedata += line
+
+        with open(file, "w") as f:
+            f.write(filedata)

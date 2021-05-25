@@ -73,12 +73,20 @@ def GetParser():
 
 
 def main(args, train_config, preprocess_config):
+    # Check for nJets args
+    if args.nJets is None:
+        nJets = train_config.Eval_parameters_validation["n_jets"]
+
+    else:
+        nJets = args.nJets
+
     if args.dl1:
         dictfile = f"{train_config.model_name}/DictFile.json"
         utt.RunPerformanceCheck(
             train_config,
             dict_file_name=dictfile,
         )
+
     else:
         if args.dict:
             output_file_name = args.dict
@@ -95,7 +103,7 @@ def main(args, train_config, preprocess_config):
                     preprocess_config,
                     args.beff,
                     args.cfrac,
-                    args.nJets,
+                    nJets,
                 )
                 beff = args.beff
                 cfrac = args.cfrac
@@ -106,7 +114,7 @@ def main(args, train_config, preprocess_config):
                     preprocess_config,
                     args.beff,
                     args.cfrac,
-                    args.nJets,
+                    nJets,
                 )
                 beff = args.beff
                 cfrac = args.cfrac
