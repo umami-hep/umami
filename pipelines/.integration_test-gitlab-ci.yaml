@@ -1,9 +1,12 @@
 test_preprocessing_dips:
   stage: integration_test_preprocessing
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  dependencies:
+    - unittest
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips" -v --junitxml=report.xml 
+    - COVERAGE_FILE=.coverage.test_preprocessing_dips coverage run --source=. -m  pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips" -v --junitxml=report.xml
+    - cp .coverage.test_preprocessing_dips ./coverage_files/.coverage.test_preprocessing_dips
   only:
     - master
   artifacts:
@@ -12,15 +15,19 @@ test_preprocessing_dips:
     paths:
       - plots/
       - preprocessing_dips/
+      - coverage_files/
     reports:
       junit: report.xml
 
 test_preprocessing_dl1r:
   stage: integration_test_preprocessing
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  dependencies:
+    - unittest
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r" -v --junitxml=report.xml 
+    - COVERAGE_FILE=.coverage.test_preprocessing_dl1r coverage run --source=. -m  pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r" -v --junitxml=report.xml
+    - cp .coverage.test_preprocessing_dl1r ./coverage_files/.coverage.test_preprocessing_dl1r
   only:
     - master
   artifacts:
@@ -29,15 +36,19 @@ test_preprocessing_dl1r:
     paths:
       - plots/
       - preprocessing_dl1r/
+      - coverage_files/
     reports:
       junit: report.xml
 
 test_preprocessing_umami:
   stage: integration_test_preprocessing
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  dependencies:
+    - unittest
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami" -v --junitxml=report.xml 
+    - COVERAGE_FILE=.coverage.test_preprocessing_umami coverage run --source=. -m  pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami" -v --junitxml=report.xml
+    - cp .coverage.test_preprocessing_umami ./coverage_files/.coverage.test_preprocessing_umami
   only:
     - master
   artifacts:
@@ -46,6 +57,7 @@ test_preprocessing_umami:
     paths:
       - plots/
       - preprocessing_umami/
+      - coverage_files/
     reports:
       junit: report.xml
 
@@ -57,7 +69,8 @@ test_train_dips:
     - test_preprocessing_dips
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_train_dips.py -v --junitxml=report.xml
+    - COVERAGE_FILE=.coverage.test_train_dips coverage run --source=. -m  pytest ./umami/tests/integration/test_train_dips.py -v --junitxml=report.xml
+    - cp .coverage.test_train_dips ./coverage_files/.coverage.test_train_dips
   only:
     - master
   artifacts:
@@ -65,6 +78,7 @@ test_train_dips:
     expire_in: 1 day
     paths:
       - test_dips_model/
+      - coverage_files/
     reports:
       junit: report.xml
 
@@ -77,7 +91,8 @@ test_train_dl1r:
   script:
     - python setup.py develop
     - echo Here is no test yet!
-    # - pytest ./umami/tests/integration/test_train_dl1.py -v --junitxml=report.xml
+    # - COVERAGE_FILE=.coverage.test_train_dl1r coverage run --source=. -m  pytest ./umami/tests/integration/test_train_dl1.py -v --junitxml=report.xml
+    # - cp .coverage.test_train_dl1r ./coverage_files/.coverage.test_train_dl1r
   only:
     - master
   artifacts:
@@ -85,6 +100,7 @@ test_train_dl1r:
     expire_in: 1 day
     paths:
       - test_dl1r_model/
+      - coverage_files/
     # reports:
     #   junit: report.xml
 
@@ -96,7 +112,8 @@ test_train_umami:
     - test_preprocessing_umami
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_train_umami.py -v --junitxml=report.xml
+    - COVERAGE_FILE=.coverage.test_train_umami coverage run --source=. -m  pytest ./umami/tests/integration/test_train_umami.py -v --junitxml=report.xml
+    - cp .coverage.test_train_umami ./coverage_files/.coverage.test_train_umami
   only:
     - master
   artifacts:
@@ -104,15 +121,19 @@ test_train_umami:
     expire_in: 1 day
     paths:
       - test_umami_model/
+      - coverage_files/
     reports:
       junit: report.xml
 
 test_preprocessing_dips_MR:
   stage: integration_test_preprocessing
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  dependencies:
+    - unittest_MR
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips" -v --junitxml=report.xml 
+    - COVERAGE_FILE=.coverage.test_preprocessing_dips coverage run --source=. -m  pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips" -v --junitxml=report.xml
+    - cp .coverage.test_preprocessing_dips ./coverage_files/.coverage.test_preprocessing_dips
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
@@ -121,15 +142,19 @@ test_preprocessing_dips_MR:
     paths:
       - plots/
       - preprocessing_dips/
+      - coverage_files/
     reports:
       junit: report.xml
 
 test_preprocessing_dl1r_MR:
   stage: integration_test_preprocessing
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  dependencies:
+    - unittest_MR
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r" -v --junitxml=report.xml 
+    - COVERAGE_FILE=.coverage.test_preprocessing_dl1r coverage run --source=. -m  pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r" -v --junitxml=report.xml
+    - cp .coverage.test_preprocessing_dl1r ./coverage_files/.coverage.test_preprocessing_dl1r
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
@@ -138,15 +163,19 @@ test_preprocessing_dl1r_MR:
     paths:
       - plots/
       - preprocessing_dl1r/
+      - coverage_files/
     reports:
       junit: report.xml
 
 test_preprocessing_umami_MR:
   stage: integration_test_preprocessing
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  dependencies:
+    - unittest_MR
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami" -v --junitxml=report.xml 
+    - COVERAGE_FILE=.coverage.test_preprocessing_umami coverage run --source=. -m  pytest ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami" -v --junitxml=report.xml
+    - cp .coverage.test_preprocessing_umami ./coverage_files/.coverage.test_preprocessing_umami
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
@@ -155,6 +184,7 @@ test_preprocessing_umami_MR:
     paths:
       - plots/
       - preprocessing_umami/
+      - coverage_files/
     reports:
       junit: report.xml
 
@@ -166,7 +196,8 @@ test_train_dips_MR:
     - test_preprocessing_dips_MR
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_train_dips.py -v --junitxml=report.xml
+    - COVERAGE_FILE=.coverage.test_train_dips coverage run --source=. -m  pytest ./umami/tests/integration/test_train_dips.py -v --junitxml=report.xml
+    - cp .coverage.test_train_dips ./coverage_files/.coverage.test_train_dips
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
@@ -174,6 +205,7 @@ test_train_dips_MR:
     expire_in: 1 day
     paths:
       - test_dips_model/
+      - coverage_files/
     reports:
       junit: report.xml
 
@@ -186,7 +218,8 @@ test_train_dl1r_MR:
   script:
     - python setup.py develop
     - echo Here is no test yet!
-    # - pytest ./umami/tests/integration/test_train_dl1.py -v --junitxml=report.xml
+    # - COVERAGE_FILE=.coverage.test_train_dl1r coverage run --source=. -m  pytest ./umami/tests/integration/test_train_dl1.py -v --junitxml=report.xml
+    # - cp .coverage.test_train_dl1r ./coverage_files/.coverage.test_train_dl1r
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
@@ -194,6 +227,7 @@ test_train_dl1r_MR:
     expire_in: 1 day
     paths:
       - test_dl1r_model/
+      - coverage_files/
     # reports:
     #   junit: report.xml
 
@@ -205,7 +239,8 @@ test_train_umami_MR:
     - test_preprocessing_umami_MR
   script:
     - python setup.py develop
-    - pytest ./umami/tests/integration/test_train_umami.py -v --junitxml=report.xml
+    - COVERAGE_FILE=.coverage.test_train_umami coverage run --source=. -m  pytest ./umami/tests/integration/test_train_umami.py -v --junitxml=report.xml
+    - cp .coverage.test_train_umami ./coverage_files/.coverage.test_train_umami
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
@@ -213,5 +248,6 @@ test_train_umami_MR:
     expire_in: 1 day
     paths:
       - test_umami_model/
+      - coverage_files/
     reports:
       junit: report.xml
