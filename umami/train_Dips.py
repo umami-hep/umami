@@ -38,7 +38,7 @@ def GetParser():
     )
 
     parser.add_argument(
-        "-e", "--epochs", type=int, help="Number of trainng epochs."
+        "-e", "--epochs", type=int, help="Number of training epochs."
     )
 
     # TODO: implementng vr_overlap

@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from pathlib import Path
 
 import h5py
@@ -13,6 +14,14 @@ from tensorflow.keras.models import load_model
 
 from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
 from umami.tools import yaml_loader
+
+
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+
+def natural_keys(text):
+    return [atoi(c) for c in re.split(r"(\d+)", text)]
 
 
 def get_validation_dict_name(WP_b, fc_value, n_jets, dir_name):
@@ -920,11 +929,13 @@ def calc_validation_metrics_dips(
         training_output_list = json.load(training_out_json)
 
     results = []
-    for n, model_file in enumerate(training_output):
+    for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
         print(f"Working on {n+1}/{len(training_output)} input files")
         result_dict = {}
         epoch = int(
-            model_file[model_file.rfind("epoch") + 5 : model_file.find(".h5")]
+            model_file[
+                model_file.rfind("model_epoch") + 11 : model_file.find(".h5")
+            ]
         )
         for train_epoch in training_output_list:
             if epoch == train_epoch["epoch"]:

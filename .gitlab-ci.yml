@@ -1,7 +1,8 @@
 stages:
   - test
   - image_build_umamibase
-  - integration_test
+  - integration_test_preprocessing
+  - integration_test_tagger
   - builds
   - image_build_umami
   - publish
