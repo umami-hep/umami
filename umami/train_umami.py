@@ -41,7 +41,6 @@ def GetParser():
     parser.add_argument(
         "-e",
         "--epochs",
-        default=300,
         type=int,
         help="Number\
         of training epochs.",

@@ -3,6 +3,7 @@ stages:
   - image_build_umamibase
   - integration_test_preprocessing
   - integration_test_tagger
+  - converage_test_stage
   - builds
   - image_build_umami
   - publish
@@ -11,14 +12,15 @@ unittest:
   stage: test
   image: python:3.7
   script:
+    - mkdir coverage_files/
     - pip install -r requirements.txt
-    - coverage run --source=. -m  pytest ./umami/tests/unit/ -v --junitxml=report.xml
-    - coverage report
-    - coverage xml
+    - COVERAGE_FILE=.coverage.unittest coverage run --source=. -m  pytest ./umami/tests/unit/ -v --junitxml=report.xml
+    - cp .coverage.unittest coverage_files/.coverage.unittest
   artifacts:
     when: always
+    paths:
+      - coverage_files/
     reports:
-      cobertura: coverage.xml
       junit: report.xml
 
 linter:
@@ -32,16 +34,17 @@ unittest_MR:
   stage: test
   image: python:3.7
   script:
+    - mkdir coverage_files/
     - pip install -r requirements.txt
-    - coverage run --source=. -m  pytest ./umami/tests/unit/ -v --junitxml=report.xml
-    - coverage report
-    - coverage xml
+    - COVERAGE_FILE=.coverage.unittest coverage run --source=. -m  pytest ./umami/tests/unit/ -v --junitxml=report.xml
+    - cp .coverage.unittest coverage_files/.coverage.unittest
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
     when: always
+    paths:
+      - coverage_files/
     reports:
-      cobertura: coverage.xml
       junit: report.xml
 
 linter_MR:
@@ -52,6 +55,45 @@ linter_MR:
     - flake8 ./umami
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+
+test_coverage:
+  stage: converage_test_stage
+  image: python:3.7-slim
+  needs: ["test_train_dips", "test_train_dl1r", "test_train_umami"]
+  script:
+    - pip install -r requirements.txt
+    - cd ./coverage_files/
+    - coverage combine
+    - coverage report
+    - coverage xml
+  only:
+    - master
+  artifacts:
+    when: always
+    paths:
+      - coverage_files/
+    reports:
+      cobertura: coverage_files/coverage.xml
+    
+
+test_coverage_MR:
+  stage: converage_test_stage
+  image: python:3.7-slim
+  needs: ["test_train_dips_MR", "test_train_dl1r_MR", "test_train_umami_MR"]
+  script:
+    - pip install -r requirements.txt
+    - cd ./coverage_files/
+    - coverage combine
+    - coverage report
+    - coverage xml
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    when: always
+    paths:
+      - coverage_files/
+    reports:
+      cobertura: coverage_files/coverage.xml
 
 include:
   - 'pipelines/.docker-gitlab-ci.yaml'
