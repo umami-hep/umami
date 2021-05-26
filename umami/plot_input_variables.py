@@ -213,6 +213,11 @@ def plot_jets_variables(plot_config, plot_type):
 if __name__ == "__main__":
     args = GetParser()
 
+    if not (args.jets or args.track):
+        raise Exception(
+            "Please provide '--tracks' or '--jets' to plot their input variables"
+        )
+
     if args.tracks:
         # Open and load the config files used in the eval process
         with open(args.config_file) as yaml_config:

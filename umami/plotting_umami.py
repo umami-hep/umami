@@ -314,12 +314,12 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
         y_target=y_target, y_predicted=y_predicted, binary=False
     )
     if bool_use_taus:
-        class_names = ["light", "c", "b", r"$\tau$"]
+        class_names = ["b", "c", "light", r"$\tau$"]
     else:
         class_names = [
-            "light",
-            "c",
             "b",
+            "c",
+            "light",
         ]
     mlxtend_plot_cm(
         conf_mat=cm,

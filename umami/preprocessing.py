@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import pathlib
 import sys
 from glob import glob
 from pprint import pprint
@@ -683,6 +684,8 @@ def RunUndersampling(args, config):
             statistics_dict = upt.RunStatSamples(bjets, cjets, ujets, taujets)
 
         out_file = config.GetFileName(x + 1, option="downsampled")
+        # ensure output path exists
+        os.makedirs(pathlib.Path(out_file).parent.absolute(), exist_ok=True)
         logging.info("saving file:", out_file)
         h5f = h5py.File(out_file, "w")
         h5f.create_dataset("bjets", data=bjets, compression="gzip")
