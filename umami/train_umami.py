@@ -4,7 +4,6 @@ import os
 
 import h5py
 import tensorflow as tf
-import yaml
 from tensorflow.keras import activations, layers
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from tensorflow.keras.layers import (
@@ -20,7 +19,6 @@ from tensorflow.keras.optimizers import Adam
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
-from umami.tools import yaml_loader
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
@@ -223,17 +221,18 @@ def Umami(args, train_config, preprocess_config):
             train_config.Eval_parameters_validation["n_jets"],
         )
 
-    exclude = None
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
+    # exclude = None
+    # if "exclude" in train_config.config:
+    #     exclude = train_config.config["exclude"]
+    # with open(train_config.var_dict, "r") as conf:
+    #     variable_config = yaml.load(conf, Loader=yaml_loader)
+    # variables, excluded_variables = utt.get_jet_feature_indices(
+    #     variable_config["train_variables"], exclude
+    # )
 
-    with open(train_config.var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
-    variables, excluded_variables = utt.get_jet_feature_indices(
-        variable_config["train_variables"], exclude
-    )
     file = h5py.File(train_config.train_file, "r")
     X_trk_train = file["X_trk_train"]
+    # X_train = file["X_train"][:, variables]
     X_train = file["X_train"]
     Y_train = file["Y_train"]
 
