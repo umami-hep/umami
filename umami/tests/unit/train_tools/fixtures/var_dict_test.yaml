@@ -1,0 +1,19 @@
+label: HadronConeExclTruthLabelID
+train_variables:
+  JetKinematics:
+    - absEta_btagJes
+    - pt_btagJes
+  JetFitter:
+    - JetFitter_isDefaults
+    - JetFitter_mass
+
+track_train_variables:
+  noNormVars: 
+    - IP3D_signed_d0_significance
+
+  logNormVars:
+    - ptfrac
+    - dr
+  jointNormVars:
+    - numberOfPixelHits
+    - numberOfSCTHits

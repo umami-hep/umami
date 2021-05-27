@@ -1,0 +1,46 @@
+{
+    "jets": [
+        {
+            "name": "absEta_btagJes",
+            "shift": 0.9172081596304374,
+            "scale": 0.6323421220996173,
+            "default": 0.9172081596304374
+        },
+        {
+            "name": "pt_btagJes",
+            "shift": 602608.6031220831,
+            "scale": 1032429.3766586224,
+            "default": 602608.6031220831
+        },
+        {
+            "name": "JetFitter_mass",
+            "shift": 2631.1425251320456,
+            "scale": 1981.4847806154044,
+            "default": 2631.1424966874542
+        },
+        {
+            "name": "JetFitter_isDefaults",
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        }
+    ],
+    "tracks": {
+        "ptfrac": {
+            "shift": -3.8192989826202393,
+            "scale": 1.6193764209747314
+        },
+        "dr": {
+            "shift": -2.772351026535034,
+            "scale": 1.0503476858139038
+        },
+        "numberOfPixelHits": {
+            "shift": 4.02654504776001,
+            "scale": 0.8564527630805969
+        },
+        "numberOfSCTHits": {
+            "shift": 8.077516555786133,
+            "scale": 1.3677268028259277
+        }
+    }
+}
