@@ -1,6 +1,7 @@
 stages:
-  - test
+  - linting
   - image_build_umamibase
+  - unit_test
   - integration_test_preprocessing
   - integration_test_tagger
   - converage_test_stage
@@ -8,53 +9,33 @@ stages:
   - image_build_umami
   - publish
 
-unittest:
-  stage: test
-  image: python:3.7
-  script:
-    - mkdir coverage_files/
-    - pip install -r requirements.txt
-    - COVERAGE_FILE=.coverage.unittest coverage run --source=. -m  pytest ./umami/tests/unit/ -v --junitxml=report.xml
-    - cp .coverage.unittest coverage_files/.coverage.unittest
-  artifacts:
-    when: always
-    paths:
-      - coverage_files/
-    reports:
-      junit: report.xml
-
 linter:
-  stage: test
+  stage: linting
   image: python:3.7-slim
   script:
+    - mkdir coverage_files/
     - pip install flake8
     - flake8 ./umami
-
-unittest_MR:
-  stage: test
-  image: python:3.7
-  script:
-    - mkdir coverage_files/
-    - pip install -r requirements.txt
-    - COVERAGE_FILE=.coverage.unittest coverage run --source=. -m  pytest ./umami/tests/unit/ -v --junitxml=report.xml
-    - cp .coverage.unittest coverage_files/.coverage.unittest
   only:
-    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+    - master
   artifacts:
     when: always
     paths:
       - coverage_files/
-    reports:
-      junit: report.xml
 
 linter_MR:
-  stage: test
+  stage: linting
   image: python:3.7-slim
   script:
+    - mkdir coverage_files/
     - pip install flake8
     - flake8 ./umami
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    when: always
+    paths:
+      - coverage_files/
 
 test_coverage:
   stage: converage_test_stage
@@ -96,6 +77,7 @@ test_coverage_MR:
       cobertura: coverage_files/coverage.xml
 
 include:
+  - 'pipelines/.unit_test-gitlab-ci.yaml'
   - 'pipelines/.docker-gitlab-ci.yaml'
   - 'pipelines/.docs-gitlab-ci.yaml'
   - 'pipelines/.integration_test-gitlab-ci.yaml'

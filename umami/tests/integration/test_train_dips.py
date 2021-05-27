@@ -56,6 +56,26 @@ def runTrainingDips(config):
     if isSuccess is True:
         run_plot_epoch_Dips
 
+    logging.info("Test: running evaluate_model.py for DIPS...")
+    run_evaluate_model_Dips = run(
+        [
+            "evaluate_model.py",
+            "-c",
+            f"{config}",
+            "-e",
+            "1",
+            "--dips",
+        ]
+    )
+    try:
+        run_evaluate_model_Dips.check_returncode()
+    except CalledProcessError:
+        logging.info("Test failed: evaluate_model.py for DIPS.")
+        isSuccess = False
+
+    if isSuccess is True:
+        run_evaluate_model_Dips
+
     return isSuccess
 
 

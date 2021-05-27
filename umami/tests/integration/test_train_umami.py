@@ -55,6 +55,25 @@ def runTrainingUmami(config):
     if isSuccess is True:
         run_plot_epoch_Umami
 
+    logging.info("Test: running evaluate_model.py for UMAMI...")
+    run_evaluate_model_Umami = run(
+        [
+            "evaluate_model.py",
+            "-c",
+            f"{config}",
+            "-e",
+            "1",
+        ]
+    )
+    try:
+        run_evaluate_model_Umami.check_returncode()
+    except CalledProcessError:
+        logging.info("Test failed: evaluate_model.py for UMAMI.")
+        isSuccess = False
+
+    if isSuccess is True:
+        run_evaluate_model_Umami
+
     return isSuccess
 
 
