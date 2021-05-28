@@ -2,7 +2,9 @@ import argparse
 import os
 
 import h5py
+import numpy as np
 import tensorflow as tf
+import yaml
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from tensorflow.keras.layers import (
     Activation,
@@ -16,6 +18,7 @@ from tensorflow.keras.optimizers import Adam
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
+from umami.tools import yaml_loader
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
@@ -95,7 +98,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     bool_use_taus = (
         train_config.bool_use_taus and preprocess_config.bool_process_taus
     )
-    print("Using bool_use_taus = ", bool_use_taus)
+    print("Including taus:", bool_use_taus)
     exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
@@ -148,14 +151,31 @@ def TrainLargeFile(args, train_config, preprocess_config):
         eval_config=train_config.Eval_parameters_validation,
     )
     callbacks = [reduce_lr, my_callback]
+
+    with open(train_config.var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
+    _, _, excluded_var = utt.get_jet_feature_indices(
+        variable_config["train_variables"], exclude
+    )
+
     file = h5py.File(train_config.train_file, "r")
     X_train = file["X_train"]
     Y_train = file["Y_train"]
+
+    # Exclude variables if needed
+    X_train = (
+        np.delete(X_train, excluded_var, 1)
+        if excluded_var is not None
+        else X_train
+    )
+
+    # Exclude taus if needed
     (X_train, Y_train) = (
         utt.filter_taus(X_train, Y_train)
         if not (bool_use_taus)
         else (X_train, Y_train)
     )
+
     # create the training datasets
     # examples taken from https://adventuresinmachinelearning.com/tensorflow-dataset-tutorial/  # noqa
     dx_train = tf.data.Dataset.from_tensor_slices(X_train)

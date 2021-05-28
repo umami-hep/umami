@@ -272,7 +272,7 @@ class MyCallbackUmami_TestCase(unittest.TestCase):
 
 class get_jet_feature_indices_TestCase(unittest.TestCase):
     """
-    Test the jet features indicies slicing.
+    Test the jet features indices slicing.
     """
 
     def setUp(self):
@@ -286,13 +286,15 @@ class get_jet_feature_indices_TestCase(unittest.TestCase):
             "JetFitter_mass",
         ]
         self.exclude = ["absEta_btagJes"]
+        self.position = 0
 
     def test_get_jet_feature_indices(self):
-        variables, excluded_variables = get_jet_feature_indices(
+        variables, excluded_variables, position = get_jet_feature_indices(
             self.variable_config, self.exclude
         )
         self.assertEqual(variables, self.cutted_variables)
         self.assertEqual(excluded_variables, self.exclude)
+        self.assertEqual(position[0], self.position)
 
 
 class GetSamples_TestCase(unittest.TestCase):

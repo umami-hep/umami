@@ -226,7 +226,7 @@ def Umami(args, train_config, preprocess_config):
     #     exclude = train_config.config["exclude"]
     # with open(train_config.var_dict, "r") as conf:
     #     variable_config = yaml.load(conf, Loader=yaml_loader)
-    # variables, excluded_variables = utt.get_jet_feature_indices(
+    # variables, excluded_variables, _ = utt.get_jet_feature_indices(
     #     variable_config["train_variables"], exclude
     # )
 
