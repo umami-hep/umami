@@ -462,9 +462,10 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
     Works for both sub-aglorithm and variables
     """
     excluded_variables = []
+    all_variables = [i for j in variable_header for i in variable_header[j]]
     if exclude is None:
-        variables = [i for j in variable_header for i in variable_header[j]]
-        return variables, excluded_variables
+        return all_variables, excluded_variables, None
+
     missing_header = []
     for exclude_this in exclude:
         if exclude_this in variable_header:
@@ -473,6 +474,7 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
         else:
             missing_header.append(exclude_this)
     variables = [i for j in variable_header for i in variable_header[j]]
+
     # If elements in exclude are not headers, check if they aren't variables
     for exclude_that in missing_header:
         if exclude_that in variables:
@@ -480,7 +482,15 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
             variables.remove(exclude_that)
         else:
             print("Variables to exclude not found: ", exclude_that)
-    return variables, excluded_variables
+    # Get the index of the excluded variables for training
+    excluded_var_indices = [
+        i for i, excl in enumerate(all_variables) if excl in excluded_variables
+    ]
+    # set to None if the list of excluded variables is empty
+    excluded_var_indices = (
+        None if len(excluded_var_indices) == 0 else excluded_var_indices
+    )
+    return variables, excluded_variables, excluded_var_indices
 
 
 def GetTestSample(
@@ -505,7 +515,7 @@ def GetTestSample(
     else:
         jets.query(f"{variable_config['label']} <= 5", inplace=True)
     labels = GetBinaryLabels(jets[variable_config["label"]].values)
-    variables, excluded_variables = get_jet_feature_indices(
+    variables, excluded_variables, _ = get_jet_feature_indices(
         variable_config["train_variables"], exclude
     )
     jets = jets[variables]
