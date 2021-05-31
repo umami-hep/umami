@@ -432,7 +432,7 @@ def RunUndersampling(args, config):
         )
 
     for x in range(config.iterations):
-        logging.info("Iteration", x + 1, "of", config.iterations)
+        logging.info(f"Iteration {x + 1} of {config.iterations}")
         vec_Z = f_Z["jets"][N_list[x]["nZ"] : N_list[x + 1]["nZ"]]
         vec_Z = append_fields(
             vec_Z,
@@ -686,7 +686,7 @@ def RunUndersampling(args, config):
         out_file = config.GetFileName(x + 1, option="downsampled")
         # ensure output path exists
         os.makedirs(pathlib.Path(out_file).parent.absolute(), exist_ok=True)
-        logging.info("saving file:", out_file)
+        logging.info(f"saving file: {out_file}")
         h5f = h5py.File(out_file, "w")
         h5f.create_dataset("bjets", data=bjets, compression="gzip")
         h5f.create_dataset("cjets", data=cjets, compression="gzip")
@@ -909,7 +909,7 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
 
     d_arr = np.stack(var_arr_list, axis=-1)
     out_file = config.GetFileName(option="preprocessed", iteration=iteration)
-    logging.info("saving file:", out_file)
+    logging.info(f"saving file: {out_file}")
     with h5py.File(out_file, "a") as h5file:
         h5file.create_dataset("trks", data=d_arr, compression="gzip")
         # TODO: Add plotting
@@ -975,7 +975,7 @@ def ApplyScalesNumpy(args, config, iteration=1):
             jets[elem["name"]] /= elem["scale"]
 
     out_file = config.GetFileName(option="preprocessed", iteration=iteration)
-    logging.info("Saving file:", out_file)
+    logging.info(f"Saving file: {out_file}")
     with h5py.File(out_file, "w") as h5file:
         h5file.create_dataset(
             "jets", data=jets.to_records(index=False), compression="gzip"
@@ -1007,11 +1007,11 @@ def WriteTrainSample(args, config):
     variables_header = variable_config["train_variables"]
     variables = [i for j in variables_header for i in variables_header[j]]
 
-    logging.info("Saving sample to", out_file)
+    logging.info(f"Saving sample to {out_file}")
     with h5py.File(out_file, "w") as output:
         for i, file in enumerate(input_files):
             logging.info(
-                "Start processing file", i + 1, "of", len(input_files)
+                f"Start processing file {i + 1} of {len(input_files)}"
             )
             with h5py.File(file, "r") as in_file:
                 jets = in_file["/jets"][:]
