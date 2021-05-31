@@ -166,7 +166,7 @@ def Dips_model(train_config=None, input_shape=None):
     dips.summary()
 
     # Set optimier and loss
-    model_optimizer = Adam(lr=NN_structure["lr"])
+    model_optimizer = Adam(learning_rate=NN_structure["lr"])
     dips.compile(
         loss="categorical_crossentropy",
         optimizer=model_optimizer,
