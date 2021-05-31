@@ -201,7 +201,7 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
     )
     umami.summary()
 
-    model_optimizer = Adam(lr=NN_structure["lr"])
+    model_optimizer = Adam(learning_rate=NN_structure["lr"])
     umami.compile(
         loss="categorical_crossentropy",
         loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},

@@ -84,7 +84,7 @@ def NN_model(train_config, input_shape):
     model = Model(inputs=inputs, outputs=predictions)
     model.summary()
 
-    model_optimizer = Adam(lr=NN_config["lr"])
+    model_optimizer = Adam(learning_rate=NN_config["lr"])
     model.compile(
         loss="categorical_crossentropy",
         optimizer=model_optimizer,

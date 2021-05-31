@@ -44,6 +44,7 @@ setup(
         "umami/plotting_umami.py",
         "umami/plotting_epoch_performance.py",
     ],
+    data_files=["umami/configs/global_config.yaml"],
     description="Machine learning based flavour tagging training framework.",
     url="https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami",
 )
