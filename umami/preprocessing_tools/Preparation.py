@@ -1,12 +1,11 @@
 """
 Helper functions to creating hybrid hdf5 samples from ttbar and Zprime ntuples
 """
-import logging
 
 import h5py
 import numpy as np
 
-from umami.configuration import global_config
+from umami.configuration import global_config, logger
 
 
 def get_jets(
@@ -42,13 +41,13 @@ def get_jets(
     """
     b_pdgid = 5
 
-    logging.debug("Opening file " + filename)
+    logger.info("Opening file " + filename)
     data_set = h5py.File(filename, "r")
     jets = data_set["jets"]
-    logging.debug(f"Total number of jets in file: {jets.size}")
+    logger.info(f"Total number of jets in file: {jets.size}")
     if write_tracks:
         tracks = data_set["tracks"]
-        logging.debug(f"Total number of tracks in file: {tracks.size}")
+        logger.info(f"Total number of tracks in file: {tracks.size}")
 
     # define event number parity rejection
     # (for splitting data in training and testing sets)

@@ -11,7 +11,7 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
-from umami.configuration import global_config
+from umami.configuration import global_config, logger
 from umami.evaluation_tools.PlottingFunctions import (
     GetScore,
     GetScoreC,
@@ -102,7 +102,7 @@ def EvaluateModel(
         nJets = args.nJets
 
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
-    print("Evaluating", model_file)
+    logger.info(f"Evaluating {model_file}")
     exclude = []
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
@@ -133,7 +133,7 @@ def EvaluateModel(
         "HadronConeExclTruthLabelID",
     ]
     df = pd.DataFrame(h5py.File(test_file, "r")["/jets"][:nJets][variables])
-    print("Jets used for testing:", len(df))
+    logger.info(f"Jets used for testing: {len(df)}")
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
     df_discs = pd.DataFrame(
         {
@@ -161,7 +161,7 @@ def EvaluateModel(
 
     x_axis_granularity = 100
 
-    print("calculating rejections per efficiency")
+    logger.info("calculating rejections per efficiency")
     b_effs = np.linspace(0.39, 1, x_axis_granularity)
     crej_arr_umami = []
     urej_arr_umami = []
@@ -200,7 +200,7 @@ def EvaluateModel(
         crej_arr_rnnip.append(crej_i)
         urej_arr_rnnip.append(urej_i)
 
-    print("calculating rejections per fc")
+    logger.info("calculating rejections per fc")
     fc_values = np.linspace(0.001, 0.1, x_axis_granularity)
 
     crej_arr_umami_cfrac = []
@@ -294,7 +294,7 @@ def EvaluateModelDips(
 
     # Define model path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
-    print("Evaluating", model_file)
+    logger.info(f"Evaluating {model_file}")
 
     # Get the testfile with the needed configs
     X_test_trk, Y_test = utt.GetTestSampleTrks(
@@ -336,7 +336,7 @@ def EvaluateModelDips(
 
     # Load the test data
     df = pd.DataFrame(h5py.File(test_file, "r")["/jets"][:nJets][variables])
-    print("Jets used for testing:", len(df))
+    logger.info(f"Jets used for testing: {len(df)}")
 
     # Define the jets used
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
@@ -372,7 +372,7 @@ def EvaluateModelDips(
 
     x_axis_granularity = 100
 
-    print("calculating rejections per efficiency")
+    logger.info("calculating rejections per efficiency")
     b_effs = np.linspace(0.39, 1, x_axis_granularity)
     crej_arr_dips = []
     urej_arr_dips = []
@@ -404,7 +404,7 @@ def EvaluateModelDips(
         crej_arr_rnnip.append(crej_i)
         urej_arr_rnnip.append(urej_i)
 
-    print("calculating rejections per fc")
+    logger.info("calculating rejections per fc")
     fc_values = np.linspace(0.001, 0.1, x_axis_granularity)
 
     crej_arr_dips_cfrac = []
@@ -474,7 +474,7 @@ def EvaluateModelDips(
     f.attrs["N_test"] = len(df)
     f.close()
 
-    print("Calculate gradients for inputs")
+    logger.info("Calculate gradients for inputs")
     # Cut off last layer of the model for saliency maps
     cutted_model = model.layers[-1].output
 
@@ -573,9 +573,9 @@ def EvaluateModelDL1(
         train_config.bool_use_taus and preprocess_config.bool_process_taus
     )
     if bool_use_taus:
-        print("Evaluating {} with taus".format(model_file))
+        logger.info(f"Evaluating {model_file} with taus")
     else:
-        print("Evaluating", model_file)
+        logger.info(f"Evaluating {model_file}")
         ftauforc_value = None
         ftauforb_value = None
 
@@ -622,13 +622,13 @@ def EvaluateModelDL1(
             if item in available_variables:
                 add_variables_available.append(item)
             else:
-                print("Variable '{}' not available".format(item))
+                logger.info(f"Variable '{item}' not available")
         variables.extend(add_variables_available)
 
     df = pd.DataFrame(
         h5py.File(test_file, "r")["/jets"][: args.nJets][variables]
     )
-    print("Jets used for testing:", len(df))
+    logger.info(f"Jets used for testing: {len(df)}")
     if bool_use_taus:
         df.query("HadronConeExclTruthLabelID in [0, 4, 5, 15]", inplace=True)
         if "DL1r_ptau" not in df:
@@ -720,7 +720,7 @@ def EvaluateModelDL1(
         )
     if add_variables_available is not None:
         for item in add_variables_available:
-            print("Adding ", item)
+            logger.info(f"Adding {item}")
             df_discs[item] = df[item]
 
     os.system(f"mkdir -p {train_config.model_name}/results")
@@ -729,7 +729,7 @@ def EvaluateModelDL1(
         data_set_name,
     )
 
-    print("calculating rejections per efficiency")
+    logger.info("calculating rejections per efficiency")
     b_effs = np.linspace(0.39, 1, 150)
     c_effs = np.linspace(0.09, 1, 150)
     crej_arr = []
@@ -926,7 +926,9 @@ def EvaluateModelDL1(
     if not bool_use_taus:
         return
 
-    print("calculating rejections per frac for beff of 70% and ceff of 40%")
+    logger.info(
+        "calculating rejections per frac for beff of 70% and ceff of 40%"
+    )
     target_beff = 0.7
     target_ceff = 0.4
     # The first two must have same number of element
@@ -945,7 +947,7 @@ def EvaluateModelDL1(
     for ind, c_frac in enumerate(c_fracs):
         b_frac = b_fracs[ind]
         if ind % (len(c_fracs) // 5) == 0:
-            print("{} % done".format(ind // (len(c_fracs) // 5) * 20))
+            logger.info(f"{ind // (len(c_fracs) // 5) * 20} % done")
         for tau_frac in tau_fracs:
             crej_i, urej_i, taurej_i = utt.GetRejection(
                 pred,
@@ -1000,7 +1002,7 @@ if __name__ == "__main__":
     preprocess_config = Configuration(train_config.preprocess_config)
     if args.dl1:
         if train_config.ttbar_test_files is not None:
-            print("Start evaluating DL1 with ttbar test files...")
+            logger.info("Start evaluating DL1 with ttbar test files...")
             for ttbar_models in train_config.ttbar_test_files:
                 EvaluateModelDL1(
                     args,
@@ -1013,7 +1015,7 @@ if __name__ == "__main__":
                 )
 
         if train_config.zpext_test_files is not None:
-            print("Start evaluating DL1 with Z' test files...")
+            logger.info("Start evaluating DL1 with Z' test files...")
             for zpext_models in train_config.zpext_test_files:
                 EvaluateModelDL1(
                     args,
@@ -1027,7 +1029,7 @@ if __name__ == "__main__":
 
     elif args.dips:
         if train_config.ttbar_test_files is not None:
-            print("Start evaluating DIPS with ttbar test files...")
+            logger.info("Start evaluating DIPS with ttbar test files...")
             for ttbar_models in train_config.ttbar_test_files:
                 EvaluateModelDips(
                     args,
@@ -1040,7 +1042,7 @@ if __name__ == "__main__":
                 )
 
         if train_config.zpext_test_files is not None:
-            print("Start evaluating DIPS with Z' test files...")
+            logger.info("Start evaluating DIPS with Z' test files...")
             for zpext_models in train_config.zpext_test_files:
                 EvaluateModelDips(
                     args,
@@ -1054,7 +1056,7 @@ if __name__ == "__main__":
 
     else:
         if train_config.zpext_test_files is not None:
-            print("Start evaluating UMAMI with ttbar test files...")
+            logger.info("Start evaluating UMAMI with ttbar test files...")
             for ttbar_models in train_config.ttbar_test_files:
                 EvaluateModel(
                     args,
@@ -1067,7 +1069,7 @@ if __name__ == "__main__":
                 )
 
         if train_config.zpext_test_files is not None:
-            print("Start evaluating UMAMI with Z' test files...")
+            logger.info("Start evaluating UMAMI with Z' test files...")
             for zpext_models in train_config.zpext_test_files:
                 EvaluateModel(
                     args,

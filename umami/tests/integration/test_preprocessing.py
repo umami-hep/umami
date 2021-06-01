@@ -1,11 +1,10 @@
-import logging
 import os
 import unittest
 from subprocess import CalledProcessError, run
 
 import yaml
 
-from umami.configuration import global_config  # noqa: F401
+from umami.configuration import logger
 from umami.tools import replaceLineInFile, yaml_loader
 
 
@@ -27,7 +26,7 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
     Return value `True` if all steps succeeded, `False` if one step did not succees."""
     isSuccess = True
 
-    logging.info("Test: running the undersampling...")
+    logger.info("Test: running the undersampling...")
     if tagger == "dl1r":
         run_undersampling = run(
             [
@@ -55,13 +54,13 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
     try:
         run_undersampling.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: preprocessing.py --undersampling.")
+        logger.info("Test failed: preprocessing.py --undersampling.")
         isSuccess = False
 
     if isSuccess is True:
         run_undersampling
 
-    logging.info("Test: retrieving scaling and shifting factors...")
+    logger.info("Test: retrieving scaling and shifting factors...")
 
     if tagger == "dl1r":
         run_scaling = run(
@@ -90,13 +89,13 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
     try:
         run_scaling.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: preprocessing.py --scaling.")
+        logger.info("Test failed: preprocessing.py --scaling.")
         isSuccess = False
 
     if isSuccess is True:
         run_scaling
 
-    logging.info("Test: applying shifting and scaling factors...")
+    logger.info("Test: applying shifting and scaling factors...")
     if tagger == "dl1r":
         run_apply_scales = run(
             [
@@ -124,13 +123,13 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
     try:
         run_apply_scales.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: preprocessing.py --apply_scales.")
+        logger.info("Test failed: preprocessing.py --apply_scales.")
         isSuccess = False
 
     if isSuccess is True:
         run_apply_scales
 
-    logging.info(
+    logger.info(
         "Test: shuffling the samples and writing the samples to disk..."
     )
     if tagger == "dl1r":
@@ -160,7 +159,7 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
     try:
         run_write.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: preprocessing.py --write.")
+        logger.info("Test failed: preprocessing.py --write.")
         isSuccess = False
 
     if isSuccess is True:
@@ -189,7 +188,7 @@ class TestPreprocessing(unittest.TestCase):
         self.data = getConfiguration()
 
         test_dir = os.path.join(self.data["test_preprocessing"]["testdir"])
-        logging.info(f"Creating test directory in {test_dir}")
+        logger.info(f"Creating test directory in {test_dir}")
         # clean up, hopefully this causes no "uh oh...""
         if test_dir.startswith("/tmp"):
             run(["rm", "-rf", test_dir])
@@ -221,7 +220,7 @@ class TestPreprocessing(unittest.TestCase):
         self.scale_dict = os.path.join(test_dir, "PFlow-scale_dict.json")
         self.output = os.path.join(test_dir, "PFlow-hybrid_70-test.h5")
 
-        logging.info(
+        logger.info(
             f"Preparing config file based on {config_source} in {self.config}..."
         )
         run(["cp", config_source, self.config])
@@ -241,14 +240,14 @@ class TestPreprocessing(unittest.TestCase):
         )
         replaceLineInFile(self.config, "iterations:", "iterations: 1")
 
-        logging.info("Downloading test data...")
+        logger.info("Downloading test data...")
         for file in self.data["test_preprocessing"]["files"]:
             path = os.path.join(
                 self.data["data_url"],
                 self.data["test_preprocessing"]["data_subfolder"],
                 file,
             )
-            logging.info(f"Retrieving file from path {path}")
+            logger.info(f"Retrieving file from path {path}")
             run(["wget", path, "--directory-prefix", test_dir])
 
     def test_preprocessing_umami(self):
