@@ -34,3 +34,10 @@ test_umami:
     files:
         - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
         - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+
+test_input_vars_plot:
+    data_subfolder: 'plot_input_vars'
+    testdir: /tmp/umami/plot_input_vars/
+    files:
+        - plot_input_vars_r21_check.h5
+        - plot_input_vars_r22_check.h5

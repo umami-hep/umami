@@ -4,6 +4,7 @@ stages:
   - unit_test
   - integration_test_preprocessing
   - integration_test_tagger
+  - integration_test_plotting
   - converage_test_stage
   - builds
   - image_build_umami
@@ -40,7 +41,6 @@ linter_MR:
 test_coverage:
   stage: converage_test_stage
   image: python:3.7-slim
-  needs: ["test_train_dips", "test_train_dl1r", "test_train_umami"]
   script:
     - pip install -r requirements.txt
     - cd ./coverage_files/
@@ -60,7 +60,6 @@ test_coverage:
 test_coverage_MR:
   stage: converage_test_stage
   image: python:3.7-slim
-  needs: ["test_train_dips_MR", "test_train_dl1r_MR", "test_train_umami_MR"]
   script:
     - pip install -r requirements.txt
     - cd ./coverage_files/

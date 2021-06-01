@@ -893,10 +893,11 @@ def plotPtDependence(
     # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
     axis_dict["left"]["top"].set_ylim(bottom=ymin, top=yAxisIncrease * ymax)
 
+    # Get xlim for the horizontal and vertical lines
+    xmin, xmax = axis_dict["left"]["top"].get_xlim()
+
     # Set WP Line
     if WP_Line is True:
-        xmin, xmax = axis_dict["left"]["top"].get_xlim()
-
         axis_dict["left"]["top"].hlines(
             y=WP,
             xmin=xmin,
