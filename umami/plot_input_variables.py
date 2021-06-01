@@ -213,7 +213,7 @@ def plot_jets_variables(plot_config, plot_type):
 if __name__ == "__main__":
     args = GetParser()
 
-    if not (args.jets or args.track):
+    if not (args.jets or args.tracks):
         raise Exception(
             "Please provide '--tracks' or '--jets' to plot their input variables"
         )

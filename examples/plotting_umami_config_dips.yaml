@@ -22,15 +22,15 @@ scores_Dips_ttbar:
 # Dips, ttbar
 scores_Dips_ttbar_comparison:
   type: "scores_comparison"
-  data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
   models_to_plot:
     dips_r21:
       data_set_name: "ttbar"
-      label: "R21"
+      label: "$t\\bar{t}$"
+      prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
     dips_r22: # The name here has no impact on anything.
-      data_set_name: "ttbar_comparison"
-      label: "R22"
+      data_set_name: "zpext"
+      label: "$Z'$"
+      prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
   plot_settings:
     WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
     nBins: 50 # Number of bins
@@ -38,51 +38,9 @@ scores_Dips_ttbar_comparison:
     figsize: [8, 6] # [width, hight]
     UseAtlasTag: True # Enable/Disable AtlasTag
     AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
     RatioType: "Ratio" # Changes the calculation of the Ratio. Use "Ratio" or "Absolute"
-
-# rnnip, ttbar
-scores_rnnip_ttbar:
-  type: "scores"
-  data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  prediction_labels: ["rnnip_pb", "rnnip_pc", "rnnip_pu"] # For umami use umami_pX or dips_pX or DL1r_pX or rnnip_pX. ORDER IS IMPORTANT
-  plot_settings:
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
-    nBins: 50 # Number of bins
-    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-# Dips, ttbar
-scores_Dips_ttbar_r22:
-  type: "scores"
-  data_set_name: "ttbar_comparison" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
-  plot_settings:
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
-    nBins: 50 # Number of bins
-    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-# rnnip, ttbar
-scores_rnnip_ttbar_r22:
-  type: "scores"
-  data_set_name: "ttbar_comparison" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  prediction_labels: ["rnnip_pb", "rnnip_pc", "rnnip_pu"] # For umami use umami_pX or dips_pX or DL1r_pX or rnnip_pX. ORDER IS IMPORTANT
-  plot_settings:
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
-    nBins: 50 # Number of bins
-    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
 Dips_light_flavour_ttbar:
   type: "ROC"
@@ -108,252 +66,10 @@ Dips_light_flavour_ttbar:
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
-Dips_c_flavour_ttbar:
-  type: "ROC"
-  models_to_plot:
-    rnnip_r21:
-      data_set_name: "ttbar"
-      label: "Recommended RNNIP"
-      df_key: "rnnip_crej"
-    dips_r21:
-      data_set_name: "ttbar"
-      label: "DIPS"
-      df_key: "dips_crej"
-  plot_settings:
-    ylabel: "c"
-    binomialErrors: True
-    xmin: 0.5
-    ymax: 1000
-    colors:
-    figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
   data_set_name: "ttbar"
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX. The order matters!
-
-Dips_light_flavour_ttbar_comparison:
-  type: "ROC"
-  models_to_plot:
-    rnnip_r21:
-      data_set_name: "ttbar"
-      label: "Recommended RNNIP R21"
-      df_key: "rnnip_urej"
-    rnnip_r22:
-      data_set_name: "ttbar_comparison"
-      label: "Recommended RNNIP R22"
-      df_key: "rnnip_urej"
-    dips_r21: # The name here has no impact on anything.
-      data_set_name: "ttbar"
-      label: "DIPS R21"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    dips_r22: # The name here has no impact on anything.
-      data_set_name: "ttbar_comparison"
-      label: "DIPS R22"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ylabel: "light"
-    binomialErrors: True
-    xmin: 0.5
-    ymax: 1000000
-    colors:
-    figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-Dips_c_flavour_ttbar_comparison:
-  type: "ROC"
-  models_to_plot:
-    rnnip_r21:
-      data_set_name: "ttbar"
-      label: "Recommended RNNIP R21"
-      df_key: "rnnip_crej"
-    rnnip_r22:
-      data_set_name: "ttbar_comparison"
-      label: "Recommended RNNIP R22"
-      df_key: "rnnip_crej"
-    dips_r21:
-      data_set_name: "ttbar"
-      label: "DIPS R21"
-      df_key: "dips_crej"
-    dips_r22: # The name here has no impact on anything.
-      data_set_name: "ttbar_comparison"
-      label: "DIPS R22"
-      df_key: "dips_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-  plot_settings:
-    ylabel: "c"
-    binomialErrors: True
-    xmin: 0.5
-    ymax: 1000
-    colors:
-    figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-Dips_light_flavour_zpext_comparison:
-  type: "ROC"
-  models_to_plot:
-    rnnip_r21:
-      data_set_name: "zpext"
-      label: "Recommended RNNIP R21"
-      df_key: "rnnip_urej"
-    rnnip_r22:
-      data_set_name: "zpext_comparison"
-      label: "Recommended RNNIP R22"
-      df_key: "rnnip_urej"
-    dips_r21: # The name here has no impact on anything.
-      data_set_name: "zpext"
-      label: "DIPS R21"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    dips_r22: # The name here has no impact on anything.
-      data_set_name: "zpext_comparison"
-      label: "DIPS R22"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ylabel: "light"
-    binomialErrors: True
-    xmin: 0.5
-    ymax: 1000000
-    colors:
-    figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-Dips_c_flavour_zpext_comparison:
-  type: "ROC"
-  models_to_plot:
-    rnnip_r21:
-      data_set_name: "zpext"
-      label: "Recommended RNNIP R21"
-      df_key: "rnnip_crej"
-    rnnip_r22:
-      data_set_name: "zpext_comparison"
-      label: "Recommended RNNIP R22"
-      df_key: "rnnip_crej"
-    dips_r21:
-      data_set_name: "zpext"
-      label: "DIPS R21"
-      df_key: "dips_crej"
-    dips_r22: # The name here has no impact on anything.
-      data_set_name: "zpext_comparison"
-      label: "DIPS R22"
-      df_key: "dips_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-  plot_settings:
-    ylabel: "c"
-    binomialErrors: True
-    xmin: 0.5
-    ymax: 1000
-    colors:
-    figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-# Dips, zpext
-scores_Dips_zpext:
-  type: "scores"
-  data_set_name: "zpext" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
-  plot_settings:
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
-    nBins: 50 # Number of bins
-    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-# Dips, zpext
-scores_Dips_zpext_comparison:
-  type: "scores_comparison"
-  data_set_name: "zpext" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
-  models_to_plot:
-    dips_r21:
-      data_set_name: "zpext"
-      label: "R21"
-    dips_r22: # The name here has no impact on anything.
-      data_set_name: "zpext_comparison"
-      label: "R22"
-  plot_settings:
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
-    nBins: 50 # Number of bins
-    yAxisIncrease: 1.4 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
-    figsize: [8, 6] # [width, hight]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-    RatioType: "Ratio" # Changes the calculation of the Ratio. Use "Ratio" or "Absolute"
-
-confusion_matrix_Dips_zpext:
-  type: "confusion_matrix"
-  data_set_name: "zpext"
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX. The order matters!
-
-Dips_light_flavour_zpext:
-  type: "ROC"
-  models_to_plot:
-    current_dl1r:
-      data_set_name: "zpext"
-      label: "Recommended RNNIP"
-      df_key: "rnnip_urej" # This is the rejection rate of the currently recommended DL1r tagger
-    dips: # The name here has no impact on anything.
-      data_set_name: "zpext"
-      label: "DIPS"
-      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ylabel: "light"
-    binomialErrors: True
-    xmin: 0.5
-    ymax: 1000
-    colors: ["orange", "blue"]
-    figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-Dips_c_flavour_zpext:
-  type: "ROC"
-  models_to_plot:
-    current_dl1r:
-      data_set_name: "zpext"
-      label: "Recommended RNNIP"
-      df_key: "rnnip_crej"
-    dips:
-      data_set_name: "zpext"
-      label: "DIPS"
-      df_key: "dips_crej"
-  plot_settings:
-    ylabel: "c"
-    binomialErrors: True
-    xmin: 0.5
-    ymax: 100
-    colors: ["orange", "blue"]
-    figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
 Dips_saliency_b_WP77_passed_ttbar:
   type: "saliency"
@@ -369,71 +85,3 @@ Dips_saliency_b_WP77_passed_ttbar:
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.925
-
-Dips_saliency_b_WP77_failed_ttbar:
-  type: "saliency"
-  plot_settings:
-    data_set_name: "ttbar"
-    title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who failed WP = 77% \n with exactly 8 tracks"
-    target_beff: 0.77
-    # u=0, c=1, b=2
-    jet_flavour: 2
-    PassBool: False
-    FlipAxis: True
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
-    yAxisAtlasTag: 0.925
-
-Dips_saliency_b_WP77_failed_zpext:
-  type: "saliency"
-  plot_settings:
-    data_set_name: "zpext"
-    title: "Saliency map for $b$ jets from \n $Z'$ who failed WP = 77% \n with exactly 8 tracks"
-    target_beff: 0.77
-    # u=0, c=1, b=2
-    jet_flavour: 2
-    PassBool: False
-    FlipAxis: True
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
-    yAxisAtlasTag: 0.925
-
-Dumper_Validation:
-  type: "dumper_validation"
-  plot_settings:
-    nBins: 20 # Number of bins
-    yAxisIncrease: 100 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-    pT_vs_beff_ttbar:
-  type: "pT_vs_eff"
-  models_to_plot:
-    rnnip_r21:
-      data_set_name: "ttbar"
-      label: "Recommended RNNIP"
-      prediction_labels: ["rnnip_pb", "rnnip_pc", "rnnip_pu"] # For umami use umami_pX or dips_pX
-    dips_r21:
-      data_set_name: "ttbar"
-      label: "DIPS"
-      prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX
-  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    bin_edges: [20, 40, 60, 80, 100, 150, 300, 1000] # Gives the bin
-    flavor: 2 # 2: b, 1: c, 0: u
-    WP: 0.77
-    WP_Line: True
-    binomialErrors: True
-    figsize: [7, 5]
-    Log: False
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample" # Don't add fc value here! Its automatically added also the WP
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-    yAxisIncrease: 1.3 # Increase ymax for atlas tag
-    ymin:
-    ymax:
-    alpha: 0.7

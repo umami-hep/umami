@@ -94,6 +94,13 @@ def GetParser():
 def EvaluateModel(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
+    # Set number of nJets for testing
+    if args.nJets is None:
+        nJets = int(train_config.Eval_parameters_validation["n_jets"])
+
+    else:
+        nJets = args.nJets
+
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     print("Evaluating", model_file)
     exclude = []
@@ -103,7 +110,7 @@ def EvaluateModel(
         test_file,
         train_config.var_dict,
         preprocess_config,
-        nJets=args.nJets,
+        nJets=nJets,
         exclude=exclude,
     )
     with CustomObjectScope({"Sum": utt.Sum}):
@@ -125,9 +132,7 @@ def EvaluateModel(
         "rnnip_pu",
         "HadronConeExclTruthLabelID",
     ]
-    df = pd.DataFrame(
-        h5py.File(test_file, "r")["/jets"][: args.nJets][variables]
-    )
+    df = pd.DataFrame(h5py.File(test_file, "r")["/jets"][:nJets][variables])
     print("Jets used for testing:", len(df))
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
     df_discs = pd.DataFrame(
@@ -282,10 +287,10 @@ def EvaluateModelDips(
 ):
     # Set number of nJets for testing
     if args.nJets is None:
-        nJets_test = int(train_config.Eval_parameters_validation["n_jets"])
+        nJets = int(train_config.Eval_parameters_validation["n_jets"])
 
     else:
-        nJets_test = args.nJets
+        nJets = args.nJets
 
     # Define model path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
@@ -296,7 +301,7 @@ def EvaluateModelDips(
         test_file,
         train_config.var_dict,
         preprocess_config,
-        nJets=nJets_test,
+        nJets=nJets,
     )
 
     # Load pretrained model
@@ -330,9 +335,7 @@ def EvaluateModelDips(
     ]
 
     # Load the test data
-    df = pd.DataFrame(
-        h5py.File(test_file, "r")["/jets"][:nJets_test][variables]
-    )
+    df = pd.DataFrame(h5py.File(test_file, "r")["/jets"][:nJets][variables])
     print("Jets used for testing:", len(df))
 
     # Define the jets used

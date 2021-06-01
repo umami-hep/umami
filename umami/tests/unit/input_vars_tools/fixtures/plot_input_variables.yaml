@@ -1,0 +1,108 @@
+Eval_parameters:
+  nJets: 3e3
+  var_dict: umami/configs/Dips_Variables.yaml
+jets_input_vars:
+  variables: "jets"
+  folder_to_save: jets_input_vars
+  Datasets_to_plot:
+    R21:
+      files: /tmp/umami/plot_input_vars/plot_input_vars_r21_check.h5
+      label: "R21 Test"
+    R22:
+      files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
+      label: "R22 Test"
+  plot_settings:
+    Log: True
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
+    yAxisAtlasTag: 0.925
+    yAxisIncrease: 2
+    figsize: [7, 5]
+    bool_use_taus: True
+  special_param_jets:
+    IP2D_cu:
+      lim_left: -30
+      lim_right: 30
+    IP2D_bu:
+      lim_left: -30
+      lim_right: 30
+  binning:
+    IP2D_cu: 5
+    IP2D_bu:
+  flavors:
+    b: 5
+    c: 4
+    u: 0
+    tau: 15
+
+nTracks_Test:
+  variables: "tracks"
+  folder_to_save: nTracks_Test
+  nTracks: True
+  Datasets_to_plot:
+    R21:
+      files: /tmp/umami/plot_input_vars/plot_input_vars_r21_check.h5
+      label: "R21 Test"
+    R22:
+      files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
+      label: "R22 Test"
+  plot_settings:
+    Log: True
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
+    yAxisAtlasTag: 0.925
+    yAxisIncrease: 2
+    figsize: [7, 5]
+    Ratio_Cut: [0.5, 2]
+  flavors:
+    b: 5
+    c: 4
+    u: 0
+
+Tracks_Test:
+  variables: "tracks"
+  folder_to_save: Tracks_Test
+  Datasets_to_plot:
+    R21:
+      files: /tmp/umami/plot_input_vars/plot_input_vars_r21_check.h5
+      label: "R21 Test"
+    R22:
+      files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
+      label: "R22 Test"
+  plot_settings:
+    Log: True
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
+    yAxisAtlasTag: 0.925
+    yAxisIncrease: 2
+    figsize: [7, 5]
+    Ratio_Cut: [0.5, 2]
+    bool_use_taus: False
+  flavors:
+    b: 5
+    c: 4
+    u: 0
+
+  plot_settings:
+    sorting_variable: "ptfrac"
+    n_Leading: [None, 0]
+    Log: True
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3M Jets"
+    yAxisAtlasTag: 0.925
+    yAxisIncrease: 2
+    figsize: [7, 5]
+    Ratio_Cut: [0.5, 1.5]
+    bool_use_taus: False
+  binning:
+    IP3D_signed_d0_significance: 100
+    numberOfInnermostPixelLayerHits: [0, 4, 1]
+    dr:
+  flavors:
+    b: 5
+    c: 4
+    u: 0

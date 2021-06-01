@@ -20,4 +20,4 @@ umami/dips*/*
 plots/*
 env/*
 .vscode/*
-!umami/tests/unit/*/*/*.png
+!umami/tests/unit/**/*.png

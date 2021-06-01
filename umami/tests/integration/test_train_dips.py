@@ -1,5 +1,6 @@
 import logging
 import os
+import tempfile
 import unittest
 from subprocess import CalledProcessError, run
 
@@ -85,13 +86,9 @@ class TestDipsTraining(unittest.TestCase):
         # Get test configuration
         self.data = getConfiguration()
 
-        test_dir = os.path.join(self.data["test_dips"]["testdir"])
+        self.test_dir_path = tempfile.TemporaryDirectory()
+        test_dir = f"{self.test_dir_path.name}"
         logging.info(f"Creating test directory in {test_dir}")
-
-        # clean up, hopefully this causes no "uh oh...""
-        if test_dir.startswith("/tmp"):
-            run(["rm", "-rf", test_dir])
-        run(["mkdir", "-p", test_dir])
 
         # config files, will be copied to test dir
         config_source = os.path.join(
@@ -105,13 +102,6 @@ class TestDipsTraining(unittest.TestCase):
         )
         self.preprocessing_config = os.path.join(
             test_dir, os.path.basename(preprocessing_config_source)
-        )
-
-        plotting_config_source = os.path.join(
-            os.getcwd(), self.data["test_dips"]["plotting_config"]
-        )
-        self.plotting_config = os.path.join(
-            test_dir, os.path.basename(plotting_config_source)
         )
 
         var_dict_dips_source = os.path.join(
@@ -145,7 +135,6 @@ class TestDipsTraining(unittest.TestCase):
 
         run(["touch", self.config])
         run(["cp", preprocessing_config_source, self.preprocessing_config])
-        run(["cp", plotting_config_source, self.plotting_config])
         run(["cp", var_dict_dips_source, self.var_dict_dips])
 
         # modify copy of preprocessing config file for test
@@ -170,7 +159,13 @@ class TestDipsTraining(unittest.TestCase):
             config.write(f"validation_file: {self.test_file_ttbar}\n")
             config.write(f"add_validation_file: {self.test_file_zprime}\n")
             config.write("ttbar_test_files:\n")
+            config.write("    ttbar_r21:\n")
+            config.write(f"        Path: {self.test_file_ttbar}\n")
+            config.write('        data_set_name: "ttbar"\n')
             config.write("zpext_test_files:\n")
+            config.write("    zpext_r21:\n")
+            config.write(f"        Path: {self.test_file_zprime}\n")
+            config.write('        data_set_name: "zpext"\n')
             config.write(f"var_dict: {self.var_dict_dips}\n")
             config.write("bool_use_taus: False\n")
             config.write("exclude: []\n")

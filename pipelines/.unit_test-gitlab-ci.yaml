@@ -52,6 +52,24 @@ unittest_train_tools:
     reports:
       junit: report.xml
 
+unittest_input_vars_tools:
+  stage: unit_test
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+  dependencies:
+    - linter
+  script:
+    - python setup.py develop
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/input_vars_tools/ -v --junitxml=report.xml
+    - cp .coverage coverage_files/.coverage.unittest_input_vars_tools
+  only:
+    - master
+  artifacts:
+    when: always
+    paths:
+      - coverage_files/
+    reports:
+      junit: report.xml
+
 unittest_preprocessing_MR:
   stage: unit_test
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
@@ -97,6 +115,24 @@ unittest_evaluation_tools_MR:
     - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/unit/evaluation_tools/ -v --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_evaluation_tools
+  only:
+    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  artifacts:
+    when: always
+    paths:
+      - coverage_files/
+    reports:
+      junit: report.xml
+
+unittest_input_vars_tools_MR:
+  stage: unit_test
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  dependencies:
+    - linter_MR
+  script:
+    - python setup.py develop
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/input_vars_tools/ -v --junitxml=report.xml
+    - cp .coverage coverage_files/.coverage.unittest_input_vars_tools
   only:
     - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
   artifacts:
