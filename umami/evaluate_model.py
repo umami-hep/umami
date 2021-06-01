@@ -576,12 +576,17 @@ def EvaluateModelDL1(
         ftauforc_value = None
         ftauforb_value = None
 
+    exclude = None
+    if "exclude" in train_config.config:
+        exclude = train_config.config["exclude"]
+
     X_test, Y_test = utt.GetTestSample(
         input_file=test_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
         nJets=args.nJets,
         use_taus=bool_use_taus,
+        exclude=exclude,
     )
     # with CustomObjectScope({'Sum': Sum}):
     model = load_model(model_file)
