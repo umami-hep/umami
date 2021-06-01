@@ -12,6 +12,7 @@ from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.models import load_model
 
+from umami.configuration import logger
 from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
 from umami.tools import yaml_loader
 
@@ -224,7 +225,9 @@ class MyCallback(Callback):
                 taufrac=self.ftauforb_value,
                 use_taus=self.include_taus,
             )
-            print("For b: c-rej:", c_rej, "u-rej:", u_rej, "tau-rej:", tau_rej)
+            logger.info(
+                f"For b: c-rej: {c_rej} u-rej: {u_rej} tau-rej: {tau_rej}"
+            )
             b_rejC, u_rejC, tau_rejC = GetRejection(
                 y_pred,
                 self.Y_valid,
@@ -233,8 +236,8 @@ class MyCallback(Callback):
                 taufrac=self.ftauforc_value,
                 use_taus=self.include_taus,
             )
-            print(
-                "For c: b-rej:", b_rejC, "u-rej:", u_rejC, "tau-rej:", tau_rejC
+            logger.info(
+                f"For c: b-rej: {b_rejC} u-rej: {u_rejC} tau-rej: {tau_rejC}"
             )
         else:
             c_rej, u_rej = GetRejection(
@@ -242,14 +245,14 @@ class MyCallback(Callback):
                 self.Y_valid,
                 frac=self.fc_value,
             )
-            print("For b: c-rej:", c_rej, "u-rej:", u_rej)
+            logger.info(f"For b: c-rej: {c_rej} u-rej: {u_rej}")
             b_rejC, u_rejC = GetRejection(
                 y_pred,
                 self.Y_valid,
                 d_type="c",
                 frac=self.fb_value,
             )
-            print("For c: b-rej:", b_rejC, "u-rej:", u_rejC)
+            logger.info(f"For c: b-rej: {b_rejC} u-rej: {u_rejC}")
         add_loss, add_acc, c_rej_add, u_rej_add = None, None, None, None
         b_rejC_add, u_rejC_add = None, None
         if self.include_taus:
@@ -322,7 +325,7 @@ class MyCallback(Callback):
 def setup_output_directory(dir_name):
     outdir = Path(dir_name)
     if outdir.is_dir():
-        print("Removing model*.h5 and *.json files.")
+        logger.info("Removing model*.h5 and *.json files.")
         for model_file in outdir.glob("model*.h5"):
             model_file.unlink()
         for model_file in outdir.glob("*.json"):
@@ -448,9 +451,8 @@ def filter_taus(train_set, test_set):
         test_set = np.delete(test_set, tau_indices, axis=0)
         test_set = np.delete(test_set, 3, axis=1)  # delete tau label column
     else:
-        print(
-            "There does not seem to be any tau data, shape of test is: ",
-            test_set.shape[1],
+        logger.info(
+            f"There does not seem to be any tau data, shape of test is: {test_set.shape[1]}"
         )
     return (train_set, test_set)
 
@@ -481,7 +483,7 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
             excluded_variables.append(exclude_that)
             variables.remove(exclude_that)
         else:
-            print("Variables to exclude not found: ", exclude_that)
+            logger.info(f"Variables to exclude not found: {exclude_that}")
     # Get the index of the excluded variables for training
     excluded_var_indices = [
         i for i, excl in enumerate(all_variables) if excl in excluded_variables
@@ -504,7 +506,7 @@ def GetTestSample(
     """
     Apply the scaling and shifting to dataset using numpy
     """
-    print("Input file is ", input_file)
+    logger.info(f"Input file is {input_file}")
     jets = pd.DataFrame(h5py.File(input_file, "r")["/jets"][:nJets])
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -522,20 +524,19 @@ def GetTestSample(
     jets = jets.replace([np.inf, -np.inf], np.nan)
     with open(preprocess_config.dict_file, "r") as infile:
         scale_dict = json.load(infile)["jets"]
-    print("Replacing default values.")
+    logger.info("Replacing default values.")
     default_dict = Gen_default_dict(scale_dict)
     jets = jets.fillna(default_dict)
-    print("Applying scaling and shifting.")
+    logger.info("Applying scaling and shifting.")
     for elem in scale_dict:
         if elem["name"] not in variables:
             if elem["name"] in excluded_variables:
-                print(
-                    elem["name"],
-                    "has been excluded from variable config (is in scale dict).",
+                logger.info(
+                    f"{elem['name']} has been excluded from variable config (is in scale dict)."
                 )
             else:
-                print(
-                    elem["name"], "in scale dict but not in variable config."
+                logger.info(
+                    f"{elem['name']} in scale dict but not in variable config."
                 )
             continue
         if "isDefaults" in elem["name"]:
@@ -550,7 +551,7 @@ def GetTestSampleTrks(input_file, var_dict, preprocess_config, nJets=int(3e5)):
     """
     Apply the scaling and shifting to dataset using numpy
     """
-    print("Loading validation data tracks")
+    logger.info("Loading validation data tracks")
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
     labels = h5py.File(input_file, "r")["/jets"][:nJets][
@@ -722,8 +723,8 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
     c_rej_umami, u_rej_umami = GetRejection(
         y_pred_umami, data_dict["Y_valid"], target_beff, cfrac
     )
-    print("Dips:", "c-rej:", c_rej_dips, "u-rej:", u_rej_dips)
-    print("Umami:", "c-rej:", c_rej_umami, "u-rej:", u_rej_umami)
+    logger.info(f"Dips: c-rej: {c_rej_dips} u-rej: {u_rej_dips}")
+    logger.info(f"Umami: c-rej: {c_rej_umami} u-rej: {u_rej_umami}")
     (
         loss_add,
         dips_loss_add,
@@ -808,7 +809,7 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
         y_pred_dips, data_dict["Y_valid"], target_beff, cfrac
     )
 
-    print("Dips:", "c-rej:", c_rej, "u-rej:", u_rej)
+    logger.info(f"Dips: c-rej: {c_rej} u-rej: {u_rej}")
 
     (
         loss_add,
@@ -882,7 +883,7 @@ def calc_validation_metrics(
 
     results = []
     for n, model_file in enumerate(training_output):
-        print(f"Working on {n+1}/{len(training_output)} input files")
+        logger.info(f"Working on {n+1}/{len(training_output)} input files")
         result_dict = {}
         epoch = int(
             model_file[model_file.find("epoch") + 5 : model_file.find(".h5")]
@@ -940,7 +941,7 @@ def calc_validation_metrics_dips(
 
     results = []
     for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
-        print(f"Working on {n+1}/{len(training_output)} input files")
+        logger.info(f"Working on {n+1}/{len(training_output)} input files")
         result_dict = {}
         epoch = int(
             model_file[

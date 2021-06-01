@@ -2,11 +2,10 @@
 
 import argparse
 import json
-import logging
 
 import yaml
 
-from umami.configuration import global_config  # noqa: F401
+from umami.configuration import logger
 from umami.tools import yaml_loader
 
 
@@ -121,13 +120,13 @@ def __run():
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
     if "dips" in args.tagger.lower():
-        logging.info("Starting processing DIPS variables.")
+        logger.info("Starting processing DIPS variables.")
         with open(args.scale_dict, "r") as f:
             scale_dict = json.load(f)
 
         track_variables = GetTrackVariables(scale_dict, variable_config)
 
-        logging.info("Found %i variables" % len(track_variables))
+        logger.info("Found %i variables" % len(track_variables))
         inputs = {}
         # inputs["name"] = "b-tagging" # only for DL1
         inputs["name"] = args.sequence_name
@@ -143,19 +142,19 @@ def __run():
             {"labels": ["pu", "pc", "pb"], "name": args.tagger}
         ]
 
-        logging.info(f"Saving {args.output}.")
+        logger.info(f"Saving {args.output}.")
         with open(args.output, "w") as dl1_vars:
             json.dump(lwtnn_var_dict, dl1_vars, indent=4)
 
     elif "dl1" in args.tagger.lower():
-        logging.info("Starting processing DL1* variables.")
+        logger.info("Starting processing DL1* variables.")
 
         with open(args.scale_dict, "r") as f:
             scale_dict = json.load(f)
 
         jet_variables = GetJetVariables(scale_dict, variable_config)
 
-        logging.info(f"Found {len(jet_variables)} jet variables")
+        logger.info(f"Found {len(jet_variables)} jet variables")
         jet_inputs = {}
         jet_inputs["name"] = "b-tagging"
         jet_inputs["variables"] = jet_variables
@@ -166,9 +165,9 @@ def __run():
         lwtnn_var_dict["inputs"] = jet_inputs
 
         if "tau" in args.tagger:
-            logging.info("Detected tau output in tagger.")
+            logger.info("Detected tau output in tagger.")
             labels_tau = ["pu", "pc", "pb", "ptau"]
-            logging.info(f"Using labels {labels_tau}")
+            logger.info(f"Using labels {labels_tau}")
             lwtnn_var_dict["outputs"] = [
                 {"labels": labels_tau, "name": args.tagger}
             ]
@@ -177,12 +176,12 @@ def __run():
                 {"labels": ["pu", "pc", "pb"], "name": args.tagger}
             ]
 
-        logging.info(f"Saving {args.output}.")
+        logger.info(f"Saving {args.output}.")
         with open(args.output, "w") as dl1_vars:
             json.dump(lwtnn_var_dict, dl1_vars, indent=4)
 
     elif "umami" in args.tagger.lower():
-        logging.info("Starting processing UMAMI variables.")
+        logger.info("Starting processing UMAMI variables.")
 
         with open(args.scale_dict, "r") as f:
             scale_dict = json.load(f)
@@ -190,8 +189,8 @@ def __run():
         jet_variables = GetJetVariables(scale_dict, variable_config)
         track_variables = GetTrackVariables(scale_dict, variable_config)
 
-        logging.info(f"Found {len(track_variables)} track variables")
-        logging.info(f"Found {len(jet_variables)} jet variables")
+        logger.info(f"Found {len(track_variables)} track variables")
+        logger.info(f"Found {len(jet_variables)} jet variables")
 
         track_inputs = {}
         track_inputs["name"] = args.sequence_name
@@ -211,7 +210,7 @@ def __run():
             {"labels": ["pu", "pc", "pb"], "name": args.tagger},
         ]
 
-        logging.info(f"Saving {args.output}.")
+        logger.info(f"Saving {args.output}.")
         with open(args.output, "w") as dl1_vars:
             json.dump(lwtnn_var_dict, dl1_vars, indent=4)
 

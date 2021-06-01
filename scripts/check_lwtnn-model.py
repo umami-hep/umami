@@ -1,5 +1,4 @@
 import argparse
-import logging
 
 import h5py
 import numpy as np
@@ -8,7 +7,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
-from umami.configuration import global_config  # noqa: F401
+from umami.configuration import logger
 from umami.train_tools import Sum
 
 
@@ -81,14 +80,14 @@ class config:
 
 def __run():
     args = GetParser()
-    logging.info(f"Opening input file {args.input}")
+    logger.info(f"Opening input file {args.input}")
     with h5py.File(args.input, "r") as file:
         df = pd.DataFrame(file["jets"][:])
 
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
     preprocess_config = config(args.scale_dict)
 
-    logging.info(f"Evaluating {args.model}")
+    logger.info(f"Evaluating {args.model}")
 
     pred_model = None
     if "umami" in args.tagger.lower():
@@ -99,7 +98,7 @@ def __run():
             nJets=int(10e6),
             exclude=None,
         )
-        logging.info(f"Evaluated jets: {len(Y_test)}")
+        logger.info(f"Evaluated jets: {len(Y_test)}")
         pred_dips, pred_umami = load_model_umami(
             args.model, X_test_trk, X_test_jet
         )
@@ -112,7 +111,7 @@ def __run():
             preprocess_config,
             nJets=int(10e6),
         )
-        logging.info(f"Evaluated jets: {len(Y_test)}")
+        logger.info(f"Evaluated jets: {len(Y_test)}")
         with CustomObjectScope({"Sum": Sum}):
             model = load_model(args.model)
         pred_model = model.predict(X_test_trk, batch_size=5000, verbose=0)
@@ -125,7 +124,7 @@ def __run():
             nJets=int(10e6),
             exclude=None,
         )
-        logging.info(f"Evaluated jets: {len(Y_test)}")
+        logger.info(f"Evaluated jets: {len(Y_test)}")
 
         with CustomObjectScope({"Sum": Sum}):
             model = load_model(args.model)
@@ -145,7 +144,7 @@ def __run():
     df["index"] = range(len(df))
 
     df["y"] = np.argmax(Y_test, axis=1)
-    logging.info(f"Jets: {len(df)}")
+    logger.info(f"Jets: {len(df)}")
 
     evaluated = "eval_pu"
     df["diff"] = abs(df[evaluated] - df[f"{args.tagger}_pu"])
@@ -195,7 +194,7 @@ def __run():
         ]
         # df_select.query("diff>1e-5", inplace=True)
         out_file = f"{args.output}.csv"
-        logging.info(f"Writing output file {out_file}")
+        logger.info(f"Writing output file {out_file}")
         df_select.to_csv(out_file, index=False)
 
 

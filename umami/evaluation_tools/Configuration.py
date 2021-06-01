@@ -1,5 +1,6 @@
 import yaml
 
+from umami.configuration import logger
 from umami.tools import yaml_loader
 
 
@@ -15,7 +16,7 @@ class Configuration(object):
         self.GetConfiguration()
 
     def LoadConfigFile(self):
-        print("Using plot config file", self.yaml_config)
+        logger.info(f"Using plot config file {self.yaml_config}")
         with open(self.yaml_config, "r") as conf:
             self.config = yaml.load(conf, Loader=yaml_loader)
 

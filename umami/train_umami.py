@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import argparse
-import os
 
 import h5py
 import tensorflow as tf
@@ -18,9 +17,8 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 
 import umami.train_tools as utt
+from umami.configuration import logger
 from umami.preprocessing_tools import Configuration
-
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 
 def GetParser():
@@ -71,11 +69,8 @@ class generator:
         )
 
     def load_in_memory(self, part=0):
-        print(
-            "\nloading in memory",
-            part + 1,
-            "/",
-            1 + self.n_jets // self.step_size,
+        logger.info(
+            f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
         )
         self.x_in_mem = self.x[
             self.step_size * part : self.step_size * (part + 1)
@@ -246,10 +241,10 @@ def Umami(args, train_config, preprocess_config):
     nJets, nTrks, nFeatures = X_trk_train.shape
     nJets, nDim = Y_train.shape
     njet_features = X_train.shape[1]
-    print(f"nJets: {nJets}, nTrks: {nTrks}")
-    print(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
+    logger.info(f"nJets: {nJets}, nTrks: {nTrks}")
+    logger.info(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
     if "model_file" in train_config.config:
-        print(f"Loading model from: {train_config.config['model_file']}")
+        logger.info(f"Loading model from: {train_config.config['model_file']}")
         umami = load_model(
             train_config.config["model_file"], {"Sum": utt.Sum}, compile=False
         )
@@ -325,7 +320,7 @@ def Umami(args, train_config, preprocess_config):
     )
 
     # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
-    print("Start training")
+    logger.info("Start training")
     umami.fit(
         train_dataset,
         epochs=nEpochs,

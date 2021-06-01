@@ -1,6 +1,5 @@
 import argparse
 import json
-import logging
 import os
 import pathlib
 import sys
@@ -19,7 +18,7 @@ from numpy.lib.recfunctions import (
 from tqdm import tqdm
 
 import umami.preprocessing_tools as upt
-from umami.configuration import global_config
+from umami.configuration import global_config, logger
 from umami.tools import yaml_loader
 
 
@@ -182,15 +181,15 @@ def RunPreparation(args, config):
     """
     # check if sample is provided, otherwise exit
     if not args.sample:
-        logging.error("Please provide --sample to prepare hybrid samples")
+        logger.error("Please provide --sample to prepare hybrid samples")
 
     # set up sample
     samples = config.preparation["samples"]
     try:
         sample = samples[args.sample]
     except KeyError:
-        logging.warning(f'Warning: sample "{args.sample}" not in config file!')
-        logging.warning(
+        logger.warning(f'Warning: sample "{args.sample}" not in config file!')
+        logger.warning(
             f'Samples contained in config file "{args.config_file}":'
         )
         pprint(samples)
@@ -222,7 +221,7 @@ def RunPreparation(args, config):
     os.makedirs(output_path, exist_ok=True)
 
     # run over ntuples to extract jets (and potentially also tracks)
-    logging.info("Processing ntuples...")
+    logger.info("Processing ntuples...")
     pbar = tqdm(total=n_jets)
     for i, filename in enumerate(ntuples):
         if n_jets <= 0:
@@ -292,7 +291,7 @@ def RunPreparation(args, config):
             break
     pbar.close()
     if n_jets_to_get > 0:
-        logging.warning(
+        logger.warning(
             f"Not enough selected jets from files, only {jets_loaded}"
         )
 
@@ -333,7 +332,7 @@ def RunMerging(args, config):
     """
     # check if sample is provided, otherwise exit
     if not args.sample:
-        logging.error("Please provide --sample to prepare hybrid samples")
+        logger.error("Please provide --sample to prepare hybrid samples")
         sys.exit(1)
 
     # set up sample
@@ -341,8 +340,8 @@ def RunMerging(args, config):
     try:
         sample = samples[args.sample]
     except KeyError:
-        logging.warning(f'Warning: sample "{args.sample}" not in config file!')
-        logging.warning(
+        logger.warning(f'Warning: sample "{args.sample}" not in config file!')
+        logger.warning(
             f'Samples contained in config file "{args.config_file}":'
         )
         pprint(samples)
@@ -373,12 +372,12 @@ def RunMerging(args, config):
     size, ranges = upt.get_size(input_files)
     upt.create_datasets(output, input_files[0], size)
 
-    logging.info(f"Merging {len(input_files)} hybrid samples...")
+    logger.info(f"Merging {len(input_files)} hybrid samples...")
     for f in tqdm(sorted(input_files)):
         tqdm.write(f"Processing sample {f}")
         upt.add_data(f, output, ranges[f])
     output.close()
-    logging.info(f"Merged hybrid samples output written to {output_file}")
+    logger.info(f"Merged hybrid samples output written to {output_file}")
 
 
 def RunUndersampling(args, config):
@@ -411,12 +410,12 @@ def RunUndersampling(args, config):
         sampling_method = "weight"
     elif config.sampling_method == "count_tau_weight" and take_taus:
         # if no taus, is equivalent to using count
-        logging.info(
+        logger.info(
             "Undersampling based on weights, but then equalise counts of b, c, and l"
         )
         sampling_method = "count_bcl_weight_tau"
     else:
-        logging.info("Unspecified sampling method, default is count")
+        logger.info("Unspecified sampling method, default is count")
         sampling_method = "count"
 
     # initialise input files (they are not yet loaded to memory)
@@ -432,7 +431,7 @@ def RunUndersampling(args, config):
         )
 
     for x in range(config.iterations):
-        logging.info(f"Iteration {x + 1} of {config.iterations}")
+        logger.info(f"Iteration {x + 1} of {config.iterations}")
         vec_Z = f_Z["jets"][N_list[x]["nZ"] : N_list[x + 1]["nZ"]]
         vec_Z = append_fields(
             vec_Z,
@@ -602,7 +601,7 @@ def RunUndersampling(args, config):
             },
         )
 
-        logging.info("starting undersampling")
+        logger.info("starting undersampling")
 
         # Do the sampling:
         (
@@ -686,7 +685,7 @@ def RunUndersampling(args, config):
         out_file = config.GetFileName(x + 1, option="downsampled")
         # ensure output path exists
         os.makedirs(pathlib.Path(out_file).parent.absolute(), exist_ok=True)
-        logging.info(f"saving file: {out_file}")
+        logger.info(f"saving file: {out_file}")
         h5f = h5py.File(out_file, "w")
         h5f.create_dataset("bjets", data=bjets, compression="gzip")
         h5f.create_dataset("cjets", data=cjets, compression="gzip")
@@ -702,7 +701,7 @@ def RunUndersampling(args, config):
 
         h5f.close()
         # TODO: verify track handling
-        logging.info("Plotting ...")
+        logger.info("Plotting ...")
         plot_name = config.GetFileName(
             x + 1,
             option="downsampled-pt_eta",
@@ -765,13 +764,13 @@ def GetScaleDict(args, config):
 
     # check if var_dict is provided, otherwise exit
     if not args.var_dict:
-        logging.error(
+        logger.error(
             "Provide --var_dict to retrieve scaling and shifting factors"
         )
         sys.exit(1)
 
     input_file = config.GetFileName(iteration=1, option="downsampled")
-    logging.info(input_file)
+    logger.info(input_file)
     infile_all = h5py.File(input_file, "r")
     take_taus = config.bool_process_taus
 
@@ -794,9 +793,7 @@ def GetScaleDict(args, config):
 
     X.replace([np.inf, -np.inf], np.nan, inplace=True)
 
-    logging.info(
-        "Retrieving scaling and shifting values for the jet variables"
-    )
+    logger.info("Retrieving scaling and shifting values for the jet variables")
 
     scale_dict = []
     for var in X.columns.values:
@@ -817,7 +814,7 @@ def GetScaleDict(args, config):
 
     scale_dict_trk = {}
     if args.tracks:
-        logging.info(
+        logger.info(
             "Retrieving scaling and shifting values for the track variables"
         )
         logNormVars = variable_config["track_train_variables"]["logNormVars"]
@@ -858,19 +855,19 @@ def GetScaleDict(args, config):
     os.makedirs(os.path.dirname(config.dict_file), exist_ok=True)
     with open(config.dict_file, "w") as outfile:
         json.dump(scale_dict, outfile, indent=4)
-    logging.info("saved scale dictionary as", config.dict_file)
+    logger.info("saved scale dictionary as", config.dict_file)
 
 
 def ApplyScalesTrksNumpy(args, config, iteration=1):
     if not args.var_dict:
-        logging.error(
+        logger.error(
             "Provide --var_dict to apply scaling and shifting factors"
         )
         sys.exit(1)
-    logging.info("Track scaling")
+    logger.info("Track scaling")
     input_file = config.GetFileName(iteration=iteration, option="downsampled")
     take_taus = config.bool_process_taus
-    logging.info(input_file)
+    logger.info(input_file)
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
@@ -885,9 +882,9 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
     if take_taus:
         dsets.append(h5py.File(input_file, "r")["/tautrk"][:])
     arrays = [np.asarray(dset) for dset in dsets]
-    logging.info("concatenate all datasets")
+    logger.info("concatenate all datasets")
     trks = np.concatenate(arrays, axis=0)
-    logging.info("concatenated")
+    logger.info("concatenated")
 
     with open(config.dict_file, "r") as infile:
         scale_dict = json.load(infile)["tracks"]
@@ -909,7 +906,7 @@ def ApplyScalesTrksNumpy(args, config, iteration=1):
 
     d_arr = np.stack(var_arr_list, axis=-1)
     out_file = config.GetFileName(option="preprocessed", iteration=iteration)
-    logging.info(f"saving file: {out_file}")
+    logger.info(f"saving file: {out_file}")
     with h5py.File(out_file, "a") as h5file:
         h5file.create_dataset("trks", data=d_arr, compression="gzip")
         # TODO: Add plotting
@@ -920,7 +917,7 @@ def ApplyScalesNumpy(args, config, iteration=1):
     Apply the scaling and shifting to dataset using numpy
     """
     if not args.var_dict:
-        logging.error(
+        logger.error(
             "Provide --var_dict to apply scaling and shifting factors"
         )
         sys.exit(1)
@@ -962,11 +959,11 @@ def ApplyScalesNumpy(args, config, iteration=1):
     jets = jets.replace([np.inf, -np.inf], np.nan)
     with open(config.dict_file, "r") as infile:
         scale_dict = json.load(infile)["jets"]
-    logging.info("Replacing default values.")
+    logger.info("Replacing default values.")
     default_dict = upt.Gen_default_dict(scale_dict)
     jets = jets.fillna(default_dict)
     # var_list = variable_config["train_variables"]
-    logging.info("Applying scaling and shifting.")
+    logger.info("Applying scaling and shifting.")
     for elem in scale_dict:
         if "isDefaults" in elem["name"]:
             continue
@@ -975,7 +972,7 @@ def ApplyScalesNumpy(args, config, iteration=1):
             jets[elem["name"]] /= elem["scale"]
 
     out_file = config.GetFileName(option="preprocessed", iteration=iteration)
-    logging.info(f"Saving file: {out_file}")
+    logger.info(f"Saving file: {out_file}")
     with h5py.File(out_file, "w") as h5file:
         h5file.create_dataset(
             "jets", data=jets.to_records(index=False), compression="gzip"
@@ -992,7 +989,7 @@ def ApplyScales(args, config):
 
 def WriteTrainSample(args, config):
     if not args.var_dict:
-        logging.error("Please provide --var_dict to write training samples")
+        logger.error("Please provide --var_dict to write training samples")
         sys.exit(1)
     with open(args.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -1007,12 +1004,10 @@ def WriteTrainSample(args, config):
     variables_header = variable_config["train_variables"]
     variables = [i for j in variables_header for i in variables_header[j]]
 
-    logging.info(f"Saving sample to {out_file}")
+    logger.info(f"Saving sample to {out_file}")
     with h5py.File(out_file, "w") as output:
         for i, file in enumerate(input_files):
-            logging.info(
-                f"Start processing file {i + 1} of {len(input_files)}"
-            )
+            logger.info(f"Start processing file {i + 1} of {len(input_files)}")
             with h5py.File(file, "r") as in_file:
                 jets = in_file["/jets"][:]
                 labels = upt.GetBinaryLabels(jets[variable_config["label"]])
@@ -1047,7 +1042,7 @@ def WriteTrainSample(args, config):
                 ]
 
                 if args.tracks:
-                    logging.info("adding tracks")
+                    logger.info("adding tracks")
                     trks = in_file["/trks"][:]
                     np.random.seed(42)
                     np.random.shuffle(trks)

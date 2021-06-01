@@ -1,4 +1,3 @@
-import logging
 import os
 import tempfile
 import unittest
@@ -6,7 +5,7 @@ from subprocess import CalledProcessError, run
 
 import yaml
 
-from umami.configuration import global_config  # noqa: F401
+from umami.configuration import logger
 from umami.tools import replaceLineInFile, yaml_loader
 
 
@@ -28,18 +27,18 @@ def runTrainingUmami(config):
     Return value `True` if training succeeded, `False` if one step did not succees."""
     isSuccess = True
 
-    logging.info("Test: running train_umami.py...")
+    logger.info("Test: running train_umami.py...")
     run_train_Umami = run(["train_umami.py", "-c", f"{config}"])
     try:
         run_train_Umami.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: run_train_umami.py.")
+        logger.info("Test failed: run_train_umami.py.")
         isSuccess = False
 
     if isSuccess is True:
         run_train_Umami
 
-    logging.info("Test: running plotting_epoch_performance.py for UMAMI...")
+    logger.info("Test: running plotting_epoch_performance.py for UMAMI...")
     run_plot_epoch_Umami = run(
         [
             "plotting_epoch_performance.py",
@@ -50,13 +49,13 @@ def runTrainingUmami(config):
     try:
         run_plot_epoch_Umami.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: plotting_epoch_performance.py for UMAMI.")
+        logger.info("Test failed: plotting_epoch_performance.py for UMAMI.")
         isSuccess = False
 
     if isSuccess is True:
         run_plot_epoch_Umami
 
-    logging.info("Test: running evaluate_model.py for UMAMI...")
+    logger.info("Test: running evaluate_model.py for UMAMI...")
     run_evaluate_model_Umami = run(
         [
             "evaluate_model.py",
@@ -69,7 +68,7 @@ def runTrainingUmami(config):
     try:
         run_evaluate_model_Umami.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: evaluate_model.py for UMAMI.")
+        logger.info("Test failed: evaluate_model.py for UMAMI.")
         isSuccess = False
 
     if isSuccess is True:
@@ -86,7 +85,7 @@ class TestUmamiTraining(unittest.TestCase):
 
         self.test_dir_path = tempfile.TemporaryDirectory()
         test_dir = f"{self.test_dir_path.name}"
-        logging.info(f"Creating test directory in {test_dir}")
+        logger.info(f"Creating test directory in {test_dir}")
 
         # config files, will be copied to test dir
         config_source = os.path.join(
@@ -113,7 +112,7 @@ class TestUmamiTraining(unittest.TestCase):
         )
 
         # input files, will be downloaded to test dir
-        logging.info("Retrieving files from preprocessing...")
+        logger.info("Retrieving files from preprocessing...")
         self.train_file = os.path.join(
             "./preprocessing_umami/preprocessing/",
             "PFlow-hybrid_70-test-preprocessed_shuffled.h5",
@@ -129,7 +128,7 @@ class TestUmamiTraining(unittest.TestCase):
         )
 
         # prepare config files by modifying local copies of config files
-        logging.info(
+        logger.info(
             f"Preparing config file based on {config_source} in {self.config}..."
         )
 
@@ -191,14 +190,14 @@ class TestUmamiTraining(unittest.TestCase):
             config.write("\n")
             config.write('    plot_datatype: "pdf"\n')
 
-        logging.info("Downloading test data...")
+        logger.info("Downloading test data...")
         for file in self.data["test_umami"]["files"]:
             path = os.path.join(
                 self.data["data_url"],
                 self.data["test_umami"]["data_subfolder"],
                 file,
             )
-            logging.info(f"Retrieving file from path {path}")
+            logger.info(f"Retrieving file from path {path}")
             run(["wget", path, "--directory-prefix", test_dir])
 
     def test_train_umami(self):
