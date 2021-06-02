@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
 
+from umami.configuration import logger
 from umami.preprocessing_tools import GetBinaryLabels
 from umami.tools import applyATLASstyle, makeATLAStag
 from umami.train_tools import GetRejection
@@ -410,7 +411,7 @@ def RunPerformanceCheck(
     fb=0.2,
     dict_file_name=None,
 ):
-    print("Running performance check.")
+    logger.info("Running performance check.")
     Eval_parameters = train_config.Eval_parameters_validation
     plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
     bool_use_taus = train_config.bool_use_taus
@@ -503,7 +504,7 @@ def RunPerformanceCheck(
 
     df_results = pd.read_json(dict_file_name)
     plot_dir = f"{train_config.model_name}/plots"
-    print("saving plots to", plot_dir)
+    logger.info(f"Saving plots to {plot_dir}")
     os.makedirs(plot_dir, exist_ok=True)
     if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
         plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
@@ -705,7 +706,7 @@ def RunPerformanceCheckDips(
     fb=0.2,
     dict_file_name=None,
 ):
-    print("Running performance check.")
+    logger.info("Running performance check.")
     Eval_parameters = train_config.Eval_parameters_validation
     plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
     recommended_fc_values = {"DL1r": 0.018, "RNNIP": 0.08}
@@ -739,7 +740,7 @@ def RunPerformanceCheckDips(
 
     df_results = pd.read_json(dict_file_name)
     plot_dir = f"{train_config.model_name}/plots"
-    print("saving plots to", plot_dir)
+    logger.info(f"saving plots to {plot_dir}")
     os.makedirs(plot_dir, exist_ok=True)
     if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
         plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
@@ -845,7 +846,7 @@ def RunPerformanceCheckUmami(
     fc=0.018,
     dict_file_name=None,
 ):
-    print("Running performance check.")
+    logger.info("Running performance check.")
     Eval_parameters = train_config.Eval_parameters_validation
     plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
     recommended_fc_values = {"DL1r": 0.018, "RNNIP": 0.08}
@@ -868,7 +869,7 @@ def RunPerformanceCheckUmami(
 
     df_results = pd.read_json(dict_file_name)
     plot_dir = f"{train_config.model_name}/plots"
-    print("saving plots to", plot_dir)
+    logger.info(f"saving plots to {plot_dir}")
     os.makedirs(plot_dir, exist_ok=True)
     if comp_tagger_name == "RNNIP":
         plot_name = f"{plot_dir}/rej-plot_val_dips.{plot_datatype}"

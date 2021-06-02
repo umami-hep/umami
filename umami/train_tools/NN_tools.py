@@ -1,3 +1,4 @@
+from umami.configuration import logger  # isort:skip
 import json
 import os
 import re
@@ -12,7 +13,6 @@ from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.models import load_model
 
-from umami.configuration import logger
 from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
 from umami.tools import yaml_loader
 

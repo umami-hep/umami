@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import binned_statistic_2d
 
-from umami.configuration import global_config
+from umami.configuration import global_config, logger
 
 
 class UnderSampling(object):
@@ -262,11 +262,11 @@ class Weighting2D(object):
 
         # Using the b-jet distribution as reference
         # print(self.bjets)
-        print(stat_b)
+        logger.info(stat_b)
         # bin_weights_u = np.divide(stat_u, stat_b)
         bin_weights_c = np.divide(stat_c, stat_b)
         # bin_weights_b = np.ones(len(stat_b))
-        print(bin_weights_c)
+        logger.info(bin_weights_c)
         # for elem, count in zip(ind_b, min_count_per_bin):
         #     np.random.seed(self.rnd_seed)
         #     bjet_indices.append(np.random.choice(np.where(
@@ -400,10 +400,8 @@ def EnforceFraction(
     if ttbar_frac_achieved < (ttbar_frac - tolerance):  # Too much Z'
         nZ_required = int(ntt / ttbar_frac - ntt)
         if nZ_required > nZ:
-            print(
-                "Error, requiring {} Z while only {} available".format(
-                    nZ_required, nZ
-                )
+            logger.warning(
+                f"Requiring {nZ_required} Z while only {nZ} available"
             )
         n_selected = np.random.choice(
             np.where(sample["category"] == 0)[0],
@@ -417,10 +415,8 @@ def EnforceFraction(
     elif ttbar_frac_achieved > (ttbar_frac + tolerance):  # Too much ttbar
         ntt_required = int(ttbar_frac / (1 - ttbar_frac) * nZ)
         if ntt_required > ntt:
-            print(
-                "Error, requiring {} tt while only {} available".format(
-                    ntt_required, ntt
-                )
+            logger.warning(
+                f"requiring {ntt_required} tt while only {ntt} available"
             )
         n_selected = np.random.choice(
             np.where(sample["category"] == 1)[0],
@@ -436,15 +432,8 @@ def EnforceFraction(
         nX_tt = len(sample[sample["category"] == 1])
         nXjets = len(sample)
         ttfrac_X = float(nX_tt) / nXjets
-        print(
-            "Further downsampled! {} {} jets: {} ttbar (frac: {}) | {} Z'-ext (frac: {})".format(
-                nXjets,
-                label,
-                nX_tt,
-                round(ttfrac_X, 2),
-                nXjets - nX_tt,
-                round(1 - ttfrac_X, 2),
-            )
+        logger.info(
+            f"Further downsampled! {nXjets} {label} jets: {nX_tt} ttbar (frac: { round(ttfrac_X, 2)}) | {nXjets - nX_tt} Z'-ext (frac: {round(1 - ttfrac_X, 2)})"
         )
     return sample, n_selected
 
@@ -469,48 +458,24 @@ def RunStatSamples(bjets, cjets, ujets, taujets=None):
         )
     else:
         ttfrac = float(nb_tt + nc_tt + nu_tt) / float(nbjets + ncjets + nujets)
-    print("ttbar fraction:", round(ttfrac, 2))
+    logger.info(f"ttbar fraction: {round(ttfrac, 2)}")
     ttfrac_b = float(nb_tt) / nbjets
     ttfrac_c = float(nc_tt) / ncjets
     ttfrac_u = float(nu_tt) / nujets
     if taujets is not None:
         ttfrac_tau = float(ntau_tt) / ntaujets
-    print(
-        "{} b jets: {} ttbar (frac: {}) | {} Z'-ext (frac: {})".format(
-            nbjets,
-            nb_tt,
-            round(ttfrac_b, 2),
-            nbjets - nb_tt,
-            round(1 - ttfrac_b, 2),
-        )
+    logger.info(
+        f"{nbjets} b jets: {nb_tt} ttbar (frac: {round(ttfrac_b, 2)}) | {nbjets - nb_tt} Z'-ext (frac: {round(1 - ttfrac_b, 2)})"
     )
-    print(
-        "{} c jets: {} ttbar (frac: {}) | {} Z'-ext (frac: {})".format(
-            ncjets,
-            nc_tt,
-            round(ttfrac_c, 2),
-            ncjets - nc_tt,
-            round(1 - ttfrac_c, 2),
-        )
+    logger.info(
+        f"{ncjets} c jets: {nc_tt} ttbar (frac: {round(ttfrac_c, 2)}) | {ncjets - nc_tt} Z'-ext (frac: {round(1 - ttfrac_c, 2)})"
     )
-    print(
-        "{} u jets: {} ttbar (frac: {}) | {} Z'-ext (frac: {})".format(
-            nujets,
-            nu_tt,
-            round(ttfrac_u, 2),
-            nujets - nu_tt,
-            round(1 - ttfrac_u, 2),
-        )
+    logger.info(
+        f"{nujets} u jets: {nu_tt} ttbar (frac: {round(ttfrac_u, 2)}) | {nujets - nu_tt} Z'-ext (frac: {round(1 - ttfrac_u, 2)})"
     )
     if taujets is not None:
-        print(
-            "{} tau jets: {} ttbar (frac: {}) | {} Z'-ext (frac: {})".format(
-                ntaujets,
-                ntau_tt,
-                round(ttfrac_tau, 2),
-                ntaujets - ntau_tt,
-                round(1 - ttfrac_tau, 2),
-            )
+        logger.info(
+            f"{ntaujets} tau jets: {ntau_tt} ttbar (frac: {round(ttfrac_tau, 2)}) | {ntaujets - ntau_tt} Z'-ext (frac: {round(1 - ttfrac_tau, 2)})"
         )
     else:
         ttfrac_tau, ntau_tt, ntaujets = 0, 0, 0

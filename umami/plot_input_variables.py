@@ -10,6 +10,7 @@ import argparse
 import yaml
 
 import umami.input_vars_tools as uit
+from umami.configuration import logger
 from umami.tools import yaml_loader
 
 
@@ -59,8 +60,7 @@ def plot_trks_variables(plot_config, plot_type):
         if plotting_config["variables"] == "jets":
             continue
 
-        print(f"Start {plot_name}...")
-        print()
+        logger.info(f"Start {plot_name}...\n")
         filepath_list = []
         labels_list = []
 
@@ -154,8 +154,7 @@ def plot_jets_variables(plot_config, plot_type):
         if plotting_config["variables"] == "tracks":
             continue
 
-        print(f"Start {plot_name}...")
-        print()
+        logger.info(f"Start {plot_name}...\n")
         filepath_list = []
         labels_list = []
 

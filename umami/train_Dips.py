@@ -1,3 +1,4 @@
+from umami.configuration import logger  # isort:skip
 import argparse
 
 import h5py
@@ -67,11 +68,8 @@ class generator:
         )
 
     def load_in_memory(self, part=0):
-        print(
-            "\nloading in memory",
-            part + 1,
-            "/",
-            1 + self.n_jets // self.step_size,
+        logger.info(
+            f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
         )
         self.x_in_mem = self.x[
             self.step_size * part : self.step_size * (part + 1)
@@ -162,8 +160,9 @@ def Dips_model(train_config=None, input_shape=None):
     output = Dense(nClasses, activation="softmax", name="Jet_class")(F)
     dips = Model(inputs=trk_inputs, outputs=output)
 
-    # Print Dips model summary
-    dips.summary()
+    # Print Dips model summary when log level lower or equal INFO level
+    if logger.level <= 20:
+        dips.summary()
 
     # Set optimier and loss
     model_optimizer = Adam(learning_rate=NN_structure["lr"])
@@ -203,7 +202,7 @@ def Dips(args, train_config, preprocess_config):
         Y_valid_add = None
 
     # Load the training file
-    print("Load training data tracks")
+    logger.info("Load training data tracks")
     file = h5py.File(train_config.train_file, "r")
     X_train = file["X_trk_train"]
     Y_train = file["Y_train"]
@@ -218,11 +217,11 @@ def Dips(args, train_config, preprocess_config):
     nJets, nDim = Y_train.shape
 
     # Print how much jets are used
-    print(f"Number of Jets used for training: {nJets}")
+    logger.info(f"Number of Jets used for training: {nJets}")
 
     if "model_file" in train_config.config:
         # Load DIPS model from file
-        print(f"Loading model from: {train_config['model_file']}")
+        logger.info(f"Loading model from: {train_config['model_file']}")
         with CustomObjectScope({"Sum": Sum}):
             dips = load_model(train_config["model_file"])
 
@@ -303,7 +302,7 @@ def Dips(args, train_config, preprocess_config):
         ),
     )
 
-    print("Start training")
+    logger.info("Start training")
     dips.fit(
         train_dataset,
         epochs=nEpochs,

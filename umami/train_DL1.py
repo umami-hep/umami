@@ -1,3 +1,4 @@
+from umami.configuration import logger  # isort:skip
 import argparse
 import os
 
@@ -82,7 +83,9 @@ def NN_model(train_config, input_shape):
     )(x)
 
     model = Model(inputs=inputs, outputs=predictions)
-    model.summary()
+    # Print DL1 model summary when log level lower or equal INFO level
+    if logger.level <= 20:
+        model.summary()
 
     model_optimizer = Adam(learning_rate=NN_config["lr"])
     model.compile(
@@ -94,11 +97,13 @@ def NN_model(train_config, input_shape):
 
 
 def TrainLargeFile(args, train_config, preprocess_config):
-    print("Loading validation data (training data will be loaded per batch)")
+    logger.info(
+        "Loading validation data (training data will be loaded per batch)"
+    )
     bool_use_taus = (
         train_config.bool_use_taus and preprocess_config.bool_process_taus
     )
-    print("Including taus:", bool_use_taus)
+    logger.info(f"Including taus: {bool_use_taus}")
     exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
@@ -193,7 +198,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
         workers=8,
     )
 
-    print("Models saved:", train_config.model_name)
+    logger.info(f"Models saved {train_config.model_name}")
 
 
 if __name__ == "__main__":

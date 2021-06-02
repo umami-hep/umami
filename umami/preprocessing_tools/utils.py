@@ -7,7 +7,7 @@ import pandas as pd
 from dask.array.slicing import shuffle_slice
 from sklearn.preprocessing import LabelBinarizer
 
-from umami.configuration import global_config
+from umami.configuration import global_config, logger
 from umami.tools import applyATLASstyle, makeATLAStag
 
 
@@ -307,8 +307,6 @@ def MakePlots(
     """
 
     vars = [global_config.pTvariable, global_config.etavariable]
-    # print(pd.DataFrame(bjets)[global_config.pTvariable])
-    # print(bjets[global_config.etavariable])
 
     bool_plot_taujets = taujets is not None
     fig = plt.figure()
@@ -398,8 +396,8 @@ def Plot_vars(bjets, cjets, ujets, plot_name="InfoPlot"):
     cjet = pd.DataFrame(cjets)
     ujet = pd.DataFrame(ujets)
     variablelist = list(bjet.columns.values)
-    print(variablelist)
-    print(len(variablelist))
+    logger.info(f"variable list: {variablelist}")
+    logger.info(f"#variable: {len(variablelist)}")
     variablelist.remove("label")
     variablelist.remove("weight")
     if "category" in variablelist:
@@ -429,7 +427,7 @@ def Plot_vars(bjets, cjets, ujets, plot_name="InfoPlot"):
         plt.legend()
     plt.tight_layout()
     plotname = "plots/%s_all_vars.pdf" % plot_name
-    print("save plot as", plotname)
+    logger.info(f"Save plot as {plotname}")
     plt.savefig(plotname, transparent=True)
 
 
@@ -462,7 +460,9 @@ def ScaleTracks(data, var_names, scale_dict=None, mask_value=0):
     if scale_dict is None:
         scale_dict = {}
         for v, name in enumerate(var_names):
-            print(f"Scaling feature {v + 1} of {len(var_names)} ({name}).")
+            logger.info(
+                f"Scaling feature {v + 1} of {len(var_names)} ({name})."
+            )
             f = data[:, :, v]
             slc = f[mask]
             m, s = slc.mean(), slc.std()
@@ -472,7 +472,9 @@ def ScaleTracks(data, var_names, scale_dict=None, mask_value=0):
 
     else:
         for v, name in enumerate(var_names):
-            print(f"Scaling feature {v + 1} of {len(var_names)} ({name}).")
+            logger.info(
+                f"Scaling feature {v + 1} of {len(var_names)} ({name})."
+            )
             f = data[:, :, v]
             slc = f[mask]
             m = scale_dict[name]["shift"]

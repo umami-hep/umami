@@ -2,7 +2,7 @@ import operator
 
 import numpy as np
 
-from umami.configuration import global_config
+from umami.configuration import global_config, logger
 
 
 def GetCuts(jets, config, sample="ttbar"):
@@ -74,5 +74,5 @@ def GetCuts(jets, config, sample="ttbar"):
         return np.unique(np.concatenate(indices_to_remove))
 
     else:
-        print("Chose either 'ttbar' or 'Zprime' as argument for sample")
+        logger.error("Chose either 'ttbar' or 'Zprime' as argument for sample")
         return 1

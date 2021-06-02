@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from umami.configuration import logger  # isort:skip
 import argparse
 
 import h5py
@@ -17,7 +18,6 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 
 import umami.train_tools as utt
-from umami.configuration import logger
 from umami.preprocessing_tools import Configuration
 
 
@@ -194,7 +194,9 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
     umami = Model(
         inputs=[trk_inputs, jet_inputs], outputs=[dips_output, jet_output]
     )
-    umami.summary()
+    # Print Umami model summary when log level lower or equal INFO level
+    if logger.level <= 20:
+        umami.summary()
 
     model_optimizer = Adam(learning_rate=NN_structure["lr"])
     umami.compile(

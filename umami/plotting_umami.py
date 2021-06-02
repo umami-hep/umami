@@ -22,6 +22,7 @@ from yaml.loader import FullLoader
 
 import umami.evaluation_tools as uet
 import umami.validation_dumper_tools as uvdt
+from umami.configuration import logger
 
 
 def GetParser():
@@ -81,7 +82,7 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
-            print("model", model_name)
+            logger.info(f"model: {model_name}")
 
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -163,14 +164,14 @@ def plot_ROCvsVar(plot_name, plot_config, eval_params, eval_file_dir):
         "variable" not in plot_config
         or plot_config["variable"] not in df_results
     ):
-        print(
+        logger.warning(
             "Forgot to specify a variable that is contained in the dataframe"
         )
-        print("Defaulting to pT")
+        logger.warning("Defaulting to pT")
         plot_config["variable"] = "pt"
 
     if "prediction_labels" not in plot_config:
-        print("Forgot to specify the prediction labels")
+        logger.warning("Forgot to specify the prediction labels")
 
     fc = 0.018
     if "fc" in plot_config and plot_config["fc"] is not None:
@@ -366,7 +367,7 @@ def score_comparison(
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
-            print("model", model_name)
+            logger.info(f"model: {model_name}")
 
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -419,7 +420,7 @@ def plot_pT_vs_eff(
             continue
 
         if print_model:
-            print("model", model_name)
+            logger.info(f"model: {model_name}")
 
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -523,7 +524,7 @@ def SetUpPlots(
 
         # Define the path to the new plot
         if print_model:
-            print("Processing:", plot_name)
+            logger.info(f"Processing: {plot_name}")
 
         if epoch_to_name:
             save_plot_to = os.path.join(
@@ -624,10 +625,8 @@ def SetUpPlots(
             )
 
         if print_model:
-            print(
-                "saved plot as:",
-                save_plot_to.replace(eval_params["Path_to_models_dir"], ""),
-                "\n",
+            logger.info(
+                f'saved plot as: {save_plot_to.replace(eval_params["Path_to_models_dir"], "")} \n'
             )
 
 

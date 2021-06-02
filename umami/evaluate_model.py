@@ -1,3 +1,4 @@
+from umami.configuration import global_config, logger  # isort:skip
 import argparse
 import os
 import pickle
@@ -11,7 +12,6 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
-from umami.configuration import global_config, logger
 from umami.evaluation_tools.PlottingFunctions import (
     GetScore,
     GetScoreC,
