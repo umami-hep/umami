@@ -1,13 +1,11 @@
 #!/usr/bin/env python
+from umami.configuration import global_config  # isort:skip  # noqa
 import argparse
-import os
 
 import tensorflow as tf
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
-
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 
 def GetParser():

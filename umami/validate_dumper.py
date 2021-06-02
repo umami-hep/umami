@@ -1,3 +1,4 @@
+from umami.configuration import logger  # isort:skip
 import argparse
 import os
 import re
@@ -91,7 +92,7 @@ def EvaluateDumperDips(dc_config):
         Y_test_list = []
 
         for file in sorted(test_file, key=natural_keys):
-            print("Using ", file)
+            logger.info(f"Using {file}")
             # Get X and Y from test file
             X_test_trk_tmp, Y_test_tmp = utt.GetTestSampleTrks(
                 file,
@@ -113,7 +114,7 @@ def EvaluateDumperDips(dc_config):
         with h5py.File(test_file, "r") as file:
             df = pd.DataFrame(file["jets"][:])
 
-        print("Using ", test_file)
+        logger.info(f"Using {test_file}")
         # Get X and Y from test file
         X_test_trk, Y_test = utt.GetTestSampleTrks(
             test_file,
@@ -126,7 +127,7 @@ def EvaluateDumperDips(dc_config):
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
 
     # Load pretrained dips model
-    print("Model used for evaluating: ", model_file)
+    logger.info(f"Model used for evaluating {model_file}")
     with CustomObjectScope({"Sum": utt.Sum}):
         model = load_model(model_file)
 
@@ -160,7 +161,7 @@ def EvaluateDumperDips(dc_config):
     # Add nTrks to dataframe
     df["nTrks"] = nTrks
 
-    print("Number of Jets: ", len(df))
+    logger.info(f"Number of Jets: {len(df)}")
 
     # Print and add to dataframe percent difference
     df_select = df.query("abs(dips_eval_pu-dips_pu)>1e-6")
@@ -222,7 +223,7 @@ def EvaluateDumperDips(dc_config):
 
         # Save selected df to csv
         df.to_csv(FilePath)
-        print(f"File saved to {FilePath}")
+        logger.info(f"File saved to {FilePath}")
 
 
 if __name__ == "__main__":

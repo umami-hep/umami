@@ -43,3 +43,27 @@ There is a [global configuration](https://gitlab.cern.ch/atlas-flavor-tagging-to
 | `pTvariable`       |    Setting the name of the `pT` variable which is used in several places.         |
 |  `etavariable`      |      Setting the name of the `absolute eta` variable which is used in several places.        |
 |  `DebugLevel`      |      Defines the debug level. Possible values:  `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`      |
+|  `TFDebugLevel`      |      Defines the debug level of tensorflow, it takes integer values [0,1,2,3], where 0 prints all messages.      |
+
+
+## Logging
+The umami framework has a custom logging module defined in [umami/configuration/Configuration.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configuration/Configuration.py). To make use of the module you need to import it via 
+```python
+from umami.configuration import logger
+```
+and then it can be used e.g. via
+```python
+logger.info(f"Loading config file {config_file}.")
+logger.debug(f"Using variable {variable} in training.")
+logger.warning(f"Not enough jets available in sample, using only {njets}")
+```
+All logging levels are defined in the following table
+
+| Level    | Numeric value |
+|----------|---------------|
+| CRITICAL | 50            |
+| ERROR    | 40            |
+| WARNING  | 30            |
+| INFO     | 20            |
+| DEBUG    | 10            |
+| NOTSET   | 0             |

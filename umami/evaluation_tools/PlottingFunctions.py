@@ -1,3 +1,4 @@
+from umami.configuration import logger  # isort:skip
 import pickle
 
 import matplotlib.pyplot as plt
@@ -91,7 +92,6 @@ def FlatEfficiencyPerBin(df, predictions, variable, var_bins, wp=0.7):
         bscores_b_in_bin = df_in_bin[df_in_bin["labels"] == 2][predictions]
         if len(bscores_b_in_bin) == 0:
             continue
-        # print("There are {} b-jets in bin {}".format(len(bscores_b_in_bin), var_bins[i]))
         cutvalue_in_bin = np.percentile(bscores_b_in_bin, 100.0 * (1.0 - wp))
         df.loc[index_jets_in_bin, ["btag"]] = (
             df_in_bin[predictions] > cutvalue_in_bin
@@ -253,7 +253,7 @@ def plotEfficiencyVariable(
                     tau_err_list.append(eff_err(eff, total_tau_tag_in_bin))
                     in_tau = True
                 else:
-                    print("Invaled value of index from labels: ", item)
+                    logger.info(f"Invaled value of index from labels: {item}")
             if not (in_u):
                 u_lst.append(1e5)
                 u_err_list.append(1)
@@ -1033,9 +1033,8 @@ def plotROCRatio(
         ylabel_right = r"$b$-Jet Rejection ($1/\epsilon_{b}$)"
 
     if binomialErrors and nTest == 0:
-        print(
-            "Error: Requested binomialErrors, but did not pass nTest.",
-            "Will NOT plot rej errors.",
+        logger.error(
+            "Error: Requested binomialErrors, but did not pass nTest. Will NOT plot rej errors."
         )
         binomialErrors = False
 
@@ -2151,7 +2150,8 @@ def plotFractionScan(
     elif label == "umami_taurejC":
         draw_label = r"Tau-Jet Rejection from c ($1/\epsilon_{\tau}$)"
     else:
-        print("Problem")
+        logger.error("Problem")
+        # TODO: add something more specific here and raise an error??
     # Take data from relevant columns:
     x_data = data[x_val]
     y_data = data[y_val]

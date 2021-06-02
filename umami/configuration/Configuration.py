@@ -36,6 +36,9 @@ class Configuration(object):
     def SetTFDebugLevel(self):
         """Setting the Debug level of tensorflow.
         For reference see https://stackoverflow.com/questions/35869137/avoid-tensorflow-print-on-standard-error"""  # noqa
+        self.logger.debug(
+            f"Setting TFDebugLevel to {self.config['TFDebugLevel']}"
+        )
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(self.config["TFDebugLevel"])
 
     def SetLoggingLevel(self):

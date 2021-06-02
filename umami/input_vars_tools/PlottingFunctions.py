@@ -15,6 +15,7 @@ import numpy as np
 import yaml
 from matplotlib import gridspec
 
+from umami.configuration import logger
 from umami.tools import yaml_loader
 from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 
@@ -546,15 +547,14 @@ def plot_input_vars_trks_comparison(
             if not os.path.isdir(filedir):
                 os.makedirs(filedir)
 
-        print(f"Path: {filedir}")
-        print(f"Sorting: {sorting_variable}")
-        print(f"nLeading track: {nLeading}")
-        print()
+        logger.info(f"Path: {filedir}")
+        logger.info(f"Sorting: {sorting_variable}")
+        logger.info(f"nLeading track: {nLeading}\n")
 
         # Loop over vars
         for var in trksVars:
             if var in nBins_dict:
-                print(f"Plotting {var}...")
+                logger.info(f"Plotting {var}...")
 
                 # Define the figure with two subplots of unequal sizes
                 axis_dict = {}
@@ -829,9 +829,8 @@ def plot_input_vars_trks_comparison(
                 plt.savefig(f"{filedir}/{var}_{nLeading}.{plot_type}")
                 plt.close()
                 plt.clf()
-        print()
-        print(
-            "-------------------------------------------------------------------------------"
+        logger.info(
+            "\n-------------------------------------------------------------------------------"
         )
 
 
@@ -1001,15 +1000,14 @@ def plot_input_vars_trks(
             if not os.path.isdir(filedir):
                 os.makedirs(filedir)
 
-        print(f"Path: {filedir}")
-        print(f"Sorting: {sorting_variable}")
-        print(f"nLeading track: {nLeading}")
-        print()
+        logger.info(f"Path: {filedir}")
+        logger.info(f"Sorting: {sorting_variable}")
+        logger.info(f"nLeading track: {nLeading}\n")
 
         # Loop over vars
         for var in trksVars:
             if var in nBins_dict:
-                print(f"Plotting {var}...")
+                logger.info(f"Plotting {var}...")
 
                 # Iterate over models
                 for (label, linestyle) in zip(
@@ -1159,8 +1157,7 @@ def plot_input_vars_trks(
                     plt.savefig(f"{filedir}/{var}_{nLeading}.{plot_type}")
                     plt.close()
                     plt.clf()
-                    print(f"{filedir}/{var}.{plot_type}")
-        print()
+                    logger.info(f"{filedir}/{var}.{plot_type}\n")
 
 
 def plot_input_vars_jets(
@@ -1309,7 +1306,7 @@ def plot_input_vars_jets(
     # Loop over vars
     for var in jetsVars:
         if var in nBins_dict:
-            print(f"Plotting {var}...")
+            logger.info(f"Plotting {var}...")
 
             for label in labels:
                 # Get variable and the labels of the jets
@@ -1426,7 +1423,6 @@ def plot_input_vars_jets(
                 plt.savefig(f"{filedir}/{var}.{plot_type}")
                 plt.close()
                 plt.clf()
-            print()
 
 
 def plot_input_vars_jets_comparison(
@@ -1585,7 +1581,7 @@ def plot_input_vars_jets_comparison(
     # Loop over vars
     for var in jetsVars:
         if var in nBins_dict:
-            print(f"Plotting {var}...")
+            logger.info(f"Plotting {var}...")
 
             # Define the figure with two subplots of unequal sizes
             axis_dict = {}
@@ -1846,7 +1842,6 @@ def plot_input_vars_jets_comparison(
             plt.savefig(f"{filedir}/{var}.{plot_type}")
             plt.close()
             plt.clf()
-    print()
-    print(
-        "-------------------------------------------------------------------------------"
+    logger.info(
+        "\n-------------------------------------------------------------------------------"
     )
