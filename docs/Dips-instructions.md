@@ -115,7 +115,9 @@ Eval_parameters_validation:
     plot_datatype: "pdf"
 ```
 
-It contains the information about the neural network architecture and the training as well as about the files for training, validation and testing. Also evaluation parameters are given for the training evaluation which is performed by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script
+It contains the information about the neural network architecture and the training as well as about the files for training, validation and testing. Also evaluation parameters are given for the training evaluation which is performed by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script.
+
+Different test files can also be added. These are used for evaluation of the model. They can be defined in their specific catagory. The filenames, i.e `ttbar_r21` are only here for separation. The important options are `Path` and `data_set_name`. First is the path to the test file. The `data_set_name` defines the name in the evaluation files, which are produced with `evaluate_model.py`. Also these names NEED to be unique. When plotting, these `data_set_name` defines which evaluation results are plotted. 
 
 Before starting the training, you need to set some paths for the umami package to find all the tools. Change to the umami dir and run the `setup.py`.
 
