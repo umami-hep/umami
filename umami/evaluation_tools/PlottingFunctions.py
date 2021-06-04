@@ -1691,7 +1691,6 @@ def plot_score_comparison(
     legFontSize=10,
     loc_legend="best",
     ncol=2,
-    RatioType="Ratio",
     Ratio_Cut=None,
     which_axis="left",
     x_label=r"$D_b$",
@@ -1759,7 +1758,7 @@ def plot_score_comparison(
     # Init bincout dict for ratio calculation
     bincounts = {}
 
-    linestyles = ["solid", "dashed"]
+    linestyles = ["solid", "dashed", "dotted", "dashdot"]
     for i, (df_results, linestyle, which_a) in enumerate(
         zip(df_list, linestyles, which_axis)
     ):
@@ -1952,57 +1951,47 @@ def plot_score_comparison(
         if bool_use_taus:
             bincounts.update({f"tau{i}": hist_counts_tau})
 
-    if bool_use_taus:
-        loop_list = zip(
-            ["b", "c", "u", "tau"],
-            ["#1f77b4", "#ff7f0e", "#2ca02c", "#7c5295"],
-        )
-    else:
-        loop_list = zip(["b", "c", "u"], ["#1f77b4", "#ff7f0e", "#2ca02c"])
-    # Start ratio plot
-    for i, (flavor, color) in enumerate(loop_list):
-        if RatioType == "Ratio":
-            axis_dict["left"]["ratio"].step(
-                x=Binning[:-1],
-                y=np.divide(
-                    bincounts["{}{}".format(flavor, 1)],
+        if bool_use_taus:
+            loop_list = zip(
+                ["b", "c", "u", "tau"],
+                ["#1f77b4", "#ff7f0e", "#2ca02c", "#7c5295"],
+            )
+        else:
+            loop_list = zip(["b", "c", "u"], ["#1f77b4", "#ff7f0e", "#2ca02c"])
+
+        # Start ratio plot
+        if i != 0:
+            for (flavor, color) in loop_list:
+                step = np.divide(
+                    bincounts["{}{}".format(flavor, i)],
                     bincounts["{}{}".format(flavor, 0)],
                     out=np.ones(
-                        bincounts["{}{}".format(flavor, 1)].shape, dtype=float
+                        bincounts["{}{}".format(flavor, i)].shape,
+                        dtype=float,
                     )
-                    * bincounts["{}{}".format(flavor, 1)]
+                    * bincounts["{}{}".format(flavor, i)]
                     + 1,
                     where=(bincounts["{}{}".format(flavor, 0)] != 0),
-                ),
-                color=color,
+                )
+
+                step = np.append(np.array([step[0]]), step)
+
+                axis_dict["left"]["ratio"].step(
+                    x=Binning,
+                    y=step,
+                    color=color,
+                    linestyle=linestyles[i],
+                )
+
+        elif i == 0:
+            # Add black line at one
+            axis_dict["left"]["ratio"].axhline(
+                y=1,
+                xmin=axis_dict["left"]["ratio"].get_xlim()[0],
+                xmax=axis_dict["left"]["ratio"].get_xlim()[1],
+                color="black",
+                alpha=0.5,
             )
-
-        elif RatioType == "Absolute":
-            axis_dict["left"]["ratio"].step(
-                x=Binning[:-1],
-                y=bincounts["{}{}".format(flavor, 1)]
-                - bincounts["{}{}".format(flavor, 0)],
-                color=color,
-            )
-
-    # Add black line at one
-    if RatioType == "Ratio":
-        axis_dict["left"]["ratio"].axhline(
-            y=1,
-            xmin=axis_dict["left"]["ratio"].get_xlim()[0],
-            xmax=axis_dict["left"]["ratio"].get_xlim()[1],
-            color="black",
-            alpha=0.5,
-        )
-
-    elif RatioType == "Absolute":
-        axis_dict["left"]["ratio"].axhline(
-            y=0,
-            xmin=axis_dict["left"]["ratio"].get_xlim()[0],
-            xmax=axis_dict["left"]["ratio"].get_xlim()[1],
-            color="black",
-            alpha=0.5,
-        )
 
     # Add axes, titels and the legend
     axis_dict["left"]["top"].set_ylabel(
@@ -2014,19 +2003,12 @@ def plot_score_comparison(
     axis_dict["left"]["ratio"].set_xlabel(
         x_label, fontsize=12, horizontalalignment="right", x=1.0
     )
-    if RatioType == "Absolute":
-        axis_dict["left"]["ratio"].set_ylabel(
-            "{} - {}".format(model_labels[1], model_labels[0]),
-            labelpad=labelpad,
-            fontsize=12,
-        )
 
-    elif RatioType == "Ratio":
-        axis_dict["left"]["ratio"].set_ylabel(
-            "{} / {}".format(model_labels[1], model_labels[0]),
-            labelpad=labelpad,
-            fontsize=12,
-        )
+    axis_dict["left"]["ratio"].set_ylabel(
+        "Ratio",
+        labelpad=labelpad,
+        fontsize=12,
+    )
 
     if Ratio_Cut is not None:
         axis_dict["left"]["ratio"].set_ylim(
@@ -2037,10 +2019,19 @@ def plot_score_comparison(
 
     if xmin is not None:
         axis_dict["left"]["top"].set_xlim(left=xmin)
+
+    else:
+        axis_dict["left"]["top"].set_xlim(left=Binning[0])
+
     if xmax is not None:
         axis_dict["left"]["top"].set_xlim(right=xmax)
+
+    else:
+        axis_dict["left"]["top"].set_xlim(right=Binning[-1])
+
     if ymin is not None:
         axis_dict["left"]["top"].set_ylim(bottom=ymin)
+
     if ymax is not None:
         axis_dict["left"]["top"].set_ylim(top=ymax)
 
