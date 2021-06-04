@@ -39,9 +39,9 @@ confusion_matrix_Dips_ttbar:
   data_set_name: "ttbar"
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"]
 ```
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `prediction_labels` | List | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `prediction_labels` | List |  Necessary |A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
 
 #### Scores
 Plotting the b-tagging discriminant scores for the different jet flavors. For example:
@@ -61,16 +61,16 @@ scores_Dips_ttbar:
     yAxisAtlasTag: 0.9 
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `prediction_labels` | List | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
-| `WorkingPoints` | List | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
-|`nBins` | Int | Number of bins that are used. |
-|`yAxisIncrease` | Float | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-|`UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-|`AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-|`SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-|`yAxisAtlasTag` | Float | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `prediction_labels` | List | Necessary | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
+| `WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
+|`nBins` | Int | Optional | Number of bins that are used. |
+|`yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+|`UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+|`AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+|`SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+|`yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 
 #### Scores Comparison
 Plotting the b-tagging discriminant scores for the different jet flavors for different models in the same plot. For example:
@@ -98,19 +98,19 @@ scores_Dips_ttbar_comparison:
     yAxisAtlasTag: 0.9
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `prediction_labels` | List | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
-|`dips_r21` | None | Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything. |
-|`label` | String | Label for the Legend in the plot. |
-|`WorkingPoints` | List | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
-|`nBins` | Int | Number of bins that are used. |
-|`yAxisIncrease` | Float | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-|`figsize` | List | A list of the width and hight of the plot. |
-|`UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-|`AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-|`SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-|`yAxisAtlasTag` | Float | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `prediction_labels` | List | Necessary | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
+|`dips_r21` | None | Necessary | Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything. |
+|`label` | String | Necessary | Label for the Legend in the plot. |
+|`WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
+|`nBins` | Int | Optional | Number of bins that are used. |
+|`yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+|`figsize` | List | Optional | A list of the width and hight of the plot. |
+|`UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+|`AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+|`SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+|`yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 
 #### ROC Curves
 Plotting the ROC Curves of the rejection rates against the b-tagging efficiency. For example:
@@ -142,24 +142,24 @@ Dips_light_flavour_ttbar:
     yAxisAtlasTag: 0.9
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `dips_r21` | None | Name of the model which is to be plotted. Not affecting anything, just for you. You can change dips_r21 to anything. |
-| `label` | String | Label for the Legend in the plot. |
-| `df_key` | String | Decide which rejection is plotted. The structure is like this: `model_Xrej`. The `X` defines the wanted rejection. `u` for light-, `c` for c-rejection, `t` for tau-rejection. Note: for DL1 only, the light-, tau-, and b- rejection from c-jets are also supported. The structure is then: `model_XrejC`, with `X` taking as value `u`, `t`, or `b`. |
-| `xlabel:` | String |(optional - default is "$b$-jet efficiency"): Set the xlabel.
-| `ylabel:` | String | Set the ylabel of the X-rejection. For example: 'c' will output `c-flavor rejection`. |
-| `binomialErrors` | Bool | Plot binomial errors to plot. |
-| `xmin` | Float | Set the minimum b efficiency in the plot (which is the xmin limit). |
-| `ymax` | Float | The maximum y axis. |
-| `colors` | List | For each model in `models_to_plot`, there must be a color in this list. If leave it empty (=None), the colors will be set automatically. | 
-| `WorkingPoints` | List | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
-| `yAxisIncrease` | Float | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `figsize:` | List | A list of the width and hight of the plot.
-| `UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-| `yAxisAtlasTag` | Float | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `dips_r21` | None | Necessary | Name of the model which is to be plotted. Not affecting anything, just for you. You can change dips_r21 to anything. |
+| `label` | String | Necessary | Label for the Legend in the plot. |
+| `df_key` | String | Necessary | Decide which rejection is plotted. The structure is like this: `model_Xrej`. The `X` defines the wanted rejection. `u` for light-, `c` for c-rejection, `t` for tau-rejection. Note: for DL1 only, the light-, tau-, and b- rejection from c-jets are also supported. The structure is then: `model_XrejC`, with `X` taking as value `u`, `t`, or `b`. |
+| `xlabel` | String | Optional | Set the xlabel.
+| `ylabel` | String | Optional | Set the ylabel of the X-rejection. For example: 'c' will output `c-flavor rejection`. |
+| `binomialErrors` | Bool | Optional | Plot binomial errors to plot. |
+| `xmin` | Float | Optional | Set the minimum b efficiency in the plot (which is the xmin limit). |
+| `ymax` | Float | Optional | The maximum y axis. |
+| `colors` | List | Optional | For each model in `models_to_plot`, there must be a color in this list. If leave it empty (=None), the colors will be set automatically. | 
+| `WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
+ | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | List | Optional |A list of the width and hight of the plot.
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 
 #### Saliency Maps
 Plotting the Saliency Map of the model. For example:
@@ -180,17 +180,17 @@ Dips_saliency_b_WP77_passed_ttbar:
     yAxisAtlasTag: 0.925
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `title` | String | Title which will be on top above the plot itself. |
-| `target_beff` | Float | The WP which needs to be passed/not passed. |
-| `jet_flavour` | Int | The jet flavor that will be plotted. Current possibilites: 2: b, 1: c, 0: light. |
-| `PassBool` | Bool | Decide if the b-tagging discriminant of the jets, which will be used, needs to be above the WP cut value or not. |
-| `FlipAxis` | Bool | If True, the y and x axis will be switched. Usefull for presenation plots. True: landscape format. |
-| `UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-| `yAxisAtlasTag` | Float | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `title` | String | Necessary | Title which will be on top above the plot itself. |
+| `target_beff` | Float | Necessary | The WP which needs to be passed/not passed. |
+| `jet_flavour` | Int | Necessary | The jet flavor that will be plotted. Current possibilites: 2: b, 1: c, 0: light. |
+| `PassBool` | Bool | Necessary | Decide if the b-tagging discriminant of the jets, which will be used, needs to be above the WP cut value or not. |
+| `FlipAxis` | Bool | Optional | If True, the y and x axis will be switched. Usefull for presenation plots. True: landscape format. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 
 #### pT vs Efficiency
 Plot the b efficiency/c-rejection/light-rejection against the pT. For example:
@@ -231,29 +231,30 @@ pT_vs_beff_zpext:
     alpha: 0.7
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `dips_r21` | None | Name of the model which is to be plotted. Don't affect anything. Just for you. You can change dips_r21 to anything. |
-| `label` | String | Label for the Legend in the plot. |
-| `prediction_labels` | List | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
-| `evaluation_file` | String | Add a path to a evaluation file here. This file will be used for the model instead of the one defined at the top. The given `data_set_name` must be in the file! |
-| `bin_edges` | List | The pT bin edges that should be used. Don't forget the starting and the ending edge! |
-| `flavor` | Int | Decide which eff/rej will be plotted. 2: b, 1: c, 0: light. |
-| `WP` | Float | Which Working Point is used. |
-| `WP_Line` | Bool | Decide if a horizontal WP line at is added or not. (Only used for beff). |
-| `Fixed_WP_Bin` | Bool | If True, the b-Tagging discriminant cut value for the given WP is not calculated over all bins but separately for each bin. |
-| `binomialErrors` | Bool | Plot binomial errors to plot. |
-| `Same_WP_Cut_Comparison` | Bool | For all models with the same `SWP_label`, one cut value for the b-tagging discriminant is used.
-| `figsize:` | List | A list of the width and height of the plot.
-| `Log` | Bool | Decide if the y axis is plotted as logarithmic or not.
-| `UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. Don't add fc value here! Its automatically added also the WP. |
-| `yAxisAtlasTag` | Float | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
-| `yAxisIncrease` | Float | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `ymin` | Float | Set the y axis minimum. Leave empty (=None) for automatically set border. |
-| `ymax` | Float | Set the y axis maximum. Leave empty (=None) for automatically set border. |
-| `alpha` | Float | The Alpha value of the plots. |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `dips_r21` | None | Necessary | Name of the model which is to be plotted. Don't affect anything. Just for you. You can change dips_r21 to anything. |
+| `label` | String | Necessary | Label for the Legend in the plot. |
+| `prediction_labels` | List |  Necessary |A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
+| `evaluation_file` | String | Optional | Add a path to a evaluation file here. This file will be used for the model instead of the one defined at the top. The given `data_set_name` must be in the file! |
+| `SWP_label` | String | Optional | The Same WP Cut label. All models with the same `SWP_label` will get the same discriminant cut value. |
+| `bin_edges` | List | Optional | The pT bin edges that should be used. Don't forget the starting and the ending edge! |
+| `flavor` | Int | Optional | Decide which eff/rej will be plotted. 2: b, 1: c, 0: light. |
+| `WP` | Float | Optional | Which Working Point is used. |
+| `WP_Line` | Bool | Optional | Decide if a horizontal WP line at is added or not. (Only used for beff). |
+| `Fixed_WP_Bin` | Bool | Optional | If True, the b-Tagging discriminant cut value for the given WP is not calculated over all bins but separately for each bin. |
+| `binomialErrors` | Bool | Optional | Plot binomial errors to plot. |
+| `Same_WP_Cut_Comparison` | Bool | Optional | For all models with the same `SWP_label`, one cut value for the b-tagging discriminant is used.
+| `figsize` | List | Optional |A list of the width and height of the plot.
+| `Log` | Bool | Optional | Decide if the y axis is plotted as logarithmic or not.
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. Don't add fc value here! Its automatically added also the WP. |
+| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+ | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `ymin` | Float | Optional | Set the y axis minimum. Leave empty (=None) for automatically set border. |
+| `ymax` | Float | Optional | Set the y axis maximum. Leave empty (=None) for automatically set border. |
+| `alpha` | Float | Optional | The Alpha value of the plots. |
 
 #### Variable vs Efficiency
 Plot the b-tag efficiency for b, c, and light jets (+ optionaly tau jets) versus a given variable (not just pT). The variables must be included in the results h5 files from the evaluation step.
@@ -282,25 +283,25 @@ eff_vs_pt_:
     ThirdTag: "Flat efficiency DL1r"
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `flat_eff` | bool | whether to use a flat b-tag b-jet efficiency per variable bin or a global one. |
-| `efficiency` | int | the desired b-jet b-tag efficiency in percent |
-| `fc` | float | (optional): the fc value to use |
-| `prediction_labels` | List | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
-| `variable` |  String | A variable contained in the h5 result file from `evaluate.py` (e.g., "pt"). <br /> To include any non-standard variable in this h5, include them in the list of the parameter `add_variables_eval` in the training configuration ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml#L69)). <br /> Note! pt variable is automatically transformed in GeV (divide by 1000)! |
-| `max_variable` | float | The maximum value to be considered for variable in the binning <br /> Note! For pt, value of variable is in GeV. |
-| `max_variable` | float | The minimum value to be considered for variable in the binning <br /> Note! For pt, value of variable is in GeV. |
-| `nbin` | int | The number of bin to be considered for variable in the binning |
-| `var_bins` | List of float | The bins to use for variable. Overrides the three parameters above |
-| `xticksval` | List of float | Main ticks positions. <br /> Note! For pt, values are in GeV. |
-| `xticks` | List of  String | The ticks to write. Requires `xticksval` to work. |
-| `xlabel` |  String | To write as name of the x label |
-| `minor_ticks_frequency` | | Frequency of the minor ticks to draw <br /> Note! For pt, values are in GeV. |
-| `UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag. |
-| `ThirdTag` | String | Write this text on the upper left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `flat_eff` | bool | Necessary | Whether to use a flat b-tag b-jet efficiency per variable bin or a global one. |
+| `efficiency` | int | Necessary | The desired b-jet b-tag efficiency in percent |
+| `fc` | float | Optional | The fc value to use |
+| `prediction_labels` | List | Necessary |A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
+| `variable` |  String | Necessary | A variable contained in the h5 result file from `evaluate.py` (e.g., "pt"). <br /> To include any non-standard variable in this h5, include them in the list of the parameter `add_variables_eval` in the training configuration ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml#L69)). <br /> Note! pt variable is automatically transformed in GeV (divide by 1000)! |
+| `max_variable` | float | Optional | The maximum value to be considered for variable in the binning <br /> Note! For pt, value of variable is in GeV. |
+| `max_variable` | float | Optional | The minimum value to be considered for variable in the binning <br /> Note! For pt, value of variable is in GeV. |
+| `nbin` | int | Optional | The number of bin to be considered for variable in the binning |
+| `var_bins` | List of float | Optional | The bins to use for variable. Overrides the three parameters above |
+| `xticksval` | List of float | Optional | Main ticks positions. <br /> Note! For pt, values are in GeV. |
+| `xticks` | List of  String | Optional | The ticks to write. Requires `xticksval` to work. |
+| `xlabel` |  String | Optional | To write as name of the x label |
+| `minor_ticks_frequency` | Int | Optional | Frequency of the minor ticks to draw <br /> Note! For pt, values are in GeV. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag. |
+| `ThirdTag` | String | Optional | Write this text on the upper left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. |
 
 #### Scanning fractions
 For DL1 with taus, the evaluation step of `evaluate.py` generates an extra h5 file giving the c/b, light, and tau rejection as a function of the c/b-fraction and the tau fraction. To produce the plot associated to this information, add (for example) this to the plotting config:
@@ -319,14 +320,14 @@ plot_scan_frac_tau:
     SecondTag: "DL1r, $\\sqrt{s}$ = 13 TeV, $t\bar{t}$"
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `label` | String | Indicate the rejection to plot (u for light). Choose from: <br /> For b-tagging: `["umami_crej", "umami_urej", "umami_taurej"]`, <br /> For c-tagging: `["umami_brejC", "umami_urejC", "umami_taurejC"]` |
-| `xlabel` | String | The label to use for the xscale of the plot (normally taus) |
-| `ylabel` | String | The label to use for the yscale of the plot. <br /> Either `"fraction_c"`or `"fraction_b"` for c- and b-tagging |
-| `UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. Don't add fc value here! Its automatically added also the WP. |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `label` | String | Necessary | Indicate the rejection to plot (u for light). Choose from: <br /> For b-tagging: `["umami_crej", "umami_urej", "umami_taurej"]`, <br /> For c-tagging: `["umami_brejC", "umami_urejC", "umami_taurejC"]` |
+| `xlabel` | String | Optional | The label to use for the xscale of the plot (normally taus) |
+| `ylabel` | String | Optional | The label to use for the yscale of the plot. <br /> Either `"fraction_c"`or `"fraction_b"` for c- and b-tagging |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. Don't add fc value here! Its automatically added also the WP. |
 
 ### Executing the Script
 The script can be executed by using the following command:
@@ -382,26 +383,26 @@ nTracks_ttbar_loose:
     u: 0
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `nTracks_ttbar_loose` | String | Name of the plots. This does not effect anything for the plots itself. |
-| `variables` | String | Must be set to "tracks" for this function. Decides, which functions for plotting are used. |
-| `folder_to_save` | String | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
-| `nTracks` | Bool | Decide if the Tracks per Jets are plotted or the input variable. |
-| `Datasets_to_plot` | None | Here the category starts of which plots shall be plotted. |
-| `R21` | None | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
-| `label` | String | Plot label for the plot legend. |
-| `plot_settings` | None | Here starts the plot settings. Do not fill! |
-| `Log` | Bool | Decide if the plots are plotted with logarithmic y axis or without. |
-| `UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-| `yAxisAtlasTag` | Float | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
-| `yAxisIncrease` | Float | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `figsize` | List | Two element list that gives the shape of the plot. (First is width, second is height). |
-| `Ratio_Cut` | List | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `flavors` | None | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `nTracks_ttbar_loose` | String | Necessary | Name of the plots. This does not effect anything for the plots itself. |
+| `variables` | String | Necessary | Must be set to "tracks" for this function. Decides, which functions for plotting are used. |
+| `folder_to_save` | String | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
+| `nTracks` | Bool | Necessary | MUST BE TRUE HERE! Decide if the Tracks per Jets are plotted or the input variable. |
+| `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
+| `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
+| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
+| `label` | String | Necessary | Plot label for the plot legend. |
+| `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |
+| `Log` | Bool | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+ | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
+| `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `flavors` | None | Necessary | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
 
 #### Input Variables Tracks
 To plot the track input variables, the following options are used.
@@ -450,29 +451,29 @@ input_vars_trks_ttbar_loose_ptfrac:
     u: 0
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `input_vars_trks_ttbar_loose_ptfrac` | String | Name of the plots. This does not effect anything for the plots itself. |
-| `variables` | String | Must be set to "tracks" for this function. Decides, which functions for plotting are used. |
-| `folder_to_save` | String | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
-| `nTracks` | Bool | To plot the input variable distributions, this must be `False`. |  
-| `Datasets_to_plot` | None | Here the category starts of which plots shall be plotted. |
-| `R21` | None | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
-| `label` | String | Plot label for the plot legend. |
-| `plot_settings` | None | Here starts the plot settings. Do not fill! |
-| `sorting_variable` | String | Variable Name to sort after. |
-| `n_Leading` | List | List of the x leading tracks. If `None`, all tracks will be plotted. If `0` the leading tracks sorted after `sorting variable` will be plotted. You can add like `None`, `0` and `1` for example and it will plot all 3 of them, each in their own folders with according labeling. This must be a list! Even if there is only one option given. |  
-| `Log` | Bool | Decide if the plots are plotted with logarithmic y axis or without. |
-| `UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-| `yAxisAtlasTag` | Float | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
-| `yAxisIncrease` | Float | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `figsize` | List | Two element list that gives the shape of the plot. (First is width, second is height). |
-| `Ratio_Cut` | List | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `binning` | None | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second ist stop and third is the step width. The so aranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. |
-| `flavors` | None | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `input_vars_trks_ttbar_loose_ptfrac` | String | Necessary | Name of the plots. This does not effect anything for the plots itself. |
+| `variables` | String | Necessary | Must be set to "tracks" for this function. Decides, which functions for plotting are used. |
+| `folder_to_save` | String | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
+| `nTracks` | Bool | Necessary | To plot the input variable distributions, this must be `False`. |  
+| `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
+| `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
+| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
+| `label` | String | Necessary | Plot label for the plot legend. |
+| `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |
+| `sorting_variable` | String | Optional | Variable Name to sort after. |
+| `n_Leading` | List | Optional | List of the x leading tracks. If `None`, all tracks will be plotted. If `0` the leading tracks sorted after `sorting variable` will be plotted. You can add like `None`, `0` and `1` for example and it will plot all 3 of them, each in their own folders with according labeling. This must be a list! Even if there is only one option given. |  
+| `Log` | Bool | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+ | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
+| `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second ist stop and third is the step width. The so aranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
+| `flavors` | None | Necessary | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
 
 #### Input Variables Jets
 To plot the jet input variables, the following options are used.
@@ -584,24 +585,24 @@ input_vars_ttbar_loose:
     u: 0
 ```
 
-| Options | Data Type | Explanation |
-|---------|-----------|-------------|
-| `input_vars_trks_ttbar_loose_ptfrac` | String | Name of the plots. This does not effect anything for the plots itself. |
-| `variables` | String | Must be set to "jets" for this function. Decides, which functions for plotting are used. |
-| `folder_to_save` | String | Path where the plots should be saved. This is a relative path. Add a folder name as path. | 
-| `Datasets_to_plot` | None | Here the category starts of which plots shall be plotted. |
-| `R21` | None | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
-| `label` | String | Plot label for the plot legend. |
-| `special_param_jets` | None | Here starts the special x axis limits for a variable. If you want to set the x range by hand, add the variable here and also the `lim_left` for xmin and `lift_right` for xmax. |
-| `binning` | None | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second ist stop and third is the step width. The so aranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. |
-| `plot_settings` | None | Here starts the plot settings. Do not fill! |  
-| `Log` | Bool | Decide if the plots are plotted with logarithmic y axis or without. |
-| `UseAtlasTag` | Bool | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-| `yAxisAtlasTag` | Float | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
-| `yAxisIncrease` | Float | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `figsize` | List | Two element list that gives the shape of the plot. (First is width, second is height). |
-| `Ratio_Cut` | List | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `flavors` | None | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `input_vars_trks_ttbar_loose_ptfrac` | String | Necessary | Name of the plots. This does not effect anything for the plots itself. |
+| `variables` | String | Necessary | Must be set to "jets" for this function. Decides, which functions for plotting are used. |
+| `folder_to_save` | String | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. | 
+| `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
+| `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
+| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
+| `label` | String | Necessary | Plot label for the plot legend. |
+| `special_param_jets` | None | Necessary | Here starts the special x axis limits for a variable. If you want to set the x range by hand, add the variable here and also the `lim_left` for xmin and `lift_right` for xmax. |
+| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second ist stop and third is the step width. The so aranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. Variables that are not in here are not plotted! |
+| `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |  
+| `Log` | Bool | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+ | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
+| `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `flavors` | None | Necessary | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |

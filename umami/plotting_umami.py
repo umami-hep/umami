@@ -387,20 +387,15 @@ def score_comparison(
         model_labels.append(model_config["label"])
         prediction_labels_list.append(model_config["prediction_labels"])
 
-    if len(df_list) > 2:
-        raise ValueError(
-            "Too many models for comparison plot! Only 2 are allowed"
-        )
-    else:
-        uet.plot_score_comparison(
-            df_list=df_list,
-            prediction_labels_list=prediction_labels_list,
-            model_labels=model_labels,
-            plot_name=plot_name,
-            bool_use_taus=bool_use_taus,
-            discriminant=discriminant,
-            **plot_config["plot_settings"],
-        )
+    uet.plot_score_comparison(
+        df_list=df_list,
+        prediction_labels_list=prediction_labels_list,
+        model_labels=model_labels,
+        plot_name=plot_name,
+        bool_use_taus=bool_use_taus,
+        discriminant=discriminant,
+        **plot_config["plot_settings"],
+    )
 
 
 def plot_pT_vs_eff(

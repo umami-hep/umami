@@ -40,7 +40,7 @@ scores_Dips_ttbar_comparison:
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-    RatioType: "Ratio" # Changes the calculation of the Ratio. Use "Ratio" or "Absolute"
+    Ratio_Cut: [0.5, 1.5]
 
 confusion_matrix_Umami_ttbar:
   type: "confusion_matrix"
