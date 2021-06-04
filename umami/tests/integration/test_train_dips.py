@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from shutil import copyfile
 from subprocess import CalledProcessError, run
 
 import yaml
@@ -132,9 +133,10 @@ class TestDipsTraining(unittest.TestCase):
             f"Preparing config file based on {config_source} in {self.config}..."
         )
 
-        run(["touch", self.config])
-        run(["cp", preprocessing_config_source, self.preprocessing_config])
-        run(["cp", var_dict_dips_source, self.var_dict_dips])
+        # Copy configs and var dict
+        copyfile(config_source, self.config)
+        copyfile(preprocessing_config_source, self.preprocessing_config)
+        copyfile(var_dict_dips_source, self.var_dict_dips)
 
         # modify copy of preprocessing config file for test
         replaceLineInFile(
@@ -149,44 +151,52 @@ class TestDipsTraining(unittest.TestCase):
         )
 
         # modify copy of training config file for test
+        with open(self.config, "r") as config:
+            self.config_file = yaml.load(config, Loader=yaml_loader)
+
+        self.config_file["model_name"] = self.data["test_dips"]["model_name"]
+        self.config_file["preprocess_config"] = f"{self.preprocessing_config}"
+        self.config_file["train_file"] = f"{self.train_file}"
+        self.config_file["validation_file"] = f"{self.test_file_ttbar}"
+        self.config_file["add_validation_file"] = f"{self.test_file_zprime}"
+
+        # Erase all not used test files
+        del self.config_file["ttbar_test_files"]
+        del self.config_file["zpext_test_files"]
+
+        # Add only wanted test files
+        self.config_file.update(
+            {
+                "ttbar_test_files": {
+                    "ttbar_r21": {
+                        "Path": f"{self.test_file_ttbar}",
+                        "data_set_name": "ttbar",
+                    }
+                }
+            }
+        )
+        self.config_file.update(
+            {
+                "zpext_test_files": {
+                    "zpext_r21": {
+                        "Path": f"{self.test_file_zprime}",
+                        "data_set_name": "zpext",
+                    }
+                }
+            }
+        )
+        self.config_file["var_dict"] = f"{self.var_dict_dips}"
+        self.config_file["NN_structure"]["batch_size"] = 50
+        self.config_file["NN_structure"]["epochs"] = 2
+        self.config_file["NN_structure"]["nJets_train"] = 100
+        self.config_file["Eval_parameters_validation"]["n_jets"] = 100
+        self.config_file["Eval_parameters_validation"][
+            "SecondTag"
+        ] = "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+        # save the copy of training config file for test
         with open(self.config, "w") as config:
-            config.write(
-                "model_name: {}\n".format(self.data["test_dips"]["model_name"])
-            )
-            config.write(f"preprocess_config: {self.preprocessing_config}\n")
-            config.write(f"train_file: {self.train_file}\n")
-            config.write(f"validation_file: {self.test_file_ttbar}\n")
-            config.write(f"add_validation_file: {self.test_file_zprime}\n")
-            config.write("ttbar_test_files:\n")
-            config.write("    ttbar_r21:\n")
-            config.write(f"        Path: {self.test_file_ttbar}\n")
-            config.write('        data_set_name: "ttbar"\n')
-            config.write("zpext_test_files:\n")
-            config.write("    zpext_r21:\n")
-            config.write(f"        Path: {self.test_file_zprime}\n")
-            config.write('        data_set_name: "zpext"\n')
-            config.write(f"var_dict: {self.var_dict_dips}\n")
-            config.write("bool_use_taus: False\n")
-            config.write("exclude: []\n")
-            config.write("NN_structure:\n")
-            config.write("    lr: 0.001\n")
-            config.write("    batch_size: 50\n")
-            config.write("    epochs: 2\n")
-            config.write("    nJets_train: 100\n")
-            config.write("    dropout: 0\n")
-            config.write("    nClasses: 3\n")
-            config.write("    Batch_Normalisation: True\n")
-            config.write("    ppm_sizes: [100, 100, 128]\n")
-            config.write("    dense_sizes: [100, 100, 100, 30]\n")
-            config.write("Eval_parameters_validation:\n")
-            config.write("    n_jets: 100\n")
-            config.write("    fc_value: 0.018\n")
-            config.write("    WP_b: 0.77\n")
-            config.write("    UseAtlasTag: True\n")
-            config.write('    AtlasTag: "Internal Simulation"\n')
-            config.write(r'    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"')
-            config.write("\n")
-            config.write('    plot_datatype: "pdf"\n')
+            yaml.dump(self.config_file, config, default_flow_style=False)
 
         logger.info("Downloading test data...")
         for file in self.data["test_dips"]["files"]:

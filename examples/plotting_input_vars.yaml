@@ -5,9 +5,9 @@ Eval_parameters:
   # Path to variable dict
   var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
 
-input_vars_ttbar_loose:
+jets_input_vars:
   variables: "jets"
-  folder_to_save: input_vars_ttbar_loose
+  folder_to_save: jets_input_vars
   Datasets_to_plot:
     R21:
       files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
@@ -112,9 +112,9 @@ input_vars_ttbar_loose:
     u: 0
     tau: 15
 
-nTracks_ttbar_loose:
+nTracks:
   variables: "tracks"
-  folder_to_save: input_vars_trks_ttbar_loose
+  folder_to_save: nTracks
   nTracks: True
   Datasets_to_plot:
     R21:
@@ -132,15 +132,14 @@ nTracks_ttbar_loose:
     yAxisIncrease: 2
     figsize: [7, 5]
     Ratio_Cut: [0.5, 2]
-    bool_use_taus: False
   flavors:
     b: 5
     c: 4
     u: 0
 
-input_vars_trks_ttbar_loose_ptfrac:
+tracks_input_vars:
   variables: "tracks"
-  folder_to_save: input_vars_trks_ttbar_loose
+  folder_to_save: tracks_input_vars
   Datasets_to_plot:
     R21:
       files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
