@@ -308,8 +308,12 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
         )
 
     y_target = df_results["labels"]
+
+    # Need to flip the prediciton labels list here.
+    # b's are in y_target a 2 while with the given order in prediction labels
+    # pb is a 0. So just switch it
     y_predicted = np.argmax(
-        df_results[plot_config["prediction_labels"]].values, axis=1
+        df_results[plot_config["prediction_labels"][::-1]].values, axis=1
     )
     cm = confusion_matrix(
         y_target=y_target, y_predicted=y_predicted, binary=False
@@ -317,11 +321,8 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     if bool_use_taus:
         class_names = ["b", "c", "light", r"$\tau$"]
     else:
-        class_names = [
-            "b",
-            "c",
-            "light",
-        ]
+        class_names = ["b", "c", "light"]
+
     mlxtend_plot_cm(
         conf_mat=cm,
         colorbar=True,
