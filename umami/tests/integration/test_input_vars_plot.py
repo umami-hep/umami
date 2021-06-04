@@ -1,6 +1,7 @@
 import logging
 import os
 import unittest
+from shutil import copyfile
 from subprocess import CalledProcessError, run
 
 import yaml
@@ -90,146 +91,68 @@ class TestInput_Vars_Plotting(unittest.TestCase):
         self.test_file_r22 = os.path.join(
             test_dir, "plot_input_vars_r22_check.h5"
         )
-        self.config = os.path.join(test_dir, "config.yaml")
+        self.config_path = os.path.join(test_dir, "config.yaml")
 
-        run(["touch", self.config])
+        copyfile("examples/plotting_input_vars.yaml", self.config_path)
 
-        # modify copy of training config file for test
-        with open(self.config, "w") as config:
-            config.write("Eval_parameters:\n")
-            config.write("  nJets: 3e3\n")
-            config.write("  var_dict: umami/configs/Dips_Variables.yaml\n")
-            config.write("jets_input_vars:\n")
-            config.write('  variables: "jets"\n')
-            config.write("  folder_to_save: jets_input_vars\n")
-            config.write("  Datasets_to_plot:\n")
-            config.write("    R21:\n")
-            config.write(
-                f"      files: {test_dir}plot_input_vars_r21_check.h5\n"
-            )
-            config.write('      label: "R21 Test"\n')
-            config.write("    R22:\n")
-            config.write(
-                f"      files: {test_dir}plot_input_vars_r22_check.h5\n"
-            )
-            config.write('      label: "R22 Test"\n')
-            config.write("  plot_settings:\n")
-            config.write("    Log: True\n")
-            config.write("    UseAtlasTag: True\n")
-            config.write('    AtlasTag: "Internal Simulation"\n')
-            config.write(
-                r'    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"'
-            )
-            config.write("\n")
-            config.write("    yAxisAtlasTag: 0.925\n")
-            config.write("    yAxisIncrease: 2\n")
-            config.write("    figsize: [7, 5]\n")
-            config.write("    bool_use_taus: True\n")
-            config.write("  special_param_jets:\n")
-            config.write("    IP2D_cu:\n")
-            config.write("      lim_left: -30\n")
-            config.write("      lim_right: 30\n")
-            config.write("    IP2D_bu:\n")
-            config.write("      lim_left: -30\n")
-            config.write("      lim_right: 30\n")
-            config.write("  binning:\n")
-            config.write("    IP2D_cu: 5\n")
-            config.write("    IP2D_bu:\n")
-            config.write("  flavors:\n")
-            config.write("    b: 5\n")
-            config.write("    c: 4\n")
-            config.write("    u: 0\n")
-            config.write("    tau: 15\n")
-            config.write("\n")
-            config.write("nTracks_Test:\n")
-            config.write('  variables: "tracks"\n')
-            config.write("  folder_to_save: nTracks_Test\n")
-            config.write("  nTracks: True\n")
-            config.write("  Datasets_to_plot:\n")
-            config.write("    R21:\n")
-            config.write(
-                f"      files: {test_dir}plot_input_vars_r21_check.h5\n"
-            )
-            config.write('      label: "R21 Test"\n')
-            config.write("    R22:\n")
-            config.write(
-                f"      files: {test_dir}plot_input_vars_r22_check.h5\n"
-            )
-            config.write('      label: "R22 Test"\n')
-            config.write("  plot_settings:\n")
-            config.write("    Log: True\n")
-            config.write("    UseAtlasTag: True\n")
-            config.write('    AtlasTag: "Internal Simulation"\n')
-            config.write(
-                r'    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"'
-            )
-            config.write("\n")
-            config.write("    yAxisAtlasTag: 0.925\n")
-            config.write("    yAxisIncrease: 2\n")
-            config.write("    figsize: [7, 5]\n")
-            config.write("    Ratio_Cut: [0.5, 2]\n")
-            config.write("  flavors:\n")
-            config.write("    b: 5\n")
-            config.write("    c: 4\n")
-            config.write("    u: 0\n")
-            config.write("\n")
-            config.write("Tracks_Test:\n")
-            config.write('  variables: "tracks"\n')
-            config.write("  folder_to_save: Tracks_Test\n")
-            config.write("  Datasets_to_plot:\n")
-            config.write("    R21:\n")
-            config.write(
-                f"      files: {test_dir}plot_input_vars_r21_check.h5\n"
-            )
-            config.write('      label: "R21 Test"\n')
-            config.write("    R22:\n")
-            config.write(
-                f"      files: {test_dir}plot_input_vars_r22_check.h5\n"
-            )
-            config.write('      label: "R22 Test"\n')
-            config.write("  plot_settings:\n")
-            config.write("    Log: True\n")
-            config.write("    UseAtlasTag: True\n")
-            config.write('    AtlasTag: "Internal Simulation"\n')
-            config.write(
-                r'    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"'
-            )
-            config.write("\n")
-            config.write("    yAxisAtlasTag: 0.925\n")
-            config.write("    yAxisIncrease: 2\n")
-            config.write("    figsize: [7, 5]\n")
-            config.write("    Ratio_Cut: [0.5, 2]\n")
-            config.write("    bool_use_taus: False\n")
-            config.write("  flavors:\n")
-            config.write("    b: 5\n")
-            config.write("    c: 4\n")
-            config.write("    u: 0\n")
-            config.write("\n")
-            config.write("  plot_settings:\n")
-            config.write('    sorting_variable: "ptfrac"\n')
-            config.write(
-                "    n_Leading: [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]\n"
-            )
-            config.write("    Log: True\n")
-            config.write("    UseAtlasTag: True\n")
-            config.write('    AtlasTag: "Internal Simulation"\n')
-            config.write(
-                r'    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3M Jets"'
-            )
-            config.write("\n")
-            config.write("    yAxisAtlasTag: 0.925\n")
-            config.write("    yAxisIncrease: 2\n")
-            config.write("    figsize: [7, 5]\n")
-            config.write("    Ratio_Cut: [0.5, 1.5]\n")
-            config.write("    bool_use_taus: False\n")
-            config.write("  binning:\n")
-            config.write("    IP3D_signed_d0_significance: 100\n")
-            config.write("    numberOfInnermostPixelLayerHits: [0, 4, 1]\n")
-            config.write("    dr:\n")
-            config.write("  flavors:\n")
-            config.write("    b: 5\n")
-            config.write("    c: 4\n")
-            config.write("    u: 0\n")
+        with open(self.config_path, "r") as conf:
+            self.config = yaml.load(conf, Loader=yaml_loader)
+
+        # Changing eval params
+        self.config["Eval_parameters"]["nJets"] = 3e3
+        self.config["Eval_parameters"][
+            "var_dict"
+        ] = "umami/configs/Dips_Variables.yaml"
+
+        # Change datasets for all
+        for plot in self.config:
+            if plot != "Eval_parameters":
+                self.config[plot]["Datasets_to_plot"]["R21"][
+                    "files"
+                ] = f"{test_dir}plot_input_vars_r21_check.h5"
+                self.config[plot]["Datasets_to_plot"]["R21"][
+                    "label"
+                ] = "R21 Test"
+                self.config[plot]["Datasets_to_plot"]["R22"][
+                    "files"
+                ] = f"{test_dir}plot_input_vars_r22_check.h5"
+                self.config[plot]["Datasets_to_plot"]["R22"][
+                    "label"
+                ] = "R22 Test"
+                self.config[plot]["plot_settings"][
+                    "SecondTag"
+                ] = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
+
+        # Change jets input vars params
+        self.config["jets_input_vars"]["special_param_jets"] = {
+            "IP2D_cu": {
+                "lim_left": -30,
+                "lim_right": 30,
+            },
+            "IP2D_bu": {
+                "lim_left": -30,
+                "lim_right": 30,
+            },
+        }
+        self.config["jets_input_vars"]["binning"] = {
+            "IP2D_cu": 5,
+            "IP2D_bu": None,
+        }
+
+        # Change tracks params
+        self.config["tracks_input_vars"]["plot_settings"]["n_Leading"] = [
+            None,
+            0,
+        ]
+        self.config["tracks_input_vars"]["binning"] = {
+            "IP3D_signed_d0_significance": 100,
+            "numberOfInnermostPixelLayerHits": [0, 4, 1],
+            "dr": None,
+        }
+
+        # Save changes to yaml
+        with open(self.config_path, "w") as conf:
+            yaml.dump(self.config, conf, default_flow_style=False)
 
         logging.info("Downloading test data...")
         for file in self.data["test_input_vars_plot"]["files"]:
@@ -243,4 +166,4 @@ class TestInput_Vars_Plotting(unittest.TestCase):
 
     def test_plot_input_vars(self):
         """Integration test of plot_input_vars.py script."""
-        self.assertTrue(runPlotInputVars(self.config))
+        self.assertTrue(runPlotInputVars(self.config_path))
