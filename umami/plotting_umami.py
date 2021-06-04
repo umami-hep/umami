@@ -379,7 +379,7 @@ def score_comparison(
 
         else:
             df_results = pd.read_hdf(
-                plot_config["evaluation_file"], plot_config["data_set_name"]
+                model_config["evaluation_file"], model_config["data_set_name"]
             )
 
         df_list.append(df_results)
