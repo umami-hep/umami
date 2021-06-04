@@ -855,7 +855,7 @@ def GetScaleDict(args, config):
     os.makedirs(os.path.dirname(config.dict_file), exist_ok=True)
     with open(config.dict_file, "w") as outfile:
         json.dump(scale_dict, outfile, indent=4)
-    logger.info("saved scale dictionary as", config.dict_file)
+    logger.info(f"saved scale dictionary as {config.dict_file}")
 
 
 def ApplyScalesTrksNumpy(args, config, iteration=1):

@@ -175,19 +175,19 @@ preprocessing.py -c examples/PFlow-Preprocessing.yaml --undersampling --tracks
 2. Retrieving scaling and shifting factors:
 
 ```bash
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --scaling --tracks
+preprocessing.py -c examples/PFlow-Preprocessing.yaml --scaling --tracks --var_dict <vardict>
 ```
 
 3. Applying shifting and scaling factors
 
 ```bash
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --apply_scales --tracks
+preprocessing.py -c examples/PFlow-Preprocessing.yaml --apply_scales --tracks --var_dict <vardict>
 ```
 
 4. Shuffling the samples and writing the samples to disk
 
 ```bash
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --write --tracks
+preprocessing.py -c examples/PFlow-Preprocessing.yaml --write --tracks --var_dict <vardict>
 ```
 
 The training Variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).

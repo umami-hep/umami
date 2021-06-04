@@ -467,7 +467,6 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
     all_variables = [i for j in variable_header for i in variable_header[j]]
     if exclude is None:
         return all_variables, excluded_variables, None
-
     missing_header = []
     for exclude_this in exclude:
         if exclude_this in variable_header:
@@ -476,7 +475,6 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
         else:
             missing_header.append(exclude_this)
     variables = [i for j in variable_header for i in variable_header[j]]
-
     # If elements in exclude are not headers, check if they aren't variables
     for exclude_that in missing_header:
         if exclude_that in variables:
@@ -492,6 +490,9 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
     excluded_var_indices = (
         None if len(excluded_var_indices) == 0 else excluded_var_indices
     )
+    logger.debug(f"variables: {variables}")
+    logger.debug(f"excluded_variables: {excluded_variables}")
+    logger.debug(f"excluded_var_indices: {excluded_var_indices}")
     return variables, excluded_variables, excluded_var_indices
 
 
@@ -528,14 +529,16 @@ def GetTestSample(
     default_dict = Gen_default_dict(scale_dict)
     jets = jets.fillna(default_dict)
     logger.info("Applying scaling and shifting.")
+    scale_dict_variables = []
     for elem in scale_dict:
+        scale_dict_variables.append(elem["name"])
         if elem["name"] not in variables:
             if elem["name"] in excluded_variables:
                 logger.info(
                     f"{elem['name']} has been excluded from variable config (is in scale dict)."
                 )
             else:
-                logger.info(
+                logger.warning(
                     f"{elem['name']} in scale dict but not in variable config."
                 )
             continue
@@ -544,6 +547,10 @@ def GetTestSample(
         else:
             jets[elem["name"]] -= elem["shift"]
             jets[elem["name"]] /= elem["scale"]
+    if not set(variables).issubset(scale_dict_variables):
+        raise KeyError(
+            f"Requested {(set(variables).difference(scale_dict_variables))} which are not in scale dict."
+        )
     return jets, labels
 
 
