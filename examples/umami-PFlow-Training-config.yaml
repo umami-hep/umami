@@ -2,6 +2,10 @@
 model_name: umami_dev
 preprocess_config: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/examples/PFlow-Preprocessing-DESY.yaml
 
+# Add here a pretrained model to start with.
+# Leave empty for a fresh start
+model_file:
+
 # Add training file
 train_file: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/preprocessed/PFlow-hybrid_70-test-preprocessed_shuffled.h5
 

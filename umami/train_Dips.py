@@ -15,7 +15,6 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
@@ -219,14 +218,21 @@ def Dips(args, train_config, preprocess_config):
     # Print how much jets are used
     logger.info(f"Number of Jets used for training: {nJets}")
 
-    if "model_file" in train_config.config:
+    if train_config.model_file is not None:
         # Load DIPS model from file
-        logger.info(f"Loading model from: {train_config['model_file']}")
-        with CustomObjectScope({"Sum": Sum}):
-            dips = load_model(train_config["model_file"])
+        logger.info(f"Loading model from: {train_config.model_file}")
+        dips = load_model(train_config.model_file, {"Sum": Sum}, compile=False)
+
+        # Compile model
+        model_optimizer = Adam(learning_rate=NN_structure["lr"])
+        dips.compile(
+            loss="categorical_crossentropy",
+            optimizer=model_optimizer,
+            metrics=["accuracy"],
+        )
 
         # Load epoch from train_config
-        epochs = train_config.NN_structure["epochs"]
+        epochs = NN_structure["epochs"]
 
     else:
         # Init dips model
@@ -237,9 +243,7 @@ def Dips(args, train_config, preprocess_config):
     # Get training set from generator
     train_dataset = (
         tf.data.Dataset.from_generator(
-            generator(
-                X_train, Y_train, train_config.NN_structure["batch_size"]
-            ),
+            generator(X_train, Y_train, NN_structure["batch_size"]),
             (tf.float32, tf.float32),
             (
                 tf.TensorShape([None, nTrks, nFeatures]),
@@ -264,7 +268,7 @@ def Dips(args, train_config, preprocess_config):
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=train_config.NN_structure["batch_size"],
+        validation_batch_size=NN_structure["batch_size"],
         save_weights_only=False,
     )
 
@@ -310,7 +314,7 @@ def Dips(args, train_config, preprocess_config):
         callbacks=[dips_mChkPt, reduce_lr, my_callback],
         # callbacks=[reduce_lr, my_callback],
         # callbacks=[my_callback],
-        steps_per_epoch=nJets / train_config.NN_structure["batch_size"],
+        steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
     )

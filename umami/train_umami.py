@@ -245,12 +245,12 @@ def Umami(args, train_config, preprocess_config):
     njet_features = X_train.shape[1]
     logger.info(f"nJets: {nJets}, nTrks: {nTrks}")
     logger.info(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
-    if "model_file" in train_config.config:
-        logger.info(f"Loading model from: {train_config.config['model_file']}")
+    if train_config.model_file is not None:
+        logger.info(f"Loading model from: {train_config.model_file}")
         umami = load_model(
-            train_config.config["model_file"], {"Sum": utt.Sum}, compile=False
+            train_config.model_file, {"Sum": utt.Sum}, compile=False
         )
-        model_optimizer = Adam(lr=NN_structure["lr"])
+        model_optimizer = Adam(learning_rate=NN_structure["lr"])
         umami.compile(
             loss="categorical_crossentropy",
             loss_weights={
@@ -306,7 +306,7 @@ def Umami(args, train_config, preprocess_config):
         verbose=1,
         mode="auto",
         cooldown=5,
-        min_lr=0.000001,
+        min_learning_rate=0.000001,
     )
     my_callback = utt.MyCallbackUmami(
         model_name=train_config.model_name,
