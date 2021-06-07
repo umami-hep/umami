@@ -22,6 +22,7 @@ class Configuration(object):
         config_items = [
             "model_name",
             "preprocess_config",
+            "model_file",
             "train_file",
             "validation_file",
             "add_validation_file",

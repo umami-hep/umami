@@ -5,6 +5,9 @@ preprocess_config: ./umami/tests/unit/preprocessing/test_preprocess_config.yaml
 # Add training file
 train_file: dummy.h5
 
+# Add model file
+model_file: dummy.h5
+
 # Add validation files
 # ttbar val
 validation_file: dummy.h5

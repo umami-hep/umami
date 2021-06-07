@@ -2,6 +2,10 @@
 model_name: DL1r-PFlow_new-taggers-stats-22M
 preprocess_config: examples/PFlow-Preprocessing.yaml
 
+# Add here a pretrained model to start with.
+# Leave empty for a fresh start
+model_file:
+
 # Add training file
 train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid-preprocessed_shuffled.h5
 

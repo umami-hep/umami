@@ -2,6 +2,10 @@
 model_name: dips_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
 preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
 
+# Add here a pretrained model to start with.
+# Leave empty for a fresh start
+model_file:
+
 # Add training file
 train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid-preprocessed_shuffled.h5
 
