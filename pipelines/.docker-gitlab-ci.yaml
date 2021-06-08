@@ -1,8 +1,3 @@
-# Tag of TensorFlow base image
-# https://pypi.org/project/tensorflow/#history
-variables:
-  TFTAG: 2.5.0
-
 # ----------------------------------------------------------------------------
 # Umami base + Umami images: only get built on master
 #                            (see below for tags)
