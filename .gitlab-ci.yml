@@ -1,3 +1,8 @@
+# Tag of TensorFlow base image
+# https://pypi.org/project/tensorflow/#history
+variables:
+  TFTAG: 2.5.0
+
 stages:
   - linting
   - image_build_umamibase
@@ -17,26 +22,13 @@ linter:
     - mkdir coverage_files/
     - pip install flake8
     - flake8 ./umami
-  only:
-    - master
   artifacts:
     when: always
     paths:
       - coverage_files/
-
-linter_MR:
-  stage: linting
-  image: python:3.7-slim
-  script:
-    - mkdir coverage_files/
-    - pip install flake8
-    - flake8 ./umami
-  only:
-    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
-  artifacts:
-    when: always
-    paths:
-      - coverage_files/
+  rules:
+    - if: $CI_COMMIT_BRANCH != ''
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 test_coverage:
   stage: converage_test_stage
@@ -47,27 +39,9 @@ test_coverage:
     - coverage combine
     - coverage report
     - coverage xml
-  only:
-    - master
-  artifacts:
-    when: always
-    paths:
-      - coverage_files/
-    reports:
-      cobertura: coverage_files/coverage.xml
-    
-
-test_coverage_MR:
-  stage: converage_test_stage
-  image: python:3.7-slim
-  script:
-    - pip install -r requirements.txt
-    - cd ./coverage_files/
-    - coverage combine
-    - coverage report
-    - coverage xml
-  only:
-    - merge_requests@atlas-flavor-tagging-tools/algorithms/umami
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"  
   artifacts:
     when: always
     paths:
