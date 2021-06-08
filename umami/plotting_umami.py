@@ -522,7 +522,7 @@ def SetUpPlots(
         if print_model:
             logger.info(f"Processing: {plot_name}")
 
-        if epoch_to_name:
+        if epoch_to_name is True:
             save_plot_to = os.path.join(
                 plot_directory,
                 plot_name
