@@ -88,7 +88,17 @@ To run the training, use the following command
 train_DL1.py -c examples/DL1r-PFlow-Training-config.yaml
 ```
 
-The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). If you want instant performance checks of the model after each epoch during the training, you can use
+The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). 
+
+Alternatively, if you are working out of the DESY Zeuthen servers, `warp.zeuthen.desy.de`, you can train using the batch system via `qsub` and GPU support by giving it the `zeuthen` flag
+
+```bash
+train_DL1.py -c examples/DL1r-PFlow-Training-config.yaml --zeuthen
+```
+
+The job will output a log to the current working directory and copy the results to the current working directory when it's done. The options for the job (time, memory, space, etc.) can be changed in `umami/institutes/zeuthen/train_job.sh`.
+
+If you want instant performance checks of the model after each epoch during the training, you can use
 
 ```bash
 plotting_epoch_performance.py -c examples/DL1r-PFlow-Training-config.yaml --dl1
