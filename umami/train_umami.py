@@ -19,6 +19,7 @@ from tensorflow.keras.optimizers import Adam
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
+from umami.institutes.utils import is_qsub_available, submit_zeuthen
 
 
 def GetParser():
@@ -34,6 +35,7 @@ def GetParser():
         required=True,
         help="Name of the training config file",
     )
+
     parser.add_argument(
         "-e",
         "--epochs",
@@ -41,6 +43,14 @@ def GetParser():
         help="Number\
         of training epochs.",
     )
+
+    parser.add_argument(
+        "-z",
+        "--zeuthen",
+        action="store_true",
+        help="Train on Zeuthen with GPU support",
+    )
+
     # TODO: implementng vr_overlap
     parser.add_argument(
         "--vr_overlap",
@@ -73,13 +83,13 @@ class generator:
             f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
         )
         self.x_in_mem = self.x[
-            self.step_size * part : self.step_size * (part + 1)
+            self.step_size * part: self.step_size * (part + 1)
         ]
         self.x_trk_in_mem = self.x_trk[
-            self.step_size * part : self.step_size * (part + 1)
+            self.step_size * part: self.step_size * (part + 1)
         ]
         self.y_in_mem = self.y[
-            self.step_size * part : self.step_size * (part + 1)
+            self.step_size * part: self.step_size * (part + 1)
         ]
 
     def __call__(self):
@@ -93,17 +103,17 @@ class generator:
                 small_step = 0
             batch_x = self.x_in_mem[
                 small_step
-                * self.batch_size : (1 + small_step)
+                * self.batch_size: (1 + small_step)
                 * self.batch_size
             ]
             batch_x_trk = self.x_trk_in_mem[
                 small_step
-                * self.batch_size : (1 + small_step)
+                * self.batch_size: (1 + small_step)
                 * self.batch_size
             ]
             batch_y = self.y_in_mem[
                 small_step
-                * self.batch_size : (1 + small_step)
+                * self.batch_size: (1 + small_step)
                 * self.batch_size
             ]
             small_step += 1
@@ -333,6 +343,17 @@ def Umami(args, train_config, preprocess_config):
     )
 
 
+def UmamiZeuthen(args, train_config, preprocess_config):
+    if is_qsub_available():
+        args.model_name = train_config.model_name
+        args.umami = True
+        submit_zeuthen(args)
+    else:
+        logger.warning(
+            "No Zeuthen batch system found, training locally instead.")
+        Umami(args, train_config, preprocess_config)
+
+
 if __name__ == "__main__":
     args = GetParser()
 
@@ -342,4 +363,7 @@ if __name__ == "__main__":
 
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
-    Umami(args, train_config, preprocess_config)
+    if args.zeuthen:
+        UmamiZeuthen(args, train_config, preprocess_config)
+    else:
+        Umami(args, train_config, preprocess_config)

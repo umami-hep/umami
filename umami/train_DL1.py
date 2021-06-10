@@ -20,6 +20,7 @@ from tensorflow.keras.optimizers import Adam
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
 from umami.tools import yaml_loader
+from umami.institutes.utils import is_qsub_available, submit_zeuthen
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
@@ -37,6 +38,7 @@ def GetParser():
         required=True,
         help="Name of the training config file",
     )
+
     parser.add_argument(
         "-e",
         "--epochs",
@@ -45,6 +47,14 @@ def GetParser():
         help="Number\
         of trainng epochs.",
     )
+
+    parser.add_argument(
+        "-z",
+        "--zeuthen",
+        action="store_true",
+        help="Train on Zeuthen with GPU support",
+    )
+
     # TODO: implementng vr_overlap
     parser.add_argument(
         "--vr_overlap",
@@ -201,8 +211,22 @@ def TrainLargeFile(args, train_config, preprocess_config):
     logger.info(f"Models saved {train_config.model_name}")
 
 
+def TrainLargeFileZeuthen(args, train_config, preprocess_config):
+    if is_qsub_available():
+        args.model_name = train_config.model_name
+        args.dl1 = True
+        submit_zeuthen(args)
+    else:
+        logger.warning(
+            "No Zeuthen batch system found, training locally instead.")
+        TrainLargeFile(args, train_config, preprocess_config)
+
+
 if __name__ == "__main__":
     args = GetParser()
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
-    TrainLargeFile(args, train_config, preprocess_config)
+    if args.zeuthen:
+        TrainLargeFileZeuthen(args, train_config, preprocess_config)
+    else:
+        TrainLargeFile(args, train_config, preprocess_config)
