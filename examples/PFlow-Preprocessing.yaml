@@ -23,9 +23,17 @@ preparation:
       type: ttbar
       category: bjets
       n_jets: 10e6
-      parity: even
       n_split: 10
-      pt_cut: true
+      cuts:
+        eventNumber:
+          operator: mod_2_==
+          condition: 0
+        pt_cut:
+          operator: <=
+          condition: 2.5e5
+        HadronConeExclTruthLabelID:
+          operator: ==
+          condition: 5
       f_output:
         path: *sample_path
         file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
@@ -36,9 +44,17 @@ preparation:
       category: cjets
       # Number of c jets available in MC16d 
       n_jets: 12745953
-      parity: even
       n_split: 13
-      pt_cut: true
+      cuts:
+        eventNumber:
+          operator: mod_2_==
+          condition: 0
+        pt_cut:
+          operator: <=
+          condition: 2.5e5
+        HadronConeExclTruthLabelID:
+          operator: ==
+          condition: 4
       f_output:
         path: *sample_path
         file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
@@ -48,9 +64,17 @@ preparation:
       type: ttbar
       category: ujets
       n_jets: 20e6
-      parity: even
       n_split: 20
-      pt_cut: true
+      cuts:
+        eventNumber:
+          operator: mod_2_==
+          condition: 0
+        pt_cut:
+          operator: <=
+          condition: 2.5e5
+        HadronConeExclTruthLabelID:
+          operator: ==
+          condition: 0
       f_output:
         path: *sample_path
         file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
@@ -60,9 +84,17 @@ preparation:
       type: ttbar
       category: taujets
       n_jets: 12745953
-      parity: even
       n_split: 5
-      pt_cut: true
+      cuts:
+        eventNumber:
+          operator: mod_2_==
+          condition: 0
+        pt_cut:
+          operator: <=
+          condition: 2.5e5
+        HadronConeExclTruthLabelID:
+          operator: ==
+          condition: 15
       f_output:
         path: *sample_path
         file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
@@ -71,9 +103,14 @@ preparation:
     training_zprime:
       type: zprime
       n_jets: 9593092
-      parity: even
       n_split: 2
-      pt_cut: true
+      cuts:
+        eventNumber:
+          operator: mod_2_==
+          condition: 0
+        pt_cut:
+          operator: ">"
+          condition: 2.5e5
       f_output:
         path: *sample_path
         file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
@@ -82,8 +119,11 @@ preparation:
     testing_ttbar:
       type: ttbar
       n_jets: 4e6
-      parity: odd
       n_split: 2
+      cuts:
+        eventNumber:
+          operator: mod_2_==
+          condition: 1
       f_output:
         path: *sample_path
         file: MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
@@ -91,8 +131,11 @@ preparation:
     testing_zprime:
       type: zprime
       n_jets: 4e6
-      parity: odd
       n_split: 2
+      cuts:
+        eventNumber:
+          operator: mod_2_==
+          condition: 1
       f_output:
         path: *sample_path
         file: MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
@@ -123,6 +166,9 @@ pT_max: False
 
 # set to true if taus are to be included in preprocessing
 bool_process_taus: False
+
+# set to true if extended flavour labelling scheme is used in preprocessing
+bool_extended_labelling: False
 
 # Define undersampling method used. Valid are "count", "weight", and "count_bcl_weight_tau"
 # Last case only applied if taus are included. Default is "count".
@@ -164,7 +210,7 @@ dict_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/scale_dicts
 
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=
-Cuts:
+cuts:
   JetFitterSecondaryVertex_mass:
     operator: <
     condition: 25000

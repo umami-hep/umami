@@ -10,6 +10,7 @@ from umami.preprocessing_tools import (
     Configuration,
     GetBinaryLabels,
     GetCuts,
+    GetSampleCuts,
     GetNJetsPerIteration,
     GetScales,
     ShuffleDataFrame,
@@ -182,7 +183,7 @@ class GetNJetsPerIterationTestCase(unittest.TestCase):
 
 class PreprocessingTestCuts(unittest.TestCase):
     """
-    Test the implementation of the Prerocessing cut application.
+    Test the implementation of the Preprocessing cut application.
     """
 
     def setUp(self):
@@ -308,6 +309,70 @@ class PreprocessingTestCuts(unittest.TestCase):
         cut_result = np.ones(len(jets))
         np.put(cut_result, indices_to_remove, 0)
         self.assertTrue(np.array_equal(cut_result, np.array([1, 0, 0])))
+
+
+class PreprocessingTestSampleCuts(unittest.TestCase):
+    """
+    Test the implementation of the Preprocessing sample cut application.
+    """
+
+    def setUp(self):
+        self.config_file = os.path.join(
+            os.path.dirname(__file__), "test_preprocess_config.yaml"
+        )
+        self.config = Configuration(self.config_file)
+        self.jets = pd.DataFrame(
+            {
+                "GhostBHadronsFinalPt": [
+                    2e3,
+                    2.6e4,
+                    np.nan,
+                    2.6e4,
+                    2e3,
+                    2.6e4,
+                ],
+                global_config.pTvariable: [
+                    2e3,
+                    2.6e4,
+                    np.nan,
+                    2.6e4,
+                    2e3,
+                    2.6e4,
+                ],
+                "HadronConeExclTruthLabelID": [5, 5, 4, 4, 0, 15],
+                "HadronConeExclExtendedTruthLabelID": [5, 54, 4, 44, 0, 15],
+                "eventNumber": [1, 2, 3, 4, 5, 6],
+            }
+        )
+        self.pass_ttbar = np.array(
+            [0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+        )
+
+    def test_cuts_passing_ttbar(self):
+        sample = self.config.preparation["samples"]["ttbar"]
+        indices_to_remove = GetSampleCuts(
+            self.jets.to_records(index=False),
+            sample.get("cuts", None),
+            extended_labelling=False
+        )
+        cut_result = np.ones(len(self.jets))
+        np.put(cut_result, indices_to_remove, 0)
+        print(cut_result)
+        print(self.pass_ttbar)
+        self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
+
+    def test_cuts_passing_ttbar_extended_labelling(self):
+        sample = self.config.preparation["samples"]["ttbar"]
+        indices_to_remove = GetSampleCuts(
+            self.jets.to_records(index=False),
+            sample.get("cuts", None),
+            extended_labelling=True
+        )
+        cut_result = np.ones(len(self.jets))
+        np.put(cut_result, indices_to_remove, 0)
+        print(cut_result)
+        print(self.pass_ttbar)
+        self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
 
 
 class GetScalesTestCase(unittest.TestCase):
