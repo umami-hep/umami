@@ -97,17 +97,17 @@ preparation:
 
       n_jets: 10000000          # number of jets in output sample
 
-      parity: even              # only store events with even event number (training sample)
-
       n_split: 10               # split output in 10 files
                                 # (which need to be merged in second step)
                                 # to reduce memory consumption
 
-      pt_cut: true              # use pt cut in hybrid sample creation
-                                # the pt cut is defined below using the
-                                # "bhad_pTcut" keyword
-                                # - for ttbar samples the cut is an upper cut
-                                # - for Z' samples the cut is a lower cut
+      cuts:                     # allows for the definition of cuts to define the sample
+        eventNumber:            # training set consists of events with even event number
+          operator: mod_2_==       # selected by modulo 2 (mod_2_==): (eventNumber) % 2 == 0
+          condition: 0          
+        pt_cut:                 # pt cut used for hybrid sample creation, ttbar sample 
+          operator: <=          # populates low pt regime < 250 GeV
+          condition: 2.5e5
 
       f_output:                 # output file of prepared samples (need to be merged)
         path: *sample_path
@@ -121,7 +121,10 @@ preparation:
     testing_zprime:
       type: zprime
       n_jets: 4000000
-      parity: odd
+      cuts:                     # allows for the definition of cuts to define the sample
+        eventNumber:            # testing set consists of events with odd event number
+          operator: mod_2       # selected by modulo 2 (mod_2): (eventNumber) % 2 == 1
+          condition: 1          
       n_split: 2
       f_output:
         path: *sample_path
@@ -215,178 +218,9 @@ preprocessing.py --config <path to config> --sample <sample> --merge --tracks
 
 ## Full example
 
-There are several training and validation/test samples to produce. See below a list of all the necessary ones in a complete example configuration file:
+There are several training and validation/test samples to produce. See the following link for a list of all the necessary ones in a complete configuration file: [`examples/PFlow-Preprocessing.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml)
 
-```
-parameters:
-  # ntuple path
-  ntuple_path: &ntuple_path <path to your data>/ntuples/
-  # prepared sample path
-  sample_path: &sample_path <path to your data>/processed/prepared_samples/
-  # merged sample path
-  file_path: &file_path <path to your data>/processed/merged_samples/
 
-preparation:
-  ntuples:
-    ttbar:
-      path: *ntuple_path
-      file_pattern: user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2020-02-14-T232210-R26303_output.h5/*.h5
-    zprime:
-      path: *ntuple_path
-      file_pattern: user.mguth.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2020-02-15-T225316-R8334_output.h5/*.h5
-
-  samples:
-    training_ttbar_bjets:
-      type: ttbar
-      category: bjets
-      n_jets: 10000000
-      parity: even
-      n_split: 10
-      pt_cut: true
-      f_output:
-        path: *sample_path
-        file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
-      merge_output: f_tt_bjets
-
-    training_ttbar_cjets:
-      type: ttbar
-      category: cjets
-      n_jets: 12745953
-      parity: even
-      n_split: 13
-      pt_cut: true
-      f_output:
-        path: *sample_path
-        file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
-      merge_output: f_tt_cjets
-
-    training_ttbar_ujets:
-      type: ttbar
-      category: ujets
-      n_jets: 20000000
-      parity: even
-      n_split: 20
-      pt_cut: true
-      f_output:
-        path: *sample_path
-        file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-      merge_output: f_tt_ujets
-
-    training_ttbar_taujets:
-      type: ttbar
-      category: taujets
-      n_jets: 12745953
-      parity: even
-      n_split: 5
-      pt_cut: true
-      f_output:
-        path: *sample_path
-        file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
-      merge_output: f_tt_taujets
-
-    training_zprime:
-      type: zprime
-      n_jets: 9593092
-      parity: even
-      split: 2
-      pt_cut: true
-      f_output:
-        path: *sample_path
-        file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
-      merge_output: f_z
-
-    testing_ttbar:
-      type: ttbar
-      n_jets: 4000000
-      parity: odd
-      n_split: 2
-      f_output:
-        path: *sample_path
-        file: MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
-
-    testing_zprime:
-      type: zprime
-      n_jets: 4000000
-      parity: odd
-      n_split: 2
-      f_output:
-        path: *sample_path
-        file: MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
-
-# amount of b-jets which are used
-njets: 5.5e6
-# fraction of ttbar jets wrt. Z'
-ttbar_frac: 0.70
-# Whether or not to enforce the ttbar fraction above
-enforce_ttbar_frac: False
-# outputfiles are split into 5
-iterations: 5
-# pT cut for hybrid creation (for light and c-jets)
-pTcut: 2.5e5
-# pT cut for b-jets
-bhad_pTcut: 2.5e5
-# upper pT limit for all jets
-pT_max: False
-# set to true if taus are to be included in preprocessing
-bool_process_taus: True
-# Define undersampling method used. Valid are "count", "weight", and "count_bcl_weight_tau"
-# Last case only applied if taus are included. Default is "count".
-# See RunUndersampling in preprocessing for more info
-sampling_method: count_bcl_weight_tau
-f_z:
-  path: *file_path
-  file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
-f_tt_bjets:
-  path: *file_path
-  file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
-f_tt_cjets:
-  path: *file_path
-  file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
-f_tt_ujets:
-  path: *file_path
-  file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-f_tt_taujets:
-  path: *file_path
-  file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
-outfile_name: /nfs/dust/atlas/user/pgadow/ftag/data/processed/20201216-defaulttracks/output/PFlow-hybrid_70-test.h5
-plot_name: PFlow_ext-hybrid
-
-# Dictfile for the scaling and shifting (json)
-dict_file: "examples/PFlow-scale_dict-22M.json"
-
-# cut definitions to be applied to remove outliers
-# possible operators: <, ==, >, >=, <=
-Cuts:
-  JetFitterSecondaryVertex_mass:
-    operator: <
-    condition: 25000
-    NaNcheck: True
-  JetFitterSecondaryVertex_energy:
-    operator: <
-    condition: 1e8
-    NaNcheck: True
-  JetFitter_deltaR:
-    operator: <
-    condition: 0.6
-    NaNcheck: True
-  softMuon_pt:
-    operator: <
-    condition: 0.5e9
-    NaNcheck: True
-  softMuon_momentumBalanceSignificance:
-    operator: <
-    condition: 50
-    NaNcheck: True
-  softMuon_scatteringNeighbourSignificance:
-    operator: <
-    condition: 600
-    NaNcheck: True
-  softMuon_momentumBalanceSignificance:
-    operator: <
-    condition: 4000
-    NaNcheck: True
-
-```
 
 ### Sample preparation
 

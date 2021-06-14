@@ -14,6 +14,8 @@ bhad_pTcut: 2.5e5
 pT_max: False
 # set to true if taus are to be included in preprocessing
 bool_process_taus: False
+# set to true if extended flavour labelling is used in preprocessing
+bool_extended_labelling: False
 sampling_method:  count
 f_z:
   path: Null
@@ -32,7 +34,7 @@ f_tt_taujets:
   file: Null
 outfile_name: Null
 plot_name: Null
-Cuts: Null
+cuts: Null
 dict_file: Null
 preparation:
   ntuples: Null

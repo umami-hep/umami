@@ -4,7 +4,26 @@ parameters:
 
 preparation:
   ntuples: None
-  samples: None
+  samples:
+    ttbar:
+      type: ttbar
+      category: bjets
+      n_jets: 1
+      n_split: 1
+      cuts:
+        eventNumber:
+          operator: mod_2_==
+          condition: 0
+        pt_cut:
+          operator: <=
+          condition: 2.5e5
+        HadronConeExclTruthLabelID:
+          operator: ==
+          condition: 5
+      f_output:
+        path: *file_path
+        file: dummy.h5
+      merge_output: f_tt_bjets
 
 # amount of b-jets which are used
 njets: 5e6
@@ -22,6 +41,8 @@ bhad_pTcut: 2.5e5
 pT_max: 3e6
 # Whether to process taus
 bool_process_taus: False
+# Whether to use extended flavour labelling
+bool_extended_labelling: False
 # Sampling method
 sampling_method: count
 f_z:
@@ -48,7 +69,7 @@ dict_file: "test.json"
 
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=
-Cuts:
+cuts:
   JetFitterSecondaryVertex_mass:
     operator: <
     condition: 25000

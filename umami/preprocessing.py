@@ -165,9 +165,6 @@ def RunPreparation(args, config):
                                   # ('even' or 'odd')
           n_split: 10             # number of output files to reduce memory
                                   # output files must be merged
-          pt_cut: true            # apply the pt cut for b-jets as an
-                                  # upper or lower cut
-                                  # depends on sample type (ttbar / zprime)
           f_output:               # where to store hybrid samples
             path: <path to output directory>
             file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
@@ -196,8 +193,7 @@ def RunPreparation(args, config):
         return
     sample_type = sample.get("type")
     sample_category = sample.get("category", None)
-    index_parity = sample.get("parity", None)
-    pt_cut = float(config.bhad_pTcut) if sample.get("pt_cut", False) else None
+    cuts = sample.get("cuts", None)
     n_jets = int(sample.get("n_jets", 0))
     n_split = int(sample.get("n_split", 1))
     output_path = sample.get("f_output")["path"]
@@ -208,6 +204,9 @@ def RunPreparation(args, config):
     ntuple_path = ntuples.get(sample["type"])["path"]
     ntuple_file_pattern = ntuples.get(sample["type"])["file_pattern"]
     ntuples = glob(os.path.join(ntuple_path, ntuple_file_pattern))
+
+    # set up flavour labelling scheme used in preprocessing
+    extended_labelling = config.bool_extended_labelling
 
     # bookkeeping variables for running over the ntuples
     jets = None
@@ -234,9 +233,9 @@ def RunPreparation(args, config):
                 n_jets,
                 sample_type,
                 sample_category,
-                index_parity,
                 args.tracks,
-                pt_cut,
+                cuts,
+                extended_labelling,
             )
             pbar.update(jets.size)
         else:
@@ -246,9 +245,9 @@ def RunPreparation(args, config):
                 n_jets_to_get,
                 sample_type,
                 sample_category,
-                index_parity,
                 args.tracks,
-                pt_cut,
+                cuts,
+                extended_labelling,
             )
             pbar.update(add_jets.size)
             jets = np.concatenate([jets, add_jets])
@@ -386,7 +385,7 @@ def RunUndersampling(args, config):
     The downsampling in this case takes as many jets of each flavour
     per pT and eta bin.
 
-    Can optionnally run on taus (taujets, PID = 15) if the configuration,
+    Can optionally run on taus (taujets, PID = 15) if the configuration,
     contains:
         bool_process_taus: True
     Undersampling method is based on sampling_method value in config:
@@ -404,6 +403,7 @@ def RunUndersampling(args, config):
     # TODO: switch to dask
 
     take_taus = config.bool_process_taus
+    extended_labelling = config.bool_extended_labelling
     if config.sampling_method == "count":
         sampling_method = "count"
     elif config.sampling_method == "weight":
@@ -507,10 +507,10 @@ def RunUndersampling(args, config):
                     ]
                 )
 
-        indices_toremove_Zprime = upt.GetCuts(vec_Z, config, "Zprime")
-        indices_toremove_bjets = upt.GetCuts(vec_tt_bjets, config)
-        indices_toremove_cjets = upt.GetCuts(vec_tt_cjets, config)
-        indices_toremove_ujets = upt.GetCuts(vec_tt_ujets, config)
+        indices_toremove_Zprime = upt.GetCuts(vec_Z, config, "Zprime", extended_labelling)
+        indices_toremove_bjets = upt.GetCuts(vec_tt_bjets, config, "ttbar", extended_labelling)
+        indices_toremove_cjets = upt.GetCuts(vec_tt_cjets, config, "ttbar", extended_labelling)
+        indices_toremove_ujets = upt.GetCuts(vec_tt_ujets, config, "ttbar", extended_labelling)
         if take_taus:
             indices_toremove_taujets = upt.GetCuts(vec_tt_taujets, config)
 
@@ -531,52 +531,99 @@ def RunUndersampling(args, config):
             if take_taus:
                 tnp_tt_tau = np.delete(tnp_tt_tau, indices_toremove_taujets, 0)
 
-        bjets = np.concatenate(
-            [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5], vec_tt_bjets]
-        )
-        cjets = np.concatenate(
-            [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 4], vec_tt_cjets]
-        )
-        ujets = np.concatenate(
-            [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0], vec_tt_ujets]
-        )
-        if take_taus:
-            taujets = np.concatenate(
-                [
-                    vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 15],
-                    vec_tt_taujets,
-                ]
+        if extended_labelling:
+            bjets = np.concatenate(
+                [vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 5 | vec_Z["HadronConeExclExtendedTruthLabelID"] == 54], vec_tt_bjets]
             )
+            cjets = np.concatenate(
+                [vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 4 | vec_Z["HadronConeExclExtendedTruthLabelID"] == 44], vec_tt_cjets]
+            )
+            ujets = np.concatenate(
+                [vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 0], vec_tt_ujets]
+            )
+        else:
+            bjets = np.concatenate(
+                [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 5], vec_tt_bjets]
+            )
+            cjets = np.concatenate(
+                [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 4], vec_tt_cjets]
+            )
+            ujets = np.concatenate(
+                [vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 0], vec_tt_ujets]
+            )
+        if take_taus:
+            if extended_labelling:
+                taujets = np.concatenate(
+                    [
+                        vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 15],
+                        vec_tt_taujets,
+                    ]
+                )
+            else:
+                taujets = np.concatenate(
+                    [
+                        vec_Z[vec_Z["HadronConeExclTruthLabelID"] == 15],
+                        vec_tt_taujets,
+                    ]
+                )
         else:
             taujets = None
 
         # New
         if args.tracks:
-            btrk = np.concatenate(
-                [
-                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 5],
-                    tnp_tt_b,
-                ]
-            )
-            ctrk = np.concatenate(
-                [
-                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 4],
-                    tnp_tt_c,
-                ]
-            )
-            utrk = np.concatenate(
-                [
-                    tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 0],
-                    tnp_tt_u,
-                ]
-            )
-            if take_taus:
-                tautrk = np.concatenate(
+            if extended_labelling:
+                btrk = np.concatenate(
                     [
-                        tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 15],
-                        tnp_tt_tau,
+                        tnp_Zprime[vec_Z["HadronConeExclExtendedTruthLabelID"] == 5 | vec_Z["HadronConeExclExtendedTruthLabelID"] == 54],
+                        tnp_tt_b,
                     ]
                 )
+                ctrk = np.concatenate(
+                    [
+                        tnp_Zprime[vec_Z["HadronConeExclExtendedTruthLabelID"] == 4 | vec_Z["HadronConeExclExtendedTruthLabelID"] == 44],
+                        tnp_tt_c,
+                    ]
+                )
+                utrk = np.concatenate(
+                    [
+                        tnp_Zprime[vec_Z["HadronConeExclExtendedTruthLabelID"] == 0],
+                        tnp_tt_u,
+                    ]
+                )
+            else:
+                btrk = np.concatenate(
+                    [
+                        tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 5],
+                        tnp_tt_b,
+                    ]
+                )
+                ctrk = np.concatenate(
+                    [
+                        tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 4],
+                        tnp_tt_c,
+                    ]
+                )
+                utrk = np.concatenate(
+                    [
+                        tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 0],
+                        tnp_tt_u,
+                    ]
+                )
+            if take_taus:
+                if extended_labelling:
+                    tautrk = np.concatenate(
+                        [
+                            tnp_Zprime[vec_Z["HadronConeExclExtendedTruthLabelID"] == 15],
+                            tnp_tt_tau,
+                        ]
+                    )
+                else:
+                    tautrk = np.concatenate(
+                        [
+                            tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 15],
+                            tnp_tt_tau,
+                        ]
+                    )
             else:
                 tautrk = None
         else:
@@ -686,6 +733,7 @@ def RunUndersampling(args, config):
         # ensure output path exists
         os.makedirs(pathlib.Path(out_file).parent.absolute(), exist_ok=True)
         logger.info(f"saving file: {out_file}")
+
         h5f = h5py.File(out_file, "w")
         h5f.create_dataset("bjets", data=bjets, compression="gzip")
         h5f.create_dataset("cjets", data=cjets, compression="gzip")
