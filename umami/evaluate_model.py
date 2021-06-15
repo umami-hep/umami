@@ -692,7 +692,7 @@ def EvaluateModelDL1(
         input_file=test_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
-        nJets=args.nJets,
+        nJets=nJets,
         use_taus=bool_use_taus,
         exclude=exclude,
     )
@@ -748,10 +748,10 @@ def EvaluateModelDL1(
 
         # Define new dict with the evaluation results
         df_discs_dict = {
-            "ptau": pred[:, tau_index],
-            "pb": pred[:, b_index],
-            "pc": pred[:, c_index],
-            "pu": pred[:, u_index],
+            "umami_ptau": pred[:, tau_index],
+            "umami_pb": pred[:, b_index],
+            "umami_pc": pred[:, c_index],
+            "umami_pu": pred[:, u_index],
             "pt": df[global_config.pTvariable],
             "eta": df[global_config.etavariable],
             "labels": y_true,
@@ -793,9 +793,9 @@ def EvaluateModelDL1(
 
         # Define new dict with the evaluation results
         df_discs_dict = {
-            "pb": pred[:, b_index],
-            "pc": pred[:, c_index],
-            "pu": pred[:, u_index],
+            "umami_pb": pred[:, b_index],
+            "umami_pc": pred[:, c_index],
+            "umami_pu": pred[:, u_index],
             "pt": df[global_config.pTvariable],
             "eta": df[global_config.etavariable],
             "labels": y_true,
@@ -1002,7 +1002,7 @@ def EvaluateModelDL1(
             )
 
     else:
-        df_eff_rej = {
+        df_eff_rej_dict = {
             "beff": b_effs,
             "ceff": c_effs,
             "umami_crej": crej_dict["umami"],
