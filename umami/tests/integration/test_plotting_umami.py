@@ -58,9 +58,11 @@ class TestPlottingUmami(unittest.TestCase):
         self.data = getConfiguration()
         self.model_name_dips = self.data["test_dips"]["model_name"]
         self.model_name_umami = self.data["test_umami"]["model_name"]
+        self.model_name_dl1 = self.data["test_dl1"]["model_name"]
 
         test_dir_dips = os.path.join(self.data["test_dips"]["testdir"])
         test_dir_umami = os.path.join(self.data["test_umami"]["testdir"])
+        test_dir_dl1 = os.path.join(self.data["test_dl1"]["testdir"])
 
         # clean up, hopefully this causes no "uh oh...""
         if test_dir_dips.startswith("/tmp"):
@@ -71,6 +73,10 @@ class TestPlottingUmami(unittest.TestCase):
             run(["rm", "-rf", test_dir_umami])
         run(["mkdir", "-p", test_dir_umami])
 
+        if test_dir_dl1.startswith("/tmp"):
+            run(["rm", "-rf", test_dir_dl1])
+        run(["mkdir", "-p", test_dir_dl1])
+
         # config files, will be copied to test dir
         self.config_source_dips = os.path.join(
             os.getcwd(), "examples/plotting_umami_config_dips.yaml"
@@ -78,6 +84,10 @@ class TestPlottingUmami(unittest.TestCase):
 
         self.config_source_umami = os.path.join(
             os.getcwd(), "examples/plotting_umami_config_Umami.yaml"
+        )
+
+        self.config_source_dl1 = os.path.join(
+            os.getcwd(), "examples/plotting_umami_config_DL1r.yaml"
         )
 
         self.config_dips = os.path.join(
@@ -89,6 +99,11 @@ class TestPlottingUmami(unittest.TestCase):
             os.getcwd(),
             self.model_name_umami,
             "plotting_umami_config_Umami.yaml",
+        )
+        self.config_dl1 = os.path.join(
+            os.getcwd(),
+            self.model_name_dl1,
+            "plotting_umami_config_DL1r.yaml",
         )
 
     def test_plotting_umami_dips(self):
@@ -135,3 +150,26 @@ class TestPlottingUmami(unittest.TestCase):
         )
 
         self.assertTrue(runPlotting(self.config_umami, "umami"))
+
+    def test_plotting_umami_dl1(self):
+        # Copy the plotting yaml file
+        run(["cp", self.config_source_dl1, self.config_dl1])
+
+        # modify copy of preprocessing config file for test
+        replaceLineInFile(
+            self.config_dl1,
+            "Path_to_models_dir:",
+            "  Path_to_models_dir: ./",
+        )
+        replaceLineInFile(
+            self.config_dl1,
+            "model_name:",
+            f"  model_name: {self.model_name_dl1}",
+        )
+        replaceLineInFile(
+            self.config_dl1,
+            "epoch:",
+            "  epoch: 1",
+        )
+
+        self.assertTrue(runPlotting(self.config_dl1, "dl1"))
