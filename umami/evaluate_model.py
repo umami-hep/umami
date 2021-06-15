@@ -94,18 +94,34 @@ def GetParser():
 def EvaluateModel(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
+    Eval_params = train_config.Eval_parameters_validation
+
     # Set number of nJets for testing
     if args.nJets is None:
-        nJets = int(train_config.Eval_parameters_validation["n_jets"])
+        nJets = int(Eval_params["n_jets"])
 
     else:
         nJets = args.nJets
 
+    # Test if multiple taggers are given or not
+    if type(Eval_params["tagger"]) is not list:
+        tagger_list = [Eval_params["tagger"]]
+        fc_list = Eval_params["fc_values_comp"]
+
+    else:
+        tagger_list = Eval_params["tagger"]
+        fc_list = Eval_params["fc_values_comp"]
+
+    # Get model file path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     logger.info(f"Evaluating {model_file}")
+
+    # Define excluded variables and laod them
     exclude = []
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
+
+    # Load the test jets
     X_test, X_test_trk, Y_test = utt.GetTestFile(
         test_file,
         train_config.var_dict,
@@ -113,157 +129,200 @@ def EvaluateModel(
         nJets=nJets,
         exclude=exclude,
     )
+
+    # Load the model for evaluation. Note: The Sum is needed here!
     with CustomObjectScope({"Sum": utt.Sum}):
         model = load_model(model_file)
 
+    # Predict the output of the model on the test jets
     pred_dips, pred_umami = model.predict(
         [X_test_trk, X_test], batch_size=5000, verbose=0
     )
+
+    # Get truth labelling
     y_true = np.argmax(Y_test, axis=1)
+
+    # Set flavour indicies
     b_index, c_index, u_index = 2, 1, 0
+
+    # Define variables that need to be loaded
     variables = [
         global_config.etavariable,
         global_config.pTvariable,
-        "DL1r_pb",
-        "DL1r_pc",
-        "DL1r_pu",
-        "rnnip_pb",
-        "rnnip_pc",
-        "rnnip_pu",
         "HadronConeExclTruthLabelID",
     ]
+
+    # Add the predictions labels for the defined taggers to
+    # variables list
+    for tagger in tagger_list:
+        variables += [f"{tagger}_pb", f"{tagger}_pc", f"{tagger}_pu"]
+
+    # Load the jets with selected variables
     df = pd.DataFrame(h5py.File(test_file, "r")["/jets"][:nJets][variables])
     logger.info(f"Jets used for testing: {len(df)}")
-    df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-    df_discs = pd.DataFrame(
-        {
-            "umami_pb": pred_umami[:, b_index],
-            "umami_pc": pred_umami[:, c_index],
-            "umami_pu": pred_umami[:, u_index],
-            "dips_pb": pred_dips[:, b_index],
-            "dips_pc": pred_dips[:, c_index],
-            "dips_pu": pred_dips[:, u_index],
-            "pt": df[global_config.pTvariable],
-            "eta": df[global_config.etavariable],
-            "labels": y_true,
-            "disc_DL1r": GetScore(df["DL1r_pb"], df["DL1r_pc"], df["DL1r_pu"]),
-            "disc_rnnip": GetScore(
-                df["rnnip_pb"], df["rnnip_pc"], df["rnnip_pu"], fc=0.08
-            ),
-        }
-    )
 
-    os.system(f"mkdir -p {train_config.model_name}/results")
+    # Exclude all flavors that are not light, c or b
+    df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
+
+    # Define new dict with the evaluation results
+    df_discs_dict = {
+        "umami_pb": pred_umami[:, b_index],
+        "umami_pc": pred_umami[:, c_index],
+        "umami_pu": pred_umami[:, u_index],
+        "dips_pb": pred_dips[:, b_index],
+        "dips_pc": pred_dips[:, c_index],
+        "dips_pu": pred_dips[:, u_index],
+        "pt": df[global_config.pTvariable],
+        "eta": df[global_config.etavariable],
+        "labels": y_true,
+    }
+
+    # Calculate dics values and add them to the dict
+    for tagger in tagger_list:
+        df_discs_dict.update(
+            {
+                f"{tagger}_pb": df[f"{tagger}_pb"],
+                f"{tagger}_pc": df[f"{tagger}_pc"],
+                f"{tagger}_pu": df[f"{tagger}_pu"],
+                f"disc_{tagger}": GetScore(
+                    df[f"{tagger}_pb"],
+                    df[f"{tagger}_pc"],
+                    df[f"{tagger}_pu"],
+                ),
+            }
+        )
+
+    # Add dict to Dataframe and delete dict
+    df_discs = pd.DataFrame(df_discs_dict)
+    del df_discs_dict
+
+    # Create results dir
+    os.makedirs(f"{train_config.model_name}/results", exist_ok=True)
+
+    # Save dataframe to h5
     df_discs.to_hdf(
         f"{train_config.model_name}/results/results-{args.epoch}.h5",
         data_set_name,
     )
 
+    # Define granularity of x
     x_axis_granularity = 100
 
     logger.info("calculating rejections per efficiency")
     b_effs = np.linspace(0.39, 1, x_axis_granularity)
-    crej_arr_umami = []
-    urej_arr_umami = []
-    crej_arr_dips = []
-    urej_arr_dips = []
-    crej_arr_dl1r = []
-    urej_arr_dl1r = []
-    crej_arr_rnnip = []
-    urej_arr_rnnip = []
 
+    crej_dict = {
+        "umami": [],
+        "dips": [],
+    }
+
+    urej_dict = {
+        "umami": [],
+        "dips": [],
+    }
+
+    # Add taggers to dicts
+    for tagger in tagger_list:
+        crej_dict.update({tagger: []})
+        urej_dict.update({tagger: []})
+
+    # Loop over effs for ROC plots
     for eff in b_effs:
+        # Add the rejections from the trained models
+        # Umami
         crej_i, urej_i = utt.GetRejection(
             pred_umami, Y_test, target_eff=eff, frac=args.cfrac
         )
-        crej_arr_umami.append(crej_i)
-        urej_arr_umami.append(urej_i)
+        crej_dict["umami"].append(crej_i)
+        urej_dict["umami"].append(urej_i)
+
+        # Dips part
         crej_i, urej_i = utt.GetRejection(
             pred_dips, Y_test, target_eff=eff, frac=args.cfrac
         )
-        crej_arr_dips.append(crej_i)
-        urej_arr_dips.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(
-            df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
-            Y_test,
-            target_eff=eff,
-            frac=0.018,
-        )
-        crej_arr_dl1r.append(crej_i)
-        urej_arr_dl1r.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(
-            df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
-            Y_test,
-            target_eff=eff,
-            frac=0.08,
-        )
-        crej_arr_rnnip.append(crej_i)
-        urej_arr_rnnip.append(urej_i)
+        crej_dict["dips"].append(crej_i)
+        urej_dict["dips"].append(urej_i)
+
+        for tagger in tagger_list:
+            crej_tmp, urej_tmp = utt.GetRejection(
+                df[[f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]].values,
+                Y_test,
+                target_eff=eff,
+                frac=fc_list[tagger],
+            )
+
+            crej_dict[tagger].append(crej_tmp)
+            urej_dict[tagger].append(urej_tmp)
 
     logger.info("calculating rejections per fc")
     fc_values = np.linspace(0.001, 0.1, x_axis_granularity)
 
-    crej_arr_umami_cfrac = []
-    urej_arr_umami_cfrac = []
-    crej_arr_dips_cfrac = []
-    urej_arr_dips_cfrac = []
-    crej_arr_dl1r_cfrac = []
-    urej_arr_dl1r_cfrac = []
-    crej_arr_rnnip_cfrac = []
-    urej_arr_rnnip_cfrac = []
+    crej_cfrac_dict = {
+        "umami": [],
+        "dips": [],
+    }
+
+    urej_cfrac_dict = {
+        "umami": [],
+        "dips": [],
+    }
+
+    for tagger in tagger_list:
+        crej_cfrac_dict.update({tagger: []})
+        urej_cfrac_dict.update({tagger: []})
 
     for fc in fc_values:
+        # Add the rejections from the trained models
+        # Umami
         crej_i, urej_i = utt.GetRejection(
             pred_umami, Y_test, target_eff=args.beff, frac=fc
         )
-        crej_arr_umami_cfrac.append(crej_i)
-        urej_arr_umami_cfrac.append(urej_i)
+        crej_cfrac_dict["umami"].append(crej_i)
+        urej_cfrac_dict["umami"].append(urej_i)
+
+        # Dips part
         crej_i, urej_i = utt.GetRejection(
             pred_dips, Y_test, target_eff=args.beff, frac=fc
         )
-        crej_arr_dips_cfrac.append(crej_i)
-        urej_arr_dips_cfrac.append(urej_i)
+        crej_cfrac_dict["dips"].append(crej_i)
+        urej_cfrac_dict["dips"].append(urej_i)
 
-        crej_dl1r, urej_dl1r = utt.GetRejection(
-            df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
-            Y_test,
-            target_eff=args.beff,
-            frac=fc,
+        for tagger in tagger_list:
+            crej_tmp, urej_tmp = utt.GetRejection(
+                df[[f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]].values,
+                Y_test,
+                target_eff=args.beff,
+                frac=fc,
+            )
+
+            crej_cfrac_dict[tagger].append(crej_tmp)
+            urej_cfrac_dict[tagger].append(urej_tmp)
+
+    df_eff_rej_dict = {
+        "beff": b_effs,
+        "umami_crej": crej_dict["umami"],
+        "umami_urej": urej_dict["umami"],
+        "dips_crej": crej_dict["dips"],
+        "dips_urej": urej_dict["dips"],
+        "fc_values": fc_values,
+        "umami_cfrac_crej": crej_cfrac_dict["umami"],
+        "umami_cfrac_urej": urej_cfrac_dict["umami"],
+        "dips_cfrac_crej": crej_cfrac_dict["dips"],
+        "dips_cfrac_urej": urej_cfrac_dict["dips"],
+    }
+
+    for tagger in tagger_list:
+        df_eff_rej_dict.update(
+            {
+                f"{tagger}_crej": crej_dict[tagger],
+                f"{tagger}_urej": urej_dict[tagger],
+                f"{tagger}_cfrac_crej": crej_cfrac_dict[tagger],
+                f"{tagger}_cfrac_urej": urej_cfrac_dict[tagger],
+            }
         )
-        crej_arr_dl1r_cfrac.append(crej_dl1r)
-        urej_arr_dl1r_cfrac.append(urej_dl1r)
 
-        crej_rnnip, urej_rnnip = utt.GetRejection(
-            df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
-            Y_test,
-            target_eff=args.beff,
-            frac=fc,
-        )
-        crej_arr_rnnip_cfrac.append(crej_rnnip)
-        urej_arr_rnnip_cfrac.append(urej_rnnip)
-
-    df_eff_rej = pd.DataFrame(
-        {
-            "beff": b_effs,
-            "umami_crej": crej_arr_umami,
-            "umami_urej": urej_arr_umami,
-            "dips_crej": crej_arr_dips,
-            "dips_urej": urej_arr_dips,
-            "dl1r_crej": crej_arr_dl1r,
-            "dl1r_urej": urej_arr_dl1r,
-            "rnnip_crej": crej_arr_rnnip,
-            "rnnip_urej": urej_arr_rnnip,
-            "fc_values": fc_values,
-            "dl1r_cfrac_crej": crej_arr_dl1r_cfrac,
-            "dl1r_cfrac_urej": urej_arr_dl1r_cfrac,
-            "rnnip_cfrac_crej": crej_arr_rnnip_cfrac,
-            "rnnip_cfrac_urej": urej_arr_rnnip_cfrac,
-            "umami_cfrac_crej": crej_arr_umami_cfrac,
-            "umami_cfrac_urej": urej_arr_umami_cfrac,
-            "dips_cfrac_crej": crej_arr_dips_cfrac,
-            "dips_cfrac_urej": urej_arr_dips_cfrac,
-        }
-    )
+    df_eff_rej = pd.DataFrame(df_eff_rej_dict)
+    del df_eff_rej_dict
 
     df_eff_rej.to_hdf(
         f"{train_config.model_name}/results/results-rej_per_eff"
@@ -285,14 +344,25 @@ def EvaluateModel(
 def EvaluateModelDips(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
+    Eval_params = train_config.Eval_parameters_validation
+
     # Set number of nJets for testing
     if args.nJets is None:
-        nJets = int(train_config.Eval_parameters_validation["n_jets"])
+        nJets = int(Eval_params["n_jets"])
 
     else:
         nJets = args.nJets
 
-    # Define model path
+    # Test if multiple taggers are given or not
+    if type(Eval_params["tagger"]) is not list:
+        tagger_list = [Eval_params["tagger"]]
+        fc_list = Eval_params["fc_values_comp"]
+
+    else:
+        tagger_list = Eval_params["tagger"]
+        fc_list = Eval_params["fc_values_comp"]
+
+    # Get model file path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     logger.info(f"Evaluating {model_file}")
 
@@ -304,7 +374,7 @@ def EvaluateModelDips(
         nJets=nJets,
     )
 
-    # Load pretrained model
+    # Load the model for evaluation. Note: The Sum is needed here!
     with CustomObjectScope({"Sum": utt.Sum}):
         model = load_model(model_file)
 
@@ -315,148 +385,163 @@ def EvaluateModelDips(
         verbose=0,
     )
 
-    # Setting y_true
+    # Get truth labelling
     y_true = np.argmax(Y_test, axis=1)
 
-    # Define the index values for the different flavours
+    # Set flavour indicies
     b_index, c_index, u_index = 2, 1, 0
 
-    # Define the needed extra variables
+    # Define variables that need to be loaded
     variables = [
         global_config.etavariable,
         global_config.pTvariable,
-        "DL1r_pb",
-        "DL1r_pc",
-        "DL1r_pu",
-        "rnnip_pb",
-        "rnnip_pc",
-        "rnnip_pu",
         "HadronConeExclTruthLabelID",
     ]
 
-    # Load the test data
+    # Add the predictions labels for the defined taggers to
+    # variables list
+    for tagger in tagger_list:
+        variables += [f"{tagger}_pb", f"{tagger}_pc", f"{tagger}_pu"]
+
+    # Load the jets with selected variables
     df = pd.DataFrame(h5py.File(test_file, "r")["/jets"][:nJets][variables])
     logger.info(f"Jets used for testing: {len(df)}")
 
-    # Define the jets used
+    # Exclude all flavours that are not light, c or b
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
 
-    # Fill the new dataframe with the evaluated parameters
-    df_discs = pd.DataFrame(
-        {
-            "dips_pb": pred_dips[:, b_index],
-            "dips_pc": pred_dips[:, c_index],
-            "dips_pu": pred_dips[:, u_index],
-            "rnnip_pb": df["rnnip_pb"],
-            "rnnip_pc": df["rnnip_pc"],
-            "rnnip_pu": df["rnnip_pu"],
-            "DL1r_pb": df["DL1r_pb"],
-            "DL1r_pc": df["DL1r_pc"],
-            "DL1r_pu": df["DL1r_pu"],
-            "pt": df[global_config.pTvariable],
-            "eta": df[global_config.etavariable],
-            "labels": y_true,
-            "disc_DL1r": GetScore(df["DL1r_pb"], df["DL1r_pc"], df["DL1r_pu"]),
-            "disc_rnnip": GetScore(
-                df["rnnip_pb"], df["rnnip_pc"], df["rnnip_pu"], fc=0.08
-            ),
-        }
-    )
+    # Define new dict with the evaluation results
+    df_discs_dict = {
+        "dips_pb": pred_dips[:, b_index],
+        "dips_pc": pred_dips[:, c_index],
+        "dips_pu": pred_dips[:, u_index],
+        "pt": df[global_config.pTvariable],
+        "eta": df[global_config.etavariable],
+        "labels": y_true,
+    }
 
-    # Create results dir and .h5 file
+    # Calculate dics values and add them to the dict
+    for tagger in tagger_list:
+        df_discs_dict.update(
+            {
+                f"{tagger}_pb": df[f"{tagger}_pb"],
+                f"{tagger}_pc": df[f"{tagger}_pc"],
+                f"{tagger}_pu": df[f"{tagger}_pu"],
+                f"disc_{tagger}": GetScore(
+                    df[f"{tagger}_pb"],
+                    df[f"{tagger}_pc"],
+                    df[f"{tagger}_pu"],
+                ),
+            }
+        )
+
+    # Add dict to Dataframe and delete dict
+    df_discs = pd.DataFrame(df_discs_dict)
+    del df_discs_dict
+
+    # Create results dir
     os.system(f"mkdir -p {train_config.model_name}/results")
+
+    # Save dataframe to h5
     df_discs.to_hdf(
         f"{train_config.model_name}/results/results-{args.epoch}.h5",
         data_set_name,
     )
 
+    # Define granularity of x
     x_axis_granularity = 100
 
     logger.info("calculating rejections per efficiency")
     b_effs = np.linspace(0.39, 1, x_axis_granularity)
-    crej_arr_dips = []
-    urej_arr_dips = []
-    crej_arr_dl1r = []
-    urej_arr_dl1r = []
-    crej_arr_rnnip = []
-    urej_arr_rnnip = []
 
+    crej_dict = {
+        "dips": [],
+    }
+
+    urej_dict = {
+        "dips": [],
+    }
+
+    # Add taggers to dicts
+    for tagger in tagger_list:
+        crej_dict.update({tagger: []})
+        urej_dict.update({tagger: []})
+
+    # Loop over effs for ROC plots
     for eff in b_effs:
+        # Add the rejections from the trained models
         crej_i, urej_i = utt.GetRejection(
             pred_dips, Y_test, target_eff=eff, frac=args.cfrac
         )
-        crej_arr_dips.append(crej_i)
-        urej_arr_dips.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(
-            df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
-            Y_test,
-            target_eff=eff,
-            frac=0.018,
-        )
-        crej_arr_dl1r.append(crej_i)
-        urej_arr_dl1r.append(urej_i)
-        crej_i, urej_i = utt.GetRejection(
-            df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
-            Y_test,
-            target_eff=eff,
-            frac=0.08,
-        )
-        crej_arr_rnnip.append(crej_i)
-        urej_arr_rnnip.append(urej_i)
+        crej_dict["dips"].append(crej_i)
+        urej_dict["dips"].append(urej_i)
+
+        for tagger in tagger_list:
+            crej_tmp, urej_tmp = utt.GetRejection(
+                df[[f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]].values,
+                Y_test,
+                target_eff=eff,
+                frac=fc_list[tagger],
+            )
+
+            crej_dict[tagger].append(crej_tmp)
+            urej_dict[tagger].append(urej_tmp)
 
     logger.info("calculating rejections per fc")
     fc_values = np.linspace(0.001, 0.1, x_axis_granularity)
 
-    crej_arr_dips_cfrac = []
-    urej_arr_dips_cfrac = []
-    crej_arr_dl1r_cfrac = []
-    urej_arr_dl1r_cfrac = []
-    crej_arr_rnnip_cfrac = []
-    urej_arr_rnnip_cfrac = []
+    crej_cfrac_dict = {
+        "dips": [],
+    }
+
+    urej_cfrac_dict = {
+        "dips": [],
+    }
+
+    for tagger in tagger_list:
+        crej_cfrac_dict.update({tagger: []})
+        urej_cfrac_dict.update({tagger: []})
 
     for fc in fc_values:
+        # Add the rejections from the trained models
         crej_i, urej_i = utt.GetRejection(
             pred_dips, Y_test, target_eff=args.beff, frac=fc
         )
-        crej_arr_dips_cfrac.append(crej_i)
-        urej_arr_dips_cfrac.append(urej_i)
+        crej_cfrac_dict["dips"].append(crej_i)
+        urej_cfrac_dict["dips"].append(urej_i)
 
-        crej_dl1r, urej_dl1r = utt.GetRejection(
-            df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
-            Y_test,
-            target_eff=args.beff,
-            frac=fc,
+        for tagger in tagger_list:
+            crej_tmp, urej_tmp = utt.GetRejection(
+                df[[f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]].values,
+                Y_test,
+                target_eff=args.beff,
+                frac=fc,
+            )
+
+            crej_cfrac_dict[tagger].append(crej_tmp)
+            urej_cfrac_dict[tagger].append(urej_tmp)
+
+    df_eff_rej_dict = {
+        "beff": b_effs,
+        "dips_crej": crej_dict["dips"],
+        "dips_urej": urej_dict["dips"],
+        "fc_values": fc_values,
+        "dips_cfrac_crej": crej_cfrac_dict["dips"],
+        "dips_cfrac_urej": urej_cfrac_dict["dips"],
+    }
+
+    for tagger in tagger_list:
+        df_eff_rej_dict.update(
+            {
+                f"{tagger}_crej": crej_dict[tagger],
+                f"{tagger}_urej": urej_dict[tagger],
+                f"{tagger}_cfrac_crej": crej_cfrac_dict[tagger],
+                f"{tagger}_cfrac_urej": urej_cfrac_dict[tagger],
+            }
         )
-        crej_arr_dl1r_cfrac.append(crej_dl1r)
-        urej_arr_dl1r_cfrac.append(urej_dl1r)
 
-        crej_rnnip, urej_rnnip = utt.GetRejection(
-            df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
-            Y_test,
-            target_eff=args.beff,
-            frac=fc,
-        )
-        crej_arr_rnnip_cfrac.append(crej_rnnip)
-        urej_arr_rnnip_cfrac.append(urej_rnnip)
-
-    df_eff_rej = pd.DataFrame(
-        {
-            "beff": b_effs,
-            "dips_crej": crej_arr_dips,
-            "dips_urej": urej_arr_dips,
-            "dl1r_crej": crej_arr_dl1r,
-            "dl1r_urej": urej_arr_dl1r,
-            "rnnip_crej": crej_arr_rnnip,
-            "rnnip_urej": urej_arr_rnnip,
-            "fc_values": fc_values,
-            "dl1r_cfrac_crej": crej_arr_dl1r_cfrac,
-            "dl1r_cfrac_urej": urej_arr_dl1r_cfrac,
-            "rnnip_cfrac_crej": crej_arr_rnnip_cfrac,
-            "rnnip_cfrac_urej": urej_arr_rnnip_cfrac,
-            "dips_cfrac_crej": crej_arr_dips_cfrac,
-            "dips_cfrac_urej": urej_arr_dips_cfrac,
-        }
-    )
+    df_eff_rej = pd.DataFrame(df_eff_rej_dict)
+    del df_eff_rej_dict
 
     df_eff_rej.to_hdf(
         f"{train_config.model_name}/results/results-rej_per_eff"
@@ -550,21 +635,21 @@ def EvaluateModelDips(
 def EvaluateModelDL1(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
+    Eval_params = train_config.Eval_parameters_validation
+
+    # Get model file path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
+    logger.info(f"Evaluating {model_file}")
 
     # Set fractions
-    fc_value = train_config.Eval_parameters_validation["fc_value"]
-    fb_value = train_config.Eval_parameters_validation["fb_value"]
-    if "ftauforb_value" in train_config.Eval_parameters_validation:
-        ftauforb_value = train_config.Eval_parameters_validation[
-            "ftauforb_value"
-        ]
+    fc_value = Eval_params["fc_value"]
+    fb_value = Eval_params["fb_value"]
+    if "ftauforb_value" in Eval_params:
+        ftauforb_value = Eval_params["ftauforb_value"]
     else:
         ftauforb_value = None
-    if "ftauforc_value" in train_config.Eval_parameters_validation:
-        ftauforc_value = train_config.Eval_parameters_validation[
-            "ftauforc_value"
-        ]
+    if "ftauforc_value" in Eval_params:
+        ftauforc_value = Eval_params["ftauforc_value"]
     else:
         ftauforc_value = None
 
@@ -579,10 +664,30 @@ def EvaluateModelDL1(
         ftauforc_value = None
         ftauforb_value = None
 
+    # Set number of nJets for testing
+    if args.nJets is None:
+        nJets = int(Eval_params["n_jets"])
+
+    else:
+        nJets = args.nJets
+
+    # Test if multiple taggers are given or not
+    if type(Eval_params["tagger"]) is not list:
+        tagger_list = [Eval_params["tagger"]]
+        fc_list = Eval_params["fc_values_comp"]
+        fb_list = Eval_params["fb_values_comp"]
+
+    else:
+        tagger_list = Eval_params["tagger"]
+        fc_list = Eval_params["fc_values_comp"]
+        fb_list = Eval_params["fb_values_comp"]
+
+    # Define excluded variables and laod them
     exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
 
+    # Load the test jets
     X_test, Y_test = utt.GetTestSample(
         input_file=test_file,
         var_dict=train_config.var_dict,
@@ -591,24 +696,27 @@ def EvaluateModelDL1(
         use_taus=bool_use_taus,
         exclude=exclude,
     )
-    # with CustomObjectScope({'Sum': Sum}):
+
+    # Load the model for evaluation.
     model = load_model(model_file)
 
+    # Predict the output of the model on the test jets
     pred = model.predict(X_test, batch_size=5000, verbose=0)
+
+    # Get truth labelling
     y_true = np.argmax(Y_test, axis=1)
+
+    # Set flavour indicies
     tau_index, b_index, c_index, u_index = 3, 2, 1, 0
 
+    # Define variables that need to be loaded
     variables = [
         global_config.etavariable,
         global_config.pTvariable,
-        "DL1r_pb",
-        "DL1r_pc",
-        "DL1r_pu",
-        "rnnip_pb",
-        "rnnip_pc",
-        "rnnip_pu",
         "HadronConeExclTruthLabelID",
     ]
+
+    # Load extra variables
     add_variables = train_config.Eval_parameters_validation[
         "add_variables_eval"
     ]
@@ -625,135 +733,157 @@ def EvaluateModelDL1(
                 logger.info(f"Variable '{item}' not available")
         variables.extend(add_variables_available)
 
-    df = pd.DataFrame(
-        h5py.File(test_file, "r")["/jets"][: args.nJets][variables]
-    )
+    # Add the predictions labels for the defined taggers to
+    # variables list
+    for tagger in tagger_list:
+        variables += [f"{tagger}_pb", f"{tagger}_pc", f"{tagger}_pu"]
+
+    # Load the jets with selected variables
+    df = pd.DataFrame(h5py.File(test_file, "r")["/jets"][:nJets][variables])
     logger.info(f"Jets used for testing: {len(df)}")
+
     if bool_use_taus:
+        # Exclude all flavors that are not light, c, b or tau
         df.query("HadronConeExclTruthLabelID in [0, 4, 5, 15]", inplace=True)
-        if "DL1r_ptau" not in df:
-            df["DL1r_ptau"] = 0
-        if "rnnip_ptau" not in df:
-            df["rnnip_ptau"] = 0
-        df_discs = pd.DataFrame(
-            {
-                "ptau": pred[:, tau_index],
-                "pb": pred[:, b_index],
-                "pc": pred[:, c_index],
-                "pu": pred[:, u_index],
-                "pt": df[global_config.pTvariable],
-                "eta": df[global_config.etavariable],
-                "labels": y_true,
-                "disc_DL1r": GetScore(
-                    df["DL1r_pb"],
-                    df["DL1r_pc"],
-                    df["DL1r_pu"],
-                    df["DL1r_ptau"],
-                    fc=fc_value,
-                    ftau=ftauforb_value,
-                ),
-                "disc_DL1rC": GetScoreC(
-                    df["DL1r_pb"],
-                    df["DL1r_pc"],
-                    df["DL1r_pu"],
-                    df["DL1r_ptau"],
-                    fb=fb_value,
-                    ftau=ftauforc_value,
-                ),
-                "disc_rnnip": GetScore(
-                    df["rnnip_pb"],
-                    df["rnnip_pc"],
-                    df["rnnip_pu"],
-                    df["rnnip_ptau"],
-                    fc=fc_value,
-                    ftau=ftauforb_value,
-                ),
-                "disc_rnnipC": GetScoreC(
-                    df["rnnip_pb"],
-                    df["rnnip_pc"],
-                    df["rnnip_pu"],
-                    df["rnnip_ptau"],
-                    fb=fb_value,
-                    ftau=ftauforc_value,
-                ),
-            }
-        )
+
+        # Define new dict with the evaluation results
+        df_discs_dict = {
+            "ptau": pred[:, tau_index],
+            "pb": pred[:, b_index],
+            "pc": pred[:, c_index],
+            "pu": pred[:, u_index],
+            "pt": df[global_config.pTvariable],
+            "eta": df[global_config.etavariable],
+            "labels": y_true,
+        }
+
+        # Calculate dics values and add them to the dict
+        for tagger in tagger_list:
+            if f"{tagger}_ptau" not in df:
+                df[f"{tagger}_ptau"] = 0
+
+            df_discs_dict.update(
+                {
+                    f"{tagger}_pb": df[f"{tagger}_pb"],
+                    f"{tagger}_pc": df[f"{tagger}_pc"],
+                    f"{tagger}_pu": df[f"{tagger}_pu"],
+                    f"{tagger}_ptau": df[f"{tagger}_ptau"],
+                    f"disc_{tagger}": GetScore(
+                        df[f"{tagger}_pb"],
+                        df[f"{tagger}_pc"],
+                        df[f"{tagger}_pu"],
+                        df[f"{tagger}_ptau"],
+                        fc=fc_list[tagger],
+                        ftau=ftauforb_value,
+                    ),
+                    f"disc_{tagger}C": GetScoreC(
+                        df[f"{tagger}_pb"],
+                        df[f"{tagger}_pc"],
+                        df[f"{tagger}_pu"],
+                        df[f"{tagger}_ptau"],
+                        fb=fb_list[tagger],
+                        ftau=ftauforc_value,
+                    ),
+                }
+            )
+
     else:
+        # Exclude all flavors that are not light, c, b or tau
         df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-        df_discs = pd.DataFrame(
-            {
-                "pb": pred[:, b_index],
-                "pc": pred[:, c_index],
-                "pu": pred[:, u_index],
-                "pt": df[global_config.pTvariable],
-                "eta": df[global_config.etavariable],
-                "labels": y_true,
-                "disc_DL1r": GetScore(
-                    df["DL1r_pb"],
-                    df["DL1r_pc"],
-                    df["DL1r_pu"],
-                    fc=fc_value,
-                    ftau=ftauforb_value,
-                ),
-                "disc_DL1rC": GetScoreC(
-                    df["DL1r_pb"],
-                    df["DL1r_pc"],
-                    df["DL1r_pu"],
-                    fb=fb_value,
-                    ftau=ftauforc_value,
-                ),
-                "disc_rnnip": GetScore(
-                    df["rnnip_pb"],
-                    df["rnnip_pc"],
-                    df["rnnip_pu"],
-                    fc=fc_value,
-                    ftau=ftauforb_value,
-                ),
-                "disc_rnnipC": GetScoreC(
-                    df["rnnip_pb"],
-                    df["rnnip_pc"],
-                    df["rnnip_pu"],
-                    fb=fb_value,
-                    ftau=ftauforc_value,
-                ),
-            }
-        )
+
+        # Define new dict with the evaluation results
+        df_discs_dict = {
+            "pb": pred[:, b_index],
+            "pc": pred[:, c_index],
+            "pu": pred[:, u_index],
+            "pt": df[global_config.pTvariable],
+            "eta": df[global_config.etavariable],
+            "labels": y_true,
+        }
+
+        # Calculate dics values and add them to the dict
+        for tagger in tagger_list:
+            df_discs_dict.update(
+                {
+                    f"{tagger}_pb": df[f"{tagger}_pb"],
+                    f"{tagger}_pc": df[f"{tagger}_pc"],
+                    f"{tagger}_pu": df[f"{tagger}_pu"],
+                    f"disc_{tagger}": GetScore(
+                        df[f"{tagger}_pb"],
+                        df[f"{tagger}_pc"],
+                        df[f"{tagger}_pu"],
+                        fc=fc_list[tagger],
+                        ftau=ftauforb_value,
+                    ),
+                    f"disc_{tagger}C": GetScoreC(
+                        df[f"{tagger}_pb"],
+                        df[f"{tagger}_pc"],
+                        df[f"{tagger}_pu"],
+                        fb=fb_list[tagger],
+                        ftau=ftauforc_value,
+                    ),
+                }
+            )
+
+    # Add dict to Dataframe and delete dict
+    df_discs = pd.DataFrame(df_discs_dict)
+    del df_discs_dict
+
+    # Adding extra variables if available
     if add_variables_available is not None:
         for item in add_variables_available:
             logger.info(f"Adding {item}")
             df_discs[item] = df[item]
 
+    # Create results dir
     os.system(f"mkdir -p {train_config.model_name}/results")
+
+    # Save dataframe to h5
     df_discs.to_hdf(
         f"{train_config.model_name}/results/results-{args.epoch}.h5",
         data_set_name,
     )
 
     logger.info("calculating rejections per efficiency")
+
     b_effs = np.linspace(0.39, 1, 150)
     c_effs = np.linspace(0.09, 1, 150)
-    crej_arr = []
-    urej_arr = []
-    crej_arr_dl1r = []
-    urej_arr_dl1r = []
-    crej_arr_rnnip = []
-    urej_arr_rnnip = []
-    brej_arrC = []
-    urej_arrC = []
-    brej_arr_dl1rC = []
-    urej_arr_dl1rC = []
-    brej_arr_rnnipC = []
-    urej_arr_rnnipC = []
-    if bool_use_taus:
-        taurej_arr = []
-        taurej_arr_dl1r = []
-        taurej_arr_rnnip = []
-        taurej_arrC = []
-        taurej_arr_dl1rC = []
-        taurej_arr_rnnipC = []
 
+    crej_dict = {
+        "umami": [],
+    }
+
+    brej_dict = {
+        "umamiC": [],
+    }
+
+    urej_dict = {
+        "umami": [],
+        "umamiC": [],
+    }
+
+    if bool_use_taus:
+        taurej_dict = {
+            "umami": [],
+            "umamiC": [],
+        }
+
+    # Add taggers to dicts
+    for tagger in tagger_list:
+        crej_dict.update({f"{tagger}": []})
+        urej_dict.update({f"{tagger}": []})
+        brej_dict.update({f"{tagger}C": []})
+        urej_dict.update({f"{tagger}C": []})
+
+        if bool_use_taus:
+            taurej_dict.update({f"{tagger}": []})
+            taurej_dict.update({f"{tagger}C": []})
+
+    # Loop over effs for ROC plots
     for ind_eff, b_eff in enumerate(b_effs):
         c_eff = c_effs[ind_eff]
+
+        # Add the rejections from the trained models
         if bool_use_taus:
             crej_i, urej_i, taurej_i = utt.GetRejection(
                 pred,
@@ -772,8 +902,9 @@ def EvaluateModelDL1(
                 taufrac=ftauforc_value,
                 use_taus=bool_use_taus,
             )
-            taurej_arr.append(taurej_i)
-            taurej_arrC.append(taurej_iC)
+            taurej_dict["umami"].append(taurej_i)
+            taurej_dict["umamiC"].append(taurej_iC)
+
         else:
             crej_i, urej_i = utt.GetRejection(
                 pred, Y_test, target_eff=b_eff, frac=fc_value
@@ -781,140 +912,127 @@ def EvaluateModelDL1(
             brej_iC, urej_iC = utt.GetRejection(
                 pred, Y_test, d_type="c", target_eff=c_eff, frac=fb_value
             )
-        crej_arr.append(crej_i)
-        urej_arr.append(urej_i)
-        brej_arrC.append(brej_iC)
-        urej_arrC.append(urej_iC)
 
-        if bool_use_taus:
-            crej_i, urej_i, taurej_i = utt.GetRejection(
-                df[["DL1r_pu", "DL1r_pc", "DL1r_pb", "DL1r_ptau"]].values,
-                Y_test,
-                target_eff=b_eff,
-                frac=fc_value,
-                taufrac=ftauforb_value,
-                use_taus=bool_use_taus,
-            )
-            brej_iC, urej_iC, taurej_iC = utt.GetRejection(
-                df[["DL1r_pu", "DL1r_pc", "DL1r_pb", "DL1r_ptau"]].values,
-                Y_test,
-                d_type="c",
-                target_eff=c_eff,
-                frac=fb_value,
-                taufrac=ftauforc_value,
-                use_taus=bool_use_taus,
-            )
-            taurej_arr_dl1r.append(taurej_i)
-            taurej_arr_dl1rC.append(taurej_iC)
-        else:
-            crej_i, urej_i = utt.GetRejection(
-                df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
-                Y_test,
-                target_eff=b_eff,
-                frac=fc_value,
-            )
-            brej_iC, urej_iC = utt.GetRejection(
-                df[["DL1r_pu", "DL1r_pc", "DL1r_pb"]].values,
-                Y_test,
-                d_type="c",
-                target_eff=c_eff,
-                frac=fb_value,
-            )
-        crej_arr_dl1r.append(crej_i)
-        urej_arr_dl1r.append(urej_i)
-        brej_arr_dl1rC.append(brej_iC)
-        urej_arr_dl1rC.append(urej_iC)
+        crej_dict["umami"].append(crej_i)
+        urej_dict["umami"].append(urej_i)
+        brej_dict["umamiC"].append(brej_iC)
+        urej_dict["umamiC"].append(urej_iC)
 
-        if bool_use_taus:
-            crej_i, urej_i, taurej_i = utt.GetRejection(
-                df[["rnnip_pu", "rnnip_pc", "rnnip_pb", "rnnip_ptau"]].values,
-                Y_test,
-                target_eff=b_eff,
-                frac=fc_value,
-                taufrac=ftauforb_value,
-                use_taus=bool_use_taus,
-            )
-            brej_iC, urej_iC, taurej_iC = utt.GetRejection(
-                df[["rnnip_pu", "rnnip_pc", "rnnip_pb", "rnnip_ptau"]].values,
-                Y_test,
-                d_type="c",
-                target_eff=c_eff,
-                frac=fb_value,
-                taufrac=ftauforc_value,
-                use_taus=bool_use_taus,
-            )
-            taurej_arr_rnnip.append(taurej_i)
-            taurej_arr_rnnipC.append(taurej_iC)
-        else:
-            crej_i, urej_i = utt.GetRejection(
-                df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
-                Y_test,
-                target_eff=b_eff,
-                frac=fc_value,
-            )
-            brej_iC, urej_iC = utt.GetRejection(
-                df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values,
-                Y_test,
-                d_type="c",
-                target_eff=c_eff,
-                frac=fb_value,
-            )
-        crej_arr_rnnip.append(crej_i)
-        urej_arr_rnnip.append(urej_i)
-        brej_arr_rnnipC.append(brej_iC)
-        urej_arr_rnnipC.append(urej_iC)
+        for tagger in tagger_list:
+            # Add the comparison taggers
+            if bool_use_taus:
+                crej_i, urej_i, taurej_i = utt.GetRejection(
+                    df[
+                        [
+                            f"{tagger}_pu",
+                            f"{tagger}_pc",
+                            f"{tagger}_pb",
+                            f"{tagger}_ptau",
+                        ]
+                    ].values,
+                    Y_test,
+                    target_eff=b_eff,
+                    frac=fc_list[tagger],
+                    taufrac=ftauforb_value,
+                    use_taus=bool_use_taus,
+                )
+                brej_iC, urej_iC, taurej_iC = utt.GetRejection(
+                    df[
+                        [
+                            f"{tagger}_pu",
+                            f"{tagger}_pc",
+                            f"{tagger}_pb",
+                            f"{tagger}_ptau",
+                        ]
+                    ].values,
+                    Y_test,
+                    d_type="c",
+                    target_eff=c_eff,
+                    frac=fb_list[tagger],
+                    taufrac=ftauforc_value,
+                    use_taus=bool_use_taus,
+                )
+                taurej_dict[f"{tagger}"].append(taurej_i)
+                taurej_dict[f"{tagger}C"].append(taurej_iC)
+            else:
+                crej_i, urej_i = utt.GetRejection(
+                    df[
+                        [f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]
+                    ].values,
+                    Y_test,
+                    target_eff=b_eff,
+                    frac=fc_list[tagger],
+                )
+                brej_iC, urej_iC = utt.GetRejection(
+                    df[
+                        [f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]
+                    ].values,
+                    Y_test,
+                    d_type="c",
+                    target_eff=c_eff,
+                    frac=fb_list[tagger],
+                )
+            crej_dict[f"{tagger}"].append(crej_i)
+            urej_dict[f"{tagger}"].append(urej_i)
+            brej_dict[f"{tagger}C"].append(brej_iC)
+            urej_dict[f"{tagger}C"].append(urej_iC)
 
     if bool_use_taus:
-        df_eff_rej = pd.DataFrame(
-            {
-                "beff": b_effs,
-                "ceff": c_effs,
-                "umami_crej": crej_arr,
-                "umami_urej": urej_arr,
-                "umami_taurej": taurej_arr,
-                "umami_brejC": brej_arrC,
-                "umami_urejC": urej_arrC,
-                "umami_taurejC": taurej_arrC,
-                "dl1r_crej": crej_arr_dl1r,
-                "dl1r_urej": urej_arr_dl1r,
-                "dl1r_taurej": taurej_arr_dl1r,
-                "dl1r_brejC": brej_arr_dl1rC,
-                "dl1r_urejC": urej_arr_dl1rC,
-                "dl1r_taurejC": taurej_arr_dl1rC,
-                "rnnip_crej": crej_arr_rnnip,
-                "rnnip_urej": urej_arr_rnnip,
-                "rnnip_taurej": taurej_arr_rnnip,
-                "rnnip_brejC": brej_arr_rnnipC,
-                "rnnip_urejC": urej_arr_rnnipC,
-                "rnnip_taurejC": taurej_arr_rnnipC,
-            }
-        )
+        df_eff_rej_dict = {
+            "beff": b_effs,
+            "ceff": c_effs,
+            "umami_crej": crej_dict["umami"],
+            "umami_urej": urej_dict["umami"],
+            "umami_taurej": taurej_dict["umami"],
+            "umami_brejC": brej_dict["umamiC"],
+            "umami_urejC": urej_dict["umamiC"],
+            "umami_taurejC": taurej_dict["umamiC"],
+        }
+
+        for tagger in tagger_list:
+            df_eff_rej_dict.update(
+                {
+                    f"{tagger}_crej": crej_dict[f"{tagger}"],
+                    f"{tagger}_urej": urej_dict[f"{tagger}"],
+                    f"{tagger}_taurej": taurej_dict[f"{tagger}"],
+                    f"{tagger}_brejC": brej_dict[f"{tagger}C"],
+                    f"{tagger}_urejC": urej_dict[f"{tagger}C"],
+                    f"{tagger}_taurejC": taurej_dict[f"{tagger}C"],
+                }
+            )
+
     else:
-        df_eff_rej = pd.DataFrame(
-            {
-                "beff": b_effs,
-                "ceff": c_effs,
-                "umami_crej": crej_arr,
-                "umami_urej": urej_arr,
-                "umami_brejC": brej_arrC,
-                "umami_urejC": urej_arrC,
-                "dl1r_crej": crej_arr_dl1r,
-                "dl1r_urej": urej_arr_dl1r,
-                "dl1r_brejC": brej_arr_dl1rC,
-                "dl1r_urejC": urej_arr_dl1rC,
-                "rnnip_crej": crej_arr_rnnip,
-                "rnnip_urej": urej_arr_rnnip,
-                "rnnip_brejC": brej_arr_rnnipC,
-                "rnnip_urejC": urej_arr_rnnipC,
-            }
-        )
+        df_eff_rej = {
+            "beff": b_effs,
+            "ceff": c_effs,
+            "umami_crej": crej_dict["umami"],
+            "umami_urej": urej_dict["umami"],
+            "umami_brejC": brej_dict["umamiC"],
+            "umami_urejC": urej_dict["umamiC"],
+        }
+
+        for tagger in tagger_list:
+            df_eff_rej_dict.update(
+                {
+                    f"{tagger}_crej": crej_dict[f"{tagger}"],
+                    f"{tagger}_urej": urej_dict[f"{tagger}"],
+                    f"{tagger}_brejC": brej_dict[f"{tagger}C"],
+                    f"{tagger}_urejC": urej_dict[f"{tagger}C"],
+                }
+            )
+
+    # Add dict to Dataframe and delete dict
+    df_eff_rej = pd.DataFrame(df_eff_rej_dict)
+    del df_eff_rej_dict
+
     df_eff_rej.to_hdf(
         f"{train_config.model_name}/results/results-rej_per_eff"
         f"-{args.epoch}.h5",
         data_set_name,
     )
+
     # Save the number of jets in the test file to the h5 file.
-    # This is needed to calculate the binominal errors
+    # This is needed to calculate the binomial errors
     f = h5py.File(
         f"{train_config.model_name}/results/"
         + f"results-rej_per_eff-{args.epoch}.h5",

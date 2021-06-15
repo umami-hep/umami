@@ -51,18 +51,18 @@ confusion_matrix_Umami_ttbar:
 beff_scan_tagger_compare_umami:
   type: "ROC"
   models_to_plot:
-    dl1r_ttbar_urej: # The name here has no impact on anything.
+    DL1r_ttbar_urej: # The name here has no impact on anything.
       data_set_name: "ttbar"
       label: "DL1r u-rej"
-      df_key: "dl1r_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+      df_key: "DL1r_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
     umami_ttbar_urej: # The name here has no impact on anything.
       data_set_name: "ttbar"
       label: "Umami u-rej"
       df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    dl1r_ttbar_crej: # The name here has no impact on anything.
+    DL1r_ttbar_crej: # The name here has no impact on anything.
       data_set_name: "ttbar"
       label: "DL1r c-rej"
-      df_key: "dl1r_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+      df_key: "DL1r_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
     umami_ttbar_crej: # The name here has no impact on anything.
       data_set_name: "ttbar"
       label: "Umami c-rej"
