@@ -56,7 +56,23 @@ Eval_parameters_validation:
     # Number of jets used for validation
     n_jets: 3e5
 
-    # Charm fraction value used for evaluation
+    # Define taggers that are used for comparison in evaluate_model
+    # This can be a list or a string for only one tagger
+    tagger: ["rnnip", "DL1r"]
+
+    # Define fc values for the taggers
+    fc_values_comp: {
+        "rnnip": 0.08,
+        "DL1r": 0.018,
+    }
+
+    # Define fb values for the taggers
+    fb_values_comp: {
+        "rnnip": 0.2,
+        "DL1r": 0.2,
+    }
+
+    # Charm fraction value used for evaluation of the trained model
     fc_value: 0.018
 
     # B fraction value used for evaluation
