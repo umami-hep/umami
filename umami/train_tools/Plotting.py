@@ -12,6 +12,116 @@ from umami.tools import applyATLASstyle, makeATLAStag
 from umami.train_tools import GetRejection
 
 
+def PlotDiscCutPerEpoch(
+    df_results,
+    plot_name,
+    target_beff=0.77,
+    fc_value=0.018,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag=0.9,
+    yAxisIncrease=1.3,
+    ncol=1,
+    plot_datatype="",
+):
+    applyATLASstyle(mtp)
+    plt.plot(
+        df_results["epoch"],
+        df_results["disc_cut"],
+        label=r"$t\bar{t}$ validation sample",
+    )
+    plt.plot(
+        df_results["epoch"],
+        df_results["disc_cut_add"],
+        label=r"$Z'$ validation sample",
+    )
+
+    if UseAtlasTag is True:
+        SecondTag = (
+            SecondTag
+            + "\nfc={}".format(fc_value)
+            + ", WP={:02d}%".format(int(target_beff * 100))
+        )
+
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    plt.legend(loc="upper right")
+    ymin, ymax = plt.ylim()
+    plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
+    plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
+    plt.ylabel(r"$b$-Tagging discriminant Cut Value")
+    plt.savefig(plot_name, transparent=True)
+    plt.cla()
+    plt.clf()
+
+
+def PlotDiscCutPerEpochUmami(
+    df_results,
+    plot_name,
+    target_beff=0.77,
+    fc_value=0.018,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag=0.9,
+    yAxisIncrease=1.3,
+    ncol=1,
+    plot_datatype="",
+):
+    applyATLASstyle(mtp)
+    plt.plot(
+        df_results["epoch"],
+        df_results["disc_cut_dips"],
+        label=r"$DIPS - t\bar{t}$ validation sample",
+    )
+    plt.plot(
+        df_results["epoch"],
+        df_results["disc_cut_dips_add"],
+        label=r"DIPS - $Z'$ validation sample",
+    )
+    plt.plot(
+        df_results["epoch"],
+        df_results["disc_cut_umami"],
+        label=r"$Umami - t\bar{t}$ validation sample",
+    )
+    plt.plot(
+        df_results["epoch"],
+        df_results["disc_cut_umami_add"],
+        label=r"Umami - $Z'$ validation sample",
+    )
+
+    if UseAtlasTag is True:
+        SecondTag = (
+            SecondTag
+            + "\nfc={}".format(fc_value)
+            + ", WP={:02d}%".format(int(target_beff * 100))
+        )
+
+        makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    plt.legend(loc="upper right")
+    ymin, ymax = plt.ylim()
+    plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
+    plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
+    plt.ylabel(r"$b$-Tagging discriminant Cut Value")
+    plt.savefig(plot_name, transparent=True)
+    plt.cla()
+    plt.clf()
+
+
 def PlotRejPerEpoch(
     df_results,
     plot_name,
@@ -189,13 +299,14 @@ def PlotLosses(
     UseAtlasTag=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag=0.9,
     plot_datatype="",
 ):
     applyATLASstyle(mtp)
     plt.plot(
         df_results["epoch"],
         df_results["loss"],
-        label="training loss - downsampled hybrid sample",
+        label="training loss - hybrid sample",
     )
     plt.plot(
         df_results["epoch"],
@@ -214,7 +325,7 @@ def PlotLosses(
             fig=plt.gcf(),
             first_tag=AtlasTag,
             second_tag=SecondTag,
-            ymax=0.75,
+            ymax=yAxisAtlasTag,
         )
 
     plt.legend(loc="upper right")
@@ -233,6 +344,7 @@ def PlotAccuracies(
     UseAtlasTag=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag=0.9,
     plot_datatype="",
     ymin=None,
     ymax=None,
@@ -241,7 +353,7 @@ def PlotAccuracies(
     plt.plot(
         df_results["epoch"],
         df_results["acc"],
-        label="training accuracy - downsampled hybrid sample",
+        label="training accuracy - hybrid sample",
     )
     plt.plot(
         df_results["epoch"],
@@ -260,7 +372,7 @@ def PlotAccuracies(
             fig=plt.gcf(),
             first_tag=AtlasTag,
             second_tag=SecondTag,
-            ymax=0.75,
+            ymax=yAxisAtlasTag,
         )
 
     plt.legend(loc="upper right")
@@ -291,7 +403,7 @@ def PlotLossesUmami(
     plt.plot(
         df_results["epoch"],
         df_results["umami_loss"],
-        label="training loss UMAMI - downsampled hybrid sample",
+        label="training loss UMAMI - hybrid sample",
     )
     plt.plot(
         df_results["epoch"],
@@ -301,7 +413,7 @@ def PlotLossesUmami(
     plt.plot(
         df_results["epoch"],
         df_results["dips_loss"],
-        label="training loss DIPS - downsampled hybrid sample",
+        label="training loss DIPS - hybrid sample",
     )
     plt.plot(
         df_results["epoch"],
@@ -349,7 +461,7 @@ def PlotAccuraciesUmami(
     plt.plot(
         df_results["epoch"],
         df_results["umami_acc"],
-        label="training acc UMAMI - downsampled hybrid sample",
+        label="training acc UMAMI - hybrid sample",
     )
     plt.plot(
         df_results["epoch"],
@@ -359,7 +471,7 @@ def PlotAccuraciesUmami(
     plt.plot(
         df_results["epoch"],
         df_results["dips_acc"],
-        label="training acc DIPS - downsampled hybrid sample",
+        label="training acc DIPS - hybrid sample",
     )
     plt.plot(
         df_results["epoch"],
@@ -486,13 +598,13 @@ def RunPerformanceCheck(
                 use_taus=True,
             )
         else:
-            c_rej, u_rej = GetRejection(
+            c_rej, u_rej, _ = GetRejection(
                 df[tagger_comp_var[:]].values,
                 y_true,
                 WP_b,
                 frac=recommended_fc_values[comp_tagger_name],
             )
-            b_rejC, u_rejC = GetRejection(
+            b_rejC, u_rejC, _ = GetRejection(
                 df[tagger_comp_var[:]].values,
                 y_true,
                 WP_b,
@@ -587,14 +699,14 @@ def RunPerformanceCheck(
                 )
             y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
             if bool_use_taus:
-                c_rej, u_rej, tau_rej = GetRejection(
+                c_rej, u_rej, tau_rej, _ = GetRejection(
                     df[tagger_comp_var[:]].values,
                     y_true,
                     WP_b,
                     frac=recommended_fc_values[comp_tagger_name],
                     use_taus=True,
                 )
-                b_rejC, u_rejC, tau_rejC = GetRejection(
+                b_rejC, u_rejC, tau_rejC, _ = GetRejection(
                     df[tagger_comp_var[:]].values,
                     y_true,
                     WP_b,
@@ -603,13 +715,13 @@ def RunPerformanceCheck(
                     use_taus=True,
                 )
             else:
-                c_rej, u_rej = GetRejection(
+                c_rej, u_rej, _ = GetRejection(
                     df[tagger_comp_var[:]].values,
                     y_true,
                     WP_b,
                     frac=recommended_fc_values[comp_tagger_name],
                 )
-                b_rejC, u_rejC = GetRejection(
+                b_rejC, u_rejC, _ = GetRejection(
                     df[tagger_comp_var[:]].values,
                     y_true,
                     WP_b,
@@ -699,8 +811,8 @@ def RunPerformanceCheck(
 def RunPerformanceCheckDips(
     train_config,
     compare_tagger=True,
-    tagger_comp_var=["DL1r_pu", "DL1r_pc", "DL1r_pb"],
-    comp_tagger_name="DL1r",
+    tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
+    comp_tagger_name="RNNIP",
     WP_b=0.77,
     fc=0.018,
     fb=0.2,
@@ -728,7 +840,7 @@ def RunPerformanceCheckDips(
         df.replace({"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True)
 
         y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-        c_rej, u_rej = GetRejection(
+        c_rej, u_rej, _ = GetRejection(
             df[tagger_comp_var[:]].values,
             y_true,
             WP_b,
@@ -780,7 +892,7 @@ def RunPerformanceCheckDips(
                 {"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True
             )
             y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-            c_rej, u_rej = GetRejection(
+            c_rej, u_rej, _ = GetRejection(
                 df[tagger_comp_var[:]].values,
                 y_true,
                 WP_b,
@@ -835,6 +947,16 @@ def RunPerformanceCheckDips(
         ymin=acc_ymin,
         ymax=acc_ymax,
     )
+    plot_name = f"{plot_dir}/disc-cut-plot.{plot_datatype}"
+    PlotDiscCutPerEpoch(
+        df_results=df_results,
+        plot_name=plot_name,
+        target_beff=WP_b,
+        fc_value=fc,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
+    )
 
 
 def RunPerformanceCheckUmami(
@@ -860,7 +982,7 @@ def RunPerformanceCheckUmami(
         df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
         df.replace({"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True)
         y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-        c_rej, u_rej = GetRejection(
+        c_rej, u_rej, _ = GetRejection(
             df[tagger_comp_var[:]].values,
             y_true,
             WP_b,
@@ -926,7 +1048,7 @@ def RunPerformanceCheckUmami(
                 {"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True
             )
             y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-            c_rej, u_rej = GetRejection(
+            c_rej, u_rej, _ = GetRejection(
                 df[tagger_comp_var[:]].values,
                 y_true,
                 WP_b,
@@ -1001,6 +1123,16 @@ def RunPerformanceCheckUmami(
         SecondTag=Eval_parameters["SecondTag"],
         ymin=acc_ymin,
         ymax=acc_ymax,
+    )
+    plot_name = f"{plot_dir}/disc-cut-plot.{plot_datatype}"
+    PlotDiscCutPerEpochUmami(
+        df_results=df_results,
+        plot_name=plot_name,
+        target_beff=WP_b,
+        fc_value=fc,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
     )
 
 

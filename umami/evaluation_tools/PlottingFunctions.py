@@ -524,6 +524,8 @@ def plotPtDependence(
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",
     yAxisAtlasTag=0.9,
     yAxisIncrease=1.1,
+    frameon=True,
+    ncol=2,
     ymin=None,
     ymax=None,
     alpha=0.8,
@@ -923,7 +925,9 @@ def plotPtDependence(
         axis_dict["left"]["ratio"].grid()
 
     # Define legend
-    axis_dict["left"]["top"].legend(loc="upper right", ncol=2)
+    axis_dict["left"]["top"].legend(
+        loc="upper right", ncol=ncol, frameon=frameon
+    )
 
     # Set the ATLAS Tag
     if fc_default is True:

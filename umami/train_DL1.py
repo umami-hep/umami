@@ -18,9 +18,9 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
 import umami.train_tools as utt
+from umami.institutes.utils import is_qsub_available, submit_zeuthen
 from umami.preprocessing_tools import Configuration
 from umami.tools import yaml_loader
-from umami.institutes.utils import is_qsub_available, submit_zeuthen
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
@@ -61,6 +61,12 @@ def GetParser():
         action="store_true",
         help="""Option to
                         enable vr overlap removall for validation sets.""",
+    )
+    parser.add_argument(
+        "-o",
+        "--overwrite_config",
+        action="store_true",
+        help="Overwrite the configs files saved in metadata folder",
     )
     args = parser.parse_args()
     return args
@@ -218,7 +224,8 @@ def TrainLargeFileZeuthen(args, train_config, preprocess_config):
         submit_zeuthen(args)
     else:
         logger.warning(
-            "No Zeuthen batch system found, training locally instead.")
+            "No Zeuthen batch system found, training locally instead."
+        )
         TrainLargeFile(args, train_config, preprocess_config)
 
 
@@ -226,6 +233,14 @@ if __name__ == "__main__":
     args = GetParser()
     train_config = utt.Configuration(args.config_file)
     preprocess_config = Configuration(train_config.preprocess_config)
+
+    utt.create_metadata_folder(
+        train_config_path=args.config_file,
+        model_name=train_config.model_name,
+        preprocess_config=train_config.preprocess_config,
+        overwrite_config=True if args.overwrite_config else False,
+    )
+
     if args.zeuthen:
         TrainLargeFileZeuthen(args, train_config, preprocess_config)
     else:

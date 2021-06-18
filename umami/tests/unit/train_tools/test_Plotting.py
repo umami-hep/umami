@@ -8,6 +8,8 @@ from matplotlib.testing.compare import compare_images
 from umami.train_tools.Plotting import (
     PlotAccuracies,
     PlotAccuraciesUmami,
+    PlotDiscCutPerEpoch,
+    PlotDiscCutPerEpochUmami,
     PlotLosses,
     PlotLossesUmami,
     PlotRejPerEpoch,
@@ -49,6 +51,12 @@ class GetRejection_TestCase(unittest.TestCase):
             "dips_acc",
             "dips_val_acc",
             "dips_val_acc_add",
+            "disc_cut",
+            "disc_cut_add",
+            "disc_cut_dips",
+            "disc_cut_umami",
+            "disc_cut_dips_add",
+            "disc_cut_umami_add",
         ]
         self.df_results = dict(
             zip(
@@ -74,7 +82,7 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "Control_PlotRejPerEpoch.png",
+                self.Control_plots_dir + "PlotRejPerEpoch.png",
                 self.tmp_plot_dir + "PlotRejPerEpoch.png",
                 tol=1,
             ),
@@ -89,7 +97,7 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "Control_PlotLosses.png",
+                self.Control_plots_dir + "PlotLosses.png",
                 self.tmp_plot_dir + "PlotLosses.png",
                 tol=1,
             ),
@@ -104,8 +112,38 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "Control_PlotAccuracies.png",
+                self.Control_plots_dir + "PlotAccuracies.png",
                 self.tmp_plot_dir + "PlotAccuracies.png",
+                tol=1,
+            ),
+        )
+
+    def test_PlotDiscCutPerEpoch(self):
+        PlotDiscCutPerEpoch(
+            df_results=self.df_results,
+            plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpoch.png",
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.Control_plots_dir + "PlotDiscCutPerEpoch.png",
+                self.tmp_plot_dir + "PlotDiscCutPerEpoch.png",
+                tol=1,
+            ),
+        )
+
+    def test_PlotDiscCutPerEpochUmami(self):
+        PlotDiscCutPerEpochUmami(
+            df_results=self.df_results,
+            plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpochUmami.png",
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.Control_plots_dir + "PlotDiscCutPerEpochUmami.png",
+                self.tmp_plot_dir + "PlotDiscCutPerEpochUmami.png",
                 tol=1,
             ),
         )
@@ -119,7 +157,7 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "Control_PlotLossesUmami.png",
+                self.Control_plots_dir + "PlotLossesUmami.png",
                 self.tmp_plot_dir + "PlotLossesUmami.png",
                 tol=1,
             ),
@@ -134,7 +172,7 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "Control_PlotAccuraciesUmami.png",
+                self.Control_plots_dir + "PlotAccuraciesUmami.png",
                 self.tmp_plot_dir + "PlotAccuraciesUmami.png",
                 tol=1,
             ),

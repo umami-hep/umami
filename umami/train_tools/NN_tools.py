@@ -3,6 +3,7 @@ import json
 import os
 import re
 from pathlib import Path
+from shutil import copyfile
 
 import h5py
 import numpy as np
@@ -44,6 +45,35 @@ def get_parameters_from_validation_dict_name(dict_name):
             f"Can't infer parameters correctly for {dict_name}. Parameters: {parameters}"
         )
     return parameters
+
+
+def create_metadata_folder(
+    train_config_path,
+    model_name,
+    preprocess_config,
+    overwrite_config=False,
+):
+    # Check if model path already existing
+    # If not, make it
+    os.makedirs(os.path.join(model_name, "metadata"), exist_ok=True)
+
+    # Copy files to metadata folder if not existing
+    for file in [train_config_path, preprocess_config]:
+        if overwrite_config is True:
+            logger.info(f"Copy {file} to metadata folder!")
+            copyfile(
+                file,
+                os.path.join(model_name, "metadata", os.path.basename(file)),
+            )
+
+        elif not os.path.isfile(
+            os.path.join(model_name, "metadata", os.path.basename(file))
+        ):
+            logger.info(f"Copy {file} to metadata folder!")
+            copyfile(
+                file,
+                os.path.join(model_name, "metadata", os.path.basename(file)),
+            )
 
 
 def GetRejection(
@@ -151,9 +181,9 @@ def GetRejection(
         tau_eff = -1
 
     if use_taus:
-        return 1.0 / second_eff, 1.0 / light_eff, 1.0 / tau_eff
+        return 1.0 / second_eff, 1.0 / light_eff, 1.0 / tau_eff, cutvalue
     else:
-        return 1.0 / second_eff, 1.0 / light_eff
+        return 1.0 / second_eff, 1.0 / light_eff, cutvalue
 
 
 class MyCallback(Callback):
@@ -218,7 +248,7 @@ class MyCallback(Callback):
         )
         y_pred = self.model.predict(self.X_valid, batch_size=5000)
         if self.include_taus:
-            c_rej, u_rej, tau_rej = GetRejection(
+            c_rej, u_rej, tau_rej, disc_cut = GetRejection(
                 y_pred,
                 self.Y_valid,
                 frac=self.fc_value,
@@ -228,7 +258,7 @@ class MyCallback(Callback):
             logger.info(
                 f"For b: c-rej: {c_rej} u-rej: {u_rej} tau-rej: {tau_rej}"
             )
-            b_rejC, u_rejC, tau_rejC = GetRejection(
+            b_rejC, u_rejC, tau_rejC, disc_cutC = GetRejection(
                 y_pred,
                 self.Y_valid,
                 d_type="c",
@@ -240,13 +270,13 @@ class MyCallback(Callback):
                 f"For c: b-rej: {b_rejC} u-rej: {u_rejC} tau-rej: {tau_rejC}"
             )
         else:
-            c_rej, u_rej = GetRejection(
+            c_rej, u_rej, disc_cut = GetRejection(
                 y_pred,
                 self.Y_valid,
                 frac=self.fc_value,
             )
             logger.info(f"For b: c-rej: {c_rej} u-rej: {u_rej}")
-            b_rejC, u_rejC = GetRejection(
+            b_rejC, u_rejC, disc_cutC = GetRejection(
                 y_pred,
                 self.Y_valid,
                 d_type="c",
@@ -265,14 +295,19 @@ class MyCallback(Callback):
             y_pred_add = self.model.predict(self.X_valid_add, batch_size=5000)
 
             if self.include_taus:
-                c_rej_add, u_rej_add, tau_rej_add = GetRejection(
+                c_rej_add, u_rej_add, tau_rej_add, disc_cut_add = GetRejection(
                     y_pred_add,
                     self.Y_valid_add,
                     frac=self.fc_value,
                     taufrac=self.ftauforb_value,
                     use_taus=self.include_taus,
                 )
-                b_rejC_add, u_rejC_add, tau_rejC_add = GetRejection(
+                (
+                    b_rejC_add,
+                    u_rejC_add,
+                    tau_rejC_add,
+                    disc_cutC_add,
+                ) = GetRejection(
                     y_pred_add,
                     self.Y_valid_add,
                     d_type="c",
@@ -281,10 +316,10 @@ class MyCallback(Callback):
                     use_taus=self.include_taus,
                 )
             else:
-                c_rej_add, u_rej_add = GetRejection(
+                c_rej_add, u_rej_add, disc_cut_add = GetRejection(
                     y_pred_add, self.Y_valid_add, frac=self.fc_value
                 )
-                b_rejC_add, u_rejC_add = GetRejection(
+                b_rejC_add, u_rejC_add, disc_cutC_add = GetRejection(
                     y_pred_add,
                     self.Y_valid_add,
                     d_type="c",
@@ -298,14 +333,18 @@ class MyCallback(Callback):
             "val_acc": val_acc,
             "c_rej": c_rej,
             "u_rej": u_rej,
+            "disc_cut": disc_cut,
             "b_rejC": b_rejC,
             "u_rejC": u_rejC,
+            "disc_cutC": disc_cutC,
             "val_loss_add": add_loss if add_loss else None,
             "val_acc_add": add_acc if add_acc else None,
             "c_rej_add": c_rej_add if c_rej_add else None,
             "u_rej_add": u_rej_add if u_rej_add else None,
-            "b_rejC_add": b_rejC_add,
-            "u_rejC_add": u_rejC_add,
+            "disc_cut_add": disc_cut_add if disc_cut_add else None,
+            "b_rejC_add": b_rejC_add if b_rejC_add else None,
+            "u_rejC_add": u_rejC_add if u_rejC_add else None,
+            "disc_cutC_add": disc_cutC_add if disc_cutC_add else None,
         }
         if self.include_taus:
             dict_epoch["tau_rej"] = tau_rej
@@ -724,10 +763,10 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
         workers=8,
         verbose=0,
     )
-    c_rej_dips, u_rej_dips = GetRejection(
+    c_rej_dips, u_rej_dips, disc_cut_dips = GetRejection(
         y_pred_dips, data_dict["Y_valid"], target_beff, cfrac
     )
-    c_rej_umami, u_rej_umami = GetRejection(
+    c_rej_umami, u_rej_umami, disc_cut_umami = GetRejection(
         y_pred_umami, data_dict["Y_valid"], target_beff, cfrac
     )
     logger.info(f"Dips: c-rej: {c_rej_dips} u-rej: {u_rej_dips}")
@@ -765,10 +804,10 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
             workers=8,
             verbose=0,
         )
-        c_rej_dips_add, u_rej_dips_add = GetRejection(
+        c_rej_dips_add, u_rej_dips_add, disc_cut_dips_add = GetRejection(
             y_pred_dips_add, data_dict["Y_valid_add"], target_beff, cfrac
         )
-        c_rej_umami_add, u_rej_umami_add = GetRejection(
+        c_rej_umami_add, u_rej_umami_add, disc_cut_umami_add = GetRejection(
             y_pred_umami_add, data_dict["Y_valid_add"], target_beff, cfrac
         )
     result_dict = {
@@ -786,10 +825,14 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
         "c_rej_umami": c_rej_umami,
         "u_rej_dips": u_rej_dips,
         "u_rej_umami": u_rej_umami,
+        "disc_cut_dips": disc_cut_dips,
+        "disc_cut_umami": disc_cut_umami,
         "c_rej_dips_add": c_rej_dips_add,
         "c_rej_umami_add": c_rej_umami_add,
         "u_rej_dips_add": u_rej_dips_add,
         "u_rej_umami_add": u_rej_umami_add,
+        "disc_cut_dips_add": disc_cut_dips_add,
+        "disc_cut_umami_add": disc_cut_umami_add,
     }
     return result_dict
 
@@ -812,7 +855,7 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
         verbose=0,
     )
 
-    c_rej, u_rej = GetRejection(
+    c_rej, u_rej, disc_cut = GetRejection(
         y_pred_dips, data_dict["Y_valid"], target_beff, cfrac
     )
 
@@ -843,7 +886,7 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
             verbose=0,
         )
 
-        c_rej_add, u_rej_add = GetRejection(
+        c_rej_add, u_rej_add, disc_cut_add = GetRejection(
             y_pred_add, data_dict["Y_valid_add"], target_beff, cfrac
         )
 
@@ -856,6 +899,8 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
         "u_rej": u_rej,
         "c_rej_add": c_rej_add,
         "u_rej_add": u_rej_add,
+        "disc_cut": disc_cut,
+        "disc_cut_add": disc_cut_add,
     }
     return result_dict
 
