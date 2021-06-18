@@ -230,21 +230,21 @@ def EvaluateModel(
     for eff in b_effs:
         # Add the rejections from the trained models
         # Umami
-        crej_i, urej_i = utt.GetRejection(
+        crej_i, urej_i, _ = utt.GetRejection(
             pred_umami, Y_test, target_eff=eff, frac=args.cfrac
         )
         crej_dict["umami"].append(crej_i)
         urej_dict["umami"].append(urej_i)
 
         # Dips part
-        crej_i, urej_i = utt.GetRejection(
+        crej_i, urej_i, _ = utt.GetRejection(
             pred_dips, Y_test, target_eff=eff, frac=args.cfrac
         )
         crej_dict["dips"].append(crej_i)
         urej_dict["dips"].append(urej_i)
 
         for tagger in tagger_list:
-            crej_tmp, urej_tmp = utt.GetRejection(
+            crej_tmp, urej_tmp, _ = utt.GetRejection(
                 df[[f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]].values,
                 Y_test,
                 target_eff=eff,
@@ -274,21 +274,21 @@ def EvaluateModel(
     for fc in fc_values:
         # Add the rejections from the trained models
         # Umami
-        crej_i, urej_i = utt.GetRejection(
+        crej_i, urej_i, _ = utt.GetRejection(
             pred_umami, Y_test, target_eff=args.beff, frac=fc
         )
         crej_cfrac_dict["umami"].append(crej_i)
         urej_cfrac_dict["umami"].append(urej_i)
 
         # Dips part
-        crej_i, urej_i = utt.GetRejection(
+        crej_i, urej_i, _ = utt.GetRejection(
             pred_dips, Y_test, target_eff=args.beff, frac=fc
         )
         crej_cfrac_dict["dips"].append(crej_i)
         urej_cfrac_dict["dips"].append(urej_i)
 
         for tagger in tagger_list:
-            crej_tmp, urej_tmp = utt.GetRejection(
+            crej_tmp, urej_tmp, _ = utt.GetRejection(
                 df[[f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]].values,
                 Y_test,
                 target_eff=args.beff,
@@ -470,14 +470,14 @@ def EvaluateModelDips(
     # Loop over effs for ROC plots
     for eff in b_effs:
         # Add the rejections from the trained models
-        crej_i, urej_i = utt.GetRejection(
+        crej_i, urej_i, _ = utt.GetRejection(
             pred_dips, Y_test, target_eff=eff, frac=args.cfrac
         )
         crej_dict["dips"].append(crej_i)
         urej_dict["dips"].append(urej_i)
 
         for tagger in tagger_list:
-            crej_tmp, urej_tmp = utt.GetRejection(
+            crej_tmp, urej_tmp, _ = utt.GetRejection(
                 df[[f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]].values,
                 Y_test,
                 target_eff=eff,
@@ -504,14 +504,14 @@ def EvaluateModelDips(
 
     for fc in fc_values:
         # Add the rejections from the trained models
-        crej_i, urej_i = utt.GetRejection(
+        crej_i, urej_i, _ = utt.GetRejection(
             pred_dips, Y_test, target_eff=args.beff, frac=fc
         )
         crej_cfrac_dict["dips"].append(crej_i)
         urej_cfrac_dict["dips"].append(urej_i)
 
         for tagger in tagger_list:
-            crej_tmp, urej_tmp = utt.GetRejection(
+            crej_tmp, urej_tmp, _ = utt.GetRejection(
                 df[[f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]].values,
                 Y_test,
                 target_eff=args.beff,
@@ -885,7 +885,7 @@ def EvaluateModelDL1(
 
         # Add the rejections from the trained models
         if bool_use_taus:
-            crej_i, urej_i, taurej_i = utt.GetRejection(
+            crej_i, urej_i, taurej_i, _ = utt.GetRejection(
                 pred,
                 Y_test,
                 target_eff=b_eff,
@@ -893,7 +893,7 @@ def EvaluateModelDL1(
                 taufrac=ftauforb_value,
                 use_taus=bool_use_taus,
             )
-            brej_iC, urej_iC, taurej_iC = utt.GetRejection(
+            brej_iC, urej_iC, taurej_iC, _ = utt.GetRejection(
                 pred,
                 Y_test,
                 d_type="c",
@@ -906,10 +906,10 @@ def EvaluateModelDL1(
             taurej_dict["umamiC"].append(taurej_iC)
 
         else:
-            crej_i, urej_i = utt.GetRejection(
+            crej_i, urej_i, _ = utt.GetRejection(
                 pred, Y_test, target_eff=b_eff, frac=fc_value
             )
-            brej_iC, urej_iC = utt.GetRejection(
+            brej_iC, urej_iC, _ = utt.GetRejection(
                 pred, Y_test, d_type="c", target_eff=c_eff, frac=fb_value
             )
 
@@ -921,7 +921,7 @@ def EvaluateModelDL1(
         for tagger in tagger_list:
             # Add the comparison taggers
             if bool_use_taus:
-                crej_i, urej_i, taurej_i = utt.GetRejection(
+                crej_i, urej_i, taurej_i, _ = utt.GetRejection(
                     df[
                         [
                             f"{tagger}_pu",
@@ -936,7 +936,7 @@ def EvaluateModelDL1(
                     taufrac=ftauforb_value,
                     use_taus=bool_use_taus,
                 )
-                brej_iC, urej_iC, taurej_iC = utt.GetRejection(
+                brej_iC, urej_iC, taurej_iC, _ = utt.GetRejection(
                     df[
                         [
                             f"{tagger}_pu",
@@ -955,7 +955,7 @@ def EvaluateModelDL1(
                 taurej_dict[f"{tagger}"].append(taurej_i)
                 taurej_dict[f"{tagger}C"].append(taurej_iC)
             else:
-                crej_i, urej_i = utt.GetRejection(
+                crej_i, urej_i, _ = utt.GetRejection(
                     df[
                         [f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]
                     ].values,
@@ -963,7 +963,7 @@ def EvaluateModelDL1(
                     target_eff=b_eff,
                     frac=fc_list[tagger],
                 )
-                brej_iC, urej_iC = utt.GetRejection(
+                brej_iC, urej_iC, _ = utt.GetRejection(
                     df[
                         [f"{tagger}_pu", f"{tagger}_pc", f"{tagger}_pb"]
                     ].values,
@@ -1067,7 +1067,7 @@ def EvaluateModelDL1(
         if ind % (len(c_fracs) // 5) == 0:
             logger.info(f"{ind // (len(c_fracs) // 5) * 20} % done")
         for tau_frac in tau_fracs:
-            crej_i, urej_i, taurej_i = utt.GetRejection(
+            crej_i, urej_i, taurej_i, _ = utt.GetRejection(
                 pred,
                 Y_test,
                 target_eff=target_beff,
@@ -1075,7 +1075,7 @@ def EvaluateModelDL1(
                 taufrac=tau_frac,
                 use_taus=bool_use_taus,
             )
-            brejC_i, urejC_i, taurejC_i = utt.GetRejection(
+            brejC_i, urejC_i, taurejC_i, _ = utt.GetRejection(
                 pred,
                 Y_test,
                 d_type="c",

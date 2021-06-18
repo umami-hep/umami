@@ -11,6 +11,7 @@ from umami.train_tools.NN_tools import (
     Sum,
     calc_validation_metrics,
     calc_validation_metrics_dips,
+    create_metadata_folder,
     evaluate_model,
     evaluate_model_dips,
     filter_taus,
@@ -21,6 +22,8 @@ from umami.train_tools.NN_tools import (
 )
 from umami.train_tools.Plotting import (
     PlotAccuracies,
+    PlotDiscCutPerEpoch,
+    PlotDiscCutPerEpochUmami,
     PlotLosses,
     PlotRejPerEpoch,
     RunPerformanceCheck,

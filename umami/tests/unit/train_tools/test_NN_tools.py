@@ -14,6 +14,7 @@ from umami.train_tools.NN_tools import (
     MyCallback,
     MyCallbackDips,
     MyCallbackUmami,
+    create_metadata_folder,
     filter_taus,
     get_jet_feature_indices,
     get_parameters_from_validation_dict_name,
@@ -34,7 +35,7 @@ class GetRejection_TestCase(unittest.TestCase):
         self.y_true_tau = np.random.randint(low=0, high=4, size=(100, 4))
 
     def test_rejection_noTaus_dtype_b_case(self):
-        c_rej, light_rej = GetRejection(
+        c_rej, light_rej, _ = GetRejection(
             y_pred=self.y_pred,
             y_true=self.y_true,
             d_type="b",
@@ -43,7 +44,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_rejection_noTaus_dtype_c_case(self):
-        b_rej, light_rej = GetRejection(
+        b_rej, light_rej, _ = GetRejection(
             y_pred=self.y_pred,
             y_true=self.y_true,
             d_type="c",
@@ -52,7 +53,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_rejection_Taus_dtype_b_case(self):
-        c_rej, light_rej, tau_rej = GetRejection(
+        c_rej, light_rej, tau_rej, _ = GetRejection(
             y_pred=self.y_pred_tau,
             y_true=self.y_true_tau,
             d_type="b",
@@ -61,7 +62,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_rejection_Taus_dtype_c_case(self):
-        b_rej, light_rej, tau_rej = GetRejection(
+        b_rej, light_rej, tau_rej, _ = GetRejection(
             y_pred=self.y_pred_tau,
             y_true=self.y_true_tau,
             d_type="c",
@@ -98,6 +99,66 @@ class dict_name_TestCase(unittest.TestCase):
         self.assertEqual(parameters["fc_value"], self.fc_value)
         self.assertEqual(parameters["n_jets"], self.n_jets)
         self.assertEqual(parameters["dir_name"], self.dir_name)
+
+
+class create_metadata_folder_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_test_dir = f"{self.tmp_dir.name}"
+        self.model_name = os.path.join(self.tmp_test_dir, "test_model")
+        self.train_config_path = os.path.join(
+            self.tmp_test_dir, "train_config.yaml"
+        )
+        self.preprocess_config = os.path.join(
+            self.tmp_test_dir, "preprocess_config.yaml"
+        )
+
+        run(["touch", f"{self.train_config_path}"])
+        run(["touch", f"{self.preprocess_config}"])
+
+    def test_create_metadata_folder(self):
+        create_metadata_folder(
+            train_config_path=self.train_config_path,
+            model_name=self.model_name,
+            preprocess_config=self.preprocess_config,
+            overwrite_config=False,
+        )
+
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(self.model_name, "metadata/train_config.yaml")
+            )
+        )
+
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(
+                    self.model_name,
+                    "metadata/preprocess_config.yaml",
+                )
+            )
+        )
+
+        create_metadata_folder(
+            train_config_path=self.train_config_path,
+            model_name=self.model_name,
+            preprocess_config=self.preprocess_config,
+            overwrite_config=True,
+        )
+
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(self.model_name, "metadata", "train_config.yaml")
+            )
+        )
+
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(
+                    self.model_name, "metadata", "preprocess_config.yaml"
+                )
+            )
+        )
 
 
 class filter_taus_TestCase(unittest.TestCase):

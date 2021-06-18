@@ -21,7 +21,6 @@ from tqdm import tqdm
 from yaml.loader import FullLoader
 
 import umami.evaluation_tools as uet
-import umami.validation_dumper_tools as uvdt
 from umami.configuration import logger
 
 
@@ -569,15 +568,6 @@ def SetUpPlots(
                 plot_name=save_plot_to,
                 FileDir=eval_file_dir,
                 epoch=int(eval_params["epoch"]),
-                **plot_config["plot_settings"],
-            )
-
-        elif plot_config["type"] == "dumper_validation":
-            uvdt.plot_dumper_evaluation(
-                plot_name=save_plot_to,
-                plot_config=plot_config,
-                eval_params=eval_params,
-                eval_file_dir=eval_file_dir,
                 **plot_config["plot_settings"],
             )
 
