@@ -21,6 +21,7 @@ setup(
         "umami.tools.PyATLASstyle",
         "umami.evaluation_tools",
         "umami.input_vars_tools",
+        "umami.institutes",
     ],
     # install_requires=[
     #     "h5py",
