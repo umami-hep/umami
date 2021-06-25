@@ -748,10 +748,10 @@ def EvaluateModelDL1(
 
         # Define new dict with the evaluation results
         df_discs_dict = {
-            "umami_ptau": pred[:, tau_index],
-            "umami_pb": pred[:, b_index],
-            "umami_pc": pred[:, c_index],
-            "umami_pu": pred[:, u_index],
+            "DL1_ptau": pred[:, tau_index],
+            "DL1_pb": pred[:, b_index],
+            "DL1_pc": pred[:, c_index],
+            "DL1_pu": pred[:, u_index],
             "pt": df[global_config.pTvariable],
             "eta": df[global_config.etavariable],
             "labels": y_true,
@@ -793,9 +793,9 @@ def EvaluateModelDL1(
 
         # Define new dict with the evaluation results
         df_discs_dict = {
-            "umami_pb": pred[:, b_index],
-            "umami_pc": pred[:, c_index],
-            "umami_pu": pred[:, u_index],
+            "DL1_pb": pred[:, b_index],
+            "DL1_pc": pred[:, c_index],
+            "DL1_pu": pred[:, u_index],
             "pt": df[global_config.pTvariable],
             "eta": df[global_config.etavariable],
             "labels": y_true,
@@ -850,22 +850,22 @@ def EvaluateModelDL1(
     c_effs = np.linspace(0.09, 1, 150)
 
     crej_dict = {
-        "umami": [],
+        "DL1": [],
     }
 
     brej_dict = {
-        "umamiC": [],
+        "DL1C": [],
     }
 
     urej_dict = {
-        "umami": [],
-        "umamiC": [],
+        "DL1": [],
+        "DL1C": [],
     }
 
     if bool_use_taus:
         taurej_dict = {
-            "umami": [],
-            "umamiC": [],
+            "DL1": [],
+            "DL1C": [],
         }
 
     # Add taggers to dicts
@@ -902,8 +902,8 @@ def EvaluateModelDL1(
                 taufrac=ftauforc_value,
                 use_taus=bool_use_taus,
             )
-            taurej_dict["umami"].append(taurej_i)
-            taurej_dict["umamiC"].append(taurej_iC)
+            taurej_dict["DL1"].append(taurej_i)
+            taurej_dict["DL1C"].append(taurej_iC)
 
         else:
             crej_i, urej_i, _ = utt.GetRejection(
@@ -913,10 +913,10 @@ def EvaluateModelDL1(
                 pred, Y_test, d_type="c", target_eff=c_eff, frac=fb_value
             )
 
-        crej_dict["umami"].append(crej_i)
-        urej_dict["umami"].append(urej_i)
-        brej_dict["umamiC"].append(brej_iC)
-        urej_dict["umamiC"].append(urej_iC)
+        crej_dict["DL1"].append(crej_i)
+        urej_dict["DL1"].append(urej_i)
+        brej_dict["DL1C"].append(brej_iC)
+        urej_dict["DL1C"].append(urej_iC)
 
         for tagger in tagger_list:
             # Add the comparison taggers
@@ -981,12 +981,12 @@ def EvaluateModelDL1(
         df_eff_rej_dict = {
             "beff": b_effs,
             "ceff": c_effs,
-            "umami_crej": crej_dict["umami"],
-            "umami_urej": urej_dict["umami"],
-            "umami_taurej": taurej_dict["umami"],
-            "umami_brejC": brej_dict["umamiC"],
-            "umami_urejC": urej_dict["umamiC"],
-            "umami_taurejC": taurej_dict["umamiC"],
+            "DL1_crej": crej_dict["DL1"],
+            "DL1_urej": urej_dict["DL1"],
+            "DL1_taurej": taurej_dict["DL1"],
+            "DL1_brejC": brej_dict["DL1C"],
+            "DL1_urejC": urej_dict["DL1C"],
+            "DL1_taurejC": taurej_dict["DL1C"],
         }
 
         for tagger in tagger_list:
@@ -1005,10 +1005,10 @@ def EvaluateModelDL1(
         df_eff_rej_dict = {
             "beff": b_effs,
             "ceff": c_effs,
-            "umami_crej": crej_dict["umami"],
-            "umami_urej": urej_dict["umami"],
-            "umami_brejC": brej_dict["umamiC"],
-            "umami_urejC": urej_dict["umamiC"],
+            "DL1_crej": crej_dict["DL1"],
+            "DL1_urej": urej_dict["DL1"],
+            "DL1_brejC": brej_dict["DL1C"],
+            "DL1_urejC": urej_dict["DL1C"],
         }
 
         for tagger in tagger_list:
@@ -1099,12 +1099,12 @@ def EvaluateModelDL1(
             "fraction_c": fraction_c,
             "fraction_b": fraction_b,
             "fraction_taus": fraction_taus,
-            "umami_crej": crej_arr,
-            "umami_urej": urej_arr,
-            "umami_taurej": taurej_arr,
-            "umami_brejC": brejC_arr,
-            "umami_urejC": urejC_arr,
-            "umami_taurejC": taurejC_arr,
+            "DL1_crej": crej_arr,
+            "DL1_urej": urej_arr,
+            "DL1_taurej": taurej_arr,
+            "DL1_brejC": brejC_arr,
+            "DL1_urejC": urejC_arr,
+            "DL1_taurejC": taurejC_arr,
         }
     )
     df_frac_rej.to_hdf(
