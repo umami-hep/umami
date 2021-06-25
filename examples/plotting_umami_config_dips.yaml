@@ -49,17 +49,52 @@ Dips_light_flavour_ttbar:
       data_set_name: "ttbar"
       label: "Recommended RNNIP"
       df_key: "rnnip_urej"
+      color: "C0"
     dips_r21: # The name here has no impact on anything.
       data_set_name: "ttbar"
       label: "DIPS"
       df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+      color: "C1"
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
     ylabel: "light"
     binomialErrors: True
     xmin: 0.5
     ymax: 1000000
-    colors:
     figsize: [7, 6] # [width, hight]
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+
+Dips_Comparison_flavour_ttbar:
+  type: "ROC_Comparison"
+  models_to_plot:
+    rnnip_r21_u:
+      data_set_name: "ttbar"
+      label: "Reco. RNNIP"
+      df_key: "rnnip_urej"
+      rejection: "Light"
+    dips_r21_u: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "DIPS"
+      df_key: "dips_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+      rejection: "Light"
+    rnnip_r21_c:
+      data_set_name: "ttbar"
+      label: "Reco. RNNIP"
+      df_key: "rnnip_crej"
+      rejection: "c"
+    dips_r21_c: # The name here has no impact on anything.
+      data_set_name: "ttbar"
+      label: "DIPS"
+      df_key: "dips_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
+      rejection: "c"
+  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+    binomialErrors: True
+    xmin: 0.5
+    ymax: 1000000
+    figsize: [9, 9] # [width, hight]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     UseAtlasTag: True # Enable/Disable AtlasTag
     AtlasTag: "Internal Simulation"

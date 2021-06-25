@@ -51,34 +51,61 @@ confusion_matrix_Umami_ttbar:
 beff_scan_tagger_compare_umami:
   type: "ROC"
   models_to_plot:
-    DL1r_ttbar_urej: # The name here has no impact on anything.
-      data_set_name: "ttbar"
-      label: "DL1r u-rej"
-      df_key: "DL1r_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    umami_ttbar_urej: # The name here has no impact on anything.
+    umami_ttbar_urej:
       data_set_name: "ttbar"
       label: "Umami u-rej"
-      df_key: "umami_urej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    DL1r_ttbar_crej: # The name here has no impact on anything.
-      data_set_name: "ttbar"
-      label: "DL1r c-rej"
-      df_key: "DL1r_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-    umami_ttbar_crej: # The name here has no impact on anything.
+      df_key: "umami_urej"
+      color: "red"
+      linestyle: "-"
+    umami_ttbar_crej:
       data_set_name: "ttbar"
       label: "Umami c-rej"
-      df_key: "umami_crej" # This is actually the rejection rate of the DL1r tragger trained with the umami framework
-  plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
+      df_key: "umami_crej"
+      color: "blue"
+      linestyle: "-"
+  plot_settings:
     ylabel: "light"
     binomialErrors: true
     UseAtlasTag: True # Enable/Disable AtlasTag
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
-    which_axis: ["left",  "left", "right",  "right"]
-    colors: ["red", "red", "blue", "blue"]
-    styles: ["-","--","-","--"]
-    ratio_id: [1,1,2,2]
     set_logy: false
     ylabel_right: "c"
     ycolor: "red"
     ycolor_right: "blue"
     xmin: 0.6
+
+# Scanning b-eff, comparing Umami and DL1r, ttbar
+beff_scan_tagger_compare_umami:
+  type: "ROC_Comparison"
+  models_to_plot:
+    DL1r_ttbar_urej:
+      data_set_name: "ttbar"
+      label: "DL1r u-rej"
+      df_key: "DL1r_urej"
+      rejection: "Light"
+    umami_ttbar_urej:
+      data_set_name: "ttbar"
+      label: "Umami u-rej"
+      df_key: "umami_urej"
+      rejection: "Light"
+    DL1r_ttbar_crej:
+      data_set_name: "ttbar"
+      label: "DL1r c-rej"
+      df_key: "DL1r_crej"
+      rejection: "c"
+    umami_ttbar_crej:
+      data_set_name: "ttbar"
+      label: "Umami c-rej"
+      df_key: "umami_crej"
+      rejection: "c"
+  plot_settings:
+    binomialErrors: True
+    xmin: 0.5
+    ymax: 1000000
+    figsize: [9, 9] # [width, hight]
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag

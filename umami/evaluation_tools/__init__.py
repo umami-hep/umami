@@ -10,5 +10,6 @@ from umami.evaluation_tools.PlottingFunctions import (
     plotFractionScan,
     plotPtDependence,
     plotROCRatio,
+    plotROCRatioComparison,
     plotSaliency,
 )
