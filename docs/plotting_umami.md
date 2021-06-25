@@ -123,17 +123,20 @@ Dips_light_flavour_ttbar:
       data_set_name: "ttbar"
       label: "Recommended RNNIP"
       df_key: "rnnip_urej"
+      color: "red"
+      linestyle: "-"
     dips_r21:
       data_set_name: "ttbar"
       label: "DIPS"
       df_key: "dips_urej"
+      color: "blue"
+      linestyle: "-"
   plot_settings:
     xlabel: "$b$-jet efficiency"
     ylabel: "light"
     binomialErrors: True
     xmin: 0.5
     ymax: 1000000
-    colors:
     figsize: [7, 6]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     UseAtlasTag: True
@@ -147,12 +150,73 @@ Dips_light_flavour_ttbar:
 | `dips_r21` | None | Necessary | Name of the model which is to be plotted. Not affecting anything, just for you. You can change dips_r21 to anything. |
 | `label` | String | Necessary | Label for the Legend in the plot. |
 | `df_key` | String | Necessary | Decide which rejection is plotted. The structure is like this: `model_Xrej`. The `X` defines the wanted rejection. `u` for light-, `c` for c-rejection, `t` for tau-rejection. Note: for DL1 only, the light-, tau-, and b- rejection from c-jets are also supported. The structure is then: `model_XrejC`, with `X` taking as value `u`, `t`, or `b`. |
+| `colors` | String | Optional | Set color for the model. If None, the colors will be set automatically for all |
+| `linestyle` | String | Optional | Set linestyle for the model. If None, the linestyles will be set automatically for all models (all the same). |
 | `xlabel` | String | Optional | Set the xlabel.
 | `ylabel` | String | Optional | Set the ylabel of the X-rejection. For example: 'c' will output `c-flavor rejection`. |
 | `binomialErrors` | Bool | Optional | Plot binomial errors to plot. |
 | `xmin` | Float | Optional | Set the minimum b efficiency in the plot (which is the xmin limit). |
 | `ymax` | Float | Optional | The maximum y axis. |
-| `colors` | List | Optional | For each model in `models_to_plot`, there must be a color in this list. If leave it empty (=None), the colors will be set automatically. | 
+| `WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
+ | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | List | Optional |A list of the width and hight of the plot.
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+
+#### Double ROC Curves
+Plotting the ROC Curves of two rejection rates against the a efficiency. For example:
+
+```yaml
+Dips_Comparison_flavour_ttbar:
+  type: "ROC"
+  models_to_plot:
+    rnnip_r21_u:
+      data_set_name: "ttbar"
+      label: "Reco. RNNIP"
+      df_key: "rnnip_urej"
+      rejection: "Light"
+    dips_r21_u:
+      data_set_name: "ttbar"
+      label: "DIPS"
+      df_key: "dips_urej"
+      rejection: "Light"
+    rnnip_r21_c:
+      data_set_name: "ttbar"
+      label: "Reco. RNNIP"
+      df_key: "rnnip_crej"
+      rejection: "c"
+    dips_r21_c:
+      data_set_name: "ttbar"
+      label: "DIPS"
+      df_key: "dips_crej"
+      rejection: "c"
+  plot_settings:
+    ylabel: "light"
+    ylabel_right: "c"
+    binomialErrors: True
+    xmin: 0.5
+    ymax: 1000000
+    colors:
+    figsize: [9, 9] # [width, hight]
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+```
+
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `dips_r21` | None | Necessary | Name of the model which is to be plotted. Not affecting anything, just for you. You can change dips_r21 to anything. |
+| `label` | String | Necessary | Label for the Legend in the plot. |
+| `df_key` | String | Necessary | Decide which rejection is plotted. The structure is like this: `model_Xrej`. The `X` defines the wanted rejection. `u` for light-, `c` for c-rejection, `t` for tau-rejection. Note: for DL1 only, the light-, tau-, and b- rejection from c-jets are also supported. The structure is then: `model_XrejC`, with `X` taking as value `u`, `t`, or `b`. |
+| `rejection` | String | Necessary | This is the rejection of the model. It's used to calculate the correct ratio and also for sorting the models to a given rejection. | 
+| `xlabel` | String | Optional | Set the xlabel. |
+| `binomialErrors` | Bool | Optional | Plot binomial errors to plot. |
+| `xmin` | Float | Optional | Set the minimum b efficiency in the plot (which is the xmin limit). |
+| `ymax` | Float | Optional | The maximum y axis. |
 | `WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
  | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | List | Optional |A list of the width and hight of the plot.
@@ -215,6 +279,7 @@ pT_vs_beff_zpext:
     bin_edges: [200, 500, 1000, 1500, 2000, 2500, 3000, 4000, 6000]
     flavor: 2
     WP: 0.77
+    Disc_Cut_Value: None
     WP_Line: True
     Fixed_WP_Bin: False
     binomialErrors: True
@@ -241,6 +306,7 @@ pT_vs_beff_zpext:
 | `bin_edges` | List | Optional | The pT bin edges that should be used. Don't forget the starting and the ending edge! |
 | `flavor` | Int | Optional | Decide which eff/rej will be plotted. 2: b, 1: c, 0: light. |
 | `WP` | Float | Optional | Which Working Point is used. |
+| `Disc_Cut_Value` | Float | Optional | When this option is set to not None, the calculation of the discriminant cut value, which is based on the given `WP`, is stopped and the value of this option is used as the discriminant cut value. |
 | `WP_Line` | Bool | Optional | Decide if a horizontal WP line at is added or not. (Only used for beff). |
 | `Fixed_WP_Bin` | Bool | Optional | If True, the b-Tagging discriminant cut value for the given WP is not calculated over all bins but separately for each bin. |
 | `binomialErrors` | Bool | Optional | Plot binomial errors to plot. |

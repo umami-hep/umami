@@ -69,6 +69,8 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
     teffs = []
     beffs = []
     labels = []
+    linestyles = []
+    colors = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
@@ -106,6 +108,11 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
         teffs.append(model_config["df_results_eff_rej"][x_values])
         beffs.append(model_config["rej_rates"])
         labels.append(model_config["label"])
+        if "linestyle" in model_config:
+            linestyles.append(model_config["linestyle"])
+
+        if "color" in model_config:
+            colors.append(model_config["color"])
 
         # nTest is only needed to calculate binomial errors
         if not nTest_provided and (
@@ -122,11 +129,104 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
         else:
             plot_config["plot_settings"]["nTest"] = 0
 
+    if len(colors) == 0:
+        colors = None
+
+    if len(linestyles) == 0:
+        linestyles = None
+
     uet.plotROCRatio(
         teffs=teffs,
         beffs=beffs,
         labels=labels,
         plot_name=plot_name,
+        styles=linestyles,
+        colors=colors,
+        **plot_config["plot_settings"],
+    )
+
+
+def plot_ROC_Comparison(
+    plot_name, plot_config, eval_params, eval_file_dir, print_model
+):
+    teffs = []
+    beffs = []
+    labels = []
+    which_rej = []
+
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    if "nTest" not in plot_config["plot_settings"].keys():
+        nTest_provided = False
+        plot_config["plot_settings"]["nTest"] = []
+    else:
+        nTest_provided = True
+
+    for model_name, model_config in plot_config["models_to_plot"].items():
+        if print_model:
+            logger.info(f"model: {model_name}")
+
+        if ("evaluation_file" not in model_config) or (
+            model_config["evaluation_file"] is None
+        ):
+            model_config["df_results_eff_rej"] = pd.read_hdf(
+                eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5",
+                model_config["data_set_name"],
+            )
+
+        else:
+            model_config["df_results_eff_rej"] = pd.read_hdf(
+                model_config["evaluation_file"], model_config["data_set_name"]
+            )
+
+        model_config["rej_rates"] = (
+            1.0 / model_config["df_results_eff_rej"][model_config["df_key"]]
+        )
+
+        x_values = "beff"
+        if "x_values_key" in plot_config:
+            x_values = plot_config["x_values_key"]
+        teffs.append(model_config["df_results_eff_rej"][x_values])
+        beffs.append(model_config["rej_rates"])
+        labels.append(model_config["label"])
+        if "rejection" in model_config:
+            which_rej.append(model_config["rejection"])
+
+        # nTest is only needed to calculate binomial errors
+        if not nTest_provided and (
+            "binomialErrors" in plot_config["plot_settings"]
+            and plot_config["plot_settings"]["binomialErrors"]
+        ):
+            h5_file = h5py.File(
+                eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
+            )
+            plot_config["plot_settings"]["nTest"].append(
+                h5_file.attrs["N_test"]
+            )
+            h5_file.close()
+        else:
+            plot_config["plot_settings"]["nTest"] = 0
+
+    # Get the right ratio id for correct ratio calculation
+    ratio_dict = {}
+    ratio_id = []
+
+    for i, which_a in enumerate(which_rej):
+        if which_a not in ratio_dict:
+            ratio_dict.update({which_a: i})
+            ratio_id.append(i)
+
+        else:
+            ratio_id.append(ratio_dict[which_a])
+
+    uet.plotROCRatioComparison(
+        teffs=teffs,
+        beffs=beffs,
+        labels=labels,
+        plot_name=plot_name,
+        which_rej=which_rej,
+        ratio_id=ratio_id,
         **plot_config["plot_settings"],
     )
 
@@ -539,6 +639,15 @@ def SetUpPlots(
         # Check for plot type and use the needed function
         if plot_config["type"] == "ROC":
             plot_ROC(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+                print_model=print_model,
+            )
+
+        elif plot_config["type"] == "ROC_Comparison":
+            plot_ROC_Comparison(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,

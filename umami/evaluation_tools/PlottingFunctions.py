@@ -1,6 +1,7 @@
 from umami.configuration import logger  # isort:skip
 import pickle
 
+import matplotlib as mtp
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -10,6 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import pchip
 
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
+from umami.tools import applyATLASstyle
 
 
 def eff_err(x, N):
@@ -504,6 +506,7 @@ def plotPtDependence(
     plot_name,
     flavor=2,
     WP=0.77,
+    Disc_Cut_Value=None,
     fc_list=[],
     fc=0.018,
     SWP_label_list=[],
@@ -651,10 +654,14 @@ def plotPtDependence(
 
         if Fixed_WP_Bin is False:
             if Same_WP_Cut_Comparison is False:
-                # Calculate WP cutoff for b-disc
-                disc_cut = np.percentile(
-                    df_results.query("labels==2")["discs"], (1 - WP) * 100
-                )
+                if Disc_Cut_Value is None:
+                    # Calculate WP cutoff for b-disc
+                    disc_cut = np.percentile(
+                        df_results.query("labels==2")["discs"], (1 - WP) * 100
+                    )
+
+                elif Disc_Cut_Value is not None:
+                    disc_cut = Disc_Cut_Value
 
             elif (
                 Same_WP_Cut_Comparison is True
@@ -1122,7 +1129,7 @@ def plotROCRatio(
         y = np.divide(1, beff[nonzero])
 
         lines = lines + axis_dict[which_a]["top"].plot(
-            x, y, style, color=color, label=label, zorder=2
+            x, y, linestyle=style, color=color, label=label, zorder=2
         )
         if binomialErrors:
             yerr = np.power(y, 2) * eff_err(beff[nonzero], nte)
@@ -1139,7 +1146,7 @@ def plotROCRatio(
         if r_id not in f0_ratio:
             f0_ratio[r_id] = f
             axis_dict["left"]["ratio"].plot(
-                x, np.ones(len(x)), style, color=color, linewidth=1.6
+                x, np.ones(len(x)), linestyle=style, color=color, linewidth=1.6
             )
             if binomialErrors:
                 axis_dict["left"]["ratio"].fill_between(
@@ -1153,7 +1160,7 @@ def plotROCRatio(
             continue
         ratio_ix = f(x) / f0_ratio[r_id](x)
         axis_dict["left"]["ratio"].plot(
-            x, ratio_ix, style, color=color, linewidth=1.6
+            x, ratio_ix, linestyle=style, color=color, linewidth=1.6
         )
         if binomialErrors:
             axis_dict["left"]["ratio"].fill_between(
@@ -1255,6 +1262,372 @@ def plotROCRatio(
         plt.savefig(plot_name, transparent=True)
     plt.close()
     # plt.show()
+
+
+def plotROCRatioComparison(
+    teffs,
+    beffs,
+    labels,
+    which_rej,
+    title="",
+    ylabel="Background Rejection",
+    tag="",
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",
+    yAxisAtlasTag=0.9,
+    figDir="../figures",
+    subDir="mc16d",
+    xmin=None,
+    ymax=None,
+    ymin=None,
+    legFontSize=10,
+    loc_legend="best",
+    Ratio_Cut=None,
+    binomialErrors=False,
+    nTest=0,
+    plot_name=None,
+    alabel=None,
+    figsize=None,
+    legcols=2,
+    labelpad=None,
+    WorkingPoints=None,
+    x_label="$b$-jet efficiency",
+    ratio_id=0,
+    ycolor="black",
+    ycolor_right="black",
+    set_logy=True,
+):
+    """
+    Plot the ROC curves with binomial errors with the two ratio plot in a subpanel
+    underneath. This function is steered by the plotting_umami.py. Documentation is
+    provided in the docs folder.
+
+    Addtional Inputs:
+    - Ratio_Cut: The range on the y-axis for the ratio panel
+    - rlabel: The label for the y-axis for the ratio panel
+    - binomialErrors: whether to include binomial errors for the rejection
+                      curves
+    - nTest: A list of the same length as beffs, with the number of events used
+            to calculate the background efficiencies.
+            We need this To calculate the binomial errors on the background
+            rejection,
+            using the formula given by
+            http://home.fnal.gov/~paterno/images/effic.pdf.
+    """
+    # Apply the ATLAS Style with the bars on the axes
+    applyATLASstyle(mtp)
+
+    # Define empty lists for the styles, colors and rejs
+    styles = []
+    colors = []
+    flav_list = []
+
+    # Loop over the given rejection types and add them to a lists
+    for which_j in which_rej:
+        if which_j not in flav_list:
+            flav_list.append(which_j)
+
+    # Append a styles for each model determined by the rejections
+    if len(styles) == 0:
+        for which_j in which_rej:
+            for i, flav in enumerate(flav_list):
+                if which_j == flav:
+                    if i == 0:
+                        # This is solids
+                        styles.append("-")
+
+                    elif i == 1:
+                        # This is densly dashed dotted
+                        styles.append((0, (3, 1, 1, 1)))
+
+    # Create list for the models
+    model_list = []
+    for label in labels:
+        if label not in model_list:
+            model_list.append(label)
+
+    # Fill in the colors for the models given
+    if len(colors) == 0:
+        for label in labels:
+            for i, model in enumerate(model_list):
+                if label == model:
+                    colors.append(f"C{i}")
+
+    # Set WP colors
+    colors_WP = "red"
+
+    if binomialErrors and nTest == 0:
+        logger.error(
+            "Error: Requested binomialErrors, but did not pass nTest. Will NOT plot rej errors."
+        )
+        binomialErrors = False
+
+    if type(nTest) != list:
+        nTest = [nTest] * len(teffs)
+
+    # Define the figure with two subplots of unequal sizes
+    axis_dict = {}
+
+    # Create figure with the given size, if provided.
+    if figsize is None:
+        fig = plt.figure(figsize=(8.27 * 0.8, 11.69 * 0.8))
+
+    else:
+        fig = plt.figure(figsize=(figsize[0], figsize[1]))
+
+    # Define the grid of the subplots
+    gs = gridspec.GridSpec(11, 1, figure=fig)
+    axis_dict["left"] = {}
+
+    # Define the top subplot for the curves
+    axis_dict["left"]["top"] = fig.add_subplot(gs[:5, 0])
+
+    # Define the ratio plots for the rejections
+    axis_dict["left"][flav_list[0]] = fig.add_subplot(
+        gs[5:8, 0], sharex=axis_dict["left"]["top"]
+    )
+    axis_dict["left"][flav_list[1]] = fig.add_subplot(
+        gs[8:, 0], sharex=axis_dict["left"]["top"]
+    )
+
+    # Draw WP lines at the specifed WPs
+    if WorkingPoints is not None:
+        for WP in WorkingPoints:
+            axis_dict["left"]["top"].axvline(
+                x=WP,
+                ymax=0.65,
+                color=colors_WP,
+                linestyle="dashed",
+                linewidth=1.0,
+            )
+
+            # Draw the WP lines in the ratio plots
+            for flav in flav_list:
+                axis_dict["left"][flav].axvline(
+                    x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
+                )
+
+            # Set the number above the line
+            axis_dict["left"]["top"].annotate(
+                text="{}%".format(int(WP * 100)),
+                xy=(WP, 0.85),
+                xytext=(WP, 0.85),
+                textcoords="offset points",
+                xycoords=("data", "figure fraction"),
+                ha="center",
+                va="bottom",
+                size=10,
+            )
+
+    # Create lines list and ratio dict for looping
+    lines = []
+    f0_ratio = {}
+
+    # Loop over the models with the different settings for each model
+    for i, (teff, beff, label, style, color, nte, which_j, r_id) in enumerate(
+        zip(teffs, beffs, labels, styles, colors, nTest, which_rej, ratio_id)
+    ):
+
+        # Mask the points where there was no change in the signal eff
+        dx = np.concatenate((np.ones(1), np.diff(teff)))
+
+        # Also mask the rejections that are 0
+        nonzero = (beff != 0) & (dx > 0)
+        if xmin:
+            nonzero = nonzero & (teff > xmin)
+        x = teff[nonzero]
+
+        # Calculate Rejection
+        y = np.divide(1, beff[nonzero])
+
+        # Plot the lines in the main plot and add them to lines list
+        lines = lines + axis_dict["left"]["top"].plot(
+            x, y, linestyle=style, color=color, label=label, zorder=2
+        )
+
+        # Calculate and plot binominal errors for main plot
+        if binomialErrors:
+            yerr = np.power(y, 2) * eff_err(beff[nonzero], nte)
+
+            y1 = y - yerr
+            y2 = y + yerr
+
+            axis_dict["left"]["top"].fill_between(
+                x, y1, y2, color=color, alpha=0.3, zorder=2
+            )
+
+        # Interpolate the rejection function for nicer plotting
+        f = pchip(x, y)
+
+        # Check if the ratio_id divisor was already used or not
+        # If not, calculate the divisor for ratio_id and add it to list
+        if r_id not in f0_ratio:
+            f0_ratio[r_id] = f
+            axis_dict["left"][which_j].plot(
+                x, np.ones(len(x)), linestyle=style, color=color, linewidth=1.6
+            )
+            if binomialErrors:
+                axis_dict["left"][which_j].fill_between(
+                    x,
+                    1 - yerr / y,
+                    1 + yerr / y,
+                    color=color,
+                    alpha=0.3,
+                    zorder=1,
+                )
+            continue
+
+        # If ratio_id divisor already calculated, plot calculate ratio and plot
+        ratio_ix = f(x) / f0_ratio[r_id](x)
+        axis_dict["left"][which_j].plot(
+            x, ratio_ix, linestyle=style, color=color, linewidth=1.6
+        )
+        if binomialErrors:
+            axis_dict["left"][which_j].fill_between(
+                x,
+                ratio_ix - yerr / f(x),
+                ratio_ix + yerr / f(x),
+                color=color,
+                alpha=0.3,
+                zorder=1,
+            )
+
+    # Add axes, titles and the legend
+    axis_dict["left"]["top"].set_ylabel(
+        ylabel, fontsize=10, horizontalalignment="right", y=1.0, color=ycolor
+    )
+    axis_dict["left"]["top"].set_title(title)
+    axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
+    axis_dict["left"]["top"].grid()
+
+    # Check for log scale
+    if set_logy:
+        axis_dict["left"]["top"].set_yscale("log")
+
+    # Set grid for the ratio plots and set ylabel
+    for flav in flav_list:
+        axis_dict["left"][flav].grid()
+
+        if flav != "c" or flav != "b":
+            rlabel = f"{flav} Ratio"
+
+        else:
+            rlabel = r"${}$ Ratio"
+
+        axis_dict["left"][flav].set_ylabel(
+            rlabel,
+            labelpad=labelpad,
+            fontsize=10,
+        )
+
+    # Set xlabel for lowest ratio plot
+    axis_dict["left"][flav_list[1]].set_xlabel(
+        x_label, fontsize=10, horizontalalignment="right", x=1.0
+    )
+
+    # Hide the xlabels of the upper ratio and the main plot
+    plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
+    plt.setp(axis_dict["left"][flav_list[0]].get_xticklabels(), visible=False)
+
+    # Print label om plot
+    if alabel is not None:
+        axis_dict["left"]["top"].text(
+            **alabel, transform=axis_dict["left"]["top"].transAxes
+        )
+
+    # Set xlimit
+    axis_dict["left"]["top"].set_xlim(teffs[0].iloc[0], teffs[0].iloc[-1])
+    if xmin:
+        axis_dict["left"]["top"].set_xlim(xmin, 1)
+
+    # Check for ylimit and set according to options
+    if ymax is not None:
+        if ymin is not None:
+            axis_dict["left"]["top"].set_ylim(ymin, ymax)
+        else:
+            axis_dict["left"]["top"].set_ylim(1, ymax)
+    elif ymin is not None:
+        _, top = axis_dict["left"]["top"].get_ylim()
+        axis_dict["left"]["top"].set_ylim(ymin, top)
+
+    # Increase y-axis for atlas label
+    left_y_limits = axis_dict["left"]["top"].get_ylim()
+    axis_dict["left"]["top"].set_ylim(left_y_limits[0], left_y_limits[1] * 1.2)
+
+    # Set ratio range
+    if Ratio_Cut is not None:
+        for flav in flav_list:
+            axis_dict["left"][flav].set_ylim(Ratio_Cut[0], Ratio_Cut[1])
+
+    # Create the two legends for rejection and model
+    line_list_rej = []
+    for i in range(2):
+        if flav_list[i] == "b" or flav_list[i] == "c":
+            label = r"${}$ Rejection".format(flav_list[i])
+
+        else:
+            label = f"{flav_list[i]} Rejection"
+        line = axis_dict["left"]["top"].plot(
+            np.nan, np.nan, color="k", label=label, linestyle=["-", "--"][i]
+        )
+        line_list_rej += line
+
+    legend1 = axis_dict["left"]["top"].legend(
+        handles=line_list_rej,
+        labels=[tmp.get_label() for tmp in line_list_rej],
+        loc="upper center",
+        fontsize=legFontSize,
+        ncol=legcols,
+    )
+
+    # Add the second legend to plot
+    axis_dict["left"]["top"].add_artist(legend1)
+
+    labels_list = []
+    lines_list = []
+
+    for line in lines:
+        for model in model_list:
+            if (
+                line.get_label() == model
+                and line.get_label() not in labels_list
+            ):
+                labels_list.append(line.get_label())
+                lines_list.append(line)
+
+    axis_dict["left"]["top"].legend(
+        handles=lines_list,
+        labels=labels_list,
+        loc=loc_legend,
+        fontsize=legFontSize,
+        ncol=legcols,
+    )
+
+    # Define ATLASTag
+    if UseAtlasTag is True:
+        pas.makeATLAStag(
+            ax=axis_dict["left"]["top"],
+            fig=fig,
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    # Set tight layout
+    plt.tight_layout()
+
+    # Set filename and save figure
+    if len(tag) != 0:
+        plt.savefig(
+            "{}/{}/rocRatio_{}.pdf".format(figDir, subDir, tag),
+            bbox_inches="tight",
+            transparent=True,
+        )
+    if plot_name is not None:
+        plt.savefig(plot_name, transparent=True)
+    plt.close()
+    plt.clf()
 
 
 def plotSaliency(
@@ -1745,9 +2118,6 @@ def plot_score_comparison(
     axis_dict["left"]["ratio"] = fig.add_subplot(
         gs[6:, 0], sharex=axis_dict["left"]["top"]
     )
-    if "right" in which_axis:
-        axis_dict["right"] = {}
-        axis_dict["right"]["top"] = axis_dict["left"]["top"].twinx()
 
     # Get binning for the plot
     _, Binning = np.histogram(
