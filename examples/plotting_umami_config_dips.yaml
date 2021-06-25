@@ -120,3 +120,41 @@ Dips_saliency_b_WP77_passed_ttbar:
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.925
+
+# Dips, ttbar
+Dips_prob_pb:
+  type: "probability"
+  data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
+  prediction_labels: "dips_pb" # For umami use umami_pX or dips_pX
+  plot_settings:
+    x_label: "DIPS Probability $b$-Jet"
+    Log: True
+    nBins: 50 # Number of bins
+    yAxisIncrease: 10 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+
+Dips_prob_comparison_pb:
+  type: "probability_comparison"
+  models_to_plot:
+    dips_r21:
+      data_set_name: "ttbar"
+      label: "DIPS"
+      prediction_label: "dips_pb"
+    rnnip_r21:
+      data_set_name: "ttbar"
+      label: "RNNIP"
+      prediction_label: "rnnip_pb"
+  plot_settings:
+    nBins: 50 # Number of bins
+    Log: True
+    x_label: "DIPS Probability $b$-Jet"
+    yAxisIncrease: 100 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
+    figsize: [8, 6] # [width, hight]
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+    Ratio_Cut: [0.5, 1.5]

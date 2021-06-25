@@ -75,6 +75,42 @@ beff_scan_tagger_compare_umami:
     ycolor_right: "blue"
     xmin: 0.6
 
+Umami_prob_pb:
+  type: "probability"
+  data_set_name: "ttbar"
+  prediction_labels: "umami_pb"
+  plot_settings:
+    x_label: "Umami Probability $b$-Jet"
+    Log: True
+    nBins: 50
+    yAxisIncrease: 10
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+
+Umami_prob_comparison_pb:
+  type: "probability_comparison"
+  models_to_plot:
+    umami_r21:
+      data_set_name: "ttbar"
+      label: "Umami"
+      prediction_label: "umami_pb"
+    rnnip_r21:
+      data_set_name: "ttbar"
+      label: "RNNIP"
+      prediction_label: "dips_pb"
+  plot_settings:
+    nBins: 50
+    Log: True
+    x_label: "DNN Probability $b$-Jet"
+    yAxisIncrease: 100
+    figsize: [8, 6]
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
+    yAxisAtlasTag: 0.9
+    Ratio_Cut: [0.5, 1.5]
 # Scanning b-eff, comparing Umami and DL1r, ttbar
 beff_scan_tagger_compare_umami:
   type: "ROC_Comparison"

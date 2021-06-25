@@ -43,6 +43,85 @@ confusion_matrix_Dips_ttbar:
 |---------|-----------|--------------------|-------------|
 | `prediction_labels` | List |  Necessary |A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
 
+#### Probability
+Plotting the DNN probability output for a specific class. For example:
+
+```yaml
+Dips_prob_pb:
+  type: "probability"
+  data_set_name: "ttbar"
+  prediction_labels: "dips_pb"
+  plot_settings:
+    x_label: "DIPS Probability $b$-Jet"
+    Log: True
+    nBins: 50
+    yAxisIncrease: 10
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+    yAxisAtlasTag: 0.9
+```
+
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `type` | String | Necessary | This gives the type of plot function used. Must be `"probability"` here. |
+| `data_set_name` | String | Necessary | Name of the dataset that is used. This is set at the evaluation in the train config. |
+| `prediction_label` | String | Necessary | Decide, which DNN output is used. Must be in the evaluation file |
+| `x_label` | String | Optional | Set the x-axis label. Default is "DNN Output" |
+| `Log` | Bool | Optional | Decide if the y-axis plotted in log |
+|`nBins` | Int | Optional | Number of bins that are used. |
+|`yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+|`UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+|`AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+|`SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+|`yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+
+#### Probability Comparison
+Plotting the DNN probability output for different models. For example:
+
+```yaml
+Dips_prob_comparison_pb:
+  type: "probability_comparison"
+  models_to_plot:
+    dips_r21:
+      data_set_name: "ttbar"
+      label: "DIPS"
+      prediction_label: "dips_pb"
+    rnnip_r21:
+      data_set_name: "ttbar"
+      label: "RNNIP"
+      prediction_label: "rnnip_pb"
+  plot_settings:
+    nBins: 50
+    Log: True
+    x_label: "DIPS Probability $b$-Jet"
+    yAxisIncrease: 100
+    figsize: [8, 6]
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
+    yAxisAtlasTag: 0.9
+    Ratio_Cut: [0.5, 1.5]
+```
+
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `type` | String | Necessary | This gives the type of plot function used. Must be `"probability_comparison"` here. |
+|`dips_r21` | None | Necessary | Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything. |
+| `data_set_name` | String | Necessary | Name of the dataset that is used. This is set at the evaluation in the train config. |
+|`label` | String | Necessary | Label for the Legend in the plot. Will be "FLAVOUR-jet LABEL" |
+| `prediction_label` | String | Necessary | Decide, which DNN output is used. Must be in the evaluation file |
+| `x_label` | String | Optional | Set the x-axis label. Default is "DNN Output" |
+| `Log` | Bool | Optional | Decide if the y-axis plotted in log |
+|`nBins` | Int | Optional | Number of bins that are used. |
+|`yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+|`figsize` | List | Optional | A list of the width and hight of the plot. |
+|`UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+|`AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+|`SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+|`yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+
 #### Scores
 Plotting the b-tagging discriminant scores for the different jet flavors. For example:
 
