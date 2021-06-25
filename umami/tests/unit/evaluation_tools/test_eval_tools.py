@@ -14,6 +14,8 @@ from umami.evaluation_tools.PlottingFunctions import (
     discriminant_output_shape,
     eff_err,
     getDiscriminant,
+    plot_prob,
+    plot_prob_comparison,
     plot_score,
     plot_score_comparison,
     plotPtDependence,
@@ -197,6 +199,7 @@ class plot_score_TestCase(unittest.TestCase):
         self.plot_config = {
             "evaluation_file": None,
             "data_set_name": "ttbar",
+            "prediction_label": "dips_pb",
             "prediction_labels": ["dips_pb", "dips_pc", "dips_pu"],
             "discriminant": "b",
         }
@@ -398,6 +401,63 @@ class plot_score_TestCase(unittest.TestCase):
             compare_images(
                 self.plots_dir + "plotSaliency.png",
                 self.tmp_plot_dir + "plotSaliency.png",
+                tol=1,
+            ),
+        )
+
+    def test_plot_prob(self):
+        self.plot_config["prediction_labels"] = "dips_pb"
+        plot_prob(
+            plot_name=self.tmp_plot_dir + "plot_prob.png",
+            plot_config=self.plot_config,
+            eval_params=self.eval_params,
+            eval_file_dir=self.tmp_plot_dir,
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.plots_dir + "plot_prob.png",
+                self.tmp_plot_dir + "plot_prob.png",
+                tol=1,
+            ),
+        )
+        self.plot_config["prediction_labels"] = [
+            "dips_pb",
+            "dips_pc",
+            "dips_pu",
+        ]
+
+    def test_plot_prob_comparison(self):
+        df_results_ttbar = pd.read_hdf(
+            self.tmp_plot_dir + "/results-1.h5",
+            "ttbar",
+        )
+
+        df_results_zpext = pd.read_hdf(
+            self.tmp_plot_dir + "/results-1.h5",
+            "zpext",
+        )
+
+        self.df_list = [df_results_ttbar, df_results_zpext]
+        self.prediction_labels_list = [
+            "dips_pb",
+            "dips_pb",
+        ]
+        self.model_labels = ["DIPS ttbar", "DIPS zpext"]
+
+        plot_prob_comparison(
+            df_list=self.df_list,
+            prediction_labels_list=self.prediction_labels_list,
+            model_labels=self.model_labels,
+            plot_name=self.tmp_plot_dir + "plot_prob_comparison.png",
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.plots_dir + "plot_prob_comparison.png",
+                self.tmp_plot_dir + "plot_prob_comparison.png",
                 tol=1,
             ),
         )

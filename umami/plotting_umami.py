@@ -65,6 +65,58 @@ def GetParser():
     return args
 
 
+def plot_probability_comparison(
+    plot_name, plot_config, eval_params, eval_file_dir, print_model
+):
+    # Init dataframe list
+    df_list = []
+    model_labels = []
+    prediction_labels_list = []
+
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    # Check if use taus is defined
+    if (
+        "bool_use_taus" not in eval_params
+        or eval_params["bool_use_taus"] is None
+    ):
+        bool_use_taus = False
+
+    else:
+        bool_use_taus = eval_params["bool_use_taus"]
+
+    for model_name, model_config in plot_config["models_to_plot"].items():
+        if print_model:
+            logger.info(f"model: {model_name}")
+
+        if ("evaluation_file" not in model_config) or (
+            model_config["evaluation_file"] is None
+        ):
+            df_results = pd.read_hdf(
+                eval_file_dir + f"/results-{eval_epoch}.h5",
+                model_config["data_set_name"],
+            )
+
+        else:
+            df_results = pd.read_hdf(
+                model_config["evaluation_file"], model_config["data_set_name"]
+            )
+
+        df_list.append(df_results)
+        model_labels.append(model_config["label"])
+        prediction_labels_list.append(model_config["prediction_label"])
+
+    uet.plot_prob_comparison(
+        df_list=df_list,
+        prediction_labels_list=prediction_labels_list,
+        model_labels=model_labels,
+        plot_name=plot_name,
+        bool_use_taus=bool_use_taus,
+        **plot_config["plot_settings"],
+    )
+
+
 def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
     teffs = []
     beffs = []
@@ -672,12 +724,30 @@ def SetUpPlots(
                 **plot_config["plot_settings"],
             )
 
+        elif plot_config["type"] == "probability":
+            uet.plot_prob(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+                **plot_config["plot_settings"],
+            )
+
         elif plot_config["type"] == "saliency":
             uet.plotSaliency(
                 plot_name=save_plot_to,
                 FileDir=eval_file_dir,
                 epoch=int(eval_params["epoch"]),
                 **plot_config["plot_settings"],
+            )
+
+        elif plot_config["type"] == "probability_comparison":
+            plot_probability_comparison(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+                print_model=print_model,
             )
 
         elif plot_config["type"] == "scores_comparison":

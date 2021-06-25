@@ -2570,3 +2570,643 @@ def plotFractionScan(
     if plot_name is not None:
         plt.savefig(plot_name, transparent=True)
     plt.close()
+
+
+def plot_prob(
+    plot_name,
+    plot_config,
+    eval_params,
+    eval_file_dir,
+    bool_use_taus=False,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    nBins=50,
+    Log=False,
+    figsize=None,
+    loc_legend="best",
+    ncol=2,
+    x_label="DNN Output",
+    yAxisIncrease=1.3,
+    yAxisAtlasTag=0.9,
+):
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+    if "bool_use_taus" in eval_params:
+        bool_use_taus = eval_params["bool_use_taus"]
+
+    else:
+        bool_use_taus = False
+
+    # Read file, change to specific file if defined
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
+    ):
+        df_results = pd.read_hdf(
+            eval_file_dir + f"/results-{eval_epoch}.h5",
+            plot_config["data_set_name"],
+        )
+
+    else:
+        df_results = pd.read_hdf(
+            plot_config["evaluation_file"], plot_config["data_set_name"]
+        )
+
+    # Clear the figure and init a new one
+    if figsize is None:
+        plt.clf()
+        plt.figure(figsize=(8, 6))
+
+    else:
+        plt.clf()
+        plt.figure(figsize=(figsize[0], figsize[1]))
+
+    # Define the length of b, c, and light
+    len_b = len(df_results.query("labels==2"))
+    len_c = len(df_results.query("labels==1"))
+    len_u = len(df_results.query("labels==0"))
+    if bool_use_taus:
+        len_tau = len(df_results.query("labels==3"))
+
+    # Calculate the hists and bin edges for errorbands
+    counts_b, bins_b = np.histogram(
+        df_results.query("labels==2")[plot_config["prediction_labels"]],
+        bins=nBins,
+    )
+
+    counts_c, bins_c = np.histogram(
+        df_results.query("labels==1")[plot_config["prediction_labels"]],
+        # Use the calculated binning to ensure its equal
+        bins=bins_b,
+    )
+
+    counts_u, bins_u = np.histogram(
+        df_results.query("labels==0")[plot_config["prediction_labels"]],
+        # Use the calculated binning to ensure its equal
+        bins=bins_b,
+    )
+    if bool_use_taus:
+        counts_tau, bins_tau = np.histogram(
+            df_results.query("labels==3")[plot_config["prediction_labels"]],
+            # Use the calculated binning to ensure its equal
+            bins=bins_b,
+        )
+
+    # Calculate the bin centers
+    bincentres = [
+        (bins_b[i] + bins_b[i + 1]) / 2.0 for i in range(len(bins_b) - 1)
+    ]
+
+    # Calculate poisson uncertainties and lower bands
+    unc_b = np.sqrt(counts_b) / len_b
+    band_lower_b = counts_b / len_b - unc_b
+
+    unc_c = np.sqrt(counts_c) / len_c
+    band_lower_c = counts_c / len_c - unc_c
+
+    unc_u = np.sqrt(counts_u) / len_u
+    band_lower_u = counts_u / len_u - unc_u
+
+    if bool_use_taus:
+        unc_tau = np.sqrt(counts_tau) / len_tau
+        band_lower_tau = counts_tau / len_tau - unc_tau
+
+    # Hist the scores and their corresponding errors
+    plt.hist(
+        x=bins_b[:-1],
+        bins=bins_b,
+        weights=(counts_b / len_b),
+        histtype="step",
+        linewidth=2.0,
+        color="#1f77b4",
+        stacked=False,
+        fill=False,
+        label=r"$b$-jets",
+    )
+
+    plt.hist(
+        x=bincentres,
+        bins=bins_b,
+        bottom=band_lower_b,
+        weights=unc_b * 2,
+        fill=False,
+        hatch="/////",
+        linewidth=0,
+        edgecolor="#666666",
+    )
+
+    plt.hist(
+        x=bins_c[:-1],
+        bins=bins_c,
+        weights=counts_c / len_c,
+        histtype="step",
+        linewidth=2.0,
+        color="#ff7f0e",
+        stacked=False,
+        fill=False,
+        label=r"$c$-jets",
+    )
+
+    plt.hist(
+        x=bincentres,
+        bins=bins_c,
+        bottom=band_lower_c,
+        weights=unc_c * 2,
+        fill=False,
+        hatch="/////",
+        linewidth=0,
+        edgecolor="#666666",
+    )
+
+    if bool_use_taus:
+        plt.hist(
+            x=bins_u[:-1],
+            bins=bins_u,
+            weights=counts_u / len_u,
+            histtype="step",
+            linewidth=2.0,
+            color="#2ca02c",
+            stacked=False,
+            fill=False,
+            label=r"light-flavour jets",
+        )
+
+        plt.hist(
+            x=bincentres,
+            bins=bins_u,
+            bottom=band_lower_u,
+            weights=unc_u * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+        )
+
+        plt.hist(
+            x=bins_tau[:-1],
+            bins=bins_tau,
+            weights=counts_tau / len_tau,
+            histtype="step",
+            linewidth=2.0,
+            color="#7c5295",
+            stacked=False,
+            fill=False,
+            label=r"tau-flavour jets",
+        )
+
+        plt.hist(
+            x=bincentres,
+            bins=bins_tau,
+            bottom=band_lower_tau,
+            weights=unc_tau * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+            label="stat. unc.",
+        )
+    else:
+        plt.hist(
+            x=bins_u[:-1],
+            bins=bins_u,
+            weights=counts_u / len_u,
+            histtype="step",
+            linewidth=2.0,
+            color="#2ca02c",
+            stacked=False,
+            fill=False,
+            label=r"light-flavour jets",
+        )
+
+        plt.hist(
+            x=bincentres,
+            bins=bins_u,
+            bottom=band_lower_u,
+            weights=unc_u * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+            label="stat. unc.",
+        )
+
+    if Log is True:
+        plt.yscale("log")
+
+        # Increase ymax so atlas tag don't cut plot
+        ymin, ymax = plt.ylim()
+
+        if ymin <= 1e-8:
+            ymin = 1e-8
+
+        plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
+
+    else:
+        # Increase ymax so atlas tag don't cut plot
+        ymin, ymax = plt.ylim()
+        plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
+
+    # Set legend
+    plt.legend(loc=loc_legend, ncol=ncol)
+
+    # Set x label
+    if "x_label" in plot_config and plot_config["x_label"] is not None:
+        plt.xlabel(plot_config["x_label"])
+
+    else:
+        plt.xlabel(plot_config["prediction_labels"])
+
+    # Set y label
+    plt.ylabel("Normalised Number of Jets")
+
+    if UseAtlasTag is True:
+        pas.makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    plt.tight_layout()
+    plt.savefig(plot_name, transparent=True)
+    plt.close()
+
+
+def plot_prob_comparison(
+    df_list,
+    prediction_labels_list,
+    model_labels,
+    plot_name,
+    bool_use_taus=False,
+    UseAtlasTag=True,
+    AtlasTag="Internal Simulation",
+    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    tag="",
+    nBins=50,
+    figsize=None,
+    labelpad=None,
+    legFontSize=10,
+    loc_legend="best",
+    ncol=2,
+    Log=False,
+    Ratio_Cut=None,
+    which_axis="left",
+    x_label="DNN Output",
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    ycolor="black",
+    ycolor_right="black",
+    title=None,
+    ylabel="Normalised Number of Jets",
+    yAxisIncrease=1.3,
+    yAxisAtlasTag=0.9,
+):
+    if type(which_axis) != list:
+        which_axis = [which_axis] * len(df_list)
+
+    # Define the figure with two subplots of unequal sizes
+    axis_dict = {}
+
+    if figsize is None:
+        fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
+
+    else:
+        fig = plt.figure(figsize=(figsize[0], figsize[1]))
+
+    gs = gridspec.GridSpec(8, 1, figure=fig)
+    axis_dict["left"] = {}
+    axis_dict["left"]["top"] = fig.add_subplot(gs[:6, 0])
+    axis_dict["left"]["ratio"] = fig.add_subplot(
+        gs[6:, 0], sharex=axis_dict["left"]["top"]
+    )
+    if "right" in which_axis:
+        axis_dict["right"] = {}
+        axis_dict["right"]["top"] = axis_dict["left"]["top"].twinx()
+
+    # Get binning for the plot
+    _, Binning = np.histogram(
+        df_list[0].query("labels==2")[prediction_labels_list[0]], bins=nBins
+    )
+
+    # Calculate the bin centers
+    bincentres = [
+        (Binning[i] + Binning[i + 1]) / 2.0 for i in range(len(Binning) - 1)
+    ]
+
+    # Init bincout dict for ratio calculation
+    bincounts = {}
+
+    linestyles = ["solid", "dashed", "dotted", "dashdot"]
+    for i, (df_results, prediction_label, linestyle, which_a) in enumerate(
+        zip(df_list, prediction_labels_list, linestyles, which_axis)
+    ):
+        # Define the length of b, c, and light
+        len_b = len(df_results.query("labels==2"))
+        len_c = len(df_results.query("labels==1"))
+        len_u = len(df_results.query("labels==0"))
+        if bool_use_taus:
+            len_tau = len(df_results.query("labels==3"))
+
+        # Calculate the hists and bin edges for errorbands
+        counts_b, bins_b = np.histogram(
+            df_results.query("labels==2")[prediction_label],
+            # Use the calculated binning to ensure its equal
+            bins=Binning,
+        )
+
+        counts_c, bins_c = np.histogram(
+            df_results.query("labels==1")[prediction_label],
+            # Use the calculated binning to ensure its equal
+            bins=Binning,
+        )
+
+        counts_u, bins_u = np.histogram(
+            df_results.query("labels==0")[prediction_label],
+            # Use the calculated binning to ensure its equal
+            bins=Binning,
+        )
+
+        if bool_use_taus:
+            counts_tau, bins_tau = np.histogram(
+                df_results.query("labels==3")[prediction_label],
+                # Use the calculated binning to ensure its equal
+                bins=Binning,
+            )
+
+        # Calculate poisson uncertainties and lower bands
+        unc_b = np.sqrt(counts_b) / len_b
+        band_lower_b = counts_b / len_b - unc_b
+
+        unc_c = np.sqrt(counts_c) / len_c
+        band_lower_c = counts_c / len_c - unc_c
+
+        unc_u = np.sqrt(counts_u) / len_u
+        band_lower_u = counts_u / len_u - unc_u
+
+        if bool_use_taus:
+            unc_tau = np.sqrt(counts_tau) / len_tau
+            band_lower_tau = counts_tau / len_tau - unc_tau
+
+        hist_counts_b, _, _ = axis_dict[which_a]["top"].hist(
+            x=bins_b[:-1],
+            bins=bins_b,
+            weights=(counts_b / len_b),
+            histtype="step",
+            linewidth=2.0,
+            linestyle=linestyle,
+            color="#1f77b4",
+            stacked=False,
+            fill=False,
+            label=r"$b$-jets {}".format(model_labels[i]),
+        )
+
+        axis_dict[which_a]["top"].hist(
+            x=bincentres,
+            bins=bins_b,
+            bottom=band_lower_b,
+            weights=unc_b * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+        )
+
+        hist_counts_c, _, _ = axis_dict[which_a]["top"].hist(
+            x=bins_c[:-1],
+            bins=bins_c,
+            weights=counts_c / len_c,
+            histtype="step",
+            linewidth=2.0,
+            linestyle=linestyle,
+            color="#ff7f0e",
+            stacked=False,
+            fill=False,
+            label=r"$c$-jets {}".format(model_labels[i]),
+        )
+
+        axis_dict[which_a]["top"].hist(
+            x=bincentres,
+            bins=bins_c,
+            bottom=band_lower_c,
+            weights=unc_c * 2,
+            fill=False,
+            hatch="/////",
+            linewidth=0,
+            edgecolor="#666666",
+        )
+
+        hist_counts_u, _, _ = axis_dict[which_a]["top"].hist(
+            x=bins_u[:-1],
+            bins=bins_u,
+            weights=counts_u / len_u,
+            histtype="step",
+            linewidth=2.0,
+            linestyle=linestyle,
+            color="#2ca02c",
+            stacked=False,
+            fill=False,
+            label=r"light-flavour jets {}".format(model_labels[i]),
+        )
+
+        if bool_use_taus:
+            axis_dict[which_a]["top"].hist(
+                x=bincentres,
+                bins=bins_u,
+                bottom=band_lower_u,
+                weights=unc_u * 2,
+                fill=False,
+                hatch="/////",
+                linewidth=0,
+                edgecolor="#666666",
+            )
+
+            hist_counts_tau, _, _ = axis_dict[which_a]["top"].hist(
+                x=bins_tau[:-1],
+                bins=bins_tau,
+                weights=counts_tau / len_tau,
+                histtype="step",
+                linewidth=2.0,
+                linestyle=linestyle,
+                color="#7c5295",
+                stacked=False,
+                fill=False,
+                label=r"tau-flavour jets {}".format(model_labels[i]),
+            )
+
+            if i == 0:
+                axis_dict[which_a]["top"].hist(
+                    x=bincentres,
+                    bins=bins_tau,
+                    bottom=band_lower_tau,
+                    weights=unc_tau * 2,
+                    fill=False,
+                    hatch="/////",
+                    linewidth=0,
+                    edgecolor="#666666",
+                    label="stat. unc.",
+                )
+
+            else:
+                axis_dict[which_a]["top"].hist(
+                    x=bincentres,
+                    bins=bins_tau,
+                    bottom=band_lower_tau,
+                    weights=unc_tau * 2,
+                    fill=False,
+                    hatch="/////",
+                    linewidth=0,
+                    edgecolor="#666666",
+                )
+        else:
+            if i == 0:
+                axis_dict[which_a]["top"].hist(
+                    x=bincentres,
+                    bins=bins_u,
+                    bottom=band_lower_u,
+                    weights=unc_u * 2,
+                    fill=False,
+                    hatch="/////",
+                    linewidth=0,
+                    edgecolor="#666666",
+                    label="stat. unc.",
+                )
+
+            else:
+                axis_dict[which_a]["top"].hist(
+                    x=bincentres,
+                    bins=bins_u,
+                    bottom=band_lower_u,
+                    weights=unc_u * 2,
+                    fill=False,
+                    hatch="/////",
+                    linewidth=0,
+                    edgecolor="#666666",
+                )
+
+        bincounts.update({f"b{i}": hist_counts_b})
+        bincounts.update({f"c{i}": hist_counts_c})
+        bincounts.update({f"u{i}": hist_counts_u})
+        if bool_use_taus:
+            bincounts.update({f"tau{i}": hist_counts_tau})
+
+        if bool_use_taus:
+            loop_list = zip(
+                ["b", "c", "u", "tau"],
+                ["#1f77b4", "#ff7f0e", "#2ca02c", "#7c5295"],
+            )
+        else:
+            loop_list = zip(["b", "c", "u"], ["#1f77b4", "#ff7f0e", "#2ca02c"])
+
+        # Start ratio plot
+        if i != 0:
+            for (flavor, color) in loop_list:
+                step = np.divide(
+                    bincounts["{}{}".format(flavor, i)],
+                    bincounts["{}{}".format(flavor, 0)],
+                    out=np.ones(
+                        bincounts["{}{}".format(flavor, i)].shape,
+                        dtype=float,
+                    )
+                    * bincounts["{}{}".format(flavor, i)]
+                    + 1,
+                    where=(bincounts["{}{}".format(flavor, 0)] != 0),
+                )
+
+                step = np.append(np.array([step[0]]), step)
+
+                axis_dict["left"]["ratio"].step(
+                    x=Binning,
+                    y=step,
+                    color=color,
+                    linestyle=linestyles[i],
+                )
+
+        elif i == 0:
+            # Add black line at one
+            axis_dict["left"]["ratio"].axhline(
+                y=1,
+                xmin=axis_dict["left"]["ratio"].get_xlim()[0],
+                xmax=axis_dict["left"]["ratio"].get_xlim()[1],
+                color="black",
+                alpha=0.5,
+            )
+
+    # Add axes, titels and the legend
+    axis_dict["left"]["top"].set_ylabel(
+        ylabel, fontsize=12, horizontalalignment="right", y=1.0, color=ycolor
+    )
+    if title is not None:
+        axis_dict["left"]["top"].set_title(title)
+    axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
+    axis_dict["left"]["ratio"].set_xlabel(
+        x_label, fontsize=12, horizontalalignment="right", x=1.0
+    )
+
+    axis_dict["left"]["ratio"].set_ylabel(
+        "Ratio",
+        labelpad=labelpad,
+        fontsize=12,
+    )
+
+    if Ratio_Cut is not None:
+        axis_dict["left"]["ratio"].set_ylim(
+            bottom=Ratio_Cut[0], top=Ratio_Cut[1]
+        )
+
+    plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
+
+    if xmin is not None:
+        axis_dict["left"]["top"].set_xlim(left=xmin)
+
+    else:
+        axis_dict["left"]["top"].set_xlim(left=Binning[0])
+
+    if xmax is not None:
+        axis_dict["left"]["top"].set_xlim(right=xmax)
+
+    else:
+        axis_dict["left"]["top"].set_xlim(right=Binning[-1])
+
+    if ymin is not None:
+        axis_dict["left"]["top"].set_ylim(bottom=ymin)
+
+    if ymax is not None:
+        axis_dict["left"]["top"].set_ylim(top=ymax)
+
+    if Log is True:
+        axis_dict["left"]["top"].set_yscale("log")
+
+    left_y_limits = axis_dict["left"]["top"].get_ylim()
+    if Log is False:
+        axis_dict["left"]["top"].set_ylim(
+            left_y_limits[0], left_y_limits[1] * yAxisIncrease
+        )
+
+    elif Log is True:
+        axis_dict["left"]["top"].set_ylim(
+            left_y_limits[0] * 0.1, left_y_limits[1] * yAxisIncrease
+        )
+
+    axis_dict["left"]["top"].legend(
+        loc=loc_legend,
+        fontsize=legFontSize,
+        ncol=ncol,
+    )  # , title="DL1r")
+
+    if UseAtlasTag is True:
+        pas.makeATLAStag(
+            ax=axis_dict["left"]["top"],
+            fig=fig,
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    plt.tight_layout()
+    if plot_name is not None:
+        plt.savefig(plot_name, transparent=True)
+    plt.close()
+    # plt.show()
