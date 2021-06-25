@@ -11,6 +11,7 @@ from tensorflow.keras.layers import Lambda
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.utils import CustomObjectScope
 
+import umami.preprocessing_tools as upt
 import umami.train_tools as utt
 from umami.evaluation_tools.PlottingFunctions import (
     GetScore,
@@ -103,6 +104,13 @@ def EvaluateModel(
     else:
         nJets = args.nJets
 
+    # Check the config if the trained model is also to be evaluated
+    if "evaluate_trained_model" not in Eval_params:
+        Eval_model_bool = True
+
+    else:
+        Eval_model_bool = Eval_params["evaluate_trained_model"]
+
     # Test if multiple taggers are given or not
     if type(Eval_params["tagger"]) is not list:
         tagger_list = [Eval_params["tagger"]]
@@ -112,35 +120,33 @@ def EvaluateModel(
         tagger_list = Eval_params["tagger"]
         fc_list = Eval_params["fc_values_comp"]
 
-    # Get model file path
-    model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
-    logger.info(f"Evaluating {model_file}")
+    if Eval_model_bool is True:
+        # Get model file path
+        model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
+        logger.info(f"Evaluating {model_file}")
 
-    # Define excluded variables and laod them
-    exclude = []
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
+        # Define excluded variables and laod them
+        exclude = []
+        if "exclude" in train_config.config:
+            exclude = train_config.config["exclude"]
 
-    # Load the test jets
-    X_test, X_test_trk, Y_test = utt.GetTestFile(
-        test_file,
-        train_config.var_dict,
-        preprocess_config,
-        nJets=nJets,
-        exclude=exclude,
-    )
+        # Load the test jets
+        X_test, X_test_trk, Y_test = utt.GetTestFile(
+            test_file,
+            train_config.var_dict,
+            preprocess_config,
+            nJets=nJets,
+            exclude=exclude,
+        )
 
-    # Load the model for evaluation. Note: The Sum is needed here!
-    with CustomObjectScope({"Sum": utt.Sum}):
-        model = load_model(model_file)
+        # Load the model for evaluation. Note: The Sum is needed here!
+        with CustomObjectScope({"Sum": utt.Sum}):
+            model = load_model(model_file)
 
-    # Predict the output of the model on the test jets
-    pred_dips, pred_umami = model.predict(
-        [X_test_trk, X_test], batch_size=5000, verbose=0
-    )
-
-    # Get truth labelling
-    y_true = np.argmax(Y_test, axis=1)
+        # Predict the output of the model on the test jets
+        pred_dips, pred_umami = model.predict(
+            [X_test_trk, X_test], batch_size=5000, verbose=0
+        )
 
     # Set flavour indicies
     b_index, c_index, u_index = 2, 1, 0
@@ -164,18 +170,35 @@ def EvaluateModel(
     # Exclude all flavors that are not light, c or b
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
 
-    # Define new dict with the evaluation results
-    df_discs_dict = {
-        "umami_pb": pred_umami[:, b_index],
-        "umami_pc": pred_umami[:, c_index],
-        "umami_pu": pred_umami[:, u_index],
-        "dips_pb": pred_dips[:, b_index],
-        "dips_pc": pred_dips[:, c_index],
-        "dips_pu": pred_dips[:, u_index],
-        "pt": df[global_config.pTvariable],
-        "eta": df[global_config.etavariable],
-        "labels": y_true,
-    }
+    # Get the truth information from files when trained model is not
+    # going to be evaluated
+    if Eval_model_bool is not True:
+        Y_test = upt.GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
+
+    # Get truth labelling
+    y_true = np.argmax(Y_test, axis=1)
+
+    if Eval_model_bool is True:
+        # Define new dict with the evaluation results
+        df_discs_dict = {
+            "umami_pb": pred_umami[:, b_index],
+            "umami_pc": pred_umami[:, c_index],
+            "umami_pu": pred_umami[:, u_index],
+            "dips_pb": pred_dips[:, b_index],
+            "dips_pc": pred_dips[:, c_index],
+            "dips_pu": pred_dips[:, u_index],
+            "pt": df[global_config.pTvariable],
+            "eta": df[global_config.etavariable],
+            "labels": y_true,
+        }
+
+    else:
+        # Define new dict with the evaluation results
+        df_discs_dict = {
+            "pt": df[global_config.pTvariable],
+            "eta": df[global_config.etavariable],
+            "labels": y_true,
+        }
 
     # Calculate dics values and add them to the dict
     for tagger in tagger_list:
@@ -228,20 +251,22 @@ def EvaluateModel(
 
     # Loop over effs for ROC plots
     for eff in b_effs:
-        # Add the rejections from the trained models
-        # Umami
-        crej_i, urej_i, _ = utt.GetRejection(
-            pred_umami, Y_test, target_eff=eff, frac=args.cfrac
-        )
-        crej_dict["umami"].append(crej_i)
-        urej_dict["umami"].append(urej_i)
 
-        # Dips part
-        crej_i, urej_i, _ = utt.GetRejection(
-            pred_dips, Y_test, target_eff=eff, frac=args.cfrac
-        )
-        crej_dict["dips"].append(crej_i)
-        urej_dict["dips"].append(urej_i)
+        if Eval_model_bool is True:
+            # Add the rejections from the trained models
+            # Umami
+            crej_i, urej_i, _ = utt.GetRejection(
+                pred_umami, Y_test, target_eff=eff, frac=args.cfrac
+            )
+            crej_dict["umami"].append(crej_i)
+            urej_dict["umami"].append(urej_i)
+
+            # Dips part
+            crej_i, urej_i, _ = utt.GetRejection(
+                pred_dips, Y_test, target_eff=eff, frac=args.cfrac
+            )
+            crej_dict["dips"].append(crej_i)
+            urej_dict["dips"].append(urej_i)
 
         for tagger in tagger_list:
             crej_tmp, urej_tmp, _ = utt.GetRejection(
@@ -272,20 +297,21 @@ def EvaluateModel(
         urej_cfrac_dict.update({tagger: []})
 
     for fc in fc_values:
-        # Add the rejections from the trained models
-        # Umami
-        crej_i, urej_i, _ = utt.GetRejection(
-            pred_umami, Y_test, target_eff=args.beff, frac=fc
-        )
-        crej_cfrac_dict["umami"].append(crej_i)
-        urej_cfrac_dict["umami"].append(urej_i)
+        if Eval_model_bool is True:
+            # Add the rejections from the trained models
+            # Umami
+            crej_i, urej_i, _ = utt.GetRejection(
+                pred_umami, Y_test, target_eff=args.beff, frac=fc
+            )
+            crej_cfrac_dict["umami"].append(crej_i)
+            urej_cfrac_dict["umami"].append(urej_i)
 
-        # Dips part
-        crej_i, urej_i, _ = utt.GetRejection(
-            pred_dips, Y_test, target_eff=args.beff, frac=fc
-        )
-        crej_cfrac_dict["dips"].append(crej_i)
-        urej_cfrac_dict["dips"].append(urej_i)
+            # Dips part
+            crej_i, urej_i, _ = utt.GetRejection(
+                pred_dips, Y_test, target_eff=args.beff, frac=fc
+            )
+            crej_cfrac_dict["dips"].append(crej_i)
+            urej_cfrac_dict["dips"].append(urej_i)
 
         for tagger in tagger_list:
             crej_tmp, urej_tmp, _ = utt.GetRejection(
@@ -298,18 +324,25 @@ def EvaluateModel(
             crej_cfrac_dict[tagger].append(crej_tmp)
             urej_cfrac_dict[tagger].append(urej_tmp)
 
-    df_eff_rej_dict = {
-        "beff": b_effs,
-        "umami_crej": crej_dict["umami"],
-        "umami_urej": urej_dict["umami"],
-        "dips_crej": crej_dict["dips"],
-        "dips_urej": urej_dict["dips"],
-        "fc_values": fc_values,
-        "umami_cfrac_crej": crej_cfrac_dict["umami"],
-        "umami_cfrac_urej": urej_cfrac_dict["umami"],
-        "dips_cfrac_crej": crej_cfrac_dict["dips"],
-        "dips_cfrac_urej": urej_cfrac_dict["dips"],
-    }
+    if Eval_model_bool is True:
+        df_eff_rej_dict = {
+            "beff": b_effs,
+            "umami_crej": crej_dict["umami"],
+            "umami_urej": urej_dict["umami"],
+            "dips_crej": crej_dict["dips"],
+            "dips_urej": urej_dict["dips"],
+            "fc_values": fc_values,
+            "umami_cfrac_crej": crej_cfrac_dict["umami"],
+            "umami_cfrac_urej": urej_cfrac_dict["umami"],
+            "dips_cfrac_crej": crej_cfrac_dict["dips"],
+            "dips_cfrac_urej": urej_cfrac_dict["dips"],
+        }
+
+    else:
+        df_eff_rej_dict = {
+            "beff": b_effs,
+            "fc_values": fc_values,
+        }
 
     for tagger in tagger_list:
         df_eff_rej_dict.update(

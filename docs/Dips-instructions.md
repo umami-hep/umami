@@ -95,8 +95,21 @@ NN_structure:
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
+    # Decide if the trained model is evaluated or only the taggers that are already in the samples
+    evaluate_trained_model: False
+
     # Number of jets used for validation
     n_jets: 3e5
+
+    # Define taggers that are used for comparison in evaluate_model
+    # This can be a list or a string for only one tagger
+    tagger: ["rnnip", "DL1r"]
+
+    # Define fc values for the taggers
+    fc_values_comp: {
+        "rnnip": 0.08,
+        "DL1r": 0.018,
+    }
 
     # Charm fraction value used for evaluation
     fc_value: 0.018
@@ -171,3 +184,10 @@ evaluate_model.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips -e 5
 
 The `-e` options (here `5`) allows to set the training epoch which should be evaluated. The `--dips` option defines that the dips tagger is used.
 It will produce .h5 and .pkl files with the evaluations which will be saved in the model folder in an extra folder called `results/`. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. For an explanation, look in the [plotting_umami documentation](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting_umami.md)
+
+## Evaluate taggers already inside the samples
+If you just want to evaluate the comparison taggers that are also defined in the `Eval_parameters_validation`, you can run the `evaluate_model` with the `evaluate_trained_model` option on `False`. Also the `--dips` is not allowed here. For example:
+
+```bash
+evaluate_model.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml -e 5
+```
