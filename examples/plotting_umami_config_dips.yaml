@@ -42,6 +42,33 @@ scores_Dips_ttbar_comparison:
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
     Ratio_Cut: [0.5, 1.5]
 
+Dips_pT_vs_beff:
+  type: "pT_vs_eff"
+  models_to_plot:
+    rnnip:
+      data_set_name: "ttbar"
+      label: "Reco. RNNIP"
+      prediction_labels: ["rnnip_pb", "rnnip_pc", "rnnip_pu"]
+    dips:
+      data_set_name: "ttbar"
+      label: "DIPS"
+      prediction_labels: ["dips_pb", "dips_pc", "dips_pu"]
+  plot_settings:
+    bin_edges: [0, 20, 30, 40, 60, 85, 110, 140, 175, 250, 400, 1000]
+    flavor: 2
+    WP: 0.77
+    WP_Line: True
+    binomialErrors: True
+    Fixed_WP_Bin: False
+    Same_WP_Cut_Comparison: False
+    figsize: [7, 5]
+    Log: False
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
+    yAxisAtlasTag: 0.9
+    yAxisIncrease: 1.3
+
 Dips_light_flavour_ttbar:
   type: "ROC"
   models_to_plot:

@@ -37,6 +37,7 @@ def runPlotting(config, tagger):
             "plotting_umami",
             "-f",
             "pdf",
+            "-p",
         ]
     )
     try:
