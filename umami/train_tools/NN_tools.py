@@ -14,8 +14,10 @@ from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.models import load_model
 
+from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
-from umami.tools import yaml_loader
+from umami.tools import replaceLineInFile, yaml_loader
+from umami.train_tools import Configuration as Train_Configuration
 
 
 def atoi(text):
@@ -50,30 +52,123 @@ def get_parameters_from_validation_dict_name(dict_name):
 def create_metadata_folder(
     train_config_path,
     model_name,
-    preprocess_config,
+    preprocess_config_path,
     overwrite_config=False,
 ):
     # Check if model path already existing
     # If not, make it
     os.makedirs(os.path.join(model_name, "metadata"), exist_ok=True)
 
+    # Get Variable dict
+    train_config = Train_Configuration(train_config_path)
+    var_dict_path = train_config.var_dict
+
+    # Get scale dict
+    preprocess_config = Preprocess_Configuration(preprocess_config_path)
+    scale_dict_path = preprocess_config.dict_file
+
     # Copy files to metadata folder if not existing
-    for file in [train_config_path, preprocess_config]:
+    for file_path in [
+        train_config_path,
+        preprocess_config_path,
+        var_dict_path,
+        scale_dict_path,
+    ]:
         if overwrite_config is True:
-            logger.info(f"Copy {file} to metadata folder!")
+            logger.info(f"Copy {file_path} to metadata folder!")
             copyfile(
-                file,
-                os.path.join(model_name, "metadata", os.path.basename(file)),
+                file_path,
+                os.path.join(
+                    model_name, "metadata", os.path.basename(file_path)
+                ),
             )
 
+            # Change the paths for the preprocess config and var dict in the train_config
+            if file_path == train_config_path:
+                metadata_preprocess_config_path = os.path.join(
+                    os.getcwd(),
+                    model_name,
+                    "metadata",
+                    os.path.basename(preprocess_config_path),
+                )
+
+                metadata_var_dict_path = os.path.join(
+                    os.getcwd(),
+                    model_name,
+                    "metadata",
+                    os.path.basename(var_dict_path),
+                )
+
+                replaceLineInFile(
+                    os.path.join(
+                        model_name, "metadata", os.path.basename(file_path)
+                    ),
+                    "preprocess_config:",
+                    f"preprocess_config: {metadata_preprocess_config_path}",
+                )
+
+                replaceLineInFile(
+                    os.path.join(
+                        model_name, "metadata", os.path.basename(file_path)
+                    ),
+                    "var_dict:",
+                    f"var_dict: {metadata_var_dict_path}",
+                )
+
+            if file_path == preprocess_config_path:
+                metadata_scale_dict_path = os.path.join(
+                    os.getcwd(),
+                    model_name,
+                    "metadata",
+                    os.path.basename(scale_dict_path),
+                )
+
+                replaceLineInFile(
+                    os.path.join(
+                        model_name, "metadata", os.path.basename(file_path)
+                    ),
+                    "dict_file:",
+                    f"dict_file: {metadata_scale_dict_path}",
+                )
+
         elif not os.path.isfile(
-            os.path.join(model_name, "metadata", os.path.basename(file))
+            os.path.join(model_name, "metadata", os.path.basename(file_path))
         ):
-            logger.info(f"Copy {file} to metadata folder!")
+            logger.info(f"Copy {file_path} to metadata folder!")
             copyfile(
-                file,
-                os.path.join(model_name, "metadata", os.path.basename(file)),
+                file_path,
+                os.path.join(
+                    model_name, "metadata", os.path.basename(file_path)
+                ),
             )
+
+            # Change the paths for the preprocess config and var dict in the train_config
+            if file_path == train_config_path:
+                metadata_preprocess_config_path = os.path.join(
+                    model_name,
+                    "metadata",
+                    os.path.basename(preprocess_config_path),
+                )
+
+                metadata_var_dict_path = os.path.join(
+                    model_name, "metadata", os.path.basename(var_dict_path)
+                )
+
+                replaceLineInFile(
+                    os.path.join(
+                        model_name, "metadata", os.path.basename(file_path)
+                    ),
+                    "preprocess_config:",
+                    f"  preprocess_config: {metadata_preprocess_config_path}",
+                )
+
+                replaceLineInFile(
+                    os.path.join(
+                        model_name, "metadata", os.path.basename(file_path)
+                    ),
+                    "var_dict:",
+                    f"  var_dict: {metadata_var_dict_path}",
+                )
 
 
 def GetRejection(
