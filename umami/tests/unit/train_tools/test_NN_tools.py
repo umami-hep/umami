@@ -1,10 +1,12 @@
 import os
 import tempfile
 import unittest
+from shutil import copyfile
 from subprocess import run
 
 import numpy as np
 
+from umami.tools import replaceLineInFile
 from umami.train_tools.Configuration import Configuration
 from umami.train_tools.NN_tools import (
     GetRejection,
@@ -112,15 +114,42 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         self.preprocess_config = os.path.join(
             self.tmp_test_dir, "preprocess_config.yaml"
         )
+        self.var_dict_path = os.path.join(self.tmp_test_dir, "Var_Dict.yaml")
+        self.scale_dict_path = os.path.join(
+            self.tmp_test_dir, "scale_dict.json"
+        )
 
-        run(["touch", f"{self.train_config_path}"])
-        run(["touch", f"{self.preprocess_config}"])
+        run(["touch", f"{self.var_dict_path}"])
+        run(["touch", f"{self.scale_dict_path}"])
+
+        copyfile(
+            os.path.join(
+                os.getcwd(), "examples/Dips-PFlow-Training-config.yaml"
+            ),
+            self.train_config_path,
+        )
+        copyfile(
+            os.path.join(os.getcwd(), "examples/PFlow-Preprocessing.yaml"),
+            self.preprocess_config,
+        )
+
+        replaceLineInFile(
+            self.train_config_path,
+            "var_dict:",
+            f"var_dict: {self.var_dict_path}",
+        )
+
+        replaceLineInFile(
+            self.preprocess_config,
+            "dict_file:",
+            f"dict_file: {self.scale_dict_path}",
+        )
 
     def test_create_metadata_folder(self):
         create_metadata_folder(
             train_config_path=self.train_config_path,
             model_name=self.model_name,
-            preprocess_config=self.preprocess_config,
+            preprocess_config_path=self.preprocess_config,
             overwrite_config=False,
         )
 
@@ -142,7 +171,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         create_metadata_folder(
             train_config_path=self.train_config_path,
             model_name=self.model_name,
-            preprocess_config=self.preprocess_config,
+            preprocess_config_path=self.preprocess_config,
             overwrite_config=True,
         )
 
