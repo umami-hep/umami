@@ -24,7 +24,8 @@ The larger release 22 samples with RNNIP, DL1* and DIPS.
 | Sample | h5 ntuples | h5 ntuples (looser track selection)   |  DAOD_PHYSVAL derivations| AOD |
 | ------------- | ---------------- | ---------------- | ---------------- | ---------------- |
 | ttbar | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4567_tid25793860_00.EMPFlow.2021-06-11-T160157-R23145_output.h5 | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4567_tid25793860_00.EMPFlow_loose.2021-06-11-T160410-R20224_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_e5984_s3126_r12629_p4567_tid25793860_00 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_e5984_s3126_r12629_tid25647818_00 
-| Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4567.EMPFlow.2021-06-11-T160157-R23145_output.h5 | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4567.EMPFlow_loose.2021-06-11-T160410-R20224_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_e7400_s3672_r12629_r12636_p4567_tid25788397_00 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.merge.AOD.e7954_e7400_s3672_r12629_r12636_tid25647816_00 |
+| Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3672_r12629_p4567.EMPFlow.2021-06-28-T144648-R16146_output.h5 | user.alfroch.800030.btagTraining.e7954_s3672_r12629_p4567.EMPFlow_loose.2021-06-28-T144904-R30279_output.h5 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_p4567 | |
+| Z' | user.alfroch.500567.btagTraining.e7954_s3672_r12629_p4567.EMPFlow.2021-06-28-T144648-R16146_output.h5 | user.alfroch.500567.btagTraining.e7954_s3672_r12629_p4567.EMPFlow_loose.2021-06-28-T144904-R30279_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_p4567 | |
 
 ## Small Validation Release 22 Samples
 
