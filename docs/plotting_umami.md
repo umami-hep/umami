@@ -244,12 +244,12 @@ Dips_light_flavour_ttbar:
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
 | `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 
-#### Double ROC Curves
-Plotting the ROC Curves of two rejection rates against the a efficiency. For example:
+#### Comparison ROC Curves (Double Rejection ROC)
+Plotting the ROC Curves of two rejection rates against a efficiency. For example:
 
 ```yaml
 Dips_Comparison_flavour_ttbar:
-  type: "ROC"
+  type: "ROC_Comparison"
   models_to_plot:
     rnnip_r21_u:
       data_set_name: "ttbar"
