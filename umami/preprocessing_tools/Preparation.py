@@ -2,7 +2,6 @@
 Helper functions to creating hybrid hdf5 samples from ttbar and Zprime ntuples
 """
 import h5py
-
 import numpy as np
 
 from umami.configuration import logger
@@ -15,6 +14,7 @@ def get_jets(
     sample_type,
     sample_category=None,
     write_tracks=False,
+    tracks_dset_name=None,
     cuts=None,
     extended_labelling=False,
 ):
@@ -44,7 +44,8 @@ def get_jets(
     jets = data_set["jets"]
     logger.info(f"Total number of jets in file: {jets.size}")
     if write_tracks:
-        tracks = data_set["tracks"]
+        tracks = data_set[tracks_dset_name]
+        logger.debug(f"Tracks dataset: {tracks_dset_name}")
         logger.info(f"Total number of tracks in file: {tracks.size}")
 
     indices_to_remove = GetSampleCuts(jets, cuts, extended_labelling)
