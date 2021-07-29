@@ -43,6 +43,11 @@ def GetParser():
         help="Stores also track information.",
     )
     parser.add_argument(
+        "--tracks_name",
+        default="tracks",
+        help="Enter the name of the tracks dataset.",
+    )
+    parser.add_argument(
         "-v",
         "--var_dict",
         default=None,
@@ -234,6 +239,7 @@ def RunPreparation(args, config):
                 sample_type,
                 sample_category,
                 args.tracks,
+                args.tracks_name,
                 cuts,
                 extended_labelling,
             )
@@ -246,6 +252,7 @@ def RunPreparation(args, config):
                 sample_type,
                 sample_category,
                 args.tracks,
+                args.tracks_name,
                 cuts,
                 extended_labelling,
             )
@@ -507,10 +514,18 @@ def RunUndersampling(args, config):
                     ]
                 )
 
-        indices_toremove_Zprime = upt.GetCuts(vec_Z, config, "Zprime", extended_labelling)
-        indices_toremove_bjets = upt.GetCuts(vec_tt_bjets, config, "ttbar", extended_labelling)
-        indices_toremove_cjets = upt.GetCuts(vec_tt_cjets, config, "ttbar", extended_labelling)
-        indices_toremove_ujets = upt.GetCuts(vec_tt_ujets, config, "ttbar", extended_labelling)
+        indices_toremove_Zprime = upt.GetCuts(
+            vec_Z, config, "Zprime", extended_labelling
+        )
+        indices_toremove_bjets = upt.GetCuts(
+            vec_tt_bjets, config, "ttbar", extended_labelling
+        )
+        indices_toremove_cjets = upt.GetCuts(
+            vec_tt_cjets, config, "ttbar", extended_labelling
+        )
+        indices_toremove_ujets = upt.GetCuts(
+            vec_tt_ujets, config, "ttbar", extended_labelling
+        )
         if take_taus:
             indices_toremove_taujets = upt.GetCuts(vec_tt_taujets, config)
 
@@ -533,13 +548,30 @@ def RunUndersampling(args, config):
 
         if extended_labelling:
             bjets = np.concatenate(
-                [vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 5 | vec_Z["HadronConeExclExtendedTruthLabelID"] == 54], vec_tt_bjets]
+                [
+                    vec_Z[
+                        vec_Z["HadronConeExclExtendedTruthLabelID"]
+                        == 5 | vec_Z["HadronConeExclExtendedTruthLabelID"]
+                        == 54
+                    ],
+                    vec_tt_bjets,
+                ]
             )
             cjets = np.concatenate(
-                [vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 4 | vec_Z["HadronConeExclExtendedTruthLabelID"] == 44], vec_tt_cjets]
+                [
+                    vec_Z[
+                        vec_Z["HadronConeExclExtendedTruthLabelID"]
+                        == 4 | vec_Z["HadronConeExclExtendedTruthLabelID"]
+                        == 44
+                    ],
+                    vec_tt_cjets,
+                ]
             )
             ujets = np.concatenate(
-                [vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 0], vec_tt_ujets]
+                [
+                    vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 0],
+                    vec_tt_ujets,
+                ]
             )
         else:
             bjets = np.concatenate(
@@ -555,7 +587,9 @@ def RunUndersampling(args, config):
             if extended_labelling:
                 taujets = np.concatenate(
                     [
-                        vec_Z[vec_Z["HadronConeExclExtendedTruthLabelID"] == 15],
+                        vec_Z[
+                            vec_Z["HadronConeExclExtendedTruthLabelID"] == 15
+                        ],
                         vec_tt_taujets,
                     ]
                 )
@@ -574,19 +608,29 @@ def RunUndersampling(args, config):
             if extended_labelling:
                 btrk = np.concatenate(
                     [
-                        tnp_Zprime[vec_Z["HadronConeExclExtendedTruthLabelID"] == 5 | vec_Z["HadronConeExclExtendedTruthLabelID"] == 54],
+                        tnp_Zprime[
+                            vec_Z["HadronConeExclExtendedTruthLabelID"]
+                            == 5 | vec_Z["HadronConeExclExtendedTruthLabelID"]
+                            == 54
+                        ],
                         tnp_tt_b,
                     ]
                 )
                 ctrk = np.concatenate(
                     [
-                        tnp_Zprime[vec_Z["HadronConeExclExtendedTruthLabelID"] == 4 | vec_Z["HadronConeExclExtendedTruthLabelID"] == 44],
+                        tnp_Zprime[
+                            vec_Z["HadronConeExclExtendedTruthLabelID"]
+                            == 4 | vec_Z["HadronConeExclExtendedTruthLabelID"]
+                            == 44
+                        ],
                         tnp_tt_c,
                     ]
                 )
                 utrk = np.concatenate(
                     [
-                        tnp_Zprime[vec_Z["HadronConeExclExtendedTruthLabelID"] == 0],
+                        tnp_Zprime[
+                            vec_Z["HadronConeExclExtendedTruthLabelID"] == 0
+                        ],
                         tnp_tt_u,
                     ]
                 )
@@ -613,14 +657,19 @@ def RunUndersampling(args, config):
                 if extended_labelling:
                     tautrk = np.concatenate(
                         [
-                            tnp_Zprime[vec_Z["HadronConeExclExtendedTruthLabelID"] == 15],
+                            tnp_Zprime[
+                                vec_Z["HadronConeExclExtendedTruthLabelID"]
+                                == 15
+                            ],
                             tnp_tt_tau,
                         ]
                     )
                 else:
                     tautrk = np.concatenate(
                         [
-                            tnp_Zprime[vec_Z["HadronConeExclTruthLabelID"] == 15],
+                            tnp_Zprime[
+                                vec_Z["HadronConeExclTruthLabelID"] == 15
+                            ],
                             tnp_tt_tau,
                         ]
                     )
