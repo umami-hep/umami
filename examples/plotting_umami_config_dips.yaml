@@ -1,6 +1,6 @@
 # Evaluation parameters
 Eval_parameters:
-  Path_to_models_dir: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami
+  Path_to_models_dir: /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami
   model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
   epoch: 59
   bool_use_taus: False
@@ -166,19 +166,19 @@ Dips_prob_pb:
 Dips_prob_comparison_pb:
   type: "probability_comparison"
   models_to_plot:
-    dips_r21:
-      data_set_name: "ttbar"
-      label: "DIPS"
-      prediction_label: "dips_pb"
     rnnip_r21:
       data_set_name: "ttbar"
       label: "RNNIP"
       prediction_label: "rnnip_pb"
+    dips_r21:
+      data_set_name: "ttbar"
+      label: "DIPS"
+      prediction_label: "dips_pb"
   plot_settings:
     nBins: 50 # Number of bins
     Log: True
     x_label: "DIPS Probability $b$-Jet"
-    yAxisIncrease: 100 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
+    yAxisIncrease: 1.5 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
     figsize: [8, 6] # [width, hight]
     UseAtlasTag: True # Enable/Disable AtlasTag
     AtlasTag: "Internal Simulation"

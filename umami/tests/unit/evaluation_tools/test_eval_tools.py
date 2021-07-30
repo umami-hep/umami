@@ -11,6 +11,8 @@ from umami.evaluation_tools.PlottingFunctions import (
     GetCutDiscriminant,
     GetScore,
     GetScoreC,
+    calc_bins,
+    calc_ratio,
     discriminant_output_shape,
     eff_err,
     getDiscriminant,
@@ -22,6 +24,61 @@ from umami.evaluation_tools.PlottingFunctions import (
     plotROCRatio,
     plotSaliency,
 )
+
+
+class calc_bins_TestCase(unittest.TestCase):
+    """
+    Test the calc bins function
+    """
+
+    def setUp(self):
+        self.bool_use_taus = True
+        self.Binning = np.array([0, 1, 2, 3, 4, 5])
+        self.tracks = np.array([1, 2, 3, 4, 5, 1, 2, 3])
+        self.bins = np.array([0, 1, 2, 3, 4, 5])
+        self.weights = np.array([0, 0.25, 0.25, 0.25, 0.25])
+        self.unc = np.array([0, 0.1767767, 0.1767767, 0.1767767, 0.1767767])
+        self.band = np.array([0, 0.0732233, 0.0732233, 0.0732233, 0.0732233])
+        self.counter = np.array([5, 3, 2, 5, 6, 2])
+        self.denominator = np.array([3, 6, 2, 7, 10, 12])
+        self.counter_unc = np.array([0.5, 1, 0.3, 0.2, 0.5, 0.3])
+        self.denominator_unc = np.array([1, 0.3, 2, 1, 5, 3])
+        self.step = np.array(
+            [1.6666667, 1.6666667, 0.5, 1, 0.7142857, 0.6, 0.1666667]
+        )
+        self.step_unc = np.array(
+            [
+                0.580017,
+                0.580017,
+                0.1685312,
+                1.0111874,
+                0.1059653,
+                0.3041381,
+                0.0485913,
+            ]
+        )
+
+    def test_calc_bins(self):
+        bins, weights, unc, band = calc_bins(
+            input_array=self.tracks,
+            Binning=self.Binning,
+        )
+
+        np.testing.assert_almost_equal(bins, self.bins)
+        np.testing.assert_almost_equal(weights, self.weights)
+        np.testing.assert_almost_equal(unc, self.unc)
+        np.testing.assert_almost_equal(band, self.band)
+
+    def test_calc_ratio(self):
+        step, step_unc = calc_ratio(
+            counter=self.counter,
+            denominator=self.denominator,
+            counter_unc=self.counter_unc,
+            denominator_unc=self.denominator_unc,
+        )
+
+        np.testing.assert_almost_equal(step, self.step)
+        np.testing.assert_almost_equal(step_unc, self.step_unc)
 
 
 class Small_funcs_TestCase(unittest.TestCase):

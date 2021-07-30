@@ -1,4 +1,4 @@
-from umami.configuration import logger  # isort:skip
+from umami.configuration import global_config, logger  # isort:skip
 import pickle
 
 import matplotlib as mtp
@@ -135,6 +135,78 @@ def getDiscriminant(x, fc=0.018):
     Note: not yet compatible with taus
     """
     return K.log(x[:, 2] / (fc * x[:, 1] + (1 - fc) * x[:, 0]))
+
+
+def calc_bins(input_array, Binning):
+    """
+    This method calculates the bin content and uncertainty
+    for a given input.
+    Returns the bins, weights, uncertainites and lower band
+    as numpy arrays.
+    """
+    # Calculate the number of jets per flavour
+    arr_length = len(input_array)
+
+    # Calculate the counts and the bin edges
+    counts, bins = np.histogram(input_array, bins=Binning)
+
+    unc = np.sqrt(counts) / arr_length
+    band = counts / arr_length - unc
+    weights = counts / arr_length
+
+    return bins, weights, unc, band
+
+
+def calc_ratio(counter, denominator, counter_unc, denominator_unc):
+    """
+    This method calculates the ratio of the given bincounts and
+    returns the input for a step function that plots the ratio
+    """
+    step = np.divide(
+        counter,
+        denominator,
+        out=np.ones(
+            counter.shape,
+            dtype=float,
+        ),
+        where=(denominator != 0),
+    )
+
+    # Add an extra bin in the beginning to have the same binning as the input
+    # Otherwise, the ratio will not be exactly above each other (due to step)
+    step = np.append(np.array([step[0]]), step)
+
+    # Calculate rel uncertainties
+    counter_rel_unc = np.divide(
+        counter_unc,
+        counter,
+        out=np.zeros(
+            counter.shape,
+            dtype=float,
+        ),
+        where=(counter != 0),
+    )
+
+    denominator_rel_unc = np.divide(
+        denominator_unc,
+        denominator,
+        out=np.zeros(
+            denominator.shape,
+            dtype=float,
+        ),
+        where=(denominator != 0),
+    )
+
+    # Calculate rel uncertainty
+    step_rel_unc = np.sqrt(counter_rel_unc ** 2 + denominator_rel_unc ** 2)
+
+    # Add the first value again (same reason as for the step calculation)
+    step_rel_unc = np.append(np.array([step_rel_unc[0]]), step_rel_unc)
+
+    # Calculate final uncertainty
+    step_unc = step * step_rel_unc
+
+    return step, step_unc
 
 
 def plotEfficiencyVariable(
@@ -657,7 +729,10 @@ def plotPtDependence(
                 if Disc_Cut_Value is None:
                     # Calculate WP cutoff for b-disc
                     disc_cut = np.percentile(
-                        df_results.query("labels==2")["discs"], (1 - WP) * 100
+                        df_results.query(
+                            f"labels=={global_config.flavour_labels['b']}"
+                        )["discs"],
+                        (1 - WP) * 100,
                     )
 
                 elif Disc_Cut_Value is not None:
@@ -669,7 +744,10 @@ def plotPtDependence(
             ):
                 # Calc disc cut value for the SWP label model
                 disc_cut = np.percentile(
-                    df_results.query("labels==2")["discs"], (1 - WP) * 100
+                    df_results.query(
+                        f"labels=={global_config.flavour_labels['b']}"
+                    )["discs"],
+                    (1 - WP) * 100,
                 )
 
                 # Set Value globally for the SWP label
@@ -719,7 +797,9 @@ def plotPtDependence(
                 # will be calculated for each of the models independently
                 if Same_WP_Cut_Comparison is False:
                     disc_cut = np.percentile(
-                        df_results.query("labels==2")["discs"][pT_mask],
+                        df_results.query(
+                            f"labels=={global_config.flavour_labels['b']}"
+                        )["discs"][pT_mask],
                         (1 - WP) * 100,
                     )
 
@@ -729,7 +809,9 @@ def plotPtDependence(
                 ):
                     # Calc disc cut value for the SWP label model
                     disc_cut = np.percentile(
-                        df_results.query("labels==2")["discs"][pT_mask],
+                        df_results.query(
+                            f"labels=={global_config.flavour_labels['b']}"
+                        )["discs"][pT_mask],
                         (1 - WP) * 100,
                     )
 
@@ -1813,178 +1895,70 @@ def plot_score(
             *[df_results[pX] for pX in plot_config["prediction_labels"]]
         )
 
+    # Calculate the binning for all flavours
+    _, Binning = np.histogram(
+        df_results.query(f"labels=={global_config.flavour_labels['b']}")[
+            "discs"
+        ],
+        bins=nBins,
+    )
+
+    # Define the flavours used
+    if bool_use_taus is True:
+        flav_list = ["b", "c", "u", "tau"]
+
+    else:
+        flav_list = ["b", "c", "u"]
+
     # Clear the figure and init a new one
     plt.clf()
     fig = plt.figure()
     ax = fig.gca()
 
-    # Define the length of b, c, and light
-    len_b = len(df_results.query("labels==2"))
-    len_c = len(df_results.query("labels==1"))
-    len_u = len(df_results.query("labels==0"))
-    if bool_use_taus:
-        len_tau = len(df_results.query("labels==3"))
+    for flavour in flav_list:
+        # Select correct jets
+        flav_tracks = df_results.query(
+            f"labels=={global_config.flavour_labels[flavour]}"
+        )["discs"]
 
-    # Calculate the hists and bin edges for errorbands
-    counts_b, bins_b = np.histogram(
-        df_results.query("labels==2")["discs"], bins=nBins
-    )
-
-    counts_c, bins_c = np.histogram(
-        df_results.query("labels==1")["discs"],
-        # Use the calculated binning to ensure its equal
-        bins=bins_b,
-    )
-
-    counts_u, bins_u = np.histogram(
-        df_results.query("labels==0")["discs"],
-        # Use the calculated binning to ensure its equal
-        bins=bins_b,
-    )
-    if bool_use_taus:
-        counts_tau, bins_tau = np.histogram(
-            df_results.query("labels==3")["discs"],
-            # Use the calculated binning to ensure its equal
-            bins=bins_b,
+        # Calculate bins
+        bins, weights, unc, band = calc_bins(
+            input_array=flav_tracks,
+            Binning=Binning,
         )
 
-    # Calculate the bin centers
-    bincentres = [
-        (bins_b[i] + bins_b[i + 1]) / 2.0 for i in range(len(bins_b) - 1)
-    ]
-
-    # Calculate poisson uncertainties and lower bands
-    unc_b = np.sqrt(counts_b) / len_b
-    band_lower_b = counts_b / len_b - unc_b
-
-    unc_c = np.sqrt(counts_c) / len_c
-    band_lower_c = counts_c / len_c - unc_c
-
-    unc_u = np.sqrt(counts_u) / len_u
-    band_lower_u = counts_u / len_u - unc_u
-
-    if bool_use_taus:
-        unc_tau = np.sqrt(counts_tau) / len_tau
-        band_lower_tau = counts_tau / len_tau - unc_tau
-
-    # Hist the scores and their corresponding errors
-    plt.hist(
-        x=bins_b[:-1],
-        bins=bins_b,
-        weights=(counts_b / len_b),
-        histtype="step",
-        linewidth=2.0,
-        color="#1f77b4",
-        stacked=False,
-        fill=False,
-        label=r"$b$-jets",
-    )
-
-    plt.hist(
-        x=bincentres,
-        bins=bins_b,
-        bottom=band_lower_b,
-        weights=unc_b * 2,
-        fill=False,
-        hatch="/////",
-        linewidth=0,
-        edgecolor="#666666",
-    )
-
-    plt.hist(
-        x=bins_c[:-1],
-        bins=bins_c,
-        weights=counts_c / len_c,
-        histtype="step",
-        linewidth=2.0,
-        color="#ff7f0e",
-        stacked=False,
-        fill=False,
-        label=r"$c$-jets",
-    )
-
-    plt.hist(
-        x=bincentres,
-        bins=bins_c,
-        bottom=band_lower_c,
-        weights=unc_c * 2,
-        fill=False,
-        hatch="/////",
-        linewidth=0,
-        edgecolor="#666666",
-    )
-
-    if bool_use_taus:
         plt.hist(
-            x=bins_u[:-1],
-            bins=bins_u,
-            weights=counts_u / len_u,
+            x=bins[:-1],
+            bins=bins,
+            weights=weights,
             histtype="step",
             linewidth=2.0,
-            color="#2ca02c",
+            color=global_config.flavour_colors[flavour],
             stacked=False,
             fill=False,
-            label=r"light-flavour jets",
+            label=global_config.flavour_legend_labels[flavour],
         )
 
-        plt.hist(
-            x=bincentres,
-            bins=bins_u,
-            bottom=band_lower_u,
-            weights=unc_u * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-        )
+        # Check for last item so the label for the legend is
+        # only printed once
+        if flavour == flav_list[-1]:
+            plt.hist(
+                x=bins[:-1],
+                bins=bins,
+                bottom=band,
+                weights=unc * 2,
+                label="stat. unc.",
+                **global_config.hist_err_style,
+            )
 
-        plt.hist(
-            x=bins_tau[:-1],
-            bins=bins_tau,
-            weights=counts_tau / len_tau,
-            histtype="step",
-            linewidth=2.0,
-            color="#7c5295",
-            stacked=False,
-            fill=False,
-            label=r"tau-flavour jets",
-        )
-
-        plt.hist(
-            x=bincentres,
-            bins=bins_tau,
-            bottom=band_lower_tau,
-            weights=unc_tau * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-            label="stat. unc.",
-        )
-    else:
-        plt.hist(
-            x=bins_u[:-1],
-            bins=bins_u,
-            weights=counts_u / len_u,
-            histtype="step",
-            linewidth=2.0,
-            color="#2ca02c",
-            stacked=False,
-            fill=False,
-            label=r"light-flavour jets",
-        )
-
-        plt.hist(
-            x=bincentres,
-            bins=bins_u,
-            bottom=band_lower_u,
-            weights=unc_u * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-            label="stat. unc.",
-        )
+        else:
+            plt.hist(
+                x=bins[:-1],
+                bins=bins,
+                bottom=band,
+                weights=unc * 2,
+                **global_config.hist_err_style,
+            )
 
     # Increase ymax so atlas tag don't cut plot
     ymin, ymax = plt.ylim()
@@ -2004,9 +1978,12 @@ def plot_score(
                 color = "#ff7f0e"
             else:
                 x_value = np.percentile(
-                    df_results.query("labels==2")["discs"], (1 - WP) * 100
+                    df_results.query(
+                        f"labels=={global_config.flavour_labels['b']}"
+                    )["discs"],
+                    (1 - WP) * 100,
                 )
-                color = "#1f77b4"
+                color = "red"
 
             # Draw WP line
             plt.vlines(
@@ -2121,251 +2098,104 @@ def plot_score_comparison(
 
     # Get binning for the plot
     _, Binning = np.histogram(
-        df_list[0].query("labels==2")["discs"], bins=nBins
+        df_list[0].query(f"labels=={global_config.flavour_labels['b']}")[
+            "discs"
+        ],
+        bins=nBins,
     )
 
-    # Calculate the bin centers
-    bincentres = [
-        (Binning[i] + Binning[i + 1]) / 2.0 for i in range(len(Binning) - 1)
-    ]
+    # Define the flavours used
+    if bool_use_taus is True:
+        flav_list = ["b", "c", "u", "tau"]
 
-    # Init bincout dict for ratio calculation
+    else:
+        flav_list = ["b", "c", "u"]
+
+    # Init bincout and unc dict for ratio calculation
     bincounts = {}
+    bincounts_unc = {}
 
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
-    for i, (df_results, linestyle, which_a) in enumerate(
-        zip(df_list, linestyles, which_axis)
+    for i, (df_results, linestyle, which_a, model_label) in enumerate(
+        zip(df_list, linestyles, which_axis, model_labels)
     ):
-        # Define the length of b, c, and light
-        len_b = len(df_results.query("labels==2"))
-        len_c = len(df_results.query("labels==1"))
-        len_u = len(df_results.query("labels==0"))
-        if bool_use_taus:
-            len_tau = len(df_results.query("labels==3"))
 
-        # Calculate the hists and bin edges for errorbands
-        counts_b, bins_b = np.histogram(
-            df_results.query("labels==2")["discs"],
-            # Use the calculated binning to ensure its equal
-            bins=Binning,
-        )
+        for flavour in flav_list:
+            # Select correct jets
+            flav_tracks = df_results.query(
+                f"labels=={global_config.flavour_labels[flavour]}"
+            )["discs"]
 
-        counts_c, bins_c = np.histogram(
-            df_results.query("labels==1")["discs"],
-            # Use the calculated binning to ensure its equal
-            bins=Binning,
-        )
-
-        counts_u, bins_u = np.histogram(
-            df_results.query("labels==0")["discs"],
-            # Use the calculated binning to ensure its equal
-            bins=Binning,
-        )
-
-        if bool_use_taus:
-            counts_tau, bins_tau = np.histogram(
-                df_results.query("labels==3")["discs"],
-                # Use the calculated binning to ensure its equal
-                bins=Binning,
+            bins, weights, unc, band = calc_bins(
+                input_array=flav_tracks,
+                Binning=Binning,
             )
 
-        # Calculate poisson uncertainties and lower bands
-        unc_b = np.sqrt(counts_b) / len_b
-        band_lower_b = counts_b / len_b - unc_b
-
-        unc_c = np.sqrt(counts_c) / len_c
-        band_lower_c = counts_c / len_c - unc_c
-
-        unc_u = np.sqrt(counts_u) / len_u
-        band_lower_u = counts_u / len_u - unc_u
-
-        if bool_use_taus:
-            unc_tau = np.sqrt(counts_tau) / len_tau
-            band_lower_tau = counts_tau / len_tau - unc_tau
-
-        hist_counts_b, _, _ = axis_dict[which_a]["top"].hist(
-            x=bins_b[:-1],
-            bins=bins_b,
-            weights=(counts_b / len_b),
-            histtype="step",
-            linewidth=2.0,
-            linestyle=linestyle,
-            color="#1f77b4",
-            stacked=False,
-            fill=False,
-            label=r"$b$-jets {}".format(model_labels[i]),
-        )
-
-        axis_dict[which_a]["top"].hist(
-            x=bincentres,
-            bins=bins_b,
-            bottom=band_lower_b,
-            weights=unc_b * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-        )
-
-        hist_counts_c, _, _ = axis_dict[which_a]["top"].hist(
-            x=bins_c[:-1],
-            bins=bins_c,
-            weights=counts_c / len_c,
-            histtype="step",
-            linewidth=2.0,
-            linestyle=linestyle,
-            color="#ff7f0e",
-            stacked=False,
-            fill=False,
-            label=r"$c$-jets {}".format(model_labels[i]),
-        )
-
-        axis_dict[which_a]["top"].hist(
-            x=bincentres,
-            bins=bins_c,
-            bottom=band_lower_c,
-            weights=unc_c * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-        )
-
-        hist_counts_u, _, _ = axis_dict[which_a]["top"].hist(
-            x=bins_u[:-1],
-            bins=bins_u,
-            weights=counts_u / len_u,
-            histtype="step",
-            linewidth=2.0,
-            linestyle=linestyle,
-            color="#2ca02c",
-            stacked=False,
-            fill=False,
-            label=r"light-flavour jets {}".format(model_labels[i]),
-        )
-
-        if bool_use_taus:
-            axis_dict[which_a]["top"].hist(
-                x=bincentres,
-                bins=bins_u,
-                bottom=band_lower_u,
-                weights=unc_u * 2,
-                fill=False,
-                hatch="/////",
-                linewidth=0,
-                edgecolor="#666666",
-            )
-
-            hist_counts_tau, _, _ = axis_dict[which_a]["top"].hist(
-                x=bins_tau[:-1],
-                bins=bins_tau,
-                weights=counts_tau / len_tau,
+            hist_counts, _, _ = axis_dict[which_a]["top"].hist(
+                x=bins[:-1],
+                bins=bins,
+                weights=weights,
                 histtype="step",
                 linewidth=2.0,
                 linestyle=linestyle,
-                color="#7c5295",
+                color=global_config.flavour_colors[flavour],
                 stacked=False,
                 fill=False,
-                label=r"tau-flavour jets {}".format(model_labels[i]),
+                label=global_config.flavour_legend_labels[flavour]
+                + f" {model_label}",
             )
 
-            if i == 0:
+            if (flavour == flav_list[-1]) and i == 0:
                 axis_dict[which_a]["top"].hist(
-                    x=bincentres,
-                    bins=bins_tau,
-                    bottom=band_lower_tau,
-                    weights=unc_tau * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
+                    x=bins[:-1],
+                    bins=bins,
+                    bottom=band,
+                    weights=unc * 2,
                     label="stat. unc.",
+                    **global_config.hist_err_style,
                 )
 
             else:
                 axis_dict[which_a]["top"].hist(
-                    x=bincentres,
-                    bins=bins_tau,
-                    bottom=band_lower_tau,
-                    weights=unc_tau * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
-                )
-        else:
-            if i == 0:
-                axis_dict[which_a]["top"].hist(
-                    x=bincentres,
-                    bins=bins_u,
-                    bottom=band_lower_u,
-                    weights=unc_u * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
-                    label="stat. unc.",
+                    x=bins[:-1],
+                    bins=bins,
+                    bottom=band,
+                    weights=unc * 2,
+                    **global_config.hist_err_style,
                 )
 
-            else:
-                axis_dict[which_a]["top"].hist(
-                    x=bincentres,
-                    bins=bins_u,
-                    bottom=band_lower_u,
-                    weights=unc_u * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
-                )
-
-        bincounts.update({f"b{i}": hist_counts_b})
-        bincounts.update({f"c{i}": hist_counts_c})
-        bincounts.update({f"u{i}": hist_counts_u})
-        if bool_use_taus:
-            bincounts.update({f"tau{i}": hist_counts_tau})
-
-        if bool_use_taus:
-            loop_list = zip(
-                ["b", "c", "u", "tau"],
-                ["#1f77b4", "#ff7f0e", "#2ca02c", "#7c5295"],
-            )
-        else:
-            loop_list = zip(["b", "c", "u"], ["#1f77b4", "#ff7f0e", "#2ca02c"])
+            bincounts.update({f"{flavour}{i}": hist_counts})
+            bincounts_unc.update({f"{flavour}{i}": unc})
 
         # Start ratio plot
         if i != 0:
-            for (flavor, color) in loop_list:
-                step = np.divide(
-                    bincounts["{}{}".format(flavor, i)],
-                    bincounts["{}{}".format(flavor, 0)],
-                    out=np.ones(
-                        bincounts["{}{}".format(flavor, i)].shape,
-                        dtype=float,
-                    )
-                    * bincounts["{}{}".format(flavor, i)]
-                    + 1,
-                    where=(bincounts["{}{}".format(flavor, 0)] != 0),
-                )
+            for flavour in flav_list:
 
-                step = np.append(np.array([step[0]]), step)
+                # Calculate the step and step_unc for ratio
+                step, step_unc = calc_ratio(
+                    counter=bincounts["{}{}".format(flavour, i)],
+                    denominator=bincounts["{}{}".format(flavour, 0)],
+                    counter_unc=bincounts_unc["{}{}".format(flavour, i)],
+                    denominator_unc=bincounts_unc["{}{}".format(flavour, 0)],
+                )
 
                 axis_dict["left"]["ratio"].step(
                     x=Binning,
                     y=step,
-                    color=color,
+                    color=global_config.flavour_colors[flavour],
                     linestyle=linestyles[i],
                 )
 
-        elif i == 0:
-            # Add black line at one
-            axis_dict["left"]["ratio"].axhline(
-                y=1,
-                xmin=axis_dict["left"]["ratio"].get_xlim()[0],
-                xmax=axis_dict["left"]["ratio"].get_xlim()[1],
-                color="black",
-                alpha=0.5,
-            )
+                axis_dict["left"]["ratio"].fill_between(
+                    x=Binning,
+                    y1=step - step_unc,
+                    y2=step + step_unc,
+                    step="pre",
+                    facecolor="none",
+                    edgecolor=global_config.hist_err_style["edgecolor"],
+                    linewidth=global_config.hist_err_style["linewidth"],
+                    hatch=global_config.hist_err_style["hatch"],
+                )
 
     # Add axes, titels and the legend
     axis_dict["left"]["top"].set_ylabel(
@@ -2409,6 +2239,15 @@ def plot_score_comparison(
     if ymax is not None:
         axis_dict["left"]["top"].set_ylim(top=ymax)
 
+    # Add black line at one
+    axis_dict["left"]["ratio"].axhline(
+        y=1,
+        xmin=0,
+        xmax=1,
+        color="black",
+        alpha=0.5,
+    )
+
     left_y_limits = axis_dict["left"]["top"].get_ylim()
     axis_dict["left"]["top"].set_ylim(
         left_y_limits[0], left_y_limits[1] * yAxisIncrease
@@ -2434,7 +2273,10 @@ def plot_score_comparison(
                 color = "#ff7f0e"
             else:
                 x_value = np.percentile(
-                    df_list[0].query("labels==2")["discs"], (1 - WP) * 100
+                    df_list[0].query(
+                        f"labels=={global_config.flavour_labels['b']}"
+                    )["discs"],
+                    (1 - WP) * 100,
                 )
                 color = "#FF0000"
 
@@ -2612,6 +2454,21 @@ def plot_prob(
             plot_config["evaluation_file"], plot_config["data_set_name"]
         )
 
+    # Calculate the binning for all flavours
+    _, Binning = np.histogram(
+        df_results.query(f"labels=={global_config.flavour_labels['b']}")[
+            plot_config["prediction_labels"]
+        ],
+        bins=nBins,
+    )
+
+    # Define the flavours used
+    if bool_use_taus is True:
+        flav_list = ["b", "c", "u", "tau"]
+
+    else:
+        flav_list = ["b", "c", "u"]
+
     # Clear the figure and init a new one
     if figsize is None:
         plt.clf()
@@ -2621,184 +2478,56 @@ def plot_prob(
         plt.clf()
         plt.figure(figsize=(figsize[0], figsize[1]))
 
-    # Define the length of b, c, and light
-    len_b = len(df_results.query("labels==2"))
-    len_c = len(df_results.query("labels==1"))
-    len_u = len(df_results.query("labels==0"))
-    if bool_use_taus:
-        len_tau = len(df_results.query("labels==3"))
+    for flavour in flav_list:
+        # Select correct jets
+        flav_tracks = df_results.query(
+            f"labels=={global_config.flavour_labels[flavour]}"
+        )[plot_config["prediction_labels"]]
 
-    # Calculate the hists and bin edges for errorbands
-    counts_b, bins_b = np.histogram(
-        df_results.query("labels==2")[plot_config["prediction_labels"]],
-        bins=nBins,
-    )
-
-    counts_c, bins_c = np.histogram(
-        df_results.query("labels==1")[plot_config["prediction_labels"]],
-        # Use the calculated binning to ensure its equal
-        bins=bins_b,
-    )
-
-    counts_u, bins_u = np.histogram(
-        df_results.query("labels==0")[plot_config["prediction_labels"]],
-        # Use the calculated binning to ensure its equal
-        bins=bins_b,
-    )
-    if bool_use_taus:
-        counts_tau, bins_tau = np.histogram(
-            df_results.query("labels==3")[plot_config["prediction_labels"]],
-            # Use the calculated binning to ensure its equal
-            bins=bins_b,
+        bins, weights, unc, band = calc_bins(
+            input_array=flav_tracks,
+            Binning=Binning,
         )
 
-    # Calculate the bin centers
-    bincentres = [
-        (bins_b[i] + bins_b[i + 1]) / 2.0 for i in range(len(bins_b) - 1)
-    ]
-
-    # Calculate poisson uncertainties and lower bands
-    unc_b = np.sqrt(counts_b) / len_b
-    band_lower_b = counts_b / len_b - unc_b
-
-    unc_c = np.sqrt(counts_c) / len_c
-    band_lower_c = counts_c / len_c - unc_c
-
-    unc_u = np.sqrt(counts_u) / len_u
-    band_lower_u = counts_u / len_u - unc_u
-
-    if bool_use_taus:
-        unc_tau = np.sqrt(counts_tau) / len_tau
-        band_lower_tau = counts_tau / len_tau - unc_tau
-
-    # Hist the scores and their corresponding errors
-    plt.hist(
-        x=bins_b[:-1],
-        bins=bins_b,
-        weights=(counts_b / len_b),
-        histtype="step",
-        linewidth=2.0,
-        color="#1f77b4",
-        stacked=False,
-        fill=False,
-        label=r"$b$-jets",
-    )
-
-    plt.hist(
-        x=bincentres,
-        bins=bins_b,
-        bottom=band_lower_b,
-        weights=unc_b * 2,
-        fill=False,
-        hatch="/////",
-        linewidth=0,
-        edgecolor="#666666",
-    )
-
-    plt.hist(
-        x=bins_c[:-1],
-        bins=bins_c,
-        weights=counts_c / len_c,
-        histtype="step",
-        linewidth=2.0,
-        color="#ff7f0e",
-        stacked=False,
-        fill=False,
-        label=r"$c$-jets",
-    )
-
-    plt.hist(
-        x=bincentres,
-        bins=bins_c,
-        bottom=band_lower_c,
-        weights=unc_c * 2,
-        fill=False,
-        hatch="/////",
-        linewidth=0,
-        edgecolor="#666666",
-    )
-
-    if bool_use_taus:
         plt.hist(
-            x=bins_u[:-1],
-            bins=bins_u,
-            weights=counts_u / len_u,
+            x=bins[:-1],
+            bins=bins,
+            weights=weights,
             histtype="step",
             linewidth=2.0,
-            color="#2ca02c",
+            color=global_config.flavour_colors[flavour],
             stacked=False,
             fill=False,
-            label=r"light-flavour jets",
+            label=global_config.flavour_legend_labels[flavour],
         )
 
-        plt.hist(
-            x=bincentres,
-            bins=bins_u,
-            bottom=band_lower_u,
-            weights=unc_u * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-        )
+        if flavour == flav_list[-1]:
+            plt.hist(
+                x=bins[:-1],
+                bins=bins,
+                bottom=band,
+                weights=unc * 2,
+                label="stat. unc.",
+                **global_config.hist_err_style,
+            )
 
-        plt.hist(
-            x=bins_tau[:-1],
-            bins=bins_tau,
-            weights=counts_tau / len_tau,
-            histtype="step",
-            linewidth=2.0,
-            color="#7c5295",
-            stacked=False,
-            fill=False,
-            label=r"tau-flavour jets",
-        )
-
-        plt.hist(
-            x=bincentres,
-            bins=bins_tau,
-            bottom=band_lower_tau,
-            weights=unc_tau * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-            label="stat. unc.",
-        )
-    else:
-        plt.hist(
-            x=bins_u[:-1],
-            bins=bins_u,
-            weights=counts_u / len_u,
-            histtype="step",
-            linewidth=2.0,
-            color="#2ca02c",
-            stacked=False,
-            fill=False,
-            label=r"light-flavour jets",
-        )
-
-        plt.hist(
-            x=bincentres,
-            bins=bins_u,
-            bottom=band_lower_u,
-            weights=unc_u * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-            label="stat. unc.",
-        )
+        else:
+            plt.hist(
+                x=bins[:-1],
+                bins=bins,
+                bottom=band,
+                weights=unc * 2,
+                **global_config.hist_err_style,
+            )
 
     if Log is True:
         plt.yscale("log")
-
-        # Increase ymax so atlas tag don't cut plot
         ymin, ymax = plt.ylim()
 
         if ymin <= 1e-8:
             ymin = 1e-8
 
+        # Increase ymax so atlas tag don't cut plot
         plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
 
     else:
@@ -2888,251 +2617,117 @@ def plot_prob_comparison(
 
     # Get binning for the plot
     _, Binning = np.histogram(
-        df_list[0].query("labels==2")[prediction_labels_list[0]], bins=nBins
+        df_list[0].query(f"labels=={global_config.flavour_labels['b']}")[
+            prediction_labels_list[0]
+        ],
+        bins=nBins,
     )
 
-    # Calculate the bin centers
-    bincentres = [
-        (Binning[i] + Binning[i + 1]) / 2.0 for i in range(len(Binning) - 1)
-    ]
+    # Define the flavours used
+    if bool_use_taus is True:
+        flav_list = ["b", "c", "u", "tau"]
 
-    # Init bincout dict for ratio calculation
+    else:
+        flav_list = ["b", "c", "u"]
+
+    # Init bincout and unc dict for ratio calculation
     bincounts = {}
+    bincounts_unc = {}
 
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
-    for i, (df_results, prediction_label, linestyle, which_a) in enumerate(
-        zip(df_list, prediction_labels_list, linestyles, which_axis)
+    for i, (
+        df_results,
+        prediction_label,
+        linestyle,
+        which_a,
+        model_label,
+    ) in enumerate(
+        zip(
+            df_list,
+            prediction_labels_list,
+            linestyles,
+            which_axis,
+            model_labels,
+        )
     ):
-        # Define the length of b, c, and light
-        len_b = len(df_results.query("labels==2"))
-        len_c = len(df_results.query("labels==1"))
-        len_u = len(df_results.query("labels==0"))
-        if bool_use_taus:
-            len_tau = len(df_results.query("labels==3"))
 
-        # Calculate the hists and bin edges for errorbands
-        counts_b, bins_b = np.histogram(
-            df_results.query("labels==2")[prediction_label],
-            # Use the calculated binning to ensure its equal
-            bins=Binning,
-        )
+        for flavour in flav_list:
+            # Select correct jets
+            flav_tracks = df_results.query(
+                f"labels=={global_config.flavour_labels[flavour]}"
+            )[prediction_label]
 
-        counts_c, bins_c = np.histogram(
-            df_results.query("labels==1")[prediction_label],
-            # Use the calculated binning to ensure its equal
-            bins=Binning,
-        )
-
-        counts_u, bins_u = np.histogram(
-            df_results.query("labels==0")[prediction_label],
-            # Use the calculated binning to ensure its equal
-            bins=Binning,
-        )
-
-        if bool_use_taus:
-            counts_tau, bins_tau = np.histogram(
-                df_results.query("labels==3")[prediction_label],
-                # Use the calculated binning to ensure its equal
-                bins=Binning,
+            # Calculate bins
+            bins, weights, unc, band = calc_bins(
+                input_array=flav_tracks,
+                Binning=Binning,
             )
 
-        # Calculate poisson uncertainties and lower bands
-        unc_b = np.sqrt(counts_b) / len_b
-        band_lower_b = counts_b / len_b - unc_b
-
-        unc_c = np.sqrt(counts_c) / len_c
-        band_lower_c = counts_c / len_c - unc_c
-
-        unc_u = np.sqrt(counts_u) / len_u
-        band_lower_u = counts_u / len_u - unc_u
-
-        if bool_use_taus:
-            unc_tau = np.sqrt(counts_tau) / len_tau
-            band_lower_tau = counts_tau / len_tau - unc_tau
-
-        hist_counts_b, _, _ = axis_dict[which_a]["top"].hist(
-            x=bins_b[:-1],
-            bins=bins_b,
-            weights=(counts_b / len_b),
-            histtype="step",
-            linewidth=2.0,
-            linestyle=linestyle,
-            color="#1f77b4",
-            stacked=False,
-            fill=False,
-            label=r"$b$-jets {}".format(model_labels[i]),
-        )
-
-        axis_dict[which_a]["top"].hist(
-            x=bincentres,
-            bins=bins_b,
-            bottom=band_lower_b,
-            weights=unc_b * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-        )
-
-        hist_counts_c, _, _ = axis_dict[which_a]["top"].hist(
-            x=bins_c[:-1],
-            bins=bins_c,
-            weights=counts_c / len_c,
-            histtype="step",
-            linewidth=2.0,
-            linestyle=linestyle,
-            color="#ff7f0e",
-            stacked=False,
-            fill=False,
-            label=r"$c$-jets {}".format(model_labels[i]),
-        )
-
-        axis_dict[which_a]["top"].hist(
-            x=bincentres,
-            bins=bins_c,
-            bottom=band_lower_c,
-            weights=unc_c * 2,
-            fill=False,
-            hatch="/////",
-            linewidth=0,
-            edgecolor="#666666",
-        )
-
-        hist_counts_u, _, _ = axis_dict[which_a]["top"].hist(
-            x=bins_u[:-1],
-            bins=bins_u,
-            weights=counts_u / len_u,
-            histtype="step",
-            linewidth=2.0,
-            linestyle=linestyle,
-            color="#2ca02c",
-            stacked=False,
-            fill=False,
-            label=r"light-flavour jets {}".format(model_labels[i]),
-        )
-
-        if bool_use_taus:
-            axis_dict[which_a]["top"].hist(
-                x=bincentres,
-                bins=bins_u,
-                bottom=band_lower_u,
-                weights=unc_u * 2,
-                fill=False,
-                hatch="/////",
-                linewidth=0,
-                edgecolor="#666666",
-            )
-
-            hist_counts_tau, _, _ = axis_dict[which_a]["top"].hist(
-                x=bins_tau[:-1],
-                bins=bins_tau,
-                weights=counts_tau / len_tau,
+            hist_counts, _, _ = axis_dict[which_a]["top"].hist(
+                x=bins[:-1],
+                bins=bins,
+                weights=weights,
                 histtype="step",
                 linewidth=2.0,
                 linestyle=linestyle,
-                color="#7c5295",
+                color=global_config.flavour_colors[flavour],
                 stacked=False,
                 fill=False,
-                label=r"tau-flavour jets {}".format(model_labels[i]),
+                label=global_config.flavour_legend_labels[flavour]
+                + f" {model_label}",
             )
 
-            if i == 0:
+            if (flavour == flav_list[-1]) and i == 0:
                 axis_dict[which_a]["top"].hist(
-                    x=bincentres,
-                    bins=bins_tau,
-                    bottom=band_lower_tau,
-                    weights=unc_tau * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
+                    x=bins[:-1],
+                    bins=bins,
+                    bottom=band,
+                    weights=unc * 2,
                     label="stat. unc.",
+                    **global_config.hist_err_style,
                 )
 
             else:
                 axis_dict[which_a]["top"].hist(
-                    x=bincentres,
-                    bins=bins_tau,
-                    bottom=band_lower_tau,
-                    weights=unc_tau * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
-                )
-        else:
-            if i == 0:
-                axis_dict[which_a]["top"].hist(
-                    x=bincentres,
-                    bins=bins_u,
-                    bottom=band_lower_u,
-                    weights=unc_u * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
-                    label="stat. unc.",
+                    x=bins[:-1],
+                    bins=bins,
+                    bottom=band,
+                    weights=unc * 2,
+                    **global_config.hist_err_style,
                 )
 
-            else:
-                axis_dict[which_a]["top"].hist(
-                    x=bincentres,
-                    bins=bins_u,
-                    bottom=band_lower_u,
-                    weights=unc_u * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
-                )
-
-        bincounts.update({f"b{i}": hist_counts_b})
-        bincounts.update({f"c{i}": hist_counts_c})
-        bincounts.update({f"u{i}": hist_counts_u})
-        if bool_use_taus:
-            bincounts.update({f"tau{i}": hist_counts_tau})
-
-        if bool_use_taus:
-            loop_list = zip(
-                ["b", "c", "u", "tau"],
-                ["#1f77b4", "#ff7f0e", "#2ca02c", "#7c5295"],
-            )
-        else:
-            loop_list = zip(["b", "c", "u"], ["#1f77b4", "#ff7f0e", "#2ca02c"])
+            bincounts.update({f"{flavour}{i}": hist_counts})
+            bincounts_unc.update({f"{flavour}{i}": unc})
 
         # Start ratio plot
         if i != 0:
-            for (flavor, color) in loop_list:
-                step = np.divide(
-                    bincounts["{}{}".format(flavor, i)],
-                    bincounts["{}{}".format(flavor, 0)],
-                    out=np.ones(
-                        bincounts["{}{}".format(flavor, i)].shape,
-                        dtype=float,
-                    )
-                    * bincounts["{}{}".format(flavor, i)]
-                    + 1,
-                    where=(bincounts["{}{}".format(flavor, 0)] != 0),
-                )
+            for flavour in flav_list:
 
-                step = np.append(np.array([step[0]]), step)
+                # Calculate the step and step_unc for ratio
+                step, step_unc = calc_ratio(
+                    counter=bincounts["{}{}".format(flavour, i)],
+                    denominator=bincounts["{}{}".format(flavour, 0)],
+                    counter_unc=bincounts_unc["{}{}".format(flavour, i)],
+                    denominator_unc=bincounts_unc["{}{}".format(flavour, 0)],
+                )
 
                 axis_dict["left"]["ratio"].step(
                     x=Binning,
                     y=step,
-                    color=color,
+                    color=global_config.flavour_colors[flavour],
                     linestyle=linestyles[i],
                 )
 
-        elif i == 0:
-            # Add black line at one
-            axis_dict["left"]["ratio"].axhline(
-                y=1,
-                xmin=axis_dict["left"]["ratio"].get_xlim()[0],
-                xmax=axis_dict["left"]["ratio"].get_xlim()[1],
-                color="black",
-                alpha=0.5,
-            )
+                axis_dict["left"]["ratio"].fill_between(
+                    x=Binning,
+                    y1=step - step_unc,
+                    y2=step + step_unc,
+                    step="pre",
+                    facecolor="none",
+                    edgecolor=global_config.hist_err_style["edgecolor"],
+                    linewidth=global_config.hist_err_style["linewidth"],
+                    hatch=global_config.hist_err_style["hatch"],
+                )
 
     # Add axes, titels and the legend
     axis_dict["left"]["top"].set_ylabel(
@@ -3176,6 +2771,15 @@ def plot_prob_comparison(
     if ymax is not None:
         axis_dict["left"]["top"].set_ylim(top=ymax)
 
+    # Add black line at one
+    axis_dict["left"]["ratio"].axhline(
+        y=1,
+        xmin=0,
+        xmax=1,
+        color="black",
+        alpha=0.5,
+    )
+
     if Log is True:
         axis_dict["left"]["top"].set_yscale("log")
 
@@ -3187,7 +2791,9 @@ def plot_prob_comparison(
 
     elif Log is True:
         axis_dict["left"]["top"].set_ylim(
-            left_y_limits[0] * 0.1, left_y_limits[1] * yAxisIncrease
+            left_y_limits[0] * 0.5,
+            left_y_limits[0]
+            * (left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease,
         )
 
     axis_dict["left"]["top"].legend(
