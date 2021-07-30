@@ -23,7 +23,14 @@ class Configuration(object):
             self.config = yaml.load(conf, Loader=yaml_loader)
 
     def GetConfiguration(self):
-        config_items = ["pTvariable", "etavariable"]
+        config_items = [
+            "pTvariable",
+            "etavariable",
+            "flavour_colors",
+            "flavour_labels",
+            "flavour_legend_labels",
+            "hist_err_style",
+        ]
         for item in config_items:
             if item in self.config:
                 self.logger.debug(f"Setting {item} to {self.config[item]}.")

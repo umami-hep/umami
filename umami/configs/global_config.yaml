@@ -2,3 +2,24 @@ pTvariable: pt_btagJes
 etavariable: absEta_btagJes
 DebugLevel: INFO
 TFDebugLevel: 1
+flavour_colors:
+  b: "#1f77b4"
+  c: "#ff7f0e"
+  u: "#2ca02c"
+  tau: "#7c5295"
+flavour_labels:
+  # These are the internal labels for the flavours, not the PDGID!
+  b: 2
+  c: 1
+  u: 0
+  tau: 3
+flavour_legend_labels:
+  b: $b$-jets
+  c: $c$-jets
+  u: light-jets
+  tau: $\\tau$-jets
+hist_err_style:
+  fill: False
+  linewidth: 0
+  hatch: "/////"
+  edgecolor: "#666666"

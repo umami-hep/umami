@@ -519,6 +519,12 @@ def plot_input_vars_trks_comparison(
                 # Delete all not b, c or light jets
                 trks = np.delete(trks, indices_toremove, 0)
 
+        if len(trks) < nJets:
+            n_trks = len(trks)
+            logger.warning(
+                f"{nJets} were set to be used, but only {n_trks} are available for {label} files!"
+            )
+
         # Append trks to dict
         trks_dict.update({label: trks[:nJets]})
         flavor_label_dict.update({label: flavor_labels[:nJets]})
@@ -972,6 +978,12 @@ def plot_input_vars_trks(
                 # Delete all not b, c or light jets
                 trks = np.delete(trks, indices_toremove, 0)
 
+        if len(trks) < nJets:
+            n_trks = len(trks)
+            logger.warning(
+                f"{nJets} were set to be used, but only {n_trks} are available for {label} files!"
+            )
+
         # Append trks to dict
         trks_dict.update({label: trks[:nJets]})
         flavor_label_dict.update({label: flavor_labels[:nJets]})
@@ -1004,9 +1016,20 @@ def plot_input_vars_trks(
         logger.info(f"Sorting: {sorting_variable}")
         logger.info(f"nLeading track: {nLeading}\n")
 
+        for var in nBins_dict:
+            if var not in trksVars:
+                logger.info(
+                    f"{var} in config, but not in Variables yaml! Skipping..."
+                )
+
         # Loop over vars
         for var in trksVars:
-            if var in nBins_dict:
+            if var not in nBins_dict:
+                logger.info(
+                    f"{var} in Variables yaml but not in config! Skipping..."
+                )
+
+            else:
                 logger.info(f"Plotting {var}...")
 
                 # Iterate over models
