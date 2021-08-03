@@ -2,6 +2,7 @@ from umami.configuration import logger  # isort:skip
 import json
 import os
 import re
+from glob import glob
 from pathlib import Path
 from shutil import copyfile
 
@@ -641,95 +642,196 @@ def GetTestSample(
     """
     Apply the scaling and shifting to dataset using numpy
     """
-    logger.info(f"Input file is {input_file}")
-    jets = pd.DataFrame(h5py.File(input_file, "r")["/jets"][:nJets])
+
+    # Get the paths of the input file as list
+    # In case there are multiple files (Wildcard etc.)
+    filepaths = glob(input_file)
+
+    # Load variables
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
-    if use_taus:
-        jets.query(
-            f"{variable_config['label']} in [0, 4, 5, 15]", inplace=True
-        )
-    else:
-        jets.query(f"{variable_config['label']} <= 5", inplace=True)
-    labels = GetBinaryLabels(jets[variable_config["label"]].values)
-    variables, excluded_variables, _ = get_jet_feature_indices(
-        variable_config["train_variables"], exclude
-    )
-    jets = jets[variables]
-    jets = jets.replace([np.inf, -np.inf], np.nan)
+
+    # Load scale dict
     with open(preprocess_config.dict_file, "r") as infile:
         scale_dict = json.load(infile)["jets"]
-    logger.info("Replacing default values.")
-    default_dict = Gen_default_dict(scale_dict)
-    jets = jets.fillna(default_dict)
-    logger.info("Applying scaling and shifting.")
-    scale_dict_variables = []
-    for elem in scale_dict:
-        scale_dict_variables.append(elem["name"])
-        if elem["name"] not in variables:
-            if elem["name"] in excluded_variables:
-                logger.info(
-                    f"{elem['name']} has been excluded from variable config (is in scale dict)."
-                )
-            else:
-                logger.warning(
-                    f"{elem['name']} in scale dict but not in variable config."
-                )
-            continue
-        if "isDefaults" in elem["name"]:
-            continue
+
+    # Define a counter for the number of jets already loaded
+    nJets_counter = 0
+
+    # Iterate over the list of input files
+    for j, file in enumerate(sorted(filepaths, key=natural_keys)):
+        logger.info(f"Input file is {file}")
+
+        # Load dataframe from file
+        jets = pd.DataFrame(h5py.File(file, "r")["/jets"][:nJets])
+
+        # Selected the wanted flavours from the files
+        if use_taus is True:
+            jets.query(
+                f"{variable_config['label']} in [0, 4, 5, 15]", inplace=True
+            )
         else:
-            jets[elem["name"]] -= elem["shift"]
-            jets[elem["name"]] /= elem["scale"]
-    if not set(variables).issubset(scale_dict_variables):
-        raise KeyError(
-            f"Requested {(set(variables).difference(scale_dict_variables))} which are not in scale dict."
+            jets.query(
+                f"{variable_config['label']} in [0, 4, 5]", inplace=True
+            )
+
+        # Get binary labels for training
+        labels = GetBinaryLabels(jets[variable_config["label"]].values)
+
+        # Retrieve variables and the excluded variables from the config
+        variables, excluded_variables, _ = get_jet_feature_indices(
+            variable_config["train_variables"], exclude
         )
-    return jets, labels
+
+        # Select only wanted variables
+        jets = jets[variables]
+
+        # Replace inf with nans
+        jets = jets.replace([np.inf, -np.inf], np.nan)
+
+        logger.info("Replacing default values.")
+        default_dict = Gen_default_dict(scale_dict)
+        jets = jets.fillna(default_dict)
+
+        logger.info("Applying scaling and shifting.")
+        scale_dict_variables = []
+        for elem in scale_dict:
+            scale_dict_variables.append(elem["name"])
+            if elem["name"] not in variables:
+                if elem["name"] in excluded_variables:
+                    logger.info(
+                        f"{elem['name']} has been excluded from variable config (is in scale dict)."
+                    )
+                else:
+                    logger.warning(
+                        f"{elem['name']} in scale dict but not in variable config."
+                    )
+                continue
+            if "isDefaults" in elem["name"]:
+                continue
+            else:
+                jets[elem["name"]] -= elem["shift"]
+                jets[elem["name"]] /= elem["scale"]
+        if not set(variables).issubset(scale_dict_variables):
+            raise KeyError(
+                f"Requested {(set(variables).difference(scale_dict_variables))} which are not in scale dict."
+            )
+
+        # If not the first file processed, append to the global one
+        if j == 0:
+            all_jets = jets
+            all_labels = labels
+
+        # if the first file processed, set as global one
+        else:
+            all_jets = all_jets.append(jets, ignore_index=True)
+            all_labels = all_labels.append(labels, ignore_index=True)
+
+        # Stop loading if enough jets are loaded
+        if nJets_counter >= nJets:
+            break
+
+    # Check if enough jets are loaded
+    if nJets_counter < nJets:
+        logger.warning(
+            f"Requested {nJets} but only {nJets_counter} could be loaded!"
+        )
+
+    else:
+        logger.info(f"Loaded {nJets_counter} jets!")
+
+    return all_jets, all_labels
 
 
-def GetTestSampleTrks(input_file, var_dict, preprocess_config, nJets=int(3e5)):
+def GetTestSampleTrks(
+    input_file,
+    var_dict,
+    preprocess_config,
+    nJets=int(3e5),
+    use_taus=False,
+):
     """
     Apply the scaling and shifting to dataset using numpy
     """
-    logger.info("Loading validation data tracks")
+
+    # Get the paths of the input file as list
+    # In case there are multiple files (Wildcard etc.)
+    filepaths = glob(input_file)
+
+    # Load variables
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
-    labels = h5py.File(input_file, "r")["/jets"][:nJets][
-        variable_config["label"]
-    ]
-    indices_toremove = np.where(labels > 5)[0]
-    labels = np.delete(labels, indices_toremove, 0)
 
-    labels = GetBinaryLabels(labels)
-
-    noNormVars = variable_config["track_train_variables"]["noNormVars"]
-    logNormVars = variable_config["track_train_variables"]["logNormVars"]
-    jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
-    trkVars = noNormVars + logNormVars + jointNormVars
-
-    trks = np.asarray(h5py.File(input_file, "r")["/tracks"][:nJets])
-    trks = np.delete(trks, indices_toremove, 0)
-
+    # Load scale dict for the tracks
     with open(preprocess_config.dict_file, "r") as infile:
         scale_dict = json.load(infile)["tracks"]
 
-    var_arr_list = []
-    trk_mask = ~np.isnan(trks["ptfrac"])
-    for var in trkVars:
-        if var in logNormVars:
-            x = np.log(trks[var])
-        else:
-            x = trks[var]
-        if var in logNormVars:
-            x -= scale_dict[var]["shift"]
-            x /= scale_dict[var]["scale"]
-        elif var in jointNormVars:
-            x = np.where(trk_mask, x - scale_dict[var]["shift"], x)
-            x = np.where(trk_mask, x / scale_dict[var]["scale"], x)
-        var_arr_list.append(np.nan_to_num(x))
+    # Define a counter for the number of jets already loaded
+    nJets_counter = 0
 
-    return np.stack(var_arr_list, axis=-1), labels
+    # Iterate over the list of input files
+    for j, file in enumerate(sorted(filepaths, key=natural_keys)):
+        logger.info(f"Loading validation data tracks from file {file}")
+
+        labels = h5py.File(input_file, "r")["/jets"][:nJets][
+            variable_config["label"]
+        ]
+        indices_toremove = np.where(labels > 5)[0]
+        labels = np.delete(labels, indices_toremove, 0)
+
+        labels = GetBinaryLabels(labels)
+
+        # Retrieve variables from config
+        noNormVars = variable_config["track_train_variables"]["noNormVars"]
+        logNormVars = variable_config["track_train_variables"]["logNormVars"]
+        jointNormVars = variable_config["track_train_variables"][
+            "jointNormVars"
+        ]
+        trkVars = noNormVars + logNormVars + jointNormVars
+
+        # Load the tracks from file
+        trks = np.asarray(h5py.File(input_file, "r")["/tracks"][:nJets])
+        trks = np.delete(trks, indices_toremove, 0)
+
+        var_arr_list = []
+        trk_mask = ~np.isnan(trks["ptfrac"])
+        for var in trkVars:
+            if var in logNormVars:
+                x = np.log(trks[var])
+            else:
+                x = trks[var]
+            if var in logNormVars:
+                x -= scale_dict[var]["shift"]
+                x /= scale_dict[var]["scale"]
+            elif var in jointNormVars:
+                x = np.where(trk_mask, x - scale_dict[var]["shift"], x)
+                x = np.where(trk_mask, x / scale_dict[var]["scale"], x)
+            var_arr_list.append(np.nan_to_num(x))
+
+        # If not the first file processed, append to the global one
+        if j == 0:
+            all_trks = np.stack(var_arr_list, axis=-1)
+            all_labels = labels
+
+        # if the first file processed, set as global one
+        else:
+            np.append(all_trks, np.stack(var_arr_list, axis=-1))
+            np.append(all_labels, labels)
+
+        # Stop loading if enough jets are loaded
+        if nJets_counter >= nJets:
+            break
+
+    # Check if enough jets are loaded
+    if nJets_counter < nJets:
+        logger.warning(
+            f"Requested {nJets} but only {nJets_counter} could be loaded!"
+        )
+
+    else:
+        logger.info(f"Loaded {nJets_counter} jets!")
+
+    return all_trks, all_labels
 
 
 def load_validation_data(train_config, preprocess_config, nJets: int):

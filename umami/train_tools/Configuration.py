@@ -19,7 +19,7 @@ class Configuration(object):
             self.config = yaml.load(conf, Loader=yaml_loader)
 
     def GetConfiguration(self):
-        config_items = [
+        config_train_items = [
             "model_name",
             "preprocess_config",
             "model_file",
@@ -33,7 +33,25 @@ class Configuration(object):
             "ttbar_test_files",
             "zpext_test_files",
         ]
-        for item in config_items:
+        config_evaluation_items = [
+            "model_name",
+            "ttbar_test_files",
+            "zpext_test_files",
+            "evaluate_trained_model",
+            "Eval_parameters_validation",
+            "bool_use_taus",
+        ]
+        if "evaluate_trained_model" in self.config.keys():
+            if self.config["evaluate_trained_model"] is True:
+                iterate_list = config_train_items
+
+            elif self.config["evaluate_trained_model"] is False:
+                iterate_list = config_evaluation_items
+
+        else:
+            iterate_list = config_train_items
+
+        for item in iterate_list:
             if item in self.config:
                 setattr(self, item, self.config[item])
             else:
