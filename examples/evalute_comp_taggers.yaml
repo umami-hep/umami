@@ -1,0 +1,45 @@
+# Set foldername (aka modelname)
+model_name: Eval_results
+
+# Set the option to evaluate a freshly trained model to False
+evaluate_trained_model: False
+
+# Decide, if taus are used or not
+bool_use_taus: False
+
+ttbar_test_files:
+    ttbar_r21:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar"
+
+    ttbar_r22:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "ttbar_comparison"
+
+zpext_test_files:
+    zpext_r21: 
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext"
+
+    zpext_r22:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        data_set_name: "zpext_comparison"
+
+    zpext_r22_no_QSP:
+        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts_No_QSPI-file_1.h5
+        data_set_name: "zpext_comparison_no_QSP"
+
+# Eval parameters for validation evaluation while training
+Eval_parameters_validation:
+    # Number of jets used for validation
+    n_jets: 3e5
+
+    # Define taggers that are used for comparison in evaluate_model
+    # This can be a list or a string for only one tagger
+    tagger: ["rnnip", "DL1r"]
+
+    # Define fc values for the taggers
+    fc_values_comp: {
+        "rnnip": 0.08,
+        "DL1r": 0.018,
+    }

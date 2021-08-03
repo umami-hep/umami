@@ -44,7 +44,6 @@ def GetParser():
         "-e",
         "--epoch",
         type=int,
-        required=True,
         help="Epoch which should be evaluated.",
     )
 
@@ -105,11 +104,11 @@ def EvaluateModel(
         nJets = args.nJets
 
     # Check the config if the trained model is also to be evaluated
-    if "evaluate_trained_model" not in Eval_params:
-        Eval_model_bool = True
+    try:
+        Eval_model_bool = train_config.evaluate_trained_model
 
-    else:
-        Eval_model_bool = Eval_params["evaluate_trained_model"]
+    except AttributeError:
+        Eval_model_bool = True
 
     # Test if multiple taggers are given or not
     if type(Eval_params["tagger"]) is not list:
@@ -121,6 +120,11 @@ def EvaluateModel(
         fc_list = Eval_params["fc_values_comp"]
 
     if Eval_model_bool is True:
+        if args.epoch is None:
+            raise ValueError(
+                "You need to give an epoch which is to be evaluated!"
+            )
+
         # Get model file path
         model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
         logger.info(f"Evaluating {model_file}")
@@ -377,6 +381,10 @@ def EvaluateModel(
 def EvaluateModelDips(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
+    # Check if epochs are set
+    if args.epoch is None:
+        raise ValueError("You need to give an epoch which is to be evaluated!")
+
     Eval_params = train_config.Eval_parameters_validation
 
     # Set number of nJets for testing
@@ -668,6 +676,10 @@ def EvaluateModelDips(
 def EvaluateModelDL1(
     args, train_config, preprocess_config, test_file, data_set_name
 ):
+    # Check if epochs are set or not
+    if args.epoch is None:
+        raise ValueError("You need to give an epoch which is to be evaluated!")
+
     Eval_params = train_config.Eval_parameters_validation
 
     # Get model file path
@@ -1150,7 +1162,15 @@ def EvaluateModelDL1(
 if __name__ == "__main__":
     args = GetParser()
     train_config = utt.Configuration(args.config_file)
-    preprocess_config = Configuration(train_config.preprocess_config)
+
+    # Check for evaluation only is used
+    try:
+        train_config.evaluate_trained_model
+        preprocess_config = train_config
+
+    except AttributeError:
+        preprocess_config = Configuration(train_config.preprocess_config)
+
     if args.dl1:
         if train_config.ttbar_test_files is not None:
             logger.info("Start evaluating DL1 with ttbar test files...")
@@ -1206,6 +1226,7 @@ if __name__ == "__main__":
                 )
 
     else:
+
         if train_config.zpext_test_files is not None:
             logger.info("Start evaluating UMAMI with ttbar test files...")
             for ttbar_models in train_config.ttbar_test_files:
