@@ -30,7 +30,7 @@ jets_input_vars:
   binning:
     IP2D_cu: 5
     IP2D_bu:
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0
@@ -56,7 +56,7 @@ nTracks_Test:
     yAxisIncrease: 2
     figsize: [7, 5]
     Ratio_Cut: [0.5, 2]
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0
@@ -81,7 +81,7 @@ Tracks_Test:
     figsize: [7, 5]
     Ratio_Cut: [0.5, 2]
     bool_use_taus: False
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0
@@ -102,7 +102,7 @@ Tracks_Test:
     IP3D_signed_d0_significance: 100
     numberOfInnermostPixelLayerHits: [0, 4, 1]
     dr:
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0

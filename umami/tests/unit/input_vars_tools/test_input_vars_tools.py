@@ -64,9 +64,9 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test"]
 
         plot_input_vars_jets(
-            filepaths=filepath_list,
-            labels=labels_list,
-            flavors=plotting_config["flavors"],
+            datasets_filepaths=filepath_list,
+            datasets_labels=labels_list,
+            flavours=plotting_config["flavours"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
@@ -101,9 +101,9 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_input_vars_jets_comparison(
-            filepaths=filepath_list,
-            labels=labels_list,
-            flavors=plotting_config["flavors"],
+            datasets_filepaths=filepath_list,
+            datasets_labels=labels_list,
+            flavours=plotting_config["flavours"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
@@ -139,9 +139,9 @@ class JetPlotting_TestCase(unittest.TestCase):
         del plotting_config["plot_settings"]["Ratio_Cut"]
 
         plot_input_vars_trks(
-            filepaths=filepath_list,
-            labels=labels_list,
-            flavors=plotting_config["flavors"],
+            datasets_filepaths=filepath_list,
+            datasets_labels=labels_list,
+            flavours=plotting_config["flavours"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
@@ -226,9 +226,9 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_input_vars_trks_comparison(
-            filepaths=filepath_list,
-            labels=labels_list,
-            flavors=plotting_config["flavors"],
+            datasets_filepaths=filepath_list,
+            datasets_labels=labels_list,
+            flavours=plotting_config["flavours"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
@@ -313,9 +313,9 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_nTracks_per_Jet(
-            filepaths=filepath_list,
-            labels=labels_list,
-            flavors=plotting_config["flavors"],
+            datasets_filepaths=filepath_list,
+            datasets_labels=labels_list,
+            flavours=plotting_config["flavours"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             output_directory=f"{self.tmp_plot_dir}",

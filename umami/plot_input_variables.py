@@ -89,9 +89,9 @@ def plot_trks_variables(plot_config, plot_type):
                 plotting_config["nTracks"] is True
             ):
                 uit.plot_nTracks_per_Jet(
-                    filepaths=filepath_list,
-                    labels=labels_list,
-                    flavors=plotting_config["flavors"],
+                    datasets_filepaths=filepath_list,
+                    datasets_labels=labels_list,
+                    flavours=plotting_config["flavours"],
                     var_dict=plot_config["Eval_parameters"]["var_dict"],
                     nJets=int(plot_config["Eval_parameters"]["nJets"]),
                     output_directory="input_vars_trks/"
@@ -102,9 +102,9 @@ def plot_trks_variables(plot_config, plot_type):
 
             else:
                 uit.plot_input_vars_trks_comparison(
-                    filepaths=filepath_list,
-                    labels=labels_list,
-                    flavors=plotting_config["flavors"],
+                    datasets_filepaths=filepath_list,
+                    datasets_labels=labels_list,
+                    flavours=plotting_config["flavours"],
                     var_dict=plot_config["Eval_parameters"]["var_dict"],
                     nJets=int(plot_config["Eval_parameters"]["nJets"]),
                     binning=plotting_config["binning"],
@@ -119,9 +119,9 @@ def plot_trks_variables(plot_config, plot_type):
                 plotting_config["nTracks"] is True
             ):
                 uit.plot_nTracks_per_Jet(
-                    filepaths=filepath_list,
-                    labels=labels_list,
-                    flavors=plotting_config["flavors"],
+                    datasets_filepaths=filepath_list,
+                    datasets_labels=labels_list,
+                    flavours=plotting_config["flavours"],
                     var_dict=plot_config["Eval_parameters"]["var_dict"],
                     nJets=int(plot_config["Eval_parameters"]["nJets"]),
                     output_directory="input_vars_trks/"
@@ -132,9 +132,9 @@ def plot_trks_variables(plot_config, plot_type):
 
             else:
                 uit.plot_input_vars_trks(
-                    filepaths=filepath_list,
-                    labels=labels_list,
-                    flavors=plotting_config["flavors"],
+                    datasets_filepaths=filepath_list,
+                    datasets_labels=labels_list,
+                    flavours=plotting_config["flavours"],
                     var_dict=plot_config["Eval_parameters"]["var_dict"],
                     nJets=int(plot_config["Eval_parameters"]["nJets"]),
                     binning=plotting_config["binning"],
@@ -180,9 +180,9 @@ def plot_jets_variables(plot_config, plot_type):
 
         if len(filepath_list) >= 2:
             uit.plot_input_vars_jets_comparison(
-                filepaths=filepath_list,
-                labels=labels_list,
-                flavors=plotting_config["flavors"],
+                datasets_filepaths=filepath_list,
+                datasets_labels=labels_list,
+                flavours=plotting_config["flavours"],
                 var_dict=plot_config["Eval_parameters"]["var_dict"],
                 nJets=int(plot_config["Eval_parameters"]["nJets"]),
                 binning=plotting_config["binning"],
@@ -195,9 +195,9 @@ def plot_jets_variables(plot_config, plot_type):
 
         else:
             uit.plot_input_vars_jets(
-                filepaths=filepath_list,
-                labels=labels_list,
-                flavors=plotting_config["flavors"],
+                datasets_filepaths=filepath_list,
+                datasets_labels=labels_list,
+                flavours=plotting_config["flavours"],
                 var_dict=plot_config["Eval_parameters"]["var_dict"],
                 nJets=int(plot_config["Eval_parameters"]["nJets"]),
                 binning=plotting_config["binning"],

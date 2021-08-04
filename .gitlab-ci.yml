@@ -10,7 +10,7 @@ stages:
   - integration_test_preprocessing
   - integration_test_tagger
   - integration_test_plotting
-  - converage_test_stage
+  - coverage_test_stage
   - builds
   - image_build_umami
   - publish
@@ -31,9 +31,10 @@ linter:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 test_coverage:
-  stage: converage_test_stage
+  stage: coverage_test_stage
   image: python:3.7-slim
   script:
+    - pip install --upgrade pip
     - pip install -r requirements.txt
     - cd ./coverage_files/
     - coverage combine
