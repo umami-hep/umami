@@ -170,8 +170,15 @@ bool_process_taus: False
 # set to true if extended flavour labelling scheme is used in preprocessing
 bool_extended_labelling: False
 
-# Define undersampling method used. Valid are "count", "weight", and "count_bcl_weight_tau"
-# Last case only applied if taus are included. Default is "count".
+# Define undersampling method used. Valid are "count", "weight", 
+# "count_bcl_weight_tau", "template_b" and "template_b_count"
+# count_bcl_weight_tau is a hybrid of count and weight to deal with taus.
+# template_b uses the b as the target distribution, but does not guarantee
+# same fractions. template_b_count will guarantee same fractions.
+# The "template_b" and "template_b_count" does not work well with taus as of now.
+# Additionally, when computing the target distribution for "template_b" and "template_b_count",
+# pT_max (set above) will be used to compute the probability ratios or PDFs.
+# Default is "count".
 # See RunUndersampling in preprocessing for more info
 sampling_method: count
 

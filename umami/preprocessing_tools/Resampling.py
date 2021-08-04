@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import binned_statistic_2d
+import warnings
 
 from umami.configuration import global_config, logger
 
@@ -231,6 +232,252 @@ class UnderSamplingProp(object):
         )
 
 
+class UnderSamplingTemplate(object):
+    """
+    The UnderSamplingTemplate is used to prepare the training dataset. It makes sure
+    that all the flavours distributions have the same shape as the b distribution.
+    If the count parameter is true, it also ensures the flavor fractions are equal.
+    This is an alternative to the class UnderSampling, with the difference that
+    it always ensures the target distribution is the b, regardless of pre-sampling
+    flavor fractions and low statistics. Does not work well with taus as of now.
+    """
+
+    def __init__(
+        self, bjets, cjets, ujets, tjets=None, pT_max=False, count=False
+    ):
+        super(UnderSamplingTemplate, self).__init__()
+        self.bjets = bjets
+        self.cjets = cjets
+        self.ujets = ujets
+        self.tjets = tjets
+        self.bool_tjets = tjets is not None
+        self.pT_max = pT_max if pT_max else 6000000
+        self.pt_bins = np.linspace(0, self.pT_max, 21)
+        self.eta_bins = np.linspace(0, 2.5, 2)
+        self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
+        self.pT_var_name = global_config.pTvariable
+        self.eta_var_name = global_config.etavariable
+        self.rnd_seed = 42
+        self.count = count
+
+    def GetIndices(self):
+        """
+        Applies the undersampling to the given arrays ensuring the b's are the
+        target distribution, i.e. all other flavors will have a b-shaped distribution.
+        However, this does not ensure the flavor fractions are equal.
+        Returns the indices for the jets to be used separately for b, c and
+        light jets (as well as taus, optionally).
+        """
+        if self.count:
+            b_indices, c_indices, u_indices, t_indices = self.GetIndicesCount()
+            return b_indices, c_indices, u_indices, t_indices
+
+        binnumbers_b, ind_b, stat_b = self.GetBins(self.bjets)
+        binnumbers_c, _, stat_c = self.GetBins(self.cjets)
+        binnumbers_u, _, stat_u = self.GetBins(self.ujets)
+
+        if self.bool_tjets:
+            binnumbers_t, _, stat_t = self.GetBins(self.tjets)
+            df_charm, df_light, df_tau = self.GetDFactors(
+                stat_b, stat_c, stat_u, stat_t
+            )
+            min_count_per_bin = np.amin(
+                [
+                    stat_b,
+                    stat_c * df_charm,
+                    stat_u * df_light,
+                    stat_t * df_tau,
+                ],
+                axis=0,
+            )
+        else:
+            df_charm, df_light, _ = self.GetDFactors(stat_b, stat_c, stat_u)
+            min_count_per_bin = np.amin(
+                [stat_b, stat_c * df_charm, stat_u * df_light], axis=0
+            )
+
+        bjet_indices = []
+        cjet_indices = []
+        ujet_indices = []
+        tjet_indices = []
+
+        for elem, count in zip(ind_b, min_count_per_bin):
+            np.random.seed(self.rnd_seed)
+            bjet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_b == elem)[0],
+                    int(count),
+                    replace=False,
+                )
+            )
+            sorted_bjet_indices = np.sort(np.concatenate(bjet_indices))
+            np.random.seed(self.rnd_seed)
+            cjet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_c == elem)[0],
+                    int(count / df_charm),
+                    replace=False,
+                )
+            )
+            sorted_cjet_indices = np.sort(np.concatenate(cjet_indices))
+            np.random.seed(self.rnd_seed)
+            ujet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_u == elem)[0],
+                    int(count / df_light),
+                    replace=False,
+                )
+            )
+            sorted_ujet_indices = np.sort(np.concatenate(ujet_indices))
+            if self.bool_tjets:
+                np.random.seed(self.rnd_seed)
+                tjet_indices.append(
+                    np.random.choice(
+                        np.where(binnumbers_t == elem)[0],
+                        int(count / df_tau),
+                        replace=False,
+                    )
+                )
+        if self.bool_tjets:
+            sorted_tjet_indices = np.sort(np.concatenate(tjet_indices))
+        else:
+            sorted_tjet_indices = None
+
+        return (
+            sorted_bjet_indices,
+            sorted_cjet_indices,
+            sorted_ujet_indices,
+            sorted_tjet_indices,
+        )
+
+    def GetIndicesCount(self):
+        """
+        Applies the undersampling to the given arrays. Same as GetIndices,
+        with the extra condition that the resulting flavor fractions as also equal.
+        Returns the indices for the jets to be used separately for b, c and
+        light jets (as well as taus, optionally).
+        """
+        binnumbers_b, ind_b, stat_b = self.GetBins(self.bjets)
+        binnumbers_c, _, stat_c = self.GetBins(self.cjets)
+        binnumbers_u, _, stat_u = self.GetBins(self.ujets)
+
+        if self.bool_tjets:
+            binnumbers_t, _, stat_t = self.GetBins(self.tjets)
+            df_charm, df_light, df_tau = self.GetDFactors(
+                stat_b, stat_c, stat_u, stat_t
+            )
+            min_count_per_bin = np.amin(
+                [
+                    stat_b,
+                    stat_c * df_charm,
+                    stat_u * df_light,
+                    stat_t * df_tau,
+                ],
+                axis=0,
+            )
+        else:
+            df_charm, df_light, _ = self.GetDFactors(stat_b, stat_c, stat_u)
+            min_count_per_bin = np.amin([stat_b, stat_c, stat_u], axis=0)
+            # this is working without taus
+            max_df = np.amax([df_charm, df_light])
+            with np.errstate(divide="ignore", invalid="ignore"):
+                sampling_prob_b = np.nan_to_num(
+                    (stat_b / min_count_per_bin) / max_df
+                )
+
+        bjet_indices = []
+        cjet_indices = []
+        ujet_indices = []
+        tjet_indices = []
+
+        for elem, count, prob_b in zip(
+            ind_b, min_count_per_bin, sampling_prob_b
+        ):
+            np.random.seed(self.rnd_seed)
+            bjet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_b == elem)[0],
+                    int(count * prob_b),
+                    replace=False,
+                )
+            )
+            sorted_bjet_indices = np.sort(np.concatenate(bjet_indices))
+            np.random.seed(self.rnd_seed)
+            cjet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_c == elem)[0],
+                    int(count * prob_b),
+                    replace=False,
+                )
+            )
+            sorted_cjet_indices = np.sort(np.concatenate(cjet_indices))
+            np.random.seed(self.rnd_seed)
+            ujet_indices.append(
+                np.random.choice(
+                    np.where(binnumbers_u == elem)[0],
+                    int(count * prob_b),
+                    replace=False,
+                )
+            )
+            sorted_ujet_indices = np.sort(np.concatenate(ujet_indices))
+            if self.bool_tjets:
+                np.random.seed(self.rnd_seed)
+                tjet_indices.append(
+                    np.random.choice(
+                        np.where(binnumbers_t == elem)[0],
+                        int(count * prob_b),
+                        replace=False,
+                    )
+                )
+        if self.bool_tjets:
+            sorted_tjet_indices = np.sort(np.concatenate(tjet_indices))
+        else:
+            sorted_tjet_indices = None
+
+        return (
+            sorted_bjet_indices,
+            sorted_cjet_indices,
+            sorted_ujet_indices,
+            sorted_tjet_indices,
+        )
+
+    def GetBins(self, df):
+        statistic, xedges, yedges, binnumber = binned_statistic_2d(
+            x=df[self.pT_var_name],
+            y=df[self.eta_var_name],
+            values=df[self.pT_var_name],
+            statistic="count",
+            bins=[self.pt_bins, self.eta_bins],
+        )
+
+        bins_indices_flat_2d = np.indices(self.nbins - 1) + 1
+        bins_indices_flat = np.ravel_multi_index(
+            bins_indices_flat_2d, self.nbins + 1
+        ).flatten()
+
+        return binnumber, bins_indices_flat, statistic.flatten()
+
+    def GetDFactors(self, stat_b, stat_c, stat_u, stat_t=None):
+        df_charm, df_light, df_tau = None, None, None
+        with np.errstate(
+            divide="ignore", invalid="ignore"
+        ), warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            ratio_bc = stat_b.astype(float) / stat_c
+            ratio_bu = stat_b.astype(float) / stat_u
+            df_charm = np.nanmax(ratio_bc)
+            df_light = np.nanmax(ratio_bu)
+            if stat_t is not None:
+                ratio_bt = stat_b.astype(float) / stat_t
+                df_tau = np.nanmax(ratio_bt)
+
+        logger.info(f"df_charm, {df_charm}")
+        logger.info(f"df_light, {df_light}")
+        logger.info(f"df_tau, {df_tau}")
+
+        return df_charm, df_light, df_tau
+
+
 class Weighting2D(object):
     """Alternatively to the UnderSampling approach, the 2D weighting can be
     used to prepare the training dataset. It makes sure
@@ -310,9 +557,13 @@ def GetNJetsPerIteration(config, total_number_of_taus=0):
         nZ = (
             int(config.njets) * 3 * (1 / config.ttbar_frac - 1)
         ) // config.iterations
-        ncjets = int(2.3 * config.njets) // config.iterations
-        nujets = int(2.7 * config.njets) // config.iterations
         njets = int(config.njets) // config.iterations
+        if config.sampling_method == "template_b":
+            ncjets = int(config.njets) // config.iterations
+            nujets = int(config.njets) // config.iterations
+        else:
+            ncjets = int(2.3 * config.njets) // config.iterations
+            nujets = int(2.7 * config.njets) // config.iterations
         if take_taus:
             # Equal number of taus per iteration
             ntaujets = int(total_number_of_taus) // config.iterations
@@ -500,6 +751,7 @@ def RunSampling(
     sampling_method="count",
     take_taus=False,
     tracks=False,
+    pT_max=False,
 ):
     """
     Runs the undersampling, with the sampling_method chosen.
@@ -524,12 +776,28 @@ def RunSampling(
             ujets = ujets[u_indices0]
             downs = UnderSampling(bjets, cjets, ujets)
             b_indices, c_indices, u_indices, _ = downs.GetIndices()
+        elif sampling_method == "template_b":
+            downs = UnderSamplingTemplate(
+                bjets, cjets, ujets, taujets, pT_max=pT_max
+            )
+            b_indices, c_indices, u_indices, tau_indices = downs.GetIndices()
+        elif sampling_method == "template_b_count":
+            downs = UnderSamplingTemplate(
+                bjets, cjets, ujets, taujets, pT_max=pT_max, count=True
+            )
+            b_indices, c_indices, u_indices, tau_indices = downs.GetIndices()
         taujets = taujets[tau_indices]
     else:
         if sampling_method == "weight":
             downs = UnderSamplingProp(bjets, cjets, ujets)
         elif sampling_method == "count":
             downs = UnderSampling(bjets, cjets, ujets)
+        elif sampling_method == "template_b":
+            downs = UnderSamplingTemplate(bjets, cjets, ujets, pT_max=pT_max)
+        elif sampling_method == "template_b_count":
+            downs = UnderSamplingTemplate(
+                bjets, cjets, ujets, pT_max=pT_max, count=True
+            )
         b_indices, c_indices, u_indices, _ = downs.GetIndices()
         taujets = None
 
