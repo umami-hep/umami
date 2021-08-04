@@ -15,7 +15,8 @@ import numpy as np
 import yaml
 from matplotlib import gridspec
 
-from umami.configuration import logger
+import umami.evaluation_tools as uet
+from umami.configuration import global_config, logger
 from umami.tools import yaml_loader
 from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 
@@ -29,11 +30,11 @@ def natural_keys(text):
 
 
 def plot_nTracks_per_Jet(
-    filepaths,
-    labels,
+    datasets_filepaths,
+    datasets_labels,
     var_dict,
     nJets,
-    flavors,
+    flavours,
     plot_type="pdf",
     UseAtlasTag=True,
     AtlasTag="Internal Simulation",
@@ -57,27 +58,28 @@ def plot_nTracks_per_Jet(
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
-    # Init trks and flavor label dicts
+    # Init trks and flavour label dicts
     trks_dict = {}
-    flavor_label_dict = {}
+    flavour_label_dict = {}
 
-    # Iterate over files
-    for i, (filepath, label) in enumerate(
-        zip(
-            filepaths,
-            labels,
-        )
+    # Iterate over the different dataset filepaths and labels
+    # defined in the config
+    for (filepath, label) in zip(
+        datasets_filepaths,
+        datasets_labels,
     ):
-        # Get wildcard
+        # Get the filepath of the dataset
         filepath = glob(filepath)
 
         # Init an empty array to append to
         trks = np.array([])
-        flavor_labels = np.array([])
+        flavour_labels = np.array([])
 
         # Loop over files and get the amount of jets needed.
-        for j, file in enumerate(sorted(filepath, key=natural_keys)):
-            if j != 0:
+        for file_counter, file in enumerate(
+            sorted(filepath, key=natural_keys)
+        ):
+            if file_counter != 0:
                 if len(trks) < nJets:
                     # Loading the labels to remove jets that are not used
                     variable_labels = h5py.File(file, "r")["/jets"][:nJets][
@@ -87,8 +89,8 @@ def plot_nTracks_per_Jet(
                     # Set up a bool list
                     indices_toremove = np.where(variable_labels > 5)[0]
 
-                    # Getting the flavor labels
-                    tmp_flavor_labels = np.delete(
+                    # Getting the flavour labels
+                    tmp_flavour_labels = np.delete(
                         variable_labels, indices_toremove, 0
                     )
 
@@ -102,8 +104,8 @@ def plot_nTracks_per_Jet(
 
                     # Append to array
                     trks = np.concatenate((trks, tmp_trks))
-                    flavor_labels = np.concatenate(
-                        (flavor_labels, tmp_flavor_labels)
+                    flavour_labels = np.concatenate(
+                        (flavour_labels, tmp_flavour_labels)
                     )
 
                 else:
@@ -118,8 +120,10 @@ def plot_nTracks_per_Jet(
                 # Set up a bool list
                 indices_toremove = np.where(variable_labels > 5)[0]
 
-                # Getting the flavor labels
-                flavor_labels = np.delete(variable_labels, indices_toremove, 0)
+                # Getting the flavour labels
+                flavour_labels = np.delete(
+                    variable_labels, indices_toremove, 0
+                )
 
                 # Load tracks
                 trks = np.asarray(h5py.File(file, "r")["/tracks"][:nJets])
@@ -129,7 +133,7 @@ def plot_nTracks_per_Jet(
 
         # Append trks to dict
         trks_dict.update({label: trks[:nJets]})
-        flavor_label_dict.update({label: flavor_labels[:nJets]})
+        flavour_label_dict.update({label: flavour_labels[:nJets]})
 
     # Check if path is existing, if not mkdir
     if not os.path.isdir(f"{output_directory}/"):
@@ -154,13 +158,14 @@ def plot_nTracks_per_Jet(
 
     # Init bincounts for ratio calculation
     bincounts = {}
+    bincounts_unc = {}
 
     # Init lowest bincount
     Lowest_histcount = 1
 
     # Iterate over models
     for model_number, (label, linestyle) in enumerate(
-        zip(labels, linestyles[: len(labels)])
+        zip(datasets_labels, linestyles[: len(datasets_labels)])
     ):
         # Sort after given variable
         trks = np.asarray(trks_dict[label])
@@ -168,127 +173,110 @@ def plot_nTracks_per_Jet(
 
         if model_number == 0:
             # Calculate unified Binning
-            nTracks_b = nTracks[flavor_label_dict[label] == 5]
+            nTracks_b = nTracks[flavour_label_dict[label] == 5]
 
             _, Binning = np.histogram(
                 nTracks_b,
                 bins=np.arange(-0.5, 40.5, 1),
             )
 
-        for t, flavor in enumerate(flavors):
-            nTracks_flavor = nTracks[
-                flavor_label_dict[label] == flavors[flavor]
+        for t, flavour in enumerate(flavours):
+            nTracks_flavour = nTracks[
+                flavour_label_dict[label] == flavours[flavour]
             ]
 
-            # Get number of jets
-            nJets = len(nTracks_flavor)
-
-            # Calculate the bin centers
-            bincentres = [
-                (Binning[e] + Binning[e + 1]) / 2.0
-                for e in range(len(Binning) - 1)
-            ]
-
-            # Calculate Binning and counts for plotting
-            counts, Bins = np.histogram(
-                np.clip(
-                    nTracks_flavor,
-                    Binning[0],
-                    Binning[-1],
-                ),
-                bins=Binning,
+            # Calculate bins
+            bins, weights, unc, band = uet.calc_bins(
+                input_array=nTracks_flavour,
+                Binning=Binning,
             )
 
-            # Calculate poisson uncertainties and lower bands
-            unc = np.sqrt(counts) / nJets
-            band_lower = counts / nJets - unc
-
             hist_counts, _, _ = axis_dict["left"]["top"].hist(
-                x=Bins[:-1],
-                bins=Bins,
-                weights=(counts / nJets),
+                x=bins[:-1],
+                bins=bins,
+                weights=weights,
                 histtype="step",
                 linewidth=1.0,
                 linestyle=linestyle,
-                color=f"C{t}",
+                color=global_config.flavour_colors[flavour],
                 stacked=False,
                 fill=False,
-                label=r"${}$-jets {}".format(flavor, label),
+                label=global_config.flavour_legend_labels[flavour]
+                + f" {label}",
             )
 
-            if label == labels[:-1] and flavor == flavors[:-1]:
+            if flavour == list(flavours.keys())[-1] and model_number == 0:
                 axis_dict["left"]["top"].hist(
-                    x=bincentres,
-                    bins=Bins,
-                    bottom=band_lower,
+                    x=bins[:-1],
+                    bins=bins,
+                    bottom=band,
                     weights=unc * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
                     label="stat. unc.",
+                    **global_config.hist_err_style,
                 )
 
             else:
                 axis_dict["left"]["top"].hist(
-                    x=bincentres,
-                    bins=Bins,
-                    bottom=band_lower,
+                    x=bins[:-1],
+                    bins=bins,
+                    bottom=band,
                     weights=unc * 2,
-                    fill=False,
-                    hatch="/////",
-                    linewidth=0,
-                    edgecolor="#666666",
+                    **global_config.hist_err_style,
                 )
 
-            bincounts.update(
-                {"{}{}".format(flavor, model_number): hist_counts}
-            )
+            bincounts.update({f"{flavour}{model_number}": hist_counts})
+            bincounts_unc.update({f"{flavour}{model_number}": unc})
 
             for count in hist_counts:
                 if count != 0 and count < Lowest_histcount:
                     Lowest_histcount = count
 
-    # Start ratio plot
-    for t, flavor in enumerate(flavors):
-        for model_number in range(len(labels)):
-            if model_number != 0:
-                step = np.divide(
-                    bincounts["{}{}".format(flavor, model_number)],
-                    bincounts["{}{}".format(flavor, 0)],
-                    out=np.ones(
-                        bincounts["{}{}".format(flavor, model_number)].shape,
-                        dtype=float,
-                    )
-                    * bincounts["{}{}".format(flavor, model_number)]
-                    + 1,
-                    where=(bincounts["{}{}".format(flavor, 0)] != 0),
+        # Start ratio plot
+        if model_number != 0:
+            for flavour in flavours:
+                step, step_unc = uet.calc_ratio(
+                    counter=bincounts["{}{}".format(flavour, model_number)],
+                    denominator=bincounts["{}{}".format(flavour, 0)],
+                    counter_unc=bincounts_unc[
+                        "{}{}".format(flavour, model_number)
+                    ],
+                    denominator_unc=bincounts_unc["{}{}".format(flavour, 0)],
                 )
-
-                step = np.append(np.array([step[0]]), step)
 
                 axis_dict["left"]["ratio"].step(
                     x=Binning,
                     y=step,
-                    color="C{}".format(t),
+                    color=global_config.flavour_colors[flavour],
                     linestyle=linestyles[model_number],
                 )
+
+                axis_dict["left"]["ratio"].fill_between(
+                    x=Binning,
+                    y1=step - step_unc,
+                    y2=step + step_unc,
+                    step="pre",
+                    facecolor="none",
+                    edgecolor=global_config.hist_err_style["edgecolor"],
+                    linewidth=global_config.hist_err_style["linewidth"],
+                    hatch=global_config.hist_err_style["hatch"],
+                )
+
+        elif model_number == 0:
+            # Add black line at one
+            axis_dict["left"]["ratio"].axhline(
+                y=1,
+                xmin=axis_dict["left"]["ratio"].get_xlim()[0],
+                xmax=axis_dict["left"]["ratio"].get_xlim()[1],
+                color="black",
+                alpha=0.5,
+            )
 
     axis_dict["left"]["ratio"].set_xlim(
         left=Binning[0],
         right=Binning[-1],
     )
 
-    # Draw black line
-    axis_dict["left"]["ratio"].hlines(
-        y=1,
-        xmin=axis_dict["left"]["ratio"].get_xlim()[0],
-        xmax=axis_dict["left"]["ratio"].get_xlim()[1],
-        color="black",
-    )
-
     # Add axes, titels and the legend
-
     if Bin_Width_y_axis is True:
         Bin_Width = abs(Binning[1] - Binning[0])
         axis_dict["left"]["top"].set_ylabel(
@@ -376,12 +364,12 @@ def plot_nTracks_per_Jet(
 
 
 def plot_input_vars_trks_comparison(
-    filepaths,
-    labels,
+    datasets_filepaths,
+    datasets_labels,
     var_dict,
     nJets,
     binning,
-    flavors,
+    flavours,
     bool_use_taus=False,
     sorting_variable="ptfrac",
     n_Leading=[None],
@@ -441,23 +429,22 @@ def plot_input_vars_trks_comparison(
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
-    # Init trks and flavor label dicts
+    # Init trks and flavour label dicts
     trks_dict = {}
-    flavor_label_dict = {}
+    flavour_label_dict = {}
 
-    # Iterate over files
-    for i, (filepath, label) in enumerate(
-        zip(
-            filepaths,
-            labels,
-        )
+    # Iterate over the different dataset filepaths and labels
+    # defined in the config
+    for (filepath, label) in zip(
+        datasets_filepaths,
+        datasets_labels,
     ):
         # Get wildcard
         filepath = glob(filepath)
 
         # Init an empty array to append to
         trks = np.array([])
-        flavor_labels = np.array([])
+        flavour_labels = np.array([])
 
         # Loop over files and get the amount of jets needed.
         for j, file in enumerate(sorted(filepath, key=natural_keys)):
@@ -475,8 +462,8 @@ def plot_input_vars_trks_comparison(
                     else:
                         indices_toremove = np.where(variable_labels > 5)[0]
 
-                    # Getting the flavor labels
-                    tmp_flavor_labels = np.delete(
+                    # Getting the flavour labels
+                    tmp_flavour_labels = np.delete(
                         variable_labels, indices_toremove, 0
                     )
 
@@ -490,8 +477,8 @@ def plot_input_vars_trks_comparison(
 
                     # Append to array
                     trks = np.concatenate((trks, tmp_trks))
-                    flavor_labels = np.concatenate(
-                        (flavor_labels, tmp_flavor_labels)
+                    flavour_labels = np.concatenate(
+                        (flavour_labels, tmp_flavour_labels)
                     )
 
                 else:
@@ -510,8 +497,10 @@ def plot_input_vars_trks_comparison(
                 else:
                     indices_toremove = np.where(variable_labels > 5)[0]
 
-                # Getting the flavor labels
-                flavor_labels = np.delete(variable_labels, indices_toremove, 0)
+                # Getting the flavour labels
+                flavour_labels = np.delete(
+                    variable_labels, indices_toremove, 0
+                )
 
                 # Load tracks
                 trks = np.asarray(h5py.File(file, "r")["/tracks"][:nJets])
@@ -527,7 +516,7 @@ def plot_input_vars_trks_comparison(
 
         # Append trks to dict
         trks_dict.update({label: trks[:nJets]})
-        flavor_label_dict.update({label: flavor_labels[:nJets]})
+        flavour_label_dict.update({label: flavour_labels[:nJets]})
 
     # Loading track variables
     noNormVars = variable_config["track_train_variables"]["noNormVars"]
@@ -581,13 +570,14 @@ def plot_input_vars_trks_comparison(
 
                 # Init bincounts for ratio calculation
                 bincounts = {}
+                bincounts_unc = {}
 
                 # Init lowest bincount
                 Lowest_histcount = 1
 
                 # Iterate over models
                 for model_number, (label, linestyle) in enumerate(
-                    zip(labels, linestyles[: len(labels)])
+                    zip(datasets_labels, linestyles[: len(datasets_labels)])
                 ):
                     # Sort after given variable
                     sorting = np.argsort(
@@ -606,7 +596,7 @@ def plot_input_vars_trks_comparison(
 
                     if model_number == 0:
                         # Calculate unified Binning
-                        b = tmp[flavor_label_dict[label] == 5]
+                        b = tmp[flavour_label_dict[label] == 5]
 
                         if nBins_dict[var] is None:
                             _, Binning = np.histogram(
@@ -619,128 +609,123 @@ def plot_input_vars_trks_comparison(
                                 bins=nBins_dict[var],
                             )
 
-                    for t, flavor in enumerate(flavors):
-                        jets = tmp[flavor_label_dict[label] == flavors[flavor]]
-
-                        # Get number of tracks
-                        nTracks = len(
-                            jets[:, nLeading][~np.isnan(jets[:, nLeading])]
-                        )
-
-                        # Calculate Binning and counts for plotting
-                        counts, Bins = np.histogram(
-                            np.clip(
-                                jets[:, nLeading][
-                                    ~np.isnan(jets[:, nLeading])
-                                ],
-                                Binning[0],
-                                Binning[-1],
-                            ),
-                            bins=Binning,
-                        )
-
-                        # Calculate the bin centers
-                        bincentres = [
-                            (Binning[e] + Binning[e + 1]) / 2.0
-                            for e in range(len(Binning) - 1)
+                    for t, flavour in enumerate(flavours):
+                        jets = tmp[
+                            flavour_label_dict[label] == flavours[flavour]
                         ]
 
-                        # Calculate poisson uncertainties and lower bands
-                        unc = np.sqrt(counts) / nTracks
-                        band_lower = counts / nTracks - unc
+                        # Get number of tracks
+                        Tracks = jets[:, nLeading][
+                            ~np.isnan(jets[:, nLeading])
+                        ]
+
+                        # Calculate bins
+                        bins, weights, unc, band = uet.calc_bins(
+                            input_array=Tracks,
+                            Binning=Binning,
+                        )
 
                         hist_counts, _, _ = axis_dict["left"]["top"].hist(
-                            x=Bins[:-1],
-                            bins=Bins,
-                            weights=(counts / nTracks),
+                            x=bins[:-1],
+                            bins=bins,
+                            weights=weights,
                             histtype="step",
                             linewidth=1.0,
                             linestyle=linestyle,
-                            color=f"C{t}",
+                            color=global_config.flavour_colors[flavour],
                             stacked=False,
                             fill=False,
-                            label=r"${}$-jets {}".format(flavor, label),
+                            label=global_config.flavour_legend_labels[flavour]
+                            + f" {label}",
                         )
 
-                        if label == labels[:-1] and flavor == flavors[:-1]:
+                        if (
+                            flavour == list(flavours.keys())[-1]
+                            and model_number == 0
+                        ):
                             axis_dict["left"]["top"].hist(
-                                x=bincentres,
-                                bins=Bins,
-                                bottom=band_lower,
+                                x=bins[:-1],
+                                bins=bins,
+                                bottom=band,
                                 weights=unc * 2,
-                                fill=False,
-                                hatch="/////",
-                                linewidth=0,
-                                edgecolor="#666666",
                                 label="stat. unc.",
+                                **global_config.hist_err_style,
                             )
 
                         else:
                             axis_dict["left"]["top"].hist(
-                                x=bincentres,
-                                bins=Bins,
-                                bottom=band_lower,
+                                x=bins[:-1],
+                                bins=bins,
+                                bottom=band,
                                 weights=unc * 2,
-                                fill=False,
-                                hatch="/////",
-                                linewidth=0,
-                                edgecolor="#666666",
+                                **global_config.hist_err_style,
                             )
 
                         bincounts.update(
-                            {"{}{}".format(flavor, model_number): hist_counts}
+                            {f"{flavour}{model_number}": hist_counts}
                         )
+                        bincounts_unc.update({f"{flavour}{model_number}": unc})
 
                         for count in hist_counts:
                             if count != 0 and count < Lowest_histcount:
                                 Lowest_histcount = count
 
-                # Start ratio plot
-                for t, flavor in enumerate(flavors):
-                    for model_number in range(len(labels)):
-                        if model_number != 0:
-                            step = np.divide(
-                                bincounts["{}{}".format(flavor, model_number)],
-                                bincounts["{}{}".format(flavor, 0)],
-                                out=np.ones(
-                                    bincounts[
-                                        "{}{}".format(flavor, model_number)
-                                    ].shape,
-                                    dtype=float,
-                                )
-                                * bincounts[
-                                    "{}{}".format(flavor, model_number)
-                                ]
-                                + 1,
-                                where=(
-                                    bincounts["{}{}".format(flavor, 0)] != 0
-                                ),
+                    # Start ratio plot
+                    if model_number != 0:
+                        for flavour in flavours:
+                            step, step_unc = uet.calc_ratio(
+                                counter=bincounts[
+                                    "{}{}".format(flavour, model_number)
+                                ],
+                                denominator=bincounts[
+                                    "{}{}".format(flavour, 0)
+                                ],
+                                counter_unc=bincounts_unc[
+                                    "{}{}".format(flavour, model_number)
+                                ],
+                                denominator_unc=bincounts_unc[
+                                    "{}{}".format(flavour, 0)
+                                ],
                             )
-
-                            step = np.append(np.array([step[0]]), step)
 
                             axis_dict["left"]["ratio"].step(
                                 x=Binning,
                                 y=step,
-                                color="C{}".format(t),
+                                color=global_config.flavour_colors[flavour],
                                 linestyle=linestyles[model_number],
                             )
+
+                            axis_dict["left"]["ratio"].fill_between(
+                                x=Binning,
+                                y1=step - step_unc,
+                                y2=step + step_unc,
+                                step="pre",
+                                facecolor="none",
+                                edgecolor=global_config.hist_err_style[
+                                    "edgecolor"
+                                ],
+                                linewidth=global_config.hist_err_style[
+                                    "linewidth"
+                                ],
+                                hatch=global_config.hist_err_style["hatch"],
+                            )
+
+                    elif model_number == 0:
+                        # Add black line at one
+                        axis_dict["left"]["ratio"].axhline(
+                            y=1,
+                            xmin=axis_dict["left"]["ratio"].get_xlim()[0],
+                            xmax=axis_dict["left"]["ratio"].get_xlim()[1],
+                            color="black",
+                            alpha=0.5,
+                        )
 
                 axis_dict["left"]["ratio"].set_xlim(
                     left=Binning[0],
                     right=Binning[-1],
                 )
 
-                # Draw black line
-                axis_dict["left"]["ratio"].hlines(
-                    y=1,
-                    xmin=axis_dict["left"]["ratio"].get_xlim()[0],
-                    xmax=axis_dict["left"]["ratio"].get_xlim()[1],
-                    color="black",
-                )
-
                 # Add axes, titels and the legend
-
                 if Bin_Width_y_axis is True:
                     Bin_Width = abs(Binning[1] - Binning[0])
                     axis_dict["left"]["top"].set_ylabel(
@@ -841,12 +826,12 @@ def plot_input_vars_trks_comparison(
 
 
 def plot_input_vars_trks(
-    filepaths,
-    labels,
+    datasets_filepaths,
+    datasets_labels,
     var_dict,
     nJets,
     binning,
-    flavors,
+    flavours,
     bool_use_taus=False,
     sorting_variable="ptfrac",
     n_Leading=None,
@@ -900,23 +885,22 @@ def plot_input_vars_trks(
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
-    # Init trks and flavor label dicts
+    # Init trks and flavour label dicts
     trks_dict = {}
-    flavor_label_dict = {}
+    flavour_label_dict = {}
 
-    # Iterate over files
-    for i, (filepath, label) in enumerate(
-        zip(
-            filepaths,
-            labels,
-        )
+    # Iterate over the different dataset filepaths and labels
+    # defined in the config
+    for (filepath, label) in zip(
+        datasets_filepaths,
+        datasets_labels,
     ):
         # Get wildcard
         filepath = glob(filepath)
 
         # Init an empty array to append to
         trks = np.array([])
-        flavor_labels = np.array([])
+        flavour_labels = np.array([])
 
         # Loop over files and get the amount of jets needed.
         for j, file in enumerate(sorted(filepath, key=natural_keys)):
@@ -934,8 +918,8 @@ def plot_input_vars_trks(
                     else:
                         indices_toremove = np.where(variable_labels > 5)[0]
 
-                    # Getting the flavor labels
-                    tmp_flavor_labels = np.delete(
+                    # Getting the flavour labels
+                    tmp_flavour_labels = np.delete(
                         variable_labels, indices_toremove, 0
                     )
 
@@ -949,8 +933,8 @@ def plot_input_vars_trks(
 
                     # Append to array
                     trks = np.concatenate((trks, tmp_trks))
-                    flavor_labels = np.concatenate(
-                        (flavor_labels, tmp_flavor_labels)
+                    flavour_labels = np.concatenate(
+                        (flavour_labels, tmp_flavour_labels)
                     )
 
                 else:
@@ -969,8 +953,10 @@ def plot_input_vars_trks(
                 else:
                     indices_toremove = np.where(variable_labels > 5)[0]
 
-                # Getting the flavor labels
-                flavor_labels = np.delete(variable_labels, indices_toremove, 0)
+                # Getting the flavour labels
+                flavour_labels = np.delete(
+                    variable_labels, indices_toremove, 0
+                )
 
                 # Load tracks
                 trks = np.asarray(h5py.File(file, "r")["/tracks"][:nJets])
@@ -986,7 +972,7 @@ def plot_input_vars_trks(
 
         # Append trks to dict
         trks_dict.update({label: trks[:nJets]})
-        flavor_label_dict.update({label: flavor_labels[:nJets]})
+        flavour_label_dict.update({label: flavour_labels[:nJets]})
 
     # Loading track variables
     noNormVars = variable_config["track_train_variables"]["noNormVars"]
@@ -1034,7 +1020,7 @@ def plot_input_vars_trks(
 
                 # Iterate over models
                 for (label, linestyle) in zip(
-                    labels, linestyles[: len(labels)]
+                    datasets_labels, linestyles[: len(datasets_labels)]
                 ):
                     # Sort after given variable
                     sorting = np.argsort(
@@ -1052,7 +1038,7 @@ def plot_input_vars_trks(
                     )
 
                     # Calculate unified Binning
-                    b = tmp[flavor_label_dict[label] == 5]
+                    b = tmp[flavour_label_dict[label] == 5]
 
                     # Check if binning is already set
                     if nBins_dict[var] is None:
@@ -1076,75 +1062,56 @@ def plot_input_vars_trks(
                     else:
                         fig = plt.figure(figsize=(figsize[0], figsize[1]))
 
-                    # Iterate over flavors
-                    for t, flavor in enumerate(flavors):
+                    # Iterate over flavours
+                    for t, flavour in enumerate(flavours):
 
-                        # Get all jets with wanted flavor
-                        jets = tmp[flavor_label_dict[label] == flavors[flavor]]
-
-                        # Get number of tracks
-                        nTracks = len(
-                            jets[:, nLeading][~np.isnan(jets[:, nLeading])]
-                        )
-
-                        # Calculate Binning and counts for plotting
-                        counts, Bins = np.histogram(
-                            np.clip(
-                                jets[:, nLeading][
-                                    ~np.isnan(jets[:, nLeading])
-                                ],
-                                Binning[0],
-                                Binning[-1],
-                            ),
-                            bins=Binning,
-                        )
-
-                        # Calculate the bin centers
-                        bincentres = [
-                            (Binning[e] + Binning[e + 1]) / 2.0
-                            for e in range(len(Binning) - 1)
+                        # Get all jets with wanted flavour
+                        jets = tmp[
+                            flavour_label_dict[label] == flavours[flavour]
                         ]
 
-                        # Calculate poisson uncertainties and lower bands
-                        unc = np.sqrt(counts) / nTracks
-                        band_lower = counts / nTracks - unc
+                        # Get number of tracks
+                        Tracks = jets[:, nLeading][
+                            ~np.isnan(jets[:, nLeading])
+                        ]
+
+                        # Calculate bins
+                        bins, weights, unc, band = uet.calc_bins(
+                            input_array=Tracks,
+                            Binning=Binning,
+                        )
 
                         plt.hist(
-                            x=Bins[:-1],
-                            bins=Bins,
-                            weights=(counts / nTracks),
+                            x=bins[:-1],
+                            bins=bins,
+                            weights=weights,
                             histtype="step",
                             linewidth=1.0,
                             linestyle=linestyle,
-                            color=f"C{t}",
+                            color=global_config.flavour_colors[flavour],
                             stacked=False,
                             fill=False,
-                            label=r"${}$-jets {}".format(flavor, label),
+                            label=global_config.flavour_legend_labels[flavour]
+                            + f" {label}",
                         )
 
-                        if label == labels[:-1] and flavor == flavors[:-1]:
+                        if flavour == list(flavours.keys())[-1]:
                             plt.hist(
-                                x=bincentres,
-                                bins=Bins,
-                                bottom=band_lower,
+                                x=bins[:-1],
+                                bins=bins,
+                                bottom=band,
                                 weights=unc * 2,
-                                fill=False,
-                                hatch="/////",
-                                linewidth=0,
-                                edgecolor="#666666",
                                 label="stat. unc.",
+                                **global_config.hist_err_style,
                             )
 
                         else:
                             plt.hist(
-                                x=bincentres,
-                                bins=Bins,
-                                bottom=band_lower,
+                                x=bins[:-1],
+                                bins=bins,
+                                bottom=band,
                                 weights=unc * 2,
-                                fill=False,
-                                hatch="/////",
-                                linewidth=0,
-                                edgecolor="#666666",
+                                **global_config.hist_err_style,
                             )
 
                     if nLeading is None:
@@ -1184,12 +1151,12 @@ def plot_input_vars_trks(
 
 
 def plot_input_vars_jets(
-    filepaths,
-    labels,
+    datasets_filepaths,
+    datasets_labels,
     var_dict,
     nJets,
     binning,
-    flavors,
+    flavours,
     Log=True,
     bool_use_taus=False,
     special_param_jets=None,
@@ -1226,23 +1193,22 @@ def plot_input_vars_jets(
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
-    # Init trks and flavor label dicts
+    # Init trks and flavour label dicts
     jets_dict = {}
-    flavor_label_dict = {}
+    flavour_label_dict = {}
 
-    # Iterate over files
-    for i, (filepath, label) in enumerate(
-        zip(
-            filepaths,
-            labels,
-        )
+    # Iterate over the different dataset filepaths and labels
+    # defined in the config
+    for (filepath, label) in zip(
+        datasets_filepaths,
+        datasets_labels,
     ):
         # Get wildcard
         filepath = glob(filepath)
 
         # Init an empty array to append to
         jets = np.array([])
-        flavor_labels = np.array([])
+        flavour_labels = np.array([])
 
         # Loop over files and get the amount of jets needed.
         for j, file in enumerate(sorted(filepath, key=natural_keys)):
@@ -1260,8 +1226,8 @@ def plot_input_vars_jets(
                     else:
                         indices_toremove = np.where(variable_labels > 5)[0]
 
-                    # Getting the flavor labels
-                    tmp_flavor_labels = np.delete(
+                    # Getting the flavour labels
+                    tmp_flavour_labels = np.delete(
                         variable_labels, indices_toremove, 0
                     )
 
@@ -1275,8 +1241,8 @@ def plot_input_vars_jets(
 
                     # Append to array
                     jets = np.concatenate((jets, tmp_jets))
-                    flavor_labels = np.concatenate(
-                        (flavor_labels, tmp_flavor_labels)
+                    flavour_labels = np.concatenate(
+                        (flavour_labels, tmp_flavour_labels)
                     )
 
                 else:
@@ -1295,8 +1261,10 @@ def plot_input_vars_jets(
                 else:
                     indices_toremove = np.where(variable_labels > 5)[0]
 
-                # Getting the flavor labels
-                flavor_labels = np.delete(variable_labels, indices_toremove, 0)
+                # Getting the flavour labels
+                flavour_labels = np.delete(
+                    variable_labels, indices_toremove, 0
+                )
 
                 # Load tracks
                 jets = np.asarray(h5py.File(file, "r")["/jets"][:nJets])
@@ -1306,7 +1274,7 @@ def plot_input_vars_jets(
 
         # Append jets to dict
         jets_dict.update({label: jets[:nJets]})
-        flavor_label_dict.update({label: flavor_labels[:nJets]})
+        flavour_label_dict.update({label: flavour_labels[:nJets]})
 
     # Loading jet variables
     jetsVars = [
@@ -1320,28 +1288,22 @@ def plot_input_vars_jets(
         os.makedirs(f"{output_directory}/")
     filedir = f"{output_directory}/"
 
-    colour_dict = {
-        0: "#2ca02c",
-        4: "#ff7f0e",
-        5: "#1f77b4",
-        15: "#7c5295",
-    }
     # Loop over vars
     for var in jetsVars:
         if var in nBins_dict:
             logger.info(f"Plotting {var}...")
 
-            for label in labels:
+            for label in datasets_labels:
                 # Get variable and the labels of the jets
                 jets_var = jets_dict[label][var]
-                flavor_labels_var = flavor_label_dict[label]
+                flavour_labels_var = flavour_label_dict[label]
 
                 # Clean both from nans
                 jets_var_clean = jets_var[~np.isnan(jets_var)]
-                flavor_label_clean = flavor_labels_var[~np.isnan(jets_var)]
+                flavour_label_clean = flavour_labels_var[~np.isnan(jets_var)]
 
                 # Calculate unified Binning
-                b = jets_var_clean[flavor_label_clean == 5]
+                b = jets_var_clean[flavour_label_clean == 5]
 
                 var_range = None
                 if (
@@ -1373,56 +1335,47 @@ def plot_input_vars_jets(
                 else:
                     fig = plt.figure(figsize=(figsize[0], figsize[1]))
 
-                for i, flavor in enumerate(flavors):
-                    jets_flavor = jets_var_clean[
-                        flavor_label_clean == flavors[flavor]
+                for flavour in flavours:
+                    jets_flavour = jets_var_clean[
+                        flavour_label_clean == flavours[flavour]
                     ]
 
-                    # Get number of jets
-                    nJets_flavor = len(jets_flavor)
-
-                    # Calculate Binning and counts for plotting
-                    counts, Bins = np.histogram(
-                        np.clip(
-                            jets_flavor,
-                            Binning[0],
-                            Binning[-1],
-                        ),
-                        bins=Binning,
+                    # Calculate bins
+                    bins, weights, unc, band = uet.calc_bins(
+                        input_array=jets_flavour,
+                        Binning=Binning,
                     )
 
-                    # Calculate the bin centers
-                    bincentres = [
-                        (Binning[i] + Binning[i + 1]) / 2.0
-                        for i in range(len(Binning) - 1)
-                    ]
-
-                    # Calculate poisson uncertainties and lower bands
-                    unc = np.sqrt(counts) / nJets_flavor
-                    band_lower = counts / nJets_flavor - unc
-
                     plt.hist(
-                        x=Bins[:-1],
-                        bins=Bins,
-                        weights=(counts / nJets_flavor),
+                        x=bins[:-1],
+                        bins=bins,
+                        weights=weights,
                         histtype="step",
                         linewidth=1.0,
-                        color=colour_dict[flavors[flavor]],
+                        color=global_config.flavour_colors[flavour],
                         stacked=False,
                         fill=False,
-                        label=r"${}$-jets".format(flavor),
+                        label=global_config.flavour_legend_labels[flavour],
                     )
 
-                    plt.hist(
-                        x=bincentres,
-                        bins=Bins,
-                        bottom=band_lower,
-                        weights=unc * 2,
-                        fill=False,
-                        hatch="/////",
-                        linewidth=0,
-                        edgecolor="#666666",
-                    )
+                    if flavour == list(flavours.keys())[-1]:
+                        plt.hist(
+                            x=bins[:-1],
+                            bins=bins,
+                            bottom=band,
+                            weights=unc * 2,
+                            label="stat. unc.",
+                            **global_config.hist_err_style,
+                        )
+
+                    else:
+                        plt.hist(
+                            x=bins[:-1],
+                            bins=bins,
+                            bottom=band,
+                            weights=unc * 2,
+                            **global_config.hist_err_style,
+                        )
 
                 plt.xlabel(var)
                 plt.ylabel("Normalised Number of Jets")
@@ -1449,12 +1402,12 @@ def plot_input_vars_jets(
 
 
 def plot_input_vars_jets_comparison(
-    filepaths,
-    labels,
+    datasets_filepaths,
+    datasets_labels,
     var_dict,
     nJets,
     binning,
-    flavors,
+    flavours,
     bool_use_taus=False,
     special_param_jets=None,
     plot_type="pdf",
@@ -1500,23 +1453,22 @@ def plot_input_vars_jets_comparison(
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
-    # Init trks and flavor label dicts
+    # Init trks and flavour label dicts
     jets_dict = {}
-    flavor_label_dict = {}
+    flavour_label_dict = {}
 
-    # Iterate over files
-    for i, (filepath, label) in enumerate(
-        zip(
-            filepaths,
-            labels,
-        )
+    # Iterate over the different dataset filepaths and labels
+    # defined in the config
+    for (filepath, label) in zip(
+        datasets_filepaths,
+        datasets_labels,
     ):
         # Get wildcard
         filepath = glob(filepath)
 
         # Init an empty array to append to
         jets = np.array([])
-        flavor_labels = np.array([])
+        flavour_labels = np.array([])
 
         # Loop over files and get the amount of jets needed.
         for j, file in enumerate(sorted(filepath, key=natural_keys)):
@@ -1534,8 +1486,8 @@ def plot_input_vars_jets_comparison(
                     else:
                         indices_toremove = np.where(variable_labels > 5)[0]
 
-                    # Getting the flavor labels
-                    tmp_flavor_labels = np.delete(
+                    # Getting the flavour labels
+                    tmp_flavour_labels = np.delete(
                         variable_labels, indices_toremove, 0
                     )
 
@@ -1549,8 +1501,8 @@ def plot_input_vars_jets_comparison(
 
                     # Append to array
                     jets = np.concatenate((jets, tmp_jets))
-                    flavor_labels = np.concatenate(
-                        (flavor_labels, tmp_flavor_labels)
+                    flavour_labels = np.concatenate(
+                        (flavour_labels, tmp_flavour_labels)
                     )
 
                 else:
@@ -1569,8 +1521,10 @@ def plot_input_vars_jets_comparison(
                 else:
                     indices_toremove = np.where(variable_labels > 5)[0]
 
-                # Getting the flavor labels
-                flavor_labels = np.delete(variable_labels, indices_toremove, 0)
+                # Getting the flavour labels
+                flavour_labels = np.delete(
+                    variable_labels, indices_toremove, 0
+                )
 
                 # Load tracks
                 jets = np.asarray(h5py.File(file, "r")["/jets"][:nJets])
@@ -1580,7 +1534,7 @@ def plot_input_vars_jets_comparison(
 
         # Append jets to dict
         jets_dict.update({label: jets[:nJets]})
-        flavor_label_dict.update({label: flavor_labels[:nJets]})
+        flavour_label_dict.update({label: flavour_labels[:nJets]})
 
     # Loading jet variables
     jetsVars = [
@@ -1593,13 +1547,6 @@ def plot_input_vars_jets_comparison(
     if not os.path.isdir(f"{output_directory}/"):
         os.makedirs(f"{output_directory}/")
     filedir = f"{output_directory}/"
-
-    colour_dict = {
-        0: "#2ca02c",
-        4: "#ff7f0e",
-        5: "#1f77b4",
-        15: "#7c5295",
-    }
 
     # Loop over vars
     for var in jetsVars:
@@ -1625,25 +1572,26 @@ def plot_input_vars_jets_comparison(
 
             # Init bincounts for ratio calculation
             bincounts = {}
+            bincounts_unc = {}
 
             # Init lowest bincount
             Lowest_histcount = 1
 
             # Iterate over models
             for model_number, (label, linestyle) in enumerate(
-                zip(labels, linestyles[: len(labels)])
+                zip(datasets_labels, linestyles[: len(datasets_labels)])
             ):
                 # Get variable and the labels of the jets
                 jets_var = jets_dict[label][var]
-                flavor_labels_var = flavor_label_dict[label]
+                flavour_labels_var = flavour_label_dict[label]
 
                 # Clean both from nans
                 jets_var_clean = jets_var[~np.isnan(jets_var)]
-                flavor_label_clean = flavor_labels_var[~np.isnan(jets_var)]
+                flavour_label_clean = flavour_labels_var[~np.isnan(jets_var)]
 
                 if model_number == 0:
                     # Calculate unified Binning
-                    b = jets_var_clean[flavor_label_clean == 5]
+                    b = jets_var_clean[flavour_label_clean == 5]
 
                     var_range = None
                     if (
@@ -1668,122 +1616,114 @@ def plot_input_vars_jets_comparison(
                             range=var_range,
                         )
 
-                for t, flavor in enumerate(flavors):
-                    jets_flavor = jets_var_clean[
-                        flavor_label_clean == flavors[flavor]
+                for t, flavour in enumerate(flavours):
+                    jets_flavour = jets_var_clean[
+                        flavour_label_clean == flavours[flavour]
                     ]
 
-                    # Get number of jets
-                    nJets_flavor = len(jets_flavor)
-
-                    # Calculate Binning and counts for plotting
-                    counts, Bins = np.histogram(
-                        np.clip(
-                            jets_flavor,
-                            Binning[0],
-                            Binning[-1],
-                        ),
-                        bins=Binning,
+                    # Calculate bins
+                    bins, weights, unc, band = uet.calc_bins(
+                        input_array=jets_flavour,
+                        Binning=Binning,
                     )
 
-                    # Calculate the bin centers
-                    bincentres = [
-                        (Binning[i] + Binning[i + 1]) / 2.0
-                        for i in range(len(Binning) - 1)
-                    ]
-
-                    # Calculate poisson uncertainties and lower bands
-                    unc = np.sqrt(counts) / nJets_flavor
-                    band_lower = counts / nJets_flavor - unc
-
                     hist_counts, _, _ = axis_dict["left"]["top"].hist(
-                        x=Bins[:-1],
-                        bins=Bins,
-                        weights=(counts / nJets_flavor),
+                        x=bins[:-1],
+                        bins=bins,
+                        weights=weights,
                         histtype="step",
                         linewidth=1.0,
                         linestyle=linestyle,
-                        color=colour_dict[flavors[flavor]],
+                        color=global_config.flavour_colors[flavour],
                         stacked=False,
                         fill=False,
-                        label=r"${}$-jets {}".format(flavor, label),
+                        label=global_config.flavour_legend_labels[flavour]
+                        + f" {label}",
                     )
 
-                    if label == labels[:-1] and flavor == flavors[:-1]:
+                    if (
+                        flavour == list(flavours.keys())[-1]
+                        and model_number == 0
+                    ):
                         axis_dict["left"]["top"].hist(
-                            x=bincentres,
-                            bins=Bins,
-                            bottom=band_lower,
+                            x=bins[:-1],
+                            bins=bins,
+                            bottom=band,
                             weights=unc * 2,
-                            fill=False,
-                            hatch="/////",
-                            linewidth=0,
-                            edgecolor="#666666",
                             label="stat. unc.",
+                            **global_config.hist_err_style,
                         )
 
                     else:
                         axis_dict["left"]["top"].hist(
-                            x=bincentres,
-                            bins=Bins,
-                            bottom=band_lower,
+                            x=bins[:-1],
+                            bins=bins,
+                            bottom=band,
                             weights=unc * 2,
-                            fill=False,
-                            hatch="/////",
-                            linewidth=0,
-                            edgecolor="#666666",
+                            **global_config.hist_err_style,
                         )
 
-                    bincounts.update(
-                        {"{}{}".format(flavor, model_number): hist_counts}
-                    )
+                    bincounts.update({f"{flavour}{model_number}": hist_counts})
+                    bincounts_unc.update({f"{flavour}{model_number}": unc})
 
                     for count in hist_counts:
                         if count != 0 and count < Lowest_histcount:
                             Lowest_histcount = count
 
-            # Start ratio plot
-            for t, flavor in enumerate(flavors):
-                for model_number in range(len(labels)):
-                    if model_number != 0:
-                        step = np.divide(
-                            bincounts["{}{}".format(flavor, model_number)],
-                            bincounts["{}{}".format(flavor, 0)],
-                            out=np.ones(
-                                bincounts[
-                                    "{}{}".format(flavor, model_number)
-                                ].shape,
-                                dtype=float,
-                            )
-                            * bincounts["{}{}".format(flavor, model_number)]
-                            + 1,
-                            where=(bincounts["{}{}".format(flavor, 0)] != 0),
+                # Start ratio plot
+                if model_number != 0:
+                    for flavour in flavours:
+                        step, step_unc = uet.calc_ratio(
+                            counter=bincounts[
+                                "{}{}".format(flavour, model_number)
+                            ],
+                            denominator=bincounts["{}{}".format(flavour, 0)],
+                            counter_unc=bincounts_unc[
+                                "{}{}".format(flavour, model_number)
+                            ],
+                            denominator_unc=bincounts_unc[
+                                "{}{}".format(flavour, 0)
+                            ],
                         )
-
-                        step = np.append(np.array([step[0]]), step)
 
                         axis_dict["left"]["ratio"].step(
                             x=Binning,
                             y=step,
-                            color=colour_dict[flavors[flavor]],
+                            color=global_config.flavour_colors[flavour],
                             linestyle=linestyles[model_number],
                         )
+
+                        axis_dict["left"]["ratio"].fill_between(
+                            x=Binning,
+                            y1=step - step_unc,
+                            y2=step + step_unc,
+                            step="pre",
+                            facecolor="none",
+                            edgecolor=global_config.hist_err_style[
+                                "edgecolor"
+                            ],
+                            linewidth=global_config.hist_err_style[
+                                "linewidth"
+                            ],
+                            hatch=global_config.hist_err_style["hatch"],
+                        )
+
+                elif model_number == 0:
+                    # Add black line at one
+                    axis_dict["left"]["ratio"].axhline(
+                        y=1,
+                        xmin=axis_dict["left"]["ratio"].get_xlim()[0],
+                        xmax=axis_dict["left"]["ratio"].get_xlim()[1],
+                        color="black",
+                        alpha=0.5,
+                    )
 
             axis_dict["left"]["ratio"].set_xlim(
                 left=Binning[0],
                 right=Binning[-1],
             )
 
-            # Draw black line
-            axis_dict["left"]["ratio"].hlines(
-                y=1,
-                xmin=axis_dict["left"]["ratio"].get_xlim()[0],
-                xmax=axis_dict["left"]["ratio"].get_xlim()[1],
-                color="black",
-            )
-
             # Add axes, titels and the legend
-
             if Bin_Width_y_axis is True:
                 Bin_Width = abs(Binning[1] - Binning[0])
                 axis_dict["left"]["top"].set_ylabel(

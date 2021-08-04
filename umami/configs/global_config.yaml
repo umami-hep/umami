@@ -17,7 +17,7 @@ flavour_legend_labels:
   b: $b$-jets
   c: $c$-jets
   u: light-jets
-  tau: $\\tau$-jets
+  tau: $\tau$-jets
 hist_err_style:
   fill: False
   linewidth: 0

@@ -106,7 +106,7 @@ jets_input_vars:
     rnnip_pb                          : 50
     rnnip_pc                          : 50
     rnnip_pu                          : 50
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0
@@ -132,7 +132,7 @@ nTracks:
     yAxisIncrease: 2
     figsize: [7, 5]
     Ratio_Cut: [0.5, 2]
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0
@@ -175,7 +175,7 @@ tracks_input_vars:
     numberOfSCTHits: [0, 19, 1]
     btagIp_d0: 100
     btagIp_z0SinTheta: 100
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0

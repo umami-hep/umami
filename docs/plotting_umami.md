@@ -522,7 +522,7 @@ nTracks_ttbar_loose:
     yAxisIncrease: 2
     figsize: [7, 5]
     Ratio_Cut: [0.5, 2]
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0
@@ -547,7 +547,7 @@ nTracks_ttbar_loose:
  | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
 | `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `flavors` | None | Necessary | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
+| `flavours` | None | Necessary | Here starts the flavours that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
 
 #### Input Variables Tracks
 To plot the track input variables, the following options are used.
@@ -590,7 +590,7 @@ input_vars_trks_ttbar_loose_ptfrac:
     numberOfSCTHits: [0, 19, 1]
     btagIp_d0: 100
     btagIp_z0SinTheta: 100
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0
@@ -618,7 +618,7 @@ input_vars_trks_ttbar_loose_ptfrac:
 | `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
 | `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
 | `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second ist stop and third is the step width. The so aranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
-| `flavors` | None | Necessary | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
+| `flavours` | None | Necessary | Here starts the flavours that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
 
 #### Input Variables Jets
 To plot the jet input variables, the following options are used.
@@ -724,7 +724,7 @@ input_vars_ttbar_loose:
     yAxisAtlasTag: 0.925
     yAxisIncrease: 2
     figsize: [7, 5]
-  flavors:
+  flavours:
     b: 5
     c: 4
     u: 0
@@ -750,4 +750,4 @@ input_vars_ttbar_loose:
  | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
 | `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `flavors` | None | Necessary | Here starts the flavors that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
+| `flavours` | None | Necessary | Here starts the flavours that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
