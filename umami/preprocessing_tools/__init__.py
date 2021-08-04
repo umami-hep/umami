@@ -16,12 +16,12 @@ from umami.preprocessing_tools.Resampling import (
     GetScales,
     UnderSampling,
     UnderSamplingProp,
+    UnderSamplingTemplate,
     Weighting2D,
     dict_in,
     EnforceFraction,
     RunStatSamples,
     RunSampling,
-
 )
 from umami.preprocessing_tools.utils import (
     GetBinaryLabels,

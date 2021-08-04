@@ -138,6 +138,14 @@ bhad_pTcut: 2.5e5
 f_tt_bjets:
   path: *file_path
   file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
+
+# Define undersampling method used. Valid are "count", "weight", 
+# "count_bcl_weight_tau", "template_b" and "template_b_count"
+# count_bcl_weight_tau is a hybrid of count and weight to deal with taus.
+# template_b uses the b as the target distribution, but does not guarantee
+# same fractions. template_b_count will guarantee same fractions.
+# Default is "count".
+sampling_method: count
 ```
 
 ### Running the sample preparation
@@ -167,13 +175,17 @@ preprocessing.py --config <path to config file> --sample training_ttbar_bjets --
 
 ### Running the preprocessing
 
-After the preparation of the samples, the next step is the processing for the training itself which is also done with the [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/preprocessing.py) script. Again, tthe configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml) which you need to adapt to your needs.
+After the preparation of the samples, the next step is the processing for the training itself which is also done with the [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/preprocessing.py) script. Again, the configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml) which you need to adapt to your needs.
 
 1. Running the undersampling:
 
 ```bash
 preprocessing.py -c examples/PFlow-Preprocessing.yaml --undersampling --tracks
 ```
+
+NOTE: If your sample's statistics are small and/or your lowest distribution is other than the b-jet distribution, you can force the b-jet distribution shape on the other jet flavor distributions by setting `sampling_method: template_b` in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml). This will ensure you keep all the b-jets, but will note ensure the fractions are the same. To ensure all the distributions have the b-shape and the same fractions, set `sampling_method: template_b_count`. Additionally, when building the target distribution for "template_b" and "template_b_count", `pT_max` (set in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml)) will be used to compute the probability ratios or PDFs. Not setting `pT_max` will allow you to keep more jets (bigger fractions) but with more noise (uncertainty) loosing the guarantee that all the distributions will have the same b-jet distribution shape.
+
+WARNING: The `template_b` and `template_b_count` does not work well with taus as of now.
 
 2. Retrieving scaling and shifting factors:
 

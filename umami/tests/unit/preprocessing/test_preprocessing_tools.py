@@ -16,6 +16,7 @@ from umami.preprocessing_tools import (
     ShuffleDataFrame,
     UnderSampling,
 )
+from umami.preprocessing_tools.Resampling import UnderSamplingTemplate
 
 
 class UnderSamplingTestCase(unittest.TestCase):
@@ -94,6 +95,88 @@ class UnderSamplingTestCase(unittest.TestCase):
         b_ind, c_ind, u_ind, _ = down_s.GetIndices()
         self.assertEqual(len(b_ind), len(c_ind))
         self.assertEqual(len(b_ind), len(u_ind))
+
+
+class UnderSamplingTemplateTestCase(unittest.TestCase):
+    """
+    Test the implementation of the UnderSamplingTemplate class.
+    """
+
+    def setUp(self):
+        """
+        Create a default dataset for testing with c-jets being the lowest distribution
+        """
+        self.df_bjets = pd.DataFrame(
+            {
+                global_config.pTvariable: abs(
+                    np.random.normal(300000, 30000, 10000)
+                ),
+                global_config.etavariable: abs(
+                    np.random.normal(1.25, 1, 10000)
+                ),
+            }
+        )
+        self.df_cjets = pd.DataFrame(
+            {
+                global_config.pTvariable: abs(
+                    np.random.normal(180000, 18000, 5000)
+                ),
+                global_config.etavariable: abs(
+                    np.random.normal(1.4, 1, 5000)
+                ),
+            }
+        )
+        self.df_ujets = pd.DataFrame(
+            {
+                global_config.pTvariable: abs(
+                    np.random.normal(250000, 25000, 10000)
+                ),
+                global_config.etavariable: abs(
+                    np.random.normal(1.0, 1, 10000)
+                ),
+            }
+        )
+
+    def test_equal_length(self):
+        down_s = UnderSamplingTemplate(
+            self.df_bjets, self.df_cjets, self.df_ujets, count=True)
+        b_indices, c_indices, u_indices, _ = down_s.GetIndices()
+        self.assertEqual(len(b_indices), len(c_indices))
+        self.assertEqual(len(b_indices), len(u_indices))
+
+    def test_zero_case(self):
+        df_zeros = pd.DataFrame(
+            np.zeros((1000, 2)),
+            columns=[global_config.pTvariable, global_config.etavariable],
+        )
+        down_s = UnderSamplingTemplate(
+            df_zeros, df_zeros, df_zeros, count=True)
+        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
+        self.assertEqual(len(b_ind), len(df_zeros))
+
+    def test_overflow(self):
+        df_large = pd.DataFrame(
+            1e10 * np.ones((1000, 2)),
+            columns=[global_config.pTvariable, global_config.etavariable],
+        )
+        down_s = UnderSamplingTemplate(
+            df_large, df_large, df_large, count=True)
+        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
+        self.assertEqual(b_ind.size, 0)
+        self.assertEqual(c_ind.size, 0)
+        self.assertEqual(u_ind.size, 0)
+
+    def test_underflow(self):
+        df_minus_ones = pd.DataFrame(
+            -1 * np.ones((1000, 2)),
+            columns=[global_config.pTvariable, global_config.etavariable],
+        )
+        down_s = UnderSamplingTemplate(
+            df_minus_ones, df_minus_ones, df_minus_ones, count=True)
+        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
+        self.assertEqual(b_ind.size, 0)
+        self.assertEqual(c_ind.size, 0)
+        self.assertEqual(u_ind.size, 0)
 
 
 class ConfigurationTestCase(unittest.TestCase):
