@@ -33,6 +33,7 @@ unittest:
       - coverage_files/
     reports:
       junit: report.xml
+  retry: 2
 
 unittest_preprocessing:
   <<: *unittest_template
