@@ -2,6 +2,7 @@
 # https://pypi.org/project/tensorflow/#history
 variables:
   TFTAG: 2.5.0
+  TORCHTAG: 1.9.0-cuda11.1-cudnn8-runtime
 
 stages:
   - linting
@@ -34,7 +35,7 @@ test_coverage:
   stage: coverage_test_stage
   image: python:3.7-slim
   script:
-    - pip install --upgrade pip
+    - pip install --upgrade pip setuptools wheel
     - pip install -r requirements.txt
     - cd ./coverage_files/
     - coverage combine
@@ -49,6 +50,7 @@ test_coverage:
       - coverage_files/
     reports:
       cobertura: coverage_files/coverage.xml
+  retry: 2
 
 include:
   - 'pipelines/.unit_test-gitlab-ci.yaml'
