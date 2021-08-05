@@ -1,5 +1,6 @@
-test_preprocessing_dips:
-  stage: integration_test_preprocessing
+.test_template: &test_template
+  before_script:
+    - python setup.py develop
   variables:
     IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
   rules:
@@ -8,247 +9,154 @@ test_preprocessing_dips:
         IMAGE_TYPE: "umamibase:latest"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
+
+.artifact_template: &artifact_template
+  name: "$CI_JOB_NAME"
+  expire_in: 1 day
+  reports:
+    junit: report.xml
+
+test_preprocessing_dips:
+  <<: *test_template
+  stage: integration_test_preprocessing
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips" -v --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - plots/
       - preprocessing_dips/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 test_preprocessing_dl1r:
+  <<: *test_template
   stage: integration_test_preprocessing
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r" -v --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_preprocessing_dl1r
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - plots/
       - preprocessing_dl1r/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 test_preprocessing_umami:
+  <<: *test_template
   stage: integration_test_preprocessing
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami" -v --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_preprocessing_umami
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - plots/
       - preprocessing_umami/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 test_train_dips:
+  <<: *test_template
   stage: integration_test_tagger
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   needs: ["test_preprocessing_dips"]
   dependencies:
     - test_preprocessing_dips
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dips.py -v --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_train_dips
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - test_dips_model/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 test_train_dl1r:
+  <<: *test_template
   stage: integration_test_tagger
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   needs: ["test_preprocessing_dl1r"]
   dependencies:
     - test_preprocessing_dl1r
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dl1.py -v --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_train_dl1r
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - test_dl1_model/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 test_train_umami:
+  <<: *test_template
   stage: integration_test_tagger
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   needs: ["test_preprocessing_umami"]
   dependencies:
     - test_preprocessing_umami
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_train_umami
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - test_umami_model/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 test_plot_input_vars:
+  <<: *test_template
   stage: integration_test_plotting
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   needs: ["test_train_dips", "test_train_dl1r", "test_train_umami"]
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_input_vars_plot.py -v --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_input_vars_plot
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - input_vars_jets/
       - input_vars_trks/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 test_plotting_umami_dips:
+  <<: *test_template
   stage: integration_test_plotting
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   needs: ["test_train_dips"]
   dependencies:
     - test_train_dips
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -k "test_plotting_umami_dips" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_dips
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - test_dips_model/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 
 test_plotting_umami_dl1:
+  <<: *test_template
   stage: integration_test_plotting
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   needs: ["test_train_dl1r"]
   dependencies:
     - test_train_dl1r
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -k "test_plotting_umami_dl1" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_dl1r
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - test_dl1_model/
       - coverage_files/
-    reports:
-      junit: report.xml
 
 
 test_plotting_umami_umami:
+  <<: *test_template
   stage: integration_test_plotting
-  variables:
-    IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      variables:
-        IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   needs: ["test_train_umami"]
   dependencies:
     - test_train_umami
   script:
-    - python setup.py develop
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -k "test_plotting_umami_umami" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_umami
   artifacts:
-    name: "$CI_JOB_NAME"
-    expire_in: 1 day
+    <<: *artifact_template
     paths:
       - test_umami_model/
       - coverage_files/
-    reports:
-      junit: report.xml
