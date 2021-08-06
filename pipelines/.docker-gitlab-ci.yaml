@@ -1,6 +1,5 @@
 # ----------------------------------------------------------------------------
-# Umami base + Umami images: only get built on master
-#                            (see below for tags)
+# Umami base + Umami images: only get built on master and tags
 # ----------------------------------------------------------------------------
 
 .image_build_template: &image_build_template
@@ -9,6 +8,7 @@
     - ignore
   tags:
     - docker-image-build
+  retry: 2
 
 
 build_umamibase_cpu:
@@ -36,6 +36,17 @@ build_umamibase_gpu:
     - if: $CI_COMMIT_TAG
       variables:
         TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+
+build_umamibase_gpu_pytorch:
+  <<: *image_build_template
+  stage: builds
+  variables:
+    DOCKER_FILE: docker/umamibase/Dockerfile
+    FROM: pytorch/pytorch:$TORCHTAG
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-pytorch-gpu'
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 
 # Umami images: use base image as a foundation to speed up build process
 build_umami_cpu:
