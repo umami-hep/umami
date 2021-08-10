@@ -72,21 +72,6 @@ Tracks_Test:
       files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
       label: "R22 Test"
   plot_settings:
-    Log: True
-    UseAtlasTag: True
-    AtlasTag: "Internal Simulation"
-    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
-    yAxisAtlasTag: 0.925
-    yAxisIncrease: 2
-    figsize: [7, 5]
-    Ratio_Cut: [0.5, 2]
-    bool_use_taus: False
-  flavours:
-    b: 5
-    c: 4
-    u: 0
-
-  plot_settings:
     sorting_variable: "ptfrac"
     n_Leading: [None, 0]
     Log: True
