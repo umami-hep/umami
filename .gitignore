@@ -21,3 +21,4 @@ plots/*
 env/*
 .vscode/*
 !umami/tests/unit/**/*.png
+python_install/
