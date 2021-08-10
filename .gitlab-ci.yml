@@ -31,6 +31,15 @@ linter:
     - if: $CI_COMMIT_BRANCH != ''
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
+yaml_linter:
+  stage: linting
+  image: sdesbure/yamllint
+  script:
+    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
+  rules:
+    - if: $CI_COMMIT_BRANCH != ''
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
 test_coverage:
   stage: coverage_test_stage
   image: python:3.7-slim
@@ -43,7 +52,7 @@ test_coverage:
     - coverage xml
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"  
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
   artifacts:
     when: always
     paths:

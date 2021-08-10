@@ -8,7 +8,7 @@ train_variables:
     - JetFitter_mass
 
 track_train_variables:
-  noNormVars: 
+  noNormVars:
     - IP3D_signed_d0_significance
 
   logNormVars:

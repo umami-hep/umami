@@ -1,16 +1,15 @@
-
 build_docs:
   stage: builds
   image: gitlab-registry.cern.ch/authoring/documentation/mkdocs:stable
   script:
-      - mkdocs build --strict --clean --site-dir www
-      - echo -e "AddDefaultCharset UTF-8\nSSLRequireSSL\n" > www/.htaccess
+    - mkdocs build --strict --clean --site-dir www
+    - echo -e "AddDefaultCharset UTF-8\nSSLRequireSSL\n" > www/.htaccess
   before_script:
-  - "" # overwrite default, do nothing
+    - "" # overwrite default, do nothing
   artifacts:
-      paths:
-          - www
-      expire_in: 1 hour
+    paths:
+      - www
+    expire_in: 1 hour
   only:
     - master
 

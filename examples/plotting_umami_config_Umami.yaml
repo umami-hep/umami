@@ -48,7 +48,7 @@ confusion_matrix_Umami_ttbar:
   prediction_labels: ["umami_pb", "umami_pc", "umami_pu"] # For umami use umami_pX or dips_pX. The order matters!
 
 # Scanning b-eff, comparing Umami and DL1r, ttbar
-beff_scan_tagger_compare_umami:
+beff_scan_tagger_umami:
   type: "ROC"
   models_to_plot:
     umami_ttbar_urej:
@@ -111,6 +111,7 @@ Umami_prob_comparison_pb:
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.9
     Ratio_Cut: [0.5, 1.5]
+
 # Scanning b-eff, comparing Umami and DL1r, ttbar
 beff_scan_tagger_compare_umami:
   type: "ROC_Comparison"

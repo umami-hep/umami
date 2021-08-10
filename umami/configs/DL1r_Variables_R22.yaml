@@ -48,7 +48,7 @@ train_variables:
     - IP3D_bu
     - IP3D_bc
     - IP3D_cu
-  RNNIP: 
+  RNNIP:
     - rnnip_pb
     - rnnip_pc
     - rnnip_pu

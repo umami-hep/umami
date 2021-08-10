@@ -26,7 +26,7 @@ ttbar_test_files:
         data_set_name: "ttbar_comparison"
 
 zpext_test_files:
-    zpext_r21: 
+    zpext_r21:
         Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
         data_set_name: "zpext"
 
@@ -45,11 +45,11 @@ bool_use_taus: False
 
 exclude: []
 
-NN_structure:  
+NN_structure:
     lr: 0.01
     batch_size: 15000
     activations: ["relu", "relu", "relu", "relu", "relu", "relu", "relu", "relu"]
-    units: [256, 128, 60, 48, 36, 24, 12, 6] 
+    units: [256, 128, 60, 48, 36, 24, 12, 6]
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
@@ -106,4 +106,3 @@ Eval_parameters_validation:
 
     # Set the datatype of the plots
     plot_datatype: "pdf"
-

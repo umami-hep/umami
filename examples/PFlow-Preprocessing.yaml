@@ -42,7 +42,7 @@ preparation:
     training_ttbar_cjets:
       type: ttbar
       category: cjets
-      # Number of c jets available in MC16d 
+      # Number of c jets available in MC16d
       n_jets: 12745953
       n_split: 13
       cuts:
@@ -170,7 +170,7 @@ bool_process_taus: False
 # set to true if extended flavour labelling scheme is used in preprocessing
 bool_extended_labelling: False
 
-# Define undersampling method used. Valid are "count", "weight", 
+# Define undersampling method used. Valid are "count", "weight",
 # "count_bcl_weight_tau", "template_b" and "template_b_count"
 # count_bcl_weight_tau is a hybrid of count and weight to deal with taus.
 # template_b uses the b as the target distribution, but does not guarantee

@@ -26,7 +26,7 @@ ttbar_test_files:
         data_set_name: "ttbar_comparison"
 
 zpext_test_files:
-    zpext_r21: 
+    zpext_r21:
         Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
         data_set_name: "zpext"
 
