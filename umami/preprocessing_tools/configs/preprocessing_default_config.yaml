@@ -16,7 +16,7 @@ pT_max: False
 bool_process_taus: False
 # set to true if extended flavour labelling is used in preprocessing
 bool_extended_labelling: False
-sampling_method:  count
+sampling_method: count
 f_z:
   path: Null
   file: Null

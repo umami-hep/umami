@@ -22,7 +22,7 @@ ttbar_test_files:
         data_set_name: "ttbar"
 
 zpext_test_files:
-    zpext_r21: 
+    zpext_r21:
         Path: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/samples/standard_mc16d_ttbar_Zext__2M/hybridLargeFiles/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
         data_set_name: "zpext"
 
@@ -33,7 +33,7 @@ bool_use_taus: False
 
 exclude: []
 
-NN_structure:  
+NN_structure:
     lr: 0.01
     batch_size: 5000
     epochs: 200

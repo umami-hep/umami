@@ -21,7 +21,7 @@ ttbar_test_files:
         data_set_name: "ttbar_unit_test"
 
 zpext_test_files:
-    zpext_r21: 
+    zpext_r21:
         Path: dummy.h5
         data_set_name: "zpext_unit_test"
 
@@ -32,7 +32,7 @@ bool_use_taus: False
 
 exclude: []
 
-NN_structure:  
+NN_structure:
     lr: 0.01
     batch_size: 100
     epoch: 5

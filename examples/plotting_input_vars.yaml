@@ -27,31 +27,31 @@ jets_input_vars:
   special_param_jets:
     IP2D_cu:
       lim_left: -30
-      lim_right: 30                        
-    IP2D_bu:   
+      lim_right: 30
+    IP2D_bu:
       lim_left: -30
-      lim_right: 30                          
-    IP2D_bc:  
+      lim_right: 30
+    IP2D_bc:
       lim_left: -30
-      lim_right: 30                           
-    IP3D_cu:   
+      lim_right: 30
+    IP3D_cu:
       lim_left: -30
-      lim_right: 30                          
-    IP3D_bu:  
+      lim_right: 30
+    IP3D_bu:
       lim_left: -30
-      lim_right: 30                         
-    IP3D_bc:     
+      lim_right: 30
+    IP3D_bc:
       lim_left: -30
       lim_right: 30
     SV1_NGTinSvx:
       lim_left: 0
-      lim_right: 19 
+      lim_right: 19
     JetFitterSecondaryVertex_nTracks:
       lim_left: 0
-      lim_right: 17  
+      lim_right: 17
     JetFitter_nTracksAtVtx:
       lim_left: 0
-      lim_right: 19 
+      lim_right: 19
     JetFitter_nSingleTracks:
       lim_left: 0
       lim_right: 18
@@ -62,50 +62,50 @@ jets_input_vars:
       lim_left: 0
       lim_right: 200
   binning:
-    IP2D_cu                           : 100
-    IP2D_bu                           : 100
-    IP2D_bc                           : 100
-    IP2D_isDefaults                   : 2
-    IP3D_cu                           : 100
-    IP3D_bu                           : 100
-    IP3D_bc                           : 100
-    IP3D_isDefaults                   : 2
-    JetFitter_mass                    : 100       
-    JetFitter_energyFraction          : 100
-    JetFitter_significance3d          : 100
-    JetFitter_deltaR                  : 100
-    JetFitter_nVTX                    : 7
-    JetFitter_nSingleTracks           : 19
-    JetFitter_nTracksAtVtx            : 20
-    JetFitter_N2Tpair                 : 201
-    JetFitter_isDefaults              : 2
+    IP2D_cu: 100
+    IP2D_bu: 100
+    IP2D_bc: 100
+    IP2D_isDefaults: 2
+    IP3D_cu: 100
+    IP3D_bu: 100
+    IP3D_bc: 100
+    IP3D_isDefaults: 2
+    JetFitter_mass: 100
+    JetFitter_energyFraction: 100
+    JetFitter_significance3d: 100
+    JetFitter_deltaR: 100
+    JetFitter_nVTX: 7
+    JetFitter_nSingleTracks: 19
+    JetFitter_nTracksAtVtx: 20
+    JetFitter_N2Tpair: 201
+    JetFitter_isDefaults: 2
     JetFitterSecondaryVertex_minimumTrackRelativeEta: 11
     JetFitterSecondaryVertex_averageTrackRelativeEta: 11
     JetFitterSecondaryVertex_maximumTrackRelativeEta: 11
-    JetFitterSecondaryVertex_maximumAllJetTrackRelativeEta : 11
-    JetFitterSecondaryVertex_minimumAllJetTrackRelativeEta : 11
-    JetFitterSecondaryVertex_averageAllJetTrackRelativeEta : 11
-    JetFitterSecondaryVertex_displacement2d : 100
-    JetFitterSecondaryVertex_displacement3d : 100
-    JetFitterSecondaryVertex_mass           : 100
-    JetFitterSecondaryVertex_energy         : 100
-    JetFitterSecondaryVertex_energyFraction : 100
-    JetFitterSecondaryVertex_isDefaults     : 2
-    JetFitterSecondaryVertex_nTracks        : 18
-    pt_btagJes                        : 100
-    absEta_btagJes                    : 100
-    SV1_Lxy                           : 100
-    SV1_N2Tpair                       : 8
-    SV1_NGTinSvx                      : 20
-    SV1_masssvx                       : 100
-    SV1_efracsvx                      : 100
-    SV1_significance3d                : 100
-    SV1_deltaR                        : 10
-    SV1_L3d                           : 100
-    SV1_isDefaults                    : 2
-    rnnip_pb                          : 50
-    rnnip_pc                          : 50
-    rnnip_pu                          : 50
+    JetFitterSecondaryVertex_maximumAllJetTrackRelativeEta: 11
+    JetFitterSecondaryVertex_minimumAllJetTrackRelativeEta: 11
+    JetFitterSecondaryVertex_averageAllJetTrackRelativeEta: 11
+    JetFitterSecondaryVertex_displacement2d: 100
+    JetFitterSecondaryVertex_displacement3d: 100
+    JetFitterSecondaryVertex_mass: 100
+    JetFitterSecondaryVertex_energy: 100
+    JetFitterSecondaryVertex_energyFraction: 100
+    JetFitterSecondaryVertex_isDefaults: 2
+    JetFitterSecondaryVertex_nTracks: 18
+    pt_btagJes: 100
+    absEta_btagJes: 100
+    SV1_Lxy: 100
+    SV1_N2Tpair: 8
+    SV1_NGTinSvx: 20
+    SV1_masssvx: 100
+    SV1_efracsvx: 100
+    SV1_significance3d: 100
+    SV1_deltaR: 10
+    SV1_L3d: 100
+    SV1_isDefaults: 2
+    rnnip_pb: 50
+    rnnip_pc: 50
+    rnnip_pu: 50
   flavours:
     b: 5
     c: 4

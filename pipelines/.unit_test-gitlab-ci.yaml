@@ -4,7 +4,7 @@ unittest:
   script:
     - pip install -r requirements.txt
     - apt-get update
-    - apt-get install -y wget 
+    - apt-get install -y wget
     - python setup.py develop
     - pytest ./umami/tests/unit/preprocessing -v
     - pytest ./umami/tests/unit/evaluation_tools -v

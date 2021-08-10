@@ -47,11 +47,11 @@ train_variables:
     - IP3D_bu
     - IP3D_bc
     - IP3D_cu
-  RNNIP: 
+  RNNIP:
     - rnnip_pb
     - rnnip_pc
     - rnnip_pu
-    
+
   # useful variables which might want to be kept but being used for training
 spectator_variables:
   - DL1r_pb
