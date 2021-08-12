@@ -14,7 +14,7 @@ from tensorflow.keras.layers import (
     Dropout,
     Input,
 )
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 
 import umami.train_tools as utt
@@ -80,25 +80,28 @@ def NN_model(train_config, input_shape):
     bool_use_taus = train_config.bool_use_taus
     n_units_end = 4 if bool_use_taus else 3
     NN_config = train_config.NN_structure
-    inputs = Input(shape=input_shape)
-    x = inputs
-    for i, unit in enumerate(NN_config["units"]):
-        x = Dense(
-            units=unit,
-            activation="linear",
+    if train_config.model_file is not None:
+        logger.info(f"Loading model from: {train_config.model_file}")
+        model = load_model(train_config.model_file, compile=False)
+    else:
+        inputs = Input(shape=input_shape)
+        x = inputs
+        for i, unit in enumerate(NN_config["units"]):
+            x = Dense(
+                units=unit,
+                activation="linear",
+                kernel_initializer="glorot_uniform",
+            )(x)
+            x = BatchNormalization()(x)
+            x = Activation(NN_config["activations"][i])(x)
+            if "dropout_rate" in NN_config:
+                x = Dropout(NN_config["dropout_rate"][i])(x)
+        predictions = Dense(
+            units=n_units_end,
+            activation="softmax",
             kernel_initializer="glorot_uniform",
         )(x)
-        x = BatchNormalization()(x)
-        x = Activation(NN_config["activations"][i])(x)
-        if "dropout_rate" in NN_config:
-            x = Dropout(NN_config["dropout_rate"][i])(x)
-    predictions = Dense(
-        units=n_units_end,
-        activation="softmax",
-        kernel_initializer="glorot_uniform",
-    )(x)
-
-    model = Model(inputs=inputs, outputs=predictions)
+        model = Model(inputs=inputs, outputs=predictions)
     # Print DL1 model summary when log level lower or equal INFO level
     if logger.level <= 20:
         model.summary()
