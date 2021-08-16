@@ -98,7 +98,18 @@ build_umamibase_cpu_MR:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
 
-
+# possibility to trigger also the GPU image in a MR - but only manually
+build_umamibase_gpu_MR:
+  <<: *image_build_template
+  stage: image_build_umamibase
+  variables:
+    DOCKER_FILE: docker/umamibase/Dockerfile
+    FROM: tensorflow/tensorflow:$TFTAG-gpu
+    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-gpu-base'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+      when: manual
+      allow_failure: true
 # ----------------------------------------------------------------------------
 # Publishing:
 # copies of the images built in gitlab CI/CD will be deployed to Docker Hub
