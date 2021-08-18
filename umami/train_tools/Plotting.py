@@ -3,20 +3,26 @@ import os
 import h5py
 import matplotlib as mtp
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
 
-from umami.configuration import logger
+from umami.configuration import global_config, logger
 from umami.preprocessing_tools import GetBinaryLabels
 from umami.tools import applyATLASstyle, makeATLAStag
-from umami.train_tools import GetRejection
+from umami.train_tools import (
+    GetRejection,
+    get_class_label_ids,
+    get_class_label_variables,
+)
 
 
 def PlotDiscCutPerEpoch(
     df_results,
     plot_name,
+    frac_class: str,
     target_beff=0.77,
-    fc_value=0.018,
+    frac: float = 0.018,
     UseAtlasTag=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
@@ -40,8 +46,8 @@ def PlotDiscCutPerEpoch(
     if UseAtlasTag is True:
         SecondTag = (
             SecondTag
-            + "\nfc={}".format(fc_value)
-            + ", WP={:02d}%".format(int(target_beff * 100))
+            + f"\n{frac_class} fraction = {frac}"
+            + f"\nWP={int(target_beff * 100):02d}%"
         )
 
         makeATLAStag(
@@ -124,170 +130,131 @@ def PlotDiscCutPerEpochUmami(
 
 def PlotRejPerEpoch(
     df_results,
-    plot_name,
-    b_rej=None,
-    c_rej=None,
-    u_rej=None,
-    tau_rej=None,
-    rej_keys={
-        "c_rej": "c_rej",
-        "u_rej": "u_rej",
-        "tau_rej": "tau_rej",
-        "b_rej": "b_rej",
-    },
-    labels={
-        "b_rej": r"$b$-rej. - val. sample",
-        "c_rej": r"$c$-rej. - val. sample",
-        "u_rej": "light-rej. - val. sample",
-        "tau_rej": "tau-rej. - val. sample",
-    },
+    plot_name: str,
+    frac_dict: dict,
+    class_labels: list,
+    main_class: str,
+    recomm_rej_dict: dict,
+    label_extension: str,
     comp_tagger_name="DL1r",
     target_beff=0.77,
-    fc_value=0.018,
-    fb_value=0.2,
-    ftau_value=None,
     UseAtlasTag=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag=0.9,
+    yAxisIncrease=1.3,
+    ncol=1,
 ):
     applyATLASstyle(mtp)
-    fig, ax1 = plt.subplots(constrained_layout=True)
-    legend_loc = (0.6, 0.75)
-    color = "#2ca02c"
-    ax1.set_xlabel("Epoch")
-    ax1.set_ylabel("light flavour jet rejection", color=color)
-    ax1.plot(
-        df_results["epoch"],
-        df_results[rej_keys["u_rej"]],
-        ":",
-        color=color,
-        label=labels["u_rej"],
-    )
-    if u_rej is not None:
-        ax1.axhline(
-            u_rej,
-            0,
-            df_results["epoch"].max(),
-            color=color,
-            lw=1.0,
-            alpha=1,
-            linestyle=(0, (5, 10)),
-            label=f"recomm. {comp_tagger_name}",
-        )
-    ax1.tick_params(axis="y", labelcolor=color)
 
-    if tau_rej is not None:
-        color = "#7c5295"
-        ax1.set_ylabel("light and tau flavour jet rejection", color="k")
-        ax1.tick_params(axis="y", labelcolor="k")
-        ax1.plot(
-            df_results["epoch"],
-            df_results[rej_keys["tau_rej"]],
-            ":",
-            color=color,
-            label=labels["tau_rej"],
-        )
-        ax1.axhline(
-            tau_rej,
-            0,
-            df_results["epoch"].max(),
-            color=color,
-            lw=1.0,
-            alpha=1,
-            linestyle=(0, (5, 10)),
-            label=f"recomm. {comp_tagger_name}",
-        )
-        # Also change the location of the legend
-        legend_loc = (0.6, 0.68)
+    # Get a list of the background classes
+    class_labels_wo_main = class_labels
+    class_labels_wo_main.remove(main_class)
 
-    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-    f_name = "fc"
-    # we already handled the x-label with ax1
-    if b_rej is not None:
-        color = "#1f77b4"
-        ax2.set_ylabel(r"$b$-jet rejection", color=color)
-        ax2.plot(
-            df_results["epoch"],
-            df_results[rej_keys["b_rej"]],
-            ":",
-            color=color,
-            label=labels["b_rej"],
-        )
+    # Get flavour categories from global config
+    flav_cat = global_config.flavour_categories
 
-        ax2.axhline(
-            b_rej,
-            0,
-            df_results["epoch"].max(),
-            color=color,
-            lw=1.0,
-            alpha=1,
-            linestyle=(7, (5, 10)),
-            label=f"recomm. {comp_tagger_name}",
-        )
-        f_name = "fb"
-        f_value = fb_value
-    if c_rej is not None:
-        color = "#ff7f0e"
-        ax2.set_ylabel(r"$c$-jet rejection", color=color)
-        ax2.plot(
-            df_results["epoch"],
-            df_results[rej_keys["c_rej"]],
-            ":",
-            color=color,
-            label=labels["c_rej"],
-        )
+    if len(class_labels_wo_main) == 2:
+        # Set global plot configs
+        fig, ax1 = plt.subplots(constrained_layout=True)
+        legend_loc = (0.6, 0.75)
+        ax1.set_xlabel("Epoch")
+        ax2 = ax1.twinx()
+        axes = [ax1, ax2]
 
-        ax2.axhline(
-            c_rej,
-            0,
-            df_results["epoch"].max(),
-            color=color,
-            lw=1.0,
-            alpha=1,
-            linestyle=(7, (5, 10)),
-            label=f"recomm. {comp_tagger_name}",
-        )
-        f_name = "fc"
-        f_value = fc_value
-    ax2.tick_params(axis="y", labelcolor=color)
+        for counter, iter_class in enumerate(class_labels_wo_main):
+            # Plot rejection
+            axes[counter].plot(
+                df_results["epoch"],
+                df_results[f"{iter_class}_rej"],
+                ":",
+                color=flav_cat[iter_class]["colour"],
+                label=f"{flav_cat[iter_class]['legend_label']} - {label_extension}",
+            )
+            axes[counter].set_ylabel(
+                f'{flav_cat[iter_class]["legend_label"]} Rejection',
+                color=flav_cat[iter_class]["colour"],
+            )
 
-    ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
+            if (
+                recomm_rej_dict
+                and recomm_rej_dict[f"{iter_class}_rej"] is not None
+                and comp_tagger_name is not None
+            ):
+                axes[counter].axhline(
+                    recomm_rej_dict[f"{iter_class}_rej"],
+                    0,
+                    df_results["epoch"].max(),
+                    color=flav_cat[iter_class]["colour"],
+                    lw=1.0,
+                    alpha=1,
+                    linestyle=(0, (5, 10)),
+                    label=f"Recomm. {comp_tagger_name}",
+                )
 
-    ax1.set_ylim(top=ax1.get_ylim()[1] * 1.2)
-    ax2.set_ylim(top=ax2.get_ylim()[1] * 1.2)
+            axes[counter].tick_params(
+                axis="y", labelcolor=flav_cat[iter_class]["colour"]
+            )
+
+        ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+        # Increase y limit for ATLAS Logo
+        ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
+        ax2.set_ylim(top=ax2.get_ylim()[1] * yAxisIncrease)
+
+    else:
+        fig, ax1 = plt.subplots(constrained_layout=True)
+        legend_loc = (0.6, 0.75)
+        ax1.set_xlabel("Epoch")
+        ax1.set_ylabel("Rejection")
+
+        for counter, iter_class in enumerate(class_labels_wo_main):
+            # Plot rejection
+            ax1.plot(
+                df_results["epoch"],
+                df_results[f"{iter_class}_rej"],
+                fmt=":",
+                color=flav_cat[iter_class]["colour"],
+                label=flav_cat[iter_class]["legend_label"],
+            )
+
+            if (
+                recomm_rej_dict is not None
+                and f"{iter_class}_rej" in recomm_rej_dict
+                and recomm_rej_dict[f"{iter_class}_rej"] is not None
+            ):
+                ax1.axhline(
+                    recomm_rej_dict[f"{iter_class}_rej"],
+                    0,
+                    df_results["epoch"].max(),
+                    color=flav_cat[iter_class]["colour"],
+                    lw=1.0,
+                    alpha=1,
+                    linestyle=(0, (5, 10)),
+                    label=f"Recomm. {comp_tagger_name} - {flav_cat[iter_class]['legend_label']}",
+                )
+
+        # Increase y limit for ATLAS Logo
+        ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
 
     if UseAtlasTag is True:
-        if tau_rej is None:
-            SecondTag = (
-                SecondTag
-                + "\n{}={}".format(f_name, f_value)
-                + ", WP={:02d}%".format(int(target_beff * 100))
+        SecondTag = (
+            SecondTag
+            + "\n{} fraction = {}".format(
+                class_labels_wo_main[0], frac_dict[class_labels_wo_main[0]]
             )
-        else:
-            if ftau_value is None:
-                SecondTag = (
-                    SecondTag
-                    + "\n{}={}".format(f_name, f_value)
-                    + "\n{}={}".format(r"$f_{tau}$", 1 - f_value)
-                    + ", WP={:02d}%".format(int(target_beff * 100))
-                )
-            else:
-                SecondTag = (
-                    SecondTag
-                    + "\n{}={}".format(f_name, f_value)
-                    + "\n{}={}".format(r"$f_{tau}$", ftau_value)
-                    + ", WP={:02d}%".format(int(target_beff * 100))
-                )
+            + "\nWP={:02d}%".format(int(target_beff * 100))
+        )
 
         makeATLAStag(
             ax=plt.gca(),
             fig=plt.gcf(),
             first_tag=AtlasTag,
             second_tag=SecondTag,
-            ymax=0.9,
+            ymax=yAxisAtlasTag,
         )
 
-    fig.legend(ncol=1, loc=legend_loc)
+    fig.legend(ncol=ncol, loc=legend_loc)
     plt.savefig(plot_name, transparent=True)
     plt.cla()
     plt.clf()
@@ -812,117 +779,174 @@ def RunPerformanceCheckDips(
     train_config,
     compare_tagger=True,
     tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
-    comp_tagger_name="RNNIP",
-    WP_b=0.77,
-    fc=0.018,
-    fb=0.2,
+    comp_tagger_name="rnnip",
+    WP: float = 0.77,
     dict_file_name=None,
 ):
     logger.info("Running performance check.")
-    Eval_parameters = train_config.Eval_parameters_validation
-    plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
-    recommended_fc_values = {"DL1r": 0.018, "RNNIP": 0.08}
 
-    if (
-        "fc_value" in Eval_parameters
-        and Eval_parameters["fc_value"] is not None
-    ):
-        fc = Eval_parameters["fc_value"]
+    # Load parameters from train config
+    Eval_parameters = train_config.Eval_parameters_validation
+    plot_datatype = Eval_parameters["plot_datatype"]
+    frac_dict = Eval_parameters["frac_dict"]
+    class_labels = train_config.NN_structure["class_labels"]
+    main_class = train_config.NN_structure["main_class"]
+    recommended_frac_dict = Eval_parameters["frac_values_comp"]
+
+    # Get class_labels variables etc. from global config
+    class_ids = get_class_label_ids(class_labels)
+    class_label_vars, flatten_class_labels = get_class_label_variables(
+        class_labels
+    )
 
     if compare_tagger:
-        variables = ["HadronConeExclTruthLabelID"]
-        variables += tagger_comp_var[:]
+
+        # Get the tagger variables and the class label variables
+        variables = class_label_vars + tagger_comp_var[:]
+
+        # Load the Jets
         df = pd.DataFrame(
             h5py.File(train_config.validation_file, "r")["/jets"][:][variables]
         )
 
-        df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-        df.replace({"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True)
+        # Iterate over the classes and remove all not used jets
+        for class_id, class_label_var in zip(class_ids, class_label_vars):
+            df.query(f"{class_label_var} in {class_id}", inplace=True)
 
-        y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-        c_rej, u_rej, _ = GetRejection(
-            df[tagger_comp_var[:]].values,
-            y_true,
-            WP_b,
-            frac=recommended_fc_values[comp_tagger_name],
+        # Init new column for string labels
+        df["Umami_string_labels"] = np.zeros_like(df[class_label_vars[0]])
+        df["Umami_labels"] = np.zeros_like(df[class_label_vars[0]])
+
+        # Change type of column to string
+        df = df.astype({"Umami_string_labels": "str"})
+
+        # Iterate over the classes and add the correct labels to Umami columns
+        for class_id, class_label_var, class_label in zip(
+            class_ids, class_label_vars, flatten_class_labels
+        ):
+            indices_tochange = np.where(df[class_label_var].values == class_id)
+
+            # Add a string description which this class is
+            df["Umami_string_labels"].values[indices_tochange] = class_label
+
+            # Add the right column label to class
+            df["Umami_labels"].values[indices_tochange] = class_labels.index(
+                class_label
+            )
+
+        # Binarize the labels
+        y_true = GetBinaryLabels(df["Umami_labels"].values)
+
+        # Calculate rejections
+        recomm_rej_dict, _ = GetRejection(
+            y_pred=df[tagger_comp_var[:]].values,
+            y_true=y_true,
+            class_labels=class_labels,
+            main_class=main_class,
+            frac_dict=recommended_frac_dict[comp_tagger_name],
+            target_eff=WP,
         )
 
     else:
-        c_rej, u_rej = None, None
+        recomm_rej_dict = None
 
+    # Get dict from json
     df_results = pd.read_json(dict_file_name)
+
+    # Define dir where the plots are saved
     plot_dir = f"{train_config.model_name}/plots"
     logger.info(f"saving plots to {plot_dir}")
     os.makedirs(plot_dir, exist_ok=True)
-    if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
-        plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
-        PlotRejPerEpoch(
-            df_results=df_results,
-            plot_name=plot_name,
-            c_rej=c_rej,
-            u_rej=u_rej,
-            labels={
-                "c_rej": r"$c$-rej. - $t\bar{t}$",
-                "u_rej": r"light-rej. - $t\bar{t}$",
-            },
-            rej_keys={
-                "c_rej": "c_rej",
-                "u_rej": "u_rej",
-            },
-            comp_tagger_name=comp_tagger_name,
-            target_beff=WP_b,
-            fc_value=fc,
-            UseAtlasTag=Eval_parameters["UseAtlasTag"],
-            AtlasTag=Eval_parameters["AtlasTag"],
-            SecondTag=Eval_parameters["SecondTag"],
-        )
+
+    # Plot comparsion for the comparison taggers
+    plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
+    PlotRejPerEpoch(
+        df_results=df_results,
+        plot_name=plot_name,
+        frac_dict=frac_dict,
+        class_labels=class_labels,
+        main_class=main_class,
+        recomm_rej_dict=recomm_rej_dict,
+        label_extension="$t\bar{t}$",
+        comp_tagger_name=comp_tagger_name,
+        target_beff=WP,
+        UseAtlasTag=Eval_parameters["UseAtlasTag"],
+        AtlasTag=Eval_parameters["AtlasTag"],
+        SecondTag=Eval_parameters["SecondTag"],
+    )
 
     if train_config.add_validation_file is not None:
         if compare_tagger:
-            variables = ["HadronConeExclTruthLabelID"]
-            variables += tagger_comp_var[:]
+            # Get the tagger variables and the class label variables
+            variables = class_label_vars + tagger_comp_var[:]
+
+            # Load the Jets
             df = pd.DataFrame(
                 h5py.File(train_config.add_validation_file, "r")["/jets"][:][
                     variables
                 ]
             )
 
-            df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-            df.replace(
-                {"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True
-            )
-            y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-            c_rej, u_rej, _ = GetRejection(
-                df[tagger_comp_var[:]].values,
-                y_true,
-                WP_b,
-                frac=recommended_fc_values[comp_tagger_name],
-            )
-        else:
-            c_rej, u_rej = None, None
+            # Iterate over the classes and remove all not used jets
+            for class_id, class_label_var in zip(class_ids, class_label_vars):
+                df.query(f"{class_label_var} in {class_id}", inplace=True)
 
-        if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
-            plot_name = f"{plot_dir}/rej-plot_val_add.{plot_datatype}"
-            PlotRejPerEpoch(
-                df_results,
-                plot_name,
-                c_rej=c_rej,
-                u_rej=u_rej,
-                labels={
-                    "c_rej": r"$c$-rej. - ext. $Z'$",
-                    "u_rej": r"light-rej. - ext. $Z'$",
-                },
-                rej_keys={
-                    "c_rej": "c_rej_add",
-                    "u_rej": "u_rej_add",
-                },
-                comp_tagger_name=comp_tagger_name,
-                target_beff=WP_b,
-                fc_value=fc,
-                UseAtlasTag=Eval_parameters["UseAtlasTag"],
-                AtlasTag=Eval_parameters["AtlasTag"],
-                SecondTag=Eval_parameters["SecondTag"],
+            # Init new column for string labels
+            df["Umami_string_labels"] = np.zeros_like(df[class_label_vars[0]])
+            df["Umami_labels"] = np.zeros_like(df[class_label_vars[0]])
+
+            # Change type of column to string
+            df = df.astype({"Umami_string_labels": "str"})
+
+            # Iterate over the classes and add the correct labels to Umami columns
+            for class_id, class_label_var, class_label in zip(
+                class_ids, class_label_vars, flatten_class_labels
+            ):
+                indices_tochange = np.where(
+                    df[class_label_var].values == class_id
+                )
+
+                # Add a string description which this class is
+                df["Umami_string_labels"].values[
+                    indices_tochange
+                ] = class_label
+
+                # Add the right column label to class
+                df["Umami_labels"].values[
+                    indices_tochange
+                ] = class_labels.index(class_label)
+
+            # Binarize the labels
+            y_true = GetBinaryLabels(df["Umami_labels"].values)
+
+            # Calculate rejections
+            recomm_rej_dict, _ = GetRejection(
+                y_pred=df[tagger_comp_var[:]].values,
+                y_true=y_true,
+                class_labels=class_labels,
+                main_class=main_class,
+                frac_dict=recommended_frac_dict[comp_tagger_name],
+                target_eff=WP,
             )
+
+        else:
+            recomm_rej_dict = None
+
+        plot_name = f"{plot_dir}/rej-plot_val_add.{plot_datatype}"
+        PlotRejPerEpoch(
+            df_results=df_results,
+            plot_name=plot_name,
+            frac_dict=frac_dict,
+            class_labels=class_labels,
+            main_class=main_class,
+            recomm_rej_dict=recomm_rej_dict,
+            label_extension="$ext. $Z'$",
+            comp_tagger_name=comp_tagger_name,
+            target_beff=WP,
+            UseAtlasTag=Eval_parameters["UseAtlasTag"],
+            AtlasTag=Eval_parameters["AtlasTag"],
+            SecondTag=Eval_parameters["SecondTag"],
+        )
 
     plot_name = f"{plot_dir}/loss-plot.{plot_datatype}"
     PlotLosses(
@@ -951,8 +975,9 @@ def RunPerformanceCheckDips(
     PlotDiscCutPerEpoch(
         df_results=df_results,
         plot_name=plot_name,
-        target_beff=WP_b,
-        fc_value=fc,
+        target_beff=WP,
+        frac_class="cjets",
+        frac=frac_dict["cjets"],
         UseAtlasTag=Eval_parameters["UseAtlasTag"],
         AtlasTag=Eval_parameters["AtlasTag"],
         SecondTag=Eval_parameters["SecondTag"],
@@ -1149,18 +1174,6 @@ def plot_validation(train_config, beff, cfrac, dict_file_name):
     RunPerformanceCheckUmami(
         train_config,
         compare_tagger=True,
-        WP_b=beff,
-        fc=cfrac,
-        dict_file_name=dict_file_name,
-    )
-
-
-def plot_validation_dips(train_config, beff, cfrac, dict_file_name):
-    RunPerformanceCheckDips(
-        train_config,
-        compare_tagger=True,
-        tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
-        comp_tagger_name="RNNIP",
         WP_b=beff,
         fc=cfrac,
         dict_file_name=dict_file_name,

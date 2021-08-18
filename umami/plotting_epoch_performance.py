@@ -97,14 +97,11 @@ def main(args, train_config, preprocess_config):
         else:
             if args.dips:
                 output_file_name = utt.calc_validation_metrics_dips(
-                    train_config,
-                    preprocess_config,
-                    args.beff,
-                    args.cfrac,
-                    nJets,
+                    train_config=train_config,
+                    preprocess_config=preprocess_config,
+                    target_beff=args.beff if args.beff else None,
+                    nJets=nJets,
                 )
-                beff = args.beff
-                cfrac = args.cfrac
 
             else:
                 output_file_name = utt.calc_validation_metrics(
@@ -118,8 +115,13 @@ def main(args, train_config, preprocess_config):
                 cfrac = args.cfrac
 
         if args.dips:
-            utt.plot_validation_dips(
-                train_config, beff, cfrac, dict_file_name=output_file_name
+            utt.RunPerformanceCheckDips(
+                train_config=train_config,
+                compare_tagger=True,
+                tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
+                comp_tagger_name="rnnip",
+                WP=beff,
+                dict_file_name=output_file_name,
             )
 
         else:

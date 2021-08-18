@@ -120,7 +120,7 @@ def Dips_model(train_config=None, input_shape=None):
     # Set NN options
     batch_norm = NN_structure["Batch_Normalisation"]
     dropout = NN_structure["dropout"]
-    nClasses = NN_structure["nClasses"]
+    class_labels = NN_structure["class_labels"]
 
     # Set the track input
     trk_inputs = Input(shape=input_shape)
@@ -169,7 +169,9 @@ def Dips_model(train_config=None, input_shape=None):
         F = layers.Activation(activations.relu, name=f"F{j}_ReLU")(F)
 
     # Set output and activation function
-    output = Dense(nClasses, activation="softmax", name="Jet_class")(F)
+    output = Dense(len(class_labels), activation="softmax", name="Jet_class")(
+        F
+    )
     dips = Model(inputs=trk_inputs, outputs=output)
 
     # Print Dips model summary when log level lower or equal INFO level
@@ -196,6 +198,7 @@ def Dips(args, train_config, preprocess_config):
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
+        class_labels=NN_structure["class_labels"],
         nJets=int(Val_params["n_jets"]),
     )
 
@@ -206,6 +209,7 @@ def Dips(args, train_config, preprocess_config):
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
+            class_labels=NN_structure["class_labels"],
             nJets=int(Val_params["n_jets"]),
         )
 
@@ -308,12 +312,13 @@ def Dips(args, train_config, preprocess_config):
     # to json file.
     my_callback = utt.MyCallbackDips(
         model_name=train_config.model_name,
+        class_labels=train_config.NN_structure["class_labels"],
+        main_class=train_config.NN_structure["main_class"],
         val_data_dict=val_data_dict,
         target_beff=train_config.Eval_parameters_validation["WP_b"],
-        charm_fraction=train_config.Eval_parameters_validation["fc_value"],
+        frac_dict=train_config.Eval_parameters_validation["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
             WP_b=train_config.Eval_parameters_validation["WP_b"],
-            fc_value=train_config.Eval_parameters_validation["fc_value"],
             n_jets=train_config.Eval_parameters_validation["n_jets"],
             dir_name=train_config.model_name,
         ),
@@ -357,6 +362,7 @@ if __name__ == "__main__":
 
     utt.create_metadata_folder(
         train_config_path=args.config_file,
+        var_dict_path=train_config.var_dict,
         model_name=train_config.model_name,
         preprocess_config_path=train_config.preprocess_config,
         overwrite_config=True if args.overwrite_config else False,

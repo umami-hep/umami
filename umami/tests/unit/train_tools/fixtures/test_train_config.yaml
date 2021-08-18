@@ -45,6 +45,8 @@ NN_structure:
     DL1_units: [57, 60, 48, 36, 24, 12, 6]
     # total loss = loss(umami) + dips_loss_weight * loss(dips)
     dips_loss_weight: 1
+    class_labels: ["bjets", "cjets", "ujets"]
+    main_class: "bjets"
 
 Eval_parameters_validation:
     # Number of jets used for each validation sample. Set this to 0 if you have memory problems

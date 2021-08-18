@@ -1,4 +1,4 @@
-from umami.configuration import logger  # isort:skip
+from umami.configuration import logger, global_config  # isort:skip
 import json
 import os
 import re
@@ -18,7 +18,6 @@ from tensorflow.keras.models import load_model
 from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
 from umami.tools import replaceLineInFile, yaml_loader
-from umami.train_tools import Configuration as Train_Configuration
 
 
 def atoi(text):
@@ -29,19 +28,79 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r"(\d+)", text)]
 
 
-def get_validation_dict_name(WP_b, fc_value, n_jets, dir_name):
+def get_validation_dict_name(WP_b, n_jets, dir_name):
     return os.path.join(
         dir_name,
-        f"validation_WP{str(WP_b).replace('.','p')}_fc{str(fc_value).replace('.','p')}_{int(n_jets)}jets_Dict.json",
+        f"validation_WP{str(WP_b).replace('.','p')}_{int(n_jets)}jets_Dict.json",
     )
+
+
+def get_class_label_ids(class_labels):
+    """
+    This function retrieves the flavour ids of the class_labels provided
+    and returns them as a list.
+    """
+
+    # Get the global_config
+    flavour_categories = global_config.flavour_categories
+
+    # Init new list
+
+    for counter, class_label in enumerate(class_labels):
+        if counter == 0:
+            id_list = np.asarray(
+                flavour_categories[class_label]["label_value"]
+            )
+
+        else:
+            id_list = np.append(
+                id_list,
+                np.asarray(flavour_categories[class_label]["label_value"]),
+            )
+
+    # Flatten the list if needed and return it
+    return id_list.tolist()
+
+
+def get_class_label_variables(class_labels):
+    """
+    This function returns a list of the label variables used for the
+    provided class_labels.
+    """
+
+    # Get the global_config
+    flavour_categories = global_config.flavour_categories
+
+    # Init new lists
+    label_var_list = []
+    flatten_class_labels = []
+
+    for class_label in class_labels:
+        if type(flavour_categories[class_label]["label_value"]) is list:
+            for i in range(
+                len(flavour_categories[class_label]["label_value"])
+            ):
+                label_var_list.append(
+                    flavour_categories[class_label]["label_var"]
+                )
+                flatten_class_labels.append(class_label)
+
+        else:
+            label_var_list.append(flavour_categories[class_label]["label_var"])
+            flatten_class_labels.append(class_label)
+
+    # Flatten the lists if needed
+    label_var_list = np.asarray(label_var_list).flatten().tolist()
+    flatten_class_labels = np.asarray(flatten_class_labels).flatten().tolist()
+
+    return label_var_list, flatten_class_labels
 
 
 def get_parameters_from_validation_dict_name(dict_name):
     sp = dict_name.split("/")[-1].split("_")
     parameters = {}
     parameters["WP_b"] = float(sp[1].replace("WP", "").replace("p", "."))
-    parameters["fc_value"] = float(sp[2].replace("fc", "").replace("p", "."))
-    parameters["n_jets"] = int(sp[3].replace("jets", ""))
+    parameters["n_jets"] = int(sp[2].replace("jets", ""))
     parameters["dir_name"] = str(Path(dict_name).parent)
     if get_validation_dict_name(**parameters) != dict_name:
         raise Exception(
@@ -52,6 +111,7 @@ def get_parameters_from_validation_dict_name(dict_name):
 
 def create_metadata_folder(
     train_config_path,
+    var_dict_path,
     model_name,
     preprocess_config_path,
     overwrite_config=False,
@@ -59,10 +119,6 @@ def create_metadata_folder(
     # Check if model path already existing
     # If not, make it
     os.makedirs(os.path.join(model_name, "metadata"), exist_ok=True)
-
-    # Get Variable dict
-    train_config = Train_Configuration(train_config_path)
-    var_dict_path = train_config.var_dict
 
     # Get scale dict
     preprocess_config = Preprocess_Configuration(preprocess_config_path)
@@ -172,114 +228,127 @@ def create_metadata_folder(
                 )
 
 
+def CalcDiscValues(
+    jets_dict: dict,
+    index_dict: dict,
+    main_class: str,
+    frac_dict: dict,
+    rej_class=None,
+):
+    """
+    Calculate the disc value based on the flavours used.
+
+    Input:
+    - jets_dict: A dict with the class_labels and their jets.
+    - index_dict: A dict with the class_labels and their respective indices.
+    - main_class: The main discriminant class. For b-tagging obviously "bjets"
+    - frac_dict: A dict with the respective fractions for each class provided
+            except main_class
+
+    Output:
+    - disc_score: Tagging discriminator score for the main flavour
+    """
+
+    # Set the rejection class for rejection calculation
+    if rej_class is None:
+        rej_class = main_class
+
+    # Init denominator of disc_score and add_small
+    denominator = 0
+    add_small = 1e-10
+
+    # Get class_labels list without main class
+    class_labels_wo_main = list(jets_dict.keys())
+    class_labels_wo_main.remove(main_class)
+
+    # Calculate counter of disc_score
+    counter = jets_dict[rej_class][:, index_dict[main_class]] + add_small
+
+    # Calculate denominator of disc_score
+    for class_label in class_labels_wo_main:
+        denominator += (
+            frac_dict[class_label]
+            * jets_dict[rej_class][:, index_dict[class_label]]
+        )
+    denominator += add_small
+
+    # Calculate final disc_score and return it
+    return np.log(counter / denominator)
+
+
 def GetRejection(
     y_pred,
     y_true,
+    class_labels: list,
+    main_class: str,
+    frac_dict: dict = {"cjets": 0.018, "ujets": 0.982},
     target_eff=0.77,
-    frac=0.018,
-    d_type="b",
-    taufrac=None,
-    use_taus=False,
 ):
     """
-    Calculates the rejections for specific WP and fraction.
-    Can perform b or c rejection depending on the value of
-    - d_type = "b" or "c"
-    If doing b (c) rejection, frac corresponds to fc (fb).
+    Calculates the rejections for a specific WP for all provided
+    classes except the discriminant class (main_class).
+
+    Input:
+    - y_pred: The prediction output of the NN
+    - y_true: The true class of the jets
+    - class_labels: A list of the class_labels which are used
+    - main_class: The main discriminant class. For b-tagging obviously "bjets"
+    - frac_dict: A dict with the respective fractions for each class provided
+            except main_class
+    - target_eff: WP which is used for discriminant calculation.
+
+    Output:
+    - Rejection_Dict: Dict of the rejections. The keys of the dict
+                      are the provided class_labels without main_class
     """
-    tau_index, b_index, c_index, u_index = 3, 2, 1, 0
+
+    # Init new dict for jets and indices
+    jets_dict = {}
+    index_dict = {}
+    rej_dict = {}
+
+    # Get max value of y_true
     y_true = np.argmax(y_true, axis=1)
-    b_jets = y_pred[y_true == b_index]
-    c_jets = y_pred[y_true == c_index]
-    u_jets = y_pred[y_true == u_index]
 
-    bool_b = False
-    main_flavour = c_jets
-    second_flavour = b_jets
-    if d_type == "b":
-        bool_b = True
-        main_flavour = b_jets
-        second_flavour = c_jets
+    # Iterate over the different class_labels and select their respective jets
+    for class_counter, class_label in enumerate(class_labels):
+        jets_dict.update({f"{class_label}": y_pred[y_true == class_counter]})
+        index_dict.update({f"{class_label}": class_counter})
 
-    ufrac = 1 - frac
-    if use_taus:
-        tau_jets = y_pred[y_true == tau_index]
-        if bool_b:
-            index_list = [b_index, c_index, u_index, tau_index]
-        else:
-            index_list = [c_index, b_index, u_index, tau_index]
-        if taufrac is None:
-            taufrac = 1 - frac
-        else:
-            ufrac = 1 - frac - taufrac
-    else:
-        if bool_b:
-            index_list = [b_index, c_index, u_index]
-        else:
-            index_list = [c_index, b_index, u_index]
-        taufrac = None
-
-    add_small = 1e-10
-
-    def frac_template(jet_flav, index=index_list):
-        """
-        Jet flav is the jet flavour used.
-        Index is a list with either:
-        - ["b_index", "c_index", "u_index"]
-        - ["b_index", "c_index", "u_index", "tau_index"]
-        - ["c_index", "b_index", "u_index"]
-        - ["c_index", "b_index", "u_index", "tau_index"]
-        First two for b tagging, second two for c tagging
-        """
-        if len(index) == 4:
-            frac_value = np.log(
-                (jet_flav[:, index[0]] + add_small)
-                / (
-                    frac * jet_flav[:, index[1]]
-                    + ufrac * jet_flav[:, index[2]]
-                    + taufrac * jet_flav[:, index[3]]
-                    + add_small
-                )
-            )
-        else:
-            frac_value = np.log(
-                (jet_flav[:, index[0]] + add_small)
-                / (
-                    frac * jet_flav[:, index[1]]
-                    + ufrac * jet_flav[:, index[2]]
-                    + add_small
-                )
-            )
-        return frac_value
-
-    disc_score = frac_template(main_flavour)
-    cutvalue = np.percentile(disc_score, 100.0 * (1.0 - target_eff))
-    # Starting rejection:
-    # Secondary flavour (c if b_type == "b", b otherwise)
-    second_eff = len(
-        second_flavour[frac_template(second_flavour) > cutvalue]
-    ) / float(len(second_flavour) + add_small)
-    # Light
-    light_eff = len(u_jets[frac_template(u_jets) > cutvalue]) / float(
-        len(u_jets) + add_small
+    # Calculate disc score
+    disc_scores = CalcDiscValues(
+        jets_dict=jets_dict,
+        index_dict=index_dict,
+        main_class=main_class,
+        frac_dict=frac_dict,
     )
-    # Taus
-    if use_taus:
-        tau_eff = len(tau_jets[frac_template(tau_jets) > cutvalue]) / float(
-            len(tau_jets) + add_small
+
+    # Calculate cutvalue on the discriminant depending of the WP
+    cutvalue = np.percentile(disc_scores, 100.0 * (1.0 - target_eff))
+
+    # Get all non-main flavours
+    class_labels_wo_main = class_labels
+    class_labels_wo_main.remove(main_class)
+
+    # Calculate efficiencies
+    for iter_main_class in class_labels_wo_main:
+        rej_dict[f"{iter_main_class}_rej"] = (
+            len(
+                jets_dict[iter_main_class][
+                    CalcDiscValues(
+                        jets_dict=jets_dict,
+                        index_dict=index_dict,
+                        main_class=main_class,
+                        frac_dict=frac_dict,
+                        rej_class=iter_main_class,
+                    )
+                    > cutvalue
+                ]
+            )
+            / (len(jets_dict[iter_main_class]) + 1e-10)
         )
 
-    if second_eff == 0:
-        second_eff = -1
-    if light_eff == 0:
-        light_eff = -1
-    if use_taus and tau_eff == 0:
-        tau_eff = -1
-
-    if use_taus:
-        return 1.0 / second_eff, 1.0 / light_eff, 1.0 / tau_eff, cutvalue
-    else:
-        return 1.0 / second_eff, 1.0 / light_eff, cutvalue
+    return rej_dict, cutvalue
 
 
 class MyCallback(Callback):
@@ -476,17 +545,24 @@ def setup_output_directory(dir_name):
 class MyCallbackDips(Callback):
     def __init__(
         self,
+        class_labels: list,
+        main_class: str,
         val_data_dict=None,
         log_file=None,
         verbose=False,
         model_name="test",
         target_beff=0.77,
-        charm_fraction=0.018,
+        frac_dict={
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
         dict_file_name="DictFile.json",
     ):
+        self.class_labels = class_labels
+        self.main_class = main_class
         self.val_data_dict = val_data_dict
         self.target_beff = target_beff
-        self.charm_fraction = charm_fraction
+        self.frac_dict = frac_dict
         self.result = []
         self.log = open(log_file, "w") if log_file else None
         self.verbose = verbose
@@ -505,10 +581,12 @@ class MyCallbackDips(Callback):
         }
         if self.val_data_dict:
             result_dict = evaluate_model_dips(
-                self.model,
-                self.val_data_dict,
-                self.target_beff,
-                self.charm_fraction,
+                model=self.model,
+                data_dict=self.val_data_dict,
+                class_labels=self.class_labels,
+                main_class=self.main_class,
+                target_beff=self.target_beff,
+                frac_dict=self.frac_dict,
             )
             # Once we use python >=3.9 (see https://www.python.org/dev/peps/pep-0584/#specification) switch to the following: dict_epoch |= result_dict
             dict_epoch = {**dict_epoch, **result_dict}
@@ -574,24 +652,6 @@ class MyCallbackUmami(Callback):
             self.log.close()
 
 
-def filter_taus(train_set, test_set):
-    """
-    Small code to filter taus away from the training dataset
-    """
-    if test_set.shape[1] > 3:
-        # Use test set, which has the label, to remove those corresponding to taus in both sets
-        # Taus are fourth column (index 3), since label is 15 (after u, c, and b)
-        tau_indices = np.where(test_set[:, 3] == 1)[0]
-        train_set = np.delete(train_set, tau_indices, axis=0)
-        test_set = np.delete(test_set, tau_indices, axis=0)
-        test_set = np.delete(test_set, 3, axis=1)  # delete tau label column
-    else:
-        logger.info(
-            f"There does not seem to be any tau data, shape of test is: {test_set.shape[1]}"
-        )
-    return (train_set, test_set)
-
-
 def get_jet_feature_indices(variable_header: dict, exclude=None):
     """
     Deletes from the jet samples the keys listed in exclude
@@ -635,9 +695,9 @@ def GetTestSample(
     input_file,
     var_dict,
     preprocess_config,
+    class_labels,
     nJets=int(3e5),
     exclude=[],
-    use_taus=False,
 ):
     """
     Apply the scaling and shifting to dataset using numpy
@@ -665,18 +725,43 @@ def GetTestSample(
         # Load dataframe from file
         jets = pd.DataFrame(h5py.File(file, "r")["/jets"][:nJets])
 
-        # Selected the wanted flavours from the files
-        if use_taus is True:
-            jets.query(
-                f"{variable_config['label']} in [0, 4, 5, 15]", inplace=True
-            )
-        else:
-            jets.query(
-                f"{variable_config['label']} in [0, 4, 5]", inplace=True
+        # Get class_labels variables etc. from global config
+        class_ids = get_class_label_ids(class_labels)
+        class_label_vars, flatten_class_labels = get_class_label_variables(
+            class_labels
+        )
+
+        # Init new column for string labels
+        jets["Umami_string_labels"] = np.zeros_like(jets[class_label_vars[0]])
+        jets["Umami_labels"] = np.zeros_like(jets[class_label_vars[0]])
+
+        # Change type of column to string
+        jets = jets.astype({"Umami_string_labels": "str"})
+
+        # Iterate over the classes and add the correct labels to Umami columns
+        for class_id, class_label_var, class_label in zip(
+            class_ids, class_label_vars, flatten_class_labels
+        ):
+            indices_tochange = np.where(
+                jets[class_label_var].values == class_id
             )
 
-        # Get binary labels for training
-        labels = GetBinaryLabels(jets[variable_config["label"]].values)
+            # Add a string description which this class is
+            jets["Umami_string_labels"].values[indices_tochange] = class_label
+
+            # Add the right column label to class
+            jets["Umami_labels"].values[indices_tochange] = class_labels.index(
+                class_label
+            )
+
+        # Get the indices of the jets that are not used
+        indices_toremove = np.where(jets["Umami_string_labels"] == "0")[0]
+
+        # Remove all unused jets
+        jets = jets.drop(indices_toremove)
+
+        # Binarize Labels
+        labels = GetBinaryLabels(jets["Umami_labels"].values)
 
         # Retrieve variables and the excluded variables from the config
         variables, excluded_variables, _ = get_jet_feature_indices(
@@ -727,6 +812,9 @@ def GetTestSample(
             all_jets = all_jets.append(jets, ignore_index=True)
             all_labels = all_labels.append(labels, ignore_index=True)
 
+        # Adding the loaded jets to counter
+        nJets_counter += len(all_labels)
+
         # Stop loading if enough jets are loaded
         if nJets_counter >= nJets:
             break
@@ -740,6 +828,7 @@ def GetTestSample(
     else:
         logger.info(f"Loaded {nJets_counter} jets!")
 
+    print(all_jets.shape)
     return all_jets, all_labels
 
 
@@ -747,8 +836,8 @@ def GetTestSampleTrks(
     input_file,
     var_dict,
     preprocess_config,
+    class_labels,
     nJets=int(3e5),
-    use_taus=False,
 ):
     """
     Apply the scaling and shifting to dataset using numpy
@@ -773,13 +862,63 @@ def GetTestSampleTrks(
     for j, file in enumerate(sorted(filepaths, key=natural_keys)):
         logger.info(f"Loading validation data tracks from file {file}")
 
-        labels = h5py.File(input_file, "r")["/jets"][:nJets][
-            variable_config["label"]
-        ]
-        indices_toremove = np.where(labels > 5)[0]
-        labels = np.delete(labels, indices_toremove, 0)
+        # Get class_labels variables etc. from global config
+        class_ids = get_class_label_ids(class_labels)
+        class_label_vars, flatten_class_labels = get_class_label_variables(
+            class_labels
+        )
 
-        labels = GetBinaryLabels(labels)
+        # Load the used label variables from file
+        with h5py.File(input_file, "r") as jets:
+            for iterator, iter_class_var in enumerate(
+                list(dict.fromkeys(class_label_vars))
+            ):
+                if iterator == 0:
+                    labels = pd.DataFrame(
+                        jets["/jets"][iter_class_var], columns=[iter_class_var]
+                    )
+
+                else:
+                    labels[iter_class_var] = jets["/jets"][iter_class_var]
+
+        # Use only the amout of jets requested
+        labels = labels[:nJets]
+
+        # Init new column for string labels
+        labels["Umami_string_labels"] = np.zeros_like(
+            labels[class_label_vars[0]]
+        )
+        labels["Umami_labels"] = np.zeros_like(labels[class_label_vars[0]])
+
+        # Change type of column to string
+        labels = labels.astype({"Umami_string_labels": "str"})
+
+        # Iterate over the classes and add the correct labels to Umami columns
+        for (class_id, class_label_var, class_label) in zip(
+            class_ids, class_label_vars, flatten_class_labels
+        ):
+            indices_tochange = np.where(
+                labels[class_label_var].values == class_id
+            )[0]
+
+            # Add a string description which this class is
+            labels["Umami_string_labels"].values[
+                indices_tochange
+            ] = class_label
+
+            # Add the right column label to class
+            labels["Umami_labels"].values[
+                indices_tochange
+            ] = class_labels.index(class_label)
+
+        # Get the indices of the jets that are not used
+        indices_toremove = np.where(labels["Umami_string_labels"] == "0")[0]
+
+        # Remove unused jets from labels
+        labels = labels.drop(indices_toremove)
+
+        # Binarize the labels
+        binary_labels = GetBinaryLabels(labels["Umami_labels"].values)
 
         # Retrieve variables from config
         noNormVars = variable_config["track_train_variables"]["noNormVars"]
@@ -811,12 +950,15 @@ def GetTestSampleTrks(
         # If not the first file processed, append to the global one
         if j == 0:
             all_trks = np.stack(var_arr_list, axis=-1)
-            all_labels = labels
+            all_labels = binary_labels
 
         # if the first file processed, set as global one
         else:
             np.append(all_trks, np.stack(var_arr_list, axis=-1))
-            np.append(all_labels, labels)
+            np.append(all_labels, binary_labels)
+
+        # Adding the loaded jets to counter
+        nJets_counter += len(all_labels)
 
         # Stop loading if enough jets are loaded
         if nJets_counter >= nJets:
@@ -844,9 +986,10 @@ def load_validation_data(train_config, preprocess_config, nJets: int):
         val_data_dict["X_valid_trk"],
         val_data_dict["Y_valid"],
     ) = GetTestFile(
-        train_config.validation_file,
-        train_config.var_dict,
-        preprocess_config,
+        file=train_config.validation_file,
+        var_dict=train_config.var_dict,
+        preprocess_config=preprocess_config,
+        class_labels=train_config.NN_structure["class_labels"],
         nJets=nJets,
         exclude=exclude,
     )
@@ -861,9 +1004,10 @@ def load_validation_data(train_config, preprocess_config, nJets: int):
             val_data_dict["X_valid_trk_add"],
             val_data_dict["Y_valid_add"],
         ) = GetTestFile(
-            train_config.add_validation_file,
-            train_config.var_dict,
-            preprocess_config,
+            file=train_config.validation_file,
+            var_dict=train_config.var_dict,
+            preprocess_config=preprocess_config,
+            class_labels=train_config.NN_structure["class_labels"],
             nJets=nJets,
             exclude=exclude,
         )
@@ -875,33 +1019,40 @@ def load_validation_data(train_config, preprocess_config, nJets: int):
 
 
 def load_validation_data_dips(train_config, preprocess_config, nJets: int):
-    exclude = None
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
+    """
+    Load the validation data for DIPS.
+
+    Input:
+    - train_config: Loaded train_config object.
+    - train_config: Loaded preprocess_config object.
+    - nJets: Number of jets to load.
+
+    Output:
+    - val_data_dict: Dict with the validation data
+    """
+
     val_data_dict = {}
-    (_, val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestFile(
-        train_config.validation_file,
-        train_config.var_dict,
-        preprocess_config,
+    (val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestSampleTrks(
+        input_file=train_config.validation_file,
+        var_dict=train_config.var_dict,
+        preprocess_config=preprocess_config,
+        class_labels=train_config.NN_structure["class_labels"],
         nJets=nJets,
-        exclude=exclude,
     )
     (
         val_data_dict["X_valid_add"],
         val_data_dict["Y_valid_add"],
-        val_data_dict["X_valid_trk_add"],
-    ) = (None, None, None)
+    ) = (None, None)
     if train_config.add_validation_file is not None:
         (
-            _,
             val_data_dict["X_valid_add"],
             val_data_dict["Y_valid_add"],
-        ) = GetTestFile(
-            train_config.add_validation_file,
-            train_config.var_dict,
-            preprocess_config,
+        ) = GetTestSampleTrks(
+            input_file=train_config.add_validation_file,
+            var_dict=train_config.var_dict,
+            preprocess_config=preprocess_config,
+            class_labels=train_config.NN_structure["class_labels"],
             nJets=nJets,
-            exclude=exclude,
         )
         assert (
             val_data_dict["X_valid"].shape[1]
@@ -914,13 +1065,30 @@ def GetTestFile(
     file: str,
     var_dict: str,
     preprocess_config: dict,
+    class_labels: list,
     nJets: int,
     exclude: list,
 ):
+    """
+    Load the training jets and tracks.
+
+    Input:
+    - file: Filepath to the file where the data are loaded from.
+    - var_dict: Path to the dict with the variables which are used.
+    - preprocess_config: The loaded preprocess config object.
+    - class_labels: List of classes used for training of the model.
+    - nJets: Number of jets used for evaluation.
+    - exclude: List of variables that are to be excluded.
+
+    Output:
+    - Returns the X, X_trk and Y for training/evaluation.
+    """
+
     X_trk, Y_trk = GetTestSampleTrks(
         input_file=file,
         var_dict=var_dict,
         preprocess_config=preprocess_config,
+        class_labels=class_labels,
         nJets=int(nJets),
     )
 
@@ -928,6 +1096,7 @@ def GetTestFile(
         input_file=file,
         var_dict=var_dict,
         preprocess_config=preprocess_config,
+        class_labels=class_labels,
         nJets=int(nJets),
         exclude=exclude,
     )
@@ -1034,7 +1203,30 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
     return result_dict
 
 
-def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
+def evaluate_model_dips(
+    model,
+    data_dict: dict,
+    class_labels: list,
+    main_class: str,
+    target_beff: float = 0.77,
+    frac_dict: dict = {"cjets": 0.018, "ujets": 0.982},
+):
+    """
+    Evaluate the DIPS model on the data provided.
+
+    Input:
+    - model: Loaded DIPS model for evaluation.
+    - data_dict: Dict with the loaded data which are to be evaluated.
+    - class_labels: List of classes used for training of the model.
+    - main_class: Main class which is to be tagged.
+    - target_beff: Working Point which is to be used for evaluation.
+    - frac_dict: Dict with the fractions of the non-main classes.
+                 Sum needs to be one!
+
+    Output:
+    - Dict with validation metrics/rejections.
+    """
+
     loss, accuracy = model.evaluate(
         data_dict["X_valid"],
         data_dict["Y_valid"],
@@ -1052,17 +1244,20 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
         verbose=0,
     )
 
-    c_rej, u_rej, disc_cut = GetRejection(
-        y_pred_dips, data_dict["Y_valid"], target_beff, cfrac
+    rej_dict, disc_cut = GetRejection(
+        y_pred=y_pred_dips,
+        y_true=data_dict["Y_valid"],
+        class_labels=class_labels,
+        main_class=main_class,
+        frac_dict=frac_dict,
+        target_eff=target_beff,
     )
-
-    logger.info(f"Dips: c-rej: {c_rej} u-rej: {u_rej}")
 
     (
         loss_add,
         accuracy_add,
-        c_rej_add,
-        u_rej_add,
+        rej_dict_add,
+        disc_cut_add,
     ) = (None, None, None, None)
 
     if data_dict["X_valid_add"] is not None:
@@ -1083,8 +1278,13 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
             verbose=0,
         )
 
-        c_rej_add, u_rej_add, disc_cut_add = GetRejection(
-            y_pred_add, data_dict["Y_valid_add"], target_beff, cfrac
+        rej_dict_add, disc_cut_add = GetRejection(
+            y_pred=y_pred_add,
+            y_true=data_dict["Y_valid_add"],
+            class_labels=class_labels,
+            main_class=main_class,
+            frac_dict=frac_dict,
+            target_eff=target_beff,
         )
 
     result_dict = {
@@ -1092,13 +1292,17 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
         "val_acc": accuracy,
         "val_loss_add": loss_add,
         "val_acc_add": accuracy_add,
-        "c_rej": c_rej,
-        "u_rej": u_rej,
-        "c_rej_add": c_rej_add,
-        "u_rej_add": u_rej_add,
         "disc_cut": disc_cut,
         "disc_cut_add": disc_cut_add,
     }
+
+    # Write results in one dict
+    result_dict.update({f"{key}_rej": rej_dict[key] for key in rej_dict})
+    result_dict.upadte(
+        {f"{key}_rej_add": rej_dict_add[key] for key in rej_dict_add}
+    )
+
+    # Return finished dict
     return result_dict
 
 
@@ -1163,20 +1367,41 @@ def calc_validation_metrics(
 def calc_validation_metrics_dips(
     train_config,
     preprocess_config,
+    frac_dict: dict,
     target_beff=0.77,
-    cfrac=0.018,
-    nJets=300000,
+    nJets=int(3e5),
 ):
+    """
+    Calculates the validation metrics and rejections for each epoch and
+    dump it into a json.
+
+    Input:
+    - train_config: The loaded train config object
+    - preprocess_config: The loaded preprocess config object
+    - frac_dict: Dict with the fractions for discriminant calculation
+    - target_beff: Target efficiency for main_class
+    - nJets: Number of jets used for evaluation
+
+    Output:
+    - Json file with validation metrics and rejections for each epoch
+    """
+
+    # Get evaluation parameters from train config
     Eval_parameters = train_config.Eval_parameters_validation
 
+    # Load validation data
     val_data_dict = load_validation_data_dips(
         train_config, preprocess_config, nJets
     )
+
+    # Make a list with the model epochs saves
     training_output = [
         os.path.join(train_config.model_name, f)
         for f in os.listdir(train_config.model_name)
         if "model_epoch" in f
     ]
+
+    # Open the json file and load the training out
     with open(
         get_validation_dict_name(
             WP_b=Eval_parameters["WP_b"],
@@ -1188,36 +1413,56 @@ def calc_validation_metrics_dips(
     ) as training_out_json:
         training_output_list = json.load(training_out_json)
 
+    # Init a results list
     results = []
+
+    # Loop over the different model savepoints at each epoch
     for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
         logger.info(f"Working on {n+1}/{len(training_output)} input files")
+
+        # Init results dict to save to
         result_dict = {}
+
+        # Get the epoch number from the .h5 file
         epoch = int(
             model_file[
-                model_file.rfind("model_epoch") + 11 : model_file.find(".h5")
+                model_file.rfind("model_epoch")
+                + len("model_epoch") : model_file.find(".h5")
             ]
         )
+
+        # Load the epoch from json and add it to dict
         for train_epoch in training_output_list:
             if epoch == train_epoch["epoch"]:
                 result_dict = train_epoch
 
+        # Load DIPS model
         dips = load_model(model_file, {"Sum": Sum})
+
+        # Validate dips
         val_result_dict = evaluate_model_dips(
-            dips, val_data_dict, target_beff, cfrac
+            dips, val_data_dict, target_beff, frac_dict
         )
+
+        # Save results in dict
         for k, v in val_result_dict.items():
             result_dict[k] = v
         results.append(result_dict)
         del dips
 
+    # Sort the results after epoch
     results = sorted(results, key=lambda x: x["epoch"])
 
+    # Get validation dict name
     output_file_path = get_validation_dict_name(
-        target_beff, cfrac, nJets, train_config.model_name
+        target_beff, nJets, train_config.model_name
     )
+
+    # Dump dict into json
     with open(output_file_path, "w") as outfile:
         json.dump(results, outfile, indent=4)
 
+    # Return Validation dict name
     return output_file_path
 
 

@@ -2,22 +2,51 @@ pTvariable: pt_btagJes
 etavariable: absEta_btagJes
 DebugLevel: INFO
 TFDebugLevel: 1
-flavour_colors:
-  b: "#1f77b4"
-  c: "#ff7f0e"
-  u: "#2ca02c"
-  tau: "#7c5295"
-flavour_labels:
-  # These are the internal labels for the flavours, not the PDGID!
-  b: 2
-  c: 1
-  u: 0
-  tau: 3
-flavour_legend_labels:
-  b: $b$-jets
-  c: $c$-jets
-  u: light-jets
-  tau: $\tau$-jets
+
+# definition of the flavour categories
+flavour_categories:
+  bjets:
+    label_var: HadronConeExclTruthLabelID
+    label_value: 5
+    colour: "#1f77b4"
+    legend_label: $b$-jets
+  cjets:
+    label_var: HadronConeExclTruthLabelID
+    label_value: 4
+    colour: "#ff7f0e"
+    legend_label: $c$-jets
+  ujets:
+    label_var: HadronConeExclTruthLabelID
+    label_value: 0
+    colour: "#2ca02c"
+    legend_label: light-flavour jets
+  taujets:
+    label_var: HadronConeExclTruthLabelID
+    label_value: 15
+    colour: "#7c5295"
+    legend_label: light-flavour jets
+  singlebjets:
+    label_var: HadronConeExclExtendedTruthLabelID
+    label_value: [5, 54]
+    colour: "#1f77b4"
+    legend_label: $b$-jets
+  bbjets:
+    label_var: HadronConeExclExtendedTruthLabelID
+    label_value: 55
+    colour: "orange"
+    legend_label: $bb$-jets
+  singlecjets:
+    label_var: HadronConeExclExtendedTruthLabelID
+    label_value: 4
+    colour: "#ff7f0e"
+    legend_label: $c$-jets
+  ccjets:
+    label_var: HadronConeExclExtendedTruthLabelID
+    label_value: 44
+    colour: ""
+    legend_label: $cc$-jets
+
+# plot style definitions
 hist_err_style:
   fill: False
   linewidth: 0

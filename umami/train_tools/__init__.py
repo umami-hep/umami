@@ -1,6 +1,7 @@
 # flake8: noqa
 from umami.train_tools.Configuration import Configuration
 from umami.train_tools.NN_tools import (
+    CalcDiscValues,
     GetRejection,
     GetTestFile,
     GetTestSample,
@@ -14,7 +15,8 @@ from umami.train_tools.NN_tools import (
     create_metadata_folder,
     evaluate_model,
     evaluate_model_dips,
-    filter_taus,
+    get_class_label_ids,
+    get_class_label_variables,
     get_jet_feature_indices,
     get_parameters_from_validation_dict_name,
     get_validation_dict_name,
@@ -29,5 +31,4 @@ from umami.train_tools.Plotting import (
     RunPerformanceCheck,
     RunPerformanceCheckUmami,
     plot_validation,
-    plot_validation_dips,
 )
