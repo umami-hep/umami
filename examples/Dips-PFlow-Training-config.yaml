@@ -59,8 +59,11 @@ NN_structure:
     # Dropout rate. If = 0, dropout is disabled
     dropout: 0
 
-    # Number of output classes
-    nClasses: 3
+    # Define which classes are used for training
+    # These are defined in the global_config
+    class_labels: ["bjets", "cjets", "ujets"]
+
+    main_class: ["bjets"]
 
     # Decide if Batch Normalisation is used
     Batch_Normalisation: True
@@ -81,16 +84,25 @@ Eval_parameters_validation:
     tagger: ["rnnip", "DL1r"]
 
     # Define fc values for the taggers
-    fc_values_comp: {
-        "rnnip": 0.08,
-        "DL1r": 0.018,
+    frac_values_comp: {
+        "rnnip": {
+            "cjets": 0.08,
+            "ujets": 0.92,
+        },
+        "DL1r": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
     }
 
     # Charm fraction value used for evaluation of the trained model
-    fc_value: 0.018
+    frac_values: {
+        "cjets": 0.018,
+        "ujets": 0.982,
+    }
 
-    # b Working point used in the evaluation
-    WP_b: 0.77
+    # Working point used in the evaluation
+    WP: 0.77
 
     # Enable/Disable atlas tag
     UseAtlasTag: True

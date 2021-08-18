@@ -26,9 +26,7 @@ class Configuration(object):
         config_items = [
             "pTvariable",
             "etavariable",
-            "flavour_colors",
-            "flavour_labels",
-            "flavour_legend_labels",
+            "flavour_categories",
             "hist_err_style",
         ]
         for item in config_items:

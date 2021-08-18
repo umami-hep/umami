@@ -2,6 +2,7 @@ import yaml
 
 from umami.configuration import logger
 from umami.tools import yaml_loader
+from umami.train_tools.NN_tools import get_class_label_ids
 
 
 class Configuration(object):
@@ -58,3 +59,8 @@ class Configuration(object):
                 raise KeyError(
                     f"You need to specify {item} in your" " config file!"
                 )
+
+        # Define a security to check if label_value is used twice
+        class_ids = get_class_label_ids(self.NN_structure["class_labels"])
+        if len(class_ids) != len(set(class_ids)):
+            raise ValueError("label_value is used twice in the used classes!")

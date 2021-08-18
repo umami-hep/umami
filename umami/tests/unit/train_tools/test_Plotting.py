@@ -28,6 +28,8 @@ class GetRejection_TestCase(unittest.TestCase):
             os.path.dirname(__file__), "plots/"
         )
         list_of_keys = [
+            "cjets_rej",
+            "ujets_rej",
             "epoch",
             "b_rej",
             "c_rej",
@@ -64,19 +66,21 @@ class GetRejection_TestCase(unittest.TestCase):
                 [np.arange(0, 10, 1) for x in range(len(list_of_keys))],
             )
         )
+        self.frac_dict = {"cjets": 0.018, "ujets": 0.982}
+        self.class_labels = ["bjets", "cjets", "ujets"]
+        self.main_class = "bjets"
+        self.recomm_rej_dict = {"cjets_rej": 2, "ujets_rej": 1}
+        self.label_extension = "$t\bar{t}$"
 
     def test_PlotRejPerEpoch(self):
-        self.b_rej = 2
-        self.c_rej = 1
-        self.u_rej = 5
-        self.tau_rej = 3
         PlotRejPerEpoch(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotRejPerEpoch.png",
-            b_rej=self.b_rej,
-            c_rej=self.c_rej,
-            u_rej=self.u_rej,
-            tau_rej=self.tau_rej,
+            frac_dict=self.frac_dict,
+            class_labels=self.class_labels,
+            main_class=self.main_class,
+            recomm_rej_dict=self.recomm_rej_dict,
+            label_extension=self.label_extension,
         )
 
         self.assertEqual(
@@ -122,6 +126,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotDiscCutPerEpoch(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpoch.png",
+            frac_class="cjets",
         )
 
         self.assertEqual(

@@ -239,6 +239,7 @@ if __name__ == "__main__":
 
     utt.create_metadata_folder(
         train_config_path=args.config_file,
+        var_dict_path=train_config.var_dict,
         model_name=train_config.model_name,
         preprocess_config_path=train_config.preprocess_config,
         overwrite_config=True if args.overwrite_config else False,
