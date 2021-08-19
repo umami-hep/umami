@@ -10,8 +10,8 @@ from umami.preprocessing_tools import (
     Configuration,
     GetBinaryLabels,
     GetCuts,
-    GetSampleCuts,
     GetNJetsPerIteration,
+    GetSampleCuts,
     GetScales,
     ShuffleDataFrame,
     UnderSampling,
@@ -121,9 +121,7 @@ class UnderSamplingTemplateTestCase(unittest.TestCase):
                 global_config.pTvariable: abs(
                     np.random.normal(180000, 18000, 5000)
                 ),
-                global_config.etavariable: abs(
-                    np.random.normal(1.4, 1, 5000)
-                ),
+                global_config.etavariable: abs(np.random.normal(1.4, 1, 5000)),
             }
         )
         self.df_ujets = pd.DataFrame(
@@ -139,7 +137,8 @@ class UnderSamplingTemplateTestCase(unittest.TestCase):
 
     def test_equal_length(self):
         down_s = UnderSamplingTemplate(
-            self.df_bjets, self.df_cjets, self.df_ujets, count=True)
+            self.df_bjets, self.df_cjets, self.df_ujets, count=True
+        )
         b_indices, c_indices, u_indices, _ = down_s.GetIndices()
         self.assertEqual(len(b_indices), len(c_indices))
         self.assertEqual(len(b_indices), len(u_indices))
@@ -150,7 +149,8 @@ class UnderSamplingTemplateTestCase(unittest.TestCase):
             columns=[global_config.pTvariable, global_config.etavariable],
         )
         down_s = UnderSamplingTemplate(
-            df_zeros, df_zeros, df_zeros, count=True)
+            df_zeros, df_zeros, df_zeros, count=True
+        )
         b_ind, c_ind, u_ind, _ = down_s.GetIndices()
         self.assertEqual(len(b_ind), len(df_zeros))
 
@@ -160,7 +160,8 @@ class UnderSamplingTemplateTestCase(unittest.TestCase):
             columns=[global_config.pTvariable, global_config.etavariable],
         )
         down_s = UnderSamplingTemplate(
-            df_large, df_large, df_large, count=True)
+            df_large, df_large, df_large, count=True
+        )
         b_ind, c_ind, u_ind, _ = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
         self.assertEqual(c_ind.size, 0)
@@ -172,7 +173,8 @@ class UnderSamplingTemplateTestCase(unittest.TestCase):
             columns=[global_config.pTvariable, global_config.etavariable],
         )
         down_s = UnderSamplingTemplate(
-            df_minus_ones, df_minus_ones, df_minus_ones, count=True)
+            df_minus_ones, df_minus_ones, df_minus_ones, count=True
+        )
         b_ind, c_ind, u_ind, _ = down_s.GetIndices()
         self.assertEqual(b_ind.size, 0)
         self.assertEqual(c_ind.size, 0)
@@ -427,16 +429,14 @@ class PreprocessingTestSampleCuts(unittest.TestCase):
                 "eventNumber": [1, 2, 3, 4, 5, 6],
             }
         )
-        self.pass_ttbar = np.array(
-            [0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
-        )
+        self.pass_ttbar = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
 
     def test_cuts_passing_ttbar(self):
         sample = self.config.preparation["samples"]["ttbar"]
         indices_to_remove = GetSampleCuts(
             self.jets.to_records(index=False),
             sample.get("cuts", None),
-            extended_labelling=False
+            extended_labelling=False,
         )
         cut_result = np.ones(len(self.jets))
         np.put(cut_result, indices_to_remove, 0)
@@ -449,7 +449,7 @@ class PreprocessingTestSampleCuts(unittest.TestCase):
         indices_to_remove = GetSampleCuts(
             self.jets.to_records(index=False),
             sample.get("cuts", None),
-            extended_labelling=True
+            extended_labelling=True,
         )
         cut_result = np.ones(len(self.jets))
         np.put(cut_result, indices_to_remove, 0)

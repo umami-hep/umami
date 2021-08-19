@@ -1,7 +1,8 @@
-from distutils.spawn import find_executable
 import os
-import subprocess
 import shlex
+import subprocess
+from distutils.spawn import find_executable
+
 from umami.configuration import logger
 
 
