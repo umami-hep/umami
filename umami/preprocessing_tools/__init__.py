@@ -11,17 +11,17 @@ from umami.preprocessing_tools.Merging import (
 )
 from umami.preprocessing_tools.Preparation import get_jets
 from umami.preprocessing_tools.Resampling import (
+    EnforceFraction,
     Gen_default_dict,
     GetNJetsPerIteration,
     GetScales,
+    RunSampling,
+    RunStatSamples,
     UnderSampling,
     UnderSamplingProp,
     UnderSamplingTemplate,
     Weighting2D,
     dict_in,
-    EnforceFraction,
-    RunStatSamples,
-    RunSampling,
 )
 from umami.preprocessing_tools.utils import (
     GetBinaryLabels,

@@ -1,9 +1,9 @@
 import operator
 import re
+from functools import reduce
 
 import numpy as np
 
-from functools import reduce
 from umami.configuration import global_config, logger
 
 
@@ -20,14 +20,14 @@ def GetSampleCuts(jets, cuts, extended_labelling=False):
     cut_rejections = []
 
     for cut, properties in cuts.items():
-        op = properties['operator']
-        cond = properties['condition']
+        op = properties["operator"]
+        cond = properties["condition"]
         # modulo operation: assume structure mod_[N]_[operator]
         # - [N] denoting "modulo N "
         # - [operator] denoting operator used for comparison to condition
-        if 'mod_' in op:
+        if "mod_" in op:
             try:
-                found = re.search(r'mod_(\d+?)_([=!><]+)', op)
+                found = re.search(r"mod_(\d+?)_([=!><]+)", op)
                 modulo = int(found.group(1))
                 op = found.group(2)
             except AttributeError:
@@ -44,22 +44,50 @@ def GetSampleCuts(jets, cuts, extended_labelling=False):
                     [==, !=, >, <. >=, <=]."
                 )
             cut_rejection = inverted_ops[op]((jets[cut] % modulo), cond)
-        elif cut == 'pt_cut':
+        elif cut == "pt_cut":
             if extended_labelling:
                 cut_rejection = (
-                    ((abs(jets["HadronConeExclExtendedTruthLabelID"]) == 5) | (abs(jets["HadronConeExclExtendedTruthLabelID"]) == 54))
-                    & (inverted_ops[op](jets["GhostBHadronsFinalPt"], float(cond)))
+                    (
+                        (abs(jets["HadronConeExclExtendedTruthLabelID"]) == 5)
+                        | (
+                            abs(jets["HadronConeExclExtendedTruthLabelID"])
+                            == 54
+                        )
+                    )
+                    & (
+                        inverted_ops[op](
+                            jets["GhostBHadronsFinalPt"], float(cond)
+                        )
+                    )
                 ) | (
-                    ((abs(jets["HadronConeExclExtendedTruthLabelID"]) != 5) & (abs(jets["HadronConeExclExtendedTruthLabelID"]) != 54))
-                    & (inverted_ops[op](jets[global_config.pTvariable], float(cond)))
+                    (
+                        (abs(jets["HadronConeExclExtendedTruthLabelID"]) != 5)
+                        & (
+                            abs(jets["HadronConeExclExtendedTruthLabelID"])
+                            != 54
+                        )
+                    )
+                    & (
+                        inverted_ops[op](
+                            jets[global_config.pTvariable], float(cond)
+                        )
+                    )
                 )
             else:
                 cut_rejection = (
                     (abs(jets["HadronConeExclTruthLabelID"]) == 5)
-                    & (inverted_ops[op](jets["GhostBHadronsFinalPt"], float(cond)))
+                    & (
+                        inverted_ops[op](
+                            jets["GhostBHadronsFinalPt"], float(cond)
+                        )
+                    )
                 ) | (
                     (abs(jets["HadronConeExclTruthLabelID"]) != 5)
-                    & (inverted_ops[op](jets[global_config.pTvariable], float(cond)))
+                    & (
+                        inverted_ops[op](
+                            jets[global_config.pTvariable], float(cond)
+                        )
+                    )
                 )
         else:
             if op in ["==", "!=", ">", ">=", "<", "<="]:
@@ -67,9 +95,9 @@ def GetSampleCuts(jets, cuts, extended_labelling=False):
             cut_rejection = inverted_ops[op](jets[cut], cond)
         cut_rejections.append(cut_rejection)
 
-    indices_to_remove = np.where(
-        reduce(operator.or_, cut_rejections, False)
-    )[0]
+    indices_to_remove = np.where(reduce(operator.or_, cut_rejections, False))[
+        0
+    ]
     del cut_rejections
 
     return indices_to_remove
@@ -113,7 +141,10 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
         if config.bhad_pTcut is not None:
             if extended_labelling:
                 indices_to_remove_bjets = np.where(
-                    ((jets["HadronConeExclExtendedTruthLabelID"] == 5) | (jets["HadronConeExclExtendedTruthLabelID"] == 54))
+                    (
+                        (jets["HadronConeExclExtendedTruthLabelID"] == 5)
+                        | (jets["HadronConeExclExtendedTruthLabelID"] == 54)
+                    )
                     & (jets["GhostBHadronsFinalPt"] > config.bhad_pTcut)
                 )[0]
             else:
@@ -126,7 +157,10 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
         if config.pTcut is not None:
             if extended_labelling:
                 indices_to_remove_xjets = np.where(
-                    ((jets["HadronConeExclExtendedTruthLabelID"] != 5) & (jets["HadronConeExclExtendedTruthLabelID"] != 54))
+                    (
+                        (jets["HadronConeExclExtendedTruthLabelID"] != 5)
+                        & (jets["HadronConeExclExtendedTruthLabelID"] != 54)
+                    )
                     & (jets[global_config.pTvariable] > config.pTcut)
                 )[0]
             else:
@@ -142,7 +176,10 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
         if config.bhad_pTcut is not None:
             if extended_labelling:
                 indices_to_remove_bjets = np.where(
-                    ((jets["HadronConeExclExtendedTruthLabelID"] == 5) | (jets["HadronConeExclExtendedTruthLabelID"] == 54))
+                    (
+                        (jets["HadronConeExclExtendedTruthLabelID"] == 5)
+                        | (jets["HadronConeExclExtendedTruthLabelID"] == 54)
+                    )
                     & (jets["GhostBHadronsFinalPt"] < config.bhad_pTcut)
                 )[0]
             else:
@@ -155,7 +192,10 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
         if config.pTcut is not None:
             if extended_labelling:
                 indices_to_remove_xjets = np.where(
-                    ((jets["HadronConeExclExtendedTruthLabelID"] != 5) & (jets["HadronConeExclExtendedTruthLabelID"] != 54))
+                    (
+                        (jets["HadronConeExclExtendedTruthLabelID"] != 5)
+                        & (jets["HadronConeExclExtendedTruthLabelID"] != 54)
+                    )
                     & (jets[global_config.pTvariable] < config.pTcut)
                 )[0]
             else:

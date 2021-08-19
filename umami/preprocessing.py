@@ -445,7 +445,7 @@ def RunUndersampling(args, config):
 
     for x in range(config.iterations):
         logger.info(f"Iteration {x + 1} of {config.iterations}")
-        vec_Z = f_Z["jets"][N_list[x]["nZ"]: N_list[x + 1]["nZ"]]
+        vec_Z = f_Z["jets"][N_list[x]["nZ"] : N_list[x + 1]["nZ"]]
         vec_Z = append_fields(
             vec_Z,
             "category",
@@ -454,7 +454,7 @@ def RunUndersampling(args, config):
             asrecarray=True,
         )
         vec_tt_bjets = f_tt_bjets["jets"][
-            N_list[x]["nbjets"]: N_list[x + 1]["nbjets"]
+            N_list[x]["nbjets"] : N_list[x + 1]["nbjets"]
         ]
         vec_tt_bjets = append_fields(
             vec_tt_bjets,
@@ -464,7 +464,7 @@ def RunUndersampling(args, config):
             asrecarray=True,
         )
         vec_tt_cjets = f_tt_cjets["jets"][
-            N_list[x]["ncjets"]: N_list[x + 1]["ncjets"]
+            N_list[x]["ncjets"] : N_list[x + 1]["ncjets"]
         ]
         vec_tt_cjets = append_fields(
             vec_tt_cjets,
@@ -474,7 +474,7 @@ def RunUndersampling(args, config):
             asrecarray=True,
         )
         vec_tt_ujets = f_tt_ujets["jets"][
-            N_list[x]["nujets"]: N_list[x + 1]["nujets"]
+            N_list[x]["nujets"] : N_list[x + 1]["nujets"]
         ]
         vec_tt_ujets = append_fields(
             vec_tt_ujets,
@@ -485,7 +485,7 @@ def RunUndersampling(args, config):
         )
         if take_taus:
             vec_tt_taujets = f_tt_taujets["jets"][
-                N_list[x]["ntaujets"]: N_list[x + 1]["ntaujets"]
+                N_list[x]["ntaujets"] : N_list[x + 1]["ntaujets"]
             ]
             vec_tt_taujets = append_fields(
                 vec_tt_taujets,
@@ -499,34 +499,35 @@ def RunUndersampling(args, config):
 
         if args.tracks:
             tnp_Zprime = np.asarray(
-                f_Z["tracks"][N_list[x]["nZ"]: N_list[x + 1]["nZ"]]
+                f_Z["tracks"][N_list[x]["nZ"] : N_list[x + 1]["nZ"]]
             )
             tnp_tt_b = np.asarray(
                 f_tt_bjets["tracks"][
-                    N_list[x]["nbjets"]: N_list[x + 1]["nbjets"]
+                    N_list[x]["nbjets"] : N_list[x + 1]["nbjets"]
                 ]
             )
             tnp_tt_c = np.asarray(
                 f_tt_cjets["tracks"][
-                    N_list[x]["ncjets"]: N_list[x + 1]["ncjets"]
+                    N_list[x]["ncjets"] : N_list[x + 1]["ncjets"]
                 ]
             )
             tnp_tt_u = np.asarray(
                 f_tt_ujets["tracks"][
-                    N_list[x]["nujets"]: N_list[x + 1]["nujets"]
+                    N_list[x]["nujets"] : N_list[x + 1]["nujets"]
                 ]
             )
             if take_taus:
                 tnp_tt_tau = np.asarray(
                     f_tt_taujets["tracks"][
-                        N_list[x]["ntaujets"]: N_list[x + 1]["ntaujets"]
+                        N_list[x]["ntaujets"] : N_list[x + 1]["ntaujets"]
                     ]
                 )
 
         logger.info("starting pruning")
         # Print some statistics on the sample formed
         statistics_dict = upt.RunStatSamples(
-            vec_tt_bjets, vec_tt_cjets, vec_tt_ujets, vec_tt_taujets)
+            vec_tt_bjets, vec_tt_cjets, vec_tt_ujets, vec_tt_taujets
+        )
         indices_toremove_Zprime = upt.GetCuts(
             vec_Z, config, "Zprime", extended_labelling
         )
@@ -708,7 +709,7 @@ def RunUndersampling(args, config):
                 global_config.pTvariable: 200,
                 global_config.etavariable: 20,
             },
-            Log=True
+            Log=True,
         )
 
         logger.info("starting undersampling")
@@ -738,7 +739,7 @@ def RunUndersampling(args, config):
             sampling_method,
             take_taus,
             args.tracks,
-            pT_max=config.pT_max
+            pT_max=config.pT_max,
         )
         # Print some statistics on the sample formed
         logger.info("finished undersampling")
@@ -1148,11 +1149,11 @@ def WriteTrainSample(args, config):
                         source["X_trk_train"] = in_file["/trks"][:1]
                     upt.create_datasets(output, source, size)
 
-                output["X_train"][ranges[file][0]: ranges[file][1]] = jets[:]
-                output["Y_train"][ranges[file][0]: ranges[file][1]] = labels[
+                output["X_train"][ranges[file][0] : ranges[file][1]] = jets[:]
+                output["Y_train"][ranges[file][0] : ranges[file][1]] = labels[
                     :
                 ]
-                output["weight"][ranges[file][0]: ranges[file][1]] = weights[
+                output["weight"][ranges[file][0] : ranges[file][1]] = weights[
                     :
                 ]
 
@@ -1162,7 +1163,7 @@ def WriteTrainSample(args, config):
                     np.random.seed(42)
                     np.random.shuffle(trks)
                     output["X_trk_train"][
-                        ranges[file][0]: ranges[file][1]
+                        ranges[file][0] : ranges[file][1]
                     ] = trks
 
 
