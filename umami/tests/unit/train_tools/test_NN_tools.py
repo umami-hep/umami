@@ -8,26 +8,53 @@ import numpy as np
 
 from umami.tools import replaceLineInFile
 from umami.train_tools.Configuration import Configuration
-from umami.train_tools.NN_tools import (  # MyCallback,; MyCallbackUmami,
+from umami.train_tools.NN_tools import (
     CalcDiscValues,
     GetRejection,
     GetTestFile,
     GetTestSample,
     GetTestSampleTrks,
-    MyCallbackDips,
+    MyCallback,
+    MyCallbackUmami,
     create_metadata_folder,
     get_class_label_ids,
     get_class_label_variables,
+    get_class_prob_var_names,
     get_jet_feature_indices,
     get_parameters_from_validation_dict_name,
     get_validation_dict_name,
-    load_validation_data,
+    load_validation_data_dips,
+    load_validation_data_umami,
+    setup_output_directory,
 )
+
+
+class setup_output_directory_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_test_dir = f"{self.tmp_dir.name}"
+
+    def test_setup_output_directory(self):
+        # Create file inside the test dir
+        run(["touch", f"{self.tmp_test_dir}/" + "model.h5"])
+
+        # Run test function
+        setup_output_directory(f"{self.tmp_test_dir}")
+
+        self.assertFalse(os.path.isfile(f"{self.tmp_test_dir}/" + "model.h5"))
+
+    def test_setup_output_directory_clean(self):
+        run(["rm", "-rfv", f"{self.tmp_test_dir}"])
+        setup_output_directory(f"{self.tmp_test_dir}")
+
+        self.assertTrue(os.path.isdir(f"{self.tmp_test_dir}"))
 
 
 class get_class_TestCase(unittest.TestCase):
     def setUp(self):
         self.class_labels_3 = ["bjets", "cjets", "ujets"]
+        self.tagger_prob = "rnnip"
+        self.class_prob_names_3 = ["rnnip_pb", "rnnip_pc", "rnnip_pu"]
         self.class_id_3 = [5, 4, 0]
         self.label_var_list_3 = [
             "HadronConeExclTruthLabelID",
@@ -36,6 +63,12 @@ class get_class_TestCase(unittest.TestCase):
         ]
         self.flatten_class_labels_3 = ["bjets", "cjets", "ujets"]
         self.class_labels_4 = ["bjets", "cjets", "ujets", "singlebjets"]
+        self.class_prob_names_4 = [
+            "rnnip_pb",
+            "rnnip_pc",
+            "rnnip_pu",
+            "rnnip_pb",
+        ]
         self.class_id_4 = [5, 4, 0, 5, 54]
         self.label_var_list_4 = [
             "HadronConeExclTruthLabelID",
@@ -79,6 +112,22 @@ class get_class_TestCase(unittest.TestCase):
         self.assertEqual(label_var_list_4, self.label_var_list_4)
 
         self.assertEqual(flatten_class_labels_4, self.flatten_class_labels_4)
+
+    def test_get_class_prob_var_names_3_classes(self):
+        class_prob_names = get_class_prob_var_names(
+            tagger_name=self.tagger_prob,
+            class_labels=self.class_labels_3,
+        )
+
+        self.assertEqual(class_prob_names, self.class_prob_names_3)
+
+    def test_get_class_prob_var_names_4_classes(self):
+        class_prob_names = get_class_prob_var_names(
+            tagger_name=self.tagger_prob,
+            class_labels=self.class_labels_4,
+        )
+
+        self.assertEqual(class_prob_names, self.class_prob_names_4)
 
 
 class CalcDiscValues_TestCase(unittest.TestCase):
@@ -338,62 +387,32 @@ class Configuration_TestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             config.GetConfiguration()
 
+    def test_double_defined_b_jets(self):
+        config = Configuration(self.config_file)
+        config.NN_structure["class_labels"] = [
+            "bjets",
+            "bbjets",
+            "cjets",
+            "ujets",
+        ]
 
-# class MyCallback_TestCase(unittest.TestCase):
-#     """
-#     Test the Callback implementation for DL1
-#     """
+        with self.assertRaises(ValueError):
+            config.GetConfiguration()
 
-#     def setUp(self):
-#         self.test_dir = tempfile.TemporaryDirectory()
-#         self.val_data_dict = {
-#             "X_valid": np.random.random((10000, 41)),
-#             "X_valid_add": np.random.random((10000, 41)),
-#             "Y_valid": np.random.random((10000, 3)),
-#             "Y_valid_add": np.random.random((10000, 3)),
-#         }
+    def test_double_defined_c_jets(self):
+        config = Configuration(self.config_file)
+        config.NN_structure["class_labels"] = [
+            "bjets",
+            "ccjets",
+            "cjets",
+            "ujets",
+        ]
 
-#         self.Eval_parameters = {
-#             "n_jets": 3e5,
-#             "fc_value": 0.018,
-#             "fb_value": 0.2,
-#             "ftauforc_value": None,
-#             "ftauforb_value": None,
-#             "WP_b": 0.77,
-#             "WP_c": 0.4,
-#             "acc_ymin": 0.59,
-#             "acc_ymax": 1.0,
-#             "add_variables_eval": ["actualInteractionsPerCrossing"],
-#             "UseAtlasTag": True,
-#             "AtlasTag": "Internal Simulation",
-#             "SecondTag": "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-#             "plot_datatype": "pdf",
-#         }
-
-#     def test_MyCallback_no_taus(self):
-#         MyCallback(
-#             model_name=f"{self.test_dir.name}",
-#             X_valid=self.val_data_dict["X_valid"],
-#             Y_valid=self.val_data_dict["Y_valid"],
-#             X_valid_add=self.val_data_dict["X_valid_add"],
-#             Y_valid_add=self.val_data_dict["Y_valid_add"],
-#             include_taus=False,
-#             eval_config=self.Eval_parameters,
-#         )
-
-#     def test_MyCallback_with_taus(self):
-#         MyCallback(
-#             model_name=f"{self.test_dir.name}",
-#             X_valid=self.val_data_dict["X_valid"],
-#             Y_valid=self.val_data_dict["Y_valid"],
-#             X_valid_add=self.val_data_dict["X_valid_add"],
-#             Y_valid_add=self.val_data_dict["Y_valid_add"],
-#             include_taus=True,
-#             eval_config=self.Eval_parameters,
-#         )
+        with self.assertRaises(ValueError):
+            config.GetConfiguration()
 
 
-class MyCallbackDips_TestCase(unittest.TestCase):
+class MyCallback_TestCase(unittest.TestCase):
     """
     Test the Callback implementation for DIPS
     """
@@ -419,8 +438,8 @@ class MyCallbackDips_TestCase(unittest.TestCase):
             "ujets": 0.982,
         }
 
-    def test_MyCallbackDips(self):
-        MyCallbackDips(
+    def test_MyCallback(self):
+        MyCallback(
             model_name=f"{self.test_dir.name}",
             class_labels=self.class_labels,
             main_class=self.main_class,
@@ -435,43 +454,51 @@ class MyCallbackDips_TestCase(unittest.TestCase):
         )
 
 
-# class MyCallbackUmami_TestCase(unittest.TestCase):
-#     """
-#     Test the Callback implementation for UMAMI
-#     """
+class MyCallbackUmami_TestCase(unittest.TestCase):
+    """
+    Test the Callback implementation for UMAMI
+    """
 
-#     def setUp(self):
-#         self.test_dir = tempfile.TemporaryDirectory()
-#         self.nFeatures_Jets = 41
-#         self.nTrks = 40
-#         self.nFeatures_Trks = 15
-#         self.nClasses = 3
-#         self.val_data_dict = {
-#             "X_valid": np.random.random((10000, self.nFeatures_Jets)),
-#             "X_valid_add": np.random.random((10000, self.nFeatures_Jets)),
-#             "X_valid_trk": np.random.random(
-#                 (10000, self.nTrks, self.nFeatures_Trks)
-#             ),
-#             "X_valid_trk_add": np.random.random(
-#                 (10000, self.nTrks, self.nFeatures_Trks)
-#             ),
-#             "Y_valid": np.random.random((10000, self.nClasses)),
-#             "Y_valid_add": np.random.random((10000, self.nClasses)),
-#         }
+    def setUp(self):
+        self.test_dir = tempfile.TemporaryDirectory()
+        self.class_labels = ["bjets", "cjets", "ujets"]
+        self.main_class = "bjets"
+        self.nFeatures_Jets = 41
+        self.nTrks = 40
+        self.nFeatures_Trks = 15
+        self.nClasses = len(self.class_labels)
+        self.target_beff = 0.77
+        self.val_data_dict = {
+            "X_valid": np.random.random((10000, self.nFeatures_Jets)),
+            "X_valid_add": np.random.random((10000, self.nFeatures_Jets)),
+            "X_valid_trk": np.random.random(
+                (10000, self.nTrks, self.nFeatures_Trks)
+            ),
+            "X_valid_trk_add": np.random.random(
+                (10000, self.nTrks, self.nFeatures_Trks)
+            ),
+            "Y_valid": np.random.random((10000, self.nClasses)),
+            "Y_valid_add": np.random.random((10000, self.nClasses)),
+        }
+        self.frac_dict = {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        }
 
-#     def test_MyCallbackUmami(self):
-#         MyCallbackUmami(
-#             model_name=f"{self.test_dir.name}",
-#             val_data_dict=self.val_data_dict,
-#             target_beff=0.77,
-#             charm_fraction=0.018,
-#             dict_file_name=get_validation_dict_name(
-#                 WP_b=0.77,
-#                 fc_value=0.018,
-#                 n_jets=300,
-#                 dir_name=f"{self.test_dir.name}",
-#             ),
-#         )
+    def test_MyCallbackUmami(self):
+        MyCallbackUmami(
+            model_name=f"{self.test_dir.name}",
+            class_labels=self.class_labels,
+            main_class=self.main_class,
+            val_data_dict=self.val_data_dict,
+            target_beff=self.target_beff,
+            frac_dict=self.frac_dict,
+            dict_file_name=get_validation_dict_name(
+                WP_b=self.target_beff,
+                n_jets=300,
+                dir_name=f"{self.test_dir.name}",
+            ),
+        )
 
 
 class get_jet_feature_indices_TestCase(unittest.TestCase):
@@ -629,8 +656,8 @@ class GetSamples_TestCase(unittest.TestCase):
         )
         self.assertEqual(Y_valid.shape, (len(Y_valid), 3))
 
-    def test_load_validation_data(self):
-        val_data_dict = load_validation_data(self, self, self.nJets)
+    def test_load_validation_data_umami(self):
+        val_data_dict = load_validation_data_umami(self, self, self.nJets)
 
         self.assertEqual(
             list(val_data_dict.keys()),
@@ -641,5 +668,18 @@ class GetSamples_TestCase(unittest.TestCase):
                 "X_valid_add",
                 "Y_valid_add",
                 "X_valid_trk_add",
+            ],
+        )
+
+    def test_load_validation_data_dips(self):
+        val_data_dict = load_validation_data_dips(self, self, self.nJets)
+
+        self.assertEqual(
+            list(val_data_dict.keys()),
+            [
+                "X_valid",
+                "Y_valid",
+                "X_valid_add",
+                "Y_valid_add",
             ],
         )

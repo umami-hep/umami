@@ -17,6 +17,86 @@ from umami.train_tools import (
 )
 
 
+def CompTaggerRejectionDict(
+    file,
+    tagger_comp_name: str,
+    tagger_comp_var: list,
+    recommended_frac_dict: dict,
+    WP: float,
+    class_labels: list,
+    main_class: str,
+):
+    """
+    Load the comparison tagger probability variables from the validation
+    file and calculate the rejections.
+
+    Input:
+    - file: Filepath to validation file.
+    - tagger_comp_name: Name of the comparison tagger.
+    - tagger_comp_var: List of the comparison tagger probability variable names.
+    - recommended_frac_dict: Dict with the fractions.
+    - class_labels: List with the used class_labels.
+    - main_class: The main discriminant class. For b-tagging obviously "bjets"
+
+    Output:
+    - Dict with the rejections for against the main class for all given flavours.
+    """
+
+    # Get class_labels variables
+    class_ids = get_class_label_ids(class_labels)
+    class_label_vars, flatten_class_labels = get_class_label_variables(
+        class_labels
+    )
+
+    # Get the tagger variables and the class label variables
+    variables = list(dict.fromkeys(class_label_vars)) + tagger_comp_var
+
+    # Load the Jets
+    df = pd.DataFrame(h5py.File(file, "r")["/jets"][:][variables])
+
+    # Init new column for string labels
+    df["Umami_string_labels"] = np.zeros_like(df[class_label_vars[0]])
+    df["Umami_labels"] = np.zeros_like(df[class_label_vars[0]])
+
+    # Change type of column to string
+    df = df.astype({"Umami_string_labels": "str"})
+
+    # Iterate over the classes and add the correct labels to Umami columns
+    for class_id, class_label_var, class_label in zip(
+        class_ids, class_label_vars, flatten_class_labels
+    ):
+        indices_tochange = np.where(df[class_label_var].values == class_id)
+
+        # Add a string description which this class is
+        df["Umami_string_labels"].values[indices_tochange] = class_label
+
+        # Add the right column label to class
+        df["Umami_labels"].values[indices_tochange] = class_labels.index(
+            class_label
+        )
+
+    # Get the indices of the jets that are not used
+    indices_toremove = np.where(df["Umami_string_labels"] == "0")[0]
+
+    # Remove all unused jets
+    df = df.drop(indices_toremove)
+
+    # Binarize the labels
+    y_true = GetBinaryLabels(df["Umami_labels"].values)
+
+    # Calculate rejections
+    recomm_rej_dict, _ = GetRejection(
+        y_pred=df[tagger_comp_var].values,
+        y_true=y_true,
+        class_labels=class_labels,
+        main_class=main_class,
+        frac_dict=recommended_frac_dict,
+        target_eff=WP,
+    )
+
+    return recomm_rej_dict
+
+
 def PlotDiscCutPerEpoch(
     df_results,
     plot_name,
@@ -24,14 +104,41 @@ def PlotDiscCutPerEpoch(
     target_beff=0.77,
     frac: float = 0.018,
     UseAtlasTag=True,
+    ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
     yAxisAtlasTag=0.9,
     yAxisIncrease=1.3,
     ncol=1,
-    plot_datatype="",
+    plot_datatype="pdf",
 ):
-    applyATLASstyle(mtp)
+    """
+    Plot the discriminant cut value for a specific working point
+    over all epochs.
+
+    Input:
+    - df_results: Dict with the epochs and disc cuts.
+    - plot_name: Path where the plots is saved + plot name.
+    - frac_class: Define which fraction is shown in ATLAS Tag.
+    - target_beff: Working Point to use.
+    - frac: Fraction value for ATLAS Tag.
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - ncol: Number of columns in the legend.
+    - plot_datatype: Datatype of the plot.
+
+    Output:
+    - Discriminant Cut per epoch plotted.
+    """
+
+    # Apply ATLAS style
+    if ApplyATLASStyle is True:
+        applyATLASstyle(mtp)
+
     plt.plot(
         df_results["epoch"],
         df_results["disc_cut"],
@@ -63,7 +170,7 @@ def PlotDiscCutPerEpoch(
     plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
     plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
     plt.ylabel(r"$b$-Tagging discriminant Cut Value")
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
 
@@ -71,17 +178,45 @@ def PlotDiscCutPerEpoch(
 def PlotDiscCutPerEpochUmami(
     df_results,
     plot_name,
+    frac_class: str,
     target_beff=0.77,
-    fc_value=0.018,
+    frac: float = 0.018,
     UseAtlasTag=True,
+    ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
     yAxisAtlasTag=0.9,
     yAxisIncrease=1.3,
     ncol=1,
-    plot_datatype="",
+    plot_datatype="pdf",
 ):
-    applyATLASstyle(mtp)
+    """
+    Plot the discriminant cut value for a specific working point
+    over all epochs.
+
+    Input:
+    - df_results: Dict with the epochs and disc cuts.
+    - plot_name: Path where the plots is saved + plot name.
+    - frac_class: Define which fraction is shown in ATLAS Tag.
+    - target_beff: Working Point to use.
+    - frac: Fraction value for ATLAS Tag.
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - ncol: Number of columns in the legend.
+    - plot_datatype: Datatype of the plot.
+
+    Output:
+    - Discriminant Cut per epoch plotted. DIPS and UMAMI both shown.
+    """
+
+    # Apply ATLAS style
+    if ApplyATLASStyle is True:
+        applyATLASstyle(mtp)
+
     plt.plot(
         df_results["epoch"],
         df_results["disc_cut_dips"],
@@ -106,8 +241,8 @@ def PlotDiscCutPerEpochUmami(
     if UseAtlasTag is True:
         SecondTag = (
             SecondTag
-            + "\nfc={}".format(fc_value)
-            + ", WP={:02d}%".format(int(target_beff * 100))
+            + f"\n{frac_class} fraction = {frac}"
+            + f"\nWP={int(target_beff * 100):02d}%"
         )
 
         makeATLAStag(
@@ -123,29 +258,62 @@ def PlotDiscCutPerEpochUmami(
     plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
     plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
     plt.ylabel(r"$b$-Tagging discriminant Cut Value")
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
 
 
 def PlotRejPerEpoch(
-    df_results,
-    plot_name: str,
+    df_results: dict,
     frac_dict: dict,
+    frac_class: str,
+    comp_tagger_rej_dict: dict,
+    comp_tagger_frac_dict: dict,
+    plot_name: str,
     class_labels: list,
     main_class: str,
-    recomm_rej_dict: dict,
     label_extension: str,
-    comp_tagger_name="DL1r",
+    rej_string: str,
     target_beff=0.77,
     UseAtlasTag=True,
+    ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
     yAxisAtlasTag=0.9,
     yAxisIncrease=1.3,
     ncol=1,
+    plot_datatype="pdf",
 ):
-    applyATLASstyle(mtp)
+    """
+    Plotting the Rejections per Epoch for the trained tagger and
+    the provided comparison taggers.
+
+    Input:
+    - df_results: Dict with the rejections of the trained tagger.
+    - frac_dict: Dict with the fractions of the trained tagger.
+    - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
+    - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
+    - plot_name: Path where the plots is saved.
+    - class_labels: A list of the class_labels which are used
+    - main_class: The main discriminant class. For b-tagging obviously "bjets"
+    - label_extension: Extension of the legend label giving the process type.
+    - rej_string: String that is added after the class for the key.
+    - target_beff: Target Working point.
+    - UseAtlasTag: Bool to decide if you want the ATLAS tag.
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - ncol: Number of columns in the legend.
+    - plot_datatype: Datatype of the plot.
+
+    Output:
+    - Plot of the rejections of the taggers per epoch.
+    """
+
+    # Apply ATLAS style
+    if ApplyATLASStyle is True:
+        applyATLASstyle(mtp)
 
     # Get a list of the background classes
     class_labels_wo_main = class_labels
@@ -166,7 +334,7 @@ def PlotRejPerEpoch(
             # Plot rejection
             axes[counter].plot(
                 df_results["epoch"],
-                df_results[f"{iter_class}_rej"],
+                df_results[f"{iter_class}_{rej_string}"],
                 ":",
                 color=flav_cat[iter_class]["colour"],
                 label=f"{flav_cat[iter_class]['legend_label']} - {label_extension}",
@@ -176,26 +344,38 @@ def PlotRejPerEpoch(
                 color=flav_cat[iter_class]["colour"],
             )
 
-            if (
-                recomm_rej_dict
-                and recomm_rej_dict[f"{iter_class}_rej"] is not None
-                and comp_tagger_name is not None
-            ):
-                axes[counter].axhline(
-                    recomm_rej_dict[f"{iter_class}_rej"],
-                    0,
-                    df_results["epoch"].max(),
-                    color=flav_cat[iter_class]["colour"],
-                    lw=1.0,
-                    alpha=1,
-                    linestyle=(0, (5, 10)),
-                    label=f"Recomm. {comp_tagger_name}",
+            if comp_tagger_rej_dict is None:
+                logger.info(
+                    "No comparison tagger defined. Plotting only trained tagger rejections!"
                 )
 
+            else:
+                for comp_tagger in comp_tagger_rej_dict:
+                    try:
+                        axes[counter].axhline(
+                            comp_tagger_rej_dict[comp_tagger][
+                                f"{iter_class}_rej"
+                            ],
+                            0,
+                            df_results["epoch"].max(),
+                            color=flav_cat[iter_class]["colour"],
+                            lw=1.0,
+                            alpha=1,
+                            linestyle=(0, (5, 10)),
+                            label=f"Recomm. {comp_tagger}",
+                        )
+
+                    except KeyError:
+                        logger.info(
+                            f"{iter_class} rejection for {comp_tagger} not in dict! Skipping ..."
+                        )
+
+            # Set color of axis
             axes[counter].tick_params(
                 axis="y", labelcolor=flav_cat[iter_class]["colour"]
             )
 
+        # Set the x axis locator
         ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
 
         # Increase y limit for ATLAS Logo
@@ -212,27 +392,37 @@ def PlotRejPerEpoch(
             # Plot rejection
             ax1.plot(
                 df_results["epoch"],
-                df_results[f"{iter_class}_rej"],
+                df_results[f"{iter_class}_{rej_string}"],
                 fmt=":",
                 color=flav_cat[iter_class]["colour"],
                 label=flav_cat[iter_class]["legend_label"],
             )
 
-            if (
-                recomm_rej_dict is not None
-                and f"{iter_class}_rej" in recomm_rej_dict
-                and recomm_rej_dict[f"{iter_class}_rej"] is not None
-            ):
-                ax1.axhline(
-                    recomm_rej_dict[f"{iter_class}_rej"],
-                    0,
-                    df_results["epoch"].max(),
-                    color=flav_cat[iter_class]["colour"],
-                    lw=1.0,
-                    alpha=1,
-                    linestyle=(0, (5, 10)),
-                    label=f"Recomm. {comp_tagger_name} - {flav_cat[iter_class]['legend_label']}",
+            if comp_tagger_rej_dict is None:
+                logger.info(
+                    "No comparison tagger defined. Plotting only trained tagger rejections!"
                 )
+
+            else:
+                for comp_tagger in comp_tagger_rej_dict:
+                    try:
+                        ax1.axhline(
+                            comp_tagger_rej_dict[comp_tagger][
+                                f"{iter_class}_rej"
+                            ],
+                            0,
+                            df_results["epoch"].max(),
+                            color=flav_cat[iter_class]["colour"],
+                            lw=1.0,
+                            alpha=1,
+                            linestyle=(0, (5, 10)),
+                            label=f"Recomm. {comp_tagger} - {flav_cat[iter_class]['legend_label']}",
+                        )
+
+                    except KeyError:
+                        logger.info(
+                            f"{iter_class} rejection for {comp_tagger} not in dict! Skipping ..."
+                        )
 
         # Increase y limit for ATLAS Logo
         ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
@@ -240,11 +430,12 @@ def PlotRejPerEpoch(
     if UseAtlasTag is True:
         SecondTag = (
             SecondTag
-            + "\n{} fraction = {}".format(
-                class_labels_wo_main[0], frac_dict[class_labels_wo_main[0]]
-            )
-            + "\nWP={:02d}%".format(int(target_beff * 100))
+            + f"\n{frac_class} fraction = {frac_dict[frac_class]}"
+            + f"\nWP={int(target_beff * 100):02d}%"
         )
+
+        # Increase y limit for ATLAS Logo
+        ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
 
         makeATLAStag(
             ax=plt.gca(),
@@ -255,7 +446,7 @@ def PlotRejPerEpoch(
         )
 
     fig.legend(ncol=ncol, loc=legend_loc)
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
 
@@ -264,12 +455,39 @@ def PlotLosses(
     df_results,
     plot_name,
     UseAtlasTag=True,
+    ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease=1.2,
     yAxisAtlasTag=0.9,
-    plot_datatype="",
+    plot_datatype="pdf",
+    ymin=None,
+    ymax=None,
 ):
-    applyATLASstyle(mtp)
+    """
+    Plot the training loss and the validation losses per epoch.
+
+    Input:
+    - df_results: Dict with the epochs and losses.
+    - plot_name: Path where the plots is saved + plot name.
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - plot_datatype: Datatype of the plot.
+    - ymin: Manually set ymin. Overwrites yAxisIncrease.
+    - ymax: Manually set ymax. Overwrites yAxisIncrease.
+
+    Output:
+    - Plot with the training and validation losses per epoch.
+    """
+
+    # Apply ATLAS style
+    if ApplyATLASStyle is True:
+        applyATLASstyle(mtp)
+
     plt.plot(
         df_results["epoch"],
         df_results["loss"],
@@ -296,11 +514,19 @@ def PlotLosses(
         )
 
     plt.legend(loc="upper right")
-    ymin, ymax = plt.ylim()
-    plt.ylim(ymin=ymin, ymax=1.2 * ymax)
+    old_ymin, old_ymax = plt.ylim()
+    if ymin is not None:
+        plt.ylim(ymin=ymin, ymax=old_ymax)
+
+    if ymax is not None:
+        plt.ylim(ymin=old_ymin, ymax=ymax)
+
+    if ymin is None and ymax is None:
+        plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
+
     plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
     plt.ylabel("Loss")
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
 
@@ -309,14 +535,39 @@ def PlotAccuracies(
     df_results,
     plot_name,
     UseAtlasTag=True,
+    ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease=1.2,
     yAxisAtlasTag=0.9,
-    plot_datatype="",
+    plot_datatype="pdf",
     ymin=None,
     ymax=None,
 ):
-    applyATLASstyle(mtp)
+    """
+    Plot the training and validation accuracies per epoch.
+
+    Input:
+    - df_results: Dict with the epochs and accuracies.
+    - plot_name: Path where the plots is saved + plot name.
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - plot_datatype: Datatype of the plot.
+    - ymin: Manually set ymin. Overwrites yAxisIncrease.
+    - ymax: Manually set ymax. Overwrites yAxisIncrease.
+
+    Output:
+    - Plot with the training and validation accuracies per epoch.
+    """
+
+    # Apply ATLAS style
+    if ApplyATLASStyle is True:
+        applyATLASstyle(mtp)
+
     plt.plot(
         df_results["epoch"],
         df_results["acc"],
@@ -343,17 +594,19 @@ def PlotAccuracies(
         )
 
     plt.legend(loc="upper right")
-    plot_ymin, plot_ymax = plt.ylim()
+    old_ymin, old_ymax = plt.ylim()
     if ymin is not None:
-        plot_ymin = ymin
+        plt.ylim(ymin=ymin, ymax=old_ymax)
+
     if ymax is not None:
-        plot_ymax = ymax
-    else:
-        plot_ymax = 1.2 * plot_ymax
-    plt.ylim(ymin=plot_ymin, ymax=plot_ymax)
+        plt.ylim(ymin=old_ymin, ymax=ymax)
+
+    if ymin is None and ymax is None:
+        plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
+
     plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
     plt.ylabel("Accuracy")
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
 
@@ -362,11 +615,41 @@ def PlotLossesUmami(
     df_results,
     plot_name,
     UseAtlasTag=True,
+    ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    plot_datatype="",
+    yAxisIncrease=1.4,
+    yAxisAtlasTag=0.9,
+    plot_datatype="pdf",
+    ymin=None,
+    ymax=None,
 ):
-    applyATLASstyle(mtp)
+    """
+    Plot the training loss and the validation losses per epoch for
+    UMAMI model (with DIPS and UMAMI losses).
+
+    Input:
+    - df_results: Dict with the epochs and losses.
+    - plot_name: Path where the plots is saved + plot name.
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - plot_datatype: Datatype of the plot.
+    - ymin: Manually set ymin. Overwrites yAxisIncrease.
+    - ymax: Manually set ymax. Overwrites yAxisIncrease.
+
+    Output:
+    - Plot with the training and validation losses per epoch for
+      UMAMI model (with DIPS and UMAMI losses).
+    """
+
+    # Apply ATLAS style
+    if ApplyATLASStyle is True:
+        applyATLASstyle(mtp)
+
     plt.plot(
         df_results["epoch"],
         df_results["umami_loss"],
@@ -398,18 +681,29 @@ def PlotLossesUmami(
         label=r"val loss DIPS - ext. $Z'$ sample",
     )
 
+    plt.legend(loc="upper right")
+    old_ymin, old_ymax = plt.ylim()
+    if ymin is not None:
+        plt.ylim(ymin=ymin, ymax=old_ymax)
+
+    if ymax is not None:
+        plt.ylim(ymin=old_ymin, ymax=ymax)
+
+    if ymin is None and ymax is None:
+        plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
+
     if UseAtlasTag is True:
         makeATLAStag(
             ax=plt.gca(),
             fig=plt.gcf(),
             first_tag=AtlasTag,
             second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
         )
 
-    plt.legend()
     plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
     plt.ylabel("Loss")
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
 
@@ -418,13 +712,41 @@ def PlotAccuraciesUmami(
     df_results,
     plot_name,
     UseAtlasTag=True,
+    ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
     SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    plot_datatype="",
+    yAxisIncrease=1.4,
+    yAxisAtlasTag=0.9,
+    plot_datatype="pdf",
     ymin=None,
     ymax=None,
 ):
-    applyATLASstyle(mtp)
+    """
+    Plot the training and validation accuracies per epoch for
+    UMAMI model (with DIPS and UMAMI accuracies).
+
+    Input:
+    - df_results: Dict with the epochs and accuracies.
+    - plot_name: Path where the plots is saved + plot name.
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - plot_datatype: Datatype of the plot.
+    - ymin: Manually set ymin. Overwrites yAxisIncrease.
+    - ymax: Manually set ymax. Overwrites yAxisIncrease.
+
+    Output:
+    - Plot with the training and validation accuracies per epoch for
+      UMAMI model (with DIPS and UMAMI accuracies).
+    """
+
+    # Apply ATLAS style
+    if ApplyATLASStyle is True:
+        applyATLASstyle(mtp)
+
     plt.plot(
         df_results["epoch"],
         df_results["umami_acc"],
@@ -456,725 +778,214 @@ def PlotAccuraciesUmami(
         label=r"val acc DIPS - ext. $Z'$ sample",
     )
 
+    plt.legend(loc="upper right")
+    old_ymin, old_ymax = plt.ylim()
+    if ymin is not None:
+        plt.ylim(ymin=ymin, ymax=old_ymax)
+
+    if ymax is not None:
+        plt.ylim(ymin=old_ymin, ymax=ymax)
+
+    if ymin is None and ymax is None:
+        plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
+
     if UseAtlasTag is True:
         makeATLAStag(
             ax=plt.gca(),
             fig=plt.gcf(),
             first_tag=AtlasTag,
             second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
         )
 
-    plt.legend()
     plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
     plt.ylabel("Accuracy")
-    plot_ymin, plot_ymax = plt.ylim()
-    if ymin is not None:
-        plot_ymin = ymin
-    if ymax is not None:
-        plot_ymax = ymax
-    else:
-        plot_ymax = 1.2 * plot_ymax
-    plt.ylim(ymin=plot_ymin, ymax=plot_ymax)
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
 
 
 def RunPerformanceCheck(
     train_config,
-    compare_tagger=True,
-    tagger_comp_var=["DL1r_pu", "DL1r_pc", "DL1r_pb"],
-    comp_tagger_name="DL1r",
-    WP_b=0.77,
-    fc=0.018,
-    fb=0.2,
-    dict_file_name=None,
+    tagger: str,
+    tagger_comp_vars: dict = None,
+    dict_file_name: str = None,
+    WP: float = None,
 ):
-    logger.info("Running performance check.")
-    Eval_parameters = train_config.Eval_parameters_validation
-    plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
-    bool_use_taus = train_config.bool_use_taus
-    recommended_fc_values = {"DL1r": 0.018, "RNNIP": 0.08}
-    recommended_fb_values = {"DL1r": 0.2, "RNNIP": 0.08}
+    """
+    Loading the validation metrics from the trained model and calculate
+    the metrics for the comparison taggers and plot them.
 
-    if (
-        "fc_value" in Eval_parameters
-        and Eval_parameters["fc_value"] is not None
-    ):
-        fc = Eval_parameters["fc_value"]
-    if (
-        "fb_value" in Eval_parameters
-        and Eval_parameters["fb_value"] is not None
-    ):
-        fb = Eval_parameters["fb_value"]
-    if bool_use_taus:
-        if "ftauforb_value" in Eval_parameters:
-            ftauforb = Eval_parameters["ftauforb_value"]
-        else:
-            ftauforb = None
-        if "ftauforc_value" in Eval_parameters:
-            ftauforc = Eval_parameters["ftauforc_value"]
-        else:
-            ftauforc = None
-    else:
-        ftauforc = None
-        ftauforb = None
+    Input:
+    - train_config: Loaded train_config object.
+    - tagger: String name of the tagger used.
+    - tagger_comp_vars: Dict of the tagger probability variables as lists.
+    - dict_file_name: Path to the json file with the per epoch metrics of the
+                      trained tagger.
 
-    c_rej, u_rej = None, None
-    if bool_use_taus:
-        tau_rej = None
+    Output:
+    - Validation metrics plots
+    """
 
-    if compare_tagger:
-        variables = ["HadronConeExclTruthLabelID"]
-        variables += tagger_comp_var[:]
-        df = pd.DataFrame(
-            h5py.File(train_config.validation_file, "r")["/jets"][:][variables]
-        )
-        if bool_use_taus:
-            df.query(
-                "HadronConeExclTruthLabelID in [0, 4, 5, 15]", inplace=True
-            )
-            df.replace(
-                {"HadronConeExclTruthLabelID": {4: 1, 5: 2, 15: 3}},
-                inplace=True,
-            )
-
-            tagger_comp_var.append("DL1r_ptau")
-            df["DL1r_ptau"] = 0
-        else:
-            df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-            df.replace(
-                {"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True
-            )
-
-        y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-        if bool_use_taus:
-            c_rej, u_rej, tau_rej = GetRejection(
-                df[tagger_comp_var[:]].values,
-                y_true,
-                WP_b,
-                frac=recommended_fc_values[comp_tagger_name],
-                use_taus=True,
-            )
-            b_rejC, u_rejC, tau_rejC = GetRejection(
-                df[tagger_comp_var[:]].values,
-                y_true,
-                WP_b,
-                d_type="c",
-                frac=recommended_fb_values[comp_tagger_name],
-                use_taus=True,
-            )
-        else:
-            c_rej, u_rej, _ = GetRejection(
-                df[tagger_comp_var[:]].values,
-                y_true,
-                WP_b,
-                frac=recommended_fc_values[comp_tagger_name],
-            )
-            b_rejC, u_rejC, _ = GetRejection(
-                df[tagger_comp_var[:]].values,
-                y_true,
-                WP_b,
-                d_type="c",
-                frac=recommended_fc_values[comp_tagger_name],
-            )
-            tau_rej = None
-            tau_rejC = None
-
-    df_results = pd.read_json(dict_file_name)
-    plot_dir = f"{train_config.model_name}/plots"
-    logger.info(f"Saving plots to {plot_dir}")
-    os.makedirs(plot_dir, exist_ok=True)
-    if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
-        plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
-        PlotRejPerEpoch(
-            df_results=df_results,
-            plot_name=plot_name,
-            c_rej=c_rej,
-            u_rej=u_rej,
-            tau_rej=tau_rej,
-            labels={
-                "c_rej": r"$c$-rej. - $t\bar{t}$",
-                "u_rej": r"light-rej. - $t\bar{t}$",
-                "tau_rej": r"tau-rej. - $t\bar{t}$",
-            },
-            rej_keys={
-                "c_rej": "c_rej",
-                "u_rej": "u_rej",
-                "tau_rej": "tau_rej",
-            },
-            comp_tagger_name=comp_tagger_name,
-            target_beff=WP_b,
-            fc_value=fc,
-            ftau_value=ftauforb,
-            UseAtlasTag=Eval_parameters["UseAtlasTag"],
-            AtlasTag=Eval_parameters["AtlasTag"],
-            SecondTag=Eval_parameters["SecondTag"],
-        )
-        plot_name = f"{plot_dir}/rej-plot_valC.pdf"
-        PlotRejPerEpoch(
-            df_results,
-            plot_name,
-            b_rej=b_rejC,
-            u_rej=u_rejC,
-            tau_rej=tau_rejC,
-            rej_keys={
-                "b_rej": "b_rejC",
-                "u_rej": "u_rejC",
-                "tau_rej": "tau_rejC",
-            },
-            labels={
-                "b_rej": r"$b$-rej. - $t\bar{t}$",
-                "u_rej": r"light-rej. - $t\bar{t}$",
-                "tau_rej": r"tau-rej. - $t\bar{t}$",
-            },
-            comp_tagger_name=comp_tagger_name,
-            target_beff=WP_b,
-            fb_value=fb,
-            ftau_value=ftauforc,
-            UseAtlasTag=Eval_parameters["UseAtlasTag"],
-            AtlasTag=Eval_parameters["AtlasTag"],
-            SecondTag=Eval_parameters["SecondTag"],
-        )
-
-    if train_config.add_validation_file is not None:
-        c_rej, u_rej = None, None
-        if compare_tagger:
-            variables = ["HadronConeExclTruthLabelID"]
-            variables += tagger_comp_var[:]
-            if bool_use_taus:
-                variables.remove("DL1r_ptau")
-            df = pd.DataFrame(
-                h5py.File(train_config.add_validation_file, "r")["/jets"][:][
-                    variables
-                ]
-            )
-            if bool_use_taus:
-                df.query(
-                    "HadronConeExclTruthLabelID in [0, 4, 5, 15]",
-                    inplace=True,
-                )
-                df.replace(
-                    {"HadronConeExclTruthLabelID": {4: 1, 5: 2, 15: 3}},
-                    inplace=True,
-                )
-                df["DL1r_ptau"] = 0
-            else:
-                df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-                df.replace(
-                    {"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True
-                )
-            y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-            if bool_use_taus:
-                c_rej, u_rej, tau_rej, _ = GetRejection(
-                    df[tagger_comp_var[:]].values,
-                    y_true,
-                    WP_b,
-                    frac=recommended_fc_values[comp_tagger_name],
-                    use_taus=True,
-                )
-                b_rejC, u_rejC, tau_rejC, _ = GetRejection(
-                    df[tagger_comp_var[:]].values,
-                    y_true,
-                    WP_b,
-                    d_type="c",
-                    frac=recommended_fb_values[comp_tagger_name],
-                    use_taus=True,
-                )
-            else:
-                c_rej, u_rej, _ = GetRejection(
-                    df[tagger_comp_var[:]].values,
-                    y_true,
-                    WP_b,
-                    frac=recommended_fc_values[comp_tagger_name],
-                )
-                b_rejC, u_rejC, _ = GetRejection(
-                    df[tagger_comp_var[:]].values,
-                    y_true,
-                    WP_b,
-                    d_type="c",
-                    frac=recommended_fb_values[comp_tagger_name],
-                )
-                tau_rej = None
-                tau_rejC = None
-
-        if comp_tagger_name == "RNNIP" or comp_tagger_name == "DL1r":
-            plot_name = f"{plot_dir}/rej-plot_val_add.{plot_datatype}"
-            PlotRejPerEpoch(
-                df_results,
-                plot_name,
-                c_rej=c_rej,
-                u_rej=u_rej,
-                tau_rej=tau_rej,
-                labels={
-                    "c_rej": r"$c$-rej. - ext. $Z'$",
-                    "u_rej": r"light-rej. - ext. $Z'$",
-                    "tau_rej": r"tau-rej. - $t\bar{t}$",
-                },
-                rej_keys={
-                    "c_rej": "c_rej_add",
-                    "u_rej": "u_rej_add",
-                    "tau_rej": "tau_rej_add",
-                },
-                comp_tagger_name=comp_tagger_name,
-                target_beff=WP_b,
-                fc_value=fc,
-                ftau_value=ftauforb,
-                UseAtlasTag=Eval_parameters["UseAtlasTag"],
-                AtlasTag=Eval_parameters["AtlasTag"],
-                SecondTag=Eval_parameters["SecondTag"],
-            )
-            plot_name = f"{plot_dir}/rej-plot_val_addC.pdf"
-            PlotRejPerEpoch(
-                df_results,
-                plot_name,
-                b_rej=b_rejC,
-                u_rej=u_rejC,
-                tau_rej=tau_rejC,
-                rej_keys={
-                    "b_rej": "b_rejC_add",
-                    "u_rej": "u_rejC_add",
-                    "tau_rej": "tau_rejC_add",
-                },
-                labels={
-                    "b_rej": r"$b$-rej. - $t\bar{t}$",
-                    "u_rej": r"light-rej. - $t\bar{t}$",
-                    "tau_rej": r"tau-rej. - $t\bar{t}$",
-                },
-                comp_tagger_name=comp_tagger_name,
-                target_beff=WP_b,
-                fb_value=fb,
-                ftau_value=ftauforc,
-                UseAtlasTag=Eval_parameters["UseAtlasTag"],
-                AtlasTag=Eval_parameters["AtlasTag"],
-                SecondTag=Eval_parameters["SecondTag"],
-            )
-
-    plot_name = f"{plot_dir}/loss-plot.{plot_datatype}"
-    PlotLosses(
-        df_results,
-        plot_name,
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-    )
-    acc_ymin, acc_ymax = None, None
-    if "acc_ymin" in Eval_parameters:
-        acc_ymin = Eval_parameters["acc_ymin"]
-    if "acc_ymax" in Eval_parameters:
-        acc_ymax = Eval_parameters["acc_ymax"]
-    plot_name = f"{plot_dir}/accuracy-plot.{plot_datatype}"
-    PlotAccuracies(
-        df_results,
-        plot_name,
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-        ymin=acc_ymin,
-        ymax=acc_ymax,
-    )
-
-
-def RunPerformanceCheckDips(
-    train_config,
-    compare_tagger=True,
-    tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
-    comp_tagger_name="rnnip",
-    WP: float = 0.77,
-    dict_file_name=None,
-):
-    logger.info("Running performance check.")
+    logger.info("Running performance check for DIPS.")
 
     # Load parameters from train config
     Eval_parameters = train_config.Eval_parameters_validation
-    plot_datatype = Eval_parameters["plot_datatype"]
-    frac_dict = Eval_parameters["frac_dict"]
+    Plotting_settings = train_config.Plotting_settings
+    frac_dict = Eval_parameters["frac_values"]
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     recommended_frac_dict = Eval_parameters["frac_values_comp"]
 
-    # Get class_labels variables etc. from global config
-    class_ids = get_class_label_ids(class_labels)
-    class_label_vars, flatten_class_labels = get_class_label_variables(
-        class_labels
-    )
+    if WP is None:
+        WP = Eval_parameters["WP"]
 
-    if compare_tagger:
+    # Get dict with training results from json
+    tagger_rej_dict = pd.read_json(dict_file_name)
 
-        # Get the tagger variables and the class label variables
-        variables = class_label_vars + tagger_comp_var[:]
+    if tagger_comp_vars is not None:
+        # Dict
+        comp_tagger_rej_dict = {}
+        comp_tagger_rej_dict_add = {}
 
-        # Load the Jets
-        df = pd.DataFrame(
-            h5py.File(train_config.validation_file, "r")["/jets"][:][variables]
-        )
-
-        # Iterate over the classes and remove all not used jets
-        for class_id, class_label_var in zip(class_ids, class_label_vars):
-            df.query(f"{class_label_var} in {class_id}", inplace=True)
-
-        # Init new column for string labels
-        df["Umami_string_labels"] = np.zeros_like(df[class_label_vars[0]])
-        df["Umami_labels"] = np.zeros_like(df[class_label_vars[0]])
-
-        # Change type of column to string
-        df = df.astype({"Umami_string_labels": "str"})
-
-        # Iterate over the classes and add the correct labels to Umami columns
-        for class_id, class_label_var, class_label in zip(
-            class_ids, class_label_vars, flatten_class_labels
-        ):
-            indices_tochange = np.where(df[class_label_var].values == class_id)
-
-            # Add a string description which this class is
-            df["Umami_string_labels"].values[indices_tochange] = class_label
-
-            # Add the right column label to class
-            df["Umami_labels"].values[indices_tochange] = class_labels.index(
-                class_label
+        # Loop over taggers that are used for comparsion
+        for tagger in tagger_comp_vars:
+            comp_tagger_rej_dict[tagger] = CompTaggerRejectionDict(
+                file=train_config.validation_file,
+                tagger_comp_name=tagger,
+                tagger_comp_var=tagger_comp_vars[tagger],
+                recommended_frac_dict=recommended_frac_dict[tagger],
+                WP=WP,
+                class_labels=class_labels,
+                main_class=main_class,
             )
 
-        # Binarize the labels
-        y_true = GetBinaryLabels(df["Umami_labels"].values)
+            if train_config.add_validation_file is not None:
+                comp_tagger_rej_dict_add[tagger] = CompTaggerRejectionDict(
+                    file=train_config.add_validation_file,
+                    tagger_comp_name=tagger,
+                    tagger_comp_var=tagger_comp_vars[tagger],
+                    recommended_frac_dict=recommended_frac_dict[tagger],
+                    WP=WP,
+                    class_labels=class_labels,
+                    main_class=main_class,
+                )
 
-        # Calculate rejections
-        recomm_rej_dict, _ = GetRejection(
-            y_pred=df[tagger_comp_var[:]].values,
-            y_true=y_true,
-            class_labels=class_labels,
-            main_class=main_class,
-            frac_dict=recommended_frac_dict[comp_tagger_name],
-            target_eff=WP,
-        )
+            else:
+                comp_tagger_rej_dict_add[tagger] = None
 
     else:
-        recomm_rej_dict = None
-
-    # Get dict from json
-    df_results = pd.read_json(dict_file_name)
+        # Define the dicts as None if compare tagger is False
+        comp_tagger_rej_dict = None
+        comp_tagger_rej_dict_add = None
 
     # Define dir where the plots are saved
     plot_dir = f"{train_config.model_name}/plots"
     logger.info(f"saving plots to {plot_dir}")
     os.makedirs(plot_dir, exist_ok=True)
 
-    # Plot comparsion for the comparison taggers
-    plot_name = f"{plot_dir}/rej-plot_val.{plot_datatype}"
-    PlotRejPerEpoch(
-        df_results=df_results,
-        plot_name=plot_name,
-        frac_dict=frac_dict,
-        class_labels=class_labels,
-        main_class=main_class,
-        recomm_rej_dict=recomm_rej_dict,
-        label_extension="$t\bar{t}$",
-        comp_tagger_name=comp_tagger_name,
-        target_beff=WP,
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-    )
-
-    if train_config.add_validation_file is not None:
-        if compare_tagger:
-            # Get the tagger variables and the class label variables
-            variables = class_label_vars + tagger_comp_var[:]
-
-            # Load the Jets
-            df = pd.DataFrame(
-                h5py.File(train_config.add_validation_file, "r")["/jets"][:][
-                    variables
-                ]
-            )
-
-            # Iterate over the classes and remove all not used jets
-            for class_id, class_label_var in zip(class_ids, class_label_vars):
-                df.query(f"{class_label_var} in {class_id}", inplace=True)
-
-            # Init new column for string labels
-            df["Umami_string_labels"] = np.zeros_like(df[class_label_vars[0]])
-            df["Umami_labels"] = np.zeros_like(df[class_label_vars[0]])
-
-            # Change type of column to string
-            df = df.astype({"Umami_string_labels": "str"})
-
-            # Iterate over the classes and add the correct labels to Umami columns
-            for class_id, class_label_var, class_label in zip(
-                class_ids, class_label_vars, flatten_class_labels
-            ):
-                indices_tochange = np.where(
-                    df[class_label_var].values == class_id
-                )
-
-                # Add a string description which this class is
-                df["Umami_string_labels"].values[
-                    indices_tochange
-                ] = class_label
-
-                # Add the right column label to class
-                df["Umami_labels"].values[
-                    indices_tochange
-                ] = class_labels.index(class_label)
-
-            # Binarize the labels
-            y_true = GetBinaryLabels(df["Umami_labels"].values)
-
-            # Calculate rejections
-            recomm_rej_dict, _ = GetRejection(
-                y_pred=df[tagger_comp_var[:]].values,
-                y_true=y_true,
+    if tagger == "umami":
+        for subtagger in ["umami", "dips"]:
+            PlotRejPerEpoch(
+                df_results=tagger_rej_dict,
+                frac_dict=frac_dict,
+                comp_tagger_rej_dict=comp_tagger_rej_dict,
+                comp_tagger_frac_dict=recommended_frac_dict,
+                plot_name=f"{plot_dir}/rej-plot_val_{subtagger}",
                 class_labels=class_labels,
                 main_class=main_class,
-                frac_dict=recommended_frac_dict[comp_tagger_name],
-                target_eff=WP,
+                label_extension=r"$t\bar{t}$",
+                rej_string=f"rej_{subtagger}",
+                target_beff=WP,
+                **Plotting_settings,
             )
 
-        else:
-            recomm_rej_dict = None
+            if tagger_comp_vars is not None:
+                PlotRejPerEpoch(
+                    df_results=tagger_rej_dict,
+                    frac_dict=frac_dict,
+                    comp_tagger_rej_dict=comp_tagger_rej_dict_add,
+                    comp_tagger_frac_dict=recommended_frac_dict,
+                    plot_name=f"{plot_dir}/rej-plot_val_{subtagger}_add",
+                    class_labels=class_labels,
+                    main_class=main_class,
+                    label_extension=r"ext. $Z'$",
+                    rej_string="rej_{subtagger}_add",
+                    target_beff=WP,
+                    **Plotting_settings,
+                )
 
-        plot_name = f"{plot_dir}/rej-plot_val_add.{plot_datatype}"
-        PlotRejPerEpoch(
-            df_results=df_results,
-            plot_name=plot_name,
-            frac_dict=frac_dict,
-            class_labels=class_labels,
-            main_class=main_class,
-            recomm_rej_dict=recomm_rej_dict,
-            label_extension="$ext. $Z'$",
-            comp_tagger_name=comp_tagger_name,
-            target_beff=WP,
-            UseAtlasTag=Eval_parameters["UseAtlasTag"],
-            AtlasTag=Eval_parameters["AtlasTag"],
-            SecondTag=Eval_parameters["SecondTag"],
-        )
-
-    plot_name = f"{plot_dir}/loss-plot.{plot_datatype}"
-    PlotLosses(
-        df_results,
-        plot_name,
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-    )
-    acc_ymin, acc_ymax = None, None
-    if "acc_ymin" in Eval_parameters:
-        acc_ymin = Eval_parameters["acc_ymin"]
-    if "acc_ymax" in Eval_parameters:
-        acc_ymax = Eval_parameters["acc_ymax"]
-    plot_name = f"{plot_dir}/accuracy-plot.{plot_datatype}"
-    PlotAccuracies(
-        df_results,
-        plot_name,
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-        ymin=acc_ymin,
-        ymax=acc_ymax,
-    )
-    plot_name = f"{plot_dir}/disc-cut-plot.{plot_datatype}"
-    PlotDiscCutPerEpoch(
-        df_results=df_results,
-        plot_name=plot_name,
-        target_beff=WP,
-        frac_class="cjets",
-        frac=frac_dict["cjets"],
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-    )
-
-
-def RunPerformanceCheckUmami(
-    train_config,
-    compare_tagger=True,
-    tagger_comp_var=["DL1r_pu", "DL1r_pc", "DL1r_pb"],
-    comp_tagger_name="DL1r",
-    WP_b=0.77,
-    fc=0.018,
-    dict_file_name=None,
-):
-    logger.info("Running performance check.")
-    Eval_parameters = train_config.Eval_parameters_validation
-    plot_datatype = train_config.Eval_parameters_validation["plot_datatype"]
-    recommended_fc_values = {"DL1r": 0.018, "RNNIP": 0.08}
-    c_rej, u_rej = None, None
-    if compare_tagger:
-        variables = ["HadronConeExclTruthLabelID"]
-        variables += tagger_comp_var[:]
-        df = pd.DataFrame(
-            h5py.File(train_config.validation_file, "r")["/jets"][:][variables]
-        )
-        df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-        df.replace({"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True)
-        y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-        c_rej, u_rej, _ = GetRejection(
-            df[tagger_comp_var[:]].values,
-            y_true,
-            WP_b,
-            frac=recommended_fc_values[comp_tagger_name],
-        )
-
-    df_results = pd.read_json(dict_file_name)
-    plot_dir = f"{train_config.model_name}/plots"
-    logger.info(f"saving plots to {plot_dir}")
-    os.makedirs(plot_dir, exist_ok=True)
-    if comp_tagger_name == "RNNIP":
-        plot_name = f"{plot_dir}/rej-plot_val_dips.{plot_datatype}"
-        PlotRejPerEpoch(
-            df_results,
+        plot_name = f"{plot_dir}/loss-plot"
+        PlotLossesUmami(
+            tagger_rej_dict,
             plot_name,
-            c_rej=c_rej,
-            u_rej=u_rej,
-            labels={
-                "c_rej": r"$c$-rej. - $t\bar{t}$",
-                "u_rej": r"light-rej. - $t\bar{t}$",
-            },
-            rej_keys={"c_rej": "c_rej_dips", "u_rej": "u_rej_dips"},
-            comp_tagger_name=comp_tagger_name,
-            target_beff=WP_b,
-            fc_value=fc,
-            UseAtlasTag=Eval_parameters["UseAtlasTag"],
-            AtlasTag=Eval_parameters["AtlasTag"],
-            SecondTag=Eval_parameters["SecondTag"],
+            **Plotting_settings,
+        )
+        plot_name = f"{plot_dir}/accuracy-plot"
+        PlotAccuraciesUmami(
+            tagger_rej_dict,
+            plot_name,
+            **Plotting_settings,
+        )
+        plot_name = f"{plot_dir}/disc-cut-plot"
+        PlotDiscCutPerEpochUmami(
+            df_results=tagger_rej_dict,
+            plot_name=plot_name,
+            frac_class="cjets",
+            target_beff=WP,
+            frac=frac_dict["cjets"],
+            **Plotting_settings,
         )
 
     else:
-        plot_name = f"{plot_dir}/rej-plot_val_umami.{plot_datatype}"
+        # Plot comparsion for the comparison taggers
         PlotRejPerEpoch(
-            df_results,
-            plot_name,
-            c_rej=c_rej,
-            u_rej=u_rej,
-            labels={
-                "c_rej": r"$c$-rej. - $t\bar{t}$",
-                "u_rej": r"light-rej. - $t\bar{t}$",
-            },
-            rej_keys={"c_rej": "c_rej_umami", "u_rej": "u_rej_umami"},
-            comp_tagger_name=comp_tagger_name,
-            target_beff=WP_b,
-            fc_value=fc,
-            UseAtlasTag=Eval_parameters["UseAtlasTag"],
-            AtlasTag=Eval_parameters["AtlasTag"],
-            SecondTag=Eval_parameters["SecondTag"],
+            df_results=tagger_rej_dict,
+            frac_dict=frac_dict,
+            comp_tagger_rej_dict=comp_tagger_rej_dict,
+            comp_tagger_frac_dict=recommended_frac_dict,
+            plot_name=f"{plot_dir}/rej-plot_val",
+            class_labels=class_labels,
+            main_class=main_class,
+            label_extension=r"$t\bar{t}$",
+            rej_string="rej",
+            target_beff=WP,
+            **Plotting_settings,
         )
 
-    if train_config.add_validation_file is not None:
-        c_rej, u_rej = None, None
-        if compare_tagger:
-            variables = ["HadronConeExclTruthLabelID"]
-            variables += tagger_comp_var[:]
-            df = pd.DataFrame(
-                h5py.File(train_config.add_validation_file, "r")["/jets"][:][
-                    variables
-                ]
-            )
-            df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-            df.replace(
-                {"HadronConeExclTruthLabelID": {4: 1, 5: 2}}, inplace=True
-            )
-            y_true = GetBinaryLabels(df["HadronConeExclTruthLabelID"].values)
-            c_rej, u_rej, _ = GetRejection(
-                df[tagger_comp_var[:]].values,
-                y_true,
-                WP_b,
-                frac=recommended_fc_values[comp_tagger_name],
-            )
-
-        if comp_tagger_name == "RNNIP":
-            plot_name = f"{plot_dir}/rej-plot_val_add_dips.{plot_datatype}"
+        if tagger_comp_vars is not None:
             PlotRejPerEpoch(
-                df_results,
-                plot_name,
-                c_rej=c_rej,
-                u_rej=u_rej,
-                labels={
-                    "c_rej": r"$c$-rej. - ext. $Z'$",
-                    "u_rej": r"light-rej. - ext. $Z'$",
-                },
-                rej_keys={
-                    "c_rej": "c_rej_dips_add",
-                    "u_rej": "u_rej_dips_add",
-                },
-                comp_tagger_name=comp_tagger_name,
-                target_beff=WP_b,
-                fc_value=fc,
-                UseAtlasTag=Eval_parameters["UseAtlasTag"],
-                AtlasTag=Eval_parameters["AtlasTag"],
-                SecondTag=Eval_parameters["SecondTag"],
+                df_results=tagger_rej_dict,
+                frac_dict=frac_dict,
+                comp_tagger_rej_dict=comp_tagger_rej_dict_add,
+                comp_tagger_frac_dict=recommended_frac_dict,
+                plot_name=f"{plot_dir}/rej-plot_val_add",
+                class_labels=class_labels,
+                main_class=main_class,
+                label_extension=r"ext. $Z'$",
+                rej_string="rej_add",
+                target_beff=WP,
+                **Plotting_settings,
             )
 
-        else:
-            plot_name = f"{plot_dir}/rej-plot_val_add_umami.{plot_datatype}"
-            PlotRejPerEpoch(
-                df_results,
-                plot_name,
-                c_rej=c_rej,
-                u_rej=u_rej,
-                labels={
-                    "c_rej": r"$c$-rej. - ext. $Z'$",
-                    "u_rej": r"light-rej. - ext. $Z'$",
-                },
-                rej_keys={
-                    "c_rej": "c_rej_umami_add",
-                    "u_rej": "u_rej_umami_add",
-                },
-                comp_tagger_name=comp_tagger_name,
-                target_beff=WP_b,
-                fc_value=fc,
-                UseAtlasTag=Eval_parameters["UseAtlasTag"],
-                AtlasTag=Eval_parameters["AtlasTag"],
-                SecondTag=Eval_parameters["SecondTag"],
-            )
-
-    plot_name = f"{plot_dir}/loss-plot.{plot_datatype}"
-    PlotLossesUmami(
-        df_results,
-        plot_name,
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-    )
-    acc_ymin, acc_ymax = None, None
-    if "acc_ymin" in Eval_parameters:
-        acc_ymin = Eval_parameters["acc_ymin"]
-    if "acc_ymax" in Eval_parameters:
-        acc_ymax = Eval_parameters["acc_ymax"]
-    plot_name = f"{plot_dir}/accuracy-plot.{plot_datatype}"
-    PlotAccuraciesUmami(
-        df_results,
-        plot_name,
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-        ymin=acc_ymin,
-        ymax=acc_ymax,
-    )
-    plot_name = f"{plot_dir}/disc-cut-plot.{plot_datatype}"
-    PlotDiscCutPerEpochUmami(
-        df_results=df_results,
-        plot_name=plot_name,
-        target_beff=WP_b,
-        fc_value=fc,
-        UseAtlasTag=Eval_parameters["UseAtlasTag"],
-        AtlasTag=Eval_parameters["AtlasTag"],
-        SecondTag=Eval_parameters["SecondTag"],
-    )
-
-
-def plot_validation(train_config, beff, cfrac, dict_file_name):
-    RunPerformanceCheckUmami(
-        train_config,
-        compare_tagger=True,
-        tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
-        comp_tagger_name="RNNIP",
-        WP_b=beff,
-        fc=cfrac,
-        dict_file_name=dict_file_name,
-    )
-    RunPerformanceCheckUmami(
-        train_config,
-        compare_tagger=True,
-        WP_b=beff,
-        fc=cfrac,
-        dict_file_name=dict_file_name,
-    )
+        plot_name = f"{plot_dir}/loss-plot"
+        PlotLosses(
+            tagger_rej_dict,
+            plot_name,
+            **Plotting_settings,
+        )
+        plot_name = f"{plot_dir}/accuracy-plot"
+        PlotAccuracies(
+            tagger_rej_dict,
+            plot_name,
+            **Plotting_settings,
+        )
+        plot_name = f"{plot_dir}/disc-cut-plot"
+        PlotDiscCutPerEpoch(
+            df_results=tagger_rej_dict,
+            plot_name=plot_name,
+            target_beff=WP,
+            frac_class="cjets",
+            frac=frac_dict["cjets"],
+            **Plotting_settings,
+        )

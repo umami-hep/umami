@@ -69,11 +69,12 @@ class generator:
     # How many jets should be loaded into memory
     chunk_size = 1e6
 
-    def __init__(self, X, Y, batch_size):
-        self.x = X
-        self.y = Y
+    def __init__(self, train_file_path, X_Name, Y_Name, n_jets, batch_size):
+        self.train_file_path = train_file_path
+        self.X_Name = X_Name
+        self.Y_Name = Y_Name
         self.batch_size = batch_size
-        self.n_jets = len(self.y)
+        self.n_jets = len(self.y) if n_jets is None else int(n_jets)
         self.length = int(self.n_jets / self.batch_size)
         self.step_size = self.batch_size * int(
             generator.chunk_size / self.batch_size
@@ -83,12 +84,15 @@ class generator:
         logger.info(
             f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
         )
-        self.x_in_mem = self.x[
-            self.step_size * part : self.step_size * (part + 1)
-        ]
-        self.y_in_mem = self.y[
-            self.step_size * part : self.step_size * (part + 1)
-        ]
+
+        # Load the
+        with open(h5py.File(self.train_file_path, "r")) as f:
+            self.x_in_mem = f[self.X_Name][
+                self.step_size * part : self.step_size * (part + 1)
+            ]
+            self.y_in_mem = f[self.Y_Name][
+                self.step_size * part : self.step_size * (part + 1)
+            ]
 
     def __call__(self):
         self.load_in_memory()
@@ -122,57 +126,65 @@ def Dips_model(train_config=None, input_shape=None):
     dropout = NN_structure["dropout"]
     class_labels = NN_structure["class_labels"]
 
-    # Set the track input
-    trk_inputs = Input(shape=input_shape)
+    if train_config.model_file is not None:
+        # Load DIPS model from file
+        logger.info(f"Loading model from: {train_config.model_file}")
+        dips = load_model(train_config.model_file, {"Sum": Sum}, compile=False)
 
-    # Masking the missing tracks
-    masked_inputs = Masking(mask_value=0)(trk_inputs)
-    tdd = masked_inputs
+    else:
+        logger.info("No modelfile provided! Initialize a new one!")
 
-    # Define the TimeDistributed layers for the different tracks
-    for i, phi_nodes in enumerate(NN_structure["ppm_sizes"]):
+        # Set the track input
+        trk_inputs = Input(shape=input_shape)
 
-        tdd = TimeDistributed(
-            Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
-        )(tdd)
+        # Masking the missing tracks
+        masked_inputs = Masking(mask_value=0)(trk_inputs)
+        tdd = masked_inputs
 
-        if batch_norm:
+        # Define the TimeDistributed layers for the different tracks
+        for i, phi_nodes in enumerate(NN_structure["ppm_sizes"]):
+
             tdd = TimeDistributed(
-                BatchNormalization(), name=f"Phi{i}_BatchNormalization"
+                Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
             )(tdd)
 
-        if dropout != 0:
+            if batch_norm:
+                tdd = TimeDistributed(
+                    BatchNormalization(), name=f"Phi{i}_BatchNormalization"
+                )(tdd)
+
+            if dropout != 0:
+                tdd = TimeDistributed(
+                    Dropout(rate=dropout), name=f"Phi{i}_Dropout"
+                )(tdd)
+
             tdd = TimeDistributed(
-                Dropout(rate=dropout), name=f"Phi{i}_Dropout"
+                layers.Activation(activations.relu), name=f"Phi{i}_ReLU"
             )(tdd)
 
-        tdd = TimeDistributed(
-            layers.Activation(activations.relu), name=f"Phi{i}_ReLU"
-        )(tdd)
+        # This is where the magic happens... sum up the track features!
+        F = Sum(name="Sum")(tdd)
 
-    # This is where the magic happens... sum up the track features!
-    F = Sum(name="Sum")(tdd)
+        # Define the main dips structure
+        for j, (F_nodes, p) in enumerate(
+            zip(
+                NN_structure["dense_sizes"],
+                [dropout] * len(NN_structure["dense_sizes"][:-1]) + [0],
+            )
+        ):
 
-    # Define the main dips structure
-    for j, (F_nodes, p) in enumerate(
-        zip(
-            NN_structure["dense_sizes"],
-            [dropout] * len(NN_structure["dense_sizes"][:-1]) + [0],
-        )
-    ):
+            F = Dense(F_nodes, activation="linear", name=f"F{j}_Dense")(F)
+            if batch_norm:
+                F = BatchNormalization(name=f"F{j}_BatchNormalization")(F)
+            if dropout != 0:
+                F = Dropout(rate=p, name=f"F{j}_Dropout")(F)
+            F = layers.Activation(activations.relu, name=f"F{j}_ReLU")(F)
 
-        F = Dense(F_nodes, activation="linear", name=f"F{j}_Dense")(F)
-        if batch_norm:
-            F = BatchNormalization(name=f"F{j}_BatchNormalization")(F)
-        if dropout != 0:
-            F = Dropout(rate=p, name=f"F{j}_Dropout")(F)
-        F = layers.Activation(activations.relu, name=f"F{j}_ReLU")(F)
-
-    # Set output and activation function
-    output = Dense(len(class_labels), activation="softmax", name="Jet_class")(
-        F
-    )
-    dips = Model(inputs=trk_inputs, outputs=output)
+        # Set output and activation function
+        output = Dense(
+            len(class_labels), activation="softmax", name="Jet_class"
+        )(F)
+        dips = Model(inputs=trk_inputs, outputs=output)
 
     # Print Dips model summary when log level lower or equal INFO level
     if logger.level <= 20:
@@ -217,50 +229,29 @@ def Dips(args, train_config, preprocess_config):
         X_valid_add = None
         Y_valid_add = None
 
-    # Load the training file
-    logger.info("Load training data tracks")
-    file = h5py.File(train_config.train_file, "r")
-    X_train = file["X_trk_train"]
-    Y_train = file["Y_train"]
-
-    # Use the number of jets set in the config file for training
-    if NN_structure["nJets_train"] is not None:
-        X_train = X_train[: int(NN_structure["nJets_train"])]
-        Y_train = Y_train[: int(NN_structure["nJets_train"])]
-
     # Get the shapes for training
-    nJets, nTrks, nFeatures = X_train.shape
-    nJets, nDim = Y_train.shape
+    with open(h5py.File(train_config.train_file, "r")) as f:
+        nJets, nTrks, nFeatures = f["X_trk_train"].shape
+        nJets, nDim = f["Y_train"].shape
 
     # Print how much jets are used
     logger.info(f"Number of Jets used for training: {nJets}")
 
-    if train_config.model_file is not None:
-        # Load DIPS model from file
-        logger.info(f"Loading model from: {train_config.model_file}")
-        dips = load_model(train_config.model_file, {"Sum": Sum}, compile=False)
-
-        # Compile model
-        model_optimizer = Adam(learning_rate=NN_structure["lr"])
-        dips.compile(
-            loss="categorical_crossentropy",
-            optimizer=model_optimizer,
-            metrics=["accuracy"],
-        )
-
-        # Load epoch from train_config
-        epochs = NN_structure["epochs"]
-
-    else:
-        # Init dips model
-        dips, epochs = Dips_model(
-            train_config=train_config, input_shape=(nTrks, nFeatures)
-        )
+    # Init dips model
+    dips, epochs = Dips_model(
+        train_config=train_config, input_shape=(nTrks, nFeatures)
+    )
 
     # Get training set from generator
     train_dataset = (
         tf.data.Dataset.from_generator(
-            generator(X_train, Y_train, NN_structure["batch_size"]),
+            generator(
+                train_file_path=train_config.train_file,
+                X_Name="X_trk_train",
+                Y_Name="Y_train",
+                n_jets=NN_structure["nJets_train"],
+                batch_size=NN_structure["batch_size"],
+            ),
             (tf.float32, tf.float32),
             (
                 tf.TensorShape([None, nTrks, nFeatures]),
@@ -310,7 +301,7 @@ def Dips(args, train_config, preprocess_config):
 
     # Set my_callback as callback. Writes history information
     # to json file.
-    my_callback = utt.MyCallbackDips(
+    my_callback = utt.MyCallback(
         model_name=train_config.model_name,
         class_labels=train_config.NN_structure["class_labels"],
         main_class=train_config.NN_structure["main_class"],

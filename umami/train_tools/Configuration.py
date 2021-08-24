@@ -2,7 +2,10 @@ import yaml
 
 from umami.configuration import logger
 from umami.tools import yaml_loader
-from umami.train_tools.NN_tools import get_class_label_ids
+from umami.train_tools.NN_tools import (
+    get_class_label_ids,
+    get_class_label_variables,
+)
 
 
 class Configuration(object):
@@ -30,7 +33,7 @@ class Configuration(object):
             "var_dict",
             "NN_structure",
             "Eval_parameters_validation",
-            "bool_use_taus",
+            "Plotting_settings",
             "ttbar_test_files",
             "zpext_test_files",
         ]
@@ -40,7 +43,7 @@ class Configuration(object):
             "zpext_test_files",
             "evaluate_trained_model",
             "Eval_parameters_validation",
-            "bool_use_taus",
+            "Plotting_settings",
         ]
         if "evaluate_trained_model" in self.config.keys():
             if self.config["evaluate_trained_model"] is True:
@@ -62,5 +65,31 @@ class Configuration(object):
 
         # Define a security to check if label_value is used twice
         class_ids = get_class_label_ids(self.NN_structure["class_labels"])
+        class_label_vars, flatten_class_labels = get_class_label_variables(
+            self.NN_structure["class_labels"]
+        )
         if len(class_ids) != len(set(class_ids)):
             raise ValueError("label_value is used twice in the used classes!")
+
+        # Define a security check for using the jets twice
+        # Check if the extended b labeling is used
+        if 55 in class_ids or 54 in class_ids:
+
+            # check if the b label is in class_ids and if its extended or not
+            if 5 in class_ids:
+                b_index = class_ids.index(5)
+
+                if class_label_vars[b_index] == "HadronConeExclTruthLabelID":
+                    raise ValueError(
+                        "You defined default bjets and extended bjets simultaneously using the simple flavour labelling scheme! Please modify class_labels."
+                    )
+
+        # Check if the extended c labeling is used
+        if 44 in class_ids:
+            if 4 in class_ids:
+                c_index = class_ids.index(4)
+
+                if class_label_vars[c_index] == "HadronConeExclTruthLabelID":
+                    raise ValueError(
+                        "You defined default cjets and extended cjets simultaneously using the simple flavour labelling scheme! Please modify class_labels."
+                    )

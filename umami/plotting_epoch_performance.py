@@ -6,6 +6,7 @@ import tensorflow as tf
 
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
+from umami.train_tools import RunPerformanceCheck, get_class_prob_var_names
 
 
 def GetParser():
@@ -37,13 +38,6 @@ def GetParser():
     )
 
     parser.add_argument(
-        "--cfrac",
-        type=float,
-        default=0.018,
-        help="charm fraction in likelihood",
-    )
-
-    parser.add_argument(
         "-d",
         "--dict",
         type=str,
@@ -55,15 +49,12 @@ def GetParser():
     )
 
     parser.add_argument(
-        "--dips",
+        "-t",
+        "--tagger",
+        type=str,
+        default=None,
         action="store_true",
-        help="Setting the model epoch performance to dips.",
-    )
-
-    parser.add_argument(
-        "--dl1",
-        action="store_true",
-        help="Setting the model epoch performance to DL1.",
+        help="Model type which is used. You can either use 'dips', 'dl1' or 'umami'.",
     )
 
     args = parser.parse_args()
@@ -78,56 +69,47 @@ def main(args, train_config, preprocess_config):
     else:
         nJets = args.nJets
 
-    if args.dl1:
-        dictfile = f"{train_config.model_name}/DictFile.json"
-        utt.RunPerformanceCheck(
-            train_config,
-            dict_file_name=dictfile,
+    if args.tagger is None:
+        raise ValueError("You need to give a model type with -t or --tagger")
+
+    if args.dict:
+        output_file_name = args.dict
+        parameters = utt.get_parameters_from_validation_dict_name(
+            output_file_name
+        )
+        beff = parameters["WP_b"]
+
+    else:
+        output_file_name = utt.calc_validation_metrics(
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+            target_beff=args.beff if args.beff else None,
+            nJets=nJets,
+            tagger=args.tagger,
+        )
+        beff = None
+
+    if args.tagger in ["umami", "dl1", "dips"]:
+        RunPerformanceCheck(
+            train_config=train_config,
+            tagger=args.tagger,
+            tagger_comp_vars={
+                f"{comp_tagger}": get_class_prob_var_names(
+                    tagger_name=f"{comp_tagger}",
+                    class_labels=train_config.NN_structure["class_labels"],
+                )
+                for comp_tagger in train_config.Eval_parameters_validation[
+                    "tagger"
+                ]
+            },
+            dict_file_name=output_file_name,
+            WP=beff,
         )
 
     else:
-        if args.dict:
-            output_file_name = args.dict
-            parameters = utt.get_parameters_from_validation_dict_name(
-                output_file_name
-            )
-            beff = parameters["WP_b"]
-            cfrac = parameters["fc_value"]
-
-        else:
-            if args.dips:
-                output_file_name = utt.calc_validation_metrics_dips(
-                    train_config=train_config,
-                    preprocess_config=preprocess_config,
-                    target_beff=args.beff if args.beff else None,
-                    nJets=nJets,
-                )
-
-            else:
-                output_file_name = utt.calc_validation_metrics(
-                    train_config,
-                    preprocess_config,
-                    args.beff,
-                    args.cfrac,
-                    nJets,
-                )
-                beff = args.beff
-                cfrac = args.cfrac
-
-        if args.dips:
-            utt.RunPerformanceCheckDips(
-                train_config=train_config,
-                compare_tagger=True,
-                tagger_comp_var=["rnnip_pu", "rnnip_pc", "rnnip_pb"],
-                comp_tagger_name="rnnip",
-                WP=beff,
-                dict_file_name=output_file_name,
-            )
-
-        else:
-            utt.plot_validation(
-                train_config, beff, cfrac, dict_file_name=output_file_name
-            )
+        raise ValueError(
+            "You need to define a model type. You can either use 'dips', 'dl1' or 'umami'."
+        )
 
 
 if __name__ == "__main__":
