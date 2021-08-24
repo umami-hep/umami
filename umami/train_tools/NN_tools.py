@@ -1,4 +1,4 @@
-from umami.configuration import logger, global_config  # isort:skip
+from umami.configuration import global_config, logger  # isort:skip
 import json
 import os
 import re
@@ -96,6 +96,30 @@ def get_class_label_variables(class_labels):
     return label_var_list, flatten_class_labels
 
 
+def get_class_prob_var_names(tagger_name, class_labels):
+    """
+    This function returns a list of the probability variable names used for the
+    provided class_labels.
+    """
+
+    # Get the global_config
+    flavour_categories = global_config.flavour_categories
+
+    # Init new list
+    prob_var_list = []
+
+    # Append the prob var names to new list
+    for class_label in class_labels:
+        prob_var_list.append(
+            tagger_name
+            + "_"
+            + flavour_categories[class_label]["prob_var_name"]
+        )
+
+    # Return list of prob var names in correct order
+    return prob_var_list
+
+
 def get_parameters_from_validation_dict_name(dict_name):
     sp = dict_name.split("/")[-1].split("_")
     parameters = {}
@@ -107,6 +131,22 @@ def get_parameters_from_validation_dict_name(dict_name):
             f"Can't infer parameters correctly for {dict_name}. Parameters: {parameters}"
         )
     return parameters
+
+
+def setup_output_directory(dir_name):
+    outdir = Path(dir_name)
+    if outdir.is_dir():
+        logger.info("Removing model*.h5 and *.json files.")
+        for model_file in outdir.glob("model*.h5"):
+            model_file.unlink()
+        for model_file in outdir.glob("*.json"):
+            model_file.unlink()
+    elif outdir.is_file():
+        raise Exception(
+            f"{dir_name} is the output directory name but it already exists as a file!"
+        )
+    else:
+        outdir.mkdir()
 
 
 def create_metadata_folder(
@@ -354,197 +394,6 @@ def GetRejection(
 class MyCallback(Callback):
     def __init__(
         self,
-        X_valid=0,
-        Y_valid=0,
-        log_file=None,
-        verbose=False,
-        model_name="test",
-        X_valid_add=None,
-        Y_valid_add=None,
-        include_taus=False,
-        eval_config=None,
-    ):
-        self.X_valid = X_valid
-        self.Y_valid = Y_valid
-        self.X_valid_add = X_valid_add
-        self.Y_valid_add = Y_valid_add
-        self.result = []
-        self.include_taus = include_taus
-        self.log = open(log_file, "w") if log_file else None
-        self.verbose = verbose
-        self.model_name = model_name
-        setup_output_directory(self.model_name)
-        self.dict_list = []
-        if eval_config is not None:
-            if (
-                "fc_value" in eval_config
-                and eval_config["fc_value"] is not None
-            ):
-                self.fc_value = eval_config["fc_value"]
-            else:
-                self.fc_value = 0.018
-            if (
-                "fb_value" in eval_config
-                and eval_config["fb_value"] is not None
-            ):
-                self.fb_value = eval_config["fb_value"]
-            else:
-                self.fb_value = 0.2
-            if include_taus:
-                if "ftauforb_value" in eval_config:
-                    self.ftauforb_value = eval_config["ftauforb_value"]
-                else:
-                    self.ftauforb_value = None
-                if "ftauforc_value" in eval_config:
-                    self.ftauforc_value = eval_config["ftauforc_value"]
-                else:
-                    self.ftauforc_value = None
-        else:
-            self.fc_value = 0.018
-            self.fb_value = 0.2
-            if include_taus:
-                self.ftauforb_value = None
-                self.ftauforc_value = None
-
-    def on_epoch_end(self, epoch, logs=None):
-        self.model.save("%s/model_epoch%i.h5" % (self.model_name, epoch))
-        val_loss, val_acc = self.model.evaluate(
-            self.X_valid, self.Y_valid, batch_size=5000
-        )
-        y_pred = self.model.predict(self.X_valid, batch_size=5000)
-        if self.include_taus:
-            c_rej, u_rej, tau_rej, disc_cut = GetRejection(
-                y_pred,
-                self.Y_valid,
-                frac=self.fc_value,
-                taufrac=self.ftauforb_value,
-                use_taus=self.include_taus,
-            )
-            logger.info(
-                f"For b: c-rej: {c_rej} u-rej: {u_rej} tau-rej: {tau_rej}"
-            )
-            b_rejC, u_rejC, tau_rejC, disc_cutC = GetRejection(
-                y_pred,
-                self.Y_valid,
-                d_type="c",
-                frac=self.fb_value,
-                taufrac=self.ftauforc_value,
-                use_taus=self.include_taus,
-            )
-            logger.info(
-                f"For c: b-rej: {b_rejC} u-rej: {u_rejC} tau-rej: {tau_rejC}"
-            )
-        else:
-            c_rej, u_rej, disc_cut = GetRejection(
-                y_pred,
-                self.Y_valid,
-                frac=self.fc_value,
-            )
-            logger.info(f"For b: c-rej: {c_rej} u-rej: {u_rej}")
-            b_rejC, u_rejC, disc_cutC = GetRejection(
-                y_pred,
-                self.Y_valid,
-                d_type="c",
-                frac=self.fb_value,
-            )
-            logger.info(f"For c: b-rej: {b_rejC} u-rej: {u_rejC}")
-        add_loss, add_acc, c_rej_add, u_rej_add = None, None, None, None
-        b_rejC_add, u_rejC_add = None, None
-        if self.include_taus:
-            tau_rej_add, tau_rejC_add = None, None
-
-        if self.X_valid_add is not None:
-            add_loss, add_acc = self.model.evaluate(
-                self.X_valid_add, self.Y_valid_add, batch_size=5000
-            )
-            y_pred_add = self.model.predict(self.X_valid_add, batch_size=5000)
-
-            if self.include_taus:
-                c_rej_add, u_rej_add, tau_rej_add, disc_cut_add = GetRejection(
-                    y_pred_add,
-                    self.Y_valid_add,
-                    frac=self.fc_value,
-                    taufrac=self.ftauforb_value,
-                    use_taus=self.include_taus,
-                )
-                (
-                    b_rejC_add,
-                    u_rejC_add,
-                    tau_rejC_add,
-                    disc_cutC_add,
-                ) = GetRejection(
-                    y_pred_add,
-                    self.Y_valid_add,
-                    d_type="c",
-                    frac=self.fb_value,
-                    taufrac=self.ftauforc_value,
-                    use_taus=self.include_taus,
-                )
-            else:
-                c_rej_add, u_rej_add, disc_cut_add = GetRejection(
-                    y_pred_add, self.Y_valid_add, frac=self.fc_value
-                )
-                b_rejC_add, u_rejC_add, disc_cutC_add = GetRejection(
-                    y_pred_add,
-                    self.Y_valid_add,
-                    d_type="c",
-                    frac=self.fb_value,
-                )
-        dict_epoch = {
-            "epoch": epoch,
-            "loss": logs["loss"],
-            "acc": logs["accuracy"],
-            "val_loss": val_loss,
-            "val_acc": val_acc,
-            "c_rej": c_rej,
-            "u_rej": u_rej,
-            "disc_cut": disc_cut,
-            "b_rejC": b_rejC,
-            "u_rejC": u_rejC,
-            "disc_cutC": disc_cutC,
-            "val_loss_add": add_loss if add_loss else None,
-            "val_acc_add": add_acc if add_acc else None,
-            "c_rej_add": c_rej_add if c_rej_add else None,
-            "u_rej_add": u_rej_add if u_rej_add else None,
-            "disc_cut_add": disc_cut_add if disc_cut_add else None,
-            "b_rejC_add": b_rejC_add if b_rejC_add else None,
-            "u_rejC_add": u_rejC_add if u_rejC_add else None,
-            "disc_cutC_add": disc_cutC_add if disc_cutC_add else None,
-        }
-        if self.include_taus:
-            dict_epoch["tau_rej"] = tau_rej
-            dict_epoch["tau_rej_add"] = tau_rej_add
-            dict_epoch["tau_rejC"] = tau_rejC
-            dict_epoch["tau_rejC_add"] = tau_rejC_add
-
-        self.dict_list.append(dict_epoch)
-        with open("%s/DictFile.json" % self.model_name, "w") as outfile:
-            json.dump(self.dict_list, outfile, indent=4)
-
-    def on_train_end(self, logs=None):
-        if self.log:
-            self.log.close()
-
-
-def setup_output_directory(dir_name):
-    outdir = Path(dir_name)
-    if outdir.is_dir():
-        logger.info("Removing model*.h5 and *.json files.")
-        for model_file in outdir.glob("model*.h5"):
-            model_file.unlink()
-        for model_file in outdir.glob("*.json"):
-            model_file.unlink()
-    elif outdir.is_file():
-        raise Exception(
-            f"{dir_name} is the output directory name but it already exists as a file!"
-        )
-    else:
-        outdir.mkdir()
-
-
-class MyCallbackDips(Callback):
-    def __init__(
-        self,
         class_labels: list,
         main_class: str,
         val_data_dict=None,
@@ -580,7 +429,7 @@ class MyCallbackDips(Callback):
             "acc": logs["accuracy"],
         }
         if self.val_data_dict:
-            result_dict = evaluate_model_dips(
+            result_dict = evaluate_model(
                 model=self.model,
                 data_dict=self.val_data_dict,
                 class_labels=self.class_labels,
@@ -603,17 +452,22 @@ class MyCallbackDips(Callback):
 class MyCallbackUmami(Callback):
     def __init__(
         self,
+        class_labels: list,
+        main_class: str,
         val_data_dict=None,
         log_file=None,
         verbose=False,
         model_name="test",
         target_beff=0.77,
-        charm_fraction=0.018,
+        frac_dict={
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
         dict_file_name="DictFile.json",
     ):
         self.val_data_dict = val_data_dict
         self.target_beff = target_beff
-        self.charm_fraction = charm_fraction
+        self.frac_dict = frac_dict
         self.result = []
         self.log = open(log_file, "w") if log_file else None
         self.verbose = verbose
@@ -634,11 +488,13 @@ class MyCallbackUmami(Callback):
             "umami_acc": logs["umami_accuracy"],
         }
         if self.val_data_dict:
-            result_dict = evaluate_model(
-                self.model,
-                self.val_data_dict,
-                self.target_beff,
-                self.charm_fraction,
+            result_dict = evaluate_model_umami(
+                model=self.model,
+                data_dict=self.val_data_dict,
+                class_labels=self.class_labels,
+                main_class=self.main_class,
+                target_beff=self.target_beff,
+                frac_dict=self.frac_dict,
             )
             # Once we use python >=3.9 (see https://www.python.org/dev/peps/pep-0584/#specification) switch to the following: dict_epoch |= result_dict
             dict_epoch = {**dict_epoch, **result_dict}
@@ -976,7 +832,7 @@ def GetTestSampleTrks(
     return all_trks, all_labels
 
 
-def load_validation_data(train_config, preprocess_config, nJets: int):
+def load_validation_data_umami(train_config, preprocess_config, nJets: int):
     exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
@@ -1106,7 +962,31 @@ def GetTestFile(
     return X, X_trk, Y
 
 
-def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
+def evaluate_model_umami(
+    model,
+    data_dict: dict,
+    class_labels: list,
+    main_class: str,
+    target_beff: float = 0.77,
+    frac_dict: dict = {"cjets": 0.018, "ujets": 0.982},
+):
+    """
+    Evaluate the UMAMI model on the data provided.
+
+    Input:
+    - model: Loaded UMAMI model for evaluation.
+    - data_dict: Dict with the loaded data which are to be evaluated.
+    - class_labels: List of classes used for training of the model.
+    - main_class: Main class which is to be tagged.
+    - target_beff: Working Point which is to be used for evaluation.
+    - frac_dict: Dict with the fractions of the non-main classes.
+                 Sum needs to be one!
+
+    Output:
+    - Dict with validation metrics/rejections.
+    """
+
+    # Calculate accuracy andloss of UMAMI and Dips part
     (
         loss,
         dips_loss,
@@ -1121,7 +1001,8 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
         workers=8,
         verbose=0,
     )
-    # loss: - dips_loss: - umami_loss: - dips_accuracy:  - umami_accuracy:
+
+    # Evaluate with the model for predictions
     y_pred_dips, y_pred_umami = model.predict(
         [data_dict["X_valid_trk"], data_dict["X_valid"]],
         batch_size=5000,
@@ -1129,24 +1010,36 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
         workers=8,
         verbose=0,
     )
-    c_rej_dips, u_rej_dips, disc_cut_dips = GetRejection(
-        y_pred_dips, data_dict["Y_valid"], target_beff, cfrac
+
+    # Get rejections for DIPS and UMAMI
+    rej_dict_dips, disc_cut_dips = GetRejection(
+        y_pred=y_pred_dips,
+        y_true=data_dict["Y_valid"],
+        class_labels=class_labels,
+        main_class=main_class,
+        frac_dict=frac_dict,
+        target_eff=target_beff,
     )
-    c_rej_umami, u_rej_umami, disc_cut_umami = GetRejection(
-        y_pred_umami, data_dict["Y_valid"], target_beff, cfrac
+    rej_dict_umami, disc_cut_umami = GetRejection(
+        y_pred=y_pred_umami,
+        y_true=data_dict["Y_valid"],
+        class_labels=class_labels,
+        main_class=main_class,
+        frac_dict=frac_dict,
+        target_eff=target_beff,
     )
-    logger.info(f"Dips: c-rej: {c_rej_dips} u-rej: {u_rej_dips}")
-    logger.info(f"Umami: c-rej: {c_rej_umami} u-rej: {u_rej_umami}")
+
+    # Evaluate Models on add_files if given
     (
         loss_add,
         dips_loss_add,
         umami_loss_add,
         dips_accuracy_add,
         umami_accuracy_add,
-        c_rej_dips_add,
-        u_rej_dips_add,
-        c_rej_umami_add,
-        u_rej_umami_add,
+        rej_dict_umami_add,
+        rej_dict_dips_add,
+        disc_cut_umami_add,
+        disc_cut_dips_add,
     ) = (None, None, None, None, None, None, None, None, None)
     if data_dict["X_valid_add"] is not None:
         (
@@ -1163,6 +1056,8 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
             workers=8,
             verbose=0,
         )
+
+        # Evaluate with the model for predictions
         y_pred_dips_add, y_pred_umami_add = model.predict(
             [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]],
             batch_size=5000,
@@ -1170,12 +1065,25 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
             workers=8,
             verbose=0,
         )
-        c_rej_dips_add, u_rej_dips_add, disc_cut_dips_add = GetRejection(
-            y_pred_dips_add, data_dict["Y_valid_add"], target_beff, cfrac
+
+        # Get rejections for DIPS and UMAMI
+        rej_dict_dips_add, disc_cut_dips_add = GetRejection(
+            y_pred=y_pred_dips_add,
+            y_true=data_dict["Y_valid_add"],
+            class_labels=class_labels,
+            main_class=main_class,
+            frac_dict=frac_dict,
+            target_eff=target_beff,
         )
-        c_rej_umami_add, u_rej_umami_add, disc_cut_umami_add = GetRejection(
-            y_pred_umami_add, data_dict["Y_valid_add"], target_beff, cfrac
+        rej_dict_umami_add, disc_cut_umami_add = GetRejection(
+            y_pred=y_pred_umami_add,
+            y_true=data_dict["Y_valid_add"],
+            class_labels=class_labels,
+            main_class=main_class,
+            frac_dict=frac_dict,
+            target_eff=target_beff,
         )
+
     result_dict = {
         "val_loss": loss,
         "dips_val_loss": dips_loss,
@@ -1187,23 +1095,35 @@ def evaluate_model(model, data_dict, target_beff=0.77, cfrac=0.018):
         "umami_val_loss_add": umami_loss_add,
         "dips_val_acc_add": dips_accuracy_add,
         "umami_val_acc_add": umami_accuracy_add,
-        "c_rej_dips": c_rej_dips,
-        "c_rej_umami": c_rej_umami,
-        "u_rej_dips": u_rej_dips,
-        "u_rej_umami": u_rej_umami,
         "disc_cut_dips": disc_cut_dips,
         "disc_cut_umami": disc_cut_umami,
-        "c_rej_dips_add": c_rej_dips_add,
-        "c_rej_umami_add": c_rej_umami_add,
-        "u_rej_dips_add": u_rej_dips_add,
-        "u_rej_umami_add": u_rej_umami_add,
         "disc_cut_dips_add": disc_cut_dips_add,
         "disc_cut_umami_add": disc_cut_umami_add,
     }
+
+    # Write results in one dict
+    result_dict.update(
+        {f"{key}_rej_umami": rej_dict_umami[key] for key in rej_dict_umami}
+    )
+    result_dict.update(
+        {f"{key}_rej_dips": rej_dict_dips[key] for key in rej_dict_dips}
+    )
+    result_dict.upadte(
+        {
+            f"{key}_rej_umami_add": rej_dict_umami_add[key]
+            for key in rej_dict_umami_add
+        }
+    )
+    result_dict.upadte(
+        {
+            f"{key}_rej_dips_add": rej_dict_dips_add[key]
+            for key in rej_dict_dips_add
+        }
+    )
     return result_dict
 
 
-def evaluate_model_dips(
+def evaluate_model(
     model,
     data_dict: dict,
     class_labels: list,
@@ -1212,10 +1132,10 @@ def evaluate_model_dips(
     frac_dict: dict = {"cjets": 0.018, "ujets": 0.982},
 ):
     """
-    Evaluate the DIPS model on the data provided.
+    Evaluate the DIPS/DL1 model on the data provided.
 
     Input:
-    - model: Loaded DIPS model for evaluation.
+    - model: Loaded DIPS/DL1 model for evaluation.
     - data_dict: Dict with the loaded data which are to be evaluated.
     - class_labels: List of classes used for training of the model.
     - main_class: Main class which is to be tagged.
@@ -1309,71 +1229,14 @@ def evaluate_model_dips(
 def calc_validation_metrics(
     train_config,
     preprocess_config,
-    target_beff=0.77,
-    cfrac=0.018,
-    nJets=300000,
-):
-    Eval_parameters = train_config.Eval_parameters_validation
-
-    val_data_dict = load_validation_data(
-        train_config, preprocess_config, nJets
-    )
-    training_output = [
-        os.path.join(train_config.model_name, f)
-        for f in os.listdir(train_config.model_name)
-        if "model" in f
-    ]
-    with open(
-        get_validation_dict_name(
-            WP_b=Eval_parameters["WP_b"],
-            fc_value=Eval_parameters["fc_value"],
-            n_jets=Eval_parameters["n_jets"],
-            dir_name=train_config.model_name,
-        ),
-        "r",
-    ) as training_out_json:
-        training_output_list = json.load(training_out_json)
-
-    results = []
-    for n, model_file in enumerate(training_output):
-        logger.info(f"Working on {n+1}/{len(training_output)} input files")
-        result_dict = {}
-        epoch = int(
-            model_file[model_file.find("epoch") + 5 : model_file.find(".h5")]
-        )
-        for train_epoch in training_output_list:
-            if epoch == train_epoch["epoch"]:
-                result_dict = train_epoch
-        umami = load_model(model_file, {"Sum": Sum})
-        val_result_dict = evaluate_model(
-            umami, val_data_dict, target_beff, cfrac
-        )
-        for k, v in val_result_dict.items():
-            result_dict[k] = v
-        results.append(result_dict)
-        del umami
-
-    results = sorted(results, key=lambda x: x["epoch"])
-
-    output_file_path = get_validation_dict_name(
-        target_beff, cfrac, nJets, train_config.model_name
-    )
-    with open(output_file_path, "w") as outfile:
-        json.dump(results, outfile, indent=4)
-
-    return output_file_path
-
-
-def calc_validation_metrics_dips(
-    train_config,
-    preprocess_config,
     frac_dict: dict,
+    tagger: str,
     target_beff=0.77,
     nJets=int(3e5),
 ):
     """
-    Calculates the validation metrics and rejections for each epoch and
-    dump it into a json.
+    Calculates the validation metrics and rejections for each epoch UMAMI
+    and dump it into a json.
 
     Input:
     - train_config: The loaded train config object
@@ -1386,13 +1249,9 @@ def calc_validation_metrics_dips(
     - Json file with validation metrics and rejections for each epoch
     """
 
-    # Get evaluation parameters from train config
+    # Get evaluation parameters and NN structure from train config
     Eval_parameters = train_config.Eval_parameters_validation
-
-    # Load validation data
-    val_data_dict = load_validation_data_dips(
-        train_config, preprocess_config, nJets
-    )
+    NN_structure = train_config.NN_structure
 
     # Make a list with the model epochs saves
     training_output = [
@@ -1405,7 +1264,6 @@ def calc_validation_metrics_dips(
     with open(
         get_validation_dict_name(
             WP_b=Eval_parameters["WP_b"],
-            fc_value=Eval_parameters["fc_value"],
             n_jets=Eval_parameters["n_jets"],
             dir_name=train_config.model_name,
         ),
@@ -1417,7 +1275,7 @@ def calc_validation_metrics_dips(
     results = []
 
     # Loop over the different model savepoints at each epoch
-    for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
+    for n, model_file in enumerate(training_output):
         logger.info(f"Working on {n+1}/{len(training_output)} input files")
 
         # Init results dict to save to
@@ -1436,19 +1294,67 @@ def calc_validation_metrics_dips(
             if epoch == train_epoch["epoch"]:
                 result_dict = train_epoch
 
-        # Load DIPS model
-        dips = load_model(model_file, {"Sum": Sum})
+        if tagger == "umami":
+            # Load UMAMI model
+            umami = load_model(model_file, {"Sum": Sum})
 
-        # Validate dips
-        val_result_dict = evaluate_model_dips(
-            dips, val_data_dict, target_beff, frac_dict
-        )
+            # Evaluate Umami model
+            val_result_dict = evaluate_model_umami(
+                model=umami,
+                data_dict=load_validation_data_umami(
+                    train_config, preprocess_config, nJets
+                ),
+                class_labels=NN_structure["class_labels"],
+                main_class=NN_structure["main_class"],
+                target_beff=target_beff,
+                frac_dict=frac_dict,
+            )
+
+            # Delete model
+            del umami
+
+        elif tagger == "dl1":
+            # Load DL1 model
+            dl1 = load_model(model_file)
+
+            # Evaluate DL1 model
+            val_result_dict = evaluate_model(
+                model=dl1,
+                data_dict=load_validation_data_umami(
+                    train_config, preprocess_config, nJets
+                ),
+                class_labels=NN_structure["class_labels"],
+                main_class=NN_structure["main_class"],
+                target_beff=target_beff,
+                frac_dict=frac_dict,
+            )
+
+            # Delete model
+            del dl1
+
+        elif tagger == "dips":
+            # Load DIPS model
+            dips = load_model(model_file, {"Sum": Sum})
+
+            # Validate dips
+            val_result_dict = evaluate_model(
+                model=dips,
+                data_dict=load_validation_data_dips(
+                    train_config, preprocess_config, nJets
+                ),
+                class_labels=NN_structure["class_labels"],
+                main_class=NN_structure["main_class"],
+                target_beff=target_beff,
+                frac_dict=frac_dict,
+            )
+
+            # Delete model
+            del dips
 
         # Save results in dict
         for k, v in val_result_dict.items():
             result_dict[k] = v
         results.append(result_dict)
-        del dips
 
     # Sort the results after epoch
     results = sorted(results, key=lambda x: x["epoch"])

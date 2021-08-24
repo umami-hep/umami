@@ -11,7 +11,7 @@ stages:
   # - integration_test_preprocessing
   # - integration_test_tagger
   # - integration_test_plotting
-  # - coverage_test_stage
+  - coverage_test_stage
   - builds
   - image_build_umami
   - publish
@@ -40,26 +40,26 @@ yaml_linter:
     - if: $CI_COMMIT_BRANCH != ''
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
-# test_coverage:
-#   stage: coverage_test_stage
-#   image: python:3.7-slim
-#   script:
-#     - pip install --upgrade pip setuptools wheel
-#     - pip install -r requirements.txt
-#     - cd ./coverage_files/
-#     - coverage combine
-#     - coverage report
-#     - coverage xml
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-#   artifacts:
-#     when: always
-#     paths:
-#       - coverage_files/
-#     reports:
-#       cobertura: coverage_files/coverage.xml
-#   retry: 2
+test_coverage:
+  stage: coverage_test_stage
+  image: python:3.7-slim
+  script:
+    - pip install --upgrade pip setuptools wheel
+    - pip install -r requirements.txt
+    - cd ./coverage_files/
+    - coverage combine
+    - coverage report
+    - coverage xml
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+  artifacts:
+    when: always
+    paths:
+      - coverage_files/
+    reports:
+      cobertura: coverage_files/coverage.xml
+  retry: 2
 
 include:
   - 'pipelines/.unit_test-gitlab-ci.yaml'

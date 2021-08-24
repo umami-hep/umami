@@ -41,8 +41,6 @@ zpext_test_files:
 # Path to Variable dict used in preprocessing
 var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
 
-bool_use_taus: False
-
 exclude: []
 
 # Values for the neural network
@@ -63,6 +61,7 @@ NN_structure:
     # These are defined in the global_config
     class_labels: ["bjets", "cjets", "ujets"]
 
+    # Main class which is to be tagged
     main_class: ["bjets"]
 
     # Decide if Batch Normalisation is used
@@ -103,6 +102,9 @@ Eval_parameters_validation:
 
     # Working point used in the evaluation
     WP: 0.77
+
+# Plotting settings for training metrics plots
+Plotting_settings:
 
     # Enable/Disable atlas tag
     UseAtlasTag: True

@@ -10,41 +10,49 @@ flavour_categories:
     label_value: 5
     colour: "#1f77b4"
     legend_label: $b$-jets
+    prob_var_name: "pb"
   cjets:
     label_var: HadronConeExclTruthLabelID
     label_value: 4
     colour: "#ff7f0e"
     legend_label: $c$-jets
+    prob_var_name: "pc"
   ujets:
     label_var: HadronConeExclTruthLabelID
     label_value: 0
     colour: "#2ca02c"
     legend_label: light-flavour jets
+    prob_var_name: "pu"
   taujets:
     label_var: HadronConeExclTruthLabelID
     label_value: 15
     colour: "#7c5295"
     legend_label: light-flavour jets
+    prob_var_name: "ptau"
   singlebjets:
     label_var: HadronConeExclExtendedTruthLabelID
     label_value: [5, 54]
     colour: "#1f77b4"
     legend_label: $b$-jets
+    prob_var_name: "pb"
   bbjets:
     label_var: HadronConeExclExtendedTruthLabelID
     label_value: 55
     colour: "orange"
     legend_label: $bb$-jets
+    prob_var_name: "pbb"
   singlecjets:
     label_var: HadronConeExclExtendedTruthLabelID
     label_value: 4
     colour: "#ff7f0e"
     legend_label: $c$-jets
+    prob_var_name: "pc"
   ccjets:
     label_var: HadronConeExclExtendedTruthLabelID
     label_value: 44
     colour: ""
     legend_label: $cc$-jets
+    prob_var_name: "pcc"
 
 # plot style definitions
 hist_err_style:
