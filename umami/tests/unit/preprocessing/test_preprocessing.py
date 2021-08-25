@@ -25,7 +25,6 @@ class PreprocessingTestParser(unittest.TestCase):
         return_value=argparse.Namespace(
             config_file=config_file,
             prepare=False,
-            merge=False,
             undersampling=False,
             scaling=True,
             apply_scales=False,

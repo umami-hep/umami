@@ -17,21 +17,6 @@ bool_process_taus: False
 # set to true if extended flavour labelling is used in preprocessing
 bool_extended_labelling: False
 sampling_method: count
-f_z:
-  path: Null
-  file: Null
-f_tt_bjets:
-  path: Null
-  file: Null
-f_tt_cjets:
-  path: Null
-  file: Null
-f_tt_ujets:
-  path: Null
-  file: Null
-f_tt_taujets:
-  path: Null
-  file: Null
 outfile_name: Null
 plot_name: Null
 cuts: Null

@@ -1,29 +1,35 @@
 parameters:
   # file path
   file_path: &file_path ./
+  ntuple_path: &ntuple_path ./
 
 preparation:
-  ntuples: None
+  ntuples:
+    ttbar:
+      path: *ntuple_path
+      file_pattern: "*.h5"
+
+  class_labels: [bjets, cjets, ujets]
+
   samples:
     ttbar:
       type: ttbar
       category: bjets
       n_jets: 1
-      n_split: 1
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 5
+        - eventNumber:
+            operator: mod_2_==
+            condition: 0
+        - pt_btagJes:
+            operator: <=
+            condition: 2.5e5
+        - pt_btagJes:
+            operator: ">"
+            condition: 1.5e5
       f_output:
         path: *file_path
         file: dummy.h5
-      merge_output: f_tt_bjets
+
 
 # amount of b-jets which are used
 njets: 5e6
@@ -45,21 +51,6 @@ bool_process_taus: False
 bool_extended_labelling: False
 # Sampling method
 sampling_method: count
-f_z:
-  path: *file_path
-  file: dummy.h5
-f_tt_bjets:
-  path: *file_path
-  file: dummy.h5
-f_tt_cjets:
-  path: *file_path
-  file: dummy.h5
-f_tt_ujets:
-  path: *file_path
-  file: dummy.h5
-f_tt_taujets:
-  path: *file_path
-  file: dummy.h5
 outfile_name: dummy_out.h5
 plot_name: dummy_plot
 
