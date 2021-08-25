@@ -14,6 +14,8 @@ from umami.train_tools.NN_tools import (
     GetTestFile,
     GetTestSample,
     GetTestSampleTrks,
+    LoadJetsFromFile,
+    LoadTrksFromFile,
     MyCallback,
     MyCallbackUmami,
     create_metadata_folder,
@@ -27,6 +29,47 @@ from umami.train_tools.NN_tools import (
     load_validation_data_umami,
     setup_output_directory,
 )
+
+
+class Load_Files_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_test_dir = f"{self.tmp_dir.name}"
+        self.class_labels = ["bjets", "cjets", "ujets"]
+        self.nJets = 3000
+
+        run(
+            [
+                "wget",
+                "https://umami-docs.web.cern.ch/umami-docs/ci/umami/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "--directory-prefix",
+                self.tmp_test_dir,
+            ]
+        )
+
+    def test_LoadJetsFromFile(self):
+        jets, labels = LoadJetsFromFile(
+            filepath=os.path.join(
+                self.tmp_test_dir,
+                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+            ),
+            class_labels=self.class_labels,
+            nJets=self.nJets,
+        )
+
+        self.assertEqual(len(jets), len(labels))
+
+    def test_LoadTrksFromFile(self):
+        trks, labels = LoadTrksFromFile(
+            filepath=os.path.join(
+                self.tmp_test_dir,
+                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+            ),
+            class_labels=self.class_labels,
+            nJets=self.nJets,
+        )
+
+        self.assertEqual(len(trks), len(labels))
 
 
 class setup_output_directory_TestCase(unittest.TestCase):

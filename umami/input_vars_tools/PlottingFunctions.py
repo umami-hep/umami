@@ -9,16 +9,16 @@ import os
 import re
 from glob import glob
 
-import h5py
+import matplotlib as mtp
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 from matplotlib import gridspec
 
 import umami.evaluation_tools as uet
+import umami.train_tools as utt
 from umami.configuration import global_config, logger
-from umami.tools import yaml_loader
-from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
+from umami.tools import applyATLASstyle, makeATLAStag, yaml_loader
 
 
 def atoi(text):
@@ -34,9 +34,10 @@ def plot_nTracks_per_Jet(
     datasets_labels,
     var_dict,
     nJets,
-    flavours,
+    class_labels,
     plot_type="pdf",
     UseAtlasTag=True,
+    ApplyATLASStyle=False,
     AtlasTag="Internal Simulation",
     SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
     yAxisAtlasTag=0.925,
@@ -51,9 +52,35 @@ def plot_nTracks_per_Jet(
     Ratio_Cut=None,
     Bin_Width_y_axis=True,
 ):
-    # Load var dict
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    """
+    Plotting the number of tracks per jet as a histogram.
+
+    Input:
+    - datasets_filepaths: List of filepaths to the files.
+    - datasets_labels: Label of the dataset for the legend.
+    - var_dict: Variable dict where all variables of the files are saved.
+    - nJets: Number of jets to use for plotting.
+    - class_labels: List of class_labels which are to be plotted.
+    - plot_type: Plottype, like pdf or png
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - output_directory: Name of the output directory. Only the dir name not path!
+    - figsize: List of the figure size. i.e [5, 6]
+    - Log: Set y-axis log True or False.
+    - ylabel: Y-label.
+    - ycolor: Y-axis-label colour.
+    - legFontSize: Legend font size
+    - ncol: Number of columns of the legend.
+    - Ratio_Cut: List of y-axis cuts for the ratio block.
+    - Bin_Width_y_axis: Show bin size on y-axis
+
+    Output:
+    - Number of tracks per jet plot
+    """
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
@@ -61,6 +88,9 @@ def plot_nTracks_per_Jet(
     # Init trks and flavour label dicts
     trks_dict = {}
     flavour_label_dict = {}
+
+    # Init jet counter
+    nJets_counter = 0
 
     # Iterate over the different dataset filepaths and labels
     # defined in the config
@@ -71,65 +101,40 @@ def plot_nTracks_per_Jet(
         # Get the filepath of the dataset
         filepath = glob(filepath)
 
-        # Init an empty array to append to
-        trks = np.array([])
-        flavour_labels = np.array([])
-
         # Loop over files and get the amount of jets needed.
         for file_counter, file in enumerate(
             sorted(filepath, key=natural_keys)
         ):
-            if file_counter != 0:
-                if len(trks) < nJets:
-                    # Loading the labels to remove jets that are not used
-                    variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                        variable_config["label"]
-                    ]
+            if nJets_counter < nJets:
+                tmp_trks, tmp_flavour_labels = utt.LoadTrksFromFile(
+                    filepath=file,
+                    class_labels=class_labels,
+                    nJets=nJets,
+                )
 
-                    # Set up a bool list
-                    indices_toremove = np.where(variable_labels > 5)[0]
+                if file_counter == 0:
+                    # Append to array
+                    trks = tmp_trks
+                    flavour_labels = tmp_flavour_labels
 
-                    # Getting the flavour labels
-                    tmp_flavour_labels = np.delete(
-                        variable_labels, indices_toremove, 0
-                    )
-
-                    # Load tracks
-                    tmp_trks = np.asarray(
-                        h5py.File(file, "r")["/tracks"][:nJets]
-                    )
-
-                    # Delete all not b, c or light jets
-                    tmp_trks = np.delete(tmp_trks, indices_toremove, 0)
-
+                else:
                     # Append to array
                     trks = np.concatenate((trks, tmp_trks))
                     flavour_labels = np.concatenate(
                         (flavour_labels, tmp_flavour_labels)
                     )
 
-                else:
-                    break
+                # Add number of jets to counter
+                nJets_counter += len(tmp_trks)
 
             else:
-                # Loading the labels to remove jets that are not used
-                variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                    variable_config["label"]
-                ]
+                break
 
-                # Set up a bool list
-                indices_toremove = np.where(variable_labels > 5)[0]
-
-                # Getting the flavour labels
-                flavour_labels = np.delete(
-                    variable_labels, indices_toremove, 0
-                )
-
-                # Load tracks
-                trks = np.asarray(h5py.File(file, "r")["/tracks"][:nJets])
-
-                # Delete all not b, c or light jets
-                trks = np.delete(trks, indices_toremove, 0)
+        if len(trks) < nJets:
+            n_trks = len(trks)
+            logger.warning(
+                f"{nJets} were set to be used, but only {n_trks} are available for {label} files!"
+            )
 
         # Append trks to dict
         trks_dict.update({label: trks[:nJets]})
@@ -142,8 +147,12 @@ def plot_nTracks_per_Jet(
     # Define the figure with two subplots of unequal sizes
     axis_dict = {}
 
+    # Apply ATLAS style if true
+    if ApplyATLASStyle:
+        applyATLASstyle(mtp)
+
     # Set up new figure
-    if figsize is None:
+    if not figsize:
         fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
     else:
@@ -173,17 +182,15 @@ def plot_nTracks_per_Jet(
 
         if model_number == 0:
             # Calculate unified Binning
-            nTracks_b = nTracks[flavour_label_dict[label] == 5]
+            nTracks_first = nTracks[flavour_label_dict[label] == 0]
 
             _, Binning = np.histogram(
-                nTracks_b,
+                nTracks_first,
                 bins=np.arange(-0.5, 40.5, 1),
             )
 
-        for t, flavour in enumerate(flavours):
-            nTracks_flavour = nTracks[
-                flavour_label_dict[label] == flavours[flavour]
-            ]
+        for flav_label, flavour in enumerate(class_labels):
+            nTracks_flavour = nTracks[flavour_label_dict[label] == flav_label]
 
             # Calculate bins
             bins, weights, unc, band = uet.calc_bins(
@@ -198,14 +205,14 @@ def plot_nTracks_per_Jet(
                 histtype="step",
                 linewidth=1.0,
                 linestyle=linestyle,
-                color=global_config.flavour_colors[flavour],
+                color=global_config.flavour_categories[flavour]["colour"],
                 stacked=False,
                 fill=False,
-                label=global_config.flavour_legend_labels[flavour]
+                label=global_config.flavour_categories[flavour]["legend_label"]
                 + f" {label}",
             )
 
-            if flavour == list(flavours.keys())[-1] and model_number == 0:
+            if flavour == class_labels[-1] and model_number == 0:
                 axis_dict["left"]["top"].hist(
                     x=bins[:-1],
                     bins=bins,
@@ -233,7 +240,7 @@ def plot_nTracks_per_Jet(
 
         # Start ratio plot
         if model_number != 0:
-            for flavour in flavours:
+            for flavour in class_labels:
                 step, step_unc = uet.calc_ratio(
                     counter=bincounts["{}{}".format(flavour, model_number)],
                     denominator=bincounts["{}{}".format(flavour, 0)],
@@ -246,7 +253,7 @@ def plot_nTracks_per_Jet(
                 axis_dict["left"]["ratio"].step(
                     x=Binning,
                     y=step,
-                    color=global_config.flavour_colors[flavour],
+                    color=global_config.flavour_categories[flavour]["colour"],
                     linestyle=linestyles[model_number],
                 )
 
@@ -369,12 +376,12 @@ def plot_input_vars_trks_comparison(
     var_dict,
     nJets,
     binning,
-    flavours,
-    bool_use_taus=False,
+    class_labels,
     sorting_variable="ptfrac",
     n_Leading=[None],
     plot_type="pdf",
     UseAtlasTag=True,
+    ApplyATLASStyle=False,
     AtlasTag="Internal Simulation",
     SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
     yAxisAtlasTag=0.925,
@@ -389,6 +396,39 @@ def plot_input_vars_trks_comparison(
     Ratio_Cut=None,
     Bin_Width_y_axis=True,
 ):
+    """
+    Plotting the track variable in comparison to another model with ratio plot.
+
+    Input:
+    - datasets_filepaths: List of filepaths to the files.
+    - datasets_labels: Label of the dataset for the legend.
+    - var_dict: Variable dict where all variables of the files are saved.
+    - nJets: Number of jets to use for plotting.
+    - binning: Decide which binning is used.
+    - class_labels: List of class_labels which are to be plotted.
+    - sorting_variable: Variable which is used for sorting.
+    - n_Leading: n-th leading jet which is plotted. For all, = None.
+    - plot_type: Plottype, like pdf or png
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - output_directory: Name of the output directory. Only the dir name not path!
+    - figsize: List of the figure size. i.e [5, 6]
+    - Log: Set y-axis log True or False.
+    - ylabel: Y-label.
+    - ycolor: Y-axis-label colour.
+    - legFontSize: Legend font size
+    - ncol: Number of columns of the legend.
+    - Ratio_Cut: List of y-axis cuts for the ratio block.
+    - Bin_Width_y_axis: Show bin size on y-axis
+
+    Output:
+    - Track variable in comparison to another model with ratio plot.
+    """
+
     nBins_dict = {}
 
     # Load the given binning or set it
@@ -422,10 +462,6 @@ def plot_input_vars_trks_comparison(
         else:
             nBins_dict.update({variable: binning[variable]})
 
-    # Load var dict
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
-
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
@@ -433,80 +469,46 @@ def plot_input_vars_trks_comparison(
     trks_dict = {}
     flavour_label_dict = {}
 
+    # Init jet counter
+    nJets_counter = 0
+
     # Iterate over the different dataset filepaths and labels
     # defined in the config
-    for (filepath, label) in zip(
+    for filepath, label in zip(
         datasets_filepaths,
         datasets_labels,
     ):
         # Get wildcard
         filepath = glob(filepath)
 
-        # Init an empty array to append to
-        trks = np.array([])
-        flavour_labels = np.array([])
-
         # Loop over files and get the amount of jets needed.
-        for j, file in enumerate(sorted(filepath, key=natural_keys)):
-            if j != 0:
-                if len(trks) < nJets:
-                    # Loading the labels to remove jets that are not used
-                    variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                        variable_config["label"]
-                    ]
+        for file_counter, file in enumerate(
+            sorted(filepath, key=natural_keys)
+        ):
+            if nJets_counter < nJets:
+                tmp_trks, tmp_flavour_labels = utt.LoadTrksFromFile(
+                    filepath=file,
+                    class_labels=class_labels,
+                    nJets=nJets,
+                )
 
-                    # Set up a bool list
-                    if bool_use_taus is True:
-                        indices_toremove = np.where(variable_labels > 15)[0]
+                if file_counter == 0:
+                    # Append to array
+                    trks = tmp_trks
+                    flavour_labels = tmp_flavour_labels
 
-                    else:
-                        indices_toremove = np.where(variable_labels > 5)[0]
-
-                    # Getting the flavour labels
-                    tmp_flavour_labels = np.delete(
-                        variable_labels, indices_toremove, 0
-                    )
-
-                    # Load tracks
-                    tmp_trks = np.asarray(
-                        h5py.File(file, "r")["/tracks"][:nJets]
-                    )
-
-                    # Delete all not b, c or light jets
-                    tmp_trks = np.delete(tmp_trks, indices_toremove, 0)
-
+                else:
                     # Append to array
                     trks = np.concatenate((trks, tmp_trks))
                     flavour_labels = np.concatenate(
                         (flavour_labels, tmp_flavour_labels)
                     )
 
-                else:
-                    break
+                # Add number of jets to counter
+                nJets_counter += len(tmp_trks)
 
             else:
-                # Loading the labels to remove jets that are not used
-                variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                    variable_config["label"]
-                ]
-
-                # Set up a bool list
-                if bool_use_taus is True:
-                    indices_toremove = np.where(variable_labels > 15)[0]
-
-                else:
-                    indices_toremove = np.where(variable_labels > 5)[0]
-
-                # Getting the flavour labels
-                flavour_labels = np.delete(
-                    variable_labels, indices_toremove, 0
-                )
-
-                # Load tracks
-                trks = np.asarray(h5py.File(file, "r")["/tracks"][:nJets])
-
-                # Delete all not b, c or light jets
-                trks = np.delete(trks, indices_toremove, 0)
+                break
 
         if len(trks) < nJets:
             n_trks = len(trks)
@@ -517,6 +519,10 @@ def plot_input_vars_trks_comparison(
         # Append trks to dict
         trks_dict.update({label: trks[:nJets]})
         flavour_label_dict.update({label: flavour_labels[:nJets]})
+
+    # Load var dict
+    with open(var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
 
     # Loading track variables
     noNormVars = variable_config["track_train_variables"]["noNormVars"]
@@ -553,6 +559,10 @@ def plot_input_vars_trks_comparison(
 
                 # Define the figure with two subplots of unequal sizes
                 axis_dict = {}
+
+                # Apply ATLAS style if true
+                if ApplyATLASStyle:
+                    applyATLASstyle(mtp)
 
                 # Set up new figure
                 if figsize is None:
@@ -596,23 +606,25 @@ def plot_input_vars_trks_comparison(
 
                     if model_number == 0:
                         # Calculate unified Binning
-                        b = tmp[flavour_label_dict[label] == 5]
+                        first_flav = tmp[flavour_label_dict[label] == 0]
 
                         if nBins_dict[var] is None:
                             _, Binning = np.histogram(
-                                b[:, nLeading][~np.isnan(b[:, nLeading])]
+                                first_flav[:, nLeading][
+                                    ~np.isnan(first_flav[:, nLeading])
+                                ]
                             )
 
                         else:
                             _, Binning = np.histogram(
-                                b[:, nLeading][~np.isnan(b[:, nLeading])],
+                                first_flav[:, nLeading][
+                                    ~np.isnan(first_flav[:, nLeading])
+                                ],
                                 bins=nBins_dict[var],
                             )
 
-                    for t, flavour in enumerate(flavours):
-                        jets = tmp[
-                            flavour_label_dict[label] == flavours[flavour]
-                        ]
+                    for flav_label, flavour in enumerate(class_labels):
+                        jets = tmp[flavour_label_dict[label] == flav_label]
 
                         # Get number of tracks
                         Tracks = jets[:, nLeading][
@@ -632,17 +644,18 @@ def plot_input_vars_trks_comparison(
                             histtype="step",
                             linewidth=1.0,
                             linestyle=linestyle,
-                            color=global_config.flavour_colors[flavour],
+                            color=global_config.flavour_categories[flavour][
+                                "colour"
+                            ],
                             stacked=False,
                             fill=False,
-                            label=global_config.flavour_legend_labels[flavour]
+                            label=global_config.flavour_categories[flavour][
+                                "legend_label"
+                            ]
                             + f" {label}",
                         )
 
-                        if (
-                            flavour == list(flavours.keys())[-1]
-                            and model_number == 0
-                        ):
+                        if flavour == class_labels[-1] and model_number == 0:
                             axis_dict["left"]["top"].hist(
                                 x=bins[:-1],
                                 bins=bins,
@@ -672,7 +685,7 @@ def plot_input_vars_trks_comparison(
 
                     # Start ratio plot
                     if model_number != 0:
-                        for flavour in flavours:
+                        for flavour in class_labels:
                             step, step_unc = uet.calc_ratio(
                                 counter=bincounts[
                                     "{}{}".format(flavour, model_number)
@@ -691,7 +704,9 @@ def plot_input_vars_trks_comparison(
                             axis_dict["left"]["ratio"].step(
                                 x=Binning,
                                 y=step,
-                                color=global_config.flavour_colors[flavour],
+                                color=global_config.flavour_categories[
+                                    flavour
+                                ]["colour"],
                                 linestyle=linestyles[model_number],
                             )
 
@@ -831,12 +846,12 @@ def plot_input_vars_trks(
     var_dict,
     nJets,
     binning,
-    flavours,
-    bool_use_taus=False,
+    class_labels,
     sorting_variable="ptfrac",
     n_Leading=None,
     plot_type="pdf",
     UseAtlasTag=True,
+    ApplyATLASStyle=False,
     AtlasTag="Internal Simulation",
     SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
     yAxisAtlasTag=0.925,
@@ -844,7 +859,44 @@ def plot_input_vars_trks(
     output_directory="input_vars_trks",
     figsize=None,
     Log=True,
+    ylabel="Normalised number of tracks",
+    ycolor="black",
+    legFontSize=10,
+    ncol=2,
+    Bin_Width_y_axis=True,
 ):
+    """
+    Plotting the track variable.
+
+    Input:
+    - datasets_filepaths: List of filepaths to the files.
+    - datasets_labels: Label of the dataset for the legend.
+    - var_dict: Variable dict where all variables of the files are saved.
+    - nJets: Number of jets to use for plotting.
+    - binning: Decide which binning is used.
+    - class_labels: List of class_labels which are to be plotted.
+    - sorting_variable: Variable which is used for sorting.
+    - n_Leading: n-th leading jet which is plotted. For all, = None.
+    - plot_type: Plottype, like pdf or png
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - output_directory: Name of the output directory. Only the dir name not path!
+    - figsize: List of the figure size. i.e [5, 6]
+    - Log: Set y-axis log True or False.
+    - ylabel: Y-label.
+    - ycolor: Y-axis-label colour.
+    - legFontSize: Legend font size
+    - ncol: Number of columns of the legend.
+    - Bin_Width_y_axis: Show bin size on y-axis
+
+    Output:
+    - Track variable for the n-th leading jets
+    """
+
     nBins_dict = {}
 
     # Load the given binning or set it
@@ -878,16 +930,15 @@ def plot_input_vars_trks(
         else:
             nBins_dict.update({variable: binning[variable]})
 
-    # Load var dict
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
-
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
     # Init trks and flavour label dicts
     trks_dict = {}
     flavour_label_dict = {}
+
+    # Init jet counter
+    nJets_counter = 0
 
     # Iterate over the different dataset filepaths and labels
     # defined in the config
@@ -898,71 +949,34 @@ def plot_input_vars_trks(
         # Get wildcard
         filepath = glob(filepath)
 
-        # Init an empty array to append to
-        trks = np.array([])
-        flavour_labels = np.array([])
-
         # Loop over files and get the amount of jets needed.
-        for j, file in enumerate(sorted(filepath, key=natural_keys)):
-            if j != 0:
-                if len(trks) < nJets:
-                    # Loading the labels to remove jets that are not used
-                    variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                        variable_config["label"]
-                    ]
+        for file_counter, file in enumerate(
+            sorted(filepath, key=natural_keys)
+        ):
+            if nJets_counter < nJets:
+                tmp_trks, tmp_flavour_labels = utt.LoadTrksFromFile(
+                    filepath=file,
+                    class_labels=class_labels,
+                    nJets=nJets,
+                )
 
-                    # Set up a bool list
-                    if bool_use_taus is True:
-                        indices_toremove = np.where(variable_labels > 15)[0]
+                if file_counter == 0:
+                    # Append to array
+                    trks = tmp_trks
+                    flavour_labels = tmp_flavour_labels
 
-                    else:
-                        indices_toremove = np.where(variable_labels > 5)[0]
-
-                    # Getting the flavour labels
-                    tmp_flavour_labels = np.delete(
-                        variable_labels, indices_toremove, 0
-                    )
-
-                    # Load tracks
-                    tmp_trks = np.asarray(
-                        h5py.File(file, "r")["/tracks"][:nJets]
-                    )
-
-                    # Delete all not b, c or light jets
-                    tmp_trks = np.delete(tmp_trks, indices_toremove, 0)
-
+                else:
                     # Append to array
                     trks = np.concatenate((trks, tmp_trks))
                     flavour_labels = np.concatenate(
                         (flavour_labels, tmp_flavour_labels)
                     )
 
-                else:
-                    break
+                # Add number of jets to counter
+                nJets_counter += len(tmp_trks)
 
             else:
-                # Loading the labels to remove jets that are not used
-                variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                    variable_config["label"]
-                ]
-
-                # Set up a bool list
-                if bool_use_taus is True:
-                    indices_toremove = np.where(variable_labels > 15)[0]
-
-                else:
-                    indices_toremove = np.where(variable_labels > 5)[0]
-
-                # Getting the flavour labels
-                flavour_labels = np.delete(
-                    variable_labels, indices_toremove, 0
-                )
-
-                # Load tracks
-                trks = np.asarray(h5py.File(file, "r")["/tracks"][:nJets])
-
-                # Delete all not b, c or light jets
-                trks = np.delete(trks, indices_toremove, 0)
+                break
 
         if len(trks) < nJets:
             n_trks = len(trks)
@@ -973,6 +987,10 @@ def plot_input_vars_trks(
         # Append trks to dict
         trks_dict.update({label: trks[:nJets]})
         flavour_label_dict.update({label: flavour_labels[:nJets]})
+
+    # Load var dict
+    with open(var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
 
     # Loading track variables
     noNormVars = variable_config["track_train_variables"]["noNormVars"]
@@ -1038,22 +1056,30 @@ def plot_input_vars_trks(
                     )
 
                     # Calculate unified Binning
-                    b = tmp[flavour_label_dict[label] == 5]
+                    first_flav = tmp[flavour_label_dict[label] == 0]
 
                     # Check if binning is already set
                     if nBins_dict[var] is None:
 
                         # Get Binning
                         _, Binning = np.histogram(
-                            b[:, nLeading][~np.isnan(b[:, nLeading])]
+                            first_flav[:, nLeading][
+                                ~np.isnan(first_flav[:, nLeading])
+                            ]
                         )
 
                     else:
                         # Get Binning
                         _, Binning = np.histogram(
-                            b[:, nLeading][~np.isnan(b[:, nLeading])],
+                            first_flav[:, nLeading][
+                                ~np.isnan(first_flav[:, nLeading])
+                            ],
                             bins=nBins_dict[var],
                         )
+
+                    # Apply ATLAS style if true
+                    if ApplyATLASStyle:
+                        applyATLASstyle(mtp)
 
                     # Set up new figure
                     if figsize is None:
@@ -1063,12 +1089,10 @@ def plot_input_vars_trks(
                         fig = plt.figure(figsize=(figsize[0], figsize[1]))
 
                     # Iterate over flavours
-                    for t, flavour in enumerate(flavours):
+                    for flav_label, flavour in enumerate(class_labels):
 
                         # Get all jets with wanted flavour
-                        jets = tmp[
-                            flavour_label_dict[label] == flavours[flavour]
-                        ]
+                        jets = tmp[flavour_label_dict[label] == flav_label]
 
                         # Get number of tracks
                         Tracks = jets[:, nLeading][
@@ -1088,14 +1112,18 @@ def plot_input_vars_trks(
                             histtype="step",
                             linewidth=1.0,
                             linestyle=linestyle,
-                            color=global_config.flavour_colors[flavour],
+                            color=global_config.flavour_categories[flavour][
+                                "colour"
+                            ],
                             stacked=False,
                             fill=False,
-                            label=global_config.flavour_legend_labels[flavour]
+                            label=global_config.flavour_categories[flavour][
+                                "legend_label"
+                            ]
                             + f" {label}",
                         )
 
-                        if flavour == list(flavours.keys())[-1]:
+                        if flavour == class_labels[-1]:
                             plt.hist(
                                 x=bins[:-1],
                                 bins=bins,
@@ -1120,25 +1148,45 @@ def plot_input_vars_trks(
                     else:
                         plt.xlabel(f"{nLeading+1} leading tracks {var}")
 
+                    # Add axes, titels and the legend
+                    if Bin_Width_y_axis is True:
+                        Bin_Width = abs(Binning[1] - Binning[0])
+                        plt.ylabel(
+                            ylabel + " / {:.2f}".format(Bin_Width),
+                            fontsize=12,
+                            horizontalalignment="right",
+                            y=1.0,
+                            color=ycolor,
+                        )
+
+                    else:
+                        plt.ylabel(
+                            ylabel,
+                            fontsize=12,
+                            horizontalalignment="right",
+                            y=1.0,
+                            color=ycolor,
+                        )
+
                     if Log is True:
-                        plt.ylabel("Normalised Number of Tracks")
                         plt.yscale("log")
                         ymin, ymax = plt.ylim()
                         plt.ylim(ymin=0.01 * ymin, ymax=yAxisIncrease * ymax)
 
                     else:
-                        plt.ylabel("Number of Tracks")
                         ymin, ymax = plt.ylim()
                         plt.ylim(ymin=0.8 * ymin, ymax=yAxisIncrease * ymax)
 
-                    plt.legend(loc="upper right")
+                    plt.legend(
+                        loc="upper right", fontsize=legFontSize, ncol=ncol
+                    )
                     plt.tight_layout()
 
                     ax = plt.gca()
                     if UseAtlasTag is True:
                         makeATLAStag(
-                            ax,
-                            fig,
+                            ax=ax,
+                            fig=fig,
                             first_tag=AtlasTag,
                             second_tag=SecondTag,
                             ymax=yAxisAtlasTag,
@@ -1156,19 +1204,55 @@ def plot_input_vars_jets(
     var_dict,
     nJets,
     binning,
-    flavours,
-    Log=True,
-    bool_use_taus=False,
+    class_labels,
     special_param_jets=None,
     plot_type="pdf",
     UseAtlasTag=True,
+    ApplyATLASStyle=False,
     AtlasTag="Internal Simulation",
     SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
     yAxisAtlasTag=0.925,
     yAxisIncrease=10,
     output_directory="input_vars_jets",
     figsize=None,
+    Log=True,
+    ylabel="Normalised number of tracks",
+    ycolor="black",
+    legFontSize=10,
+    ncol=2,
+    Bin_Width_y_axis=True,
 ):
+    """
+    Plotting the jet variable.
+
+    Input:
+    - datasets_filepaths: List of filepaths to the files.
+    - datasets_labels: Label of the dataset for the legend.
+    - var_dict: Variable dict where all variables of the files are saved.
+    - nJets: Number of jets to use for plotting.
+    - binning: Decide which binning is used.
+    - class_labels: List of class_labels which are to be plotted.
+    - special_param_jets: Give specific x-axis-limits for variable.
+    - plot_type: Plottype, like pdf or png
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - output_directory: Name of the output directory. Only the dir name not path!
+    - figsize: List of the figure size. i.e [5, 6]
+    - Log: Set y-axis log True or False.
+    - ylabel: Y-label.
+    - ycolor: Y-axis-label colour.
+    - legFontSize: Legend font size
+    - ncol: Number of columns of the legend.
+    - Bin_Width_y_axis: Show bin size on y-axis
+
+    Output:
+    - Jet variable plot
+    """
+
     nBins_dict = {}
 
     # Load the given binning or set it
@@ -1197,6 +1281,9 @@ def plot_input_vars_jets(
     jets_dict = {}
     flavour_label_dict = {}
 
+    # Init jet counter
+    nJets_counter = 0
+
     # Iterate over the different dataset filepaths and labels
     # defined in the config
     for (filepath, label) in zip(
@@ -1206,71 +1293,40 @@ def plot_input_vars_jets(
         # Get wildcard
         filepath = glob(filepath)
 
-        # Init an empty array to append to
-        jets = np.array([])
-        flavour_labels = np.array([])
-
         # Loop over files and get the amount of jets needed.
-        for j, file in enumerate(sorted(filepath, key=natural_keys)):
-            if j != 0:
-                if len(jets) < nJets:
-                    # Loading the labels to remove jets that are not used
-                    variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                        variable_config["label"]
-                    ]
-
-                    # Set up a bool list
-                    if bool_use_taus is True:
-                        indices_toremove = np.where(variable_labels > 15)[0]
-
-                    else:
-                        indices_toremove = np.where(variable_labels > 5)[0]
-
-                    # Getting the flavour labels
-                    tmp_flavour_labels = np.delete(
-                        variable_labels, indices_toremove, 0
-                    )
-
-                    # Load jets
-                    tmp_jets = np.asarray(
-                        h5py.File(file, "r")["/jets"][:nJets]
-                    )
-
-                    # Delete all not b, c or light jets
-                    tmp_jets = np.delete(tmp_jets, indices_toremove, 0)
-
-                    # Append to array
-                    jets = np.concatenate((jets, tmp_jets))
-                    flavour_labels = np.concatenate(
-                        (flavour_labels, tmp_flavour_labels)
-                    )
-
-                else:
-                    break
-
-            else:
-                # Loading the labels to remove jets that are not used
-                variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                    variable_config["label"]
-                ]
-
-                # Set up a bool list
-                if bool_use_taus is True:
-                    indices_toremove = np.where(variable_labels > 15)[0]
-
-                else:
-                    indices_toremove = np.where(variable_labels > 5)[0]
-
-                # Getting the flavour labels
-                flavour_labels = np.delete(
-                    variable_labels, indices_toremove, 0
+        for file_counter, file in enumerate(
+            sorted(filepath, key=natural_keys)
+        ):
+            if nJets_counter < nJets:
+                tmp_jets, tmp_flavour_labels = utt.LoadJetsFromFile(
+                    filepath=file,
+                    class_labels=class_labels,
+                    nJets=nJets,
                 )
 
-                # Load tracks
-                jets = np.asarray(h5py.File(file, "r")["/jets"][:nJets])
+                if file_counter == 0:
+                    # Append to array
+                    jets = tmp_jets
+                    flavour_labels = tmp_flavour_labels
 
-                # Delete all not b, c or light jets
-                jets = np.delete(jets, indices_toremove, 0)
+                else:
+                    # Append to array
+                    jets = jets.append(tmp_jets, ignore_index=True)
+                    flavour_labels = flavour_labels.append(
+                        tmp_flavour_labels, ignore_index=True
+                    )
+
+                # Add number of loaded jets to counter
+                nJets_counter += len(tmp_jets)
+
+            else:
+                break
+
+        if len(jets) < nJets:
+            n_jets = len(jets)
+            logger.warning(
+                f"{nJets} were set to be used, but only {n_jets} are available for {label} files!"
+            )
 
         # Append jets to dict
         jets_dict.update({label: jets[:nJets]})
@@ -1303,7 +1359,7 @@ def plot_input_vars_jets(
                 flavour_label_clean = flavour_labels_var[~np.isnan(jets_var)]
 
                 # Calculate unified Binning
-                b = jets_var_clean[flavour_label_clean == 5]
+                first_flav = jets_var_clean[flavour_label_clean == 0]
 
                 var_range = None
                 if (
@@ -1319,14 +1375,18 @@ def plot_input_vars_jets(
                         var_range = (lim_left, lim_right)
 
                 if nBins_dict[var] is None:
-                    _, Binning = np.histogram(b, range=var_range)
+                    _, Binning = np.histogram(first_flav, range=var_range)
 
                 else:
                     _, Binning = np.histogram(
-                        b,
+                        first_flav,
                         bins=nBins_dict[var],
                         range=var_range,
                     )
+
+                # Apply ATLAS style if true
+                if ApplyATLASStyle:
+                    applyATLASstyle(mtp)
 
                 # Set up new figure
                 if figsize is None:
@@ -1335,9 +1395,9 @@ def plot_input_vars_jets(
                 else:
                     fig = plt.figure(figsize=(figsize[0], figsize[1]))
 
-                for flavour in flavours:
+                for flav_label, flavour in enumerate(class_labels):
                     jets_flavour = jets_var_clean[
-                        flavour_label_clean == flavours[flavour]
+                        flavour_label_clean == flav_label
                     ]
 
                     # Calculate bins
@@ -1352,13 +1412,17 @@ def plot_input_vars_jets(
                         weights=weights,
                         histtype="step",
                         linewidth=1.0,
-                        color=global_config.flavour_colors[flavour],
+                        color=global_config.flavour_categories[flavour][
+                            "colour"
+                        ],
                         stacked=False,
                         fill=False,
-                        label=global_config.flavour_legend_labels[flavour],
+                        label=global_config.flavour_categories[flavour][
+                            "legend_label"
+                        ],
                     )
 
-                    if flavour == list(flavours.keys())[-1]:
+                    if flavour == class_labels[-1]:
                         plt.hist(
                             x=bins[:-1],
                             bins=bins,
@@ -1378,19 +1442,44 @@ def plot_input_vars_jets(
                         )
 
                 plt.xlabel(var)
-                plt.ylabel("Normalised Number of Jets")
-                plt.yscale("log")
 
-                ymin, ymax = plt.ylim()
-                plt.ylim(ymin=0.01 * ymin, ymax=yAxisIncrease * ymax)
-                plt.legend(loc="upper right")
+                # Add axes, titels and the legend
+                if Bin_Width_y_axis is True:
+                    Bin_Width = abs(Binning[1] - Binning[0])
+                    plt.ylabel(
+                        ylabel + " / {:.2f}".format(Bin_Width),
+                        fontsize=12,
+                        horizontalalignment="right",
+                        y=1.0,
+                        color=ycolor,
+                    )
+
+                else:
+                    plt.ylabel(
+                        ylabel,
+                        fontsize=12,
+                        horizontalalignment="right",
+                        y=1.0,
+                        color=ycolor,
+                    )
+
+                if Log is True:
+                    plt.yscale("log")
+                    ymin, ymax = plt.ylim()
+                    plt.ylim(ymin=0.01 * ymin, ymax=yAxisIncrease * ymax)
+
+                else:
+                    ymin, ymax = plt.ylim()
+                    plt.ylim(ymin=0.8 * ymin, ymax=yAxisIncrease * ymax)
+
+                plt.legend(loc="upper right", fontsize=legFontSize, ncol=ncol)
                 plt.tight_layout()
 
                 ax = plt.gca()
                 if UseAtlasTag is True:
                     makeATLAStag(
-                        ax,
-                        fig,
+                        ax=ax,
+                        fig=fig,
                         first_tag=AtlasTag,
                         second_tag=SecondTag,
                         ymax=yAxisAtlasTag,
@@ -1407,11 +1496,11 @@ def plot_input_vars_jets_comparison(
     var_dict,
     nJets,
     binning,
-    flavours,
-    bool_use_taus=False,
+    class_labels,
     special_param_jets=None,
     plot_type="pdf",
     UseAtlasTag=True,
+    ApplyATLASStyle=False,
     AtlasTag="Internal Simulation",
     SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
     yAxisAtlasTag=0.925,
@@ -1426,6 +1515,38 @@ def plot_input_vars_jets_comparison(
     Ratio_Cut=None,
     Bin_Width_y_axis=True,
 ):
+    """
+    Plotting the jet variable comparison for the given datasets.
+
+    Input:
+    - datasets_filepaths: List of filepaths to the files.
+    - datasets_labels: Label of the dataset for the legend.
+    - var_dict: Variable dict where all variables of the files are saved.
+    - nJets: Number of jets to use for plotting.
+    - binning: Decide which binning is used.
+    - class_labels: List of class_labels which are to be plotted.
+    - special_param_jets: Give specific x-axis-limits for variable.
+    - plot_type: Plottype, like pdf or png
+    - UseAtlasTag: Define if ATLAS Tag is used or not.
+    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - output_directory: Name of the output directory. Only the dir name not path!
+    - figsize: List of the figure size. i.e [5, 6]
+    - Log: Set y-axis log True or False.
+    - ylabel: Y-label.
+    - ycolor: Y-axis-label colour.
+    - legFontSize: Legend font size
+    - ncol: Number of columns of the legend.
+    - Ratio_Cut: List of y-axis cuts for the ratio block.
+    - Bin_Width_y_axis: Show bin size on y-axis
+
+    Output:
+    - Jet variable comparison plot for the given datasets
+    """
+
     nBins_dict = {}
 
     # Load the given binning or set it
@@ -1447,15 +1568,15 @@ def plot_input_vars_jets_comparison(
         else:
             nBins_dict.update({variable: binning[variable]})
 
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
-
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
     # Init trks and flavour label dicts
     jets_dict = {}
     flavour_label_dict = {}
+
+    # Init jet counter
+    nJets_counter = 0
 
     # Iterate over the different dataset filepaths and labels
     # defined in the config
@@ -1466,75 +1587,47 @@ def plot_input_vars_jets_comparison(
         # Get wildcard
         filepath = glob(filepath)
 
-        # Init an empty array to append to
-        jets = np.array([])
-        flavour_labels = np.array([])
-
         # Loop over files and get the amount of jets needed.
-        for j, file in enumerate(sorted(filepath, key=natural_keys)):
-            if j != 0:
-                if len(jets) < nJets:
-                    # Loading the labels to remove jets that are not used
-                    variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                        variable_config["label"]
-                    ]
-
-                    # Set up a bool list
-                    if bool_use_taus is True:
-                        indices_toremove = np.where(variable_labels > 15)[0]
-
-                    else:
-                        indices_toremove = np.where(variable_labels > 5)[0]
-
-                    # Getting the flavour labels
-                    tmp_flavour_labels = np.delete(
-                        variable_labels, indices_toremove, 0
-                    )
-
-                    # Load jets
-                    tmp_jets = np.asarray(
-                        h5py.File(file, "r")["/jets"][:nJets]
-                    )
-
-                    # Delete all not b, c or light jets
-                    tmp_jets = np.delete(tmp_jets, indices_toremove, 0)
-
-                    # Append to array
-                    jets = np.concatenate((jets, tmp_jets))
-                    flavour_labels = np.concatenate(
-                        (flavour_labels, tmp_flavour_labels)
-                    )
-
-                else:
-                    break
-
-            else:
-                # Loading the labels to remove jets that are not used
-                variable_labels = h5py.File(file, "r")["/jets"][:nJets][
-                    variable_config["label"]
-                ]
-
-                # Set up a bool list
-                if bool_use_taus is True:
-                    indices_toremove = np.where(variable_labels > 15)[0]
-
-                else:
-                    indices_toremove = np.where(variable_labels > 5)[0]
-
-                # Getting the flavour labels
-                flavour_labels = np.delete(
-                    variable_labels, indices_toremove, 0
+        for file_counter, file in enumerate(
+            sorted(filepath, key=natural_keys)
+        ):
+            if nJets_counter < nJets:
+                tmp_jets, tmp_flavour_labels = utt.LoadJetsFromFile(
+                    filepath=file,
+                    class_labels=class_labels,
+                    nJets=nJets,
                 )
 
-                # Load tracks
-                jets = np.asarray(h5py.File(file, "r")["/jets"][:nJets])
+                if file_counter == 0:
+                    # Append to array
+                    jets = tmp_jets
+                    flavour_labels = tmp_flavour_labels
 
-                # Delete all not b, c or light jets
-                jets = np.delete(jets, indices_toremove, 0)
+                else:
+                    # Append to array
+                    jets = jets.append(tmp_jets, ignore_index=True)
+                    flavour_labels = flavour_labels.append(
+                        tmp_flavour_labels, ignore_index=True
+                    )
+
+                # Add number of jets to counter
+                nJets_counter += len(tmp_jets)
+
+            else:
+                break
+
+        if len(jets) < nJets:
+            n_jets = len(jets)
+            logger.warning(
+                f"{nJets} were set to be used, but only {n_jets} are available for {label} files!"
+            )
 
         # Append jets to dict
         jets_dict.update({label: jets[:nJets]})
         flavour_label_dict.update({label: flavour_labels[:nJets]})
+
+    with open(var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
 
     # Loading jet variables
     jetsVars = [
@@ -1555,6 +1648,10 @@ def plot_input_vars_jets_comparison(
 
             # Define the figure with two subplots of unequal sizes
             axis_dict = {}
+
+            # Apply ATLAS style if true
+            if ApplyATLASStyle:
+                applyATLASstyle(mtp)
 
             # Set up new figure
             if figsize is None:
@@ -1591,7 +1688,7 @@ def plot_input_vars_jets_comparison(
 
                 if model_number == 0:
                     # Calculate unified Binning
-                    b = jets_var_clean[flavour_label_clean == 5]
+                    first_flav = jets_var_clean[flavour_label_clean == 0]
 
                     var_range = None
                     if (
@@ -1607,18 +1704,18 @@ def plot_input_vars_jets_comparison(
                             var_range = (lim_left, lim_right)
 
                     if nBins_dict[var] is None:
-                        _, Binning = np.histogram(b, range=var_range)
+                        _, Binning = np.histogram(first_flav, range=var_range)
 
                     else:
                         _, Binning = np.histogram(
-                            b,
+                            first_flav,
                             bins=nBins_dict[var],
                             range=var_range,
                         )
 
-                for t, flavour in enumerate(flavours):
+                for flav_label, flavour in enumerate(class_labels):
                     jets_flavour = jets_var_clean[
-                        flavour_label_clean == flavours[flavour]
+                        flavour_label_clean == flav_label
                     ]
 
                     # Calculate bins
@@ -1634,17 +1731,18 @@ def plot_input_vars_jets_comparison(
                         histtype="step",
                         linewidth=1.0,
                         linestyle=linestyle,
-                        color=global_config.flavour_colors[flavour],
+                        color=global_config.flavour_categories[flavour][
+                            "colour"
+                        ],
                         stacked=False,
                         fill=False,
-                        label=global_config.flavour_legend_labels[flavour]
+                        label=global_config.flavour_categories[flavour][
+                            "legend_label"
+                        ]
                         + f" {label}",
                     )
 
-                    if (
-                        flavour == list(flavours.keys())[-1]
-                        and model_number == 0
-                    ):
+                    if flavour == class_labels[-1] and model_number == 0:
                         axis_dict["left"]["top"].hist(
                             x=bins[:-1],
                             bins=bins,
@@ -1672,7 +1770,7 @@ def plot_input_vars_jets_comparison(
 
                 # Start ratio plot
                 if model_number != 0:
-                    for flavour in flavours:
+                    for flavour in class_labels:
                         step, step_unc = uet.calc_ratio(
                             counter=bincounts[
                                 "{}{}".format(flavour, model_number)
@@ -1689,7 +1787,9 @@ def plot_input_vars_jets_comparison(
                         axis_dict["left"]["ratio"].step(
                             x=Binning,
                             y=step,
-                            color=global_config.flavour_colors[flavour],
+                            color=global_config.flavour_categories[flavour][
+                                "colour"
+                            ],
                             linestyle=linestyles[model_number],
                         )
 
