@@ -4,7 +4,7 @@ import warnings
 import yaml
 
 from umami.configuration import logger
-from umami.tools import yaml_loader
+from umami.tools import YAML, yaml_loader
 
 
 class Configuration(object):
@@ -24,8 +24,9 @@ class Configuration(object):
         with open(self.yaml_default_config, "r") as conf:
             self.default_config = yaml.load(conf, Loader=yaml_loader)
         logger.info(f"Using config file {self.yaml_config}")
+        umami_yaml = YAML(typ="safe", pure=True)
         with open(self.yaml_config, "r") as conf:
-            self.config = yaml.load(conf, Loader=yaml_loader)
+            self.config = umami_yaml.load(conf)
 
     def GetConfiguration(self):
         for elem in self.default_config:

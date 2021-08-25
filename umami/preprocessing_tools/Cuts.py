@@ -4,8 +4,6 @@ from functools import reduce
 
 import numpy as np
 
-from umami.configuration import global_config, logger
-
 
 def GetSampleCuts(jets, cuts):
     """Given an array of jets and a list of cuts, the function provides a list of indices
@@ -47,6 +45,7 @@ def GetSampleCuts(jets, cuts):
         properties = cut_entry[cut]
         op = properties["operator"]
         cond = properties["condition"]
+        NaNCheck = properties.get("NaNcheck", False)
         # modulo operation: assume structure mod_[N]_[operator]
         # - [N] denoting "modulo N "
         # - [operator] denoting operator used for comparison to condition
@@ -79,6 +78,10 @@ def GetSampleCuts(jets, cuts):
                 else:
                     cond = float(cond)
                     cut_rejection = inverted_ops[op](jets[cut], cond)
+                    if NaNCheck:
+                        cut_rejection = cut_rejection & (
+                            jets[cut] == jets[cut]
+                        )
             else:
                 raise KeyError(
                     f"Only supported operators are: \
@@ -92,115 +95,6 @@ def GetSampleCuts(jets, cuts):
     del cut_rejections
 
     return indices_to_remove
-
-
-def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
-    # define operator dict to be able to call them via string from config
-    ops = {
-        "<": operator.lt,
-        "<=": operator.le,
-        "==": operator.eq,
-        ">=": operator.ge,
-        ">": operator.gt,
-    }
-    indices_to_remove = []
-    # General cuts as defined in config (to remove outliers)
-    if config.cuts is not None:
-        for elem in config.cuts:
-            op_func = ops[config.cuts[elem]["operator"]]
-            if config.cuts[elem]["NaNcheck"] is True:
-                indices_i_to_remove = np.where(
-                    np.logical_not(
-                        op_func(jets[elem], config.cuts[elem]["condition"])
-                    )
-                    & (jets[elem] == jets[elem])
-                )[0]
-            else:
-                indices_i_to_remove = np.where(
-                    np.logical_not(
-                        op_func(jets[elem], config.cuts[elem]["condition"])
-                    )
-                )[0]
-
-            indices_to_remove.append(indices_i_to_remove)
-
-    if config.pT_max is not False:
-        indices_to_remove.append(
-            np.where(jets[global_config.pTvariable] > config.pT_max)[0]
-        )
-    if sample == "ttbar":
-        if config.bhad_pTcut is not None:
-            if extended_labelling:
-                indices_to_remove_bjets = np.where(
-                    (
-                        (jets["HadronConeExclExtendedTruthLabelID"] == 5)
-                        | (jets["HadronConeExclExtendedTruthLabelID"] == 54)
-                    )
-                    & (jets["GhostBHadronsFinalPt"] > config.bhad_pTcut)
-                )[0]
-            else:
-                indices_to_remove_bjets = np.where(
-                    (jets["HadronConeExclTruthLabelID"] == 5)
-                    & (jets["GhostBHadronsFinalPt"] > config.bhad_pTcut)
-                )[0]
-            indices_to_remove.append(indices_to_remove_bjets)
-
-        if config.pTcut is not None:
-            if extended_labelling:
-                indices_to_remove_xjets = np.where(
-                    (
-                        (jets["HadronConeExclExtendedTruthLabelID"] != 5)
-                        & (jets["HadronConeExclExtendedTruthLabelID"] != 54)
-                    )
-                    & (jets[global_config.pTvariable] > config.pTcut)
-                )[0]
-            else:
-                indices_to_remove_xjets = np.where(
-                    (jets["HadronConeExclTruthLabelID"] != 5)
-                    & (jets[global_config.pTvariable] > config.pTcut)
-                )[0]
-            indices_to_remove.append(indices_to_remove_xjets)
-
-        return np.unique(np.concatenate(indices_to_remove))
-
-    elif sample == "Zprime":
-        if config.bhad_pTcut is not None:
-            if extended_labelling:
-                indices_to_remove_bjets = np.where(
-                    (
-                        (jets["HadronConeExclExtendedTruthLabelID"] == 5)
-                        | (jets["HadronConeExclExtendedTruthLabelID"] == 54)
-                    )
-                    & (jets["GhostBHadronsFinalPt"] < config.bhad_pTcut)
-                )[0]
-            else:
-                indices_to_remove_bjets = np.where(
-                    (jets["HadronConeExclTruthLabelID"] == 5)
-                    & (jets["GhostBHadronsFinalPt"] < config.bhad_pTcut)
-                )[0]
-            indices_to_remove.append(indices_to_remove_bjets)
-
-        if config.pTcut is not None:
-            if extended_labelling:
-                indices_to_remove_xjets = np.where(
-                    (
-                        (jets["HadronConeExclExtendedTruthLabelID"] != 5)
-                        & (jets["HadronConeExclExtendedTruthLabelID"] != 54)
-                    )
-                    & (jets[global_config.pTvariable] < config.pTcut)
-                )[0]
-            else:
-                indices_to_remove_xjets = np.where(
-                    (jets["HadronConeExclTruthLabelID"] != 5)
-                    & (jets[global_config.pTvariable] < config.pTcut)
-                )[0]
-            indices_to_remove.append(indices_to_remove_xjets)
-
-        return np.unique(np.concatenate(indices_to_remove))
-
-    else:
-        logger.error("Chose either 'ttbar' or 'Zprime' as argument for sample")
-        return 1
 
 
 def GetCategoryCuts(label_var, label_value):

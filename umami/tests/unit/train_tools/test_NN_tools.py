@@ -278,6 +278,9 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         self.preprocess_config = os.path.join(
             self.tmp_test_dir, "preprocess_config.yaml"
         )
+        self.preprocess_config_include = os.path.join(
+            self.tmp_test_dir, "Preprocessing-settings-Geneva.yaml"
+        )
         self.var_dict_path = os.path.join(self.tmp_test_dir, "Var_Dict.yaml")
         self.scale_dict_path = os.path.join(
             self.tmp_test_dir, "scale_dict.json"
@@ -295,6 +298,12 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         copyfile(
             os.path.join(os.getcwd(), "examples/PFlow-Preprocessing.yaml"),
             self.preprocess_config,
+        )
+        copyfile(
+            os.path.join(
+                os.getcwd(), "examples/Preprocessing-settings-Geneva.yaml"
+            ),
+            self.preprocess_config_include,
         )
 
         replaceLineInFile(

@@ -4,6 +4,8 @@ import yaml
 
 # adding a custom yaml loader in order to be able to have nubers with
 # scientific notation
+# TODO: This should be replaced everywhere with the new YAML loader which
+# also allows !include
 yaml_loader = yaml.SafeLoader
 yaml_loader.add_implicit_resolver(
     "tag:yaml.org,2002:float",

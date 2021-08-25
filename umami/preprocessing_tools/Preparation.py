@@ -12,6 +12,16 @@ from umami.configuration import global_config, logger
 from umami.preprocessing_tools import GetCategoryCuts, GetSampleCuts
 
 
+def GetPreparationSamplePath(sample):
+    """
+    Retrieves the output sample path of the samples defined in the
+    'samples' block in the preprocessing config.
+    """
+    return os.path.join(
+        sample.get("f_output")["path"], sample.get("f_output")["file"]
+    )
+
+
 class PrepareSamples:
     """
     This class is preparing the samples for further processing defined in the

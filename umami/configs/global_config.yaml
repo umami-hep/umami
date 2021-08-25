@@ -6,9 +6,14 @@ TFDebugLevel: 1
 # definition of the flavour categories
 flavour_categories:
   bjets:
+    # for now HadronConeExclTruthLabelID and HadronConeExclExtendedTruthLabelID
+    # more to come hopefully
     label_var: HadronConeExclTruthLabelID
+    # EDM ID
     label_value: 5
+    # colour used to plot this category
     colour: "#1f77b4"
+    # label used in the plotting
     legend_label: $b$-jets
     prob_var_name: "pb"
   cjets:
@@ -27,7 +32,7 @@ flavour_categories:
     label_var: HadronConeExclTruthLabelID
     label_value: 15
     colour: "#7c5295"
-    legend_label: light-flavour jets
+    legend_label: $\tau$-jets
     prob_var_name: "ptau"
   singlebjets:
     label_var: HadronConeExclExtendedTruthLabelID

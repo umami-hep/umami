@@ -1,0 +1,14 @@
+# Path where the ntuples are saved
+ntuple_path: &ntuple_path /nfs/dust/atlas/user/pgadow/ftag/data/ntuple_links/
+
+# Path where the hybrid samples will be saved
+sample_path: &sample_path /nfs/dust/atlas/user/pgadow/ftag/data/processed/20210525-defaulttracks/hybrids/
+
+# Path where the merged and ready-to-train samples are saved
+file_path: &file_path /nfs/dust/atlas/user/pgadow/ftag/data/processed/20210525-defaulttracks/preprocessed/
+
+# Name of the output file from the preprocessing
+.outfile_name: &outfile_name /nfs/dust/atlas/user/pgadow/ftag/data/processed/20210525-defaulttracks/output/PFlow-hybrid_70-test.h5
+
+# Dictfile for the scaling and shifting (json)
+.dict_file: &dict_file "/nfs/dust/atlas/user/pgadow/ftag/data/processed/20210525-defaulttracks/scale_dicts/PFlow-scale_dict-22M.json"
