@@ -1,6 +1,7 @@
+import warnings
+
 import numpy as np
 from scipy.stats import binned_statistic_2d
-import warnings
 
 from umami.configuration import global_config, logger
 

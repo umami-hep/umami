@@ -12,133 +12,184 @@ preparation:
   ntuples:
     ttbar:
       path: *ntuple_path
-      file_pattern: user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2020-02-14-T232210-R26303_output.h5/*.h5
+      file_pattern: user.alfroch.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
 
     zprime:
       path: *ntuple_path
-      file_pattern: user.mguth.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2020-02-15-T225316-R8334_output.h5/*.h5
+      file_pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
+
+  class_labels: [bjets, cjets, ujets]
 
   samples:
     training_ttbar_bjets:
       type: ttbar
       category: bjets
       n_jets: 10e6
-      n_split: 10
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 5
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: <=
+            condition: 2.5e5
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
-      merge_output: f_tt_bjets
+        file: MC16d-bjets_training_ttbar_PFlow.h5
 
     training_ttbar_cjets:
       type: ttbar
       category: cjets
       # Number of c jets available in MC16d
       n_jets: 12745953
-      n_split: 13
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 4
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: <=
+            condition: 2.5e5
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
-      merge_output: f_tt_cjets
+        file: MC16d-cjets_training_ttbar_PFlow.h5
 
     training_ttbar_ujets:
       type: ttbar
       category: ujets
       n_jets: 20e6
-      n_split: 20
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 0
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: <=
+            condition: 2.5e5
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-      merge_output: f_tt_ujets
+        file: MC16d-ujets_training_ttbar_PFlow.h5
 
     training_ttbar_taujets:
       type: ttbar
       category: taujets
       n_jets: 12745953
-      n_split: 5
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 15
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: <=
+            condition: 2.5e5
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
-      merge_output: f_tt_taujets
+        file: MC16d-taujets_training_ttbar_PFlow.h5
 
-    training_zprime:
+    training_zprime_bjets:
       type: zprime
-      n_jets: 9593092
-      n_split: 2
+      category: bjets
+      n_jets: 10e6
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: ">"
-          condition: 2.5e5
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: ">"
+            condition: 2.5e5
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
-      merge_output: f_z
+        file: MC16d-bjets_training_zprime_PFlow.h5
+
+    training_zprime_cjets:
+      type: zprime
+      category: cjets
+      # Number of c jets available in MC16d
+      n_jets: 10e6
+      cuts:
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: ">"
+            condition: 2.5e5
+      f_output:
+        path: *sample_path
+        file: MC16d-cjets_training_zprime_PFlow.h5
+
+    training_zprime_ujets:
+      type: zprime
+      category: ujets
+      n_jets: 10e6
+      cuts:
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: ">"
+            condition: 2.5e5
+      f_output:
+        path: *sample_path
+        file: MC16d-ujets_training_zprime_PFlow.h5
+
+    training_zprime_taujets:
+      type: zprime
+      category: taujets
+      n_jets: 10e6
+      cuts:
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: ">"
+            condition: 2.5e5
+      f_output:
+        path: *sample_path
+        file: MC16d-taujets_training_zprime_PFlow.h5
+
+    validation_ttbar:
+      type: ttbar
+      category: inclusive
+      n_jets: 4e6
+      cuts:
+        - eventNumber:
+            operator: mod_6_==
+            condition: 4
+      f_output:
+        path: *sample_path
+        file: MC16d-inclusive_validation_ttbar_PFlow.h5
 
     testing_ttbar:
       type: ttbar
+      category: inclusive
       n_jets: 4e6
-      n_split: 2
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 1
+        - eventNumber:
+            operator: mod_6_==
+            condition: 5
       f_output:
         path: *sample_path
-        file: MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
+        file: MC16d-inclusive_testing_ttbar_PFlow.h5
+
+    validation_zprime:
+      type: zprime
+      category: inclusive
+      n_jets: 4e6
+      cuts:
+        - eventNumber:
+            operator: mod_6_==
+            condition: 4
+      f_output:
+        path: *sample_path
+        file: MC16d-inclusive_validation_zprime_PFlow.h5
 
     testing_zprime:
       type: zprime
+      category: inclusive
       n_jets: 4e6
-      n_split: 2
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 1
+        - eventNumber:
+            operator: mod_6_==
+            condition: 5
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
+        file: MC16d-inclusive_testing_zprime_PFlow.h5
 
 # amount of b-jets from ttbar which are used in the pre-resampling,
 # can change after applying resampling in the hybrid sample creation
@@ -181,32 +232,6 @@ bool_extended_labelling: False
 # Default is "count".
 # See RunUndersampling in preprocessing for more info
 sampling_method: count
-
-# Name of the output files for the different jets
-# ZPrime (Mixed)
-f_z:
-  path: *file_path
-  file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
-
-# ttbar (b)
-f_tt_bjets:
-  path: *file_path
-  file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
-
-# ttbar (c)
-f_tt_cjets:
-  path: *file_path
-  file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
-
-# ttbar (u)
-f_tt_ujets:
-  path: *file_path
-  file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-
-# ttbar (tau)
-f_tt_taujets:
-  path: *file_path
-  file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
 
 # Name of the output file from the preprocessing
 outfile_name: /nfs/dust/atlas/user/pgadow/ftag/data/processed/20210525-defaulttracks/output/PFlow-hybrid_70-test.h5

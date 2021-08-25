@@ -1,6 +1,10 @@
 # flake8: noqa
 from umami.preprocessing_tools.Configuration import Configuration
-from umami.preprocessing_tools.Cuts import GetCuts, GetSampleCuts
+from umami.preprocessing_tools.Cuts import (
+    GetCategoryCuts,
+    GetCuts,
+    GetSampleCuts,
+)
 from umami.preprocessing_tools.Merging import (
     add_data,
     check_keys,
@@ -10,7 +14,7 @@ from umami.preprocessing_tools.Merging import (
     get_size,
 )
 from umami.preprocessing_tools.PDF_Sampling import PDFSampling
-from umami.preprocessing_tools.Preparation import get_jets
+from umami.preprocessing_tools.Preparation import PrepareSamples
 from umami.preprocessing_tools.Resampling import (
     EnforceFraction,
     Gen_default_dict,

@@ -1,5 +1,7 @@
 ## Development
 
+### Test suite
+
 Umami's development uses unit tests to ensure it is working. The unit tests are located in [`umami/tests`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tree/master/umami/tests).
 You can run the unit tests with the command:
 ```bash
@@ -18,11 +20,27 @@ and the integration test similarly via
 pytest ./umami/tests/integration/ -v
 ```
 
+### Tools for uniform coding style
 
-In order to run the code style checker flake8 use the following command:
+In order to run the code style checker `flake8` use the following command:
 ```bash
 flake8 ./umami
 ```
+
+In order to run the yaml linter `yamllint` use the following command:
+
+```bash
+yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .
+```
+
+In order to format the code using [`black`](https://github.com/psf/black) use the following command:
+
+```bash
+black ./umami
+```
+
+
+### Commiting changes and pre-commit hooks
 
 If you want to commit changes it is recommended to install the [pre-commit hooks](https://githooks.com) by doing the following:
 
@@ -32,9 +50,7 @@ pre-commit install
 
 This will run `isort`, `black` and `flake8` on staged python files when commiting.
 
-
 ## Global Configuration
-
 
 There is a [global configuration](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml) file which allows to set different global settings.
 

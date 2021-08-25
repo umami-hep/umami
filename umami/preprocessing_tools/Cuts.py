@@ -1,13 +1,30 @@
 import operator
 import re
+from functools import reduce
 
 import numpy as np
 
-from functools import reduce
 from umami.configuration import global_config, logger
 
 
-def GetSampleCuts(jets, cuts, extended_labelling=False):
+def GetSampleCuts(jets, cuts):
+    """Given an array of jets and a list of cuts, the function provides a list of indices
+       which are removed by applying the cuts.
+       Users can define the cuts either via the variable name and logical operators:
+       ==, !=, >, >=, <, <= or using the dedicated modulo operator.
+
+       The latter is defined as follows:
+       mod_[N]_[operator] with
+       - [N] denoting "modulo N "
+       - [operator] denoting operator used for comparison to condition
+
+    Args:
+        jets (array of jets): array of jets which need to pass certain cuts
+        cuts (list): list from config file which contains dict objects for individual cuts
+
+    Returns:
+        indices_to_remove: numpy array of indices to be removed by the cuts
+    """
     # define operator dict to be able to call them via string from config
     inverted_ops = {
         "==": operator.ne,
@@ -19,15 +36,23 @@ def GetSampleCuts(jets, cuts, extended_labelling=False):
     }
     cut_rejections = []
 
-    for cut, properties in cuts.items():
-        op = properties['operator']
-        cond = properties['condition']
+    for cut_entry in cuts:
+        # expect a dictionary with only one entry
+        cut = list(cut_entry.keys())
+        if len(cut) != 1:
+            raise KeyError(
+                "The cut object is expected to be a dictionary with one entry."
+            )
+        cut = cut[0]
+        properties = cut_entry[cut]
+        op = properties["operator"]
+        cond = properties["condition"]
         # modulo operation: assume structure mod_[N]_[operator]
         # - [N] denoting "modulo N "
         # - [operator] denoting operator used for comparison to condition
-        if 'mod_' in op:
+        if "mod_" in op:
             try:
-                found = re.search(r'mod_(\d+?)_([=!><]+)', op)
+                found = re.search(r"mod_(\d+?)_([=!><]+)", op)
                 modulo = int(found.group(1))
                 op = found.group(2)
             except AttributeError:
@@ -39,37 +64,31 @@ def GetSampleCuts(jets, cuts, extended_labelling=False):
                 )
             except KeyError:
                 raise RuntimeError(
-                    "Incorrect use of modulo cut for sample: \
+                    f"Incorrect use of modulo cut for sample: \
                     only supported operators 'op' in mod_N_op are: \
-                    [==, !=, >, <. >=, <=]."
+                    {list(inverted_ops.keys())}."
                 )
             cut_rejection = inverted_ops[op]((jets[cut] % modulo), cond)
-        elif cut == 'pt_cut':
-            if extended_labelling:
-                cut_rejection = (
-                    ((abs(jets["HadronConeExclExtendedTruthLabelID"]) == 5) | (abs(jets["HadronConeExclExtendedTruthLabelID"]) == 54))
-                    & (inverted_ops[op](jets["GhostBHadronsFinalPt"], float(cond)))
-                ) | (
-                    ((abs(jets["HadronConeExclExtendedTruthLabelID"]) != 5) & (abs(jets["HadronConeExclExtendedTruthLabelID"]) != 54))
-                    & (inverted_ops[op](jets[global_config.pTvariable], float(cond)))
-                )
-            else:
-                cut_rejection = (
-                    (abs(jets["HadronConeExclTruthLabelID"]) == 5)
-                    & (inverted_ops[op](jets["GhostBHadronsFinalPt"], float(cond)))
-                ) | (
-                    (abs(jets["HadronConeExclTruthLabelID"]) != 5)
-                    & (inverted_ops[op](jets[global_config.pTvariable], float(cond)))
-                )
         else:
-            if op in ["==", "!=", ">", ">=", "<", "<="]:
-                cond = float(cond)
-            cut_rejection = inverted_ops[op](jets[cut], cond)
+            if op in list(inverted_ops.keys()):
+                if type(cond) is list:
+                    indices = [
+                        inverted_ops[op](jets[cut], cond_i) for cond_i in cond
+                    ]
+                    cut_rejection = reduce(operator.and_, indices)
+                else:
+                    cond = float(cond)
+                    cut_rejection = inverted_ops[op](jets[cut], cond)
+            else:
+                raise KeyError(
+                    f"Only supported operators are: \
+                    {list(inverted_ops.keys())}."
+                )
         cut_rejections.append(cut_rejection)
 
-    indices_to_remove = np.where(
-        reduce(operator.or_, cut_rejections, False)
-    )[0]
+    indices_to_remove = np.where(reduce(operator.or_, cut_rejections, False))[
+        0
+    ]
     del cut_rejections
 
     return indices_to_remove
@@ -113,7 +132,10 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
         if config.bhad_pTcut is not None:
             if extended_labelling:
                 indices_to_remove_bjets = np.where(
-                    ((jets["HadronConeExclExtendedTruthLabelID"] == 5) | (jets["HadronConeExclExtendedTruthLabelID"] == 54))
+                    (
+                        (jets["HadronConeExclExtendedTruthLabelID"] == 5)
+                        | (jets["HadronConeExclExtendedTruthLabelID"] == 54)
+                    )
                     & (jets["GhostBHadronsFinalPt"] > config.bhad_pTcut)
                 )[0]
             else:
@@ -126,7 +148,10 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
         if config.pTcut is not None:
             if extended_labelling:
                 indices_to_remove_xjets = np.where(
-                    ((jets["HadronConeExclExtendedTruthLabelID"] != 5) & (jets["HadronConeExclExtendedTruthLabelID"] != 54))
+                    (
+                        (jets["HadronConeExclExtendedTruthLabelID"] != 5)
+                        & (jets["HadronConeExclExtendedTruthLabelID"] != 54)
+                    )
                     & (jets[global_config.pTvariable] > config.pTcut)
                 )[0]
             else:
@@ -142,7 +167,10 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
         if config.bhad_pTcut is not None:
             if extended_labelling:
                 indices_to_remove_bjets = np.where(
-                    ((jets["HadronConeExclExtendedTruthLabelID"] == 5) | (jets["HadronConeExclExtendedTruthLabelID"] == 54))
+                    (
+                        (jets["HadronConeExclExtendedTruthLabelID"] == 5)
+                        | (jets["HadronConeExclExtendedTruthLabelID"] == 54)
+                    )
                     & (jets["GhostBHadronsFinalPt"] < config.bhad_pTcut)
                 )[0]
             else:
@@ -155,7 +183,10 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
         if config.pTcut is not None:
             if extended_labelling:
                 indices_to_remove_xjets = np.where(
-                    ((jets["HadronConeExclExtendedTruthLabelID"] != 5) & (jets["HadronConeExclExtendedTruthLabelID"] != 54))
+                    (
+                        (jets["HadronConeExclExtendedTruthLabelID"] != 5)
+                        & (jets["HadronConeExclExtendedTruthLabelID"] != 54)
+                    )
                     & (jets[global_config.pTvariable] < config.pTcut)
                 )[0]
             else:
@@ -170,3 +201,30 @@ def GetCuts(jets, config, sample="ttbar", extended_labelling=False):
     else:
         logger.error("Chose either 'ttbar' or 'Zprime' as argument for sample")
         return 1
+
+
+def GetCategoryCuts(label_var, label_value):
+    """
+    This function returns the cut object for the categories used in the
+    preprocessing.
+    """
+    cut_object = []
+    if (
+        type(label_value) is int
+        or type(label_value) is float
+        or type(label_value) is list
+    ):
+        cut_object.append(
+            {
+                label_var: {
+                    "operator": "==",
+                    "condition": label_value,
+                }
+            }
+        )
+    else:
+        raise ValueError(
+            "The 'label_value' in the global config has a not allowed type. Should be either an integer or a list of integers."
+        )
+
+    return cut_object
