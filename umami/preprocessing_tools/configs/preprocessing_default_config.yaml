@@ -1,22 +1,5 @@
-# amount of b-jets which are used
-njets: 5e6
-# fraction of ttbar jets wrt. Z'
-ttbar_frac: 0.65
-# Whether to enforce the above ttbar fraction in the final sample
-enforce_ttbar_frac: False
-# outputfiles are split into n iterations
-iterations: 2
-# pT cut for hybrid creation (for light and c-jets)
-pTcut: 2.5e5
-# pT cut for b-jets
-bhad_pTcut: 2.5e5
-# upper pT limit for all jets
-pT_max: False
 # set to true if taus are to be included in preprocessing
-bool_process_taus: False
 # set to true if extended flavour labelling is used in preprocessing
-bool_extended_labelling: False
-sampling_method: count
 outfile_name: Null
 plot_name: Null
 cuts: Null
@@ -24,3 +7,7 @@ dict_file: Null
 preparation:
   ntuples: Null
   samples: Null
+
+sampling:
+  method: Null
+  options: Null
