@@ -268,6 +268,147 @@ def create_metadata_folder(
                 )
 
 
+def LoadJetsFromFile(
+    filepath: str,
+    class_labels: list,
+    nJets: int,
+):
+    """
+    Load jets from file. Only jets from classes in class_labels are returned.
+
+    Input:
+    - filepath: Path to the .h5 file with the jets.
+    - class_labels: List of class labels which are used.
+    - nJets: Number of jets to load.
+
+    Output:
+    - Jets: The jets as numpy ndarray
+    - Umami_labels: The internal class label for each jet. Corresponds with the
+                    index of the class label in class_labels.
+    """
+
+    # Get class_labels variables etc. from global config
+    class_ids = get_class_label_ids(class_labels)
+    class_label_vars, flatten_class_labels = get_class_label_variables(
+        class_labels
+    )
+
+    # Load dataframe from file
+    jets = pd.DataFrame(h5py.File(filepath, "r")["/jets"][:nJets])
+
+    # Init new column for string labels
+    jets["Umami_string_labels"] = np.zeros_like(jets[class_label_vars[0]])
+    jets["Umami_labels"] = np.zeros_like(jets[class_label_vars[0]])
+
+    # Change type of column to string
+    jets = jets.astype({"Umami_string_labels": "str"})
+
+    # Iterate over the classes and add the correct labels to Umami columns
+    for class_id, class_label_var, class_label in zip(
+        class_ids, class_label_vars, flatten_class_labels
+    ):
+        indices_tochange = np.where(jets[class_label_var].values == class_id)
+
+        # Add a string description which this class is
+        jets["Umami_string_labels"].values[indices_tochange] = class_label
+
+        # Add the right column label to class
+        jets["Umami_labels"].values[indices_tochange] = class_labels.index(
+            class_label
+        )
+
+    # Get the indices of the jets that are not used
+    indices_toremove = np.where(jets["Umami_string_labels"] == "0")[0]
+
+    # Remove all unused jets
+    jets = jets.drop(indices_toremove)
+
+    # Return the jets and internal labels
+    return jets, jets["Umami_labels"].values
+
+
+def LoadTrksFromFile(
+    filepath: str,
+    class_labels: list,
+    nJets: int,
+):
+    """
+    Load tracks from file. Only jets from classes in class_labels are returned.
+
+    Input:
+    - filepath: Path to the .h5 file with the jets.
+    - class_labels: List of class labels which are used.
+    - nJets: Number of jets to load.
+
+    Output:
+    - Trks: The tracks of the jets as numpy ndarray
+    - Umami_labels: The internal class label for each jet. Corresponds with the
+                    index of the class label in class_labels.
+    """
+
+    # Get class_labels variables etc. from global config
+    class_ids = get_class_label_ids(class_labels)
+    class_label_vars, flatten_class_labels = get_class_label_variables(
+        class_labels
+    )
+
+    # Load the used label variables from file
+    with h5py.File(filepath, "r") as jets:
+        for iterator, iter_class_var in enumerate(
+            list(dict.fromkeys(class_label_vars))
+        ):
+            if iterator == 0:
+                labels = pd.DataFrame(
+                    jets["/jets"][iter_class_var], columns=[iter_class_var]
+                )
+
+            else:
+                labels[iter_class_var] = jets["/jets"][iter_class_var]
+
+    # Use only the amout of jets requested
+    labels = labels[:nJets]
+
+    # Init new column for string labels
+    labels["Umami_string_labels"] = np.zeros_like(labels[class_label_vars[0]])
+    labels["Umami_labels"] = np.zeros_like(labels[class_label_vars[0]])
+
+    # Change type of column to string
+    labels = labels.astype({"Umami_string_labels": "str"})
+
+    # Iterate over the classes and add the correct labels to Umami columns
+    for (class_id, class_label_var, class_label) in zip(
+        class_ids, class_label_vars, flatten_class_labels
+    ):
+        indices_tochange = np.where(
+            labels[class_label_var].values == class_id
+        )[0]
+
+        # Add a string description which this class is
+        labels["Umami_string_labels"].values[indices_tochange] = class_label
+
+        # Add the right column label to class
+        labels["Umami_labels"].values[indices_tochange] = class_labels.index(
+            class_label
+        )
+
+    # Get the indices of the jets that are not used
+    indices_toremove = np.where(labels["Umami_string_labels"] == "0")[0]
+
+    # Remove unused jets from labels
+    labels = labels.drop(indices_toremove)
+    Umami_labels = labels["Umami_labels"].values
+
+    # Load tracks and delete unused classes
+    trks = np.delete(
+        arr=np.asarray(h5py.File(filepath, "r")["/tracks"][:nJets]),
+        obj=indices_toremove,
+        axis=0,
+    )
+
+    # Return Trks and labels
+    return trks, Umami_labels
+
+
 def CalcDiscValues(
     jets_dict: dict,
     index_dict: dict,
@@ -578,46 +719,14 @@ def GetTestSample(
     for j, file in enumerate(sorted(filepaths, key=natural_keys)):
         logger.info(f"Input file is {file}")
 
-        # Load dataframe from file
-        jets = pd.DataFrame(h5py.File(file, "r")["/jets"][:nJets])
-
-        # Get class_labels variables etc. from global config
-        class_ids = get_class_label_ids(class_labels)
-        class_label_vars, flatten_class_labels = get_class_label_variables(
-            class_labels
+        jets, Umami_labels = LoadJetsFromFile(
+            filepath=file,
+            class_labels=class_labels,
+            nJets=nJets,
         )
 
-        # Init new column for string labels
-        jets["Umami_string_labels"] = np.zeros_like(jets[class_label_vars[0]])
-        jets["Umami_labels"] = np.zeros_like(jets[class_label_vars[0]])
-
-        # Change type of column to string
-        jets = jets.astype({"Umami_string_labels": "str"})
-
-        # Iterate over the classes and add the correct labels to Umami columns
-        for class_id, class_label_var, class_label in zip(
-            class_ids, class_label_vars, flatten_class_labels
-        ):
-            indices_tochange = np.where(
-                jets[class_label_var].values == class_id
-            )
-
-            # Add a string description which this class is
-            jets["Umami_string_labels"].values[indices_tochange] = class_label
-
-            # Add the right column label to class
-            jets["Umami_labels"].values[indices_tochange] = class_labels.index(
-                class_label
-            )
-
-        # Get the indices of the jets that are not used
-        indices_toremove = np.where(jets["Umami_string_labels"] == "0")[0]
-
-        # Remove all unused jets
-        jets = jets.drop(indices_toremove)
-
         # Binarize Labels
-        labels = GetBinaryLabels(jets["Umami_labels"].values)
+        labels = GetBinaryLabels(Umami_labels)
 
         # Retrieve variables and the excluded variables from the config
         variables, excluded_variables, _ = get_jet_feature_indices(
@@ -684,7 +793,7 @@ def GetTestSample(
     else:
         logger.info(f"Loaded {nJets_counter} jets!")
 
-    print(all_jets.shape)
+    # Return jets and labels
     return all_jets, all_labels
 
 
@@ -718,63 +827,14 @@ def GetTestSampleTrks(
     for j, file in enumerate(sorted(filepaths, key=natural_keys)):
         logger.info(f"Loading validation data tracks from file {file}")
 
-        # Get class_labels variables etc. from global config
-        class_ids = get_class_label_ids(class_labels)
-        class_label_vars, flatten_class_labels = get_class_label_variables(
-            class_labels
+        trks, labels = LoadTrksFromFile(
+            filepath=file,
+            class_labels=class_labels,
+            nJets=nJets,
         )
-
-        # Load the used label variables from file
-        with h5py.File(input_file, "r") as jets:
-            for iterator, iter_class_var in enumerate(
-                list(dict.fromkeys(class_label_vars))
-            ):
-                if iterator == 0:
-                    labels = pd.DataFrame(
-                        jets["/jets"][iter_class_var], columns=[iter_class_var]
-                    )
-
-                else:
-                    labels[iter_class_var] = jets["/jets"][iter_class_var]
-
-        # Use only the amout of jets requested
-        labels = labels[:nJets]
-
-        # Init new column for string labels
-        labels["Umami_string_labels"] = np.zeros_like(
-            labels[class_label_vars[0]]
-        )
-        labels["Umami_labels"] = np.zeros_like(labels[class_label_vars[0]])
-
-        # Change type of column to string
-        labels = labels.astype({"Umami_string_labels": "str"})
-
-        # Iterate over the classes and add the correct labels to Umami columns
-        for (class_id, class_label_var, class_label) in zip(
-            class_ids, class_label_vars, flatten_class_labels
-        ):
-            indices_tochange = np.where(
-                labels[class_label_var].values == class_id
-            )[0]
-
-            # Add a string description which this class is
-            labels["Umami_string_labels"].values[
-                indices_tochange
-            ] = class_label
-
-            # Add the right column label to class
-            labels["Umami_labels"].values[
-                indices_tochange
-            ] = class_labels.index(class_label)
-
-        # Get the indices of the jets that are not used
-        indices_toremove = np.where(labels["Umami_string_labels"] == "0")[0]
-
-        # Remove unused jets from labels
-        labels = labels.drop(indices_toremove)
 
         # Binarize the labels
-        binary_labels = GetBinaryLabels(labels["Umami_labels"].values)
+        binary_labels = GetBinaryLabels(labels)
 
         # Retrieve variables from config
         noNormVars = variable_config["track_train_variables"]["noNormVars"]
@@ -783,10 +843,6 @@ def GetTestSampleTrks(
             "jointNormVars"
         ]
         trkVars = noNormVars + logNormVars + jointNormVars
-
-        # Load the tracks from file
-        trks = np.asarray(h5py.File(input_file, "r")["/tracks"][:nJets])
-        trks = np.delete(trks, indices_toremove, 0)
 
         var_arr_list = []
         trk_mask = ~np.isnan(trks["ptfrac"])

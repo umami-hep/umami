@@ -6,6 +6,8 @@ from umami.train_tools.NN_tools import (
     GetTestFile,
     GetTestSample,
     GetTestSampleTrks,
+    LoadJetsFromFile,
+    LoadTrksFromFile,
     MyCallback,
     MyCallbackUmami,
     Sum,

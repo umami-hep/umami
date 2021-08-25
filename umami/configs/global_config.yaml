@@ -26,7 +26,7 @@ flavour_categories:
     label_var: HadronConeExclTruthLabelID
     label_value: 0
     colour: "#2ca02c"
-    legend_label: light-flavour jets
+    legend_label: light-jets
     prob_var_name: "pu"
   taujets:
     label_var: HadronConeExclTruthLabelID
