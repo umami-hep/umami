@@ -50,6 +50,7 @@ test_coverage:
     - coverage combine
     - coverage report
     - coverage xml
+    - coverage html
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
@@ -60,6 +61,26 @@ test_coverage:
     reports:
       cobertura: coverage_files/coverage.xml
   retry: 2
+
+coverage_html_report:
+  stage: builds
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer
+  script:
+    - deploy-eos
+  needs:
+    - test_coverage
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+      variables:
+        EOS_PATH: "/eos/user/u/umamibot/www/coverage_reports/master/"
+        CI_OUTPUT_DIR: "coverage_files/htmlcov/"
+        METHOD: rsync
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+      variables:
+        EOS_PATH: "/eos/user/u/umamibot/www/coverage_reports/${CI_MERGE_REQUEST_IID}/"
+        CI_OUTPUT_DIR: "coverage_files/htmlcov/"
+        METHOD: rsync
+
 
 include:
   - 'pipelines/.unit_test-gitlab-ci.yaml'
