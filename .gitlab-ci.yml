@@ -81,6 +81,17 @@ coverage_html_report:
         CI_OUTPUT_DIR: "coverage_files/htmlcov/"
         METHOD: rsync
 
+test_coverage_post_report:
+  stage: publish
+  image: python:3.7-slim
+  needs: ["test_coverage"]
+  before_script:
+    - pip install --upgrade pip setuptools wheel
+    - pip install python-gitlab
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+  script:
+    - python pipelines/gitlab-mr-coverage-api-post.py
 
 include:
   - 'pipelines/.unit_test-gitlab-ci.yaml'
