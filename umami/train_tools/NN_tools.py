@@ -875,37 +875,26 @@ def load_validation_data(train_config, preprocess_config, nJets: int):
 
 
 def load_validation_data_dips(train_config, preprocess_config, nJets: int):
-    exclude = None
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
     val_data_dict = {}
-    (_, val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestFile(
+    (val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestSampleTrks(
         train_config.validation_file,
         train_config.var_dict,
         preprocess_config,
         nJets=nJets,
-        exclude=exclude,
     )
     (
         val_data_dict["X_valid_add"],
         val_data_dict["Y_valid_add"],
-        val_data_dict["X_valid_trk_add"],
-    ) = (None, None, None)
+    ) = (None, None)
     if train_config.add_validation_file is not None:
         (
-            _,
             val_data_dict["X_valid_add"],
             val_data_dict["Y_valid_add"],
-        ) = GetTestFile(
+        ) = GetTestSampleTrks(
             train_config.add_validation_file,
             train_config.var_dict,
             preprocess_config,
             nJets=nJets,
-            exclude=exclude,
-        )
-        assert (
-            val_data_dict["X_valid"].shape[1]
-            == val_data_dict["X_valid_add"].shape[1]
         )
     return val_data_dict
 
@@ -1119,16 +1108,22 @@ def calc_validation_metrics(
         for f in os.listdir(train_config.model_name)
         if "model" in f
     ]
-    with open(
-        get_validation_dict_name(
-            WP_b=Eval_parameters["WP_b"],
-            fc_value=Eval_parameters["fc_value"],
-            n_jets=Eval_parameters["n_jets"],
-            dir_name=train_config.model_name,
-        ),
-        "r",
-    ) as training_out_json:
-        training_output_list = json.load(training_out_json)
+    try:
+        with open(
+            get_validation_dict_name(
+                WP_b=Eval_parameters["WP_b"],
+                fc_value=Eval_parameters["fc_value"],
+                n_jets=Eval_parameters["n_jets"],
+                dir_name=train_config.model_name,
+            ),
+            "r",
+        ) as training_out_json:
+            training_output_list = json.load(training_out_json)
+
+    except FileNotFoundError:
+        training_output_list = [
+            {"epoch": n} for n in range(train_config.NN_structure["epochs"])
+        ]
 
     results = []
     for n, model_file in enumerate(training_output):
@@ -1177,16 +1172,22 @@ def calc_validation_metrics_dips(
         for f in os.listdir(train_config.model_name)
         if "model_epoch" in f
     ]
-    with open(
-        get_validation_dict_name(
-            WP_b=Eval_parameters["WP_b"],
-            fc_value=Eval_parameters["fc_value"],
-            n_jets=Eval_parameters["n_jets"],
-            dir_name=train_config.model_name,
-        ),
-        "r",
-    ) as training_out_json:
-        training_output_list = json.load(training_out_json)
+    try:
+        with open(
+            get_validation_dict_name(
+                WP_b=Eval_parameters["WP_b"],
+                fc_value=Eval_parameters["fc_value"],
+                n_jets=Eval_parameters["n_jets"],
+                dir_name=train_config.model_name,
+            ),
+            "r",
+        ) as training_out_json:
+            training_output_list = json.load(training_out_json)
+
+    except FileNotFoundError:
+        training_output_list = [
+            {"epoch": n} for n in range(train_config.NN_structure["epochs"])
+        ]
 
     results = []
     for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
