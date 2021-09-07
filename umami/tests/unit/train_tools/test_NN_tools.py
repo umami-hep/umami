@@ -22,6 +22,7 @@ from umami.train_tools.NN_tools import (
     get_class_label_ids,
     get_class_label_variables,
     get_class_prob_var_names,
+    get_epoch_from_string,
     get_jet_feature_indices,
     get_parameters_from_validation_dict_name,
     get_validation_dict_name,
@@ -29,6 +30,17 @@ from umami.train_tools.NN_tools import (
     load_validation_data_umami,
     setup_output_directory,
 )
+
+
+class get_epoch_from_string_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.test_string = "model_epoch11.h5"
+        self.int = 11
+
+    def test_get_epoch_from_string(self):
+        test_int = get_epoch_from_string(self.test_string)
+
+        self.assertEqual(int(test_int), self.int)
 
 
 class Load_Files_TestCase(unittest.TestCase):
@@ -287,13 +299,13 @@ class dict_name_TestCase(unittest.TestCase):
     def setUp(self):
         self.dir_name = "test"
         self.dict_name = "validation_WP0p77_300000jets_Dict.json"
-        self.WP_b = 0.77
+        self.WP = 0.77
         self.n_jets = 300000
 
     def test_get_dict_name(self):
         self.assertEqual(
             get_validation_dict_name(
-                WP_b=self.WP_b,
+                WP=self.WP,
                 n_jets=self.n_jets,
                 dir_name=self.dir_name,
             ),
@@ -305,7 +317,7 @@ class dict_name_TestCase(unittest.TestCase):
             self.dir_name + "/" + self.dict_name
         )
 
-        self.assertEqual(parameters["WP_b"], self.WP_b)
+        self.assertEqual(parameters["WP"], self.WP)
         self.assertEqual(parameters["n_jets"], self.n_jets)
         self.assertEqual(parameters["dir_name"], self.dir_name)
 
@@ -499,7 +511,7 @@ class MyCallback_TestCase(unittest.TestCase):
             target_beff=self.target_beff,
             frac_dict=self.frac_dict,
             dict_file_name=get_validation_dict_name(
-                WP_b=self.target_beff,
+                WP=self.target_beff,
                 n_jets=300,
                 dir_name=f"{self.test_dir.name}",
             ),
@@ -546,7 +558,7 @@ class MyCallbackUmami_TestCase(unittest.TestCase):
             target_beff=self.target_beff,
             frac_dict=self.frac_dict,
             dict_file_name=get_validation_dict_name(
-                WP_b=self.target_beff,
+                WP=self.target_beff,
                 n_jets=300,
                 dir_name=f"{self.test_dir.name}",
             ),

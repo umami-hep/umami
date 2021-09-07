@@ -1,3 +1,4 @@
+import copy
 import os
 
 import h5py
@@ -266,7 +267,6 @@ def PlotDiscCutPerEpochUmami(
 def PlotRejPerEpoch(
     df_results: dict,
     frac_dict: dict,
-    frac_class: str,
     comp_tagger_rej_dict: dict,
     comp_tagger_frac_dict: dict,
     plot_name: str,
@@ -282,6 +282,7 @@ def PlotRejPerEpoch(
     yAxisAtlasTag=0.9,
     yAxisIncrease=1.3,
     ncol=1,
+    legend_loc=(0.6, 0.65),
     plot_datatype="pdf",
 ):
     """
@@ -316,16 +317,16 @@ def PlotRejPerEpoch(
         applyATLASstyle(mtp)
 
     # Get a list of the background classes
-    class_labels_wo_main = class_labels
+    class_labels_wo_main = copy.deepcopy(class_labels)
     class_labels_wo_main.remove(main_class)
 
     # Get flavour categories from global config
     flav_cat = global_config.flavour_categories
+    linestyle_list = ["-", (0, (5, 10)), (0, (5, 5)), (0, (5, 1))]
 
     if len(class_labels_wo_main) == 2:
         # Set global plot configs
         fig, ax1 = plt.subplots(constrained_layout=True)
-        legend_loc = (0.6, 0.75)
         ax1.set_xlabel("Epoch")
         ax2 = ax1.twinx()
         axes = [ax1, ax2]
@@ -350,7 +351,9 @@ def PlotRejPerEpoch(
                 )
 
             else:
-                for comp_tagger in comp_tagger_rej_dict:
+                for comp_counter, comp_tagger in enumerate(
+                    comp_tagger_rej_dict
+                ):
                     try:
                         axes[counter].axhline(
                             comp_tagger_rej_dict[comp_tagger][
@@ -361,7 +364,9 @@ def PlotRejPerEpoch(
                             color=flav_cat[iter_class]["colour"],
                             lw=1.0,
                             alpha=1,
-                            linestyle=(0, (5, 10)),
+                            linestyle=linestyle_list[comp_counter]
+                            if comp_counter < len(linestyle_list)
+                            else "-",
                             label=f"Recomm. {comp_tagger}",
                         )
 
@@ -384,7 +389,6 @@ def PlotRejPerEpoch(
 
     else:
         fig, ax1 = plt.subplots(constrained_layout=True)
-        legend_loc = (0.6, 0.75)
         ax1.set_xlabel("Epoch")
         ax1.set_ylabel("Rejection")
 
@@ -428,11 +432,7 @@ def PlotRejPerEpoch(
         ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
 
     if UseAtlasTag is True:
-        SecondTag = (
-            SecondTag
-            + f"\n{frac_class} fraction = {frac_dict[frac_class]}"
-            + f"\nWP={int(target_beff * 100):02d}%"
-        )
+        SecondTag = SecondTag + f"\nWP={int(target_beff * 100):02d}%"
 
         # Increase y limit for ATLAS Logo
         ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
@@ -454,6 +454,7 @@ def PlotRejPerEpoch(
 def PlotLosses(
     df_results,
     plot_name,
+    train_history_dict,
     UseAtlasTag=True,
     ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
@@ -490,7 +491,7 @@ def PlotLosses(
 
     plt.plot(
         df_results["epoch"],
-        df_results["loss"],
+        train_history_dict["loss"],
         label="training loss - hybrid sample",
     )
     plt.plot(
@@ -534,6 +535,7 @@ def PlotLosses(
 def PlotAccuracies(
     df_results,
     plot_name,
+    train_history_dict,
     UseAtlasTag=True,
     ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
@@ -570,7 +572,7 @@ def PlotAccuracies(
 
     plt.plot(
         df_results["epoch"],
-        df_results["acc"],
+        train_history_dict["accuracy"],
         label="training accuracy - hybrid sample",
     )
     plt.plot(
@@ -614,6 +616,7 @@ def PlotAccuracies(
 def PlotLossesUmami(
     df_results,
     plot_name,
+    train_history_dict,
     UseAtlasTag=True,
     ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
@@ -652,7 +655,7 @@ def PlotLossesUmami(
 
     plt.plot(
         df_results["epoch"],
-        df_results["umami_loss"],
+        train_history_dict["umami_loss"],
         label="training loss UMAMI - hybrid sample",
     )
     plt.plot(
@@ -662,7 +665,7 @@ def PlotLossesUmami(
     )
     plt.plot(
         df_results["epoch"],
-        df_results["dips_loss"],
+        train_history_dict["dips_loss"],
         label="training loss DIPS - hybrid sample",
     )
     plt.plot(
@@ -711,6 +714,7 @@ def PlotLossesUmami(
 def PlotAccuraciesUmami(
     df_results,
     plot_name,
+    train_history_dict,
     UseAtlasTag=True,
     ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
@@ -749,7 +753,7 @@ def PlotAccuraciesUmami(
 
     plt.plot(
         df_results["epoch"],
-        df_results["umami_acc"],
+        train_history_dict["umami_accuracy"],
         label="training acc UMAMI - hybrid sample",
     )
     plt.plot(
@@ -759,7 +763,7 @@ def PlotAccuraciesUmami(
     )
     plt.plot(
         df_results["epoch"],
-        df_results["dips_acc"],
+        train_history_dict["dips_accuracy"],
         label="training acc DIPS - hybrid sample",
     )
     plt.plot(
@@ -810,6 +814,7 @@ def RunPerformanceCheck(
     tagger: str,
     tagger_comp_vars: dict = None,
     dict_file_name: str = None,
+    train_history_dict: str = None,
     WP: float = None,
 ):
     """
@@ -842,6 +847,7 @@ def RunPerformanceCheck(
 
     # Get dict with training results from json
     tagger_rej_dict = pd.read_json(dict_file_name)
+    train_history_dict = pd.read_json(train_history_dict)
 
     if tagger_comp_vars is not None:
         # Dict
@@ -919,12 +925,14 @@ def RunPerformanceCheck(
         PlotLossesUmami(
             tagger_rej_dict,
             plot_name,
+            train_history_dict=train_history_dict,
             **Plotting_settings,
         )
         plot_name = f"{plot_dir}/accuracy-plot"
         PlotAccuraciesUmami(
             tagger_rej_dict,
             plot_name,
+            train_history_dict=train_history_dict,
             **Plotting_settings,
         )
         plot_name = f"{plot_dir}/disc-cut-plot"
@@ -972,12 +980,14 @@ def RunPerformanceCheck(
         PlotLosses(
             tagger_rej_dict,
             plot_name,
+            train_history_dict=train_history_dict,
             **Plotting_settings,
         )
         plot_name = f"{plot_dir}/accuracy-plot"
         PlotAccuracies(
             tagger_rej_dict,
             plot_name,
+            train_history_dict=train_history_dict,
             **Plotting_settings,
         )
         plot_name = f"{plot_dir}/disc-cut-plot"

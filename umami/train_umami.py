@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from umami.configuration import logger  # isort:skip
 import argparse
+import json
 
 import h5py
 import numpy as np
@@ -382,7 +383,7 @@ def Umami(args, train_config, preprocess_config):
 
     # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
     logger.info("Start training")
-    umami.fit(
+    history = umami.fit(
         train_dataset,
         epochs=nEpochs,
         callbacks=[reduce_lr, my_callback],
@@ -390,6 +391,13 @@ def Umami(args, train_config, preprocess_config):
         use_multiprocessing=True,
         workers=8,
     )
+
+    # Dump dict into json
+    logger.info(
+        f"Dumping history file to {train_config.model_name}/history.json"
+    )
+    with open(f"{train_config.model_name}/history.json", "w") as outfile:
+        json.dump(history, outfile, indent=4)
 
 
 def UmamiZeuthen(args, train_config, preprocess_config):

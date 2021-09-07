@@ -1,5 +1,6 @@
 from umami.configuration import logger  # isort:skip
 import argparse
+import json
 import os
 
 import h5py
@@ -317,7 +318,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     )
 
     logger.info("Start training")
-    model.fit(
+    history = model.fit(
         x=train_dataset,
         epochs=nEpochs,
         callbacks=[reduce_lr, my_callback],
@@ -325,6 +326,13 @@ def TrainLargeFile(args, train_config, preprocess_config):
         use_multiprocessing=True,
         workers=8,
     )
+
+    # Dump dict into json
+    logger.info(
+        f"Dumping history file to {train_config.model_name}/history.json"
+    )
+    with open(f"{train_config.model_name}/history.json", "w") as outfile:
+        json.dump(history, outfile, indent=4)
 
     logger.info(f"Models saved {train_config.model_name}")
 
