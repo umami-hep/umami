@@ -26,7 +26,6 @@ def GetParser():
     parser.add_argument(
         "--nJets",
         type=int,
-        default=300000,
         help="Number of validation jets used",
     )
 
@@ -53,7 +52,6 @@ def GetParser():
         "--tagger",
         type=str,
         default=None,
-        action="store_true",
         help="Model type which is used. You can either use 'dips', 'dl1' or 'umami'.",
     )
 
@@ -64,7 +62,7 @@ def GetParser():
 def main(args, train_config, preprocess_config):
     # Check for nJets args
     if args.nJets is None:
-        nJets = train_config.Eval_parameters_validation["n_jets"]
+        nJets = int(train_config.Eval_parameters_validation["n_jets"])
 
     else:
         nJets = args.nJets
@@ -77,17 +75,19 @@ def main(args, train_config, preprocess_config):
         parameters = utt.get_parameters_from_validation_dict_name(
             output_file_name
         )
-        beff = parameters["WP_b"]
+        beff = parameters["WP"]
 
     else:
         output_file_name = utt.calc_validation_metrics(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            target_beff=args.beff if args.beff else None,
+            target_beff=args.beff
+            if args.beff
+            else train_config.Eval_parameters_validation["WP"],
             nJets=nJets,
             tagger=args.tagger,
         )
-        beff = None
+        beff = train_config.Eval_parameters_validation["WP"]
 
     if args.tagger in ["umami", "dl1", "dips"]:
         RunPerformanceCheck(
@@ -103,6 +103,7 @@ def main(args, train_config, preprocess_config):
                 ]
             },
             dict_file_name=output_file_name,
+            train_history_dict=f"{train_config.model_name}/history.json",
             WP=beff,
         )
 

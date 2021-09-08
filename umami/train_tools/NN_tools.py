@@ -1,4 +1,5 @@
 from umami.configuration import global_config, logger  # isort:skip
+import copy
 import json
 import os
 import re
@@ -28,10 +29,15 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r"(\d+)", text)]
 
 
-def get_validation_dict_name(WP_b, n_jets, dir_name):
+def get_epoch_from_string(string):
+    m = re.search("model_epoch(.+?).h5", string)
+    return m.group(1)
+
+
+def get_validation_dict_name(WP, n_jets, dir_name):
     return os.path.join(
         dir_name,
-        f"validation_WP{str(WP_b).replace('.','p')}_{int(n_jets)}jets_Dict.json",
+        f"validation_WP{str(WP).replace('.','p')}_{int(n_jets)}jets_Dict.json",
     )
 
 
@@ -123,7 +129,7 @@ def get_class_prob_var_names(tagger_name, class_labels):
 def get_parameters_from_validation_dict_name(dict_name):
     sp = dict_name.split("/")[-1].split("_")
     parameters = {}
-    parameters["WP_b"] = float(sp[1].replace("WP", "").replace("p", "."))
+    parameters["WP"] = float(sp[1].replace("WP", "").replace("p", "."))
     parameters["n_jets"] = int(sp[2].replace("jets", ""))
     parameters["dir_name"] = str(Path(dict_name).parent)
     if get_validation_dict_name(**parameters) != dict_name:
@@ -508,7 +514,7 @@ def GetRejection(
     cutvalue = np.percentile(disc_scores, 100.0 * (1.0 - target_eff))
 
     # Get all non-main flavours
-    class_labels_wo_main = class_labels
+    class_labels_wo_main = copy.deepcopy(class_labels)
     class_labels_wo_main.remove(main_class)
 
     # Calculate efficiencies
@@ -1159,20 +1165,20 @@ def evaluate_model_umami(
 
     # Write results in one dict
     result_dict.update(
-        {f"{key}_rej_umami": rej_dict_umami[key] for key in rej_dict_umami}
+        {f"{key}_umami": rej_dict_umami[key] for key in rej_dict_umami}
     )
     result_dict.update(
-        {f"{key}_rej_dips": rej_dict_dips[key] for key in rej_dict_dips}
+        {f"{key}_dips": rej_dict_dips[key] for key in rej_dict_dips}
     )
     result_dict.upadte(
         {
-            f"{key}_rej_umami_add": rej_dict_umami_add[key]
+            f"{key}_umami_add": rej_dict_umami_add[key]
             for key in rej_dict_umami_add
         }
     )
     result_dict.upadte(
         {
-            f"{key}_rej_dips_add": rej_dict_dips_add[key]
+            f"{key}_dips_add": rej_dict_dips_add[key]
             for key in rej_dict_dips_add
         }
     )
@@ -1273,9 +1279,9 @@ def evaluate_model(
     }
 
     # Write results in one dict
-    result_dict.update({f"{key}_rej": rej_dict[key] for key in rej_dict})
-    result_dict.upadte(
-        {f"{key}_rej_add": rej_dict_add[key] for key in rej_dict_add}
+    result_dict.update({f"{key}": rej_dict[key] for key in rej_dict})
+    result_dict.update(
+        {f"{key}_add": rej_dict_add[key] for key in rej_dict_add}
     )
 
     # Return finished dict
@@ -1285,13 +1291,12 @@ def evaluate_model(
 def calc_validation_metrics(
     train_config,
     preprocess_config,
-    frac_dict: dict,
     tagger: str,
     target_beff=0.77,
     nJets=int(3e5),
 ):
     """
-    Calculates the validation metrics and rejections for each epoch UMAMI
+    Calculates the validation metrics and rejections for each epoch
     and dump it into a json.
 
     Input:
@@ -1317,15 +1322,24 @@ def calc_validation_metrics(
     ]
 
     # Open the json file and load the training out
-    with open(
-        get_validation_dict_name(
-            WP_b=Eval_parameters["WP_b"],
-            n_jets=Eval_parameters["n_jets"],
-            dir_name=train_config.model_name,
-        ),
-        "r",
-    ) as training_out_json:
-        training_output_list = json.load(training_out_json)
+    try:
+        with open(
+            get_validation_dict_name(
+                WP=Eval_parameters["WP"],
+                n_jets=Eval_parameters["n_jets"],
+                dir_name=train_config.model_name,
+            ),
+            "r",
+        ) as training_out_json:
+            training_output_list = json.load(training_out_json)
+
+    except FileNotFoundError:
+        logger.info(
+            "No callback json file with validation metrics found! Make new one"
+        )
+        training_output_list = [
+            {"epoch": n} for n in range(train_config.NN_structure["epochs"])
+        ]
 
     # Init a results list
     results = []
@@ -1363,7 +1377,7 @@ def calc_validation_metrics(
                 class_labels=NN_structure["class_labels"],
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
-                frac_dict=frac_dict,
+                frac_dict=Eval_parameters["frac_values"],
             )
 
             # Delete model
@@ -1382,7 +1396,7 @@ def calc_validation_metrics(
                 class_labels=NN_structure["class_labels"],
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
-                frac_dict=frac_dict,
+                frac_dict=Eval_parameters["frac_values"],
             )
 
             # Delete model
@@ -1401,7 +1415,7 @@ def calc_validation_metrics(
                 class_labels=NN_structure["class_labels"],
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
-                frac_dict=frac_dict,
+                frac_dict=Eval_parameters["frac_values"],
             )
 
             # Delete model

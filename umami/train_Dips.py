@@ -1,5 +1,6 @@
 from umami.configuration import logger  # isort:skip
 import argparse
+import json
 
 import h5py
 import tensorflow as tf
@@ -316,7 +317,7 @@ def Dips(args, train_config, preprocess_config):
     )
 
     logger.info("Start training")
-    dips.fit(
+    history = dips.fit(
         train_dataset,
         epochs=nEpochs,
         validation_data=(X_valid, Y_valid),
@@ -327,6 +328,13 @@ def Dips(args, train_config, preprocess_config):
         use_multiprocessing=True,
         workers=8,
     )
+
+    # Dump dict into json
+    logger.info(
+        f"Dumping history file to {train_config.model_name}/history.json"
+    )
+    with open(f"{train_config.model_name}/history.json", "w") as outfile:
+        json.dump(history, outfile, indent=4)
 
 
 def DipsZeuthen(args, train_config, preprocess_config):

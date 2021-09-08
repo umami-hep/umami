@@ -36,19 +36,19 @@ class GetRejection_TestCase(unittest.TestCase):
             "loss",
             "val_loss",
             "val_loss_add",
-            "acc",
+            "accuracy",
             "val_acc",
             "val_acc_add",
             "umami_loss",
             "umami_val_loss",
             "umami_val_loss_add",
-            "umami_acc",
+            "umami_accuracy",
             "umami_val_acc",
             "umami_val_acc_add",
             "dips_loss",
             "dips_val_loss",
             "dips_val_loss_add",
-            "dips_acc",
+            "dips_accuracy",
             "dips_val_acc",
             "dips_val_acc_add",
             "disc_cut",
@@ -64,6 +64,18 @@ class GetRejection_TestCase(unittest.TestCase):
                 [np.arange(0, 10, 1) for x in range(len(list_of_keys))],
             )
         )
+        self.train_history_dict = {
+            key: self.df_results[key]
+            for key in [
+                "epoch",
+                "loss",
+                "accuracy",
+                "umami_loss",
+                "umami_accuracy",
+                "dips_accuracy",
+                "dips_loss",
+            ]
+        }
         self.comp_tagger_frac_dict = {
             "RNNIP": {"cjets": 0.018, "ujets": 0.982}
         }
@@ -78,7 +90,6 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotRejPerEpoch(
             df_results=self.df_results,
             frac_dict=self.frac_dict,
-            frac_class=self.frac_class,
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
             comp_tagger_frac_dict=self.comp_tagger_frac_dict,
             plot_name=self.tmp_plot_dir + "PlotRejPerEpoch",
@@ -87,6 +98,7 @@ class GetRejection_TestCase(unittest.TestCase):
             label_extension=self.label_extension,
             rej_string="rej",
             plot_datatype="png",
+            legend_loc=(0.6, 0.75),
         )
 
         self.assertEqual(
@@ -102,6 +114,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotLosses(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotLosses",
+            train_history_dict=self.train_history_dict,
             plot_datatype="png",
         )
 
@@ -118,6 +131,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotAccuracies(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotAccuracies",
+            train_history_dict=self.train_history_dict,
             plot_datatype="png",
         )
 
@@ -169,6 +183,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotLossesUmami(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotLossesUmami",
+            train_history_dict=self.train_history_dict,
             plot_datatype="png",
         )
 
@@ -185,6 +200,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotAccuraciesUmami(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotAccuraciesUmami",
+            train_history_dict=self.train_history_dict,
             plot_datatype="png",
         )
 
