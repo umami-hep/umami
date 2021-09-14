@@ -17,6 +17,16 @@ The FTAG1 derivations and the most recent ntuples for PFlow with the new RNNIP, 
 |MC16e - Z' | user.alfroch.427080.btagTraining.e5362_s3126_r10724_p3985.EMPFlow.2021-09-07-T122808-R14883_output.h5 | user.alfroch.427080.btagTraining.e5362_s3126_r10724_p3985.EMPFlow_loose.2021-09-07-T122950-R13989_output.h5 | mc16_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.deriv.DAOD_FTAG1.e5362_s3126_r10724_p3985 | mc16_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.recon.AOD.e5362_s3126_r10724 |
 
 
+## Release 22 Samples with Muons
+
+The round 2 release 22 samples with RNNIP, DL1* and DIPS.
+
+| Sample | h5 ntuples | h5 ntuples (looser track selection)   |  DAOD_PHYSVAL derivations| AOD |
+| ------------- | ---------------- | ---------------- | ---------------- | ---------------- |
+| ttbar | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4724.EMPFlow.2021-09-09-T005916-R23392_output.h5 | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4724.EMPFlow_loose.2021-09-09-T005957-R30414_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_e5984_s3126_r12629_p4724 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_e5984_s3126_r12629
+| Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4724.EMPFlow.2021-09-09-T005916-R23392_output.h5 | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4724.EMPFlow_loose.2021-09-09-T005957-R30414_output.h5 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_r12636_p4724 |  |
+| Z' | user.alfroch.500567.btagTraining.e7954_e7400_s3672_r12629_r12636_p4724.EMPFlow.2021-09-09-T005916-R23392_output.h5 | user.alfroch.500567.btagTraining.e7954_e7400_s3672_r12629_r12636_p4724.EMPFlow_loose.2021-09-09-T005957-R30414_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_e7400_s3672_r12629_r12636_p4724 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.merge.AOD.e7954_e7400_s3672_r12629_r12636 |
+
 ## Release 22 Samples
 
 The Round 2 release 22 samples with RNNIP, DL1* and DIPS.
