@@ -87,7 +87,7 @@ class generator:
         )
 
         # Load the
-        with open(h5py.File(self.train_file_path, "r")) as f:
+        with h5py.File(self.train_file_path, "r") as f:
             self.x_in_mem = f[self.X_Name][
                 self.step_size * part : self.step_size * (part + 1)
             ]
@@ -231,7 +231,7 @@ def Dips(args, train_config, preprocess_config):
         Y_valid_add = None
 
     # Get the shapes for training
-    with open(h5py.File(train_config.train_file, "r")) as f:
+    with h5py.File(train_config.train_file, "r") as f:
         nJets, nTrks, nFeatures = f["X_trk_train"].shape
         nJets, nDim = f["Y_train"].shape
 
@@ -307,10 +307,10 @@ def Dips(args, train_config, preprocess_config):
         class_labels=train_config.NN_structure["class_labels"],
         main_class=train_config.NN_structure["main_class"],
         val_data_dict=val_data_dict,
-        target_beff=train_config.Eval_parameters_validation["WP_b"],
+        target_beff=train_config.Eval_parameters_validation["WP"],
         frac_dict=train_config.Eval_parameters_validation["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
-            WP_b=train_config.Eval_parameters_validation["WP_b"],
+            WP=train_config.Eval_parameters_validation["WP"],
             n_jets=train_config.Eval_parameters_validation["n_jets"],
             dir_name=train_config.model_name,
         ),
@@ -333,8 +333,13 @@ def Dips(args, train_config, preprocess_config):
     logger.info(
         f"Dumping history file to {train_config.model_name}/history.json"
     )
+
+    # Make the history dict the same shape as the dict from the callbacks
+    hist_dict = utt.prepare_history_dict(history.history)
+
+    # Dump history file to json
     with open(f"{train_config.model_name}/history.json", "w") as outfile:
-        json.dump(history, outfile, indent=4)
+        json.dump(hist_dict, outfile, indent=4)
 
 
 def DipsZeuthen(args, train_config, preprocess_config):

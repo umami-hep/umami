@@ -43,7 +43,6 @@ def GetParser():
     parser.add_argument(
         "-e",
         "--epochs",
-        default=300,
         type=int,
         help="Number\
         of training epochs.",
@@ -101,7 +100,7 @@ class generator:
         )
 
         # Load the
-        with open(h5py.File(self.train_file_path, "r")) as f:
+        with h5py.File(self.train_file_path, "r") as f:
             self.x_in_mem = f[self.X_Name][
                 self.step_size * part : self.step_size * (part + 1)
             ]
@@ -158,7 +157,7 @@ def DL1_model(train_config, input_shape):
         inputs = Input(shape=input_shape)
 
         # Define layers
-        for i, unit in enumerate(NN_structure["units"]):
+        for i, unit in enumerate(NN_structure["dense_sizes"]):
             x = Dense(
                 units=unit,
                 activation="linear",
@@ -218,7 +217,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     )
 
     # Get the shapes for training
-    with open(h5py.File(train_config.train_file, "r")) as f:
+    with h5py.File(train_config.train_file, "r") as f:
         nJets, nFeatures = f["X_train"].shape
         nJets, nDim = f["Y_train"].shape
 
@@ -246,41 +245,9 @@ def TrainLargeFile(args, train_config, preprocess_config):
         .prefetch(3)
     )
 
-    # Load the validation tracks
-    X_valid, Y_valid = utt.GetTestSample(
-        input_file=train_config.validation_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config,
-        class_labels=NN_structure["class_labels"],
-        nJets=int(Val_params["n_jets"]),
-        exclude=exclude,
-    )
-
-    # Load the add_files if defined
-    if train_config.add_validation_file is not None:
-        X_valid_add, Y_valid_add = utt.GetTestSample(
-            input_file=train_config.add_validation_file,
-            var_dict=train_config.var_dict,
-            preprocess_config=preprocess_config,
-            class_labels=NN_structure["class_labels"],
-            nJets=int(Val_params["n_jets"]),
-            exclude=exclude,
-        )
-
-    else:
-        X_valid_add, Y_valid_add = None, None
-
-    # Forming a dict for Callback
-    val_data_dict = {
-        "X_valid": X_valid,
-        "Y_valid": Y_valid,
-        "X_valid_add": X_valid_add,
-        "Y_valid_add": Y_valid_add,
-    }
-
     # Load model and epochs
     model, epochs = DL1_model(
-        train_config=train_config, input_shape=(X_valid.shape[1],)
+        train_config=train_config, input_shape=(nFeatures,)
     )
 
     # Check if epochs is set via argparser or not
@@ -301,6 +268,15 @@ def TrainLargeFile(args, train_config, preprocess_config):
         min_lr=0.000001,
     )
 
+    # Load validation data for callback
+    val_data_dict = None
+    if train_config.Eval_parameters_validation["n_jets"] > 0:
+        val_data_dict = utt.load_validation_data_dl1(
+            train_config,
+            preprocess_config,
+            train_config.Eval_parameters_validation["n_jets"],
+        )
+
     # Set my_callback as callback. Writes history information
     # to json file.
     my_callback = utt.MyCallback(
@@ -308,10 +284,10 @@ def TrainLargeFile(args, train_config, preprocess_config):
         class_labels=NN_structure["class_labels"],
         main_class=NN_structure["main_class"],
         val_data_dict=val_data_dict,
-        target_beff=Val_params["WP_b"],
+        target_beff=Val_params["WP"],
         frac_dict=Val_params["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
-            WP_b=Val_params["WP_b"],
+            WP=Val_params["WP"],
             n_jets=Val_params["n_jets"],
             dir_name=train_config.model_name,
         ),
@@ -331,8 +307,13 @@ def TrainLargeFile(args, train_config, preprocess_config):
     logger.info(
         f"Dumping history file to {train_config.model_name}/history.json"
     )
+
+    # Make the history dict the same shape as the dict from the callbacks
+    hist_dict = utt.prepare_history_dict(history.history)
+
+    # Dump history file to json
     with open(f"{train_config.model_name}/history.json", "w") as outfile:
-        json.dump(history, outfile, indent=4)
+        json.dump(hist_dict, outfile, indent=4)
 
     logger.info(f"Models saved {train_config.model_name}")
 

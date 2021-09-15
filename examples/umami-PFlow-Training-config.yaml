@@ -62,14 +62,14 @@ NN_structure:
 
     # Define which classes are used for training
     # These are defined in the global_config
-    class_labels: ["bjets", "cjets", "ujets"]
+    class_labels: ["ujets", "cjets", "bjets"]
 
     # Main class which is to be tagged
-    main_class: ["bjets"]
+    main_class: "bjets"
 
 Eval_parameters_validation:
     # Number of jets used for each validation sample. Set this to 0 if you have memory problems
-    n_jets: 100000
+    n_jets: 3e5
 
     # Define taggers that are used for comparison in evaluate_model
     # This can be a list or a string for only one tagger
@@ -89,8 +89,14 @@ Eval_parameters_validation:
 
     # Charm fraction value used for evaluation of the trained model
     frac_values: {
-        "cjets": 0.018,
-        "ujets": 0.982,
+        "dips": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
+        "umami": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
     }
 
     # Working point used in the evaluation

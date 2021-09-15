@@ -1,4 +1,4 @@
-parameters: !include Preprocessing-settings-Geneva.yaml
+parameters: !include Preprocessing-settings-Freiburg.yaml
 
 # Defining yaml anchors to be used later, avoiding duplication
 .cuts_template_ttbar_train: &cuts_template_ttbar_train
@@ -190,7 +190,7 @@ sampling:
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: indices.h5
     # outputfiles are split into 5 -> needs to be implemented
-    # iterations: 5
+    iterations: 5
 
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name

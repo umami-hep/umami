@@ -181,7 +181,6 @@ def PlotDiscCutPerEpochUmami(
     plot_name,
     frac_class: str,
     target_beff=0.77,
-    frac: float = 0.018,
     UseAtlasTag=True,
     ApplyATLASStyle=True,
     AtlasTag="Internal Simulation",
@@ -200,7 +199,6 @@ def PlotDiscCutPerEpochUmami(
     - plot_name: Path where the plots is saved + plot name.
     - frac_class: Define which fraction is shown in ATLAS Tag.
     - target_beff: Working Point to use.
-    - frac: Fraction value for ATLAS Tag.
     - UseAtlasTag: Define if ATLAS Tag is used or not.
     - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
     - AtlasTag: Main tag. Mainly "Internal Simulation".
@@ -240,11 +238,7 @@ def PlotDiscCutPerEpochUmami(
     )
 
     if UseAtlasTag is True:
-        SecondTag = (
-            SecondTag
-            + f"\n{frac_class} fraction = {frac}"
-            + f"\nWP={int(target_beff * 100):02d}%"
-        )
+        SecondTag = SecondTag + f"\nWP={int(target_beff * 100):02d}%"
 
         makeATLAStag(
             ax=plt.gca(),
@@ -855,30 +849,32 @@ def RunPerformanceCheck(
         comp_tagger_rej_dict_add = {}
 
         # Loop over taggers that are used for comparsion
-        for tagger in tagger_comp_vars:
-            comp_tagger_rej_dict[tagger] = CompTaggerRejectionDict(
+        for comp_tagger in tagger_comp_vars:
+            comp_tagger_rej_dict[comp_tagger] = CompTaggerRejectionDict(
                 file=train_config.validation_file,
-                tagger_comp_name=tagger,
-                tagger_comp_var=tagger_comp_vars[tagger],
-                recommended_frac_dict=recommended_frac_dict[tagger],
+                tagger_comp_name=comp_tagger,
+                tagger_comp_var=tagger_comp_vars[comp_tagger],
+                recommended_frac_dict=recommended_frac_dict[comp_tagger],
                 WP=WP,
                 class_labels=class_labels,
                 main_class=main_class,
             )
 
             if train_config.add_validation_file is not None:
-                comp_tagger_rej_dict_add[tagger] = CompTaggerRejectionDict(
+                comp_tagger_rej_dict_add[
+                    comp_tagger
+                ] = CompTaggerRejectionDict(
                     file=train_config.add_validation_file,
-                    tagger_comp_name=tagger,
-                    tagger_comp_var=tagger_comp_vars[tagger],
-                    recommended_frac_dict=recommended_frac_dict[tagger],
+                    tagger_comp_name=comp_tagger,
+                    tagger_comp_var=tagger_comp_vars[comp_tagger],
+                    recommended_frac_dict=recommended_frac_dict[comp_tagger],
                     WP=WP,
                     class_labels=class_labels,
                     main_class=main_class,
                 )
 
             else:
-                comp_tagger_rej_dict_add[tagger] = None
+                comp_tagger_rej_dict_add[comp_tagger] = None
 
     else:
         # Define the dicts as None if compare tagger is False
@@ -916,7 +912,7 @@ def RunPerformanceCheck(
                     class_labels=class_labels,
                     main_class=main_class,
                     label_extension=r"ext. $Z'$",
-                    rej_string="rej_{subtagger}_add",
+                    rej_string=f"rej_{subtagger}_add",
                     target_beff=WP,
                     **Plotting_settings,
                 )
@@ -941,7 +937,6 @@ def RunPerformanceCheck(
             plot_name=plot_name,
             frac_class="cjets",
             target_beff=WP,
-            frac=frac_dict["cjets"],
             **Plotting_settings,
         )
 
