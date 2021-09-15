@@ -11,6 +11,7 @@ from umami.train_tools.Configuration import Configuration
 from umami.train_tools.NN_tools import (
     CalcDiscValues,
     GetRejection,
+    GetScore,
     GetTestFile,
     GetTestSample,
     GetTestSampleTrks,
@@ -233,10 +234,16 @@ class GetRejection_TestCase(unittest.TestCase):
         """
         # Create a temporary directory
         rng = np.random.default_rng(42)
-        self.y_pred = rng.integers(low=0, high=3, size=(100, 3))
-        self.y_true = rng.integers(low=0, high=3, size=(100, 3))
-        self.y_pred_tau = rng.integers(low=0, high=4, size=(100, 4))
-        self.y_true_tau = rng.integers(low=0, high=4, size=(100, 4))
+        self.y_pred = rng.random(size=(10000, 3))
+        self.y_true = rng.random(size=(10000, 3))
+        self.y_pred_tau = rng.random(size=(10000, 4))
+        self.y_true_tau = rng.random(size=(10000, 4))
+        self.y_true = (self.y_true == self.y_true.max(axis=1)[:, None]).astype(
+            int
+        )
+        self.y_true_tau = (
+            self.y_true_tau == self.y_true_tau.max(axis=1)[:, None]
+        ).astype(int)
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.class_labels_tau = ["bjets", "cjets", "ujets", "taujets"]
         self.main_class = "bjets"
@@ -250,11 +257,6 @@ class GetRejection_TestCase(unittest.TestCase):
             "ujets": 0.782,
             "taujets": 0.2,
         }
-        self.crej = 0.6538461538436391
-        self.urej = 0.5624999999964845
-        self.crej_tau = 0.8461538461505917
-        self.urej_tau = 0.599999999996
-        self.taurej = 0.6363636363578512
 
     def test_GetRejection(self):
         rej_dict, disc_cut = GetRejection(
@@ -267,10 +269,6 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
         self.assertTrue(("cjets_rej" in rej_dict and "ujets_rej" in rej_dict))
-
-        self.assertEqual(rej_dict["cjets_rej"], self.crej)
-
-        self.assertEqual(rej_dict["ujets_rej"], self.urej)
 
     def test_GetRejection_4_classes(self):
         rej_dict, disc_cut = GetRejection(
@@ -288,11 +286,59 @@ class GetRejection_TestCase(unittest.TestCase):
             and "taujets_rej" in rej_dict
         )
 
-        self.assertEqual(rej_dict["cjets_rej"], self.crej_tau)
 
-        self.assertEqual(rej_dict["ujets_rej"], self.urej_tau)
+class GetScore_TestCase(unittest.TestCase):
+    def setUp(self):
+        """
+        Create a default dataset for testing.
+        """
+        # Create a temporary directory
+        rng = np.random.default_rng(42)
+        self.y_pred = rng.random(size=(10000, 3))
+        self.y_true = rng.random(size=(10000, 3))
+        self.y_pred_tau = rng.random(size=(10000, 4))
+        self.y_true_tau = rng.random(size=(10000, 4))
+        self.y_true = (self.y_true == self.y_true.max(axis=1)[:, None]).astype(
+            int
+        )
+        self.y_true_tau = (
+            self.y_true_tau == self.y_true_tau.max(axis=1)[:, None]
+        ).astype(int)
+        self.class_labels = ["bjets", "cjets", "ujets"]
+        self.class_labels_tau = ["bjets", "cjets", "ujets", "taujets"]
+        self.main_class = "bjets"
+        self.target_eff = 0.77
+        self.frac_dict = {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        }
+        self.frac_dict_tau = {
+            "cjets": 0.018,
+            "ujets": 0.782,
+            "taujets": 0.2,
+        }
 
-        self.assertEqual(rej_dict["taujets_rej"], self.taurej)
+    def test_GetScore(self):
+        disc_scores = GetScore(
+            y_pred=self.y_pred,
+            class_labels=self.class_labels,
+            main_class=self.main_class,
+            frac_dict=self.frac_dict,
+        )
+
+        self.assertEqual(len(disc_scores), len(self.y_pred))
+        self.assertAlmostEqual(disc_scores[0], -0.09494753279842187)
+
+    def test_GetScore4Classes(self):
+        disc_scores = GetScore(
+            y_pred=self.y_pred_tau,
+            class_labels=self.class_labels_tau,
+            main_class=self.main_class,
+            frac_dict=self.frac_dict_tau,
+        )
+
+        self.assertEqual(len(disc_scores), len(self.y_pred))
+        self.assertAlmostEqual(disc_scores[0], -0.0597642740794453)
 
 
 class dict_name_TestCase(unittest.TestCase):
@@ -334,7 +380,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
             self.tmp_test_dir, "preprocess_config.yaml"
         )
         self.preprocess_config_include = os.path.join(
-            self.tmp_test_dir, "Preprocessing-settings-Geneva.yaml"
+            self.tmp_test_dir, "Preprocessing-settings-Freiburg.yaml"
         )
         self.var_dict_path = os.path.join(self.tmp_test_dir, "Var_Dict.yaml")
         self.scale_dict_path = os.path.join(
@@ -356,7 +402,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         )
         copyfile(
             os.path.join(
-                os.getcwd(), "examples/Preprocessing-settings-Geneva.yaml"
+                os.getcwd(), "examples/Preprocessing-settings-Freiburg.yaml"
             ),
             self.preprocess_config_include,
         )
@@ -599,6 +645,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def setUp(self):
         self.NN_structure = {"class_labels": ["bjets", "cjets", "ujets"]}
+        self.preparation = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.test_dir = tempfile.TemporaryDirectory()
         self.validation_file = f"{self.test_dir.name}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
         self.add_validation_file = f"{self.test_dir.name}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
@@ -655,7 +702,23 @@ class GetSamples_TestCase(unittest.TestCase):
         )
         self.assertEqual(Y_trk.shape, (len(Y_trk), 3))
 
+    def test_GetTestSampleTrks_Different_class_labels(self):
+        self.class_labels_given = ["ujets", "cjets", "bjets"]
+
+        with self.assertRaises(AssertionError):
+            X_trk, Y_trk = GetTestSampleTrks(
+                input_file=self.validation_file,
+                var_dict=self.var_dict,
+                preprocess_config=self,
+                class_labels=self.class_labels_given,
+                nJets=self.nJets,
+            )
+
     def test_GetTestSampleTrks_Extended_Labeling(self):
+        self.preparation = {
+            "class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]
+        }
+
         X_trk, Y_trk = GetTestSampleTrks(
             input_file=self.validation_file,
             var_dict=self.var_dict,
@@ -687,7 +750,24 @@ class GetSamples_TestCase(unittest.TestCase):
             ["absEta_btagJes", "JetFitter_isDefaults", "JetFitter_mass"],
         )
 
+    def test_GetTestSample_Different_class_labels(self):
+        self.class_labels_given = ["ujets", "cjets", "bjets"]
+
+        with self.assertRaises(AssertionError):
+            X, Y = GetTestSample(
+                input_file=self.validation_file,
+                var_dict=self.var_dict,
+                preprocess_config=self,
+                class_labels=self.class_labels_given,
+                nJets=self.nJets,
+                exclude=self.exclude,
+            )
+
     def test_GetTestSample_Extended_Labeling(self):
+        self.preparation = {
+            "class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]
+        }
+
         X, Y = GetTestSample(
             input_file=self.validation_file,
             var_dict=self.var_dict,

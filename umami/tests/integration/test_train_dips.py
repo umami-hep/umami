@@ -45,7 +45,8 @@ def runTrainingDips(config):
             "plotting_epoch_performance.py",
             "-c",
             f"{config}",
-            "--dips",
+            "--tagger",
+            "dips",
         ]
     )
     try:
@@ -100,8 +101,15 @@ class TestDipsTraining(unittest.TestCase):
             "./preprocessing_dips/preprocessing/",
             os.path.basename(self.data["test_preprocessing"]["config"]),
         )
+        preprocessing_config_paths_source = os.path.join(
+            "./preprocessing_dips/preprocessing/",
+            os.path.basename(self.data["test_preprocessing"]["config_paths"]),
+        )
         self.preprocessing_config = os.path.join(
             test_dir, os.path.basename(preprocessing_config_source)
+        )
+        self.preprocessing_config_paths = os.path.join(
+            test_dir, os.path.basename(preprocessing_config_paths_source)
         )
 
         var_dict_dips_source = os.path.join(
@@ -136,18 +144,21 @@ class TestDipsTraining(unittest.TestCase):
         # Copy configs and var dict
         copyfile(config_source, self.config)
         copyfile(preprocessing_config_source, self.preprocessing_config)
+        copyfile(
+            preprocessing_config_paths_source, self.preprocessing_config_paths
+        )
         copyfile(var_dict_dips_source, self.var_dict_dips)
 
         # modify copy of preprocessing config file for test
         replaceLineInFile(
-            self.preprocessing_config,
-            "outfile_name:",
-            f"outfile_name: {self.train_file}",
+            self.preprocessing_config_paths,
+            ".outfile_name:",
+            f".outfile_name: &outfile_name {self.train_file}",
         )
         replaceLineInFile(
-            self.preprocessing_config,
-            "dict_file:",
-            f"dict_file: {self.scale_dict}",
+            self.preprocessing_config_paths,
+            ".dict_file:",
+            f".dict_file: &dict_file {self.scale_dict}",
         )
 
         # modify copy of training config file for test
@@ -189,10 +200,8 @@ class TestDipsTraining(unittest.TestCase):
         self.config_file["NN_structure"]["batch_size"] = 50
         self.config_file["NN_structure"]["epochs"] = 2
         self.config_file["NN_structure"]["nJets_train"] = 100
-        self.config_file["Eval_parameters_validation"]["n_jets"] = 100
-        self.config_file["Eval_parameters_validation"][
-            "SecondTag"
-        ] = "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+        self.config_file["Eval_parameters_validation"]["n_jets"] = 4000
+        self.config_file["Eval_parameters_validation"]["low"] = 0.60
 
         # save the copy of training config file for test
         with open(self.config, "w") as config:

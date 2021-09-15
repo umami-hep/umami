@@ -60,10 +60,10 @@ NN_structure:
 
     # Define which classes are used for training
     # These are defined in the global_config
-    class_labels: ["bjets", "cjets", "ujets"]
+    class_labels: ["ujets", "cjets", "bjets"]
 
     # Main class which is to be tagged
-    main_class: ["bjets"]
+    main_class: "bjets"
 
     # Decide if Batch Normalisation is used
     Batch_Normalisation: False
@@ -103,6 +103,9 @@ Eval_parameters_validation:
 
     # A list to add available variables to the evaluation files
     add_variables_eval: ["actualInteractionsPerCrossing"]
+
+    # Working point used in the evaluation
+    WP: 0.77
 
 # Plotting settings for training metrics plots
 Plotting_settings:

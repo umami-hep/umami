@@ -166,7 +166,6 @@ class GetRejection_TestCase(unittest.TestCase):
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpochUmami",
             frac_class="cjets",
-            frac=0.018,
             plot_datatype="png",
         )
 

@@ -7,7 +7,7 @@ unittest:
     - apt-get install -y wget
     - python setup.py develop
     - pytest ./umami/tests/unit/preprocessing -v
-    # - pytest ./umami/tests/unit/evaluation_tools -v
+    - pytest ./umami/tests/unit/evaluation_tools -v
     - pytest ./umami/tests/unit/train_tools -v
     - pytest ./umami/tests/unit/input_vars_tools -v
   rules:
@@ -41,11 +41,11 @@ unittest_preprocessing:
     - pytest --cov=./ --cov-report= ./umami/tests/unit/preprocessing/ -v --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_preprocessing
 
-# unittest_evaluation_tools:
-#   <<: *unittest_template
-#   script:
-#     - pytest --cov=./ --cov-report= ./umami/tests/unit/evaluation_tools/ -v --junitxml=report.xml
-#     - cp .coverage coverage_files/.coverage.unittest_evaluation_tools
+unittest_evaluation_tools:
+  <<: *unittest_template
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/evaluation_tools/ -v --junitxml=report.xml
+    - cp .coverage coverage_files/.coverage.unittest_evaluation_tools
 
 unittest_train_tools:
   <<: *unittest_template
