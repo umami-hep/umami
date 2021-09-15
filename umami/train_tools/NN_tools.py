@@ -727,6 +727,8 @@ def GetTestSample(
             all_jets = all_jets.append(jets, ignore_index=True)
             all_labels = all_labels.append(labels, ignore_index=True)
 
+        nJets_counter += len(all_jets)
+
         # Stop loading if enough jets are loaded
         if nJets_counter >= nJets:
             break
