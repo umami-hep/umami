@@ -7,7 +7,7 @@ import h5py
 import numpy as np
 import tensorflow as tf
 import yaml
-from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.layers import (
     Activation,
     BatchNormalization,
@@ -258,6 +258,16 @@ def TrainLargeFile(args, train_config, preprocess_config):
     else:
         nEpochs = args.epochs
 
+    # Set ModelCheckpoint as callback
+    dl1_mChkPt = ModelCheckpoint(
+        f"{train_config.model_name}" + "/dl1_model_{epoch:03d}.h5",
+        monitor="val_loss",
+        verbose=True,
+        save_best_only=False,
+        validation_batch_size=NN_structure["batch_size"],
+        save_weights_only=False,
+    )
+
     reduce_lr = ReduceLROnPlateau(
         monitor="loss",
         factor=0.8,
@@ -297,7 +307,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     history = model.fit(
         x=train_dataset,
         epochs=nEpochs,
-        callbacks=[reduce_lr, my_callback],
+        callbacks=[dl1_mChkPt, reduce_lr, my_callback],
         steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
