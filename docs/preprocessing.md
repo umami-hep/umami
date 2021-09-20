@@ -37,7 +37,7 @@ For more information, consider the [FTAG TWiki about flavour labelling](https://
 | -------------------------- | ---------------- |
 | 0                          | light jets       |
 | 4                          | c-jets           |
-| 5                          | single b-jets    |
+| 5                          | b-jets    |
 | 15                         | tau-jets         |
 
 | HadronConeExclExtendedTruthLabelID | Category         |
