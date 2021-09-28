@@ -11,7 +11,10 @@ from numpy.lib.recfunctions import repack_fields, structured_to_unstructured
 
 import umami.preprocessing_tools as upt
 from umami.configuration import logger
-from umami.preprocessing_tools import UnderSampling
+from umami.preprocessing_tools import (
+    ProbabilityRatioUnderSampling,
+    UnderSampling,
+)
 from umami.tools import yaml_loader
 
 
@@ -409,6 +412,9 @@ if __name__ == "__main__":
             us = UnderSampling(config)
             us.Run()
         # here the other options such as PDFSampling etc. would be called
+        if config.sampling["method"] == "probability_ratio":
+            ust = ProbabilityRatioUnderSampling(config)
+            ust.Run()
     if args.scaling:
         GetScaleDict(args, config)
     if args.apply_scales:
