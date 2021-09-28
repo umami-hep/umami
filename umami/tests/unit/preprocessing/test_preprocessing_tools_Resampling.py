@@ -1,16 +1,17 @@
 import os
 import unittest
 
+import h5py
 import numpy as np
 import pandas as pd
 
 from umami.configuration import global_config
-from umami.preprocessing_tools import (  # UndersamplingGenerator,
+from umami.preprocessing_tools import (
     CalculateBinning,
     Configuration,
     CorrectFractions,
+    ProbabilityRatioUnderSampling,
     UnderSampling,
-    UnderSamplingTemplate,
 )
 
 
@@ -88,7 +89,7 @@ class CalculateBinningTestCase(unittest.TestCase):
         np.testing.assert_array_equal(CalculateBinning(bins), expected_outcome)
 
 
-class UndersamplingGeneratorTestCase(unittest.TestCase):
+class ResamplingGeneratorTestCase(unittest.TestCase):
     """
     Test the implementation of the UndersamplingGenerator function.
     """
@@ -251,85 +252,153 @@ class PDFResamplingTestCase(unittest.TestCase):
     pass
 
 
-class UnderSamplingTemplateTestCase(unittest.TestCase):
+class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
     """
-    Test the implementation of the UnderSamplingTemplate class.
+    Test the implementation of the ProbabilityRatioUnderSampling class.
     """
 
     def setUp(self):
         """
-        Create a default dataset for testing with c-jets being the lowest distribution
+        Create a default dataset for testing.
         """
-        self.df_bjets = pd.DataFrame(
-            {
-                global_config.pTvariable: abs(
-                    np.random.normal(300000, 30000, 10000)
-                ),
-                global_config.etavariable: abs(
-                    np.random.normal(1.25, 1, 10000)
-                ),
-            }
+        self.config_file = os.path.join(
+            os.path.dirname(__file__), "test_preprocess_config.yaml"
         )
-        self.df_cjets = pd.DataFrame(
-            {
-                global_config.pTvariable: abs(
-                    np.random.normal(180000, 18000, 5000)
-                ),
-                global_config.etavariable: abs(np.random.normal(1.4, 1, 5000)),
-            }
-        )
-        self.df_ujets = pd.DataFrame(
-            {
-                global_config.pTvariable: abs(
-                    np.random.normal(250000, 25000, 10000)
-                ),
-                global_config.etavariable: abs(
-                    np.random.normal(1.0, 1, 10000)
-                ),
-            }
-        )
+        self.config = Configuration(self.config_file)
+        sampling_config = self.config.sampling
+        sampling_config["options"]["target_distribution"] = "bjets"
+        sampling_config["options"]["sampling_variables"][0][
+            global_config.pTvariable
+        ]["bins"] = [
+            0,
+            15e5,
+            21,
+        ]
+        sampling_config["options"]["sampling_variables"][1][
+            global_config.etavariable
+        ]["bins"] = [
+            0,
+            2.5,
+            2,
+        ]
+        self.sampling_config = sampling_config
+        self.samples_config = (self.config.preparation).get("samples")
+        self.data = {
+            "training_ttbar_bjets": pd.DataFrame(
+                {
+                    global_config.pTvariable: abs(
+                        np.random.normal(250000, 30000, 10000)
+                    ),
+                    global_config.etavariable: abs(
+                        np.random.normal(1.25, 1, 10000)
+                    ),
+                }
+            ),
+            "training_ttbar_cjets": pd.DataFrame(
+                {
+                    global_config.pTvariable: abs(
+                        np.random.normal(220000, 28000, 10000)
+                    ),
+                    global_config.etavariable: abs(
+                        np.random.normal(1.4, 1, 10000)
+                    ),
+                }
+            ),
+            "training_ttbar_ujets": pd.DataFrame(
+                {
+                    global_config.pTvariable: abs(
+                        np.random.normal(230000, 25000, 10000)
+                    ),
+                    global_config.etavariable: abs(
+                        np.random.normal(1.0, 1, 10000)
+                    ),
+                }
+            ),
+            "training_zprime_bjets": pd.DataFrame(
+                {
+                    global_config.pTvariable: abs(
+                        np.random.normal(260000, 30000, 10000)
+                    ),
+                    global_config.etavariable: abs(
+                        np.random.normal(1.5, 1, 10000)
+                    ),
+                }
+            ),
+            "training_zprime_cjets": pd.DataFrame(
+                {
+                    global_config.pTvariable: abs(
+                        np.random.normal(260000, 28000, 10000)
+                    ),
+                    global_config.etavariable: abs(
+                        np.random.normal(1.6, 1, 10000)
+                    ),
+                }
+            ),
+            "training_zprime_ujets": pd.DataFrame(
+                {
+                    global_config.pTvariable: abs(
+                        np.random.normal(350000, 25000, 10000)
+                    ),
+                    global_config.etavariable: abs(
+                        np.random.normal(1.2, 1, 10000)
+                    ),
+                }
+            ),
+        }
+        training_ttbar_samples = [
+            "training_ttbar_bjets",
+            "training_ttbar_cjets",
+            "training_ttbar_ujets",
+            "training_zprime_bjets",
+            "training_zprime_cjets",
+            "training_zprime_ujets",
+        ]
+        for sample in training_ttbar_samples:
+            sample_config_output = self.samples_config[sample]["f_output"]
+            test_h5_file_name = f"{sample_config_output['path']}/{sample_config_output['file']}"
+            with h5py.File(test_h5_file_name, "w") as f:
+                jets = f.create_dataset(
+                    "jets",
+                    (10000),
+                    dtype=np.dtype(
+                        [
+                            (global_config.pTvariable, "f"),
+                            (global_config.etavariable, "f"),
+                        ]
+                    ),
+                )
+                jets[global_config.pTvariable] = self.data[sample][
+                    global_config.pTvariable
+                ]
+                jets[global_config.etavariable] = self.data[sample][
+                    global_config.etavariable
+                ]
 
-    def test_equal_length(self):
-        down_s = UnderSamplingTemplate(
-            self.df_bjets, self.df_cjets, self.df_ujets, count=True
-        )
-        b_indices, c_indices, u_indices, _ = down_s.GetIndices()
-        self.assertEqual(len(b_indices), len(c_indices))
-        self.assertEqual(len(b_indices), len(u_indices))
+    def test_CountNoSamplesDefined(self):
+        del self.sampling_config["options"]["samples"]
+        us = ProbabilityRatioUnderSampling(self.config)
+        with self.assertRaises(KeyError):
+            us.InitialiseSamples()
 
-    def test_zero_case(self):
-        df_zeros = pd.DataFrame(
-            np.zeros((1000, 2)),
-            columns=[global_config.pTvariable, global_config.etavariable],
-        )
-        down_s = UnderSamplingTemplate(
-            df_zeros, df_zeros, df_zeros, count=True
-        )
-        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
-        self.assertEqual(len(b_ind), len(df_zeros))
+    def test_DifferentSamplesPerCategory(self):
+        del self.sampling_config["options"]["samples"]["zprime"][1]
+        us = ProbabilityRatioUnderSampling(self.config)
+        with self.assertRaises(RuntimeError):
+            us.InitialiseSamples()
 
-    def test_overflow(self):
-        df_large = pd.DataFrame(
-            1e10 * np.ones((1000, 2)),
-            columns=[global_config.pTvariable, global_config.etavariable],
+    def test_equal_length_hybrids(self):
+        us = ProbabilityRatioUnderSampling(self.config)
+        us.InitialiseSamples()
+        indices = us.GetIndices()
+        self.assertEqual(
+            len(indices["training_ttbar_bjets"])
+            + len(indices["training_zprime_bjets"]),
+            len(indices["training_ttbar_cjets"])
+            + len(indices["training_zprime_cjets"]),
         )
-        down_s = UnderSamplingTemplate(
-            df_large, df_large, df_large, count=True
+        self.assertEqual(
+            len(indices["training_ttbar_bjets"])
+            + len(indices["training_zprime_bjets"]),
+            len(indices["training_ttbar_ujets"])
+            + len(indices["training_zprime_ujets"]),
         )
-        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
-        self.assertEqual(b_ind.size, 0)
-        self.assertEqual(c_ind.size, 0)
-        self.assertEqual(u_ind.size, 0)
-
-    def test_underflow(self):
-        df_minus_ones = pd.DataFrame(
-            -1 * np.ones((1000, 2)),
-            columns=[global_config.pTvariable, global_config.etavariable],
-        )
-        down_s = UnderSamplingTemplate(
-            df_minus_ones, df_minus_ones, df_minus_ones, count=True
-        )
-        b_ind, c_ind, u_ind, _ = down_s.GetIndices()
-        self.assertEqual(b_ind.size, 0)
-        self.assertEqual(c_ind.size, 0)
-        self.assertEqual(u_ind.size, 0)

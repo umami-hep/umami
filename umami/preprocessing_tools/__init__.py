@@ -20,11 +20,10 @@ from umami.preprocessing_tools.Resampling import (
     Gen_default_dict,
     GetScales,
     PDFResampling,
+    ProbabilityRatioUnderSampling,
     Resampling,
     UnderSampling,
-    UndersamplingGenerator,
     UnderSamplingProp,
-    UnderSamplingTemplate,
     dict_in,
 )
 from umami.preprocessing_tools.utils import (
