@@ -31,6 +31,7 @@ nav:
     - LWTNN Conversion: LWTNN-conversion.md
     - Evaluate Taggers in Samples: WO_trained_model.md
     - Plotting evaluated Results: plotting_umami.md
+    - Feature Importance: Feature_Importance.md
 
 plugins:
     - search

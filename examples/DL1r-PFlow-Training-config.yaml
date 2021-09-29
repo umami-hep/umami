@@ -106,3 +106,26 @@ Eval_parameters_validation:
 
     # Set the datatype of the plots
     plot_datatype: "pdf"
+
+    # some properties for the feature importance explanation with SHAPley
+    shapley:
+        # Over how many full sets of features it should calculate over.
+        # Corresponds to the dots in the beeswarm plot.
+        # 200 takes like 10-15 min for DL1r on a 32 core-cpu
+        feature_sets: 200
+
+        # defines which of the model outputs (flavor) you want to explain
+        # [tau,b,c,u] := [3, 2, 1, 0]
+        model_output: 2
+
+        # You can also choose if you want to plot the magnitude of feature
+        # importance for all output nodes (flavors) in another plot. This
+        # will give you a bar plot of the mean SHAP value magnitudes.
+        bool_all_flavor_plot: False
+
+        # as this takes much longer you can average the feature_sets to a
+        # smaller set, 50 is a good choice for DL1r
+        averaged_sets: 50
+
+        # [11,11] works well for dl1r
+        plot_size: [11, 11]

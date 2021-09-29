@@ -77,6 +77,31 @@ def runTrainingDL1(config):
     if isSuccess is True:
         run_evaluate_model_DL1
 
+    logger.info(
+        "Test: running evaluate_model.py for DL1 with shapley option..."
+    )
+    run_evaluate_model_DL1_with_shapley = run(
+        [
+            "evaluate_model.py",
+            "-c",
+            f"{config}",
+            "-e",
+            "1",
+            "--dl1",
+            "--shapley",
+        ]
+    )
+    try:
+        run_evaluate_model_DL1_with_shapley.check_returncode()
+    except CalledProcessError:
+        logger.info(
+            "Test failed: evaluate_model.py for DL1 with shapley option."
+        )
+        isSuccess = False
+
+    if isSuccess is True:
+        run_evaluate_model_DL1_with_shapley
+
     return isSuccess
 
 
