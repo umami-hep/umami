@@ -32,3 +32,4 @@ flake8==3.9.2
 black==21.5b1
 pre-commit==2.12.1
 yamllint==1.26.2
+shap==0.39.0

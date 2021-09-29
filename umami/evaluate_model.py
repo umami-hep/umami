@@ -21,6 +21,7 @@ from umami.evaluation_tools.PlottingFunctions import (
     getDiscriminant,
 )
 from umami.preprocessing_tools import Configuration
+from umami.evaluation_tools import FeatureImportance
 
 # from plottingFunctions import sigBkgEff
 tf.compat.v1.disable_eager_execution()
@@ -85,6 +86,12 @@ def GetParser():
         help="""charm fraction used for the b efficiency scan.
         The charm fraction for the recommended taggers are not
         affected by this! They are 0.018 / 0.08 for DL1r / RNNIP.""",
+    )
+
+    parser.add_argument(
+        "--shapley",
+        action="store_true",
+        help="Calculates feature importance for DL1",
     )
 
     args = parser.parse_args()
@@ -674,7 +681,12 @@ def EvaluateModelDips(
 
 
 def EvaluateModelDL1(
-    args, train_config, preprocess_config, test_file, data_set_name
+    args,
+    train_config,
+    preprocess_config,
+    test_file,
+    data_set_name,
+    test_file_entry,
 ):
     # Check if epochs are set or not
     if args.epoch is None:
@@ -1086,6 +1098,29 @@ def EvaluateModelDL1(
     f.attrs["N_test"] = len(df)
     f.close()
 
+    if args.shapley:
+        logger.info("Explaining feature importance with SHAPley")
+        FeatureImportance.ShapleyOneFlavor(
+            model=model,
+            test_data=X_test,
+            model_output=Eval_params["shapley"]["model_output"],
+            feature_sets=Eval_params["shapley"]["feature_sets"],
+            plot_size=Eval_params["shapley"]["plot_size"],
+            plot_path=f"{train_config.model_name}/",
+            plot_name=test_file_entry + "_shapley_b-jets",
+        )
+
+        if Eval_params["shapley"]["bool_all_flavor_plot"]:
+            FeatureImportance.ShapleyAllFlavors(
+                model=model,
+                test_data=X_test,
+                feature_sets=Eval_params["shapley"]["feature_sets"],
+                averaged_sets=Eval_params["shapley"]["averaged_sets"],
+                plot_size=Eval_params["shapley"]["plot_size"],
+                plot_path=f"{train_config.model_name}/",
+                plot_name=test_file_entry + "_shapley_all_flavors",
+            )
+
     if not bool_use_taus:
         return
 
@@ -1183,6 +1218,7 @@ if __name__ == "__main__":
                     train_config.ttbar_test_files[ttbar_models][
                         "data_set_name"
                     ],
+                    ttbar_models,
                 )
 
         if train_config.zpext_test_files is not None:
@@ -1196,6 +1232,7 @@ if __name__ == "__main__":
                     train_config.zpext_test_files[zpext_models][
                         "data_set_name"
                     ],
+                    zpext_models,
                 )
 
     elif args.dips:

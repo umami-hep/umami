@@ -53,3 +53,24 @@ Eval_parameters_validation:
     WP_b: 0.77
     # fc_value and WP_b are autmoatically added to the plot label
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # some properties for the feature importance explanation with SHAPley
+    shapley:
+        # Over how many full sets of features it should calculate over
+        # 200 takes like 10-15 min for DL1r on 32 core-cpu
+        feature_sets: 4
+
+        # defines which of the model outputs (flavor) you want to explain
+        # [tau,b,c,u] := [3, 2, 1, 0]
+        model_output: 2
+
+        # You can also choose if you want to view the feature importance of all
+        # flavors in one plot (usually we are just interested in the b-output)
+        bool_all_flavor_plot: True
+
+        # as this takes much longer you can average the shapley_feature_sets to a
+        # smaller set, 50 is a good choice for DL1r
+        averaged_sets: 2
+
+        # [11,11] works well for dl1r
+        plot_size: [11, 11]
