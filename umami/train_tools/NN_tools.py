@@ -727,6 +727,7 @@ def GetTestSample(
             all_jets = all_jets.append(jets, ignore_index=True)
             all_labels = all_labels.append(labels, ignore_index=True)
 
+        # Add the number of loaded jets to counter
         nJets_counter += len(all_jets)
 
         # Stop loading if enough jets are loaded
@@ -819,6 +820,9 @@ def GetTestSampleTrks(
         else:
             np.append(all_trks, np.stack(var_arr_list, axis=-1))
             np.append(all_labels, labels)
+
+        # Add the number of jets to counter
+        nJets_counter += len(all_trks)
 
         # Stop loading if enough jets are loaded
         if nJets_counter >= nJets:
