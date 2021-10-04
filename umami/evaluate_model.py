@@ -1264,7 +1264,7 @@ if __name__ == "__main__":
 
     else:
 
-        if train_config.zpext_test_files is not None:
+        if train_config.ttbar_test_files is not None:
             logger.info("Start evaluating UMAMI with ttbar test files...")
             for ttbar_models in train_config.ttbar_test_files:
                 EvaluateModel(
