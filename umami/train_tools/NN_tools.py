@@ -1058,7 +1058,8 @@ def evaluate_model_dips(model, data_dict, target_beff=0.77, cfrac=0.018):
         accuracy_add,
         c_rej_add,
         u_rej_add,
-    ) = (None, None, None, None)
+        disc_cut_add,
+    ) = (None, None, None, None, None)
 
     if data_dict["X_valid_add"] is not None:
         loss_add, accuracy_add = model.evaluate(
