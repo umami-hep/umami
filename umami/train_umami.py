@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 import yaml
 from tensorflow.keras import activations, layers
-from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.layers import (
     BatchNormalization,
     Dense,
@@ -358,6 +358,7 @@ def Umami(args, train_config, preprocess_config):
     else:
         nEpochs = args.epochs
 
+    # Define LearningRate Reducer as Callback
     reduce_lr = ReduceLROnPlateau(
         monitor="loss",
         factor=0.8,
@@ -367,6 +368,18 @@ def Umami(args, train_config, preprocess_config):
         cooldown=5,
         min_learning_rate=0.000001,
     )
+
+    # Set ModelCheckpoint as callback
+    umami_mChkPt = ModelCheckpoint(
+        f"{train_config.model_name}" + "/umami_model_{epoch:03d}.h5",
+        monitor="val_loss",
+        verbose=True,
+        save_best_only=False,
+        validation_batch_size=NN_structure["batch_size"],
+        save_weights_only=False,
+    )
+
+    # Init the Umami callback
     my_callback = utt.MyCallbackUmami(
         model_name=train_config.model_name,
         class_labels=train_config.NN_structure["class_labels"],
@@ -386,7 +399,7 @@ def Umami(args, train_config, preprocess_config):
     history = umami.fit(
         train_dataset,
         epochs=nEpochs,
-        callbacks=[reduce_lr, my_callback],
+        callbacks=[umami_mChkPt, reduce_lr, my_callback],
         steps_per_epoch=nJets / train_config.NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
