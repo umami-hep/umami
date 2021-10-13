@@ -21,7 +21,7 @@ def getConfiguration():
     return conf_setup
 
 
-def runPreprocessing(config, var_dict, scale_dict, output, tagger):
+def runPreprocessing(config, tagger):
     """Call all steps of the preprocessing for a certain configuration and variable dict input.
     Return value `True` if all steps succeeded, `False` if one step did not succees."""
     isSuccess = True
@@ -41,8 +41,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                     "preprocessing.py",
                     "-c",
                     f"{config}",
-                    "--var_dict",
-                    var_dict,
                     "--sample",
                     f"{sample}",
                     "--prepare",
@@ -55,8 +53,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                     "preprocessing.py",
                     "-c",
                     f"{config}",
-                    "--var_dict",
-                    var_dict,
                     "--sample",
                     f"{sample}",
                     "--tracks",
@@ -79,8 +75,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--var_dict",
-                var_dict,
                 "--sample",
                 "count",
                 "--resampling",
@@ -93,8 +87,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--var_dict",
-                var_dict,
                 "--sample",
                 "count",
                 "--tracks",
@@ -118,8 +110,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--var_dict",
-                var_dict,
                 "--scaling",
             ]
         )
@@ -130,8 +120,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--var_dict",
-                var_dict,
                 "--scaling",
                 "--tracks",
             ]
@@ -152,8 +140,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--var_dict",
-                var_dict,
                 "--apply_scales",
             ]
         )
@@ -164,8 +150,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--var_dict",
-                var_dict,
                 "--apply_scales",
                 "--tracks",
             ]
@@ -188,8 +172,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--var_dict",
-                var_dict,
                 "--write",
             ]
         )
@@ -200,8 +182,6 @@ def runPreprocessing(config, var_dict, scale_dict, output, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--var_dict",
-                var_dict,
                 "--write",
                 "--tracks",
             ]
@@ -297,6 +277,11 @@ class TestPreprocessing(unittest.TestCase):
         )
         replaceLineInFile(
             self.config_paths,
+            "sample_path:",
+            f"sample_path: &sample_path {test_dir}",
+        )
+        replaceLineInFile(
+            self.config_paths,
             "file_path:",
             f"file_path: &file_path {test_dir}",
         )
@@ -334,72 +319,50 @@ class TestPreprocessing(unittest.TestCase):
 
         run(
             [
-                "cp",
-                self.config,
-                "/home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/preprocessing_dips/preprocessing/",
+                "mv",
+                os.path.join(test_dir, "ttbar_basefile.h5"),
+                os.path.join(test_dir, "ttbar", "ttbar_basefile.h5"),
             ]
         )
         run(
             [
-                "cp",
-                self.config_paths,
-                "/home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/preprocessing_dips/preprocessing/",
-            ]
-        )
-        run(
-            [
-                "cp",
-                self.var_dict_umami,
-                "/home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/preprocessing_dips/preprocessing/",
-            ]
-        )
-        run(
-            [
-                "cp",
-                self.var_dict_dips,
-                "/home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/preprocessing_dips/preprocessing/",
-            ]
-        )
-        run(
-            [
-                "cp",
-                self.var_dict_dl1r,
-                "/home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/preprocessing_dips/preprocessing/",
+                "mv",
+                os.path.join(test_dir, "zpext_basefile.h5"),
+                os.path.join(test_dir, "zpext", "zpext_basefile.h5"),
             ]
         )
 
     def test_preprocessing_umami(self):
         """Integration test of preprocessing.py script using Umami variables."""
-        self.assertTrue(
-            runPreprocessing(
-                self.config,
-                self.var_dict_umami,
-                self.scale_dict,
-                self.output,
-                "umami",
-            )
+        replaceLineInFile(
+            self.config_paths,
+            ".var_file:",
+            f".var_file: &var_file {self.var_dict_umami}",
         )
+
+        self.assertTrue(runPreprocessing(self.config, tagger="umami"))
 
     def test_preprocessing_dips(self):
         """Integration test of preprocessing.py script using DIPS variables."""
-        self.assertTrue(
-            runPreprocessing(
-                self.config,
-                self.var_dict_dips,
-                self.scale_dict,
-                self.output,
-                "dips",
-            )
+        replaceLineInFile(
+            self.config_paths,
+            ".var_file:",
+            f".var_file: &var_file {self.var_dict_dips}",
         )
+        self.assertTrue(runPreprocessing(self.config, tagger="dips"))
 
     def test_preprocessing_dl1r(self):
-        """Integration test of preprocessing.py script using DL1R variables."""
-        self.assertTrue(
-            runPreprocessing(
-                self.config,
-                self.var_dict_dl1r,
-                self.scale_dict,
-                self.output,
-                "dl1r",
-            )
+        """Integration test of preprocessing.py script using DL1r variables."""
+        replaceLineInFile(
+            self.config,
+            "    save_tracks:",
+            "    save_tracks: False",
         )
+
+        replaceLineInFile(
+            self.config_paths,
+            ".var_file:",
+            f".var_file: &var_file {self.var_dict_dl1r}",
+        )
+
+        self.assertTrue(runPreprocessing(self.config, tagger="dl1r"))

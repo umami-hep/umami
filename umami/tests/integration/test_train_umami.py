@@ -125,7 +125,7 @@ class TestUmamiTraining(unittest.TestCase):
         logger.info("Retrieving files from preprocessing...")
         self.train_file = os.path.join(
             "./preprocessing_umami/preprocessing/",
-            "PFlow-hybrid_70-test-preprocessed_shuffled.h5",
+            "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
         )
         self.test_file_ttbar = os.path.join(
             test_dir, "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
@@ -202,7 +202,7 @@ class TestUmamiTraining(unittest.TestCase):
         self.config_file["NN_structure"]["epochs"] = 2
         self.config_file["NN_structure"]["nJets_train"] = 100
         self.config_file["Eval_parameters_validation"]["n_jets"] = 4000
-        self.config_file["Eval_parameters_validation"]["low"] = 0.60
+        self.config_file["Eval_parameters_validation"]["eff_min"] = 0.60
 
         # save the copy of training config file for test
         with open(self.config, "w") as config:

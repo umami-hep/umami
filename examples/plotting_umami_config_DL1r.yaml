@@ -8,8 +8,9 @@ Eval_parameters:
 scores_DL1r: # Each item on this level defines one plot. The name of this key is later used for the name of the output file.
   type: "scores"
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  # To include taus, add "ptau" as the last entry
-  prediction_labels: ["DL1_pb", "DL1_pc", "DL1_pu"] # For umami use umami_pX or dips_pX.
+  tagger_name: "DL1" # Name of the tagger: Example: dips_pb -> Name of tagger: dips
+  class_labels: ["ujets", "cjets", "bjets"] # Classes which are used
+  main_class: "bjets" # Main class
   plot_settings:  # All options of the score plot can be changed here
     UseAtlasTag: True # Enable/Disable AtlasTag
     AtlasTag: "Internal Simulation"
@@ -28,85 +29,65 @@ DL1r_light_flavour:
   models_to_plot:
     DL1r: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "DL1r 22M"
-      df_key: "DL1_urej" # This is actually the rejection rate of the DL1r tragger trained with the DL1 framework
-    current_DL1r:
-      data_set_name: "ttbar"
-      label: "recommended DL1r"
-      df_key: "DL1r_urej" # This is the rejection rate of the currently recommended DL1r tagger
+      label: "DL1r"
+      tagger_name: "DL1"
+      rejection_class: "cjets"
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    ymax: 5000.
-    ylabel: "light"
-    binomialErrors: true
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
+    binomialErrors: True
+    xmin: 0.5
+    ymax: 1000000
+    figsize: [7, 6] # [width, hight]
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
+# # Example of a pt vs efficiency plot in a small pT region
+# eff_vs_pt_small:
+#   type: "ROCvsVar"
+#   evaluation_file:  # from evaluation
+#   data_set_name: "ttbar"
+#   flat_eff: True # bool whether to plot a flat b-efficiency as a function of var
+#   efficiency: 70 # the targeted efficiency
+#   fc: 0.018
+#   prediction_labels: ["DL1_pb", "DL1_pc", "DL1_pu"] # the prediction label to use
+#   variable: pt   # which variable to plot the efficiency as a function of.
+#   max_variable: 1500000 #maximum value of the range of variable.
+#   min_variable: 10000 #minimum value of the range of variable.
+#   nbin: 100 #number of bin to use
+#   var_bins: [20000, 30000, 40000, 50000, 75000, 100000, 150000, 250000]
+#   xticksval: [20, 50, 100, 150, 200, 250]
+#   xticks: ["", "$50$", "$100$", "$150$", "$200$", "$250$"]
+#   plot_settings:
+#     xlabel: "$p_T$ [GeV]"
+#     minor_ticks_frequency: 10
+#     UseAtlasTag: True
+#     AtlasTag: "Internal"
+#     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
+#     ThirdTag: "Flat efficiency DL1r"
 
-DL1r_c_flavour:
-  type: "ROC"
-  models_to_plot:
-    DL1r:
-      data_set_name: "ttbar"
-      label: "DL1r 22M"
-      df_key: "DL1_crej"
-    current_DL1r:
-      data_set_name: "ttbar"
-      label: "recommended DL1r"
-      df_key: "DL1r_crej"
-  plot_settings:
-    ymax: 100.
-    ylabel: "c"
-    binomialErrors: true
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, fc=0.018"
-
-# To do a DL1r_t_flavour ROC plot:
-# Same as above with DL1_trej and DL1r_trej (replace "c" flavour by "t").
-
-# Example of a pt vs efficiency plot in a small pT region
-eff_vs_pt_small:
-  type: "ROCvsVar"
-  evaluation_file:  # from evaluation
-  data_set_name: "ttbar"
-  flat_eff: True # bool whether to plot a flat b-efficiency as a function of var
-  efficiency: 70 # the targeted efficiency
-  fc: 0.018
-  prediction_labels: ["DL1_pb", "DL1_pc", "DL1_pu"] # the prediction label to use
-  variable: pt   # which variable to plot the efficiency as a function of.
-  max_variable: 1500000 #maximum value of the range of variable.
-  min_variable: 10000 #minimum value of the range of variable.
-  nbin: 100 #number of bin to use
-  var_bins: [20000, 30000, 40000, 50000, 75000, 100000, 150000, 250000]
-  xticksval: [20, 50, 100, 150, 200, 250]
-  xticks: ["", "$50$", "$100$", "$150$", "$200$", "$250$"]
-  plot_settings:
-    xlabel: "$p_T$ [GeV]"
-    minor_ticks_frequency: 10
-    UseAtlasTag: True
-    AtlasTag: "Internal"
-    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
-    ThirdTag: "Flat efficiency DL1r"
-
-
-# Example of a pt vs efficiency plot in a large pT region
-eff_vs_pt_large:
-  type: "ROCvsVar"
-  evaluation_file:  # from evaluation
-  data_set_name: "ttbar"
-  flat_eff: True #bool whether to plot a flat b-efficiency as a function of var
-  efficiency: 70 #the targeted efficiency
-  prediction_labels: ["DL1_pb", "DL1_pc", "DL1_pu"] # the prediction label to use
-  variable: pt   #which variable to plot the efficiency as a function of.
-  max_variable: 5000000 #maximum value of the range of variable.
-  min_variable: 200000 #minimum value of the range of variable.
-  nbin: 15 #number of bin to use
-  xticksval: [200, 1000, 2000, 3000, 4000, 5000]
-  xticks: ["", "$1000$", "$2000$", "$3000$", "$4000$", "$5000$"]
-  plot_settings:
-    xlabel: "$p_T$ [GeV]"
-    minor_ticks_frequency: 200
-    UseAtlasTag: True
-    AtlasTag: "Internal"
-    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
-    ThirdTag: "Flat efficiency DL1r"
+# # Example of a pt vs efficiency plot in a large pT region
+# eff_vs_pt_large:
+#   type: "ROCvsVar"
+#   evaluation_file:  # from evaluation
+#   data_set_name: "ttbar"
+#   flat_eff: True #bool whether to plot a flat b-efficiency as a function of var
+#   efficiency: 70 #the targeted efficiency
+#   prediction_labels: ["DL1_pb", "DL1_pc", "DL1_pu"] # the prediction label to use
+#   variable: pt   #which variable to plot the efficiency as a function of.
+#   max_variable: 5000000 #maximum value of the range of variable.
+#   min_variable: 200000 #minimum value of the range of variable.
+#   nbin: 15 #number of bin to use
+#   xticksval: [200, 1000, 2000, 3000, 4000, 5000]
+#   xticks: ["", "$1000$", "$2000$", "$3000$", "$4000$", "$5000$"]
+#   plot_settings:
+#     xlabel: "$p_T$ [GeV]"
+#     minor_ticks_frequency: 200
+#     UseAtlasTag: True
+#     AtlasTag: "Internal"
+#     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
+#     ThirdTag: "Flat efficiency DL1r"
 
 # plot_scan_frac_tau_ZP:
 #   type: "FracScan"

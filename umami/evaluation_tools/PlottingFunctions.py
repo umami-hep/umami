@@ -960,6 +960,7 @@ def plotROCRatio(
     labelpad: int = None,
     which_axis: list = "left",
     WorkingPoints: list = None,
+    same_height_WP: bool = True,
     ratio_id: int = 0,
     ycolor: str = "black",
     ycolor_right: str = "black",
@@ -1044,28 +1045,31 @@ def plotROCRatio(
 
     if WorkingPoints is not None:
         for WP in WorkingPoints:
+
+            # Set y-point of the WP lines/text
+            ytext = 0.65 if same_height_WP else 1.25 - WP
+
             axis_dict["left"]["top"].axvline(
                 x=WP,
-                ymax=0.65,
+                ymax=ytext,
                 color=colors_WP,
                 linestyle="dashed",
                 linewidth=1.0,
             )
 
-            axis_dict["left"]["ratio"].axvline(
-                x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
+            # Set the number above the line
+            axis_dict["left"]["top"].text(
+                x=WP - 0.005,
+                y=ytext + 0.005,
+                s=f"{int(WP * 100)}%",
+                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(
+                    0
+                )[0],
+                fontsize=10,
             )
 
-            # Set the number above the line
-            axis_dict["left"]["top"].annotate(
-                text="{}%".format(int(WP * 100)),
-                xy=(WP, 0.79),
-                xytext=(WP, 0.79),
-                textcoords="offset points",
-                xycoords=("data", "figure fraction"),
-                ha="center",
-                va="bottom",
-                size=10,
+            axis_dict["left"]["ratio"].axvline(
+                x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
             )
 
     # Create lines list and ratio dict for looping
@@ -1294,7 +1298,7 @@ def plotROCRatioComparison(
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample",
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.3,
-    styles: list = [],
+    linestyles: list = [],
     colors: list = [],
     xmin: float = None,
     ymax: float = None,
@@ -1310,6 +1314,7 @@ def plotROCRatioComparison(
     legcols: int = 1,
     labelpad: int = None,
     WorkingPoints: list = None,
+    same_height_WP: bool = True,
     ratio_id: list = 0,
     ycolor: str = "black",
     ycolor_right: str = "black",
@@ -1342,18 +1347,18 @@ def plotROCRatioComparison(
     # Loop over the given rejection types and add them to a lists
     flav_list = list(dict.fromkeys(rej_class_list))
 
-    # Append a styles for each model determined by the rejections
-    if len(styles) == 0:
+    # Append a linestyles for each model determined by the rejections
+    if len(linestyles) == 0:
         for which_j in rej_class_list:
             for i, flav in enumerate(flav_list):
                 if which_j == flav:
                     if i == 0:
                         # This is solids
-                        styles.append("-")
+                        linestyles.append("-")
 
                     elif i == 1:
                         # This is densly dashed dotted
-                        styles.append((0, (3, 1, 1, 1)))
+                        linestyles.append((0, (3, 1, 1, 1)))
 
                     else:
                         raise ValueError("Can't plot more than 2 rejections!")
@@ -1421,12 +1426,28 @@ def plotROCRatioComparison(
     # Draw WP lines at the specifed WPs
     if WorkingPoints is not None:
         for WP in WorkingPoints:
+
+            # Set y-point of the WP lines/text
+            ytext = 0.65 if same_height_WP else 1.25 - WP
+
+            # Plot the vertical WP lines for top plot
             axis_dict["left"]["top"].axvline(
                 x=WP,
-                ymax=0.65,
+                ymax=ytext,
                 color=colors_WP,
                 linestyle="dashed",
                 linewidth=1.0,
+            )
+
+            # Set the number above the line
+            axis_dict["left"]["top"].text(
+                x=WP - 0.005,
+                y=ytext + 0.005,
+                s=f"{int(WP * 100)}%",
+                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(
+                    0
+                )[0],
+                fontsize=10,
             )
 
             # Draw the WP lines in the ratio plots
@@ -1434,18 +1455,6 @@ def plotROCRatioComparison(
                 axis_dict["left"][flav].axvline(
                     x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
                 )
-
-            # Set the number above the line
-            axis_dict["left"]["top"].annotate(
-                text="{}%".format(int(WP * 100)),
-                xy=(WP, 0.85),
-                xytext=(WP, 0.85),
-                textcoords="offset points",
-                xycoords=("data", "figure fraction"),
-                ha="center",
-                va="bottom",
-                size=10,
-            )
 
     # Create lines list and ratio dict for looping
     lines = []
@@ -1456,7 +1465,7 @@ def plotROCRatioComparison(
         == len(tagger_list)
         == len(rej_class_list)
         == len(labels)
-        == len(styles)
+        == len(linestyles)
         == len(colors)
         == len(nTest)
         == len(ratio_id)
@@ -1478,7 +1487,7 @@ def plotROCRatioComparison(
             tagger_list,
             rej_class_list,
             labels,
-            styles,
+            linestyles,
             colors,
             nTest,
             ratio_id,
@@ -2759,8 +2768,8 @@ def plot_prob_comparison(
     elif set_logy is True:
         axis_dict["left"]["top"].set_ylim(
             left_y_limits[0] * 0.5,
-            left_y_limits[0]
-            * (left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease,
+            (left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease
+            / left_y_limits[1],
         )
 
     axis_dict["left"]["top"].legend(

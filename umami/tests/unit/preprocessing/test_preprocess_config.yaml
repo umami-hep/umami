@@ -120,6 +120,8 @@ sampling:
 outfile_name: dummy_out.h5
 plot_name: dummy_plot
 
+var_file: "fixtures/dummy_var_file.yaml"
+
 # Dictfile for the scaling and shifting (json)
 dict_file: "test.json"
 

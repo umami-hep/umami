@@ -4,6 +4,7 @@ outfile_name: Null
 plot_name: Null
 cuts: Null
 dict_file: Null
+var_file: Null
 preparation:
   ntuples: Null
   samples: Null

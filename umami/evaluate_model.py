@@ -354,8 +354,12 @@ def EvaluateModelDips(
         main_class=main_class,
         frac_values={"dips": Eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
-        low=0.49 if "low" not in Eval_params else Eval_params["low"],
-        high=1.0 if "high" not in Eval_params else Eval_params["high"],
+        eff_min=0.49
+        if "eff_min" not in Eval_params
+        else Eval_params["eff_min"],
+        eff_max=1.0
+        if "eff_max" not in Eval_params
+        else Eval_params["eff_max"],
     )
 
     # Form the dict to a Dataframe and save it
@@ -539,8 +543,12 @@ def EvaluateModelDL1(
         main_class=main_class,
         frac_values={"DL1": Eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
-        low=0.49 if "low" not in Eval_params else Eval_params["low"],
-        high=1.0 if "high" not in Eval_params else Eval_params["high"],
+        eff_min=0.49
+        if "eff_min" not in Eval_params
+        else Eval_params["eff_min"],
+        eff_max=1.0
+        if "eff_max" not in Eval_params
+        else Eval_params["eff_max"],
     )
 
     # Add dict to Dataframe and delete dict

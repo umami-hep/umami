@@ -12,7 +12,6 @@ from umami.preprocessing_tools import (
     GetBinaryLabels,
     GetCategoryCuts,
     GetSampleCuts,
-    GetScales,
     PrepareSamples,
 )
 
@@ -124,42 +123,6 @@ class PreprocessingTestSampleCuts(unittest.TestCase):
         cut_result = np.ones(len(self.jets))
         np.put(cut_result, indices_to_remove, 0)
         self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
-
-
-class GetScalesTestCase(unittest.TestCase):
-    """
-    Test the implementation of the GetScales class.
-    """
-
-    def setUp(self):
-        self.arr_0 = np.zeros(500)
-        self.arr_1 = np.ones(500)
-
-    def test_ZeroCase(self):
-        varname, average, std, default = GetScales(
-            self.arr_0, self.arr_1, "zeros", {}
-        )
-        self.assertEqual(average, 0)
-        self.assertEqual(std, 0)
-        self.assertEqual(default, 0)
-
-    def test_ReturnVarname(self):
-        varname, _, _, _ = GetScales(self.arr_0, self.arr_1, "zeros", {})
-        self.assertEqual(varname, "zeros")
-
-    def test_WeightZero(self):
-        with self.assertRaises(ValueError):
-            varname, average, std, default = GetScales(
-                self.arr_1, self.arr_0, "zeros", {}
-            )
-
-    def test_OneCase(self):
-        varname, average, std, default = GetScales(
-            self.arr_1, self.arr_1, "ones", {}
-        )
-        self.assertEqual(average, 1)
-        self.assertEqual(std, 0)
-        self.assertEqual(default, 1)
 
 
 class GetBinaryLabelsTestCase(unittest.TestCase):

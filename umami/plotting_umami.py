@@ -71,20 +71,11 @@ def plot_probability_comparison(
     # Init dataframe list
     df_list = []
     model_labels = []
-    prediction_labels_list = []
+    tagger_list = []
+    class_labels_list = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
-
-    # Check if use taus is defined
-    if (
-        "bool_use_taus" not in eval_params
-        or eval_params["bool_use_taus"] is None
-    ):
-        bool_use_taus = False
-
-    else:
-        bool_use_taus = eval_params["bool_use_taus"]
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
@@ -104,15 +95,17 @@ def plot_probability_comparison(
             )
 
         df_list.append(df_results)
+        tagger_list.append(model_config["tagger_name"])
         model_labels.append(model_config["label"])
-        prediction_labels_list.append(model_config["prediction_label"])
+        class_labels_list.append(model_config["class_labels"])
 
     uet.plot_prob_comparison(
         df_list=df_list,
-        prediction_labels_list=prediction_labels_list,
         model_labels=model_labels,
+        tagger_list=tagger_list,
+        class_labels_list=class_labels_list,
+        flavour=plot_config["prob_class"],
         plot_name=plot_name,
-        bool_use_taus=bool_use_taus,
         **plot_config["plot_settings"],
     )
 
@@ -524,7 +517,7 @@ def score_comparison(
         model_labels=model_labels,
         tagger_list=tagger_list,
         class_labels_list=class_labels_list,
-        main_class=plot_config["plot_settings"]["main_class"],
+        main_class=plot_config["main_class"],
         plot_name=plot_name,
         **plot_config["plot_settings"],
     )
@@ -641,6 +634,7 @@ def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
         tagger_name=plot_config["tagger_name"],
         class_labels=plot_config["class_labels"],
         main_class=plot_config["main_class"],
+        plot_name=plot_name,
         **plot_config["plot_settings"],
     )
 
@@ -668,7 +662,7 @@ def plot_prob(plot_name, plot_config, eval_params, eval_file_dir):
         plot_name=plot_name,
         tagger_name=plot_config["tagger_name"],
         class_labels=plot_config["class_labels"],
-        flavour=plot_config["class_probability"],
+        flavour=plot_config["prob_class"],
         **plot_config["plot_settings"],
     )
 
@@ -748,7 +742,6 @@ def SetUpPlots(
                 plot_config=plot_config,
                 eval_params=eval_params,
                 eval_file_dir=eval_file_dir,
-                **plot_config["plot_settings"],
             )
 
         elif plot_config["type"] == "probability":
@@ -757,7 +750,6 @@ def SetUpPlots(
                 plot_config=plot_config,
                 eval_params=eval_params,
                 eval_file_dir=eval_file_dir,
-                **plot_config["plot_settings"],
             )
 
         elif plot_config["type"] == "saliency":

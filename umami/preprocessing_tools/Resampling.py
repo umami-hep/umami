@@ -151,7 +151,7 @@ class Resampling(object):
             if "save_tracks" in self.options.keys()
             else False
         )
-        self.outfile_name = self.config.GetFileName()
+        self.outfile_name = self.config.GetFileName(option="resampled")
 
     def _GetBinning(self):
         """
