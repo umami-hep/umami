@@ -154,7 +154,6 @@ preparation:
         path: *sample_path
         file: MC16d-inclusive_testing_zprime_PFlow.h5
 
-
 sampling:
   method: count
   # The options depend on the sampling method
@@ -195,6 +194,9 @@ sampling:
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name
 plot_name: PFlow_ext-hybrid
+
+# Variable dict which is used for scaling and shifting
+var_file: *var_file
 
 # Dictfile for the scaling and shifting (json)
 dict_file: *dict_file

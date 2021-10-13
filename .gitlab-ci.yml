@@ -8,9 +8,9 @@ stages:
   - linting
   - image_build_umamibase
   - unit_test
-  # - integration_test_preprocessing
-  # - integration_test_tagger
-  # - integration_test_plotting
+  - integration_test_preprocessing
+  - integration_test_tagger
+  - integration_test_plotting
   - coverage_test_stage
   - builds
   - image_build_umami
@@ -96,5 +96,5 @@ test_coverage_post_report:
 include:
   - 'pipelines/.unit_test-gitlab-ci.yaml'
   - 'pipelines/.docker-gitlab-ci.yaml'
-  # - 'pipelines/.docs-gitlab-ci.yaml'
-  # - 'pipelines/.integration_test-gitlab-ci.yaml'
+  - 'pipelines/.docs-gitlab-ci.yaml'
+  - 'pipelines/.integration_test-gitlab-ci.yaml'

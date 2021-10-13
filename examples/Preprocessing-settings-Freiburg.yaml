@@ -11,4 +11,7 @@ file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocesse
 .outfile_name: &outfile_name /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid.h5
 
 # Dictfile for the scaling and shifting (json)
+.var_file: &var_file /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
+
+# Dictfile for the scaling and shifting (json)
 .dict_file: &dict_file /home/fr/fr_fr/fr_af1100/b-Tagging/scale_dicts/PFlow-scale_dict-22M.json

@@ -9,7 +9,9 @@ Eval_parameters:
 scores_Umami_ttbar:
   type: "scores"
   data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
-  prediction_labels: ["umami_pb", "umami_pc", "umami_pu"] # For umami use umami_pX or dips_pX
+  tagger_name: "umami" # Name of the tagger: Example: dips_pb -> Name of tagger: dips
+  class_labels: ["ujets", "cjets", "bjets"] # Classes which are used
+  main_class: "bjets" # Main class
   plot_settings:
     WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
     nBins: 50 # Number of bins
@@ -19,18 +21,21 @@ scores_Umami_ttbar:
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
-# Dips, ttbar
-scores_Dips_ttbar_comparison:
+# Umami, ttbar
+scores_Umami_ttbar_comparison:
   type: "scores_comparison"
+  main_class: "bjets"
   models_to_plot:
     umami_r21:
       data_set_name: "ttbar"
+      tagger_name: "umami"
+      class_labels: ["ujets", "cjets", "bjets"]
       label: "$t\\bar{t}$"
-      prediction_labels: ["umami_pb", "umami_pc", "umami_pu"] # For umami use umami_pX or dips_pX
     umami_r22: # The name here has no impact on anything.
-      data_set_name: "zpext"
-      label: "$Z'$"
-      prediction_labels: ["umami_pb", "umami_pc", "umami_pu"] # For umami use umami_pX or dips_pX
+      data_set_name: "ttbar"
+      tagger_name: "umami"
+      class_labels: ["ujets", "cjets", "bjets"]
+      label: "$t\\bar{t} 2$"
   plot_settings:
     WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
     nBins: 50 # Number of bins
@@ -51,36 +56,29 @@ confusion_matrix_Umami_ttbar:
 beff_scan_tagger_umami:
   type: "ROC"
   models_to_plot:
-    umami_ttbar_urej:
+    umami_r21: # The name here has no impact on anything.
       data_set_name: "ttbar"
-      label: "Umami u-rej"
-      df_key: "umami_urej"
-      color: "red"
-      linestyle: "-"
-    umami_ttbar_crej:
-      data_set_name: "ttbar"
-      label: "Umami c-rej"
-      df_key: "umami_crej"
-      color: "blue"
-      linestyle: "-"
+      label: "UMAMI"
+      tagger_name: "umami"
+      rejection_class: "cjets"
   plot_settings:
-    ylabel: "light"
-    binomialErrors: true
+    binomialErrors: True
+    xmin: 0.5
+    ymax: 1000000
+    figsize: [7, 6] # [width, hight]
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     UseAtlasTag: True # Enable/Disable AtlasTag
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
-    set_logy: false
-    ylabel_right: "c"
-    ycolor: "red"
-    ycolor_right: "blue"
-    xmin: 0.6
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
 Umami_prob_pb:
   type: "probability"
   data_set_name: "ttbar"
-  prediction_labels: "umami_pb"
+  tagger_name: "umami"
+  class_labels: ["ujets", "cjets", "bjets"]
+  prob_class: "bjets"
   plot_settings:
-    x_label: "Umami Probability $b$-Jet"
     Log: True
     nBins: 50
     yAxisIncrease: 10
@@ -91,51 +89,52 @@ Umami_prob_pb:
 
 Umami_prob_comparison_pb:
   type: "probability_comparison"
+  prob_class: "bjets"
   models_to_plot:
+    umami_r22:
+      data_set_name: "ttbar"
+      label: "UMAMI"
+      tagger_name: "umami"
+      class_labels: ["ujets", "cjets", "bjets"]
     umami_r21:
       data_set_name: "ttbar"
-      label: "Umami"
-      prediction_label: "umami_pb"
-    rnnip_r21:
-      data_set_name: "ttbar"
-      label: "RNNIP"
-      prediction_label: "dips_pb"
+      label: "Umami DIPS"
+      tagger_name: "dips"
+      class_labels: ["ujets", "cjets", "bjets"]
   plot_settings:
     nBins: 50
-    Log: True
-    x_label: "DNN Probability $b$-Jet"
+    set_logy: False
     yAxisIncrease: 100
     figsize: [8, 6]
     UseAtlasTag: True
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.9
-    Ratio_Cut: [0.5, 1.5]
 
 # Scanning b-eff, comparing Umami and DL1r, ttbar
 beff_scan_tagger_compare_umami:
   type: "ROC_Comparison"
   models_to_plot:
-    DL1r_ttbar_urej:
+    dips_ttbar_urej:
       data_set_name: "ttbar"
-      label: "DL1r u-rej"
-      df_key: "DL1r_urej"
-      rejection: "Light"
+      label: "Umami DIPS"
+      tagger_name: "dips"
+      rejection_class: "ujets"
     umami_ttbar_urej:
       data_set_name: "ttbar"
-      label: "Umami u-rej"
-      df_key: "umami_urej"
-      rejection: "Light"
-    DL1r_ttbar_crej:
+      label: "Umami"
+      tagger_name: "umami"
+      rejection_class: "ujets"
+    dips_ttbar_crej:
       data_set_name: "ttbar"
-      label: "DL1r c-rej"
-      df_key: "DL1r_crej"
-      rejection: "c"
+      label: "Umami DIPS"
+      tagger_name: "dips"
+      rejection_class: "cjets"
     umami_ttbar_crej:
       data_set_name: "ttbar"
-      label: "Umami c-rej"
-      df_key: "umami_crej"
-      rejection: "c"
+      label: "Umami"
+      tagger_name: "umami"
+      rejection_class: "cjets"
   plot_settings:
     binomialErrors: True
     xmin: 0.5
