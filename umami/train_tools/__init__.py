@@ -11,7 +11,6 @@ from umami.train_tools.NN_tools import (
     LoadTrksFromFile,
     MyCallback,
     MyCallbackUmami,
-    Sum,
     calc_validation_metrics,
     create_metadata_folder,
     evaluate_model,

@@ -826,7 +826,7 @@ def RunPerformanceCheck(
     - Validation metrics plots
     """
 
-    logger.info("Running performance check for DIPS.")
+    logger.info(f"Running performance check for {tagger}.")
 
     # Load parameters from train config
     Eval_parameters = train_config.Eval_parameters_validation

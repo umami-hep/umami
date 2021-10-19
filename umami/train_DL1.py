@@ -4,20 +4,11 @@ import json
 import os
 
 import h5py
-import numpy as np
 import tensorflow as tf
 import yaml
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.layers import (
-    Activation,
-    BatchNormalization,
-    Dense,
-    Dropout,
-    Input,
-)
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.optimizers import Adam
 
+import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.institutes.utils import is_qsub_available, submit_zeuthen
 from umami.preprocessing_tools import Configuration
@@ -76,125 +67,6 @@ def GetParser():
 # TODO: add gpu support
 
 
-class generator:
-    # How many jets should be loaded into memory
-    chunk_size = 1e6
-
-    def __init__(
-        self, train_file_path, X_Name, Y_Name, n_jets, batch_size, excluded_var
-    ):
-        self.train_file_path = train_file_path
-        self.X_Name = X_Name
-        self.Y_Name = Y_Name
-        self.batch_size = batch_size
-        self.excluded_var = excluded_var
-        self.n_jets = len(self.y) if n_jets is None else int(n_jets)
-        self.length = int(self.n_jets / self.batch_size)
-        self.step_size = self.batch_size * int(
-            generator.chunk_size / self.batch_size
-        )
-
-    def load_in_memory(self, part=0):
-        logger.info(
-            f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
-        )
-
-        # Load the
-        with h5py.File(self.train_file_path, "r") as f:
-            self.x_in_mem = f[self.X_Name][
-                self.step_size * part : self.step_size * (part + 1)
-            ]
-            self.y_in_mem = f[self.Y_Name][
-                self.step_size * part : self.step_size * (part + 1)
-            ]
-
-        # Exclude variables if needed
-        self.x_in_mem = (
-            np.delete(self.x_in_mem, self.excluded_var, 1)
-            if self.excluded_var is not None
-            else self.x_in_mem
-        )
-
-    def __call__(self):
-        self.load_in_memory()
-        n = 1
-        small_step = 0
-        for idx in range(self.length):
-            if (idx + 1) * self.batch_size > self.step_size * n:
-                self.load_in_memory(n)
-                n += 1
-                small_step = 0
-            batch_x = self.x_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
-            ]
-            batch_y = self.y_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
-            ]
-            small_step += 1
-            yield (batch_x, batch_y)
-
-
-def DL1_model(train_config, input_shape):
-    # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
-
-    # Set NN options
-    batch_norm = NN_structure["Batch_Normalisation"]
-    dropout = NN_structure["dropout"]
-    class_labels = NN_structure["class_labels"]
-
-    # Load model from file if defined
-    if train_config.model_file is not None:
-        logger.info(f"Loading model from: {train_config.model_file}")
-        model = load_model(train_config.model_file, compile=False)
-
-    else:
-        # Define input
-        inputs = Input(shape=input_shape)
-
-        # Define layers
-        for i, unit in enumerate(NN_structure["dense_sizes"]):
-            x = Dense(
-                units=unit,
-                activation="linear",
-                kernel_initializer="glorot_uniform",
-            )(inputs)
-
-            # Add Batch Normalization if True
-            if batch_norm:
-                x = BatchNormalization()(x)
-
-            # Add dropout if != 0
-            if dropout != 0:
-                x = Dropout(NN_structure["dropout_rate"][i])(x)
-
-            # Define activation for the layer
-            x = Activation(NN_structure["activations"][i])(x)
-
-        predictions = Dense(
-            units=len(class_labels),
-            activation="softmax",
-            kernel_initializer="glorot_uniform",
-        )(x)
-        model = Model(inputs=inputs, outputs=predictions)
-
-    # Print DL1 model summary when log level lower or equal INFO level
-    if logger.level <= 20:
-        model.summary()
-
-    model_optimizer = Adam(learning_rate=NN_structure["lr"])
-    model.compile(
-        loss="categorical_crossentropy",
-        optimizer=model_optimizer,
-        metrics=["accuracy"],
-    )
-    return model, NN_structure["epochs"]
-
-
 def TrainLargeFile(args, train_config, preprocess_config):
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
@@ -227,7 +99,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     # Build train_datasets for training
     train_dataset = (
         tf.data.Dataset.from_generator(
-            generator(
+            utf.dl1_generator(
                 train_file_path=train_config.train_file,
                 X_Name="X_train",
                 Y_Name="Y_train",
@@ -246,7 +118,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     )
 
     # Load model and epochs
-    model, epochs = DL1_model(
+    model, epochs = utf.DL1_model(
         train_config=train_config, input_shape=(nFeatures,)
     )
 
