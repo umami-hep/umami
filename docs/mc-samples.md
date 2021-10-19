@@ -19,7 +19,7 @@ The FTAG1 derivations and the most recent ntuples for PFlow with the new RNNIP, 
 
 ## Release 22 Samples with Muons
 
-The round 2 release 22 samples with RNNIP, DL1* and DIPS. Muon information are added.
+The round 2 release 22 samples with RNNIP, DL1* and DIPS. Muon information are added (softMuon).
 
 | Sample | h5 ntuples | h5 ntuples (looser track selection)   |  DAOD_PHYSVAL derivations| AOD |
 | ------------- | ---------------- | ---------------- | ---------------- | ---------------- |
