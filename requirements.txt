@@ -33,3 +33,4 @@ black==21.5b1
 pre-commit==2.12.1
 ruamel.yaml==0.17.10
 yamllint==1.26.2
+shap==0.39.0

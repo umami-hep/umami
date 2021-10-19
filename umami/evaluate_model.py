@@ -12,6 +12,7 @@ from tensorflow.keras.utils import CustomObjectScope
 import umami.evaluation_tools as uet
 import umami.tf_tools as utf
 import umami.train_tools as utt
+from umami.evaluation_tools import FeatureImportance
 from umami.preprocessing_tools import Configuration
 
 # from plottingFunctions import sigBkgEff
@@ -66,6 +67,12 @@ def GetParser():
         "--beff",
         type=float,
         help="b efficiency used for the charm fraction scan",
+    )
+
+    parser.add_argument(
+        "--shapley",
+        action="store_true",
+        help="Calculates feature importance for DL1",
     )
 
     args = parser.parse_args()
@@ -405,7 +412,12 @@ def EvaluateModelDips(
 
 
 def EvaluateModelDL1(
-    args, train_config, preprocess_config, test_file, data_set_name
+    args,
+    train_config,
+    preprocess_config,
+    test_file,
+    data_set_name,
+    test_file_entry,
 ):
     # Get train parameters
     Eval_params = train_config.Eval_parameters_validation
@@ -572,6 +584,29 @@ def EvaluateModelDL1(
     f.attrs["N_test"] = len(jets)
     f.close()
 
+    if args.shapley:
+        logger.info("Explaining feature importance with SHAPley")
+        FeatureImportance.ShapleyOneFlavor(
+            model=model,
+            test_data=X_test,
+            model_output=Eval_params["shapley"]["model_output"],
+            feature_sets=Eval_params["shapley"]["feature_sets"],
+            plot_size=Eval_params["shapley"]["plot_size"],
+            plot_path=f"{train_config.model_name}/",
+            plot_name=test_file_entry + "_shapley_b-jets",
+        )
+
+        if Eval_params["shapley"]["bool_all_flavor_plot"]:
+            FeatureImportance.ShapleyAllFlavors(
+                model=model,
+                test_data=X_test,
+                feature_sets=Eval_params["shapley"]["feature_sets"],
+                averaged_sets=Eval_params["shapley"]["averaged_sets"],
+                plot_size=Eval_params["shapley"]["plot_size"],
+                plot_path=f"{train_config.model_name}/",
+                plot_name=test_file_entry + "_shapley_all_flavors",
+            )
+
     # TODO Rewrite
     # if not bool_use_taus:
     #     return
@@ -670,6 +705,7 @@ if __name__ == "__main__":
                     train_config.ttbar_test_files[ttbar_models][
                         "data_set_name"
                     ],
+                    ttbar_models,
                 )
 
         if train_config.zpext_test_files is not None:
@@ -683,6 +719,7 @@ if __name__ == "__main__":
                     train_config.zpext_test_files[zpext_models][
                         "data_set_name"
                     ],
+                    zpext_models,
                 )
 
     elif args.dips:
@@ -714,7 +751,7 @@ if __name__ == "__main__":
 
     else:
 
-        if train_config.zpext_test_files is not None:
+        if train_config.ttbar_test_files is not None:
             logger.info("Start evaluating UMAMI with ttbar test files...")
             for ttbar_models in train_config.ttbar_test_files:
                 EvaluateModel(

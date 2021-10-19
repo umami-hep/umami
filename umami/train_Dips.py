@@ -146,12 +146,24 @@ def Dips(args, train_config, preprocess_config):
         min_lr=0.000001,
     )
 
+    # Convert numpy arrays to tensors to avoid memory leak in callbacks
+    X_valid_tensor = tf.convert_to_tensor(X_valid, dtype=tf.float64)
+    Y_valid_tensor = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
+    if train_config.add_validation_file is not None:
+        X_valid_add_tensor = tf.convert_to_tensor(
+            X_valid_add, dtype=tf.float64
+        )
+        Y_valid_add_tensor = tf.convert_to_tensor(Y_valid_add, dtype=tf.int64)
+    else:
+        X_valid_add_tensor = None
+        Y_valid_add_tensor = None
+
     # Forming a dict for Callback
     val_data_dict = {
-        "X_valid": X_valid,
-        "Y_valid": Y_valid,
-        "X_valid_add": X_valid_add,
-        "Y_valid_add": Y_valid_add,
+        "X_valid": X_valid_tensor,
+        "Y_valid": Y_valid_tensor,
+        "X_valid_add": X_valid_add_tensor,
+        "Y_valid_add": Y_valid_add_tensor,
     }
 
     # Set my_callback as callback. Writes history information

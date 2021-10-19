@@ -980,6 +980,9 @@ def GetTestSampleTrks(
         # Adding the loaded jets to counter
         nJets_counter += len(all_labels)
 
+        # Add the number of jets to counter
+        nJets_counter += len(all_trks)
+
         # Stop loading if enough jets are loaded
         if nJets_counter >= nJets:
             break
@@ -1039,7 +1042,7 @@ def load_validation_data_umami(train_config, preprocess_config, nJets: int):
 
 
 def load_validation_data_dl1(train_config, preprocess_config, nJets: int):
-    exclude = None
+    exclude = []
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
     val_data_dict = {}
@@ -1066,10 +1069,6 @@ def load_validation_data_dl1(train_config, preprocess_config, nJets: int):
             class_labels=train_config.NN_structure["class_labels"],
             nJets=nJets,
             exclude=exclude,
-        )
-        assert (
-            val_data_dict["X_valid"].shape[1]
-            == val_data_dict["X_valid_add"].shape[1]
         )
     return val_data_dict
 
