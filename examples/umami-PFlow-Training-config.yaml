@@ -29,45 +29,86 @@ zpext_test_files:
 # Path to Variable dict used in preprocessing
 var_dict: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/umami/configs/Umami_Variables.yaml
 
-bool_use_taus: False
-
 exclude: []
 
 NN_structure:
+    # NN Training parameters
     lr: 0.01
     batch_size: 5000
     epochs: 200
+
+    # Number of jets used for training
+    # To use all: Fill nothing
     nJets_train:
+
+    # Dropout rate for the DIPS block. If = 0, dropout is disabled
+    dropout: 0
+
+    # Decide if Batch Normalisation is used in the DIPS block
+    Batch_Normalisation: True
+
     # DIPS structure
     DIPS_ppm_units: [100, 100, 128]
     DIPS_dense_units: [100, 100, 100, 30]
+
     # These are the layers that will be concatenated with the last layer of DIPS_dense_uits
     intermediate_units: [72]
+
     # DL1 structure
     DL1_units: [57, 60, 48, 36, 24, 12, 6]
+
     # total loss = loss(umami) + dips_loss_weight * loss(dips)
     dips_loss_weight: 1
 
+    # Define which classes are used for training
+    # These are defined in the global_config
+    class_labels: ["ujets", "cjets", "bjets"]
+
+    # Main class which is to be tagged
+    main_class: "bjets"
+
 Eval_parameters_validation:
     # Number of jets used for each validation sample. Set this to 0 if you have memory problems
-    n_jets: 100000
+    n_jets: 3e5
 
     # Define taggers that are used for comparison in evaluate_model
     # This can be a list or a string for only one tagger
     tagger: ["rnnip", "DL1r"]
 
     # Define fc values for the taggers
-    fc_values_comp: {
-        "rnnip": 0.08,
-        "DL1r": 0.018,
+    frac_values_comp: {
+        "rnnip": {
+            "cjets": 0.08,
+            "ujets": 0.92,
+        },
+        "DL1r": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
     }
 
     # Charm fraction value used for evaluation of the trained model
-    fc_value: 0.018
+    frac_values: {
+        "dips": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
+        "umami": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
+    }
 
-    WP_b: 0.77
-    # fc_value and WP_b are autmoatically added to the plot label
+    # Working point used in the evaluation
+    WP: 0.77
+
+# Plotting settings for training metrics plots
+Plotting_settings:
+
+    # Enable/Disable atlas tag
     UseAtlasTag: True
+
+    # fc_value and WP_b are autmoatically added to the plot label
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
 

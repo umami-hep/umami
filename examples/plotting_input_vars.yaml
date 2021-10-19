@@ -23,7 +23,7 @@ jets_input_vars:
     yAxisAtlasTag: 0.925
     yAxisIncrease: 2
     figsize: [7, 5]
-    bool_use_taus: True
+  class_labels: ["bjets", "cjets", "ujets"]
   special_param_jets:
     IP2D_cu:
       lim_left: -30
@@ -132,10 +132,7 @@ nTracks:
     yAxisIncrease: 2
     figsize: [7, 5]
     Ratio_Cut: [0.5, 2]
-  flavours:
-    b: 5
-    c: 4
-    u: 0
+  class_labels: ["bjets", "cjets", "ujets"]
 
 tracks_input_vars:
   variables: "tracks"
@@ -158,7 +155,6 @@ tracks_input_vars:
     yAxisIncrease: 2
     figsize: [7, 5]
     Ratio_Cut: [0.5, 1.5]
-    bool_use_taus: False
   binning:
     IP3D_signed_d0_significance: 100
     IP3D_signed_z0_significance: 100
@@ -175,7 +171,4 @@ tracks_input_vars:
     numberOfSCTHits: [0, 19, 1]
     btagIp_d0: 100
     btagIp_z0SinTheta: 100
-  flavours:
-    b: 5
-    c: 4
-    u: 0
+  class_labels: ["bjets", "cjets", "ujets"]

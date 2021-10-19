@@ -1,25 +1,15 @@
 from umami.configuration import logger  # isort:skip
 import argparse
+import json
 
 import h5py
 import tensorflow as tf
-from tensorflow.keras import activations, layers
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.layers import (
-    BatchNormalization,
-    Dense,
-    Dropout,
-    Input,
-    Masking,
-    TimeDistributed,
-)
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.optimizers import Adam
 
+import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.institutes.utils import is_qsub_available, submit_zeuthen
 from umami.preprocessing_tools import Configuration
-from umami.train_tools import Sum
 
 
 def GetParser():
@@ -65,127 +55,6 @@ def GetParser():
     return args
 
 
-class generator:
-    # How many jets should be loaded into memory
-    chunk_size = 1e6
-
-    def __init__(self, X, Y, batch_size):
-        self.x = X
-        self.y = Y
-        self.batch_size = batch_size
-        self.n_jets = len(self.y)
-        self.length = int(self.n_jets / self.batch_size)
-        self.step_size = self.batch_size * int(
-            generator.chunk_size / self.batch_size
-        )
-
-    def load_in_memory(self, part=0):
-        logger.info(
-            f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
-        )
-        self.x_in_mem = self.x[
-            self.step_size * part : self.step_size * (part + 1)
-        ]
-        self.y_in_mem = self.y[
-            self.step_size * part : self.step_size * (part + 1)
-        ]
-
-    def __call__(self):
-        self.load_in_memory()
-        n = 1
-        small_step = 0
-        for idx in range(self.length):
-            if (idx + 1) * self.batch_size > self.step_size * n:
-                self.load_in_memory(n)
-                n += 1
-                small_step = 0
-            batch_x = self.x_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
-            ]
-            batch_y = self.y_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
-            ]
-            small_step += 1
-            yield (batch_x, batch_y)
-
-
-def Dips_model(train_config=None, input_shape=None):
-    # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
-
-    # Set NN options
-    batch_norm = NN_structure["Batch_Normalisation"]
-    dropout = NN_structure["dropout"]
-    nClasses = NN_structure["nClasses"]
-
-    # Set the track input
-    trk_inputs = Input(shape=input_shape)
-
-    # Masking the missing tracks
-    masked_inputs = Masking(mask_value=0)(trk_inputs)
-    tdd = masked_inputs
-
-    # Define the TimeDistributed layers for the different tracks
-    for i, phi_nodes in enumerate(NN_structure["ppm_sizes"]):
-
-        tdd = TimeDistributed(
-            Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
-        )(tdd)
-
-        if batch_norm:
-            tdd = TimeDistributed(
-                BatchNormalization(), name=f"Phi{i}_BatchNormalization"
-            )(tdd)
-
-        if dropout != 0:
-            tdd = TimeDistributed(
-                Dropout(rate=dropout), name=f"Phi{i}_Dropout"
-            )(tdd)
-
-        tdd = TimeDistributed(
-            layers.Activation(activations.relu), name=f"Phi{i}_ReLU"
-        )(tdd)
-
-    # This is where the magic happens... sum up the track features!
-    F = Sum(name="Sum")(tdd)
-
-    # Define the main dips structure
-    for j, (F_nodes, p) in enumerate(
-        zip(
-            NN_structure["dense_sizes"],
-            [dropout] * len(NN_structure["dense_sizes"][:-1]) + [0],
-        )
-    ):
-
-        F = Dense(F_nodes, activation="linear", name=f"F{j}_Dense")(F)
-        if batch_norm:
-            F = BatchNormalization(name=f"F{j}_BatchNormalization")(F)
-        if dropout != 0:
-            F = Dropout(rate=p, name=f"F{j}_Dropout")(F)
-        F = layers.Activation(activations.relu, name=f"F{j}_ReLU")(F)
-
-    # Set output and activation function
-    output = Dense(nClasses, activation="softmax", name="Jet_class")(F)
-    dips = Model(inputs=trk_inputs, outputs=output)
-
-    # Print Dips model summary when log level lower or equal INFO level
-    if logger.level <= 20:
-        dips.summary()
-
-    # Set optimier and loss
-    model_optimizer = Adam(learning_rate=NN_structure["lr"])
-    dips.compile(
-        loss="categorical_crossentropy",
-        optimizer=model_optimizer,
-        metrics=["accuracy"],
-    )
-    return dips, NN_structure["epochs"]
-
-
 def Dips(args, train_config, preprocess_config):
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
@@ -196,6 +65,7 @@ def Dips(args, train_config, preprocess_config):
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
+        class_labels=NN_structure["class_labels"],
         nJets=int(Val_params["n_jets"]),
     )
 
@@ -206,6 +76,7 @@ def Dips(args, train_config, preprocess_config):
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
+            class_labels=NN_structure["class_labels"],
             nJets=int(Val_params["n_jets"]),
         )
 
@@ -213,50 +84,29 @@ def Dips(args, train_config, preprocess_config):
         X_valid_add = None
         Y_valid_add = None
 
-    # Load the training file
-    logger.info("Load training data tracks")
-    file = h5py.File(train_config.train_file, "r")
-    X_train = file["X_trk_train"]
-    Y_train = file["Y_train"]
-
-    # Use the number of jets set in the config file for training
-    if NN_structure["nJets_train"] is not None:
-        X_train = X_train[: int(NN_structure["nJets_train"])]
-        Y_train = Y_train[: int(NN_structure["nJets_train"])]
-
     # Get the shapes for training
-    nJets, nTrks, nFeatures = X_train.shape
-    nJets, nDim = Y_train.shape
+    with h5py.File(train_config.train_file, "r") as f:
+        nJets, nTrks, nFeatures = f["X_trk_train"].shape
+        nJets, nDim = f["Y_train"].shape
 
     # Print how much jets are used
     logger.info(f"Number of Jets used for training: {nJets}")
 
-    if train_config.model_file is not None:
-        # Load DIPS model from file
-        logger.info(f"Loading model from: {train_config.model_file}")
-        dips = load_model(train_config.model_file, {"Sum": Sum}, compile=False)
-
-        # Compile model
-        model_optimizer = Adam(learning_rate=NN_structure["lr"])
-        dips.compile(
-            loss="categorical_crossentropy",
-            optimizer=model_optimizer,
-            metrics=["accuracy"],
-        )
-
-        # Load epoch from train_config
-        epochs = NN_structure["epochs"]
-
-    else:
-        # Init dips model
-        dips, epochs = Dips_model(
-            train_config=train_config, input_shape=(nTrks, nFeatures)
-        )
+    # Init dips model
+    dips, epochs = utf.Dips_model(
+        train_config=train_config, input_shape=(nTrks, nFeatures)
+    )
 
     # Get training set from generator
     train_dataset = (
         tf.data.Dataset.from_generator(
-            generator(X_train, Y_train, NN_structure["batch_size"]),
+            utf.dips_generator(
+                train_file_path=train_config.train_file,
+                X_trk_Name="X_trk_train",
+                Y_Name="Y_train",
+                n_jets=NN_structure["nJets_train"],
+                batch_size=NN_structure["batch_size"],
+            ),
             (tf.float32, tf.float32),
             (
                 tf.TensorShape([None, nTrks, nFeatures]),
@@ -277,7 +127,7 @@ def Dips(args, train_config, preprocess_config):
 
     # Set ModelCheckpoint as callback
     dips_mChkPt = ModelCheckpoint(
-        f"{train_config.model_name}" + "/dips_model_{epoch:02d}.h5",
+        f"{train_config.model_name}" + "/dips_model_{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
@@ -300,7 +150,9 @@ def Dips(args, train_config, preprocess_config):
     X_valid_tensor = tf.convert_to_tensor(X_valid, dtype=tf.float64)
     Y_valid_tensor = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
     if train_config.add_validation_file is not None:
-        X_valid_add_tensor = tf.convert_to_tensor(X_valid_add, dtype=tf.float64)
+        X_valid_add_tensor = tf.convert_to_tensor(
+            X_valid_add, dtype=tf.float64
+        )
         Y_valid_add_tensor = tf.convert_to_tensor(Y_valid_add, dtype=tf.int64)
     else:
         X_valid_add_tensor = None
@@ -316,21 +168,22 @@ def Dips(args, train_config, preprocess_config):
 
     # Set my_callback as callback. Writes history information
     # to json file.
-    my_callback = utt.MyCallbackDips(
+    my_callback = utt.MyCallback(
         model_name=train_config.model_name,
+        class_labels=train_config.NN_structure["class_labels"],
+        main_class=train_config.NN_structure["main_class"],
         val_data_dict=val_data_dict,
-        target_beff=train_config.Eval_parameters_validation["WP_b"],
-        charm_fraction=train_config.Eval_parameters_validation["fc_value"],
+        target_beff=train_config.Eval_parameters_validation["WP"],
+        frac_dict=train_config.Eval_parameters_validation["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
-            WP_b=train_config.Eval_parameters_validation["WP_b"],
-            fc_value=train_config.Eval_parameters_validation["fc_value"],
+            WP=train_config.Eval_parameters_validation["WP"],
             n_jets=train_config.Eval_parameters_validation["n_jets"],
             dir_name=train_config.model_name,
         ),
     )
 
     logger.info("Start training")
-    dips.fit(
+    history = dips.fit(
         train_dataset,
         epochs=nEpochs,
         validation_data=(X_valid, Y_valid),
@@ -341,6 +194,18 @@ def Dips(args, train_config, preprocess_config):
         use_multiprocessing=True,
         workers=8,
     )
+
+    # Dump dict into json
+    logger.info(
+        f"Dumping history file to {train_config.model_name}/history.json"
+    )
+
+    # Make the history dict the same shape as the dict from the callbacks
+    hist_dict = utt.prepare_history_dict(history.history)
+
+    # Dump history file to json
+    with open(f"{train_config.model_name}/history.json", "w") as outfile:
+        json.dump(hist_dict, outfile, indent=4)
 
 
 def DipsZeuthen(args, train_config, preprocess_config):
@@ -367,6 +232,7 @@ if __name__ == "__main__":
 
     utt.create_metadata_folder(
         train_config_path=args.config_file,
+        var_dict_path=train_config.var_dict,
         model_name=train_config.model_name,
         preprocess_config_path=train_config.preprocess_config,
         overwrite_config=True if args.overwrite_config else False,

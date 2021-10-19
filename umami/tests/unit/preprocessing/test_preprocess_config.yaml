@@ -1,67 +1,126 @@
 parameters:
   # file path
   file_path: &file_path ./
+  ntuple_path: &ntuple_path ./
+  sample_path: &sample_path ./
+
 
 preparation:
-  ntuples: None
+  ntuples:
+    ttbar:
+      path: *ntuple_path
+      file_pattern: "*.h5"
+
+  class_labels: [bjets, cjets, ujets]
+
   samples:
     ttbar:
       type: ttbar
       category: bjets
       n_jets: 1
-      n_split: 1
       cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 5
+        - eventNumber:
+            operator: mod_2_==
+            condition: 0
+        - pt_btagJes:
+            operator: <=
+            condition: 2.5e5
+        - pt_btagJes:
+            operator: ">"
+            condition: 1.5e5
       f_output:
         path: *file_path
         file: dummy.h5
-      merge_output: f_tt_bjets
+    training_ttbar_bjets:
+      type: ttbar
+      category: bjets
+      n_jets: 10e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_ttbar_bjets.h5
 
-# amount of b-jets which are used
-njets: 5e6
-# fraction of ttbar jets wrt. Z'
-ttbar_frac: 0.7
-# Whether or not to enforce the ttbar fraction above
-enforce_ttbar_frac: False
-# outputfiles are split into 6
-iterations: 6
-# pT cut for hybrid creation (for light and c-jets)
-pTcut: 1.25e5
-# pT cut for b-jets
-bhad_pTcut: 2.5e5
-# upper pT limit for all jets
-pT_max: 3e6
-# Whether to process taus
-bool_process_taus: False
-# Whether to use extended flavour labelling
-bool_extended_labelling: False
-# Sampling method
-sampling_method: count
-f_z:
-  path: *file_path
-  file: dummy.h5
-f_tt_bjets:
-  path: *file_path
-  file: dummy.h5
-f_tt_cjets:
-  path: *file_path
-  file: dummy.h5
-f_tt_ujets:
-  path: *file_path
-  file: dummy.h5
-f_tt_taujets:
-  path: *file_path
-  file: dummy.h5
+    training_ttbar_cjets:
+      type: ttbar
+      category: cjets
+      # Number of c jets available in MC16d
+      n_jets: 12745953
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_ttbar_cjets.h5
+
+    training_ttbar_ujets:
+      type: ttbar
+      category: ujets
+      n_jets: 20e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_ttbar_ujets.h5
+
+    training_zprime_bjets:
+      type: zprime
+      category: bjets
+      n_jets: 10e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_zprime_bjets.h5
+
+    training_zprime_cjets:
+      type: zprime
+      category: cjets
+      # Number of c jets available in MC16d
+      n_jets: 10e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_zprime_cjets.h5
+
+    training_zprime_ujets:
+      type: zprime
+      category: ujets
+      n_jets: 10e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_zprime_ujets.h5
+
+
+sampling:
+  method: count
+  # The options depend on the sampling method
+  options:
+    sampling_variables:
+      - pt_btagJes:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+      - absEta_btagJes:
+          bins: [0, 2.5, 10]
+    samples:
+      ttbar:
+        - training_ttbar_bjets
+        - training_ttbar_cjets
+        - training_ttbar_ujets
+      zprime:
+        - training_zprime_bjets
+        - training_zprime_cjets
+        - training_zprime_ujets
+    fractions:
+      ttbar: 0.65
+      zprime: 0.35
+    # can change after applying resampling in the hybrid sample creation
+    njets: 5.5e6
+    intermediate_index_file: indices.h5
+    # outputfiles are split into 5
+    iterations: 5
+
 outfile_name: dummy_out.h5
 plot_name: dummy_plot
+
+var_file: "fixtures/dummy_var_file.yaml"
 
 # Dictfile for the scaling and shifting (json)
 dict_file: "test.json"
@@ -78,11 +137,3 @@ cuts:
     operator: <
     condition: 1e8
     NaNcheck: True
-  # vr_overlap:
-  #   operator: ==
-  #   condition: 1
-  #   NaNcheck: False
-  # jetPtRank:
-  #   operator: <=
-  #   condition: 3
-  #   NaNcheck: False

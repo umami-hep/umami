@@ -1,6 +1,6 @@
 # Set modelname and path to Pflow preprocessing config file
 model_name: dips_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
-preprocess_config: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
+preprocess_config: /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/examples/PFlow-Preprocessing.yaml
 
 # Add here a pretrained model to start with.
 # Leave empty for a fresh start
@@ -39,9 +39,7 @@ zpext_test_files:
         data_set_name: "zpext_comparison_no_QSP"
 
 # Path to Variable dict used in preprocessing
-var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
-
-bool_use_taus: False
+var_dict: /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
 
 exclude: []
 
@@ -59,8 +57,12 @@ NN_structure:
     # Dropout rate. If = 0, dropout is disabled
     dropout: 0
 
-    # Number of output classes
-    nClasses: 3
+    # Define which classes are used for training
+    # These are defined in the global_config
+    class_labels: ["ujets", "cjets", "bjets"]
+
+    # Main class which is to be tagged
+    main_class: "bjets"
 
     # Decide if Batch Normalisation is used
     Batch_Normalisation: True
@@ -81,16 +83,28 @@ Eval_parameters_validation:
     tagger: ["rnnip", "DL1r"]
 
     # Define fc values for the taggers
-    fc_values_comp: {
-        "rnnip": 0.08,
-        "DL1r": 0.018,
+    frac_values_comp: {
+        "rnnip": {
+            "cjets": 0.08,
+            "ujets": 0.92,
+        },
+        "DL1r": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
     }
 
     # Charm fraction value used for evaluation of the trained model
-    fc_value: 0.018
+    frac_values: {
+        "cjets": 0.018,
+        "ujets": 0.982,
+    }
 
-    # b Working point used in the evaluation
-    WP_b: 0.77
+    # Working point used in the evaluation
+    WP: 0.77
+
+# Plotting settings for training metrics plots
+Plotting_settings:
 
     # Enable/Disable atlas tag
     UseAtlasTag: True

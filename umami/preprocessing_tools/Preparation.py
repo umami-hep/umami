@@ -1,59 +1,180 @@
 """
 Helper functions to creating hybrid hdf5 samples from ttbar and Zprime ntuples
 """
+import os
+from glob import glob
+
 import h5py
 import numpy as np
+from tqdm import tqdm
 
-from umami.configuration import logger
-from umami.preprocessing_tools import GetSampleCuts
+from umami.configuration import global_config, logger
+from umami.preprocessing_tools import GetCategoryCuts, GetSampleCuts
 
 
-def get_jets(
-    filename,
-    n_jets,
-    sample_type,
-    sample_category=None,
-    write_tracks=False,
-    tracks_dset_name=None,
-    cuts=None,
-    extended_labelling=False,
-):
-    """Helper function to extract jet and track information from a h5 ntuple.
-    The function can be used to create hybrid samples from ttbar
-    and Zprime input ntuples. The hybrid samples are created from jets in
-    the ttbar sample for b-jet pt below a certain pt threshold and from
-    jets in the Zprime for b-jet pt above a certain pt threshold.
-
-    :param filename: path to the h5 ntuple
-    :param n_jets: number of jets to be extracted from the ntuple
-    :param sample_type: type of the sample (can be either 'ttbar' or 'zprime')
-    :param sample_category: relevant for ttbar sample, type of jet flavour
-                            (can be 'bjets', 'cjets', 'ujets', or 'taujets')
-    :param write_tracks: also store track information (true/false)
-    :param cuts: specify a dictionary of cuts to be applied for selecting jets
-                 for a respective sample (e.g. event number parity, jet flavor)
-                 (no cut applied, if not specified)
-    :param extended_labelling: use extended flavour labelling (true/false)
-    :returns: (jets, tracks), where jets is a numpy array of jets.
-              Similarly, tracks is a numpy array of tracks but is only created
-              if the write_tracks parameter is set to True.
+def GetPreparationSamplePath(sample):
     """
-    logger.info("Opening file " + filename)
+    Retrieves the output sample path of the samples defined in the
+    'samples' block in the preprocessing config.
+    """
+    return os.path.join(
+        sample.get("f_output")["path"], sample.get("f_output")["file"]
+    )
 
-    data_set = h5py.File(filename, "r")
-    jets = data_set["jets"]
-    logger.info(f"Total number of jets in file: {jets.size}")
-    if write_tracks:
-        tracks = data_set[tracks_dset_name]
-        logger.debug(f"Tracks dataset: {tracks_dset_name}")
-        logger.info(f"Total number of tracks in file: {tracks.size}")
 
-    indices_to_remove = GetSampleCuts(jets, cuts, extended_labelling)
-    jets = np.delete(jets, indices_to_remove)[:n_jets]
-    jets = jets[:n_jets]
-    if write_tracks:
-        tracks = np.delete(tracks, indices_to_remove, axis=0)[:n_jets]
-        tracks = tracks[:n_jets]
-        return jets, tracks
-    else:
-        return jets, None
+class PrepareSamples:
+    """
+    This class is preparing the samples for further processing defined in the
+    configuration file:
+        - extracts the selected jets (applying cuts: flavour, pT etc)
+        - writes these iteratively to h5 output files
+
+    This class will take the information provided in the `samples` block in
+    the preprocessing config.
+    """
+
+    def __init__(self, args, config) -> None:
+        self.config = config
+        self.__setup(args)
+
+    def __setup(self, args):
+        # check if sample is provided, otherwise exit
+        if not args.sample:
+            raise KeyError("Please provide --sample to prepare hybrid samples")
+        # load list of samples
+        samples = self.config.preparation["samples"]
+        try:
+            sample = samples[args.sample]
+        except KeyError:
+            raise KeyError(f'sample "{args.sample}" not in config file!')
+
+        self.sample_type = sample.get("type")
+        self.sample_category = sample.get("category")
+        cuts = sample.get("cuts", None)
+        if self.sample_category == "inclusive":
+            self.cuts = cuts
+        else:
+            try:
+                category_setup = global_config.flavour_categories[
+                    self.sample_category
+                ]
+            except KeyError:
+                raise KeyError(
+                    f"Requested sample category {self.sample_category} not defined in global config."
+                )
+
+            # retrieving the cuts for the category selection
+            category_cuts = GetCategoryCuts(
+                category_setup["label_var"], category_setup["label_value"]
+            )
+            self.cuts = cuts + category_cuts
+        self.n_jets_to_get = int(sample.get("n_jets", 0))
+        self.save_tracks = args.tracks
+        self.tracks_name = args.tracks_name
+        output_path = sample.get("f_output")["path"]
+        self.output_file = os.path.join(
+            output_path, sample.get("f_output")["file"]
+        )
+        # bookkeeping variables for running over the ntuples
+        self.jets_loaded = 0
+        self.create_file = True
+        self.shuffle_array = args.shuffle_array
+        # set up ntuples
+        ntuples = self.config.preparation["ntuples"]
+        ntuple_path = ntuples.get(sample["type"])["path"]
+        ntuple_file_pattern = ntuples.get(sample["type"])["file_pattern"]
+        self.ntuples = glob(os.path.join(ntuple_path, ntuple_file_pattern))
+        # ensure output path exists
+        os.makedirs(output_path, exist_ok=True)
+
+    def get_jets(self, filename):
+        """Helper function to extract jet and track information from a h5 ntuple.
+
+        :param filename: path to the h5 ntuple
+        :returns: (jets, tracks), where jets is a numpy array of jets.
+                Similarly, tracks is a numpy array of tracks but is only created
+                if `self.save_tracks` is set to True.
+        """
+        data_set = h5py.File(filename, "r")
+        jets = data_set["jets"]
+        logger.debug(f"Total number of jets in file: {jets.size}")
+        if self.save_tracks:
+            tracks = data_set[self.tracks_name]
+            logger.debug(f"Tracks dataset: {self.tracks_name}")
+            logger.debug(f"Total number of tracks in file: {tracks.size}")
+
+        indices_to_remove = GetSampleCuts(jets, self.cuts)
+        jets = np.delete(jets, indices_to_remove)[: self.n_jets_to_get]
+        jets = jets[: self.n_jets_to_get]
+        if self.save_tracks:
+            tracks = np.delete(tracks, indices_to_remove, axis=0)[
+                : self.n_jets_to_get
+            ]
+            tracks = tracks[: self.n_jets_to_get]
+            return jets, tracks
+        else:
+            return jets, None
+
+    def Run(self):
+        """Run over Ntuples to extract jets (and potentially also tracks)"""
+        logger.info("Processing ntuples...")
+        pbar = tqdm(total=self.n_jets_to_get)
+        for i, filename in enumerate(self.ntuples):
+            if self.n_jets_to_get <= 0:
+                break
+
+            jets, tracks = self.get_jets(filename)
+            pbar.update(jets.size)
+            self.jets_loaded += jets.size
+            self.n_jets_to_get -= jets.size
+
+            if self.shuffle_array:
+                pbar.write("Shuffling array")
+                rng = np.random.default_rng(seed=42)
+                rng.shuffle(jets)
+                if self.save_tracks:
+                    rng.shuffle(tracks)
+
+            if self.create_file:
+                self.create_file = False
+                # write to file by creating dataset
+                pbar.write("Creating output file: " + self.output_file)
+                with h5py.File(self.output_file, "w") as out_file:
+                    out_file.create_dataset(
+                        "jets",
+                        data=jets,
+                        compression="gzip",
+                        chunks=True,
+                        maxshape=(None,),
+                    )
+                    if self.save_tracks:
+                        out_file.create_dataset(
+                            "tracks",
+                            data=tracks,
+                            compression="gzip",
+                            chunks=True,
+                            maxshape=(None, tracks.shape[1]),
+                        )
+            else:
+                # appending to existing dataset
+                pbar.write("Writing to output file: " + self.output_file)
+                with h5py.File(self.output_file, "a") as out_file:
+                    out_file["jets"].resize(
+                        (out_file["jets"].shape[0] + jets.shape[0]),
+                        axis=0,
+                    )
+                    out_file["jets"][-jets.shape[0] :] = jets
+                    if self.save_tracks:
+                        out_file["tracks"].resize(
+                            (out_file["tracks"].shape[0] + tracks.shape[0]),
+                            axis=0,
+                        )
+                        out_file["tracks"][-tracks.shape[0] :] = tracks
+
+            if self.n_jets_to_get <= 0:
+                break
+        pbar.close()
+        if self.n_jets_to_get > 0:
+            logger.warning(
+                f"Not enough selected jets from files, only {self.jets_loaded}"
+            )

@@ -29,7 +29,7 @@ def runTrainingDL1(config):
     isSuccess = True
 
     logger.info("Test: running train_DL1.py...")
-    run_train_DL1 = run(["train_DL1.py", "-c", f"{config}", "-e", "2"])
+    run_train_DL1 = run(["train_DL1.py", "-c", f"{config}"])
     try:
         run_train_DL1.check_returncode()
     except CalledProcessError:
@@ -45,7 +45,8 @@ def runTrainingDL1(config):
             "plotting_epoch_performance.py",
             "-c",
             f"{config}",
-            "--dl1",
+            "--tagger",
+            "dl1",
         ]
     )
     try:
@@ -125,8 +126,15 @@ class TestDL1Training(unittest.TestCase):
             "./preprocessing_dl1r/preprocessing/",
             os.path.basename(self.data["test_preprocessing"]["config"]),
         )
+        preprocessing_config_paths_source = os.path.join(
+            "./preprocessing_dl1r/preprocessing/",
+            os.path.basename(self.data["test_preprocessing"]["config_paths"]),
+        )
         self.preprocessing_config = os.path.join(
             test_dir, os.path.basename(preprocessing_config_source)
+        )
+        self.preprocessing_config_paths = os.path.join(
+            test_dir, os.path.basename(preprocessing_config_paths_source)
         )
 
         var_dict_dl1_source = os.path.join(
@@ -141,7 +149,7 @@ class TestDL1Training(unittest.TestCase):
         logger.info("Retrieving files from preprocessing...")
         self.train_file = os.path.join(
             "./preprocessing_dl1r/preprocessing/",
-            "PFlow-hybrid_70-test-preprocessed_shuffled.h5",
+            "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
         )
         self.test_file_ttbar = os.path.join(
             test_dir, "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
@@ -161,18 +169,21 @@ class TestDL1Training(unittest.TestCase):
         # Copy configs and var dict
         copyfile(config_source, self.config)
         copyfile(preprocessing_config_source, self.preprocessing_config)
+        copyfile(
+            preprocessing_config_paths_source, self.preprocessing_config_paths
+        )
         copyfile(var_dict_dl1_source, self.var_dict_dl1)
 
         # modify copy of preprocessing config file for test
         replaceLineInFile(
-            self.preprocessing_config,
-            "outfile_name:",
-            f"outfile_name: {self.train_file}",
+            self.preprocessing_config_paths,
+            ".outfile_name:",
+            f".outfile_name: &outfile_name {self.train_file}",
         )
         replaceLineInFile(
-            self.preprocessing_config,
-            "dict_file:",
-            f"dict_file: {self.scale_dict}",
+            self.preprocessing_config_paths,
+            ".dict_file:",
+            f".dict_file: &dict_file {self.scale_dict}",
         )
 
         # modify copy of training config file for test
@@ -184,6 +195,7 @@ class TestDL1Training(unittest.TestCase):
         self.config_file["train_file"] = f"{self.train_file}"
         self.config_file["validation_file"] = f"{self.test_file_ttbar}"
         self.config_file["add_validation_file"] = f"{self.test_file_zprime}"
+
         # Erase all not used test files
         del self.config_file["ttbar_test_files"]
         del self.config_file["zpext_test_files"]
@@ -213,10 +225,8 @@ class TestDL1Training(unittest.TestCase):
         self.config_file["NN_structure"]["batch_size"] = 50
         self.config_file["NN_structure"]["epochs"] = 2
         self.config_file["NN_structure"]["nJets_train"] = 100
-        self.config_file["Eval_parameters_validation"]["n_jets"] = 100
-        self.config_file["Eval_parameters_validation"][
-            "SecondTag"
-        ] = "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+        self.config_file["Eval_parameters_validation"]["n_jets"] = 4000
+        self.config_file["Eval_parameters_validation"]["eff_min"] = 0.60
 
         # save the copy of training config file for test
         with open(self.config, "w") as config:

@@ -1,22 +1,14 @@
 from umami.configuration import logger  # isort:skip
 import argparse
+import json
 import os
 
 import h5py
-import numpy as np
 import tensorflow as tf
 import yaml
-from tensorflow.keras.callbacks import ReduceLROnPlateau
-from tensorflow.keras.layers import (
-    Activation,
-    BatchNormalization,
-    Dense,
-    Dropout,
-    Input,
-)
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 
+import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.institutes.utils import is_qsub_available, submit_zeuthen
 from umami.preprocessing_tools import Configuration
@@ -42,10 +34,9 @@ def GetParser():
     parser.add_argument(
         "-e",
         "--epochs",
-        default=300,
         type=int,
         help="Number\
-        of trainng epochs.",
+        of training epochs.",
     )
 
     parser.add_argument(
@@ -76,84 +67,79 @@ def GetParser():
 # TODO: add gpu support
 
 
-def NN_model(train_config, input_shape):
-    bool_use_taus = train_config.bool_use_taus
-    n_units_end = 4 if bool_use_taus else 3
-    NN_config = train_config.NN_structure
-    if train_config.model_file is not None:
-        logger.info(f"Loading model from: {train_config.model_file}")
-        model = load_model(train_config.model_file, compile=False)
-    else:
-        inputs = Input(shape=input_shape)
-        x = inputs
-        for i, unit in enumerate(NN_config["units"]):
-            x = Dense(
-                units=unit,
-                activation="linear",
-                kernel_initializer="glorot_uniform",
-            )(x)
-            x = BatchNormalization()(x)
-            x = Activation(NN_config["activations"][i])(x)
-            if "dropout_rate" in NN_config:
-                x = Dropout(NN_config["dropout_rate"][i])(x)
-        predictions = Dense(
-            units=n_units_end,
-            activation="softmax",
-            kernel_initializer="glorot_uniform",
-        )(x)
-        model = Model(inputs=inputs, outputs=predictions)
-    # Print DL1 model summary when log level lower or equal INFO level
-    if logger.level <= 20:
-        model.summary()
-
-    model_optimizer = Adam(learning_rate=NN_config["lr"])
-    model.compile(
-        loss="categorical_crossentropy",
-        optimizer=model_optimizer,
-        metrics=["accuracy"],
-    )
-    return model, NN_config["batch_size"]
-
-
 def TrainLargeFile(args, train_config, preprocess_config):
-    logger.info(
-        "Loading validation data (training data will be loaded per batch)"
-    )
-    bool_use_taus = (
-        train_config.bool_use_taus and preprocess_config.bool_process_taus
-    )
-    logger.info(f"Including taus: {bool_use_taus}")
-    exclude = None
+    # Load NN Structure and training parameter from file
+    NN_structure = train_config.NN_structure
+    Val_params = train_config.Eval_parameters_validation
+
+    # Load the excluded variables from train_config
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
 
-    Val_params = train_config.Eval_parameters_validation
-    if "n_jets" in Val_params:
-        nJets = int(Val_params["n_jets"])
     else:
-        nJets = int(5e5)
+        exclude = None
 
-    X_valid, Y_valid = utt.GetTestSample(
-        input_file=train_config.validation_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config,
-        nJets=nJets,
-        use_taus=bool_use_taus,
-        exclude=exclude,
+    # Load variable config
+    with open(train_config.var_dict, "r") as conf:
+        variable_config = yaml.load(conf, Loader=yaml_loader)
+
+    # Get excluded variables
+    _, _, excluded_var = utt.get_jet_feature_indices(
+        variable_config["train_variables"], exclude
     )
-    X_valid_add, Y_valid_add = None, None
-    if train_config.add_validation_file is not None:
-        X_valid_add, Y_valid_add = utt.GetTestSample(
-            input_file=train_config.add_validation_file,
-            var_dict=train_config.var_dict,
-            preprocess_config=preprocess_config,
-            nJets=nJets,
-            use_taus=bool_use_taus,
-            exclude=exclude,
-        )
-        assert X_valid.shape[1] == X_valid_add.shape[1]
 
-    model, batch_size = NN_model(train_config, (X_valid.shape[1],))
+    # Get the shapes for training
+    with h5py.File(train_config.train_file, "r") as f:
+        nJets, nFeatures = f["X_train"].shape
+        nJets, nDim = f["Y_train"].shape
+
+    # Print how much jets are used
+    logger.info(f"Number of Jets used for training: {nJets}")
+
+    # Build train_datasets for training
+    train_dataset = (
+        tf.data.Dataset.from_generator(
+            utf.dl1_generator(
+                train_file_path=train_config.train_file,
+                X_Name="X_train",
+                Y_Name="Y_train",
+                n_jets=NN_structure["nJets_train"],
+                batch_size=NN_structure["batch_size"],
+                excluded_var=excluded_var,
+            ),
+            (tf.float32, tf.float32),
+            (
+                tf.TensorShape([None, nFeatures]),
+                tf.TensorShape([None, nDim]),
+            ),
+        )
+        .repeat()
+        .prefetch(3)
+    )
+
+    # Load model and epochs
+    model, epochs = utf.DL1_model(
+        train_config=train_config, input_shape=(nFeatures,)
+    )
+
+    # Check if epochs is set via argparser or not
+    if args.epochs is None:
+        nEpochs = epochs
+
+    # If not, use epochs from config file
+    else:
+        nEpochs = args.epochs
+
+    # Set ModelCheckpoint as callback
+    dl1_mChkPt = ModelCheckpoint(
+        f"{train_config.model_name}" + "/dl1_model_{epoch:03d}.h5",
+        monitor="val_loss",
+        verbose=True,
+        save_best_only=False,
+        validation_batch_size=NN_structure["batch_size"],
+        save_weights_only=False,
+    )
+
     reduce_lr = ReduceLROnPlateau(
         monitor="loss",
         factor=0.8,
@@ -163,59 +149,53 @@ def TrainLargeFile(args, train_config, preprocess_config):
         cooldown=5,
         min_lr=0.000001,
     )
-    # reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5,
-    #                               min_lr=0.00001)
+
+    # Load validation data for callback
+    val_data_dict = None
+    if train_config.Eval_parameters_validation["n_jets"] > 0:
+        val_data_dict = utt.load_validation_data_dl1(
+            train_config,
+            preprocess_config,
+            train_config.Eval_parameters_validation["n_jets"],
+        )
+
+    # Set my_callback as callback. Writes history information
+    # to json file.
     my_callback = utt.MyCallback(
         model_name=train_config.model_name,
-        X_valid=X_valid,
-        Y_valid=Y_valid,
-        X_valid_add=X_valid_add,
-        Y_valid_add=Y_valid_add,
-        include_taus=bool_use_taus,
-        eval_config=train_config.Eval_parameters_validation,
-    )
-    callbacks = [reduce_lr, my_callback]
-
-    with open(train_config.var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
-    _, _, excluded_var = utt.get_jet_feature_indices(
-        variable_config["train_variables"], exclude
+        class_labels=NN_structure["class_labels"],
+        main_class=NN_structure["main_class"],
+        val_data_dict=val_data_dict,
+        target_beff=Val_params["WP"],
+        frac_dict=Val_params["frac_values"],
+        dict_file_name=utt.get_validation_dict_name(
+            WP=Val_params["WP"],
+            n_jets=Val_params["n_jets"],
+            dir_name=train_config.model_name,
+        ),
     )
 
-    file = h5py.File(train_config.train_file, "r")
-    X_train = file["X_train"]
-    Y_train = file["Y_train"]
-
-    # Exclude variables if needed
-    X_train = (
-        np.delete(X_train, excluded_var, 1)
-        if excluded_var is not None
-        else X_train
-    )
-
-    # Exclude taus if needed
-    (X_train, Y_train) = (
-        utt.filter_taus(X_train, Y_train)
-        if not (bool_use_taus)
-        else (X_train, Y_train)
-    )
-
-    # create the training datasets
-    # examples taken from https://adventuresinmachinelearning.com/tensorflow-dataset-tutorial/  # noqa
-    dx_train = tf.data.Dataset.from_tensor_slices(X_train)
-    dy_train = tf.data.Dataset.from_tensor_slices(Y_train)
-    # zip the x and y training data together and batch etc.
-    train_dataset = (
-        tf.data.Dataset.zip((dx_train, dy_train)).repeat().batch(batch_size)
-    )
-    model.fit(
+    logger.info("Start training")
+    history = model.fit(
         x=train_dataset,
-        epochs=args.epochs,
-        callbacks=callbacks,
-        steps_per_epoch=len(Y_train) / batch_size,
+        epochs=nEpochs,
+        callbacks=[dl1_mChkPt, reduce_lr, my_callback],
+        steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
     )
+
+    # Dump dict into json
+    logger.info(
+        f"Dumping history file to {train_config.model_name}/history.json"
+    )
+
+    # Make the history dict the same shape as the dict from the callbacks
+    hist_dict = utt.prepare_history_dict(history.history)
+
+    # Dump history file to json
+    with open(f"{train_config.model_name}/history.json", "w") as outfile:
+        json.dump(hist_dict, outfile, indent=4)
 
     logger.info(f"Models saved {train_config.model_name}")
 
@@ -239,6 +219,7 @@ if __name__ == "__main__":
 
     utt.create_metadata_folder(
         train_config_path=args.config_file,
+        var_dict_path=train_config.var_dict,
         model_name=train_config.model_name,
         preprocess_config_path=train_config.preprocess_config,
         overwrite_config=True if args.overwrite_config else False,

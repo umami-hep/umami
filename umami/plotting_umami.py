@@ -71,20 +71,11 @@ def plot_probability_comparison(
     # Init dataframe list
     df_list = []
     model_labels = []
-    prediction_labels_list = []
+    tagger_list = []
+    class_labels_list = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
-
-    # Check if use taus is defined
-    if (
-        "bool_use_taus" not in eval_params
-        or eval_params["bool_use_taus"] is None
-    ):
-        bool_use_taus = False
-
-    else:
-        bool_use_taus = eval_params["bool_use_taus"]
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
@@ -104,22 +95,25 @@ def plot_probability_comparison(
             )
 
         df_list.append(df_results)
+        tagger_list.append(model_config["tagger_name"])
         model_labels.append(model_config["label"])
-        prediction_labels_list.append(model_config["prediction_label"])
+        class_labels_list.append(model_config["class_labels"])
 
     uet.plot_prob_comparison(
         df_list=df_list,
-        prediction_labels_list=prediction_labels_list,
         model_labels=model_labels,
+        tagger_list=tagger_list,
+        class_labels_list=class_labels_list,
+        flavour=plot_config["prob_class"],
         plot_name=plot_name,
-        bool_use_taus=bool_use_taus,
         **plot_config["plot_settings"],
     )
 
 
 def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
-    teffs = []
-    beffs = []
+    df_results_list = []
+    tagger_list = []
+    rej_class_list = []
     labels = []
     linestyles = []
     colors = []
@@ -150,16 +144,11 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
                 model_config["evaluation_file"], model_config["data_set_name"]
             )
 
-        model_config["rej_rates"] = (
-            1.0 / model_config["df_results_eff_rej"][model_config["df_key"]]
-        )
-
-        x_values = "beff"
-        if "x_values_key" in plot_config:
-            x_values = plot_config["x_values_key"]
-        teffs.append(model_config["df_results_eff_rej"][x_values])
-        beffs.append(model_config["rej_rates"])
+        df_results_list.append(model_config["df_results_eff_rej"])
+        tagger_list.append(model_config["tagger_name"])
+        rej_class_list.append(model_config["rejection_class"])
         labels.append(model_config["label"])
+
         if "linestyle" in model_config:
             linestyles.append(model_config["linestyle"])
 
@@ -188,8 +177,9 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
         linestyles = None
 
     uet.plotROCRatio(
-        teffs=teffs,
-        beffs=beffs,
+        df_results_list=df_results_list,
+        tagger_list=tagger_list,
+        rej_class_list=rej_class_list,
         labels=labels,
         plot_name=plot_name,
         styles=linestyles,
@@ -201,10 +191,12 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
 def plot_ROC_Comparison(
     plot_name, plot_config, eval_params, eval_file_dir, print_model
 ):
-    teffs = []
-    beffs = []
+    df_results_list = []
+    tagger_list = []
+    rej_class_list = []
     labels = []
-    which_rej = []
+    linestyles = []
+    colors = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
@@ -232,18 +224,16 @@ def plot_ROC_Comparison(
                 model_config["evaluation_file"], model_config["data_set_name"]
             )
 
-        model_config["rej_rates"] = (
-            1.0 / model_config["df_results_eff_rej"][model_config["df_key"]]
-        )
-
-        x_values = "beff"
-        if "x_values_key" in plot_config:
-            x_values = plot_config["x_values_key"]
-        teffs.append(model_config["df_results_eff_rej"][x_values])
-        beffs.append(model_config["rej_rates"])
+        df_results_list.append(model_config["df_results_eff_rej"])
+        tagger_list.append(model_config["tagger_name"])
+        rej_class_list.append(model_config["rejection_class"])
         labels.append(model_config["label"])
-        if "rejection" in model_config:
-            which_rej.append(model_config["rejection"])
+
+        if "linestyle" in model_config:
+            linestyles.append(model_config["linestyle"])
+
+        if "color" in model_config:
+            colors.append(model_config["color"])
 
         # nTest is only needed to calculate binomial errors
         if not nTest_provided and (
@@ -264,7 +254,7 @@ def plot_ROC_Comparison(
     ratio_dict = {}
     ratio_id = []
 
-    for i, which_a in enumerate(which_rej):
+    for i, which_a in enumerate(rej_class_list):
         if which_a not in ratio_dict:
             ratio_dict.update({which_a: i})
             ratio_id.append(i)
@@ -273,12 +263,14 @@ def plot_ROC_Comparison(
             ratio_id.append(ratio_dict[which_a])
 
     uet.plotROCRatioComparison(
-        teffs=teffs,
-        beffs=beffs,
+        df_results_list=df_results_list,
+        tagger_list=tagger_list,
+        rej_class_list=rej_class_list,
         labels=labels,
         plot_name=plot_name,
-        which_rej=which_rej,
         ratio_id=ratio_id,
+        linestyles=linestyles,
+        colors=colors,
         **plot_config["plot_settings"],
     )
 
@@ -491,31 +483,12 @@ def score_comparison(
 ):
     # Init dataframe list
     df_list = []
+    tagger_list = []
+    class_labels_list = []
     model_labels = []
-    prediction_labels_list = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
-
-    # Check if use taus is defined
-    if (
-        "bool_use_taus" not in eval_params
-        or eval_params["bool_use_taus"] is None
-    ):
-        bool_use_taus = False
-
-    else:
-        bool_use_taus = eval_params["bool_use_taus"]
-
-    discriminant = "b"
-    if (
-        "discriminant" not in plot_config
-        or plot_config["discriminant"] is None
-    ):
-        discriminant = "b"
-
-    else:
-        discriminant = plot_config["discriminant"]
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
@@ -536,15 +509,16 @@ def score_comparison(
 
         df_list.append(df_results)
         model_labels.append(model_config["label"])
-        prediction_labels_list.append(model_config["prediction_labels"])
+        tagger_list.append(model_config["tagger_name"])
+        class_labels_list.append(model_config["class_labels"])
 
     uet.plot_score_comparison(
         df_list=df_list,
-        prediction_labels_list=prediction_labels_list,
         model_labels=model_labels,
+        tagger_list=tagger_list,
+        class_labels_list=class_labels_list,
+        main_class=plot_config["main_class"],
         plot_name=plot_name,
-        bool_use_taus=bool_use_taus,
-        discriminant=discriminant,
         **plot_config["plot_settings"],
     )
 
@@ -555,8 +529,7 @@ def plot_pT_vs_eff(
     # Init label and dataframe list
     df_list = []
     model_labels = []
-    prediction_labels_list = []
-    fc_list = []
+    tagger_list = []
     SWP_label_list = []
 
     # Get the epoch which is to be evaluated
@@ -583,9 +556,6 @@ def plot_pT_vs_eff(
                 model_config["data_set_name"],
             )
 
-        if "fc" in model_config and model_config["fc"] is not None:
-            fc_list.append(model_config["fc"])
-
         if (
             "SWP_label" in model_config
             and model_config["SWP_label"] is not None
@@ -594,18 +564,13 @@ def plot_pT_vs_eff(
 
         df_list.append(df_results)
         model_labels.append(model_config["label"])
-        prediction_labels_list.append(model_config["prediction_labels"])
-
-    # Check if all models
-    if (len(fc_list) != len(df_list)) and (len(fc_list) != 0):
-        raise KeyError("You need to give all or no model a fc value!")
+        tagger_list.append(model_config["tagger"])
 
     uet.plotPtDependence(
         df_list=df_list,
-        prediction_labels=prediction_labels_list,
+        tagger_list=tagger_list,
         model_labels=model_labels,
         plot_name=plot_name,
-        fc_list=fc_list,
         SWP_label_list=SWP_label_list,
         **plot_config["plot_settings"],
     )
@@ -642,6 +607,62 @@ def plot_fraction_scan(plot_name, plot_config, eval_params, eval_file_dir):
         plot_name=plot_name,
         x_val=x_values,
         y_val=y_values,
+        **plot_config["plot_settings"],
+    )
+
+
+def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    # Read file, change to specific file if defined
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
+    ):
+        df_results = pd.read_hdf(
+            eval_file_dir + f"/results-{eval_epoch}.h5",
+            plot_config["data_set_name"],
+        )
+
+    else:
+        df_results = pd.read_hdf(
+            plot_config["evaluation_file"], plot_config["data_set_name"]
+        )
+
+    uet.plot_score(
+        df_results=df_results,
+        tagger_name=plot_config["tagger_name"],
+        class_labels=plot_config["class_labels"],
+        main_class=plot_config["main_class"],
+        plot_name=plot_name,
+        **plot_config["plot_settings"],
+    )
+
+
+def plot_prob(plot_name, plot_config, eval_params, eval_file_dir):
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    # Read file, change to specific file if defined
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
+    ):
+        df_results = pd.read_hdf(
+            eval_file_dir + f"/results-{eval_epoch}.h5",
+            plot_config["data_set_name"],
+        )
+
+    else:
+        df_results = pd.read_hdf(
+            plot_config["evaluation_file"], plot_config["data_set_name"]
+        )
+
+    uet.plot_prob(
+        df_results=df_results,
+        plot_name=plot_name,
+        tagger_name=plot_config["tagger_name"],
+        class_labels=plot_config["class_labels"],
+        flavour=plot_config["prob_class"],
         **plot_config["plot_settings"],
     )
 
@@ -716,21 +737,19 @@ def SetUpPlots(
             )
 
         elif plot_config["type"] == "scores":
-            uet.plot_score(
+            plot_score(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
                 eval_file_dir=eval_file_dir,
-                **plot_config["plot_settings"],
             )
 
         elif plot_config["type"] == "probability":
-            uet.plot_prob(
+            plot_prob(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
                 eval_file_dir=eval_file_dir,
-                **plot_config["plot_settings"],
             )
 
         elif plot_config["type"] == "saliency":

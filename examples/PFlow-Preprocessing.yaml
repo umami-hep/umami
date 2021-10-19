@@ -1,220 +1,207 @@
-parameters:
-  # Path where the ntuples are saved
-  ntuple_path: &ntuple_path /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/
+parameters: !include Preprocessing-settings-Freiburg.yaml
 
-  # Path where the hybrid samples will be saved
-  sample_path: &sample_path /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/
+# Defining yaml anchors to be used later, avoiding duplication
+.cuts_template_ttbar_train: &cuts_template_ttbar_train
+  cuts:
+    - eventNumber:
+        operator: mod_6_<=
+        condition: 3
+    - pt_btagJes:
+        operator: <=
+        condition: 2.5e5
 
-  # Path where the merged and ready-to-train samples are saved
-  file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/
+.cuts_template_zprime_train: &cuts_template_zprime_train
+  cuts:
+    - eventNumber:
+        operator: mod_6_<=
+        condition: 3
+    - pt_btagJes:
+        operator: <=
+        condition: 2.5e5
+
+.cuts_template_validation: &cuts_template_validation
+  cuts:
+    - eventNumber:
+        operator: mod_6_==
+        condition: 4
+
+.cuts_template_test: &cuts_template_test
+  cuts:
+    - eventNumber:
+        operator: mod_6_==
+        condition: 5
 
 preparation:
   ntuples:
     ttbar:
       path: *ntuple_path
-      file_pattern: user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2020-02-14-T232210-R26303_output.h5/*.h5
+      file_pattern: user.alfroch.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
 
     zprime:
       path: *ntuple_path
-      file_pattern: user.mguth.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2020-02-15-T225316-R8334_output.h5/*.h5
+      file_pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
+
+  class_labels: [ujets, cjets, bjets]
 
   samples:
     training_ttbar_bjets:
       type: ttbar
       category: bjets
       n_jets: 10e6
-      n_split: 10
-      cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 5
+      <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
-      merge_output: f_tt_bjets
+        file: MC16d-bjets_training_ttbar_PFlow.h5
 
     training_ttbar_cjets:
       type: ttbar
       category: cjets
       # Number of c jets available in MC16d
       n_jets: 12745953
-      n_split: 13
-      cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 4
+      <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
-      merge_output: f_tt_cjets
+        file: MC16d-cjets_training_ttbar_PFlow.h5
 
     training_ttbar_ujets:
       type: ttbar
       category: ujets
       n_jets: 20e6
-      n_split: 20
-      cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 0
+      <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-      merge_output: f_tt_ujets
+        file: MC16d-ujets_training_ttbar_PFlow.h5
 
     training_ttbar_taujets:
       type: ttbar
       category: taujets
-      n_jets: 12745953
-      n_split: 5
-      cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: <=
-          condition: 2.5e5
-        HadronConeExclTruthLabelID:
-          operator: ==
-          condition: 15
+      n_jets: 13e6
+      <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
-      merge_output: f_tt_taujets
+        file: MC16d-taujets_training_ttbar_PFlow.h5
 
-    training_zprime:
+    training_zprime_bjets:
       type: zprime
-      n_jets: 9593092
-      n_split: 2
-      cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 0
-        pt_cut:
-          operator: ">"
-          condition: 2.5e5
+      category: bjets
+      n_jets: 10e6
+      <<: *cuts_template_zprime_train
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
-      merge_output: f_z
+        file: MC16d-bjets_training_zprime_PFlow.h5
+
+    training_zprime_cjets:
+      type: zprime
+      category: cjets
+      # Number of c jets available in MC16d
+      n_jets: 10e6
+      <<: *cuts_template_zprime_train
+      f_output:
+        path: *sample_path
+        file: MC16d-cjets_training_zprime_PFlow.h5
+
+    training_zprime_ujets:
+      type: zprime
+      category: ujets
+      n_jets: 10e6
+      <<: *cuts_template_zprime_train
+      f_output:
+        path: *sample_path
+        file: MC16d-ujets_training_zprime_PFlow.h5
+
+    training_zprime_taujets:
+      type: zprime
+      category: taujets
+      n_jets: 10e6
+      <<: *cuts_template_zprime_train
+      f_output:
+        path: *sample_path
+        file: MC16d-taujets_training_zprime_PFlow.h5
+
+    validation_ttbar:
+      type: ttbar
+      category: inclusive
+      n_jets: 4e6
+      <<: *cuts_template_validation
+      f_output:
+        path: *sample_path
+        file: MC16d-inclusive_validation_ttbar_PFlow.h5
 
     testing_ttbar:
       type: ttbar
+      category: inclusive
       n_jets: 4e6
-      n_split: 2
-      cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 1
+      <<: *cuts_template_test
       f_output:
         path: *sample_path
-        file: MC16d_hybrid_odd_100_PFlow-no_pTcuts.h5
+        file: MC16d-inclusive_testing_ttbar_PFlow.h5
+
+    validation_zprime:
+      type: zprime
+      category: inclusive
+      n_jets: 4e6
+      <<: *cuts_template_validation
+      f_output:
+        path: *sample_path
+        file: MC16d-inclusive_validation_zprime_PFlow.h5
 
     testing_zprime:
       type: zprime
+      category: inclusive
       n_jets: 4e6
-      n_split: 2
-      cuts:
-        eventNumber:
-          operator: mod_2_==
-          condition: 1
+      <<: *cuts_template_test
       f_output:
         path: *sample_path
-        file: MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts.h5
+        file: MC16d-inclusive_testing_zprime_PFlow.h5
 
-# amount of b-jets from ttbar which are used in the pre-resampling,
-# can change after applying resampling in the hybrid sample creation
-njets: 5.5e6
-
-# fraction of ttbar jets wrt. Z'
-# can change after applying resampling in the hybrid sample creation
-ttbar_frac: 0.65
-
-# Whether or not to enforce the ttbar fraction above
-enforce_ttbar_frac: False
-
-# outputfiles are split into 5
-# iterations: 1
-iterations: 5
-
-# pT cut for hybrid creation (for light and c-jets)
-pTcut: 2.5e5
-
-# pT cut for b-jets
-bhad_pTcut: 2.5e5
-
-# upper pT limit for all jets
-pT_max: False
-
-# set to true if taus are to be included in preprocessing
-bool_process_taus: False
-
-# set to true if extended flavour labelling scheme is used in preprocessing
-bool_extended_labelling: False
-
-# Define undersampling method used. Valid are "count", "weight",
-# "count_bcl_weight_tau", "template_b" and "template_b_count"
-# count_bcl_weight_tau is a hybrid of count and weight to deal with taus.
-# template_b uses the b as the target distribution, but does not guarantee
-# same fractions. template_b_count will guarantee same fractions.
-# The "template_b" and "template_b_count" does not work well with taus as of now.
-# Additionally, when computing the target distribution for "template_b" and "template_b_count",
-# pT_max (set above) will be used to compute the probability ratios or PDFs.
-# Default is "count".
-# See RunUndersampling in preprocessing for more info
-sampling_method: count
-
-# Name of the output files for the different jets
-# ZPrime (Mixed)
-f_z:
-  path: *file_path
-  file: MC16d_hybrid-ext_even_0_PFlow-merged.h5
-
-# ttbar (b)
-f_tt_bjets:
-  path: *file_path
-  file: MC16d_hybrid-bjets_even_1_PFlow-merged.h5
-
-# ttbar (c)
-f_tt_cjets:
-  path: *file_path
-  file: MC16d_hybrid-cjets_even_1_PFlow-merged.h5
-
-# ttbar (u)
-f_tt_ujets:
-  path: *file_path
-  file: MC16d_hybrid-ujets_even_1_PFlow-merged.h5
-
-# ttbar (tau)
-f_tt_taujets:
-  path: *file_path
-  file: MC16d_hybrid-taujets_even_1_PFlow-merged.h5
+sampling:
+  method: count
+  # The options depend on the sampling method
+  options:
+    sampling_variables:
+      - pt_btagJes:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+      - absEta_btagJes:
+          bins: [0, 2.5, 10]
+    samples:
+      ttbar:
+        - training_ttbar_bjets
+        - training_ttbar_cjets
+        - training_ttbar_ujets
+      zprime:
+        - training_zprime_bjets
+        - training_zprime_cjets
+        - training_zprime_ujets
+    # this optional option allows to specify the jets which should be used per sample
+    custom_njets_initial:
+      # these are empiric values ensuring a smooth hybrid sample
+      training_ttbar_bjets: 5.5e6
+      training_ttbar_cjets: 11.5e6
+      training_ttbar_ujets: 13.5e6
+    fractions:
+      ttbar: 0.7
+      zprime: 0.3
+    # number of training jets
+    njets: 25e6
+    save_tracks: True
+    # this stores the indices per sample into an intermediate file
+    intermediate_index_file: indices.h5
+    # outputfiles are split into 5 -> needs to be implemented
+    iterations: 5
 
 # Name of the output file from the preprocessing
-outfile_name: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid.h5
+outfile_name: *outfile_name
 plot_name: PFlow_ext-hybrid
 
-# Dictfile for the scaling and shifting (json)
-dict_file: "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/scale_dicts/PFlow-scale_dict-22M.json"
+# Variable dict which is used for scaling and shifting
+var_file: *var_file
 
+# Dictfile for the scaling and shifting (json)
+dict_file: *dict_file
+
+# TODO: move these cuts to the preparation step
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=
 cuts:

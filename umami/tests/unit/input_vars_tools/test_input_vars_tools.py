@@ -66,7 +66,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         plot_input_vars_jets(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
-            flavours=plotting_config["flavours"],
+            class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
@@ -103,7 +103,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         plot_input_vars_jets_comparison(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
-            flavours=plotting_config["flavours"],
+            class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
@@ -141,7 +141,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         plot_input_vars_trks(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
-            flavours=plotting_config["flavours"],
+            class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
@@ -228,7 +228,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         plot_input_vars_trks_comparison(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
-            flavours=plotting_config["flavours"],
+            class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
@@ -315,7 +315,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         plot_nTracks_per_Jet(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
-            flavours=plotting_config["flavours"],
+            class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             output_directory=f"{self.tmp_plot_dir}",

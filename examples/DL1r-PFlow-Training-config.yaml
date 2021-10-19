@@ -46,10 +46,33 @@ bool_use_taus: False
 exclude: []
 
 NN_structure:
-    lr: 0.01
+    # NN Training parameters
+    lr: 0.001
     batch_size: 15000
+    epochs: 200
+
+    # Number of jets used for training
+    # To use all: Fill nothing
+    nJets_train:
+
+    # Dropout rate. If = 0, dropout is disabled
+    dropout: 0
+
+    # Define which classes are used for training
+    # These are defined in the global_config
+    class_labels: ["ujets", "cjets", "bjets"]
+
+    # Main class which is to be tagged
+    main_class: "bjets"
+
+    # Decide if Batch Normalisation is used
+    Batch_Normalisation: False
+
+    # Nodes per dense layer. Starting with first dense layer.
+    dense_sizes: [256, 128, 60, 48, 36, 24, 12, 6]
+
+    # Activations of the layers. Starting with first dense layer.
     activations: ["relu", "relu", "relu", "relu", "relu", "relu", "relu", "relu"]
-    units: [256, 128, 60, 48, 36, 24, 12, 6]
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
@@ -61,51 +84,28 @@ Eval_parameters_validation:
     tagger: ["rnnip", "DL1r"]
 
     # Define fc values for the taggers
-    fc_values_comp: {
-        "rnnip": 0.08,
-        "DL1r": 0.018,
-    }
-
-    # Define fb values for the taggers
-    fb_values_comp: {
-        "rnnip": 0.2,
-        "DL1r": 0.2,
+    frac_values_comp: {
+        "rnnip": {
+            "cjets": 0.08,
+            "ujets": 0.92,
+        },
+        "DL1r": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
     }
 
     # Charm fraction value used for evaluation of the trained model
-    fc_value: 0.018
-
-    # B fraction value used for evaluation
-    fb_value: 0.2
-
-    # Tau fraction value used for evaluation (for c)
-    ftauforc_value: None
-
-    # # Tau fraction value used for evaluation (for b)
-    ftauforb_value: None
-
-    # b Working point used in the evaluation
-    WP_b: 0.77
-    # C Working point used in the evaluation
-    WP_c: 0.4
-
-    # Set minimum of accuracy plot y-axis
-    acc_ymin: 0.59
-    # Set maximum of accuracy plot y-axis
-    acc_ymax: 1.0
+    frac_values: {
+        "cjets": 0.018,
+        "ujets": 0.982,
+    }
 
     # A list to add available variables to the evaluation files
     add_variables_eval: ["actualInteractionsPerCrossing"]
 
-    # Enable/Disable atlas tag
-    UseAtlasTag: True
-
-    # fc_value and WP_b are autmoatically added to the plot label
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
-
-    # Set the datatype of the plots
-    plot_datatype: "pdf"
+    # Working point used in the evaluation
+    WP: 0.77
 
     # some properties for the feature importance explanation with SHAPley
     shapley:
@@ -129,3 +129,16 @@ Eval_parameters_validation:
 
         # [11,11] works well for dl1r
         plot_size: [11, 11]
+
+# Plotting settings for training metrics plots
+Plotting_settings:
+
+    # Enable/Disable atlas tag
+    UseAtlasTag: True
+
+    # fc_value and WP_b are autmoatically added to the plot label
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # Set the datatype of the plots
+    plot_datatype: "pdf"

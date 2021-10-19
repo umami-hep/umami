@@ -4,8 +4,6 @@ import pickle
 import matplotlib as mtp
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import tensorflow.keras.backend as K
 from matplotlib import gridspec
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import pchip
@@ -18,53 +16,8 @@ def eff_err(x, N):
     return np.sqrt(x * (1 - x) / N)
 
 
-def GetScore(pb, pc, pu, ptau=None, fc=0.018, ftau=None):
-    pb = pb.astype("float64")
-    pc = pc.astype("float64")
-    pu = pu.astype("float64")
-    add_small = 1e-10
-    if ptau is not None:
-        if ftau is None:
-            flight = 1 - fc
-            ftau = flight
-        else:
-            flight = 1 - fc - ftau
-        ptau = ptau.astype("float64")
-        return np.log(
-            (pb + add_small)
-            / (flight * pu + ftau * ptau + fc * pc + add_small)
-        )
-    return np.log((pb + add_small) / ((1.0 - fc) * pu + fc * pc + add_small))
-
-
-def GetScoreC(pb, pc, pu, ptau=None, fb=0.2, ftau=None):
-    pb = pb.astype("float64")
-    pc = pc.astype("float64")
-    pu = pu.astype("float64")
-    add_small = 1e-10
-    if ptau is not None:
-        if ftau is None:
-            flight = 1 - fb
-            ftau = flight
-        else:
-            flight = 1 - fb - ftau
-        ptau = ptau.astype("float64")
-        return np.log(
-            (pc + add_small)
-            / (flight * pu + ftau * ptau + fb * pb + add_small)
-        )
-    return np.log((pc + add_small) / ((1.0 - fb) * pu + fb * pb + add_small))
-
-
-def GetCutDiscriminant(pb, pc, pu, ptau=None, fc=0.018, ftau=None, wp=0.7):
-    """
-    Return the cut value on the b-discrimant to reach desired WP
-    (working point).
-    pb, pc, and pu (ptau) are the proba for the b-jets.
-    """
-    bscore = GetScore(pb, pc, pu, ptau=ptau, fc=fc, ftau=ftau)
-    cutvalue = np.percentile(bscore, 100.0 * (1.0 - wp))
-    return cutvalue
+def rej_err(x, N):
+    return np.sqrt((1 / x) * (1 - (1 / x)) / N)
 
 
 def FlatEfficiencyPerBin(df, predictions, variable, var_bins, wp=0.7):
@@ -100,41 +53,6 @@ def FlatEfficiencyPerBin(df, predictions, variable, var_bins, wp=0.7):
         ) * 1
 
     return df["btag"]
-
-
-def discriminant_output_shape(input_shape):
-    shape = list(input_shape)
-    assert len(shape) == 2  # only valid for 2D tensors
-    return (shape[0],)
-
-
-def get_gradients(model, X, nJets):
-    """
-    Calculating the gradients with respect to the input variables.
-    Note that only Keras backend functions can be used here because
-    the gradients are tensorflow tensors and are not compatible with
-    numpy.
-    """
-    gradients = K.gradients(model.output, model.inputs)
-
-    input_tensors = model.inputs + [K.learning_phase()]
-    compute_gradients = K.function(inputs=input_tensors, outputs=gradients)
-
-    # Pass in the cts and categorical inputs, as well as the learning phase
-    # (0 for test mode)
-    gradients = compute_gradients([X[:nJets], 0])
-
-    return gradients[0]
-
-
-def getDiscriminant(x, fc=0.018):
-    """
-    This method returns the score of the input (like GetScore)
-    but calculated with the Keras Backend due to conflicts of
-    numpy functions inside a layer in a keras model.
-    Note: not yet compatible with taus
-    """
-    return K.log(x[:, 2] / (fc * x[:, 1] + (1 - fc) * x[:, 0]))
 
 
 def calc_bins(input_array, Binning):
@@ -573,38 +491,37 @@ def plotEfficiencyVariable(
 
 def plotPtDependence(
     df_list,
-    prediction_labels,
+    tagger_list,
     model_labels,
-    plot_name,
-    flavor=2,
-    WP=0.77,
-    Disc_Cut_Value=None,
-    fc_list=[],
-    fc=0.018,
-    SWP_label_list=[],
-    Passed=True,
-    Fixed_WP_Bin=False,
-    Same_WP_Cut_Comparison=False,
-    Same_WP_Cut_Comparison_Model=0,
+    plot_name: str,
+    class_labels: list,
+    main_class: str,
+    flavour: str,
+    WP: float = 0.77,
+    Disc_Cut_Value: float = None,
+    SWP_Comparison: bool = False,
+    SWP_label_list: list = [],
+    Passed: bool = True,
+    Fixed_WP_Bin: bool = False,
     bin_edges=[0, 20, 50, 90, 150, 300, 1000],
-    WP_Line=False,
-    figsize=None,
-    Grid=False,
-    binomialErrors=True,
-    xlabel=r"$p_T$ in GeV",
-    Log=None,
-    colors=None,
-    UseAtlasTag=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",
-    yAxisAtlasTag=0.9,
-    yAxisIncrease=1.1,
-    frameon=True,
-    ncol=2,
-    ymin=None,
-    ymax=None,
-    alpha=0.8,
-    trans=True,
+    WP_Line: bool = False,
+    figsize: list = None,
+    Grid: bool = False,
+    binomialErrors: bool = True,
+    xlabel: str = r"$p_T$ in GeV",
+    Log: bool = False,
+    colors: list = None,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",
+    yAxisAtlasTag: float = 0.9,
+    yAxisIncrease: float = 1.1,
+    frameon: bool = True,
+    ncol: int = 2,
+    ymin: float = None,
+    ymax: float = None,
+    alpha: float = 0.8,
+    trans: bool = True,
 ):
     """
     For a given list of models, plot the b-eff, l and c-rej as a function
@@ -612,29 +529,22 @@ def plotPtDependence(
 
     Following options are needed to be given:
     - df_list: List of the dataframes from the model. See plotting_umami.py
-    - prediction_labels: Probability label names. I.e. [dips_pb, dips_pc, dips_pu]
-                         The order is important!
+    - tagger_list: List of strings with the tagger names (MUST BE THE NAMES IN FILE)
     - model_labels: Labels for the legend of the plot
     - plot_name: Path, Name and format of the resulting plot file
+    - class_labels: A list of the class_labels which are used
+    - main_class: The main discriminant class. For b-tagging obviously "bjets"
+    - flavour: Flavour which is to be plotted.
 
     Following options are preset and can be changed:
-    - flavor: Flavor ID of the jets type that should plotted.
-              2: b jet (eff)
-              1: c jet (rej)
-              0: u jet (rej)
     - WP: Which Working point is used
-    - fc_list: fc values for the different models. Give one for all
-               or no model, otherwise you get an error
-    - fc: If all models have the same fc value and none are given with
-          the fc_list, this value is used for calculation
+    - Disc_Cut_Value: Set a disc cut value for all models if SWP is off.
+    - SWP_Comparison: Use the same cut value on the discriminant for all
+                      models with the same SWP_label. Not works with Fixed_WP_Bin True.
+    - SWP_label_list: List of labels for each model. Models with same SWP label get
+                      the same Disc_cut_value
     - Passed: Select if the selected jets need to pass the discriminant WP cut
     - Fixed_WP_Bin: Calculate the WP cut on the discriminant per bin
-    - Same_WP_Cut_Comparison: Use the same cut value on the b-tagging
-                              discriminant for all models in the plot. Not works
-                              with Fixed_WP_Bin True.
-    - Same_WP_Cut_Comparison_Model: Model which cut is used in the Same WP Cut.
-                                    0 is the first defined, 1 the second and so
-                                    on.
     - bin_edges: As the name says, the edges of the bins used
     - WP_Line: Print a WP line in the upper plot
     - figsize: Size of the resulting figure
@@ -649,25 +559,28 @@ def plotPtDependence(
                  It added automatically
     - yAxisAtlasTag: Relative y axis position of the ATLAS Tag in
     - yAxisIncrease: Increasing the y axis to fit the ATLAS Tag in
+    - frameon: Set the frame around legend off/on
+    - ncol: Number of columns in the legend
     - ymin: y axis minimum
     - ymax: y axis maximum
     - alpha: Value for visibility of the plot lines
-    - trans: Sets the transparicy of the background. If true, the background erased.
+    - trans: Sets the transparity of the background. If true, the background erased.
              If False, the background is white
     """
+
+    # Get global config of the classes
+    flav_cat = global_config.flavour_categories
+
     # Get the bins for the histogram
     pt_midpts = (np.asarray(bin_edges)[:-1] + np.asarray(bin_edges)[1:]) / 2.0
     bin_widths = (np.asarray(bin_edges)[1:] - np.asarray(bin_edges)[:-1]) / 2.0
     Npts = pt_midpts.size
 
-    if Same_WP_Cut_Comparison is True:
+    if SWP_Comparison is True:
         SWP_Cut_Dict = {}
 
-    # Get flavor indices
-    b_index, c_index, u_index = 2, 1, 0
-
-    # Set fc default for proper labeling
-    fc_default = False
+    # Get the indicies of the flavours
+    index_dict = {f"{flavour}": i for i, flavour in enumerate(class_labels)}
 
     # Set color if not provided
     if colors is None:
@@ -685,16 +598,9 @@ def plotPtDependence(
         "yerr": [],
     }
 
-    # Check if fc values or given
-    if len(fc_list) == 0:
-        fc_default = True
-
-        for i in range(len(df_list)):
-            fc_list.append(0.018)
-
     # Init new figure
     if figsize is None:
-        fig = plt.figure(figsize=(8.27 * 0.8, 11.69 * 0.8))
+        fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
     else:
         fig = plt.figure(figsize=(figsize[0], figsize[1]))
@@ -706,17 +612,9 @@ def plotPtDependence(
         gs[6:, 0], sharex=axis_dict["left"]["top"]
     )
 
-    for i, (df_results, model_label, pred_labels, color, fcs) in enumerate(
-        zip(df_list, model_labels, prediction_labels, colors, fc_list)
+    for i, (df_results, model_label, tagger, color) in enumerate(
+        zip(df_list, model_labels, tagger_list, colors)
     ):
-        # Adding fc value to model label if needed
-        if fc_default is False:
-            model_label += "\nfc={}".format(fcs)
-
-        # Calculate b-discriminant
-        df_results["discs"] = GetScore(
-            *[df_results[pX] for pX in pred_labels], fc=fcs
-        )
 
         # Placeholder for the sig eff and bkg rejections
         effs = np.zeros(Npts)
@@ -725,13 +623,13 @@ def plotPtDependence(
         truth_labels = df_results["labels"]
 
         if Fixed_WP_Bin is False:
-            if Same_WP_Cut_Comparison is False:
+            if SWP_Comparison is False:
                 if Disc_Cut_Value is None:
                     # Calculate WP cutoff for b-disc
                     disc_cut = np.percentile(
-                        df_results.query(
-                            f"labels=={global_config.flavour_labels['b']}"
-                        )["discs"],
+                        df_results.query(f"labels=={index_dict[main_class]}")[
+                            f"disc_{tagger}"
+                        ],
                         (1 - WP) * 100,
                     )
 
@@ -739,24 +637,21 @@ def plotPtDependence(
                     disc_cut = Disc_Cut_Value
 
             elif (
-                Same_WP_Cut_Comparison is True
+                SWP_Comparison is True
                 and SWP_label_list[i] not in SWP_Cut_Dict
             ):
                 # Calc disc cut value for the SWP label model
                 disc_cut = np.percentile(
-                    df_results.query(
-                        f"labels=={global_config.flavour_labels['b']}"
-                    )["discs"],
+                    df_results.query(f"labels=={index_dict[main_class]}")[
+                        f"disc_{tagger}"
+                    ],
                     (1 - WP) * 100,
                 )
 
                 # Set Value globally for the SWP label
                 SWP_Cut_Dict.update({SWP_label_list[i]: disc_cut})
 
-            elif (
-                Same_WP_Cut_Comparison is True
-                and SWP_label_list[i] in SWP_Cut_Dict
-            ):
+            elif SWP_Comparison is True and SWP_label_list[i] in SWP_Cut_Dict:
                 # Set disc_cut for the model after its SWP label
                 disc_cut = SWP_Cut_Dict[SWP_label_list[i]]
 
@@ -771,20 +666,24 @@ def plotPtDependence(
             np.arange(Npts), bin_edges[:-1], bin_edges[1:]
         ):
 
-            # Cut on selected flavor jets with the wanted pt range
+            # Cut on selected flavour jets with the wanted pt range
             den_mask = (
                 (jetPts > pt_min)
                 & (jetPts < pt_max)
-                & (truth_labels == flavor)
+                & (truth_labels == index_dict[flavour])
             )
 
             if Fixed_WP_Bin is False:
                 # Cut on jets which passed the WP
                 if Passed is True:
-                    num_mask = den_mask & (df_results["discs"] > disc_cut)
+                    num_mask = den_mask & (
+                        df_results[f"disc_{tagger}"] > disc_cut
+                    )
 
                 else:
-                    num_mask = den_mask & (df_results["discs"] <= disc_cut)
+                    num_mask = den_mask & (
+                        df_results[f"disc_{tagger}"] <= disc_cut
+                    )
 
             else:
                 # Setting pT mask for the selected bin to calculate
@@ -795,23 +694,23 @@ def plotPtDependence(
                 # its not added to the dict yet. If its already added,
                 # the value is loaded. If SWP is false, the disc value
                 # will be calculated for each of the models independently
-                if Same_WP_Cut_Comparison is False:
+                if SWP_Comparison is False:
                     disc_cut = np.percentile(
-                        df_results.query(
-                            f"labels=={global_config.flavour_labels['b']}"
-                        )["discs"][pT_mask],
+                        df_results.query(f"labels=={index_dict[main_class]}")[
+                            f"disc_{tagger}"
+                        ][pT_mask],
                         (1 - WP) * 100,
                     )
 
                 elif (
-                    Same_WP_Cut_Comparison is True
+                    SWP_Comparison is True
                     and SWP_label_list[i] not in SWP_Cut_Dict
                 ):
                     # Calc disc cut value for the SWP label model
                     disc_cut = np.percentile(
-                        df_results.query(
-                            f"labels=={global_config.flavour_labels['b']}"
-                        )["discs"][pT_mask],
+                        df_results.query(f"labels=={index_dict[main_class]}")[
+                            f"disc_{tagger}"
+                        ][pT_mask],
                         (1 - WP) * 100,
                     )
 
@@ -819,7 +718,7 @@ def plotPtDependence(
                     SWP_Cut_Dict.update({SWP_label_list[i]: disc_cut})
 
                 elif (
-                    Same_WP_Cut_Comparison is True
+                    SWP_Comparison is True
                     and SWP_label_list[i] in SWP_Cut_Dict
                 ):
                     # Set disc_cut for the model after its SWP label
@@ -827,17 +726,21 @@ def plotPtDependence(
 
                 # Cut on jets which passed the WP
                 if Passed is True:
-                    num_mask = den_mask & (df_results["discs"] > disc_cut)
+                    num_mask = den_mask & (
+                        df_results[f"disc_{tagger}"] > disc_cut
+                    )
 
                 else:
-                    num_mask = den_mask & (df_results["discs"] <= disc_cut)
+                    num_mask = den_mask & (
+                        df_results[f"disc_{tagger}"] <= disc_cut
+                    )
 
             # Sum masks for binominal error calculation
             nTest[j] = den_mask.sum()
             effs[j] = num_mask.sum() / nTest[j]
 
         # For b-jets, plot the eff: for l and c-jets, look at the rej
-        if flavor == b_index:
+        if flavour == main_class:
             yerr = eff_err(effs, nTest) if binomialErrors else None
 
             axis_dict["left"]["top"].errorbar(
@@ -928,7 +831,7 @@ def plotPtDependence(
     )
 
     # Set metric
-    if flavor == b_index:
+    if flavour == main_class:
         metric = "efficiency"
 
     else:
@@ -939,21 +842,11 @@ def plotPtDependence(
         Fixed_WP_Label = "Inclusive"
 
     else:
-        Fixed_WP_Label = ""
-
-    # Set flavor label for the y axis
-    if flavor == b_index:
-        flav_label = r"$b$-jet"
-
-    elif flavor == c_index:
-        flav_label = r"$c$-jet"
-
-    elif flavor == u_index:
-        flav_label = "light-flavour jet"
+        Fixed_WP_Label = "Fixed"
 
     # Set y label
     axis_dict["left"]["top"].set_ylabel(
-        f"{Fixed_WP_Label} {flav_label}-{metric}",
+        f'{Fixed_WP_Label} {flav_cat[flavour]["legend_label"]}-{metric}',
         horizontalalignment="right",
         y=1.0,
     )
@@ -962,14 +855,11 @@ def plotPtDependence(
     axis_dict["left"]["ratio"].set_ylabel("Ratio")
 
     # Check for Logscale
-    if Log:
+    if Log is True:
         axis_dict["left"]["top"].set_yscale("log")
 
     # Set limits
     axis_dict["left"]["top"].set_xlim(bin_edges[0], bin_edges[-1])
-
-    if flavor == b_index:
-        axis_dict["left"]["top"].set_ylim(ymin=ymin, ymax=ymax)
 
     # Increase ymax so atlas tag don't cut plot
     if (ymin is None) and (ymax is None):
@@ -1019,29 +909,14 @@ def plotPtDependence(
     )
 
     # Set the ATLAS Tag
-    if fc_default is True:
-        if UseAtlasTag is True:
-            pas.makeATLAStag(
-                ax=axis_dict["left"]["top"],
-                fig=fig,
-                first_tag=AtlasTag,
-                second_tag=(
-                    SecondTag
-                    + ", fc={}".format(fc)
-                    + "\nWP = {}%".format(int(WP * 100))
-                ),
-                ymax=yAxisAtlasTag,
-            )
-
-    elif fc_default is False:
-        if UseAtlasTag is True:
-            pas.makeATLAStag(
-                ax=axis_dict["left"]["top"],
-                fig=fig,
-                first_tag=AtlasTag,
-                second_tag=(SecondTag + "\nWP = {}%".format(int(WP * 100))),
-                ymax=yAxisAtlasTag,
-            )
+    if UseAtlasTag is True:
+        pas.makeATLAStag(
+            ax=axis_dict["left"]["top"],
+            fig=fig,
+            first_tag=AtlasTag,
+            second_tag=(SecondTag + "\nWP = {}%".format(int(WP * 100))),
+            ymax=yAxisAtlasTag,
+        )
 
     # Set tight layout
     plt.tight_layout()
@@ -1052,45 +927,46 @@ def plotPtDependence(
 
 
 def plotROCRatio(
-    teffs,
-    beffs,
-    labels,
-    title="",
-    ylabel="Background rejection",
-    tag="",
-    UseAtlasTag=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",
-    yAxisAtlasTag=0.9,
-    figDir="../figures",
-    subDir="mc16d",
-    styles=None,
-    colors=None,
-    xmin=None,
-    ymax=None,
-    ymin=None,
-    legFontSize=10,
-    loc_legend="best",
-    rrange=None,
-    rlabel="Ratio",
-    binomialErrors=False,
-    nTest=0,
-    plot_name=None,
-    alabel=None,
-    figsize=None,
-    legcols=2,
-    labelpad=None,
-    which_axis="left",
-    WorkingPoints=None,
-    x_label="$b$-jet efficiency",
-    ylabel_right=None,
-    ratio_id=0,
-    ycolor="black",
-    ycolor_right="black",
-    set_logy=True,
+    df_results_list: list,
+    tagger_list: list,
+    rej_class_list: list,
+    labels: list,
+    plot_name: str,
+    df_eff_key: str = "effs",
+    main_class: str = "bjets",
+    title: str = "",
+    ApplyAtlasStyle: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",
+    yAxisAtlasTag: float = 0.9,
+    yAxisIncrease: float = 1.3,
+    styles: list = None,
+    colors: list = None,
+    xmin: float = None,
+    ymax: float = None,
+    ymin: float = None,
+    ymax_right: float = None,
+    ymin_right: float = None,
+    legFontSize: int = 10,
+    loc_legend: str = "best",
+    rrange: list = None,
+    rlabel: str = "Ratio",
+    binomialErrors: bool = True,
+    nTest: list = 0,
+    alabel: dict = None,
+    figsize: list = None,
+    legcols: int = 1,
+    labelpad: int = None,
+    which_axis: list = "left",
+    WorkingPoints: list = None,
+    same_height_WP: bool = True,
+    ratio_id: int = 0,
+    ycolor: str = "black",
+    ycolor_right: str = "black",
+    set_logy: bool = True,
 ):
     """
-
     Plot the ROC curves with binomial errors with the ratio plot in a subpanel
     underneath. This function all accepts the same inputs as plotROC, and the
     additional ones are listed below.
@@ -1100,60 +976,59 @@ def plotROCRatio(
     - rlabel: The label for the y-axis for the ratio panel
     - binomialErrors: whether to include binomial errors for the rejection
                       curves
-    - nTest: A list of the same length as beffs, with the number of events used
-            to calculate the background efficiencies.
-            We need this To calculate the binomial errors on the background
-            rejection,
-            using the formula given by
-            http://home.fnal.gov/~paterno/images/effic.pdf.
+    - nTest: A list of the same length as class_rejections, with the number of events used
+             to calculate the background efficiencies.
+             We need this To calculate the binomial errors on the background
+             rejection,
+             using the formula given by
+             http://home.fnal.gov/~paterno/images/effic.pdf.
     """
-    # set ylabel
-    if ylabel == "light":
-        ylabel = r"Light-Flavour Jet Rejection ($1/\epsilon_{l}$)"
-    elif ylabel == "c":
-        ylabel = r"$c$-Jet Rejection ($1/\epsilon_{c}$)"
-    elif ylabel == "t":
-        ylabel = r"Tau-Jet Rejection ($1/\epsilon_{\tau}$)"
-    elif ylabel == "b":
-        ylabel = r"$b$-Jet Rejection ($1/\epsilon_{b}$)"
-    if ylabel_right == "light":
-        ylabel_right = r"Light-Flavour Jet Rejection ($1/\epsilon_{l}$)"
-    elif ylabel_right == "c":
-        ylabel_right = r"$c$-Jet Rejection ($1/\epsilon_{c}$)"
-    elif ylabel_right == "t":
-        ylabel_right = r"Tau-Jet Rejection ($1/\epsilon_{\tau}$)"
-    elif ylabel_right == "b":
-        ylabel_right = r"$b$-Jet Rejection ($1/\epsilon_{b}$)"
+    # Apply the ATLAS Style with the bars on the axes
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
 
-    if binomialErrors and nTest == 0:
-        logger.error(
-            "Error: Requested binomialErrors, but did not pass nTest. Will NOT plot rej errors."
-        )
-        binomialErrors = False
+    # Get global config for flavours
+    flav_cat = global_config.flavour_categories
+
+    if binomialErrors is True:
+        # Check if nTest is provided in all samples
+        nTest_in_file = []
+        for df_results in df_results_list:
+            if "N_test" not in df_results:
+                nTest_in_file.append(False)
+
+            else:
+                nTest_in_file.append(True)
+
+        if nTest == 0 and not all(nTest_in_file):
+            logger.error(
+                "Requested binomialErrors, but not all models have nTest. Will NOT plot rej errors."
+            )
+            binomialErrors = False
 
     if styles is None:
-        styles = ["-" for i in teffs]
+        styles = ["-" for i in labels]
     if colors is None:
-        colors = ["C{}".format(i) for i in range(len(teffs))]
+        colors = ["C{}".format(i) for i in range(len(labels))]
         colors_WP = "C{}".format(len(colors) + 1)
 
     else:
         colors_WP = "red"
 
     if type(nTest) != list:
-        nTest = [nTest] * len(teffs)
+        nTest = [nTest] * len(labels)
 
     if type(which_axis) != list:
-        which_axis = [which_axis] * len(teffs)
+        which_axis = [which_axis] * len(labels)
 
     if type(ratio_id) != list:
-        ratio_id = [ratio_id] * len(teffs)
+        ratio_id = [ratio_id] * len(labels)
 
     # Define the figure with two subplots of unequal sizes
     axis_dict = {}
 
     if figsize is None:
-        fig = plt.figure(figsize=(8.27 * 0.8, 11.69 * 0.8))
+        fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
     else:
         fig = plt.figure(figsize=(figsize[0], figsize[1]))
@@ -1170,52 +1045,93 @@ def plotROCRatio(
 
     if WorkingPoints is not None:
         for WP in WorkingPoints:
+
+            # Set y-point of the WP lines/text
+            ytext = 0.65 if same_height_WP else 1.25 - WP
+
             axis_dict["left"]["top"].axvline(
                 x=WP,
-                ymax=0.65,
+                ymax=ytext,
                 color=colors_WP,
                 linestyle="dashed",
                 linewidth=1.0,
+            )
+
+            # Set the number above the line
+            axis_dict["left"]["top"].text(
+                x=WP - 0.005,
+                y=ytext + 0.005,
+                s=f"{int(WP * 100)}%",
+                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(
+                    0
+                )[0],
+                fontsize=10,
             )
 
             axis_dict["left"]["ratio"].axvline(
                 x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
             )
 
-            # Set the number above the line
-            axis_dict["left"]["top"].annotate(
-                text="{}%".format(int(WP * 100)),
-                xy=(WP, 0.79),
-                xytext=(WP, 0.79),
-                textcoords="offset points",
-                xycoords=("data", "figure fraction"),
-                ha="center",
-                va="bottom",
-                size=10,
-            )
-
+    # Create lines list and ratio dict for looping
     lines = []
     f0_ratio = {}
-    for i, (teff, beff, label, style, color, nte, which_a, r_id) in enumerate(
-        zip(teffs, beffs, labels, styles, colors, nTest, which_axis, ratio_id)
+
+    # Loop over the models with the different settings for each model
+    for i, (
+        df_results,
+        tagger,
+        rej_class,
+        label,
+        style,
+        color,
+        nte,
+        which_a,
+        r_id,
+    ) in enumerate(
+        zip(
+            df_results_list,
+            tagger_list,
+            rej_class_list,
+            labels,
+            styles,
+            colors,
+            nTest,
+            which_axis,
+            ratio_id,
+        )
     ):
 
+        # Get the main class efficency for x-axis
+        main_class_effs = df_results[df_eff_key]
+
+        # Get the rejections
+        class_rejections = df_results[f"{tagger}_{rej_class}_rej"]
+
+        # Check which rejection is on which axis and set label
+        if which_a == "right":
+            ylabel_right = f'{flav_cat[rej_class]["legend_label"]} Rejection'
+
+        elif which_a == "left":
+            ylabel = f'{flav_cat[rej_class]["legend_label"]} Rejection'
+
         # Mask the points where there was no change in the signal eff
-        dx = np.concatenate((np.ones(1), np.diff(teff)))
+        dx = np.concatenate((np.ones(1), np.diff(main_class_effs)))
 
         # Also mask the rejections that are 0
-        nonzero = (beff != 0) & (dx > 0)
+        nonzero = (class_rejections != 0) & (dx > 0)
         if xmin:
-            nonzero = nonzero & (teff > xmin)
-        x = teff[nonzero]
-        y = np.divide(1, beff[nonzero])
+            nonzero = nonzero & (main_class_effs > xmin)
+        x = main_class_effs[nonzero]
+        y = class_rejections[nonzero]
 
+        # Plot the lines in the main plot and add them to lines list
         lines = lines + axis_dict[which_a]["top"].plot(
             x, y, linestyle=style, color=color, label=label, zorder=2
         )
-        if binomialErrors:
-            yerr = np.power(y, 2) * eff_err(beff[nonzero], nte)
 
+        # Calculate and plot binominal errors for main plot
+        if binomialErrors is True:
+            yerr = np.power(y, 2) * rej_err(class_rejections[nonzero], nte)
             y1 = y - yerr
             y2 = y + yerr
 
@@ -1223,14 +1139,17 @@ def plotROCRatio(
                 x, y1, y2, color=color, alpha=0.3, zorder=2
             )
 
+        # Interpolate the rejection function for nicer plotting
         f = pchip(x, y)
 
+        # Check if the ratio_id divisor was already used or not
+        # If not, calculate the divisor for ratio_id and add it to list
         if r_id not in f0_ratio:
             f0_ratio[r_id] = f
             axis_dict["left"]["ratio"].plot(
                 x, np.ones(len(x)), linestyle=style, color=color, linewidth=1.6
             )
-            if binomialErrors:
+            if binomialErrors is True:
                 axis_dict["left"]["ratio"].fill_between(
                     x,
                     1 - yerr / y,
@@ -1240,11 +1159,13 @@ def plotROCRatio(
                     zorder=1,
                 )
             continue
+
+        # If ratio_id divisor already calculated, plot calculate ratio and plot
         ratio_ix = f(x) / f0_ratio[r_id](x)
         axis_dict["left"]["ratio"].plot(
             x, ratio_ix, linestyle=style, color=color, linewidth=1.6
         )
-        if binomialErrors:
+        if binomialErrors is True:
             axis_dict["left"]["ratio"].fill_between(
                 x,
                 ratio_ix - yerr / f(x),
@@ -1264,7 +1185,10 @@ def plotROCRatio(
     if set_logy:
         axis_dict["left"]["top"].set_yscale("log")
     axis_dict["left"]["ratio"].set_xlabel(
-        x_label, fontsize=12, horizontalalignment="right", x=1.0
+        f'{flav_cat[main_class]["legend_label"]} Efficiency',
+        fontsize=12,
+        horizontalalignment="right",
+        x=1.0,
     )
     axis_dict["left"]["ratio"].set_ylabel(
         rlabel, labelpad=labelpad, fontsize=12
@@ -1293,37 +1217,54 @@ def plotROCRatio(
             **alabel, transform=axis_dict["left"]["top"].transAxes
         )
 
-    axis_dict["left"]["top"].set_xlim(teffs[0].iloc[0], teffs[0].iloc[-1])
+    # Auto set x-limit
+    axis_dict["left"]["top"].set_xlim(
+        df_results_list[0][df_eff_key].iloc[0],
+        df_results_list[0][df_eff_key].iloc[-1],
+    )
+
+    # Manually set xmin
     if xmin:
         axis_dict["left"]["top"].set_xlim(xmin, 1)
 
-    if ymax is not None:
-        if ymin is not None:
-            axis_dict["left"]["top"].set_ylim(ymin, ymax)
-        else:
-            axis_dict["left"]["top"].set_ylim(1, ymax)
-    elif ymin is not None:
-        _, top = axis_dict["left"]["top"].get_ylim()
-        axis_dict["left"]["top"].set_ylim(ymin, top)
+    # Check for ymin/ymax and set y-axis
+    if set_logy is True:
+        left_y_limits = axis_dict["left"]["top"].get_ylim()
+        yAxisIncrease = (
+            left_y_limits[1] / left_y_limits[0]
+        ) ** yAxisIncrease / left_y_limits[1]
 
     left_y_limits = axis_dict["left"]["top"].get_ylim()
-    axis_dict["left"]["top"].set_ylim(left_y_limits[0], left_y_limits[1] * 1.2)
+    new_ymin_left = left_y_limits[0] if ymin is None else ymin
+    new_ymax_left = left_y_limits[1] * yAxisIncrease if ymax is None else ymax
+    axis_dict["left"]["top"].set_ylim(new_ymin_left, new_ymax_left)
+
     if "right" in axis_dict:
         right_y_limits = axis_dict["right"]["top"].get_ylim()
-        axis_dict["right"]["top"].set_ylim(
-            right_y_limits[0], right_y_limits[1] * 1.2
+        new_ymin_right = (
+            right_y_limits[0] if ymin_right is None else ymin_right
         )
+        new_ymax_right = (
+            right_y_limits[1] * yAxisIncrease
+            if ymax_right is None
+            else ymax_right
+        )
+        axis_dict["right"]["top"].set_ylim(new_ymin_right, new_ymax_right)
 
+    # Increase the ratio y-axis if wanted
     if rrange is not None:
         axis_dict["left"]["ratio"].set_ylim(rrange)
+
+    # Define the legend
     axis_dict["left"]["top"].legend(
         handles=lines,
         labels=[line.get_label() for line in lines],
         loc=loc_legend,
         fontsize=legFontSize,
         ncol=legcols,
-    )  # , title="DL1r")
+    )
 
+    # Define ATLAS tag
     if UseAtlasTag is True:
         pas.makeATLAStag(
             ax=axis_dict["left"]["top"],
@@ -1333,52 +1274,51 @@ def plotROCRatio(
             ymax=yAxisAtlasTag,
         )
 
+    # Set tight layout
     plt.tight_layout()
-    if len(tag) != 0:
-        plt.savefig(
-            "{}/{}/rocRatio_{}.pdf".format(figDir, subDir, tag),
-            bbox_inches="tight",
-            transparent=True,
-        )
-    if plot_name is not None:
-        plt.savefig(plot_name, transparent=True)
+
+    # Save plot
+    plt.savefig(plot_name, transparent=True)
     plt.close()
-    # plt.show()
+    plt.clf()
 
 
 def plotROCRatioComparison(
-    teffs,
-    beffs,
-    labels,
-    which_rej,
-    title="",
-    ylabel="Background Rejection",
-    tag="",
-    UseAtlasTag=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",
-    yAxisAtlasTag=0.9,
-    figDir="../figures",
-    subDir="mc16d",
-    xmin=None,
-    ymax=None,
-    ymin=None,
-    legFontSize=10,
-    loc_legend="best",
-    Ratio_Cut=None,
-    binomialErrors=False,
-    nTest=0,
-    plot_name=None,
-    alabel=None,
-    figsize=None,
-    legcols=2,
-    labelpad=None,
-    WorkingPoints=None,
-    x_label="$b$-jet efficiency",
-    ratio_id=0,
-    ycolor="black",
-    ycolor_right="black",
-    set_logy=True,
+    df_results_list: list,
+    tagger_list: list,
+    rej_class_list: list,
+    labels: list,
+    plot_name: str,
+    df_eff_key: str = "effs",
+    main_class: str = "bjets",
+    title: str = "",
+    ApplyAtlasStyle: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample",
+    yAxisAtlasTag: float = 0.9,
+    yAxisIncrease: float = 1.3,
+    linestyles: list = [],
+    colors: list = [],
+    xmin: float = None,
+    ymax: float = None,
+    ymin: float = None,
+    labelFontSize: int = 10,
+    legFontSize: int = 10,
+    loc_legend: str = "best",
+    Ratio_Cut: list = None,
+    binomialErrors: bool = True,
+    nTest: list = 0,
+    alabel: dict = None,
+    figsize: list = None,
+    legcols: int = 1,
+    labelpad: int = None,
+    WorkingPoints: list = None,
+    same_height_WP: bool = True,
+    ratio_id: list = 0,
+    ycolor: str = "black",
+    ycolor_right: str = "black",
+    set_logy: bool = True,
 ):
     """
     Plot the ROC curves with binomial errors with the two ratio plot in a subpanel
@@ -1398,30 +1338,30 @@ def plotROCRatioComparison(
             http://home.fnal.gov/~paterno/images/effic.pdf.
     """
     # Apply the ATLAS Style with the bars on the axes
-    applyATLASstyle(mtp)
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
 
-    # Define empty lists for the styles, colors and rejs
-    styles = []
-    colors = []
-    flav_list = []
+    # Get global config for flavours
+    flav_cat = global_config.flavour_categories
 
     # Loop over the given rejection types and add them to a lists
-    for which_j in which_rej:
-        if which_j not in flav_list:
-            flav_list.append(which_j)
+    flav_list = list(dict.fromkeys(rej_class_list))
 
-    # Append a styles for each model determined by the rejections
-    if len(styles) == 0:
-        for which_j in which_rej:
+    # Append a linestyles for each model determined by the rejections
+    if len(linestyles) == 0:
+        for which_j in rej_class_list:
             for i, flav in enumerate(flav_list):
                 if which_j == flav:
                     if i == 0:
                         # This is solids
-                        styles.append("-")
+                        linestyles.append("-")
 
                     elif i == 1:
                         # This is densly dashed dotted
-                        styles.append((0, (3, 1, 1, 1)))
+                        linestyles.append((0, (3, 1, 1, 1)))
+
+                    else:
+                        raise ValueError("Can't plot more than 2 rejections!")
 
     # Create list for the models
     model_list = []
@@ -1439,21 +1379,31 @@ def plotROCRatioComparison(
     # Set WP colors
     colors_WP = "red"
 
-    if binomialErrors and nTest == 0:
-        logger.error(
-            "Error: Requested binomialErrors, but did not pass nTest. Will NOT plot rej errors."
-        )
-        binomialErrors = False
+    if binomialErrors is True:
+        # Check if nTest is provided in all samples
+        nTest_in_file = []
+        for df_results in df_results_list:
+            if "N_test" not in df_results:
+                nTest_in_file.append(False)
+
+            else:
+                nTest_in_file.append(True)
+
+        if nTest == 0 and not all(nTest_in_file):
+            logger.error(
+                "Requested binomialErrors, but not all models have nTest. Will NOT plot rej errors."
+            )
+            binomialErrors = False
 
     if type(nTest) != list:
-        nTest = [nTest] * len(teffs)
+        nTest = [nTest] * len(labels)
 
     # Define the figure with two subplots of unequal sizes
     axis_dict = {}
 
     # Create figure with the given size, if provided.
     if figsize is None:
-        fig = plt.figure(figsize=(8.27 * 0.8, 11.69 * 0.8))
+        fig = plt.figure(figsize=(8, 8))
 
     else:
         fig = plt.figure(figsize=(figsize[0], figsize[1]))
@@ -1476,12 +1426,28 @@ def plotROCRatioComparison(
     # Draw WP lines at the specifed WPs
     if WorkingPoints is not None:
         for WP in WorkingPoints:
+
+            # Set y-point of the WP lines/text
+            ytext = 0.65 if same_height_WP else 1.25 - WP
+
+            # Plot the vertical WP lines for top plot
             axis_dict["left"]["top"].axvline(
                 x=WP,
-                ymax=0.65,
+                ymax=ytext,
                 color=colors_WP,
                 linestyle="dashed",
                 linewidth=1.0,
+            )
+
+            # Set the number above the line
+            axis_dict["left"]["top"].text(
+                x=WP - 0.005,
+                y=ytext + 0.005,
+                s=f"{int(WP * 100)}%",
+                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(
+                    0
+                )[0],
+                fontsize=10,
             )
 
             # Draw the WP lines in the ratio plots
@@ -1490,38 +1456,59 @@ def plotROCRatioComparison(
                     x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
                 )
 
-            # Set the number above the line
-            axis_dict["left"]["top"].annotate(
-                text="{}%".format(int(WP * 100)),
-                xy=(WP, 0.85),
-                xytext=(WP, 0.85),
-                textcoords="offset points",
-                xycoords=("data", "figure fraction"),
-                ha="center",
-                va="bottom",
-                size=10,
-            )
-
     # Create lines list and ratio dict for looping
     lines = []
     f0_ratio = {}
 
+    assert (
+        len(df_results_list)
+        == len(tagger_list)
+        == len(rej_class_list)
+        == len(labels)
+        == len(linestyles)
+        == len(colors)
+        == len(nTest)
+        == len(ratio_id)
+    ), "Input configs must be given for each model. Dimension Error!"
+
     # Loop over the models with the different settings for each model
-    for i, (teff, beff, label, style, color, nte, which_j, r_id) in enumerate(
-        zip(teffs, beffs, labels, styles, colors, nTest, which_rej, ratio_id)
+    for i, (
+        df_results,
+        tagger,
+        rej_class,
+        label,
+        style,
+        color,
+        nte,
+        r_id,
+    ) in enumerate(
+        zip(
+            df_results_list,
+            tagger_list,
+            rej_class_list,
+            labels,
+            linestyles,
+            colors,
+            nTest,
+            ratio_id,
+        )
     ):
 
+        # Get the main class efficency for x-axis
+        main_class_effs = df_results[df_eff_key]
+
+        # Get the rejections
+        class_rejections = df_results[f"{tagger}_{rej_class}_rej"]
+
         # Mask the points where there was no change in the signal eff
-        dx = np.concatenate((np.ones(1), np.diff(teff)))
+        dx = np.concatenate((np.ones(1), np.diff(main_class_effs)))
 
         # Also mask the rejections that are 0
-        nonzero = (beff != 0) & (dx > 0)
+        nonzero = (class_rejections != 0) & (dx > 0)
         if xmin:
-            nonzero = nonzero & (teff > xmin)
-        x = teff[nonzero]
-
-        # Calculate Rejection
-        y = np.divide(1, beff[nonzero])
+            nonzero = nonzero & (main_class_effs > xmin)
+        x = main_class_effs[nonzero]
+        y = class_rejections[nonzero]
 
         # Plot the lines in the main plot and add them to lines list
         lines = lines + axis_dict["left"]["top"].plot(
@@ -1530,7 +1517,7 @@ def plotROCRatioComparison(
 
         # Calculate and plot binominal errors for main plot
         if binomialErrors:
-            yerr = np.power(y, 2) * eff_err(beff[nonzero], nte)
+            yerr = np.power(y, 2) * rej_err(class_rejections[nonzero], nte)
 
             y1 = y - yerr
             y2 = y + yerr
@@ -1546,11 +1533,11 @@ def plotROCRatioComparison(
         # If not, calculate the divisor for ratio_id and add it to list
         if r_id not in f0_ratio:
             f0_ratio[r_id] = f
-            axis_dict["left"][which_j].plot(
+            axis_dict["left"][rej_class].plot(
                 x, np.ones(len(x)), linestyle=style, color=color, linewidth=1.6
             )
             if binomialErrors:
-                axis_dict["left"][which_j].fill_between(
+                axis_dict["left"][rej_class].fill_between(
                     x,
                     1 - yerr / y,
                     1 + yerr / y,
@@ -1562,11 +1549,11 @@ def plotROCRatioComparison(
 
         # If ratio_id divisor already calculated, plot calculate ratio and plot
         ratio_ix = f(x) / f0_ratio[r_id](x)
-        axis_dict["left"][which_j].plot(
+        axis_dict["left"][rej_class].plot(
             x, ratio_ix, linestyle=style, color=color, linewidth=1.6
         )
         if binomialErrors:
-            axis_dict["left"][which_j].fill_between(
+            axis_dict["left"][rej_class].fill_between(
                 x,
                 ratio_ix - yerr / f(x),
                 ratio_ix + yerr / f(x),
@@ -1577,7 +1564,11 @@ def plotROCRatioComparison(
 
     # Add axes, titles and the legend
     axis_dict["left"]["top"].set_ylabel(
-        ylabel, fontsize=10, horizontalalignment="right", y=1.0, color=ycolor
+        "Background Rejection",
+        fontsize=labelFontSize,
+        horizontalalignment="right",
+        y=1.0,
+        color=ycolor,
     )
     axis_dict["left"]["top"].set_title(title)
     axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
@@ -1590,22 +1581,20 @@ def plotROCRatioComparison(
     # Set grid for the ratio plots and set ylabel
     for flav in flav_list:
         axis_dict["left"][flav].grid()
-
-        if flav != "c" or flav != "b":
-            rlabel = f"{flav} Ratio"
-
-        else:
-            rlabel = r"${}$ Ratio"
+        rlabel = f'{flav_cat[flav]["legend_label"]} Ratio'
 
         axis_dict["left"][flav].set_ylabel(
             rlabel,
             labelpad=labelpad,
-            fontsize=10,
+            fontsize=labelFontSize,
         )
 
     # Set xlabel for lowest ratio plot
     axis_dict["left"][flav_list[1]].set_xlabel(
-        x_label, fontsize=10, horizontalalignment="right", x=1.0
+        f'{flav_cat[main_class]["legend_label"]} Efficiency',
+        fontsize=labelFontSize,
+        horizontalalignment="right",
+        x=1.0,
     )
 
     # Hide the xlabels of the upper ratio and the main plot
@@ -1618,24 +1607,28 @@ def plotROCRatioComparison(
             **alabel, transform=axis_dict["left"]["top"].transAxes
         )
 
-    # Set xlimit
-    axis_dict["left"]["top"].set_xlim(teffs[0].iloc[0], teffs[0].iloc[-1])
+    # Auto set x-limit
+    axis_dict["left"]["top"].set_xlim(
+        df_results_list[0][df_eff_key].iloc[0],
+        df_results_list[0][df_eff_key].iloc[-1],
+    )
+
+    # Manually set xmin
     if xmin:
         axis_dict["left"]["top"].set_xlim(xmin, 1)
 
-    # Check for ylimit and set according to options
-    if ymax is not None:
-        if ymin is not None:
-            axis_dict["left"]["top"].set_ylim(ymin, ymax)
-        else:
-            axis_dict["left"]["top"].set_ylim(1, ymax)
-    elif ymin is not None:
-        _, top = axis_dict["left"]["top"].get_ylim()
-        axis_dict["left"]["top"].set_ylim(ymin, top)
+    # Check for ymin/ymax and set y-axis
+    if set_logy is True:
+        left_y_limits = axis_dict["left"]["top"].get_ylim()
+        yAxisIncrease = (
+            left_y_limits[1] / left_y_limits[0]
+        ) ** yAxisIncrease / left_y_limits[1]
 
-    # Increase y-axis for atlas label
+    # Check for ymin/ymax and set y-axis
     left_y_limits = axis_dict["left"]["top"].get_ylim()
-    axis_dict["left"]["top"].set_ylim(left_y_limits[0], left_y_limits[1] * 1.2)
+    new_ymin_left = left_y_limits[0] if ymin is None else ymin
+    new_ymax_left = left_y_limits[1] * yAxisIncrease if ymax is None else ymax
+    axis_dict["left"]["top"].set_ylim(new_ymin_left, new_ymax_left)
 
     # Set ratio range
     if Ratio_Cut is not None:
@@ -1645,11 +1638,7 @@ def plotROCRatioComparison(
     # Create the two legends for rejection and model
     line_list_rej = []
     for i in range(2):
-        if flav_list[i] == "b" or flav_list[i] == "c":
-            label = r"${}$ Rejection".format(flav_list[i])
-
-        else:
-            label = f"{flav_list[i]} Rejection"
+        label = f'{flav_cat[flav_list[i]]["legend_label"]} Rejection'
         line = axis_dict["left"]["top"].plot(
             np.nan, np.nan, color="k", label=label, linestyle=["-", "--"][i]
         )
@@ -1666,6 +1655,7 @@ def plotROCRatioComparison(
     # Add the second legend to plot
     axis_dict["left"]["top"].add_artist(legend1)
 
+    # Get the labels for the legends
     labels_list = []
     lines_list = []
 
@@ -1678,6 +1668,7 @@ def plotROCRatioComparison(
                 labels_list.append(line.get_label())
                 lines_list.append(line)
 
+    # Define the legend
     axis_dict["left"]["top"].legend(
         handles=lines_list,
         labels=labels_list,
@@ -1700,26 +1691,20 @@ def plotROCRatioComparison(
     plt.tight_layout()
 
     # Set filename and save figure
-    if len(tag) != 0:
-        plt.savefig(
-            "{}/{}/rocRatio_{}.pdf".format(figDir, subDir, tag),
-            bbox_inches="tight",
-            transparent=True,
-        )
-    if plot_name is not None:
-        plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name, transparent=True)
     plt.close()
     plt.clf()
 
 
 def plotSaliency(
     plot_name,
-    FileDir,
     epoch,
     data_set_name,
     title,
+    filepath=None,
+    FileDir=None,
     target_beff=0.77,
-    jet_flavour=2,
+    jet_flavour="bjets",
     PassBool=True,
     nFixedTrks=8,
     fs=14,
@@ -1730,21 +1715,36 @@ def plotSaliency(
     yAxisAtlasTag=0.925,
     FlipAxis=False,
 ):
+    assert not (
+        FileDir is None and filepath is None
+    ), "Define FileDir or filepath"
+
     # Transform to percent
     target_beff = 100 * target_beff
 
     # Little Workaround
     AtlasTag = " " + AtlasTag
 
-    with open(FileDir + f"/saliency_{epoch}_{data_set_name}.pkl", "rb") as f:
-        maps_dict = pickle.load(f)
+    if filepath is None:
+        with open(
+            FileDir + f"/saliency_{epoch}_{data_set_name}.pkl", "rb"
+        ) as f:
+            maps_dict = pickle.load(f)
+
+    else:
+        with open(filepath, "rb") as f:
+            maps_dict = pickle.load(f)
 
     gradient_map = maps_dict[
         "{}_{}_{}".format(int(target_beff), jet_flavour, PassBool)
     ]
 
     colorScale = np.max(np.abs(gradient_map))
-    cmaps = ["RdBu", "PuOr", "PiYG"]
+    cmaps = {
+        "ujets": "RdBu",
+        "cjets": "PuOr",
+        "bjets": "PiYG",
+    }
 
     nFeatures = gradient_map.shape[0]
 
@@ -1845,81 +1845,48 @@ def plotSaliency(
 
 
 def plot_score(
-    plot_name,
-    plot_config,
-    eval_params,
-    eval_file_dir,
-    UseAtlasTag=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
-    WorkingPoints=None,
-    nBins=50,
-    yAxisIncrease=1.3,
-    yAxisAtlasTag=0.9,
+    df_results,
+    plot_name: str,
+    tagger_name: str,
+    class_labels: list,
+    main_class: str,
+    ApplyAtlasStyle: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    WorkingPoints: list = None,
+    nBins: int = 50,
+    yAxisIncrease: float = 1.3,
+    yAxisAtlasTag: float = 0.9,
 ):
-    # Get the epoch which is to be evaluated
-    eval_epoch = int(eval_params["epoch"])
-    if "bool_use_taus" in eval_params:
-        bool_use_taus = eval_params["bool_use_taus"]
+    # Apply the ATLAS Style with the bars on the axes
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
 
-    else:
-        bool_use_taus = False
+    # Get flavour categories from global config file
+    flav_cat = global_config.flavour_categories
 
-    if "discriminant" in plot_config:
-        discriminant = plot_config["discriminant"]
-
-    else:
-        discriminant = "b"
-
-    # Read file, change to specific file if defined
-    if ("evaluation_file" not in plot_config) or (
-        plot_config["evaluation_file"] is None
-    ):
-        df_results = pd.read_hdf(
-            eval_file_dir + f"/results-{eval_epoch}.h5",
-            plot_config["data_set_name"],
-        )
-
-    else:
-        df_results = pd.read_hdf(
-            plot_config["evaluation_file"], plot_config["data_set_name"]
-        )
-
-    # Calculate the scores for the NN outputs
-    if discriminant == "c":
-        df_results["discs"] = GetScoreC(
-            *[df_results[pX] for pX in plot_config["prediction_labels"]]
-        )
-    else:
-        df_results["discs"] = GetScore(
-            *[df_results[pX] for pX in plot_config["prediction_labels"]]
-        )
+    # Get index dict
+    index_dict = {f"{flavour}": i for i, flavour in enumerate(class_labels)}
 
     # Calculate the binning for all flavours
     _, Binning = np.histogram(
-        df_results.query(f"labels=={global_config.flavour_labels['b']}")[
-            "discs"
+        df_results.query(f"labels=={index_dict[main_class]}")[
+            f"disc_{tagger_name}"
         ],
         bins=nBins,
     )
-
-    # Define the flavours used
-    if bool_use_taus is True:
-        flav_list = ["b", "c", "u", "tau"]
-
-    else:
-        flav_list = ["b", "c", "u"]
 
     # Clear the figure and init a new one
     plt.clf()
     fig = plt.figure()
     ax = fig.gca()
 
-    for flavour in flav_list:
+    for flavour in class_labels:
         # Select correct jets
-        flav_tracks = df_results.query(
-            f"labels=={global_config.flavour_labels[flavour]}"
-        )["discs"]
+        flav_tracks = df_results.query(f"labels=={index_dict[flavour]}")[
+            f"disc_{tagger_name}"
+        ]
 
         # Calculate bins
         bins, weights, unc, band = calc_bins(
@@ -1933,15 +1900,15 @@ def plot_score(
             weights=weights,
             histtype="step",
             linewidth=2.0,
-            color=global_config.flavour_colors[flavour],
+            color=flav_cat[flavour]["colour"],
             stacked=False,
             fill=False,
-            label=global_config.flavour_legend_labels[flavour],
+            label=flav_cat[flavour]["legend_label"],
         )
 
         # Check for last item so the label for the legend is
         # only printed once
-        if flavour == flav_list[-1]:
+        if flavour == class_labels[-1]:
             plt.hist(
                 x=bins[:-1],
                 bins=bins,
@@ -1971,26 +1938,19 @@ def plot_score(
         for WP in WorkingPoints:
 
             # Calculate x value of WP line
-            if discriminant == "c":
-                x_value = np.percentile(
-                    df_results.query("labels==1")["discs"], (1 - WP) * 100
-                )
-                color = "#ff7f0e"
-            else:
-                x_value = np.percentile(
-                    df_results.query(
-                        f"labels=={global_config.flavour_labels['b']}"
-                    )["discs"],
-                    (1 - WP) * 100,
-                )
-                color = "red"
+            x_value = np.percentile(
+                df_results.query(f"labels=={index_dict[main_class]}")[
+                    f"disc_{tagger_name}"
+                ],
+                (1 - WP) * 100,
+            )
 
             # Draw WP line
             plt.vlines(
                 x=x_value,
                 ymin=ymin,
                 ymax=WP * ymax,
-                colors=color,
+                colors="red",
                 linestyles="dashed",
                 linewidth=2.0,
             )
@@ -2007,11 +1967,12 @@ def plot_score(
             )
 
     plt.legend()
-    if discriminant == "c":
-        plt.xlabel("$D_{c}$")
-    else:
-        plt.xlabel("$D_{b}$")
-    plt.ylabel("Normalised Number of Jets")
+    plt.xlabel(
+        f'{flav_cat[main_class]["legend_label"]} discriminant',
+        horizontalalignment="right",
+        x=1.0,
+    )
+    plt.ylabel("Normalised Number of Jets", horizontalalignment="right", y=1.0)
 
     if UseAtlasTag is True:
         pas.makeATLAStag(
@@ -2028,54 +1989,49 @@ def plot_score(
 
 
 def plot_score_comparison(
-    df_list,
-    prediction_labels_list,
-    model_labels,
-    plot_name,
-    bool_use_taus=False,
-    discriminant="b",
-    UseAtlasTag=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
-    tag="",
-    WorkingPoints=None,
-    nBins=50,
-    figsize=None,
-    labelpad=None,
-    legFontSize=10,
-    loc_legend="best",
-    ncol=2,
+    df_list: list,
+    model_labels: list,
+    tagger_list: list,
+    class_labels_list: list,
+    main_class: str,
+    plot_name: str,
+    ApplyAtlasStyle: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    yAxisIncrease: float = 1.3,
+    yAxisAtlasTag: float = 0.9,
+    WorkingPoints: list = None,
+    tagger_for_WP: str = None,
+    nBins: int = 50,
+    figsize: list = None,
+    labelpad: int = None,
+    labelFontSize: int = 10,
+    legFontSize: int = 10,
+    loc_legend: str = "best",
+    ncol: int = 2,
     Ratio_Cut=None,
     which_axis="left",
     x_label=r"$D_b$",
-    xmin=None,
-    xmax=None,
-    ymin=None,
-    ymax=None,
-    ycolor="black",
-    ycolor_right="black",
-    title=None,
-    ylabel="Normalised Number of Jets",
-    yAxisIncrease=1.3,
-    yAxisAtlasTag=0.9,
+    xmin: float = None,
+    xmax: float = None,
+    ymin: float = None,
+    ymax: float = None,
+    ycolor: str = "black",
+    ycolor_right: str = "black",
+    title: str = None,
 ):
-    # Calculate the scores for the NN outputs
-    for (df_results, prediction_labels) in zip(
-        df_list, prediction_labels_list
-    ):
-        if discriminant == "b":
-            df_results["discs"] = GetScore(
-                *[df_results[pX] for pX in prediction_labels]
-            )
-        elif discriminant == "c":
-            df_results["discs"] = GetScoreC(
-                *[df_results[pX] for pX in prediction_labels]
-            )
-            if x_label == r"$D_b$":
-                # Swap to c discriminant
-                x_label = r"$D_c$"
-        else:
-            raise ValueError("Unknown discriminant {}!".format(discriminant))
+    # Apply the ATLAS Style with the bars on the axes
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
+
+    # Get flavour categories from global config file
+    flav_cat = global_config.flavour_categories
+
+    # Get index dict
+    index_dict = {
+        f"{flavour}": i for i, flavour in enumerate(class_labels_list[0])
+    }
 
     if type(which_axis) != list:
         which_axis = [which_axis] * len(df_list)
@@ -2098,33 +2054,44 @@ def plot_score_comparison(
 
     # Get binning for the plot
     _, Binning = np.histogram(
-        df_list[0].query(f"labels=={global_config.flavour_labels['b']}")[
-            "discs"
+        df_list[0].query(f"labels=={index_dict[main_class]}")[
+            f"disc_{tagger_list[0]}"
         ],
         bins=nBins,
     )
-
-    # Define the flavours used
-    if bool_use_taus is True:
-        flav_list = ["b", "c", "u", "tau"]
-
-    else:
-        flav_list = ["b", "c", "u"]
 
     # Init bincout and unc dict for ratio calculation
     bincounts = {}
     bincounts_unc = {}
 
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
-    for i, (df_results, linestyle, which_a, model_label) in enumerate(
-        zip(df_list, linestyles, which_axis, model_labels)
+    for i, (
+        df_results,
+        linestyle,
+        which_a,
+        model_label,
+        tagger,
+        class_labels,
+    ) in enumerate(
+        zip(
+            df_list,
+            linestyles,
+            which_axis,
+            model_labels,
+            tagger_list,
+            class_labels_list,
+        )
     ):
+        # Get index dict
+        index_dict = {
+            f"{flavour}": i for i, flavour in enumerate(class_labels)
+        }
 
-        for flavour in flav_list:
+        for flavour in class_labels:
             # Select correct jets
-            flav_tracks = df_results.query(
-                f"labels=={global_config.flavour_labels[flavour]}"
-            )["discs"]
+            flav_tracks = df_results.query(f"labels=={index_dict[flavour]}")[
+                f"disc_{tagger}"
+            ]
 
             bins, weights, unc, band = calc_bins(
                 input_array=flav_tracks,
@@ -2138,14 +2105,13 @@ def plot_score_comparison(
                 histtype="step",
                 linewidth=2.0,
                 linestyle=linestyle,
-                color=global_config.flavour_colors[flavour],
+                color=flav_cat[flavour]["colour"],
                 stacked=False,
                 fill=False,
-                label=global_config.flavour_legend_labels[flavour]
-                + f" {model_label}",
+                label=flav_cat[flavour]["legend_label"] + f" {model_label}",
             )
 
-            if (flavour == flav_list[-1]) and i == 0:
+            if (flavour == class_labels[-1]) and i == 0:
                 axis_dict[which_a]["top"].hist(
                     x=bins[:-1],
                     bins=bins,
@@ -2169,7 +2135,7 @@ def plot_score_comparison(
 
         # Start ratio plot
         if i != 0:
-            for flavour in flav_list:
+            for flavour in class_labels:
 
                 # Calculate the step and step_unc for ratio
                 step, step_unc = calc_ratio(
@@ -2182,7 +2148,7 @@ def plot_score_comparison(
                 axis_dict["left"]["ratio"].step(
                     x=Binning,
                     y=step,
-                    color=global_config.flavour_colors[flavour],
+                    color=flav_cat[flavour]["colour"],
                     linestyle=linestyles[i],
                 )
 
@@ -2199,19 +2165,25 @@ def plot_score_comparison(
 
     # Add axes, titels and the legend
     axis_dict["left"]["top"].set_ylabel(
-        ylabel, fontsize=12, horizontalalignment="right", y=1.0, color=ycolor
+        "Normalised Number of Jets",
+        fontsize=labelFontSize,
+        horizontalalignment="right",
+        y=1.0,
+        color=ycolor,
     )
     if title is not None:
         axis_dict["left"]["top"].set_title(title)
     axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
     axis_dict["left"]["ratio"].set_xlabel(
-        x_label, fontsize=12, horizontalalignment="right", x=1.0
+        f'{flav_cat[main_class]["legend_label"]} discriminant',
+        horizontalalignment="right",
+        x=1.0,
     )
 
     axis_dict["left"]["ratio"].set_ylabel(
         "Ratio",
         labelpad=labelpad,
-        fontsize=12,
+        fontsize=labelFontSize,
     )
 
     if Ratio_Cut is not None:
@@ -2265,27 +2237,25 @@ def plot_score_comparison(
         # Iterate over WPs
         for WP in WorkingPoints:
 
+            # Get tagger for WP calculation
+            tagger_name_WP = (
+                tagger_list[0] if tagger_for_WP is None else tagger_for_WP
+            )
+
             # Calculate x value of WP line
-            if discriminant == "c":
-                x_value = np.percentile(
-                    df_list[0].query("labels==1")["discs"], (1 - WP) * 100
-                )
-                color = "#ff7f0e"
-            else:
-                x_value = np.percentile(
-                    df_list[0].query(
-                        f"labels=={global_config.flavour_labels['b']}"
-                    )["discs"],
-                    (1 - WP) * 100,
-                )
-                color = "#FF0000"
+            x_value = np.percentile(
+                df_results.query(f"labels=={index_dict[main_class]}")[
+                    f"disc_{tagger_name_WP}"
+                ],
+                (1 - WP) * 100,
+            )
 
             # Draw WP line
             axis_dict["left"]["top"].axvline(
                 x=x_value,
                 ymin=0,
                 ymax=0.75 * WP,
-                color=color,
+                color="red",
                 linestyle="dashed",
                 linewidth=1.0,
             )
@@ -2295,7 +2265,7 @@ def plot_score_comparison(
                 x=x_value,
                 ymin=0,
                 ymax=1,
-                color=color,
+                color="red",
                 linestyle="dashed",
                 linewidth=1.0,
             )
@@ -2327,10 +2297,8 @@ def plot_score_comparison(
         )
 
     plt.tight_layout()
-    if plot_name is not None:
-        plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name, transparent=True)
     plt.close()
-    # plt.show()
 
 
 def plotFractionScan(
@@ -2415,59 +2383,42 @@ def plotFractionScan(
 
 
 def plot_prob(
-    plot_name,
-    plot_config,
-    eval_params,
-    eval_file_dir,
-    bool_use_taus=False,
-    UseAtlasTag=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
-    nBins=50,
-    Log=False,
-    figsize=None,
-    loc_legend="best",
-    ncol=2,
-    x_label="DNN Output",
-    yAxisIncrease=1.3,
-    yAxisAtlasTag=0.9,
+    df_results,
+    plot_name: str,
+    tagger_name: str,
+    class_labels: list,
+    flavour: str,
+    ApplyAtlasStyle: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    nBins: int = 50,
+    Log: bool = False,
+    figsize: list = None,
+    labelFontSize: int = 10,
+    loc_legend: str = "best",
+    ncol: int = 2,
+    x_label: str = None,
+    yAxisIncrease: float = 1.3,
+    yAxisAtlasTag: float = 0.9,
 ):
-    # Get the epoch which is to be evaluated
-    eval_epoch = int(eval_params["epoch"])
-    if "bool_use_taus" in eval_params:
-        bool_use_taus = eval_params["bool_use_taus"]
+    # Apply the ATLAS Style with the bars on the axes
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
 
-    else:
-        bool_use_taus = False
+    # Get flavour categories from global config file
+    flav_cat = global_config.flavour_categories
 
-    # Read file, change to specific file if defined
-    if ("evaluation_file" not in plot_config) or (
-        plot_config["evaluation_file"] is None
-    ):
-        df_results = pd.read_hdf(
-            eval_file_dir + f"/results-{eval_epoch}.h5",
-            plot_config["data_set_name"],
-        )
-
-    else:
-        df_results = pd.read_hdf(
-            plot_config["evaluation_file"], plot_config["data_set_name"]
-        )
+    # Get index dict
+    index_dict = {f"{label}": i for i, label in enumerate(class_labels)}
 
     # Calculate the binning for all flavours
     _, Binning = np.histogram(
-        df_results.query(f"labels=={global_config.flavour_labels['b']}")[
-            plot_config["prediction_labels"]
+        df_results.query(f"labels=={index_dict[flavour]}")[
+            f'{tagger_name}_{flav_cat[flavour]["prob_var_name"]}'
         ],
         bins=nBins,
     )
-
-    # Define the flavours used
-    if bool_use_taus is True:
-        flav_list = ["b", "c", "u", "tau"]
-
-    else:
-        flav_list = ["b", "c", "u"]
 
     # Clear the figure and init a new one
     if figsize is None:
@@ -2478,11 +2429,11 @@ def plot_prob(
         plt.clf()
         plt.figure(figsize=(figsize[0], figsize[1]))
 
-    for flavour in flav_list:
+    for iter_flavour in class_labels:
         # Select correct jets
-        flav_tracks = df_results.query(
-            f"labels=={global_config.flavour_labels[flavour]}"
-        )[plot_config["prediction_labels"]]
+        flav_tracks = df_results.query(f"labels=={index_dict[iter_flavour]}")[
+            f'{tagger_name}_{flav_cat[iter_flavour]["prob_var_name"]}'
+        ]
 
         bins, weights, unc, band = calc_bins(
             input_array=flav_tracks,
@@ -2495,13 +2446,13 @@ def plot_prob(
             weights=weights,
             histtype="step",
             linewidth=2.0,
-            color=global_config.flavour_colors[flavour],
+            color=flav_cat[iter_flavour]["colour"],
             stacked=False,
             fill=False,
-            label=global_config.flavour_legend_labels[flavour],
+            label=flav_cat[iter_flavour]["legend_label"],
         )
 
-        if flavour == flav_list[-1]:
+        if iter_flavour == class_labels[-1]:
             plt.hist(
                 x=bins[:-1],
                 bins=bins,
@@ -2538,15 +2489,24 @@ def plot_prob(
     # Set legend
     plt.legend(loc=loc_legend, ncol=ncol)
 
-    # Set x label
-    if "x_label" in plot_config and plot_config["x_label"] is not None:
-        plt.xlabel(plot_config["x_label"])
-
-    else:
-        plt.xlabel(plot_config["prediction_labels"])
-
-    # Set y label
-    plt.ylabel("Normalised Number of Jets")
+    # Set label
+    xlabel = (
+        f'{flav_cat[flavour]["legend_label"]} Probability'
+        if x_label is None
+        else x_label
+    )
+    plt.xlabel(
+        xlabel,
+        horizontalalignment="right",
+        fontsize=labelFontSize,
+        x=1.0,
+    )
+    plt.ylabel(
+        "Normalised Number of Jets",
+        horizontalalignment="right",
+        fontsize=labelFontSize,
+        y=1.0,
+    )
 
     if UseAtlasTag is True:
         pas.makeATLAStag(
@@ -2563,36 +2523,51 @@ def plot_prob(
 
 
 def plot_prob_comparison(
-    df_list,
-    prediction_labels_list,
-    model_labels,
-    plot_name,
-    bool_use_taus=False,
-    UseAtlasTag=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
-    tag="",
-    nBins=50,
-    figsize=None,
-    labelpad=None,
-    legFontSize=10,
-    loc_legend="best",
-    ncol=2,
-    Log=False,
+    df_list: list,
+    model_labels: list,
+    tagger_list: list,
+    class_labels_list: list,
+    flavour: str,
+    plot_name: str,
+    ApplyAtlasStyle: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    yAxisIncrease: float = 1.3,
+    yAxisAtlasTag: float = 0.9,
+    WorkingPoints: list = None,
+    tagger_for_WP: str = None,
+    nBins: int = 50,
+    figsize: list = None,
+    labelpad: int = None,
+    labelFontSize: int = 10,
+    legFontSize: int = 10,
+    loc_legend: str = "best",
+    ncol: int = 2,
     Ratio_Cut=None,
     which_axis="left",
-    x_label="DNN Output",
-    xmin=None,
-    xmax=None,
-    ymin=None,
-    ymax=None,
-    ycolor="black",
-    ycolor_right="black",
-    title=None,
-    ylabel="Normalised Number of Jets",
-    yAxisIncrease=1.3,
-    yAxisAtlasTag=0.9,
+    x_label: str = None,
+    xmin: float = None,
+    xmax: float = None,
+    ymin: float = None,
+    ymax: float = None,
+    ycolor: str = "black",
+    ycolor_right: str = "black",
+    title: str = None,
+    set_logy: bool = False,
 ):
+    # Apply the ATLAS Style with the bars on the axes
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
+
+    # Get flavour categories from global config file
+    flav_cat = global_config.flavour_categories
+
+    # Get index dict
+    index_dict = {
+        f"{iter_flav}": i for i, iter_flav in enumerate(class_labels_list[0])
+    }
+
     if type(which_axis) != list:
         which_axis = [which_axis] * len(df_list)
 
@@ -2611,24 +2586,14 @@ def plot_prob_comparison(
     axis_dict["left"]["ratio"] = fig.add_subplot(
         gs[6:, 0], sharex=axis_dict["left"]["top"]
     )
-    if "right" in which_axis:
-        axis_dict["right"] = {}
-        axis_dict["right"]["top"] = axis_dict["left"]["top"].twinx()
 
     # Get binning for the plot
     _, Binning = np.histogram(
-        df_list[0].query(f"labels=={global_config.flavour_labels['b']}")[
-            prediction_labels_list[0]
+        df_list[0].query(f"labels=={index_dict[flavour]}")[
+            f'{tagger_list[0]}_{flav_cat[flavour]["prob_var_name"]}'
         ],
         bins=nBins,
     )
-
-    # Define the flavours used
-    if bool_use_taus is True:
-        flav_list = ["b", "c", "u", "tau"]
-
-    else:
-        flav_list = ["b", "c", "u"]
 
     # Init bincout and unc dict for ratio calculation
     bincounts = {}
@@ -2637,25 +2602,31 @@ def plot_prob_comparison(
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
     for i, (
         df_results,
-        prediction_label,
         linestyle,
         which_a,
         model_label,
+        tagger,
+        class_labels,
     ) in enumerate(
         zip(
             df_list,
-            prediction_labels_list,
             linestyles,
             which_axis,
             model_labels,
+            tagger_list,
+            class_labels_list,
         )
     ):
+        # Get index dict
+        index_dict = {
+            f"{iter_flav}": i for i, iter_flav in enumerate(class_labels)
+        }
 
-        for flavour in flav_list:
+        for iter_flav in class_labels:
             # Select correct jets
-            flav_tracks = df_results.query(
-                f"labels=={global_config.flavour_labels[flavour]}"
-            )[prediction_label]
+            flav_tracks = df_results.query(f"labels=={index_dict[iter_flav]}")[
+                f'{tagger}_{flav_cat[flavour]["prob_var_name"]}'
+            ]
 
             # Calculate bins
             bins, weights, unc, band = calc_bins(
@@ -2670,14 +2641,13 @@ def plot_prob_comparison(
                 histtype="step",
                 linewidth=2.0,
                 linestyle=linestyle,
-                color=global_config.flavour_colors[flavour],
+                color=flav_cat[iter_flav]["colour"],
                 stacked=False,
                 fill=False,
-                label=global_config.flavour_legend_labels[flavour]
-                + f" {model_label}",
+                label=flav_cat[iter_flav]["legend_label"] + f" {model_label}",
             )
 
-            if (flavour == flav_list[-1]) and i == 0:
+            if (iter_flav == class_labels[-1]) and i == 0:
                 axis_dict[which_a]["top"].hist(
                     x=bins[:-1],
                     bins=bins,
@@ -2696,25 +2666,25 @@ def plot_prob_comparison(
                     **global_config.hist_err_style,
                 )
 
-            bincounts.update({f"{flavour}{i}": hist_counts})
-            bincounts_unc.update({f"{flavour}{i}": unc})
+            bincounts.update({f"{iter_flav}{i}": hist_counts})
+            bincounts_unc.update({f"{iter_flav}{i}": unc})
 
         # Start ratio plot
         if i != 0:
-            for flavour in flav_list:
+            for iter_flav in class_labels:
 
                 # Calculate the step and step_unc for ratio
                 step, step_unc = calc_ratio(
-                    counter=bincounts["{}{}".format(flavour, i)],
-                    denominator=bincounts["{}{}".format(flavour, 0)],
-                    counter_unc=bincounts_unc["{}{}".format(flavour, i)],
-                    denominator_unc=bincounts_unc["{}{}".format(flavour, 0)],
+                    counter=bincounts["{}{}".format(iter_flav, i)],
+                    denominator=bincounts["{}{}".format(iter_flav, 0)],
+                    counter_unc=bincounts_unc["{}{}".format(iter_flav, i)],
+                    denominator_unc=bincounts_unc["{}{}".format(iter_flav, 0)],
                 )
 
                 axis_dict["left"]["ratio"].step(
                     x=Binning,
                     y=step,
-                    color=global_config.flavour_colors[flavour],
+                    color=flav_cat[iter_flav]["colour"],
                     linestyle=linestyles[i],
                 )
 
@@ -2731,19 +2701,25 @@ def plot_prob_comparison(
 
     # Add axes, titels and the legend
     axis_dict["left"]["top"].set_ylabel(
-        ylabel, fontsize=12, horizontalalignment="right", y=1.0, color=ycolor
+        "Normalised Number of Jets",
+        fontsize=labelFontSize,
+        horizontalalignment="right",
+        y=1.0,
+        color=ycolor,
     )
     if title is not None:
         axis_dict["left"]["top"].set_title(title)
     axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
     axis_dict["left"]["ratio"].set_xlabel(
-        x_label, fontsize=12, horizontalalignment="right", x=1.0
+        f'{flav_cat[flavour]["legend_label"]} Probability',
+        horizontalalignment="right",
+        x=1.0,
     )
 
     axis_dict["left"]["ratio"].set_ylabel(
         "Ratio",
         labelpad=labelpad,
-        fontsize=12,
+        fontsize=labelFontSize,
     )
 
     if Ratio_Cut is not None:
@@ -2780,20 +2756,20 @@ def plot_prob_comparison(
         alpha=0.5,
     )
 
-    if Log is True:
+    if set_logy is True:
         axis_dict["left"]["top"].set_yscale("log")
 
     left_y_limits = axis_dict["left"]["top"].get_ylim()
-    if Log is False:
+    if set_logy is False:
         axis_dict["left"]["top"].set_ylim(
             left_y_limits[0], left_y_limits[1] * yAxisIncrease
         )
 
-    elif Log is True:
+    elif set_logy is True:
         axis_dict["left"]["top"].set_ylim(
             left_y_limits[0] * 0.5,
-            left_y_limits[0]
-            * (left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease,
+            (left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease
+            / left_y_limits[1],
         )
 
     axis_dict["left"]["top"].legend(

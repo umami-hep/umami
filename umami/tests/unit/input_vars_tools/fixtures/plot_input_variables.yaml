@@ -17,9 +17,8 @@ jets_input_vars:
     AtlasTag: "Internal Simulation"
     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
     yAxisAtlasTag: 0.925
-    yAxisIncrease: 2
+    yAxisIncrease: 5
     figsize: [7, 5]
-    bool_use_taus: True
   special_param_jets:
     IP2D_cu:
       lim_left: -30
@@ -30,11 +29,7 @@ jets_input_vars:
   binning:
     IP2D_cu: 5
     IP2D_bu:
-  flavours:
-    b: 5
-    c: 4
-    u: 0
-    tau: 15
+  class_labels: ["bjets", "cjets", "ujets", "taujets"]
 
 nTracks_Test:
   variables: "tracks"
@@ -53,13 +48,10 @@ nTracks_Test:
     AtlasTag: "Internal Simulation"
     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
     yAxisAtlasTag: 0.925
-    yAxisIncrease: 2
+    yAxisIncrease: 5
     figsize: [7, 5]
     Ratio_Cut: [0.5, 2]
-  flavours:
-    b: 5
-    c: 4
-    u: 0
+  class_labels: ["bjets", "cjets", "ujets"]
 
 Tracks_Test:
   variables: "tracks"
@@ -79,15 +71,11 @@ Tracks_Test:
     AtlasTag: "Internal Simulation"
     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3M Jets"
     yAxisAtlasTag: 0.925
-    yAxisIncrease: 2
+    yAxisIncrease: 5
     figsize: [7, 5]
     Ratio_Cut: [0.5, 1.5]
-    bool_use_taus: False
   binning:
     IP3D_signed_d0_significance: 100
     numberOfInnermostPixelLayerHits: [0, 4, 1]
     dr:
-  flavours:
-    b: 5
-    c: 4
-    u: 0
+  class_labels: ["bjets", "cjets", "ujets"]
