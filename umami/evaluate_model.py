@@ -10,6 +10,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import CustomObjectScope
 
 import umami.evaluation_tools as uet
+import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.preprocessing_tools import Configuration
 
@@ -127,7 +128,7 @@ def EvaluateModel(
         )
 
         # Load the model for evaluation. Note: The Sum is needed here!
-        with CustomObjectScope({"Sum": utt.Sum}):
+        with CustomObjectScope({"Sum": utf.Sum}):
             model = load_model(model_file)
 
         # Predict the output of the model on the test jets
@@ -279,7 +280,7 @@ def EvaluateModelDips(
     )
 
     # Load the model for evaluation. Note: The Sum is needed here!
-    with CustomObjectScope({"Sum": utt.Sum}):
+    with CustomObjectScope({"Sum": utf.Sum}):
         model = load_model(model_file)
 
     # Get predictions from trained model

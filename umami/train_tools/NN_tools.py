@@ -11,13 +11,12 @@ import h5py
 import numpy as np
 import pandas as pd
 import yaml
-from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.layers import Layer
 from tensorflow.keras.models import load_model
 
 from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
+from umami.tf_tools import Sum
 from umami.tools import replaceLineInFile, yaml_loader
 
 
@@ -1579,34 +1578,3 @@ def calc_validation_metrics(
 
     # Return Validation dict name
     return output_file_path
-
-
-class Sum(Layer):
-    """
-    Simple sum layer.
-    The tricky bits are getting masking to work properly, but given
-    that time distributed dense layers _should_ compute masking on their
-    own.
-
-    Author: Dan Guest
-    https://github.com/dguest/flow-network/blob/master/SumLayer.py
-
-    """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.supports_masking = True
-
-    def build(self, input_shape):
-        pass
-
-    def call(self, x, mask=None):
-        if mask is not None:
-            x = x * K.cast(mask, K.dtype(x))[:, :, None]
-        return K.sum(x, axis=1)
-
-    def compute_output_shape(self, input_shape):
-        return input_shape[0], input_shape[2]
-
-    def compute_mask(self, inputs, mask):
-        return None
