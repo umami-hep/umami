@@ -6,7 +6,20 @@ import json
 import h5py
 import tensorflow as tf
 import yaml
+from tensorflow.keras import activations
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.layers import (
+    Activation,
+    BatchNormalization,
+    Concatenate,
+    Dense,
+    Dropout,
+    Input,
+    Masking,
+    TimeDistributed,
+)
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.optimizers import Adam
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
@@ -61,6 +74,128 @@ def GetParser():
     return args
 
 
+def Umami_model(train_config=None, input_shape=None, njet_features=None):
+    # Load NN Structure and training parameter from file
+    NN_structure = train_config.NN_structure
+
+    # Set NN options
+    batch_norm = NN_structure["Batch_Normalisation"]
+    dropout = NN_structure["dropout"]
+    class_labels = NN_structure["class_labels"]
+
+    if train_config.model_file is not None:
+        # Load DIPS model from file
+        logger.info(f"Loading model from: {train_config.model_file}")
+        umami = load_model(
+            train_config.model_file, {"Sum": utf.Sum}, compile=False
+        )
+
+    else:
+        logger.info("No modelfile provided! Initialize a new one!")
+
+        # Set the track input
+        trk_inputs = Input(shape=input_shape)
+
+        # Masking the missing tracks
+        masked_inputs = Masking(mask_value=0)(trk_inputs)
+        tdd = masked_inputs
+
+        # Define the TimeDistributed layers for the different tracks
+        for i, phi_nodes in enumerate(NN_structure["DIPS_ppm_units"]):
+
+            tdd = TimeDistributed(
+                Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
+            )(tdd)
+
+            if batch_norm:
+                tdd = TimeDistributed(
+                    BatchNormalization(), name=f"Phi{i}_BatchNormalization"
+                )(tdd)
+
+            if dropout != 0:
+                tdd = TimeDistributed(
+                    Dropout(rate=dropout), name=f"Phi{i}_Dropout"
+                )(tdd)
+
+            tdd = TimeDistributed(
+                Activation(activations.relu), name=f"Phi{i}_ReLU"
+            )(tdd)
+
+        # This is where the magic happens... sum up the track features!
+        F = utf.Sum(name="Sum")(tdd)
+
+        for j, (F_nodes, p) in enumerate(
+            zip(
+                NN_structure["DIPS_dense_units"],
+                [dropout] * len(NN_structure["DIPS_dense_units"][:-1]) + [0],
+            )
+        ):
+
+            F = Dense(F_nodes, activation="linear", name=f"F{j}_Dense")(F)
+            if batch_norm:
+                F = BatchNormalization(name=f"F{j}_BatchNormalization")(F)
+            if dropout != 0:
+                F = Dropout(rate=p, name=f"F{j}_Dropout")(F)
+            F = Activation(activations.relu, name=f"F{j}_ReLU")(F)
+
+        dips_output = Dense(
+            len(class_labels), activation="softmax", name="dips"
+        )(F)
+
+        # Input layer
+        jet_inputs = Input(shape=(njet_features,))
+
+        # Adding the intermediate dense layers for DL1
+        x = jet_inputs
+        for unit in NN_structure["intermediate_units"]:
+            x = Dense(
+                units=unit,
+                activation="linear",
+                kernel_initializer="glorot_uniform",
+            )(x)
+            x = BatchNormalization()(x)
+            x = Activation("relu")(x)
+
+        # Concatenate the inputs
+        x = Concatenate()([F, x])
+
+        # Loop to initialise the hidden layers
+        for unit in NN_structure["DL1_units"]:
+            x = Dense(
+                units=unit,
+                activation="linear",
+                kernel_initializer="glorot_uniform",
+            )(x)
+            x = BatchNormalization()(x)
+            x = Activation("relu")(x)
+
+        jet_output = Dense(
+            units=len(class_labels),
+            activation="softmax",
+            kernel_initializer="glorot_uniform",
+            name="umami",
+        )(x)
+
+        umami = Model(
+            inputs=[trk_inputs, jet_inputs], outputs=[dips_output, jet_output]
+        )
+
+    # Print Umami model summary when log level lower or equal INFO level
+    if logger.level <= 20:
+        umami.summary()
+
+    # Set optimier and loss
+    model_optimizer = Adam(learning_rate=NN_structure["lr"])
+    umami.compile(
+        loss="categorical_crossentropy",
+        loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
+        optimizer=model_optimizer,
+        metrics=["accuracy"],
+    )
+
+    return umami, NN_structure["epochs"]
+
+
 def Umami(args, train_config, preprocess_config):
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
@@ -100,7 +235,7 @@ def Umami(args, train_config, preprocess_config):
     logger.info(f"nJets: {nJets}, nTrks: {nTrks}")
     logger.info(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
 
-    umami, _ = utf.Umami_model(
+    umami, _ = Umami_model(
         train_config=train_config,
         input_shape=(nTrks, nFeatures),
         njet_features=njet_features,

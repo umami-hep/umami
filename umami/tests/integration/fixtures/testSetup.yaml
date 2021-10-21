@@ -3,7 +3,7 @@ data_url: 'https://umami-docs.web.cern.ch/umami-docs/ci/'
 test_preprocessing:
     data_subfolder: 'preprocessing'
     config: 'examples/PFlow-Preprocessing.yaml'
-    config_paths: 'examples/Preprocessing-settings-Freiburg.yaml'
+    config_paths: 'examples/Preprocessing-parameters.yaml'
     var_dict_dl1r: 'umami/configs/DL1r_Variables.yaml'
     var_dict_dips: 'umami/configs/Dips_Variables.yaml'
     var_dict_umami: 'umami/configs/Umami_Variables.yaml'

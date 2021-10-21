@@ -380,7 +380,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
             self.tmp_test_dir, "preprocess_config.yaml"
         )
         self.preprocess_config_include = os.path.join(
-            self.tmp_test_dir, "Preprocessing-settings-Freiburg.yaml"
+            self.tmp_test_dir, "Preprocessing-parameters.yaml"
         )
         self.var_dict_path = os.path.join(self.tmp_test_dir, "Var_Dict.yaml")
         self.scale_dict_path = os.path.join(
@@ -402,7 +402,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         )
         copyfile(
             os.path.join(
-                os.getcwd(), "examples/Preprocessing-settings-Freiburg.yaml"
+                os.getcwd(), "examples/Preprocessing-parameters.yaml"
             ),
             self.preprocess_config_include,
         )
