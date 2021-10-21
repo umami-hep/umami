@@ -1,14 +1,17 @@
 # Path where the ntuples are saved
-ntuple_path: &ntuple_path /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/
+ntuple_path: &ntuple_path /srv/beegfs/scratch/groups/dpnc/atlas/FTag/samples/r21/Loose
 
 # Path where the hybrid samples will be saved
 sample_path: &sample_path /srv/beegfs/scratch/groups/dpnc/atlas/FTag/samples/new-preprocessing-umami/hybrids
 
 # Path where the merged and ready-to-train samples are saved
-file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/
+file_path: &file_path /srv/beegfs/scratch/groups/dpnc/atlas/FTag/samples/new-preprocessing-umami/preprocessed
 
 # Name of the output file from the preprocessing
 .outfile_name: &outfile_name /srv/beegfs/scratch/groups/dpnc/atlas/FTag/samples/preprocessed-umami/default/final-samples/PFlow-hybrid-preprocessed.h5
 
 # Dictfile for the scaling and shifting (json)
-.dict_file: &dict_file "/work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/scale_dicts/PFlow-scale_dict-22M.json"
+.var_file: &var_file "/srv/beegfs/scratch/users/s/schroert/umami/umami/configs/Umami_Variables.yaml"
+
+# Dictfile for the scaling and shifting (json)
+.dict_file: &dict_file "/srv/beegfs/scratch/groups/dpnc/atlas/FTag/samples/new-preprocessing-umami/scale_dicts/PFlow-scale_dict-22M.json"
