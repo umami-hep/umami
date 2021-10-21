@@ -1,4 +1,4 @@
-parameters: !include Preprocessing-settings-Freiburg.yaml
+parameters: !include Preprocessing-parameters.yaml
 
 # Defining yaml anchors to be used later, avoiding duplication
 .cuts_template_ttbar_train: &cuts_template_ttbar_train

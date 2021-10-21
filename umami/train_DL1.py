@@ -7,6 +7,15 @@ import h5py
 import tensorflow as tf
 import yaml
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.layers import (
+    Activation,
+    BatchNormalization,
+    Dense,
+    Dropout,
+    Input,
+)
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.optimizers import Adam
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
@@ -67,6 +76,63 @@ def GetParser():
 # TODO: add gpu support
 
 
+def DL1_model(train_config, input_shape):
+    # Load NN Structure and training parameter from file
+    NN_structure = train_config.NN_structure
+
+    # Set NN options
+    batch_norm = NN_structure["Batch_Normalisation"]
+    dropout = NN_structure["dropout"]
+    class_labels = NN_structure["class_labels"]
+
+    # Load model from file if defined
+    if train_config.model_file is not None:
+        logger.info(f"Loading model from: {train_config.model_file}")
+        model = load_model(train_config.model_file, compile=False)
+
+    else:
+        # Define input
+        inputs = Input(shape=input_shape)
+
+        # Define layers
+        for i, unit in enumerate(NN_structure["dense_sizes"]):
+            x = Dense(
+                units=unit,
+                activation="linear",
+                kernel_initializer="glorot_uniform",
+            )(inputs)
+
+            # Add Batch Normalization if True
+            if batch_norm:
+                x = BatchNormalization()(x)
+
+            # Add dropout if != 0
+            if dropout != 0:
+                x = Dropout(NN_structure["dropout_rate"][i])(x)
+
+            # Define activation for the layer
+            x = Activation(NN_structure["activations"][i])(x)
+
+        predictions = Dense(
+            units=len(class_labels),
+            activation="softmax",
+            kernel_initializer="glorot_uniform",
+        )(x)
+        model = Model(inputs=inputs, outputs=predictions)
+
+    # Print DL1 model summary when log level lower or equal INFO level
+    if logger.level <= 20:
+        model.summary()
+
+    model_optimizer = Adam(learning_rate=NN_structure["lr"])
+    model.compile(
+        loss="categorical_crossentropy",
+        optimizer=model_optimizer,
+        metrics=["accuracy"],
+    )
+    return model, NN_structure["epochs"]
+
+
 def TrainLargeFile(args, train_config, preprocess_config):
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
@@ -118,7 +184,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     )
 
     # Load model and epochs
-    model, epochs = utf.DL1_model(
+    model, epochs = DL1_model(
         train_config=train_config, input_shape=(nFeatures,)
     )
 

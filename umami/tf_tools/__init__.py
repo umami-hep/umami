@@ -15,9 +15,4 @@ from umami.tf_tools.layers import (
     MaskedSoftmax,
     Sum,
 )
-from umami.tf_tools.models import (
-    Deepsets_model,
-    Dips_model,
-    DL1_model,
-    Umami_model,
-)
+from umami.tf_tools.models import Deepsets_model
