@@ -1,7 +1,7 @@
 from umami.configuration import global_config, logger  # isort:skip
-import pickle
 
 import matplotlib as mtp
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
@@ -511,17 +511,19 @@ def plotPtDependence(
     xlabel: str = r"$p_T$ in GeV",
     Log: bool = False,
     colors: list = None,
+    ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.1,
-    frameon: bool = True,
-    ncol: int = 2,
+    frameon: bool = False,
+    ncol: int = 1,
     ymin: float = None,
     ymax: float = None,
     alpha: float = 0.8,
     trans: bool = True,
+    linewidth: float = 1.6,
 ):
     """
     For a given list of models, plot the b-eff, l and c-rej as a function
@@ -553,6 +555,7 @@ def plotPtDependence(
     - xlabel: Label for x axis
     - Log: Set yscale to Log
     - colors: Custom color list for the different models
+    - ApplyAtlasStyle: Apply ATLAS style for matplotlib
     - UseAtlasTag: Use the ATLAS Tag in the plots
     - AtlasTag: First row of the ATLAS Tag
     - SecondTag: Second Row of the ATLAS Tag. No need to add WP or fc.
@@ -567,6 +570,10 @@ def plotPtDependence(
     - trans: Sets the transparity of the background. If true, the background erased.
              If False, the background is white
     """
+
+    # Apply ATLAS style
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
 
     # Get global config of the classes
     flav_cat = global_config.flavour_categories
@@ -752,6 +759,7 @@ def plotPtDependence(
                 fmt=".",
                 label=model_label,
                 alpha=alpha,
+                linewidth=linewidth,
             )
 
             # Calculate Ratio
@@ -771,6 +779,7 @@ def plotPtDependence(
                     fmt=".",
                     label=model_label,
                     alpha=alpha,
+                    linewidth=linewidth,
                 )
 
             else:
@@ -798,6 +807,7 @@ def plotPtDependence(
                 fmt=".",
                 label=model_label,
                 alpha=alpha,
+                linewidth=linewidth,
             )
 
             # Calculate Ratio
@@ -817,6 +827,7 @@ def plotPtDependence(
                     fmt=".",
                     label=model_label,
                     alpha=alpha,
+                    linewidth=linewidth,
                 )
 
             else:
@@ -846,7 +857,7 @@ def plotPtDependence(
 
     # Set y label
     axis_dict["left"]["top"].set_ylabel(
-        f'{Fixed_WP_Label} {flav_cat[flavour]["legend_label"]}-{metric}',
+        f'{Fixed_WP_Label} {flav_cat[flavour]["legend_label"]} {metric}',
         horizontalalignment="right",
         y=1.0,
     )
@@ -872,7 +883,16 @@ def plotPtDependence(
         _, ymax = axis_dict["left"]["top"].get_ylim()
 
     # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
-    axis_dict["left"]["top"].set_ylim(bottom=ymin, top=yAxisIncrease * ymax)
+    if Log is True:
+        axis_dict["left"]["top"].set_ylim(
+            ymin,
+            ymin * ((ymax / ymin) ** yAxisIncrease),
+        )
+
+    else:
+        axis_dict["left"]["top"].set_ylim(
+            bottom=ymin, top=yAxisIncrease * ymax
+        )
 
     # Get xlim for the horizontal and vertical lines
     xmin, xmax = axis_dict["left"]["top"].get_xlim()
@@ -908,13 +928,28 @@ def plotPtDependence(
         loc="upper right", ncol=ncol, frameon=frameon
     )
 
+    # Redefine Second Tag with inclusive or fixed tag
+    if Fixed_WP_Bin is True:
+        SecondTag = (
+            SecondTag
+            + "\nConstant "
+            + r"$\epsilon_b$ = {}% per bin".format(int(WP * 100))
+        )
+
+    else:
+        SecondTag = (
+            SecondTag
+            + "\nInclusive "
+            + r"$\epsilon_b$ = {}%".format(int(WP * 100))
+        )
+
     # Set the ATLAS Tag
     if UseAtlasTag is True:
         pas.makeATLAStag(
             ax=axis_dict["left"]["top"],
             fig=fig,
             first_tag=AtlasTag,
-            second_tag=(SecondTag + "\nWP = {}%".format(int(WP * 100))),
+            second_tag=SecondTag,
             ymax=yAxisAtlasTag,
         )
 
@@ -1231,8 +1266,10 @@ def plotROCRatio(
     if set_logy is True:
         left_y_limits = axis_dict["left"]["top"].get_ylim()
         yAxisIncrease = (
-            left_y_limits[1] / left_y_limits[0]
-        ) ** yAxisIncrease / left_y_limits[1]
+            left_y_limits[0]
+            * ((left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease)
+            / left_y_limits[1]
+        )
 
     left_y_limits = axis_dict["left"]["top"].get_ylim()
     new_ymin_left = left_y_limits[0] if ymin is None else ymin
@@ -1564,7 +1601,7 @@ def plotROCRatioComparison(
 
     # Add axes, titles and the legend
     axis_dict["left"]["top"].set_ylabel(
-        "Background Rejection",
+        "Background rejection",
         fontsize=labelFontSize,
         horizontalalignment="right",
         y=1.0,
@@ -1581,7 +1618,7 @@ def plotROCRatioComparison(
     # Set grid for the ratio plots and set ylabel
     for flav in flav_list:
         axis_dict["left"][flav].grid()
-        rlabel = f'{flav_cat[flav]["legend_label"]} Ratio'
+        rlabel = f'{flav_cat[flav]["legend_label"]} ratio'
 
         axis_dict["left"][flav].set_ylabel(
             rlabel,
@@ -1591,7 +1628,7 @@ def plotROCRatioComparison(
 
     # Set xlabel for lowest ratio plot
     axis_dict["left"][flav_list[1]].set_xlabel(
-        f'{flav_cat[main_class]["legend_label"]} Efficiency',
+        f'{flav_cat[main_class]["legend_label"]} efficiency',
         fontsize=labelFontSize,
         horizontalalignment="right",
         x=1.0,
@@ -1621,8 +1658,10 @@ def plotROCRatioComparison(
     if set_logy is True:
         left_y_limits = axis_dict["left"]["top"].get_ylim()
         yAxisIncrease = (
-            left_y_limits[1] / left_y_limits[0]
-        ) ** yAxisIncrease / left_y_limits[1]
+            left_y_limits[0]
+            * ((left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease)
+            / left_y_limits[1]
+        )
 
     # Check for ymin/ymax and set y-axis
     left_y_limits = axis_dict["left"]["top"].get_ylim()
@@ -1638,7 +1677,7 @@ def plotROCRatioComparison(
     # Create the two legends for rejection and model
     line_list_rej = []
     for i in range(2):
-        label = f'{flav_cat[flav_list[i]]["legend_label"]} Rejection'
+        label = f'{flav_cat[flav_list[i]]["legend_label"]} rejection'
         line = axis_dict["left"]["top"].plot(
             np.nan, np.nan, color="k", label=label, linestyle=["-", "--"][i]
         )
@@ -1697,17 +1736,14 @@ def plotROCRatioComparison(
 
 
 def plotSaliency(
+    maps_dict,
     plot_name,
-    epoch,
-    data_set_name,
     title,
-    filepath=None,
-    FileDir=None,
     target_beff=0.77,
     jet_flavour="bjets",
     PassBool=True,
     nFixedTrks=8,
-    fs=14,
+    fontsize=14,
     xlabel="Tracks sorted by $s_{d0}$",
     UseAtlasTag=True,
     AtlasTag="Internal Simulation",
@@ -1715,25 +1751,11 @@ def plotSaliency(
     yAxisAtlasTag=0.925,
     FlipAxis=False,
 ):
-    assert not (
-        FileDir is None and filepath is None
-    ), "Define FileDir or filepath"
-
     # Transform to percent
     target_beff = 100 * target_beff
 
     # Little Workaround
     AtlasTag = " " + AtlasTag
-
-    if filepath is None:
-        with open(
-            FileDir + f"/saliency_{epoch}_{data_set_name}.pkl", "rb"
-        ) as f:
-            maps_dict = pickle.load(f)
-
-    else:
-        with open(filepath, "rb") as f:
-            maps_dict = pickle.load(f)
 
     gradient_map = maps_dict[
         "{}_{}_{}".format(int(target_beff), jet_flavour, PassBool)
@@ -1753,10 +1775,12 @@ def plotSaliency(
         gradient_map = np.swapaxes(gradient_map, 0, 1)
 
         plt.yticks(
-            np.arange(nFixedTrks), np.arange(1, nFixedTrks + 1), fontsize=fs
+            np.arange(nFixedTrks),
+            np.arange(1, nFixedTrks + 1),
+            fontsize=fontsize,
         )
 
-        plt.ylabel(xlabel, fontsize=fs)
+        plt.ylabel(xlabel, fontsize=fontsize)
         plt.ylim(-0.5, nFixedTrks - 0.5)
 
         # ylabels. Order must be the same as in the Vardict
@@ -1778,16 +1802,23 @@ def plotSaliency(
             r"$z_0 \sin \theta$",
         ]
 
-        plt.xticks(np.arange(nFeatures), xticklabels[:nFeatures], rotation=45)
+        plt.xticks(
+            np.arange(nFeatures),
+            xticklabels[:nFeatures],
+            rotation=45,
+            fontsize=fontsize,
+        )
 
     else:
         fig = plt.figure(figsize=(0.7 * nFixedTrks, 0.7 * nFeatures))
 
         plt.xticks(
-            np.arange(nFixedTrks), np.arange(1, nFixedTrks + 1), fontsize=fs
+            np.arange(nFixedTrks),
+            np.arange(1, nFixedTrks + 1),
+            fontsize=fontsize,
         )
 
-        plt.xlabel(xlabel, fontsize=fs)
+        plt.xlabel(xlabel, fontsize=fontsize)
         plt.xlim(-0.5, nFixedTrks - 0.5)
 
         # ylabels. Order must be the same as in the Vardict
@@ -1809,7 +1840,9 @@ def plotSaliency(
             r"$z_0 \sin \theta$",
         ]
 
-        plt.yticks(np.arange(nFeatures), yticklabels[:nFeatures])
+        plt.yticks(
+            np.arange(nFeatures), yticklabels[:nFeatures], fontsize=fontsize
+        )
 
     im = plt.imshow(
         gradient_map,
@@ -1819,7 +1852,7 @@ def plotSaliency(
         vmax=colorScale,
     )
 
-    plt.title(title, fontsize=fs)
+    plt.title(title, fontsize=fontsize)
 
     ax = plt.gca()
 
@@ -1837,8 +1870,12 @@ def plotSaliency(
     cax = divider.append_axes("right", size="5%", pad=0.05)
     colorbar = plt.colorbar(im, cax=cax)
     colorbar.ax.set_title(
-        r"$\frac{\partial D_{b}}{\partial x_{ik}}$", size=1.5 * fs
+        r"$\frac{\partial D_{b}}{\partial x_{ik}}$", size=1.6 * fontsize
     )
+
+    # Set the fontsize of the colorbar yticks
+    for t in colorbar.ax.get_yticklabels():
+        t.set_fontsize(fontsize)
 
     # Save the figure
     plt.savefig(plot_name, transparent=True, bbox_inches="tight")
@@ -1858,6 +1895,8 @@ def plot_score(
     nBins: int = 50,
     yAxisIncrease: float = 1.3,
     yAxisAtlasTag: float = 0.9,
+    xlabel: str = None,
+    WorkingPoints_Legend: bool = False,
 ):
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
@@ -1931,6 +1970,9 @@ def plot_score(
     ymin, ymax = plt.ylim()
     plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
 
+    # Define handles and labels
+    handles, labels = plt.gca().get_legend_handles_labels()
+
     # Set WP vertical lines if given in config
     if WorkingPoints is not None:
 
@@ -1944,6 +1986,17 @@ def plot_score(
                 ],
                 (1 - WP) * 100,
             )
+
+            # Add WP cut values to legend if wanted
+            if WorkingPoints_Legend is True:
+                handles.extend(
+                    [
+                        mpatches.Patch(
+                            color="w",
+                            label=f"{int(WP * 100)}% WP cut value: {x_value:.2f}",
+                        )
+                    ]
+                )
 
             # Draw WP line
             plt.vlines(
@@ -1966,13 +2019,23 @@ def plot_score(
                 size=10,
             )
 
-    plt.legend()
-    plt.xlabel(
-        f'{flav_cat[main_class]["legend_label"]} discriminant',
-        horizontalalignment="right",
-        x=1.0,
-    )
-    plt.ylabel("Normalised Number of Jets", horizontalalignment="right", y=1.0)
+    # Init legend
+    plt.legend(handles=handles)
+
+    if xlabel:
+        plt.xlabel(
+            xlabel,
+            horizontalalignment="right",
+            x=1.0,
+        )
+
+    else:
+        plt.xlabel(
+            f'{flav_cat[main_class]["legend_label"]} discriminant',
+            horizontalalignment="right",
+            x=1.0,
+        )
+    plt.ylabel("Normalised number of jets", horizontalalignment="right", y=1.0)
 
     if UseAtlasTag is True:
         pas.makeATLAStag(
@@ -2768,8 +2831,8 @@ def plot_prob_comparison(
     elif set_logy is True:
         axis_dict["left"]["top"].set_ylim(
             left_y_limits[0] * 0.5,
-            (left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease
-            / left_y_limits[1],
+            left_y_limits[0]
+            * ((left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease),
         )
 
     axis_dict["left"]["top"].legend(

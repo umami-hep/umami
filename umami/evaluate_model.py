@@ -87,6 +87,12 @@ def EvaluateModel(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
+    var_cuts = (
+        Eval_params["variable_cuts"][f"{data_set_name}"]
+        if "variable_cuts" in Eval_params
+        and Eval_params["variable_cuts"] is not None
+        else None
+    )
 
     # Init the placeholder lists for tagger_names
     tagger_names = []
@@ -132,6 +138,7 @@ def EvaluateModel(
             class_labels=class_labels,
             nJets=nJets,
             exclude=exclude,
+            cut_vars_dict=var_cuts,
         )
 
         # Load the model for evaluation. Note: The Sum is needed here!
@@ -172,6 +179,7 @@ def EvaluateModel(
         class_labels=class_labels,
         nJets=nJets,
         variables=variables,
+        cut_vars_dict=var_cuts,
     )
 
     # Get the discriminant values and probabilities of each tagger
@@ -262,6 +270,12 @@ def EvaluateModelDips(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
+    var_cuts = (
+        Eval_params["variable_cuts"][f"{data_set_name}"]
+        if "variable_cuts" in Eval_params
+        and Eval_params["variable_cuts"] is not None
+        else None
+    )
 
     # Set number of nJets for testing
     nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
@@ -284,6 +298,7 @@ def EvaluateModelDips(
         preprocess_config=preprocess_config,
         class_labels=class_labels,
         nJets=nJets,
+        cut_vars_dict=var_cuts,
     )
 
     # Load the model for evaluation. Note: The Sum is needed here!
@@ -322,6 +337,7 @@ def EvaluateModelDips(
         class_labels=class_labels,
         nJets=nJets,
         variables=variables,
+        cut_vars_dict=var_cuts,
     )
 
     # Get the discriminant values and probabilities of each tagger
@@ -424,6 +440,12 @@ def EvaluateModelDL1(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
+    var_cuts = (
+        Eval_params["variable_cuts"][f"{data_set_name}"]
+        if "variable_cuts" in Eval_params
+        and Eval_params["variable_cuts"] is not None
+        else None
+    )
 
     # Check if epochs are set or not
     if args.epoch is None:
@@ -456,6 +478,7 @@ def EvaluateModelDL1(
         class_labels=class_labels,
         nJets=nJets,
         exclude=exclude,
+        cut_vars_dict=var_cuts,
     )
 
     # Load the model for evaluation.
@@ -510,6 +533,7 @@ def EvaluateModelDL1(
         class_labels=class_labels,
         nJets=nJets,
         variables=variables,
+        cut_vars_dict=var_cuts,
     )
 
     # Get the discriminant values and probabilities of each tagger
@@ -736,18 +760,18 @@ if __name__ == "__main__":
                     ],
                 )
 
-        # if train_config.zpext_test_files is not None:
-        #     logger.info("Start evaluating DIPS with Z' test files...")
-        #     for zpext_models in train_config.zpext_test_files:
-        #         EvaluateModelDips(
-        #             args,
-        #             train_config,
-        #             preprocess_config,
-        #             train_config.zpext_test_files[zpext_models]["Path"],
-        #             train_config.zpext_test_files[zpext_models][
-        #                 "data_set_name"
-        #             ],
-        #         )
+        if train_config.zpext_test_files is not None:
+            logger.info("Start evaluating DIPS with Z' test files...")
+            for zpext_models in train_config.zpext_test_files:
+                EvaluateModelDips(
+                    args,
+                    train_config,
+                    preprocess_config,
+                    train_config.zpext_test_files[zpext_models]["Path"],
+                    train_config.zpext_test_files[zpext_models][
+                        "data_set_name"
+                    ],
+                )
 
     else:
 

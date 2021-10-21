@@ -11,6 +11,7 @@ and has to be specified in the config file as 'evaluation_file'.
 
 import argparse
 import os
+import pickle
 
 import h5py
 import matplotlib.pyplot as plt
@@ -667,6 +668,32 @@ def plot_prob(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
+def plot_saliency(plot_name, plot_config, eval_params, eval_file_dir):
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    # Read file, change to specific file if defined
+    if ("evaluation_file" not in plot_config) or (
+        plot_config["evaluation_file"] is None
+    ):
+        with open(
+            eval_file_dir
+            + f'/saliency_{eval_epoch}_{plot_config["data_set_name"]}.pkl',
+            "rb",
+        ) as f:
+            maps_dict = pickle.load(f)
+
+    else:
+        with open(plot_config["evaluation_file"], "rb") as f:
+            maps_dict = pickle.load(f)
+
+    uet.plotSaliency(
+        maps_dict=maps_dict,
+        plot_name=plot_name,
+        **plot_config["plot_settings"],
+    )
+
+
 def SetUpPlots(
     plotting_config, plot_directory, eval_file_dir, format, print_model
 ):
@@ -753,11 +780,11 @@ def SetUpPlots(
             )
 
         elif plot_config["type"] == "saliency":
-            uet.plotSaliency(
+            plot_saliency(
                 plot_name=save_plot_to,
-                FileDir=eval_file_dir,
-                epoch=int(eval_params["epoch"]),
-                **plot_config["plot_settings"],
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
             )
 
         elif plot_config["type"] == "probability_comparison":

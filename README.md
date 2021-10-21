@@ -6,8 +6,6 @@ The Umami documentation is avaliable here:
 
 [![Umami docs](https://img.shields.io/badge/info-documentation-informational)](https://umami-docs.web.cern.ch/umami-docs/)
 
-
-
 Below is included a brief summary on how to get started fast.
 
 ## Installation
@@ -23,6 +21,20 @@ besides the CPU image, there is also a GPU image available which is especially u
 ```bash
 singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami:latest-gpu bash
 ```
+
+This image has Tensorflow installed for training the taggers. Another option is PyTorch. You can use it with this:
+
+```bash
+singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umamibase:latest-pytorch-gpu bash
+```
+
+If you want to change something in the code (outside of config files), you need to run
+
+```bash
+source run_setup.sh
+```
+
+which sources the [run_setup.sh](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/run_setup.sh). Otherwise, the already in the image installed version of Umami is used.
 
 ### Manual setup
 
@@ -58,16 +70,17 @@ The test suite can be run via
 pytest ./umami/tests/ -v
 ```
 
-If you want to only run unit tests, this can be done via
+If you want to only run, for example, the unit tests for the evaluation tools, this can be done via
 
 ```bash
-pytest ./umami/tests/unit/ -v
+pytest ./umami/tests/unit/evaluation_tools/ -v
 ```
 
-and the integration test similarly via
+To run the integration tests, you need to run them in the correct order: preprocessing, training, plotting.   
+Otherwise, you will get an error that some files are missing. You can run those via
 
 ```bash
-pytest ./umami/tests/integration/ -v
+pytest ./umami/tests/integration/test_preprocessing.py -v
 ```
 
 In order to run the code style checker `flake8` use the following command
@@ -76,6 +89,12 @@ In order to run the code style checker `flake8` use the following command
 flake8 ./umami
 ```
 
+## Preprocessing
+
+For the training of umami the ntuples are used as specified in the section [MC Samples](#mc-samples).
+
+The ntuples need to be preprocessed following the [preprocessing instructions](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/preprocessing.md).
+
 ## DL1r instructions
 
 If you want to train or evaluate DL1r please follow the [DL1r-instructions](docs/DL1r-instructions.md).
@@ -83,9 +102,3 @@ If you want to train or evaluate DL1r please follow the [DL1r-instructions](docs
 ## DIPS instructions
 
 If you want to train or evaluate DIPS please follow the [DIPS-instructions](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/Dips-instructions.md)
-
-## Preprocessing
-
-For the training of umami the ntuples are used as specified in the section [MC Samples](#mc-samples).
-
-The ntuples need to be preprocessed following the [preprocessing instructions](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/preprocessing.md).

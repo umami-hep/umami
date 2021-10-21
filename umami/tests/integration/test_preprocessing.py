@@ -22,8 +22,18 @@ def getConfiguration():
 
 
 def runPreprocessing(config, tagger):
-    """Call all steps of the preprocessing for a certain configuration and variable dict input.
-    Return value `True` if all steps succeeded, `False` if one step did not succees."""
+    """
+    Call all steps of the preprocessing for a certain configuration and variable dict input.
+    Return value `True` if all steps succeeded, `False` if one step did not succees.
+
+    Input:
+    - config: Config file used for testing.
+    - tagger: Name of the tagger which is to be used.
+
+    Output:
+    - True/False: Value if preprocessing worked.
+    - Artifact: Artifacts of the preprocessing for the next step in line.
+    """
     isSuccess = True
 
     logger.info("Test: running the prepare...")
@@ -75,8 +85,6 @@ def runPreprocessing(config, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--sample",
-                "count",
                 "--resampling",
             ]
         )
@@ -87,8 +95,6 @@ def runPreprocessing(config, tagger):
                 "preprocessing.py",
                 "-c",
                 f"{config}",
-                "--sample",
-                "count",
                 "--tracks",
                 "--resampling",
             ]

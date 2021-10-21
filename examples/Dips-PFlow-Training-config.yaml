@@ -19,24 +19,20 @@ add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16
 ttbar_test_files:
     ttbar_r21:
         Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "ttbar"
+        data_set_name: "ttbar_r21"
 
     ttbar_r22:
         Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "ttbar_comparison"
+        data_set_name: "ttbar_r22"
 
 zpext_test_files:
     zpext_r21:
         Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "zpext"
+        data_set_name: "zpext_r21"
 
     zpext_r22:
         Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "zpext_comparison"
-
-    zpext_r22_no_QSP:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts_No_QSPI-file_1.h5
-        data_set_name: "zpext_comparison_no_QSP"
+        data_set_name: "zpext_r22"
 
 # Path to Variable dict used in preprocessing
 var_dict: /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
@@ -98,6 +94,34 @@ Eval_parameters_validation:
     frac_values: {
         "cjets": 0.018,
         "ujets": 0.982,
+    }
+
+    # Cuts which are applied to the different datasets used for evaluation
+    variable_cuts: {
+        "ttbar_r21": {
+            "pt_btagJes": {
+                "operator": "<=",
+                "condition": 250000,
+            }
+        },
+        "ttbar_r22": {
+            "pt_btagJes": {
+                "operator": "<=",
+                "condition": 250000,
+            }
+        },
+        "zpext_r21": {
+            "pt_btagJes": {
+                "operator": ">",
+                "condition": 250000,
+            }
+        },
+        "zpext_r22": {
+            "pt_btagJes": {
+                "operator": ">",
+                "condition": 250000,
+            }
+        },
     }
 
     # Working point used in the evaluation
