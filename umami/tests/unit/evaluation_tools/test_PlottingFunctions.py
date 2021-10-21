@@ -1,4 +1,5 @@
 import os
+import pickle
 import tempfile
 import unittest
 from subprocess import run
@@ -289,11 +290,12 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plotSaliency(self):
+        with open(self.tmp_plot_dir + "saliency_1_ttbar_new.pkl", "rb") as f:
+            maps_dict = pickle.load(f)
+
         plotSaliency(
+            maps_dict=maps_dict,
             plot_name=self.tmp_plot_dir + "plotSaliency.png",
-            filepath=self.tmp_plot_dir + "saliency_1_ttbar_new.pkl",
-            epoch=self.eval_params["epoch"],
-            data_set_name=self.plot_config["data_set_name"],
             title="Test Saliency",
         )
 

@@ -264,13 +264,19 @@ class Scaling:
         Set up a generator who applies the scaling/shifting for the given jet variables.
 
         Input:
-        - tracks: Decide, if tracks or jets are loaded.
-        - input_file: File which is to be scaled. Default is file_name + resampled.
+        - input_file: File which is to be scaled.
+        - jets_variables: Variables of the jets which are to be scaled.
+        - jets_scale_dict: Scale dict of the jet variables with the values inside.
+        - jets_default_dict: Default scale dict of the jets.
+        - nJets: Number of jets which are to be scaled.
+        - tracks_noNormVars: Track variables which will not be scaled.
+        - tracks_logNormVars: Track variables where the log is used and then scaled.
+        - tracks_jointNormVars: Joint track variables.
+        - tracks_scale_dict: Scale dict of the track variables.
         - chunkSize: The number of jets which are loaded and scaled/shifted per step.
-        - counter: Counter for looping
 
         Output:
-        - Yield: The yielded scaled/shifted jets/tracks
+        - Yield: The yielded scaled/shifted jets/tracks and the labels
         """
 
         # Open the file and load the jets
@@ -373,10 +379,11 @@ class Scaling:
 
     def ApplyScales(self, input_file: str = None, chunkSize: int = 1e5):
         """
-        Apply the scaling and shifting to dataset using numpy
+        Apply the scaling and shifting.
 
         Input:
         - input_file: File which is to be scaled.
+        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
 
         Output:
         - scaled_file: Returns the scaled/shifted file

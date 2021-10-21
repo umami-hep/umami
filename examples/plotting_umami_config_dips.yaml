@@ -122,11 +122,10 @@ confusion_matrix_Dips_ttbar:
 
 Dips_saliency_b_WP77_passed_ttbar:
   type: "saliency"
+  data_set_name: "ttbar"
   plot_settings:
-    data_set_name: "ttbar"
     title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who passed WP = 77% \n with exactly 8 tracks"
     target_beff: 0.77
-    # u=0, c=1, b=2
     jet_flavour: "cjets"
     PassBool: True
     FlipAxis: True

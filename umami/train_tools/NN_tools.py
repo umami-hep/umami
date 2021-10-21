@@ -304,6 +304,7 @@ def LoadJetsFromFile(
     class_labels: list,
     nJets: int,
     variables: list = None,
+    cut_vars_dict: dict = None,
 ):
     """
     Load jets from file. Only jets from classes in class_labels are returned.
@@ -328,6 +329,13 @@ def LoadJetsFromFile(
 
     # Load dataframe from file
     if variables:
+        if cut_vars_dict:
+            # Add the needed variables to the variable list
+            variables += list(dict.fromkeys(cut_vars_dict))
+
+            # Remove doublings
+            variables = list(dict.fromkeys(variables))
+
         jets = pd.DataFrame(
             h5py.File(filepath, "r")["/jets"][:nJets][variables]
         )
@@ -356,8 +364,44 @@ def LoadJetsFromFile(
             class_label
         )
 
+    # Define the conditions to remove
+    toremove_conditions = jets["Umami_string_labels"] == "0"
+
+    # Add the needed cuts to the already existing one
+    if cut_vars_dict:
+        for var in cut_vars_dict:
+            if cut_vars_dict[var]["operator"] == "<=":
+                toremove_conditions = toremove_conditions | (
+                    jets[f"{var}"] > cut_vars_dict[var]["condition"]
+                )
+
+            elif cut_vars_dict[var]["operator"] == "==":
+                toremove_conditions = toremove_conditions | (
+                    jets[f"{var}"] != cut_vars_dict[var]["condition"]
+                )
+
+            elif cut_vars_dict[var]["operator"] == ">=":
+                toremove_conditions = toremove_conditions | (
+                    jets[f"{var}"] > cut_vars_dict[var]["condition"]
+                )
+
+            elif cut_vars_dict[var]["operator"] == "<":
+                toremove_conditions = toremove_conditions | (
+                    jets[f"{var}"] >= cut_vars_dict[var]["condition"]
+                )
+
+            elif cut_vars_dict[var]["operator"] == ">":
+                toremove_conditions = toremove_conditions | (
+                    jets[f"{var}"] <= cut_vars_dict[var]["condition"]
+                )
+
+            else:
+                raise ValueError(
+                    f'Operator type {cut_vars_dict[var]["operator"]} in variable cuts not supported'
+                )
+
     # Get the indices of the jets that are not used
-    indices_toremove = np.where(jets["Umami_string_labels"] == "0")[0]
+    indices_toremove = np.where(toremove_conditions is True)[0]
 
     # Remove all unused jets
     jets = jets.drop(indices_toremove)
@@ -370,6 +414,7 @@ def LoadTrksFromFile(
     filepath: str,
     class_labels: list,
     nJets: int,
+    cut_vars_dict: dict = None,
 ):
     """
     Load tracks from file. Only jets from classes in class_labels are returned.
@@ -391,11 +436,16 @@ def LoadTrksFromFile(
         class_labels
     )
 
+    # Define the labels which are needed
+    jet_vars_to_load = list(dict.fromkeys(class_label_vars))
+
+    # Load variables for cuts if given
+    if cut_vars_dict:
+        jet_vars_to_load += list(dict.fromkeys(cut_vars_dict))
+
     # Load the used label variables from file
     with h5py.File(filepath, "r") as jets:
-        for iterator, iter_class_var in enumerate(
-            list(dict.fromkeys(class_label_vars))
-        ):
+        for iterator, iter_class_var in enumerate(jet_vars_to_load):
             if iterator == 0:
                 labels = pd.DataFrame(
                     jets["/jets"][iter_class_var], columns=[iter_class_var]
@@ -430,8 +480,44 @@ def LoadTrksFromFile(
             class_label
         )
 
+    # Define the conditions to remove
+    toremove_conditions = labels["Umami_string_labels"] == "0"
+
+    # Add the needed cuts to the already existing one
+    if cut_vars_dict:
+        for var in cut_vars_dict:
+            if cut_vars_dict[var]["operator"] == "<=":
+                toremove_conditions = toremove_conditions | (
+                    labels[f"{var}"] > cut_vars_dict[var]["condition"]
+                )
+
+            elif cut_vars_dict[var]["operator"] == "==":
+                toremove_conditions = toremove_conditions | (
+                    labels[f"{var}"] != cut_vars_dict[var]["condition"]
+                )
+
+            elif cut_vars_dict[var]["operator"] == ">=":
+                toremove_conditions = toremove_conditions | (
+                    labels[f"{var}"] > cut_vars_dict[var]["condition"]
+                )
+
+            elif cut_vars_dict[var]["operator"] == "<":
+                toremove_conditions = toremove_conditions | (
+                    labels[f"{var}"] >= cut_vars_dict[var]["condition"]
+                )
+
+            elif cut_vars_dict[var]["operator"] == ">":
+                toremove_conditions = toremove_conditions | (
+                    labels[f"{var}"] <= cut_vars_dict[var]["condition"]
+                )
+
+            else:
+                raise ValueError(
+                    f'Operator type {cut_vars_dict[var]["operator"]} in variable cuts not supported'
+                )
+
     # Get the indices of the jets that are not used
-    indices_toremove = np.where(labels["Umami_string_labels"] == "0")[0]
+    indices_toremove = np.where(toremove_conditions is True)[0]
 
     # Remove unused jets from labels
     labels = labels.drop(indices_toremove)
@@ -793,6 +879,7 @@ def GetTestSample(
     class_labels,
     nJets=int(3e5),
     exclude=[],
+    cut_vars_dict: dict = None,
 ):
     """
     Apply the scaling and shifting to dataset using numpy
@@ -826,6 +913,7 @@ def GetTestSample(
             filepath=file,
             class_labels=class_labels,
             nJets=nJets,
+            cut_vars_dict=cut_vars_dict,
         )
 
         # Binarize Labels
@@ -881,7 +969,7 @@ def GetTestSample(
             all_labels = all_labels.append(labels, ignore_index=True)
 
         # Adding the loaded jets to counter
-        nJets_counter += len(all_labels)
+        nJets_counter += len(all_jets)
 
         # Stop loading if enough jets are loaded
         if nJets_counter >= nJets:
@@ -906,6 +994,7 @@ def GetTestSampleTrks(
     preprocess_config,
     class_labels,
     nJets=int(3e5),
+    cut_vars_dict=None,
 ):
     """
     Apply the scaling and shifting to dataset using numpy
@@ -939,6 +1028,7 @@ def GetTestSampleTrks(
             filepath=file,
             class_labels=class_labels,
             nJets=nJets,
+            cut_vars_dict=cut_vars_dict,
         )
 
         # Binarize the labels
@@ -978,9 +1068,6 @@ def GetTestSampleTrks(
             np.append(all_labels, binary_labels)
 
         # Adding the loaded jets to counter
-        nJets_counter += len(all_labels)
-
-        # Add the number of jets to counter
         nJets_counter += len(all_trks)
 
         # Stop loading if enough jets are loaded
@@ -1123,6 +1210,7 @@ def GetTestFile(
     class_labels: list,
     nJets: int,
     exclude: list,
+    cut_vars_dict: dict = None,
 ):
     """
     Load the training jets and tracks.
@@ -1145,6 +1233,7 @@ def GetTestFile(
         preprocess_config=preprocess_config,
         class_labels=class_labels,
         nJets=int(nJets),
+        cut_vars_dict=cut_vars_dict,
     )
 
     X, Y = GetTestSample(
@@ -1154,6 +1243,7 @@ def GetTestFile(
         class_labels=class_labels,
         nJets=int(nJets),
         exclude=exclude,
+        cut_vars_dict=cut_vars_dict,
     )
 
     assert np.equal(Y, Y_trk).all()

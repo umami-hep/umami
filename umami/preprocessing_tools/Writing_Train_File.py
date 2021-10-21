@@ -32,12 +32,12 @@ class TrainSampleWriter:
         Set up a generator who loads the scaled file and save it in the format for training.
 
         Input:
-        - tracks: Decide, if tracks or jets are loaded.
-        - input_file: File which is to be scaled. Default is file_name + resampled.
+        - input_file: File which is to be scaled.
+        - nJets: Number of jets used.
         - chunkSize: The number of jets which are loaded and scaled/shifted per step.
 
         Output:
-        - Yield: The yielded scaled/shifted jets/tracks
+        - Yield: The yielded jets/tracks and labels loaded from file
         """
 
         # Open the file and load the jets
@@ -78,6 +78,16 @@ class TrainSampleWriter:
         output_file: str = None,
         chunkSize: int = int(1e5),
     ):
+        """
+        Input:
+        - input_file: File with scaled/shifted jets. Default is name from config + resampled_scaled
+        - output_file: Name of the output file. Default is name from config + resampled_scaled_shuffled.
+        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
+
+        Output:
+        - Train File: File which ready for training with the NN's.
+        """
+
         # Get the input files for writing/merging
         if input_file is None:
             input_file = self.config.GetFileName(option="resampled_scaled")

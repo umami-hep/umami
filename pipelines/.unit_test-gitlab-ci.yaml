@@ -10,6 +10,7 @@ unittest:
     - pytest ./umami/tests/unit/evaluation_tools -v
     - pytest ./umami/tests/unit/train_tools -v
     - pytest ./umami/tests/unit/input_vars_tools -v
+    - pytest ./umami/tests/unit/tf_tools -v
   rules:
     - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
 
@@ -58,3 +59,9 @@ unittest_input_vars_tools:
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/unit/input_vars_tools/ -v --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_input_vars_tools
+
+unittest_tf_tools:
+  <<: *unittest_template
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/tf_tools/ -v --junitxml=report.xml
+    - cp .coverage coverage_files/.coverage.unittest_tf_tools

@@ -7,7 +7,7 @@ parameters: !include Preprocessing-settings-Freiburg.yaml
         operator: mod_6_<=
         condition: 3
     - pt_btagJes:
-        operator: <=
+        operator: "<="
         condition: 2.5e5
 
 .cuts_template_zprime_train: &cuts_template_zprime_train
@@ -16,7 +16,7 @@ parameters: !include Preprocessing-settings-Freiburg.yaml
         operator: mod_6_<=
         condition: 3
     - pt_btagJes:
-        operator: <=
+        operator: ">="
         condition: 2.5e5
 
 .cuts_template_validation: &cuts_template_validation
