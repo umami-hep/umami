@@ -1794,8 +1794,8 @@ def plotSaliency(
             "shared pixel hits",
             "split pixel hits",
             "shared SCT hits",
-            r"$\log \ p_T^{frac}$",
-            r"$\log \ \Delta R$",
+            "log" + r" $p_T^{frac}$",
+            "log" + r" $\mathrm{\Delta} R$",
             "nPixHits",
             "nSCTHits",
             "$d_0$",
@@ -1832,8 +1832,8 @@ def plotSaliency(
             "shared pixel hits",
             "split pixel hits",
             "shared SCT hits",
-            r"$\log \ p_T^{frac}$",
-            r"$\log \ \Delta R$",
+            "log" + r" $p_T^{frac}$",
+            "log" + r" $\mathrm{\Delta} R$",
             "nPixHits",
             "nSCTHits",
             "$d_0$",
@@ -1870,7 +1870,8 @@ def plotSaliency(
     cax = divider.append_axes("right", size="5%", pad=0.05)
     colorbar = plt.colorbar(im, cax=cax)
     colorbar.ax.set_title(
-        r"$\frac{\partial D_{b}}{\partial x_{ik}}$", size=1.6 * fontsize
+        r"$\frac{\mathrm{\partial} D_{b}}{\mathrm{\partial} x_{ik}}$",
+        size=1.6 * fontsize,
     )
 
     # Set the fontsize of the colorbar yticks
