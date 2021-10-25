@@ -42,6 +42,7 @@ class Configuration(object):
             "ttbar_test_files",
             "zpext_test_files",
             "evaluate_trained_model",
+            "NN_structure",
             "Eval_parameters_validation",
             "Plotting_settings",
         ]

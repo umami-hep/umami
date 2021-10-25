@@ -288,6 +288,7 @@ def LoadJetsFromFile(
     nJets: int,
     variables: list = None,
     cut_vars_dict: dict = None,
+    print_logger: bool = True,
 ):
     """
     Load jets from file. Only jets from classes in class_labels are returned.
@@ -304,6 +305,15 @@ def LoadJetsFromFile(
                     index of the class label in class_labels.
     """
 
+    # Get the paths of the files as a iterable list
+    filepaths = glob(filepath)
+
+    # Check if filepaths is empty
+    if len(filepaths) == 0:
+        raise RuntimeError(
+            "No file selected! Check the filepath in your config file!"
+        )
+
     # Get class_labels variables etc. from global config
     class_ids = get_class_label_ids(class_labels)
     class_label_vars, flatten_class_labels = get_class_label_variables(
@@ -319,78 +329,114 @@ def LoadJetsFromFile(
             # Remove doublings
             variables = list(dict.fromkeys(variables))
 
-        jets = pd.DataFrame(
-            h5py.File(filepath, "r")["/jets"][:nJets][variables]
-        )
+    # Init a counter for the number of loaded jets
+    nJets_counter = 0
 
-    else:
-        jets = pd.DataFrame(h5py.File(filepath, "r")["/jets"][:nJets])
+    for j, file in enumerate(sorted(filepaths, key=natural_keys)):
+        if variables:
+            jets = pd.DataFrame(
+                h5py.File(file, "r")["/jets"][:nJets][variables]
+            )
 
-    # Init new column for string labels
-    jets["Umami_string_labels"] = np.zeros_like(jets[class_label_vars[0]])
-    jets["Umami_labels"] = np.zeros_like(jets[class_label_vars[0]])
+        else:
+            jets = pd.DataFrame(h5py.File(file, "r")["/jets"][:nJets])
 
-    # Change type of column to string
-    jets = jets.astype({"Umami_string_labels": "str"})
+        # Init new column for string labels
+        jets["Umami_string_labels"] = np.zeros_like(jets[class_label_vars[0]])
+        jets["Umami_labels"] = np.zeros_like(jets[class_label_vars[0]])
 
-    # Iterate over the classes and add the correct labels to Umami columns
-    for class_id, class_label_var, class_label in zip(
-        class_ids, class_label_vars, flatten_class_labels
-    ):
-        indices_tochange = np.where(jets[class_label_var].values == class_id)
+        # Change type of column to string
+        jets = jets.astype({"Umami_string_labels": "str"})
 
-        # Add a string description which this class is
-        jets["Umami_string_labels"].values[indices_tochange] = class_label
+        # Iterate over the classes and add the correct labels to Umami columns
+        for class_id, class_label_var, class_label in zip(
+            class_ids, class_label_vars, flatten_class_labels
+        ):
+            indices_tochange = np.where(
+                jets[class_label_var].values == class_id
+            )
 
-        # Add the right column label to class
-        jets["Umami_labels"].values[indices_tochange] = class_labels.index(
-            class_label
-        )
+            # Add a string description which this class is
+            jets["Umami_string_labels"].values[indices_tochange] = class_label
 
-    # Define the conditions to remove
-    toremove_conditions = jets["Umami_string_labels"] == "0"
+            # Add the right column label to class
+            jets["Umami_labels"].values[indices_tochange] = class_labels.index(
+                class_label
+            )
 
-    # Add the needed cuts to the already existing one
-    if cut_vars_dict:
-        for var in cut_vars_dict:
-            if cut_vars_dict[var]["operator"] == "<=":
-                toremove_conditions = toremove_conditions | (
-                    jets[f"{var}"] > cut_vars_dict[var]["condition"]
-                )
+        # Define the conditions to remove
+        toremove_conditions = jets["Umami_string_labels"] == "0"
 
-            elif cut_vars_dict[var]["operator"] == "==":
-                toremove_conditions = toremove_conditions | (
-                    jets[f"{var}"] != cut_vars_dict[var]["condition"]
-                )
+        # Add the needed cuts to the already existing one
+        if cut_vars_dict:
+            for var in cut_vars_dict:
+                if cut_vars_dict[var]["operator"] == "<=":
+                    toremove_conditions = toremove_conditions | (
+                        jets[f"{var}"] > cut_vars_dict[var]["condition"]
+                    )
 
-            elif cut_vars_dict[var]["operator"] == ">=":
-                toremove_conditions = toremove_conditions | (
-                    jets[f"{var}"] > cut_vars_dict[var]["condition"]
-                )
+                elif cut_vars_dict[var]["operator"] == "==":
+                    toremove_conditions = toremove_conditions | (
+                        jets[f"{var}"] != cut_vars_dict[var]["condition"]
+                    )
 
-            elif cut_vars_dict[var]["operator"] == "<":
-                toremove_conditions = toremove_conditions | (
-                    jets[f"{var}"] >= cut_vars_dict[var]["condition"]
-                )
+                elif cut_vars_dict[var]["operator"] == ">=":
+                    toremove_conditions = toremove_conditions | (
+                        jets[f"{var}"] > cut_vars_dict[var]["condition"]
+                    )
 
-            elif cut_vars_dict[var]["operator"] == ">":
-                toremove_conditions = toremove_conditions | (
-                    jets[f"{var}"] <= cut_vars_dict[var]["condition"]
-                )
+                elif cut_vars_dict[var]["operator"] == "<":
+                    toremove_conditions = toremove_conditions | (
+                        jets[f"{var}"] >= cut_vars_dict[var]["condition"]
+                    )
 
-            else:
-                raise ValueError(
-                    f'Operator type {cut_vars_dict[var]["operator"]} in variable cuts not supported'
-                )
+                elif cut_vars_dict[var]["operator"] == ">":
+                    toremove_conditions = toremove_conditions | (
+                        jets[f"{var}"] <= cut_vars_dict[var]["condition"]
+                    )
 
-    # Get the indices of the jets that are not used
-    indices_toremove = np.where(toremove_conditions is True)[0]
+                else:
+                    raise ValueError(
+                        f'Operator type {cut_vars_dict[var]["operator"]} in variable cuts not supported'
+                    )
 
-    # Remove all unused jets
-    jets = jets.drop(indices_toremove)
+        # Get the indices of the jets that are not used
+        indices_toremove = np.where(toremove_conditions == True)[  # noqa: E712
+            0
+        ]
+
+        # Remove all unused jets
+        jets = jets.drop(indices_toremove)
+
+        # If not the first file processed, append to the global one
+        if j == 0:
+            all_jets = jets
+            all_labels = jets["Umami_labels"].values
+
+        # if the first file processed, set as global one
+        else:
+            all_jets = all_jets.append(jets, ignore_index=True)
+            all_labels = np.append(all_labels, jets["Umami_labels"].values)
+
+        # Adding the loaded jets to counter
+        nJets_counter += len(jets)
+
+        # Stop loading if enough jets are loaded
+        if nJets_counter >= nJets:
+            break
+
+    if print_logger:
+        # Check if enough jets are loaded
+        if nJets_counter < nJets:
+            logger.warning(
+                f"Requested {nJets} but only {nJets_counter} could be loaded!"
+            )
+
+        else:
+            logger.info(f"Loaded {nJets} jets!")
 
     # Return the jets and internal labels
-    return jets, jets["Umami_labels"].values
+    return all_jets[:nJets], all_labels[:nJets]
 
 
 def LoadTrksFromFile(
@@ -398,6 +444,7 @@ def LoadTrksFromFile(
     class_labels: list,
     nJets: int,
     cut_vars_dict: dict = None,
+    print_logger: bool = True,
 ):
     """
     Load tracks from file. Only jets from classes in class_labels are returned.
@@ -413,6 +460,15 @@ def LoadTrksFromFile(
                     index of the class label in class_labels.
     """
 
+    # Get the paths of the files as a iterable list
+    filepaths = glob(filepath)
+
+    # Check if filepaths is empty
+    if len(filepaths) == 0:
+        raise RuntimeError(
+            "No file selected! Check the filepath in your config file!"
+        )
+
     # Get class_labels variables etc. from global config
     class_ids = get_class_label_ids(class_labels)
     class_label_vars, flatten_class_labels = get_class_label_variables(
@@ -426,95 +482,133 @@ def LoadTrksFromFile(
     if cut_vars_dict:
         jet_vars_to_load += list(dict.fromkeys(cut_vars_dict))
 
-    # Load the used label variables from file
-    with h5py.File(filepath, "r") as jets:
-        for iterator, iter_class_var in enumerate(jet_vars_to_load):
-            if iterator == 0:
-                labels = pd.DataFrame(
-                    jets["/jets"][iter_class_var], columns=[iter_class_var]
-                )
+    # Init a counter for the number of loaded jets
+    nJets_counter = 0
 
-            else:
-                labels[iter_class_var] = jets["/jets"][iter_class_var]
+    # Iterate over the files
+    for j, file in enumerate(sorted(filepaths, key=natural_keys)):
+        # Load the used label variables from file
+        with h5py.File(file, "r") as jets:
+            for iterator, iter_class_var in enumerate(jet_vars_to_load):
+                if iterator == 0:
+                    labels = pd.DataFrame(
+                        jets["/jets"][iter_class_var], columns=[iter_class_var]
+                    )
 
-    # Use only the amout of jets requested
-    labels = labels[:nJets]
+                else:
+                    labels[iter_class_var] = jets["/jets"][iter_class_var]
 
-    # Init new column for string labels
-    labels["Umami_string_labels"] = np.zeros_like(labels[class_label_vars[0]])
-    labels["Umami_labels"] = np.zeros_like(labels[class_label_vars[0]])
+        # Use only the amout of jets requested
+        labels = labels[:nJets]
 
-    # Change type of column to string
-    labels = labels.astype({"Umami_string_labels": "str"})
+        # Init new column for string labels
+        labels["Umami_string_labels"] = np.zeros_like(
+            labels[class_label_vars[0]]
+        )
+        labels["Umami_labels"] = np.zeros_like(labels[class_label_vars[0]])
 
-    # Iterate over the classes and add the correct labels to Umami columns
-    for (class_id, class_label_var, class_label) in zip(
-        class_ids, class_label_vars, flatten_class_labels
-    ):
-        indices_tochange = np.where(
-            labels[class_label_var].values == class_id
-        )[0]
+        # Change type of column to string
+        labels = labels.astype({"Umami_string_labels": "str"})
 
-        # Add a string description which this class is
-        labels["Umami_string_labels"].values[indices_tochange] = class_label
+        # Iterate over the classes and add the correct labels to Umami columns
+        for (class_id, class_label_var, class_label) in zip(
+            class_ids, class_label_vars, flatten_class_labels
+        ):
+            indices_tochange = np.where(
+                labels[class_label_var].values == class_id
+            )[0]
 
-        # Add the right column label to class
-        labels["Umami_labels"].values[indices_tochange] = class_labels.index(
-            class_label
+            # Add a string description which this class is
+            labels["Umami_string_labels"].values[
+                indices_tochange
+            ] = class_label
+
+            # Add the right column label to class
+            labels["Umami_labels"].values[
+                indices_tochange
+            ] = class_labels.index(class_label)
+
+        # Define the conditions to remove
+        toremove_conditions = labels["Umami_string_labels"] == "0"
+
+        # Add the needed cuts to the already existing one
+        if cut_vars_dict:
+            for var in cut_vars_dict:
+                if cut_vars_dict[var]["operator"] == "<=":
+                    toremove_conditions = toremove_conditions | (
+                        labels[f"{var}"] > cut_vars_dict[var]["condition"]
+                    )
+
+                elif cut_vars_dict[var]["operator"] == "==":
+                    toremove_conditions = toremove_conditions | (
+                        labels[f"{var}"] != cut_vars_dict[var]["condition"]
+                    )
+
+                elif cut_vars_dict[var]["operator"] == ">=":
+                    toremove_conditions = toremove_conditions | (
+                        labels[f"{var}"] > cut_vars_dict[var]["condition"]
+                    )
+
+                elif cut_vars_dict[var]["operator"] == "<":
+                    toremove_conditions = toremove_conditions | (
+                        labels[f"{var}"] >= cut_vars_dict[var]["condition"]
+                    )
+
+                elif cut_vars_dict[var]["operator"] == ">":
+                    toremove_conditions = toremove_conditions | (
+                        labels[f"{var}"] <= cut_vars_dict[var]["condition"]
+                    )
+
+                else:
+                    raise ValueError(
+                        f'Operator type {cut_vars_dict[var]["operator"]} in variable cuts not supported'
+                    )
+
+        # Get the indices of the jets that are not used
+        indices_toremove = np.where(toremove_conditions == True)[  # noqa: E712
+            0
+        ]
+
+        # Remove unused jets from labels
+        labels = labels.drop(indices_toremove)
+        Umami_labels = labels["Umami_labels"].values
+
+        # Load tracks and delete unused classes
+        trks = np.delete(
+            arr=np.asarray(h5py.File(file, "r")["/tracks"][:nJets]),
+            obj=indices_toremove,
+            axis=0,
         )
 
-    # Define the conditions to remove
-    toremove_conditions = labels["Umami_string_labels"] == "0"
+        # If not the first file processed, append to the global one
+        if j == 0:
+            all_trks = trks
+            all_labels = Umami_labels
 
-    # Add the needed cuts to the already existing one
-    if cut_vars_dict:
-        for var in cut_vars_dict:
-            if cut_vars_dict[var]["operator"] == "<=":
-                toremove_conditions = toremove_conditions | (
-                    labels[f"{var}"] > cut_vars_dict[var]["condition"]
-                )
+        # if the first file processed, set as global one
+        else:
+            all_trks = np.append(all_trks, trks, axis=0)
+            all_labels = np.append(all_labels, Umami_labels)
 
-            elif cut_vars_dict[var]["operator"] == "==":
-                toremove_conditions = toremove_conditions | (
-                    labels[f"{var}"] != cut_vars_dict[var]["condition"]
-                )
+        # Adding the loaded jets to counter
+        nJets_counter += len(trks)
 
-            elif cut_vars_dict[var]["operator"] == ">=":
-                toremove_conditions = toremove_conditions | (
-                    labels[f"{var}"] > cut_vars_dict[var]["condition"]
-                )
+        # Stop loading if enough jets are loaded
+        if nJets_counter >= nJets:
+            break
 
-            elif cut_vars_dict[var]["operator"] == "<":
-                toremove_conditions = toremove_conditions | (
-                    labels[f"{var}"] >= cut_vars_dict[var]["condition"]
-                )
+    if print_logger:
+        # Check if enough jets are loaded
+        if nJets_counter < nJets:
+            logger.warning(
+                f"Requested {nJets} but only {nJets_counter} could be loaded!"
+            )
 
-            elif cut_vars_dict[var]["operator"] == ">":
-                toremove_conditions = toremove_conditions | (
-                    labels[f"{var}"] <= cut_vars_dict[var]["condition"]
-                )
-
-            else:
-                raise ValueError(
-                    f'Operator type {cut_vars_dict[var]["operator"]} in variable cuts not supported'
-                )
-
-    # Get the indices of the jets that are not used
-    indices_toremove = np.where(toremove_conditions is True)[0]
-
-    # Remove unused jets from labels
-    labels = labels.drop(indices_toremove)
-    Umami_labels = labels["Umami_labels"].values
-
-    # Load tracks and delete unused classes
-    trks = np.delete(
-        arr=np.asarray(h5py.File(filepath, "r")["/tracks"][:nJets]),
-        obj=indices_toremove,
-        axis=0,
-    )
+        else:
+            logger.info(f"Loaded {nJets} jets!")
 
     # Return Trks and labels
-    return trks, Umami_labels
+    return all_trks[:nJets], all_labels[:nJets]
 
 
 def CalcDiscValues(
@@ -877,6 +971,12 @@ def GetTestSample(
     # In case there are multiple files (Wildcard etc.)
     filepaths = glob(input_file)
 
+    # Check if filepaths is empty
+    if len(filepaths) == 0:
+        raise RuntimeError(
+            "No file selected! Check the filepath in your config file!"
+        )
+
     # Load variables
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -897,6 +997,7 @@ def GetTestSample(
             class_labels=class_labels,
             nJets=nJets,
             cut_vars_dict=cut_vars_dict,
+            print_logger=False,
         )
 
         # Binarize Labels
@@ -952,7 +1053,7 @@ def GetTestSample(
             all_labels = all_labels.append(labels, ignore_index=True)
 
         # Adding the loaded jets to counter
-        nJets_counter += len(all_jets)
+        nJets_counter += len(jets)
 
         # Stop loading if enough jets are loaded
         if nJets_counter >= nJets:
@@ -965,10 +1066,10 @@ def GetTestSample(
         )
 
     else:
-        logger.info(f"Loaded {nJets_counter} jets!")
+        logger.info(f"Loaded {nJets} jets!")
 
     # Return jets and labels
-    return all_jets, all_labels
+    return all_jets[:nJets], all_labels[:nJets]
 
 
 def GetTestSampleTrks(
@@ -992,6 +1093,12 @@ def GetTestSampleTrks(
     # In case there are multiple files (Wildcard etc.)
     filepaths = glob(input_file)
 
+    # Check if filepaths is empty
+    if len(filepaths) == 0:
+        raise RuntimeError(
+            "No file selected! Check the filepath in your config file!"
+        )
+
     # Load variables
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -1012,6 +1119,7 @@ def GetTestSampleTrks(
             class_labels=class_labels,
             nJets=nJets,
             cut_vars_dict=cut_vars_dict,
+            print_logger=False,
         )
 
         # Binarize the labels
@@ -1040,18 +1148,21 @@ def GetTestSampleTrks(
                 x = np.where(trk_mask, x / scale_dict[var]["scale"], x)
             var_arr_list.append(np.nan_to_num(x))
 
+        # Stack the track variables
+        trks = np.stack(var_arr_list, axis=-1)
+
         # If not the first file processed, append to the global one
         if j == 0:
-            all_trks = np.stack(var_arr_list, axis=-1)
+            all_trks = trks
             all_labels = binary_labels
 
         # if the first file processed, set as global one
         else:
-            np.append(all_trks, np.stack(var_arr_list, axis=-1))
-            np.append(all_labels, binary_labels)
+            all_trks = np.append(all_trks, trks, axis=0)
+            all_labels = np.append(all_labels, binary_labels, axis=0)
 
         # Adding the loaded jets to counter
-        nJets_counter += len(all_trks)
+        nJets_counter += len(trks)
 
         # Stop loading if enough jets are loaded
         if nJets_counter >= nJets:
@@ -1064,9 +1175,9 @@ def GetTestSampleTrks(
         )
 
     else:
-        logger.info(f"Loaded {nJets_counter} jets!")
+        logger.info(f"Loaded {nJets} jets!")
 
-    return all_trks, all_labels
+    return all_trks[:nJets], all_labels[:nJets]
 
 
 def load_validation_data_umami(train_config, preprocess_config, nJets: int):
