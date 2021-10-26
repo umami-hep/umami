@@ -33,7 +33,7 @@ linter:
 
 yaml_linter:
   stage: linting
-  image: sdesbure/yamllint
+  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/training-images/yamllint:latest
   script:
     - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
   rules:
