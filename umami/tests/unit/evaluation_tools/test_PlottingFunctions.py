@@ -126,9 +126,7 @@ class plot_score_TestCase(unittest.TestCase):
             "epoch": 1,
             "bool_use_taus": False,
         }
-        self.data_url = (
-            "https://umami-docs.web.cern.ch/umami-docs/ci/eval_files/"
-        )
+        self.data_url = "https://umami-ci-provider.web.cern.ch/eval_files/"
         self.results_url = self.data_url + "results-1_new.h5"
         self.rej_url = self.data_url + "results-rej_per_eff-1_new.h5"
         self.saliency_url = self.data_url + "saliency_1_ttbar_new.pkl"

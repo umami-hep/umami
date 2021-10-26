@@ -1,4 +1,4 @@
-data_url: 'https://umami-docs.web.cern.ch/umami-docs/ci/'
+data_url: 'https://umami-ci-provider.web.cern.ch/'
 
 test_preprocessing:
     data_subfolder: 'preprocessing'
