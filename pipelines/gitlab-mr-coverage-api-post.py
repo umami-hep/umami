@@ -7,7 +7,7 @@ gl = gitlab.Gitlab('https://gitlab.cern.ch', private_token=os.environ['API_UMAMI
 project = gl.projects.get('79534')
 
 mr_id   = os.environ['CI_MERGE_REQUEST_IID']
-note = f"The detailed coverage is available under https://umami-docs.web.cern.ch/umami-docs/coverage_reports/{mr_id}/"
+note = f"The detailed coverage is available under https://umami-ci-coverage.web.cern.ch/{mr_id}/"
 mr = project.mergerequests.get(mr_id)
 post_coverage = True
 for note_i in mr.notes.list():
