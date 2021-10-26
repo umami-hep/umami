@@ -1,4 +1,4 @@
-[![pipeline status](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/badges/master/pipeline.svg)](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/commits/master) [![coverage report](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/badges/master/coverage.svg)](https://umami-docs.web.cern.ch/umami-docs/coverage_reports/master/) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![pipeline status](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/badges/master/pipeline.svg)](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/commits/master) [![coverage report](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/badges/master/coverage.svg)](https://umami-ci-coverage.web.cern.ch/master/) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # Umami
 
