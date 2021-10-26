@@ -25,7 +25,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_plot_dir = f"{self.tmp_dir.name}/"
         self.data_url = (
-            "https://umami-docs.web.cern.ch/umami-docs/ci/plot_input_vars/"
+            "https://umami-ci-provider.web.cern.ch/plot_input_vars/"
         )
 
         self.Control_plots_dir = os.path.join(

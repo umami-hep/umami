@@ -54,7 +54,7 @@ class Load_Files_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-docs.web.cern.ch/umami-docs/ci/umami/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
                 "--directory-prefix",
                 self.tmp_test_dir,
             ]
@@ -659,7 +659,7 @@ class GetSamples_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-docs.web.cern.ch/umami-docs/ci/umami/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]
@@ -667,7 +667,7 @@ class GetSamples_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-docs.web.cern.ch/umami-docs/ci/umami/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]
