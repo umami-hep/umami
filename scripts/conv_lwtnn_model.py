@@ -6,7 +6,7 @@ from tensorflow.keras.initializers import glorot_uniform
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import CustomObjectScope
 
-from umami.train_tools import Sum
+from umami.tf_tools import Sum
 
 
 def GetParser():

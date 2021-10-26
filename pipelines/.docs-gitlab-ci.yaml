@@ -1,32 +1,25 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  MKDOCS_VERSION: '1.2.1'
+  MATERIAL_VERSION: '7.1.10'
+  I18NSTATIC_VERSION: '0.17'
+
 build_docs:
+  image: python:3.8-alpine
   stage: builds
-  image: gitlab-registry.cern.ch/authoring/documentation/mkdocs:stable
-  script:
-    - mkdocs build --strict --clean --site-dir www
-    - echo -e "AddDefaultCharset UTF-8\nSSLRequireSSL\n" > www/.htaccess
   before_script:
     - "" # overwrite default, do nothing
+  script:
+    - apk add --no-cache git subversion
+    - pip install --upgrade pip setuptools wheel
+    - pip install mkdocs==${MKDOCS_VERSION} mkdocs-material==${MATERIAL_VERSION} mkdocs-static-i18n==${I18NSTATIC_VERSION}
+    - if [[ -f requirements.txt ]]; then pip install -r requirements.txt; fi;
+    - mkdocs build -d public
+    - if [[ -f _redirects ]]; then cp _redirects public; fi;
   artifacts:
     paths:
-      - www
+    - www
     expire_in: 1 hour
-  only:
-    - master
-
-# deploy the website to EOS, but only for master branch of main repository
-#     see https://gitlab.cern.ch/ci-tools/ci-web-deployer/
-deploying_docs:
-  stage: publish
-  needs:
-    - build_docs
-  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer
-  variables:
-    METHOD: xrdcp
-    EOS_PATH: "/eos/user/u/umamibot/www"
-    CI_OUTPUT_DIR: "www/"
-  before_script:
-    - "" # overwrite default, do nothing
-  script:
-    - deploy-eos
-  only:
-    - master@atlas-flavor-tagging-tools/algorithms/umami
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: always
