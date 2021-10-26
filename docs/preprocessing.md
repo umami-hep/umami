@@ -287,6 +287,16 @@ The `options` are some options for the different resampling methods. You need to
 Another thing you need to define are the `samples` which are to be resampled. You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`.
 `fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The rest of the variables are pretty self-explanatory.
 
+
+### General settings 
+
+| Setting | Explanation      |
+| ------ | ---------------- |
+| `outfile_name` | name of the output file of the preprocessing |
+| `plot_name` | defines the names of the control plots which are produced in the preprocessing |
+| `var_file` | path to the variable dict |
+| `dict_file` | path to the scale dict |
+
 ```yaml
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name
