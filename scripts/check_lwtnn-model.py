@@ -8,7 +8,7 @@ from tensorflow.keras.utils import CustomObjectScope
 
 import umami.train_tools as utt
 from umami.configuration import logger
-from umami.train_tools import Sum
+from umami.tf_tools import Sum
 
 
 def GetParser():
