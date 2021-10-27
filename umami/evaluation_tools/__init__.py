@@ -12,6 +12,7 @@ from umami.evaluation_tools.PlottingFunctions import (
     FlatEfficiencyPerBin,
     calc_bins,
     calc_ratio,
+    plot_confusion,
     plot_prob,
     plot_prob_comparison,
     plot_score,

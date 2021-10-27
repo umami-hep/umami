@@ -109,11 +109,19 @@ def EvaluateModel(
         Eval_model_bool = True
 
     # Test if multiple taggers are given or not
-    if type(Eval_params["tagger"]) is not list:
+    if type(Eval_params["tagger"]) is str:
         tagger_list = [Eval_params["tagger"]]
 
-    else:
+    elif type(Eval_params["tagger"]) is list:
         tagger_list = Eval_params["tagger"]
+
+    else:
+        raise ValueError(
+            """
+            Tagger given in Eval_parameters_validation
+            is not a string or a list!
+            """
+        )
 
     if Eval_model_bool is True:
         if args.epoch is None:
@@ -281,11 +289,19 @@ def EvaluateModelDips(
     nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Test if multiple taggers are given or not
-    if type(Eval_params["tagger"]) is not list:
+    if type(Eval_params["tagger"]) is str:
         tagger_list = [Eval_params["tagger"]]
 
-    else:
+    elif type(Eval_params["tagger"]) is list:
         tagger_list = Eval_params["tagger"]
+
+    else:
+        raise ValueError(
+            """
+            Tagger given in Eval_parameters_validation
+            is not a string or a list!
+            """
+        )
 
     # Get model file path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
@@ -455,11 +471,19 @@ def EvaluateModelDL1(
     nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Test if multiple taggers are given or not
-    if type(Eval_params["tagger"]) is not list:
+    if type(Eval_params["tagger"]) is str:
         tagger_list = [Eval_params["tagger"]]
 
-    else:
+    elif type(Eval_params["tagger"]) is list:
         tagger_list = Eval_params["tagger"]
+
+    else:
+        raise ValueError(
+            """
+            Tagger given in Eval_parameters_validation
+            is not a string or a list!
+            """
+        )
 
     # Get model file path
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"

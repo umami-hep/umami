@@ -311,7 +311,10 @@ def LoadJetsFromFile(
     # Check if filepaths is empty
     if len(filepaths) == 0:
         raise RuntimeError(
-            "No file selected! Check the filepath in your config file!"
+            f"""
+            No file found in path {filepath}!
+            Check the filepath in your train_config file!
+            """
         )
 
     # Get class_labels variables etc. from global config
@@ -466,7 +469,10 @@ def LoadTrksFromFile(
     # Check if filepaths is empty
     if len(filepaths) == 0:
         raise RuntimeError(
-            "No file selected! Check the filepath in your config file!"
+            f"""
+            No file found in path {filepath}!
+            Check the filepath in your train_config file!
+            """
         )
 
     # Get class_labels variables etc. from global config
@@ -974,7 +980,10 @@ def GetTestSample(
     # Check if filepaths is empty
     if len(filepaths) == 0:
         raise RuntimeError(
-            "No file selected! Check the filepath in your config file!"
+            f"""
+            No file found in path {input_file}!
+            Check the filepath in your train_config file!
+            """
         )
 
     # Load variables
@@ -1096,7 +1105,10 @@ def GetTestSampleTrks(
     # Check if filepaths is empty
     if len(filepaths) == 0:
         raise RuntimeError(
-            "No file selected! Check the filepath in your config file!"
+            f"""
+            No file found in path {input_file}!
+            Check the filepath in your train_config file!
+            """
         )
 
     # Load variables

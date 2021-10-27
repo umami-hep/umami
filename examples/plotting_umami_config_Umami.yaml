@@ -3,7 +3,7 @@ Eval_parameters:
   Path_to_models_dir: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/24_1_umami_dlw_1_lt22M/
   model_name: umami_looseTrack_22M
   epoch: 249
-  bool_use_taus: False
+  epoch_to_name: True
 
 # Dips, ttbar
 scores_Umami_ttbar:
@@ -50,11 +50,15 @@ scores_Umami_ttbar_comparison:
 confusion_matrix_Umami_ttbar:
   type: "confusion_matrix"
   data_set_name: "ttbar"
-  prediction_labels: ["umami_pb", "umami_pc", "umami_pu"] # For umami use umami_pX or dips_pX. The order matters!
+  tagger_name: "umami"
+  class_labels: ["ujets", "cjets", "bjets"]
+  plot_settings:
+    colorbar: True
 
 # Scanning b-eff, comparing Umami and DL1r, ttbar
 beff_scan_tagger_umami:
   type: "ROC"
+  main_class: "bjets"
   models_to_plot:
     umami_r21: # The name here has no impact on anything.
       data_set_name: "ttbar"
