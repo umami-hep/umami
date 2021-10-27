@@ -12,30 +12,32 @@ model_name: Eval_results
 # Set the option to evaluate a freshly trained model to False
 evaluate_trained_model: False
 
-# Decide, if taus are used or not
-bool_use_taus: False
-
 ttbar_test_files:
     ttbar_r21:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "ttbar"
+        Path: <path>/<to>/<preprocessed>/<samples>/ttbar_r21_test_file.h5
+        data_set_name: "ttbar_r21"
 
     ttbar_r22:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "ttbar_comparison"
+        Path: <path>/<to>/<preprocessed>/<samples>/ttbar_r22_test_file.h5
+        data_set_name: "ttbar_r22"
 
 zpext_test_files:
-    zpext_r21: 
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "zpext"
+    zpext_r21:
+        Path: <path>/<to>/<preprocessed>/<samples>/zpext_r21_test_file.h5
+        data_set_name: "zpext_r21"
 
     zpext_r22:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "zpext_comparison"
+        Path: <path>/<to>/<preprocessed>/<samples>/zpext_r22_test_file.h5
+        data_set_name: "zpext_r22"
 
-    zpext_r22_no_QSP:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts_No_QSPI-file_1.h5
-        data_set_name: "zpext_comparison_no_QSP"
+# Values for the neural network
+NN_structure:
+    # Define which classes are used for training
+    # These are defined in the global_config
+    class_labels: ["ujets", "cjets", "bjets"]
+
+    # Main class which is to be tagged
+    main_class: "bjets"
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
@@ -47,20 +49,60 @@ Eval_parameters_validation:
     tagger: ["rnnip", "DL1r"]
 
     # Define fc values for the taggers
-    fc_values_comp: {
-        "rnnip": 0.08,
-        "DL1r": 0.018,
+    frac_values_comp: {
+        "rnnip": {
+            "cjets": 0.08,
+            "ujets": 0.92,
+        },
+        "DL1r": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
+    }
+
+    # Cuts which are applied to the different datasets used for evaluation
+    variable_cuts: {
+        "ttbar_r21": {
+            "pt_btagJes": {
+                "operator": "<=",
+                "condition": 250000,
+            }
+        },
+        "ttbar_r22": {
+            "pt_btagJes": {
+                "operator": "<=",
+                "condition": 250000,
+            }
+        },
+        "zpext_r21": {
+            "pt_btagJes": {
+                "operator": ">",
+                "condition": 250000,
+            }
+        },
+        "zpext_r22": {
+            "pt_btagJes": {
+                "operator": ">",
+                "condition": 250000,
+            }
+        },
     }
 ```
 
-The first option `model_name` sets the name of the output folder where the results of the evaluation are saved. Also you need to decide if you want to include taus (Note: You can only use taus if they are in the samples you want to evaluate!).   
-The `evaluate_trained_model` needs to be `False` here! Otherwise the script will try to load and evaluate the freshly trained model that is not available.   
-Very important are the `ttbar_test_files` and `zpext_test_files`. Here you can give the files you want to evaluate (Wildcarding is enabled) and give them a unique `data_set_name`. Which results to plot later will be decided by this names!
-
-Now the important part, the `Eval_parameters_validation`. Here we can define the options for the evaluation.   
-First, the number of jets `n_jets`. This is the max number of jets that are loaded (also from multiple files).   
-The taggers you want to evaluate are defined in the `taggers` option. This needs to be a list of strings! Also the names in there need to be the same as in the files you want to evaluate. I.e. you have `DL1r_pb`, `DL1r_pc` and `DL1r_pu` in your files, the correct name of the tagger for the list would be `"DL1r"`. The script is loading the tagger probabilities like `TAGGER_pb`.   
-Another part is the `fc_values_comp`. For each of your taggers, you can define a specific `fc` value (the "normal" `fc` value is not used if `evaluate_trained_model` is `False`)
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `model_name` | String | Necessary | Name of the model which is to be trained. Also the foldername where everything of the model will be saved. |
+| `evaluate_trained_model` | Bool | Necessary | Needs to be `False` here. Otherwise the script tries to load the freshly trained model
+| `ttbar_test_files` | Dict | Optional | Here you can define different ttbar test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is irrelevant while the `Path` and `data_set_name` are important. The `data_set_name` needs to be unique. Its the identifier/name of the dataset in the evaluation file which is used for plotting. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
+| `zpext_test_files` | Dict | Optional | Here you can define different zpext test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is irrelevant while the `Path` and `data_set_name` are important. The `data_set_name` needs to be unique. Its the identifier/name of the dataset in the evaluation file which is used for plotting. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
+| `NN_structure` | None | Necessary | A dict where all important information for the training are defined. |
+| `class_labels` | List | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
+| `main_class` | String | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. |
+| `Eval_parameters_validation` | None | Necessary | A dict where all important information for the training are defined. |
+| `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. | 
+| `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
+| `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
+| `variable_cuts` | Dict | Necessary | Dict of cuts which are applied when loading the different test files. Only jet variables can be cut on. |
 
 To run the evaluation, you can now execute the following command in the `umami/umami` folder where the `evaluate_model.py` is:
 

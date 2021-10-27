@@ -8,14 +8,14 @@ The plotting_umami.py is used to plot the results of the evaluation script. Diff
 **Important: The indentation in this .yaml is important due to the way the files are read by the script.**   
 A fully written one can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/examples/plotting_umami_config_dips.yaml).   
 
-The config file starts with the `Eval_parameters`. Here the `Path_to_models_dir` is set, where the models are saved. Also the `model_name` and the `epoch` which is to be plotted is set. A boolean parameter can be set here to indicate whether to plot with taus included (requires to have train and preprocessed with taus). For example, this can look like this:
+The config file starts with the `Eval_parameters`. Here the `Path_to_models_dir` is set, where the models are saved. Also the `model_name` and the `epoch` which is to be plotted is set. A boolean parameter can be set here to add the epoch to the end of the plot name. This is `epoch_to_name`. For example, this can look like this:
 
 ```yaml
 Eval_parameters:
-  Path_to_models_dir: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami
+  Path_to_models_dir: /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami
   model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
   epoch: 59
-  bool_use_taus: False
+  epoch_to_name: True
 ```
 
 In the different available plots, there are options that are available in mostly all of them. So they will be explained next. For specific options, look at the comment in the section of the plot.   
@@ -25,6 +25,7 @@ In the different available plots, there are options that are available in mostly
 | `Name_of_the_plot` | All plots start with no indentation and the name of plot. This will be the output name of the plot file and has no impact on the plot itself. |
 | `type` | This option specifies the plot function that is used. |
 | `data_set_name` | Decides which evaluated dataset (or file) is used. This `data_set_name` are set in the `train_config` yaml file which is used in the evaluation of the model. There the different files are getting their own `data_set_name` which needs to be the same as here! |
+| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
 | `models_to_plot` | In the comparison plots, the models which are to be plotted needs to be defined in here. You can add as many models as you want. For example this can be used to plot the results of the different taggers in one plot (e.g. for score comparison or ROC curves). The different models can be assisted with `evaluation_file` to point to the results file you have created with `evaluate_model.py`. e.g.`evaluation_file: YOURMODEL/results/results-rej_per_eff-229.h5` |
 | `plot_settings` | In this section, all optional plotting settings are defined. They don't need to be defined but you can. For the specific available options in each function, look in the corresponding section. |
 
@@ -37,11 +38,13 @@ Plot a confusion matrix. For example:
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
   data_set_name: "ttbar"
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"]
+  class_labels: ["ujets", "cjets", "bjets"]
+  plot_settings:
+    colorbar: True
 ```
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `prediction_labels` | List |  Necessary |A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
+| `colorbar` | Bool | Optional | Define, if the colorbar on the side is shown or not. |
 
 #### Probability
 Plotting the DNN probability output for a specific class. For example:
@@ -50,9 +53,10 @@ Plotting the DNN probability output for a specific class. For example:
 Dips_prob_pb:
   type: "probability"
   data_set_name: "ttbar"
-  prediction_labels: "dips_pb"
+  tagger_name: "dips"
+  class_labels: ["ujets", "cjets", "bjets"]
+  prob_class: "bjets"
   plot_settings:
-    x_label: "DIPS Probability $b$-Jet"
     Log: True
     nBins: 50
     yAxisIncrease: 10
@@ -66,15 +70,22 @@ Dips_prob_pb:
 |---------|-----------|--------------------|-------------|
 | `type` | String | Necessary | This gives the type of plot function used. Must be `"probability"` here. |
 | `data_set_name` | String | Necessary | Name of the dataset that is used. This is set at the evaluation in the train config. |
-| `prediction_label` | String | Necessary | Decide, which DNN output is used. Must be in the evaluation file |
-| `x_label` | String | Optional | Set the x-axis label. Default is "DNN Output" |
+| `tagger_name` | String | Necessary | Name of the tagger which is to be plotted. |
+| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
+| `prob_class` | String | Necessary | Class of the to be plotted probability. | 
+| `ApplyAtlasStyle` | Bool | Optional | Set the plotting style to ATLAS (root like look). |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `nBins` | Int | Optional | Number of bins that are used. |
 | `Log` | Bool | Optional | Decide if the y-axis plotted in log |
-|`nBins` | Int | Optional | Number of bins that are used. |
-|`yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-|`UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-|`AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
-|`SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-|`yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `figsize` | List | Optional | List with the figure sizes. For example [5, 3] |
+| `labelFontSize` | Int | Optional | Fontsize of the labels |
+| `loc_legend` | String | Optional | Sets the position of the legend. Default is "best". |
+| `ncol` | Int | Optional | Number of columns in the legend. |
+| `x_label` | String | Optional | Set the x-axis label. Default is "DNN Output" |
+| `yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 
 #### Probability Comparison
 Plotting the DNN probability output for different models. For example:
@@ -82,20 +93,22 @@ Plotting the DNN probability output for different models. For example:
 ```yaml
 Dips_prob_comparison_pb:
   type: "probability_comparison"
+  prob_class: "bjets"
   models_to_plot:
+    dips_r22:
+      data_set_name: "ttbar"
+      label: "rnnip"
+      tagger_name: "rnnip"
+      class_labels: ["ujets", "cjets", "bjets"]
     dips_r21:
       data_set_name: "ttbar"
       label: "DIPS"
-      prediction_label: "dips_pb"
-    rnnip_r21:
-      data_set_name: "ttbar"
-      label: "RNNIP"
-      prediction_label: "rnnip_pb"
+      tagger_name: "dips"
+      class_labels: ["ujets", "cjets", "bjets"]
   plot_settings:
     nBins: 50
-    Log: True
-    x_label: "DIPS Probability $b$-Jet"
-    yAxisIncrease: 100
+    set_logy: True
+    yAxisIncrease: 1.5
     figsize: [8, 6]
     UseAtlasTag: True
     AtlasTag: "Internal Simulation"
@@ -107,19 +120,21 @@ Dips_prob_comparison_pb:
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
 | `type` | String | Necessary | This gives the type of plot function used. Must be `"probability_comparison"` here. |
-|`dips_r21` | None | Necessary | Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything. |
+| `prob_class` | String | Necessary | Class of the to be plotted probability. | 
+| `dips_r21` | None | Necessary | Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything. |
 | `data_set_name` | String | Necessary | Name of the dataset that is used. This is set at the evaluation in the train config. |
-|`label` | String | Necessary | Label for the Legend in the plot. Will be "FLAVOUR-jet LABEL" |
-| `prediction_label` | String | Necessary | Decide, which DNN output is used. Must be in the evaluation file |
+| `label` | String | Necessary | Label for the Legend in the plot. Will be "FLAVOUR-jet LABEL" |
+| `tagger_name` | String | Necessary | Name of the tagger which is to be plotted. |
+| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
 | `x_label` | String | Optional | Set the x-axis label. Default is "DNN Output" |
 | `Log` | Bool | Optional | Decide if the y-axis plotted in log |
-|`nBins` | Int | Optional | Number of bins that are used. |
-|`yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-|`figsize` | List | Optional | A list of the width and hight of the plot. |
-|`UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-|`AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
-|`SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-|`yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `nBins` | Int | Optional | Number of bins that are used. |
+| `yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | List | Optional | A list of the width and hight of the plot. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 | `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
 
 #### Scores
@@ -129,48 +144,13 @@ Plotting the b-tagging discriminant scores for the different jet flavors. For ex
 scores_Dips_ttbar:
   type: "scores"
   data_set_name: "ttbar"
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"]
+  tagger_name: "dips"
+  class_labels: ["ujets", "cjets", "bjets"]
+  main_class: "bjets"
   plot_settings:
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     nBins: 50
     yAxisIncrease: 1.3
-    UseAtlasTag: True
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
-    yAxisAtlasTag: 0.9 
-```
-
-| Options | Data Type | Necessary/Optional | Explanation |
-|---------|-----------|--------------------|-------------|
-| `prediction_labels` | List | Necessary | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
-| `WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
-|`nBins` | Int | Optional | Number of bins that are used. |
-|`yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-|`UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-|`AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
-|`SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-|`yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
-
-#### Scores Comparison
-Plotting the b-tagging discriminant scores for the different jet flavors for different models in the same plot. For example:
-
-```yaml
-scores_Dips_ttbar_comparison:
-  type: "scores_comparison"
-  data_set_name: "ttbar"
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"]
-  models_to_plot:
-    dips_r21:
-      data_set_name: "ttbar"
-      label: "R21"
-    dips_r22:
-      data_set_name: "ttbar_comparison"
-      label: "R22"
-  plot_settings:
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    nBins: 50
-    yAxisIncrease: 1.4
-    figsize: [8, 6]
     UseAtlasTag: True
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
@@ -179,17 +159,63 @@ scores_Dips_ttbar_comparison:
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `prediction_labels` | List | Necessary | A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
-|`dips_r21` | None | Necessary | Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything. |
-|`label` | String | Necessary | Label for the Legend in the plot. |
-|`WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
-|`nBins` | Int | Optional | Number of bins that are used. |
-|`yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-|`figsize` | List | Optional | A list of the width and hight of the plot. |
-|`UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-|`AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
-|`SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-|`yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `tagger_name` | String | Necessary | Name of the tagger which is to be plotted. |
+| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
+| `main_class` | String | Class which is to be tagged. |
+| `WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
+| `nBins` | Int | Optional | Number of bins that are used. |
+| `yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+
+#### Scores Comparison
+Plotting the b-tagging discriminant scores for the different jet flavors for different models in the same plot. For example:
+
+```yaml
+scores_Dips_ttbar_comparison:
+  type: "scores_comparison"
+  main_class: "bjets"
+  models_to_plot:
+    dips_r21:
+      data_set_name: "ttbar"
+      tagger_name: "dips"
+      class_labels: ["ujets", "cjets", "bjets"]
+      label: "$t\\bar{t}$"
+    dips_r22:
+      data_set_name: "ttbar"
+      tagger_name: "dips"
+      class_labels: ["ujets", "cjets", "bjets"]
+      label: "$t\\bar{t} 2$"
+  plot_settings:
+    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    nBins: 50
+    yAxisIncrease: 1.4
+    figsize: [8, 6]
+    UseAtlasTag: True
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
+    yAxisAtlasTag: 0.9
+    Ratio_Cut: [0.5, 1.5]
+```
+
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `main_class` | String | Class which is to be tagged. |
+| `dips_r21` | None | Necessary | Name of the model which is to be plotted. Don't effect anything. Just for you. You can change dips_r21 to anything. |
+| `tagger_name` | String | Necessary | Name of the tagger which is to be plotted. |
+| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
+| `label` | String | Necessary | Label for the Legend in the plot. |
+| `WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
+| `nBins` | Int | Optional | Number of bins that are used. |
+| `yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | List | Optional | A list of the width and hight of the plot. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
 
 #### ROC Curves
 Plotting the ROC Curves of the rejection rates against the b-tagging efficiency. For example:
@@ -197,22 +223,14 @@ Plotting the ROC Curves of the rejection rates against the b-tagging efficiency.
 ```yaml
 Dips_light_flavour_ttbar:
   type: "ROC"
+  main_class: "bjets"
   models_to_plot:
-    rnnip_r21:
-      data_set_name: "ttbar"
-      label: "Recommended RNNIP"
-      df_key: "rnnip_urej"
-      color: "red"
-      linestyle: "-"
     dips_r21:
       data_set_name: "ttbar"
       label: "DIPS"
-      df_key: "dips_urej"
-      color: "blue"
-      linestyle: "-"
+      tagger_name: "dips"
+      rejection_class: "cjets"
   plot_settings:
-    xlabel: "$b$-jet efficiency"
-    ylabel: "light"
     binomialErrors: True
     xmin: 0.5
     ymax: 1000000
@@ -226,9 +244,11 @@ Dips_light_flavour_ttbar:
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
+| `main_class` | String | Class which is to be tagged. |
 | `dips_r21` | None | Necessary | Name of the model which is to be plotted. Not affecting anything, just for you. You can change dips_r21 to anything. |
 | `label` | String | Necessary | Label for the Legend in the plot. |
-| `df_key` | String | Necessary | Decide which rejection is plotted. The structure is like this: `model_Xrej`. The `X` defines the wanted rejection. `u` for light-, `c` for c-rejection, `t` for tau-rejection. Note: for DL1 only, the light-, tau-, and b- rejection from c-jets are also supported. The structure is then: `model_XrejC`, with `X` taking as value `u`, `t`, or `b`. |
+| `tagger_name` | String | Necessary | Name of the tagger which is to be plotted. |
+| `rejection_class` | String | Necessary | Class which the main flavour is plotted against. |
 | `colors` | String | Optional | Set color for the model. If None, the colors will be set automatically for all |
 | `linestyle` | String | Optional | Set linestyle for the model. If None, the linestyles will be set automatically for all models (all the same). |
 | `xlabel` | String | Optional | Set the xlabel.
@@ -245,53 +265,50 @@ Dips_light_flavour_ttbar:
 | `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 
 #### Comparison ROC Curves (Double Rejection ROC)
-Plotting the ROC Curves of two rejection rates against a efficiency. For example:
+Plotting the ROC Curves of two rejection rates against a efficiency. You need to define a model for each model/rejection pair. For example:
 
 ```yaml
 Dips_Comparison_flavour_ttbar:
   type: "ROC_Comparison"
   models_to_plot:
-    rnnip_r21_u:
+    rnnip_u:
       data_set_name: "ttbar"
-      label: "Reco. RNNIP"
-      df_key: "rnnip_urej"
-      rejection: "Light"
+      label: "recomm. RNNIP"
+      tagger_name: "rnnip"
+      rejection_class: "ujets"
+    rnnip_c:
+      data_set_name: "ttbar"
+      label: "recomm. RNNIP"
+      tagger_name: "rnnip"
+      rejection_class: "cjets"
     dips_r21_u:
       data_set_name: "ttbar"
       label: "DIPS"
-      df_key: "dips_urej"
-      rejection: "Light"
-    rnnip_r21_c:
-      data_set_name: "ttbar"
-      label: "Reco. RNNIP"
-      df_key: "rnnip_crej"
-      rejection: "c"
+      tagger_name: "dips"
+      rejection_class: "ujets"
     dips_r21_c:
       data_set_name: "ttbar"
       label: "DIPS"
-      df_key: "dips_crej"
-      rejection: "c"
+      tagger_name: "dips"
+      rejection_class: "cjets"
   plot_settings:
-    ylabel: "light"
-    ylabel_right: "c"
     binomialErrors: True
     xmin: 0.5
     ymax: 1000000
-    colors:
-    figsize: [9, 9] # [width, hight]
+    figsize: [9, 9]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
+    UseAtlasTag: True
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+    yAxisAtlasTag: 0.9
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
 | `dips_r21` | None | Necessary | Name of the model which is to be plotted. Not affecting anything, just for you. You can change dips_r21 to anything. |
 | `label` | String | Necessary | Label for the Legend in the plot. |
-| `df_key` | String | Necessary | Decide which rejection is plotted. The structure is like this: `model_Xrej`. The `X` defines the wanted rejection. `u` for light-, `c` for c-rejection, `t` for tau-rejection. Note: for DL1 only, the light-, tau-, and b- rejection from c-jets are also supported. The structure is then: `model_XrejC`, with `X` taking as value `u`, `t`, or `b`. |
-| `rejection` | String | Necessary | This is the rejection of the model. It's used to calculate the correct ratio and also for sorting the models to a given rejection. | 
+| `tagger_name` | String | Necessary | Name of the tagger which is to be plotted. |
+| `rejection_class` | String | Necessary | Class which the main flavour is plotted against. |
 | `xlabel` | String | Optional | Set the xlabel. |
 | `binomialErrors` | Bool | Optional | Plot binomial errors to plot. |
 | `xmin` | Float | Optional | Set the minimum b efficiency in the plot (which is the xmin limit). |
@@ -310,14 +327,14 @@ Plotting the Saliency Map of the model. For example:
 ```yaml
 Dips_saliency_b_WP77_passed_ttbar:
   type: "saliency"
+  data_set_name: "ttbar"
   plot_settings:
-    data_set_name: "ttbar"
     title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who passed WP = 77% \n with exactly 8 tracks"
     target_beff: 0.77
-    jet_flavour: 2
+    jet_flavour: "cjets"
     PassBool: True
     FlipAxis: True
-    UseAtlasTag: True
+    UseAtlasTag: True # Enable/Disable AtlasTag
     AtlasTag: "Internal Simulation"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.925
@@ -327,7 +344,7 @@ Dips_saliency_b_WP77_passed_ttbar:
 |---------|-----------|--------------------|-------------|
 | `title` | String | Necessary | Title which will be on top above the plot itself. |
 | `target_beff` | Float | Necessary | The WP which needs to be passed/not passed. |
-| `jet_flavour` | Int | Necessary | The jet flavor that will be plotted. Current possibilites: 2: b, 1: c, 0: light. |
+| `jet_flavour` | Int | Necessary | Class which is to be plotted. |
 | `PassBool` | Bool | Necessary | Decide if the b-tagging discriminant of the jets, which will be used, needs to be above the WP cut value or not. |
 | `FlipAxis` | Bool | Optional | If True, the y and x axis will be switched. Usefull for presenation plots. True: landscape format. |
 | `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
@@ -339,57 +356,47 @@ Dips_saliency_b_WP77_passed_ttbar:
 Plot the b efficiency/c-rejection/light-rejection against the pT. For example:
 
 ```yaml
-pT_vs_beff_zpext:
+Dips_pT_vs_beff:
   type: "pT_vs_eff"
   models_to_plot:
-    rnnip_r21:
-      data_set_name: "zpext"
-      label: "Recommended RNNIP"
-      prediction_labels: ["rnnip_pb", "rnnip_pc", "rnnip_pu"]
-      evaluation_file:
-      SWP_label: "rnnip"
-    dips_r21:
-      data_set_name: "zpext"
+    dips:
+      data_set_name: "ttbar"
       label: "DIPS"
-      prediction_labels: ["dips_pb", "dips_pc", "dips_pu"]
-      evaluation_file:
-      SWP_label: "dips"
+      tagger_name: "dips"
   plot_settings:
-    bin_edges: [200, 500, 1000, 1500, 2000, 2500, 3000, 4000, 6000]
-    flavor: 2
+    bin_edges: [20, 30, 40, 60, 85, 110, 140, 175, 250]
+    flavour: "cjets"
+    class_labels: ["ujets", "cjets", "bjets"]
+    main_class: "bjets"
     WP: 0.77
-    Disc_Cut_Value: None
     WP_Line: True
-    Fixed_WP_Bin: False
     binomialErrors: True
-    Same_WP_Cut_Comparison: True
+    Fixed_WP_Bin: False
+    SWP_Comparison: False
     figsize: [7, 5]
     Log: False
     UseAtlasTag: True
     AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$Z'$ Test Sample"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
     yAxisAtlasTag: 0.9
     yAxisIncrease: 1.3
-    ymin:
-    ymax:
-    alpha: 0.7
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `dips_r21` | None | Necessary | Name of the model which is to be plotted. Don't affect anything. Just for you. You can change dips_r21 to anything. |
 | `label` | String | Necessary | Label for the Legend in the plot. |
-| `prediction_labels` | List |  Necessary |A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
+| `tagger_name` | String | Necessary | Name of the tagger which is to be plotted. |
 | `evaluation_file` | String | Optional | Add a path to a evaluation file here. This file will be used for the model instead of the one defined at the top. The given `data_set_name` must be in the file! |
-| `SWP_label` | String | Optional | The Same WP Cut label. All models with the same `SWP_label` will get the same discriminant cut value. |
-| `bin_edges` | List | Optional | The pT bin edges that should be used. Don't forget the starting and the ending edge! |
-| `flavor` | Int | Optional | Decide which eff/rej will be plotted. 2: b, 1: c, 0: light. |
-| `WP` | Float | Optional | Which Working Point is used. |
-| `Disc_Cut_Value` | Float | Optional | When this option is set to not None, the calculation of the discriminant cut value, which is based on the given `WP`, is stopped and the value of this option is used as the discriminant cut value. |
-| `WP_Line` | Bool | Optional | Decide if a horizontal WP line at is added or not. (Only used for beff). |
-| `Fixed_WP_Bin` | Bool | Optional | If True, the b-Tagging discriminant cut value for the given WP is not calculated over all bins but separately for each bin. |
+| `SWP_label` | String | Optional | String label of the Same Working Point (SWP) method. All models with the same SWP label use the same Working point cut value. |
+| `bin_edges` | List | Necessary | Setting the edges of the bins. Don't forget the first/last edge! | 
+| `flavour` | String | Necessary | Flavour class rejection which is to be plotted. |
+| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
+| `main_class` | String | Class which is to be tagged. |
+| `WP` | Float | Necessary | Float of the working point that will be used. |
+| `WP_line` | Float | Optional | Print a horizontal line at this value efficiency. |
 | `binomialErrors` | Bool | Optional | Plot binomial errors to plot. |
-| `Same_WP_Cut_Comparison` | Bool | Optional | For all models with the same `SWP_label`, one cut value for the b-tagging discriminant is used.
+| `Fixed_WP_Bin` | Bool | Optional | Calculate the WP cut on the discriminant per bin. |
+| `SWP_Comparison` | Bool | Optional | Use the same cut value on the discriminant for all models with the same SWP_label. Not works with Fixed_WP_Bin True.
 | `figsize` | List | Optional |A list of the width and height of the plot.
 | `Log` | Bool | Optional | Decide if the y axis is plotted as logarithmic or not.
 | `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
@@ -481,7 +488,13 @@ The script can be executed by using the following command:
 plotting_umami.py -c ${EXAMPLES}/plotting_umami_config_dips.yaml -o dips_eval_plots
 ```
 
-The `-o` option defines the name of the output directory. It will be added to the model folder where also the results are saved.
+The `-o` option defines the name of the output directory. It will be added to the model folder where also the results are saved. Also you can set the output filetype by using the `-f` option. For example:
+
+```bash
+plotting_umami.py -c ${EXAMPLES}/plotting_umami_config_dips.yaml -o dips_eval_plots -f png
+```
+
+The output plots will be .png now. Standard is pdf.
 
 ## Plot Input Variables
 The input variables for different files can also be plotted using the `plot_input_variables.py` script. Its also steered by a yaml file. An example for such a file can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml). The structure is close to the one from `plotting_umami` but still a little bit different.   

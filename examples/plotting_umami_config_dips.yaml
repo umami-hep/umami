@@ -3,7 +3,7 @@ Eval_parameters:
   Path_to_models_dir: /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami
   model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
   epoch: 59
-  bool_use_taus: False
+  epoch_to_name: True
 
 # Dips, ttbar
 scores_Dips_ttbar:
@@ -53,7 +53,7 @@ Dips_pT_vs_beff:
     dips:
       data_set_name: "ttbar"
       label: "DIPS"
-      tagger: "dips"
+      tagger_name: "dips"
   plot_settings:
     bin_edges: [0, 20, 30, 40, 60, 85, 110, 140, 175, 250, 400, 1000]
     flavour: "cjets"
@@ -74,6 +74,7 @@ Dips_pT_vs_beff:
 
 Dips_light_flavour_ttbar:
   type: "ROC"
+  main_class: "bjets"
   models_to_plot:
     dips_r21: # The name here has no impact on anything.
       data_set_name: "ttbar"
@@ -118,7 +119,10 @@ Dips_Comparison_flavour_ttbar:
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
   data_set_name: "ttbar"
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] # For umami use umami_pX or dips_pX. The order matters!
+  tagger_name: "dips"
+  class_labels: ["ujets", "cjets", "bjets"]
+  plot_settings:
+    colorbar: True
 
 Dips_saliency_b_WP77_passed_ttbar:
   type: "saliency"

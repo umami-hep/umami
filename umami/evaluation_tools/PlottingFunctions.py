@@ -5,6 +5,8 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
+from mlxtend.evaluate import confusion_matrix
+from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import pchip
 
@@ -967,8 +969,8 @@ def plotROCRatio(
     rej_class_list: list,
     labels: list,
     plot_name: str,
+    main_class: str,
     df_eff_key: str = "effs",
-    main_class: str = "bjets",
     title: str = "",
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
@@ -2856,3 +2858,65 @@ def plot_prob_comparison(
         plt.savefig(plot_name, transparent=True)
     plt.close()
     # plt.show()
+
+
+def plot_confusion(
+    df_results: dict,
+    tagger_name: str,
+    class_labels: list,
+    plot_name: str,
+    colorbar: bool = True,
+    show_absolute: bool = False,
+    show_normed: bool = True,
+    transparent_bkg: bool = True,
+):
+    """
+    Plotting the confusion matrix for a given tagger.
+
+    Input:
+    - df_results: Loaded pandas dataframe from the evaluation file.
+    - tagger_name: Name of the tagger in the evaluation file.
+    - class_labels: List of class labels used.
+    - plot_name: Full path + name of the plot with the extension.
+    - colorbar: Decide, if colourbar is shown or not.
+    - show_absolute: Show the absolute.
+    - show_normed: Show the output normed.
+    - transparent_bkg: Decide, if the background is transparent or not.
+
+    Output:
+    - Confusion Matrix
+    """
+
+    # Get a list of the tagger prob variables
+    prob_list = []
+    for prob in class_labels:
+        prob_list.append(
+            f'{tagger_name}_{global_config.flavour_categories[prob]["prob_var_name"]}'
+        )
+
+    # Get the truth
+    y_target = df_results["labels"]
+
+    # Get the probabilities of the tagger and select the highest
+    y_predicted = np.argmax(df_results[prob_list].values, axis=1)
+
+    # Define the confusion matrix
+    cm = confusion_matrix(
+        y_target=y_target, y_predicted=y_predicted, binary=False
+    )
+
+    # Plot the colormap
+    mlxtend_plot_cm(
+        conf_mat=cm,
+        colorbar=colorbar,
+        show_absolute=show_absolute,
+        show_normed=show_normed,
+        class_names=class_labels,
+    )
+
+    # Set tight layout for the plot
+    plt.tight_layout()
+
+    # Save the plot to path
+    plt.savefig(plot_name, transparent=transparent_bkg)
+    plt.close()

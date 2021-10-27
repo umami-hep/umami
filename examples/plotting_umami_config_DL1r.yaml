@@ -3,7 +3,7 @@ Eval_parameters:
   Path_to_models_dir: /nfs/dust/atlas/user/ahnenjan/phd/DL1/run/models/new_DL1r_22M/
   model_name: DL1r_22M
   epoch: 10
-  bool_use_taus: False
+  epoch_to_name: True
 
 scores_DL1r: # Each item on this level defines one plot. The name of this key is later used for the name of the output file.
   type: "scores"
@@ -20,12 +20,14 @@ scores_DL1r: # Each item on this level defines one plot. The name of this key is
 confusion_matrix_DL1r:
   type: "confusion_matrix"
   data_set_name: "ttbar"
-   # To include taus, add "ptau" as the last entry
-  prediction_labels: ["DL1_pb", "DL1_pc", "DL1_pu"] # For umami use umami_pX or dips_pX. The order matters!
-
+  tagger_name: "DL1"
+  class_labels: ["ujets", "cjets", "bjets"]
+  plot_settings:
+    colorbar: True
 
 DL1r_light_flavour:
   type: "ROC"
+  main_class: "bjets"
   models_to_plot:
     DL1r: # The name here has no impact on anything.
       data_set_name: "ttbar"

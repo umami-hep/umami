@@ -216,6 +216,7 @@ class plot_score_TestCase(unittest.TestCase):
             labels=["RNNIP ttbar", "DIPS ttbar"],
             plot_name=self.tmp_plot_dir + "ROC_Test.png",
             nTest=[100000, 100000],
+            main_class="bjets",
         )
 
         self.assertEqual(

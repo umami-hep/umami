@@ -14,7 +14,6 @@ import os
 import pickle
 
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yaml
@@ -183,6 +182,7 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
         rej_class_list=rej_class_list,
         labels=labels,
         plot_name=plot_name,
+        main_class=plot_config["main_class"],
         styles=linestyles,
         colors=colors,
         **plot_config["plot_settings"],
@@ -432,12 +432,8 @@ def plot_ROCvsVar(plot_name, plot_config, eval_params, eval_file_dir):
 
 
 def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
-    from mlxtend.evaluate import confusion_matrix
-    from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
-
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
-    bool_use_taus = eval_params["bool_use_taus"]
 
     if ("evaluation_file" not in plot_config) or (
         plot_config["evaluation_file"] is None
@@ -451,32 +447,13 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
             plot_config["evaluation_file"], plot_config["data_set_name"]
         )
 
-    y_target = df_results["labels"]
-
-    # Need to flip the prediciton labels list here.
-    # b's are in y_target a 2 while with the given order in prediction labels
-    # pb is a 0. So just switch it
-    y_predicted = np.argmax(
-        df_results[plot_config["prediction_labels"][::-1]].values, axis=1
+    uet.plot_confusion(
+        df_results=df_results,
+        tagger_name=plot_config["tagger_name"],
+        class_labels=plot_config["class_labels"],
+        plot_name=plot_name,
+        **plot_config["plot_settings"],
     )
-    cm = confusion_matrix(
-        y_target=y_target, y_predicted=y_predicted, binary=False
-    )
-    if bool_use_taus:
-        class_names = ["b", "c", "light", r"$\tau$"]
-    else:
-        class_names = ["b", "c", "light"]
-
-    mlxtend_plot_cm(
-        conf_mat=cm,
-        colorbar=True,
-        show_absolute=False,
-        show_normed=True,
-        class_names=class_names,
-    )
-    plt.tight_layout()
-    plt.savefig(plot_name, transparent=True)
-    plt.close()
 
 
 def score_comparison(
@@ -565,7 +542,7 @@ def plot_pT_vs_eff(
 
         df_list.append(df_results)
         model_labels.append(model_config["label"])
-        tagger_list.append(model_config["tagger"])
+        tagger_list.append(model_config["tagger_name"])
 
     uet.plotPtDependence(
         df_list=df_list,
