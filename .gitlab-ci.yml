@@ -8,6 +8,7 @@ variables:
   I18NSTATIC_VERSION: '0.17'
 
 stages:
+  - check_mr
   - linting
   - image_build_umamibase
   - unit_test
@@ -19,6 +20,17 @@ stages:
   - image_build_umami
   - publish
   - pages
+
+checking_mr:
+  stage: check_mr
+  image: python:3.7-slim
+  before_script:
+    - pip install --upgrade pip setuptools wheel
+    - pip install python-gitlab
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - python pipelines/gitlab-check-mr.py
 
 linter:
   stage: linting
