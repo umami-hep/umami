@@ -4,7 +4,7 @@
 
 The Umami documentation is avaliable here:
 
-[![Umami docs](https://img.shields.io/badge/info-documentation-informational)](https://umami-docs.web.cern.ch/umami-docs/)
+[![Umami docs](https://img.shields.io/badge/info-documentation-informational)](https://umami-docs.web.cern.ch/)
 
 Below is included a brief summary on how to get started fast.
 

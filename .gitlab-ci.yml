@@ -3,6 +3,9 @@
 variables:
   TFTAG: 2.6.0
   TORCHTAG: 1.9.0-cuda11.1-cudnn8-runtime
+  MKDOCS_VERSION: '1.2.1'
+  MATERIAL_VERSION: '7.1.10'
+  I18NSTATIC_VERSION: '0.17'
 
 stages:
   - linting
@@ -95,9 +98,24 @@ test_coverage_post_report:
   script:
     - python pipelines/gitlab-mr-coverage-api-post.py
 
+pages:
+  image: python:3.8-alpine
+  stage: pages
+  script:
+    - apk add --no-cache git subversion
+    - pip install --upgrade pip setuptools wheel
+    - pip install mkdocs==${MKDOCS_VERSION} mkdocs-material==${MATERIAL_VERSION} mkdocs-static-i18n==${I18NSTATIC_VERSION}
+    - mkdocs build -d public
+    - if [[ -f _redirects ]]; then cp _redirects public; fi;
+  artifacts:
+    paths:
+    - public
+    expire_in: 1 hour
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: always
+
 include:
   - 'pipelines/.unit_test-gitlab-ci.yaml'
   - 'pipelines/.docker-gitlab-ci.yaml'
   - 'pipelines/.integration_test-gitlab-ci.yaml'
-  - project: 'authoring/documentation/mkdocs-ci'
-    file: 'mkdocs-gitlab-pages.gitlab-ci.yml'
