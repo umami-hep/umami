@@ -26,3 +26,18 @@ nav:
 
 plugins:
     - search
+
+markdown_extensions:
+    - admonition
+    - codehilite
+    - pymdownx.arithmatex
+    - pymdownx.details
+    - pymdownx.inlinehilite
+    - pymdownx.smartsymbols
+    - pymdownx.superfences
+
+
+extra_javascript:
+    - 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML'
+
+
