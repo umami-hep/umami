@@ -42,6 +42,7 @@ confusion_matrix_Dips_ttbar:
   plot_settings:
     colorbar: True
 ```
+
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
 | `colorbar` | Bool | Optional | Define, if the colorbar on the side is shown or not. |
