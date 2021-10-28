@@ -7,7 +7,7 @@ labels = {
     "DIPS": ["umami/train_Dips.py"],
     "DL1": ["umami/train_DL1.py"],
     "Umami": ["umami/train_umami.py"],
-    "Documentation": ["docs/", "README.md"],
+    "Documentation": ["docs/", "README.md", "mkdocs.yml"],
     "Evaluation": ["umami/evaluation_tools/", "umami/evaluate_model.py"],
     "Plotting": [
         "umami/plotting_umami.py",
@@ -17,6 +17,17 @@ labels = {
     ],
     "Preprocessing": ["umami/preprocessing.py", "umami/preprocessing_tools/"],
     "Unit/Integration Test": ["umami/tests/"],
+    "CI/CD": [".gitlab-ci.yml", "pipelines/"],
+    "Setup/Dependencies": [
+        "requirements.txt",
+        "setup.cfg",
+        "docker/",
+        "MANIFEST.in",
+        "run_setup.sh",
+        "setup.py",
+        "pyproject.toml",
+        ".pre-commit-config.yaml"
+        ],
 }
 
 
