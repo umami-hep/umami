@@ -28,7 +28,7 @@ checking_mr:
     - pip install --upgrade pip setuptools wheel
     - pip install python-gitlab
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_EVENT_TYPE != "merge_train" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
   script:
     - python pipelines/gitlab-check-mr.py
 
