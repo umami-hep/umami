@@ -1235,6 +1235,7 @@ def load_validation_data_umami(train_config, preprocess_config, nJets: int):
 
 
 def load_validation_data_dl1(train_config, preprocess_config, nJets: int):
+    nJets = int(nJets)
     exclude = []
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]

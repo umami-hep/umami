@@ -148,6 +148,7 @@ def plotEfficiencyVariable(
     AtlasTag="Internal",
     SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$",
     ThirdTag="DL1r",
+    SaveData=False,
 ):
     """
     For a given variable (string) in the panda dataframe df, plots:
@@ -192,7 +193,7 @@ def plotEfficiencyVariable(
     c_lst, c_err_list = [], []
     u_lst, u_err_list = [], []
     tau_lst, tau_err_list = [], []
-
+    null_value = np.nan
     for i in range(len(var_bins) - 1):
         df_in_bin = data[
             (var_bins[i] <= data[variable])
@@ -210,15 +211,15 @@ def plotEfficiencyVariable(
             total_in_bin += total_tau_tag_in_bin
 
         if total_in_bin == 0:
-            total_var.append(0)
-            u_lst.append(1e5)
-            u_err_list.append(1)
-            c_lst.append(1e5)
-            c_err_list.append(1)
-            b_lst.append(1e5)
-            b_err_list.append(1)
-            tau_lst.append(1e5)
-            tau_err_list.append(1)
+            total_var.append(null_value)
+            u_lst.append(null_value)
+            u_err_list.append(null_value)
+            c_lst.append(null_value)
+            c_err_list.append(null_value)
+            b_lst.append(null_value)
+            b_err_list.append(null_value)
+            tau_lst.append(null_value)
+            tau_err_list.append(null_value)
         else:
             total_var.append(total_in_bin)
             index, counts = np.unique(
@@ -249,17 +250,17 @@ def plotEfficiencyVariable(
                 else:
                     logger.info(f"Invaled value of index from labels: {item}")
             if not (in_u):
-                u_lst.append(1e5)
-                u_err_list.append(1)
+                u_lst.append(null_value)
+                u_err_list.append(null_value)
             if not (in_c):
-                c_lst.append(1e5)
-                c_err_list.append(1)
+                c_lst.append(null_value)
+                c_err_list.append(null_value)
             if not (in_b):
-                b_lst.append(1e5)
-                b_err_list.append(1)
+                b_lst.append(null_value)
+                b_err_list.append(null_value)
             if not (in_tau):
-                tau_lst.append(1e5)
-                tau_err_list.append(1)
+                tau_lst.append(null_value)
+                tau_err_list.append(null_value)
     if plot_name[-4:] == ".pdf":
         plot_name = plot_name[:-4]
 
@@ -280,9 +281,9 @@ def plotEfficiencyVariable(
         ThirdTag = (
             ThirdTag
             + "\n"
-            + "$\\epsilon_b$ = {}%, $f_c$ = {}, $f_\tau$ = {}".format(
-                efficiency, fc, ftau
-            )
+            + "$\\epsilon_b$ = {}%, $f_c$ = {}, ".format(efficiency, fc)
+            + "$f_{tau}$ = "
+            + "{}".format(ftau)
         )
     # Divide pT values to express in GeV, not MeV
     if variable == "pt":
@@ -316,6 +317,50 @@ def plotEfficiencyVariable(
         else:
             trimmed_label = x_label
             trimmed_label_val = x_label
+
+    if SaveData:
+        x_arr = np.asarray(x_value)
+        x_err_arr = np.asarray(x_err)
+        b_arr = np.asarray(b_lst)
+        b_err_arr = np.asarray(b_err_list)
+        c_arr = np.asarray(c_lst)
+        c_err_arr = np.asarray(c_err_list)
+        u_arr = np.asarray(u_lst)
+        u_err_arr = np.asarray(u_err_list)
+        if include_taus:
+            tau_arr = np.asarray(tau_lst)
+            tau_err_arr = np.asarray(tau_err_list)
+            np.savetxt(
+                plot_name + "_effTable_" + "old" + ".txt",
+                (
+                    x_arr,
+                    x_err_arr,
+                    b_arr,
+                    b_err_arr,
+                    c_arr,
+                    c_err_arr,
+                    u_arr,
+                    u_err_arr,
+                    tau_arr,
+                    tau_err_arr,
+                ),
+                delimiter=" ",
+            )
+        else:
+            np.savetxt(
+                plot_name + "_effTable_" + "old" + ".txt",
+                (
+                    x_arr,
+                    x_err_arr,
+                    b_arr,
+                    b_err_arr,
+                    c_arr,
+                    c_err_arr,
+                    u_arr,
+                    u_err_arr,
+                ),
+                delimiter=" ",
+            )
 
     # First plot: variable
     fig, ax1 = plt.subplots()
@@ -2403,10 +2448,17 @@ def plotFractionScan(
     size_x = len(x_compact)
     size_y = len(y_compact)
     z_data_table = z_data.values.reshape((size_y, size_x))
+    for y_ind in range(size_y):
+        for x_ind in range(size_x):
+            if x_compact[x_ind] + y_compact[y_ind] > 1:
+                z_data_table[y_ind, x_ind] = np.nan
+    cmap = plt.get_cmap(name="RdBu")
+    cmap.set_bad(color="#C5C9C7")
+
     fig, ax = plt.subplots()
     plot = ax.imshow(
         z_data_table,
-        cmap="RdBu",
+        cmap=cmap,
         interpolation="bilinear",
         # extent = [x_compact[0], x_compact[-1], y_compact[-1], y_compact[0]],
         aspect=size_x / size_y,

@@ -417,6 +417,7 @@ eff_vs_pt_:
   type: "ROCvsVar"
   data_set_name: "ttbar"
   flat_eff: True 
+  cut_value: None
   efficiency: 70 
   fc: 0.018
   prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] 
@@ -434,11 +435,13 @@ eff_vs_pt_:
     AtlasTag: "Internal"
     SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
     ThirdTag: "Flat efficiency DL1r"
+    SaveData: False 
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
 | `flat_eff` | bool | Necessary | Whether to use a flat b-tag b-jet efficiency per variable bin or a global one. |
+| `cut_value` | None or float | Optional | Enforce a specific cut value on the b-discriminant. Can be used to apply R21 cut values to R22. `flat_eff` must be False. |
 | `efficiency` | int | Necessary | The desired b-jet b-tag efficiency in percent |
 | `fc` | float | Optional | The fc value to use |
 | `prediction_labels` | List | Necessary |A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
@@ -455,6 +458,7 @@ eff_vs_pt_:
 | `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
 | `SecondTag` | String | Optional | Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag. |
 | `ThirdTag` | String | Optional | Write this text on the upper left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. |
+| `SaveData` | Bool | Optional | Saves the plotted data in a text file. |
 
 #### Scanning fractions
 For DL1 with taus, the evaluation step of `evaluate.py` generates an extra h5 file giving the c/b, light, and tau rejection as a function of the c/b-fraction and the tau fraction. To produce the plot associated to this information, add (for example) this to the plotting config:
