@@ -405,10 +405,35 @@ def plot_ROCvsVar(plot_name, plot_config, eval_params, eval_file_dir):
             wp=plot_config["efficiency"] / 100,
         )
     else:
-        cutvalue = np.percentile(
-            df_results[df_results["labels"] == 2]["bscore"],
-            100.0 * (1.0 - plot_config["efficiency"] / 100.0),
-        )
+        if "cut_value" in plot_config and plot_config["cut_value"] is not None:
+            cutvalue = plot_config["cut_value"]
+        elif plot_config["data_set_name"] != "ttbar":
+            # Need to load the ttbar to compute the cut for the WP.
+            if ("evaluation_file" not in plot_config) or (
+                plot_config["evaluation_file"] is None
+            ):
+                df_cut = pd.read_hdf(
+                    eval_file_dir + f"/results-{eval_epoch}.h5",
+                    "ttbar",
+                )
+            else:
+                df_cut = pd.read_hdf(plot_config["evaluation_file"], "ttbar")
+            df_cut["bscore"] = uet.GetScore(
+                *[df_cut[pX] for pX in plot_config["prediction_labels"]],
+                fc=fc,
+                ftau=ftau,
+            )
+            cutvalue = np.percentile(
+                df_cut[df_cut["labels"] == 2]["bscore"],
+                100.0 * (1.0 - plot_config["efficiency"] / 100.0),
+            )
+            del df_cut
+        else:
+            # It's the ttbar:
+            cutvalue = np.percentile(
+                df_results[df_results["labels"] == 2]["bscore"],
+                100.0 * (1.0 - plot_config["efficiency"] / 100.0),
+            )
         df_results["btag"] = (df_results["bscore"] > cutvalue) * 1
 
     if "xticksval" in plot_config:

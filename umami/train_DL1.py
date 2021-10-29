@@ -49,6 +49,13 @@ def GetParser():
     )
 
     parser.add_argument(
+        "-cl",
+        "--chunk_loading",
+        action="store_true",
+        help="Load train dataset in chunks.",
+    )
+
+    parser.add_argument(
         "-z",
         "--zeuthen",
         action="store_true",
@@ -95,12 +102,13 @@ def DL1_model(train_config, input_shape):
         inputs = Input(shape=input_shape)
 
         # Define layers
+        x = inputs
         for i, unit in enumerate(NN_structure["dense_sizes"]):
             x = Dense(
                 units=unit,
                 activation="linear",
                 kernel_initializer="glorot_uniform",
-            )(inputs)
+            )(x)
 
             # Add Batch Normalization if True
             if batch_norm:
