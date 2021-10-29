@@ -26,8 +26,8 @@ labels = {
         "run_setup.sh",
         "setup.py",
         "pyproject.toml",
-        ".pre-commit-config.yaml"
-        ],
+        ".pre-commit-config.yaml",
+    ],
 }
 
 
@@ -61,11 +61,20 @@ mr = project.mergerequests.get(mr_id)
 changed_files = [elem["new_path"] for elem in mr.changes()["changes"]]
 
 mr_labels, changed_files_in_docs = get_labels(changed_files, mr.labels)
+# define flag if only documentation is concerned
+only_docs = changed_files_in_docs == len(changed_files)
+# if only documentation is concerned adding a Skip-CI label
+if only_docs:
+    mr_labels.append("Skip-CI")
+# in case other files are changed in a later commit, removing the skip-ci flag
+if not only_docs:
+    if "Skip-CI" in mr_labels:
+        mr_labels.remove("Skip-CI")
 mr.labels = mr_labels
 mr.save()
 
 # approve MR if only documentation is concerned
-if changed_files_in_docs == len(changed_files):
+if only_docs:
     mr.notes.create({"body": "Only documentation is concerened - approving."})
     mr.approve()
     mr.save()
