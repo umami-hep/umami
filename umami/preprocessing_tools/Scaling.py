@@ -54,6 +54,145 @@ class Scaling:
         with open(config.var_file, "r") as conf:
             self.variable_config = yaml.load(conf, Loader=yaml_loader)
 
+    def join_mean_scale(
+        self,
+        first_scale_dict: dict,
+        second_scale_dict: dict,
+        variable: str,
+        first_N: int,
+        second_N: int,
+    ):
+        """
+        Combine the mean and scale of the two input scale dict.
+
+        Input:
+        - first_scale_dict: First scale dict with the variable and
+                            their respective mean/std inside.
+        - second_scale_dict: Second scale dict with the variable and
+                            their respective mean/std inside.
+        - variable: Variable which is to be combined.
+        - first_N: Number of tracks/jets used to calculate mean/std for first dict.
+        - second_N: Number of tracks/jets used to calculate mean/std for second dict.
+
+        Output:
+        combined_mean: Combined mean/shift.
+        combined_std: Combined std/scale.
+        """
+
+        # Get the values in variables
+        mean = first_scale_dict[variable]["shift"]
+        tmp_mean = second_scale_dict[variable]["shift"]
+        std = first_scale_dict[variable]["scale"]
+        tmp_std = second_scale_dict[variable]["scale"]
+
+        # Combine the means
+        combined_mean = (mean * first_N + tmp_mean * second_N) / (
+            first_N + second_N
+        )
+
+        # Combine the std
+        combined_std = np.sqrt(
+            (
+                (
+                    ((mean ** 2 + std ** 2) * first_N)
+                    + ((tmp_mean ** 2 + tmp_std ** 2) * second_N)
+                )
+            )
+            / (first_N + second_N)
+        )
+
+        return combined_mean, combined_std
+
+    def join_scale_dicts_trks(
+        self,
+        first_scale_dict: dict,
+        second_scale_dict: dict,
+        first_nTrks: int,
+        second_nTrks: int,
+    ):
+        """
+        Combining the scale dicts of two track chunks.
+
+        Input:
+        - first_scale_dict: First scale dict to join.
+        - second_scale_dict: Second scale dict to join.
+
+        Output:
+        - combined_scale_dict: The combined scale dict.
+        """
+
+        # Init a new combined scale dict
+        combined_scale_dict = {}
+
+        for var in first_scale_dict:
+            # Add var to combined dict
+            combined_scale_dict[var] = {}
+
+            # Combine the means
+            (
+                combined_scale_dict[var]["shift"],
+                combined_scale_dict[var]["scale"],
+            ) = self.join_mean_scale(
+                first_scale_dict=first_scale_dict,
+                second_scale_dict=second_scale_dict,
+                variable=var,
+                first_N=first_nTrks,
+                second_N=second_nTrks,
+            )
+
+        return combined_scale_dict
+
+    def join_scale_dicts_jets(
+        self,
+        first_scale_dict: dict,
+        second_scale_dict: dict,
+        first_nJets: int,
+        second_nJets: int,
+    ):
+        """
+        Combining the scale dicts of two track chunks.
+
+        Input:
+        - first_scale_dict: First scale dict two join.
+        - second_scale_dict: Second scale dict two join.
+
+        Output:
+        - combined_scaled_dict: The combined scale dict list.
+        """
+
+        # Init a combined list for the dicts
+        combined_dict_list = []
+
+        # Loop over the list with the dicts from the variables
+        for first_counter in range(len(first_scale_dict)):
+            for second_counter in range(len(second_scale_dict)):
+
+                # Ensure the same variables are merged
+                if (
+                    first_scale_dict[first_counter]["name"]
+                    == second_scale_dict[second_counter]["name"]
+                ):
+                    # Combine the means
+                    combined_average, combined_std = self.join_mean_scale(
+                        first_scale_dict=first_scale_dict,
+                        second_scale_dict=second_scale_dict,
+                        variable=first_counter,
+                        first_N=first_nJets,
+                        second_N=second_nJets,
+                    )
+
+                    # Combine the mean/shift in a dict and append it
+                    combined_dict_list.append(
+                        self.dict_in(
+                            varname=first_scale_dict[first_counter]["name"],
+                            average=combined_average,
+                            std=combined_std,
+                            default=first_scale_dict[first_counter]["default"],
+                        )
+                    )
+
+        return combined_dict_list
+
     def get_scaling_tracks(self, data, var_names, mask_value=0):
         """
         Calculate the scale dict for the tracks and return the dict.
@@ -65,6 +204,7 @@ class Scaling:
 
         Output:
         - scale_dict: Scale dict with scaling/shifting values for each variable
+        - nTrks: Number of tracks used to calculate the scaling/shifting
         """
         # TODO add weight support for tracks
 
@@ -82,10 +222,11 @@ class Scaling:
             )
             f = data[:, :, v]
             slc = f[mask]
+            nTrks = len(slc)
             m, s = slc.mean(), slc.std()
             scale_dict[name] = {"shift": float(m), "scale": float(s)}
 
-        return scale_dict
+        return scale_dict, nTrks
 
     def get_scaling(self, vec, w, varname, custom_defaults_vars):
         """
@@ -143,7 +284,7 @@ class Scaling:
             "default": default,
         }
 
-    def GetScaleDict(self, input_file: str = None):
+    def GetScaleDict(self, input_file: str = None, chunkSize: int = 1e5):
         """
         Calculates the scaling, shifting and default values and saves them to json.
 
@@ -158,87 +299,82 @@ class Scaling:
         if input_file is None:
             input_file = self.config.GetFileName(option="resampled")
 
+        logger.info(
+            "Retrieving scaling and shifting values for the jet variables"
+        )
         logger.info(f"Using {input_file} for calculation of scaling/shifting")
-
-        # Load file
-        infile_all = h5py.File(input_file, "r")
 
         # Extract the correct variables
         variables_header = self.variable_config["train_variables"]
         var_list = [i for j in variables_header for i in variables_header[j]]
 
-        # Load jets from file
-        jets = pd.DataFrame(infile_all["/jets"][:][var_list])
-
-        # Replace inf values
-        jets.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-        logger.info(
-            "Retrieving scaling and shifting values for the jet variables"
+        # Get the file_length
+        file_length = len(
+            h5py.File(input_file, "r")["/jets"].fields(var_list[0])[:]
         )
-        scale_dict = []
-        for var in jets.columns.values:
-            if var in [self.variable_config["label"], "weight"]:
-                continue
-            elif "isDefaults" in var:
-                logger.debug(
-                    f"Default scaling/shifting values (0, 1) are used for {var}"
-                )
-                scale_dict.append(self.dict_in(var, 0.0, 1.0, None))
+
+        # Get the number of chunks we need to load
+        n_chunks = int(np.ceil(file_length / chunkSize))
+
+        # Get the jets scaling generator
+        jets_scaling_generator = self.get_scaling_generator(
+            input_file=input_file,
+            nJets=file_length,
+            chunkSize=chunkSize,
+        )
+
+        # Loop over chunks
+        for chunk_counter in range(n_chunks):
+            # Check if this is the first time loading from the generator
+            if chunk_counter == 0:
+                # Get the first chunk of scales from the generator
+                scale_dict, nJets_loaded = next(jets_scaling_generator)
+
             else:
-                dict_entry = self.get_scaling(
-                    vec=jets[var].values,
-                    w=jets["weight"].values
-                    if "weight" in jets
-                    else np.ones(len(jets)),
-                    varname=var,
-                    custom_defaults_vars=self.variable_config[
-                        "custom_defaults_vars"
-                    ],
-                )
-                scale_dict.append(self.dict_in(*dict_entry))
+                # Get the next chunk of scales from the generator
+                tmp_scale_dict, tmp_nJets_loaded = next(jets_scaling_generator)
 
+                # Combine the scale dicts coming from the generator
+                scale_dict = self.join_scale_dicts_jets(
+                    first_scale_dict=scale_dict,
+                    second_scale_dict=tmp_scale_dict,
+                    first_nJets=nJets_loaded,
+                    second_nJets=tmp_nJets_loaded,
+                )
+
+        # Init a empty scale dict for the tracks
         scale_dict_trk = {}
+
+        # Check if tracks are used or not
         if self.bool_use_tracks is True:
-            logger.info(
-                "Retrieving scaling and shifting values for the track variables"
+
+            # Load generator
+            trks_scaling_generator = self.get_scaling_tracks_generator(
+                input_file=input_file,
+                nJets=file_length,
+                chunkSize=chunkSize,
             )
 
-            # Load the variables which are scaled/shifted
-            logNormVars = self.variable_config["track_train_variables"][
-                "logNormVars"
-            ]
-            jointNormVars = self.variable_config["track_train_variables"][
-                "jointNormVars"
-            ]
-            trkVars = logNormVars + jointNormVars
+            # Loop over chunks
+            for chunk_counter in range(n_chunks):
+                # Check if this is the first time loading from the generator
+                if chunk_counter == 0:
+                    # Get the first chunk of scales from the generator
+                    scale_dict_trk, nTrks_loaded = next(trks_scaling_generator)
 
-            # Load the tracks as np arrays from file
-            trks = np.asarray(infile_all["/tracks"][:])
+                else:
+                    # Get the next chunk of scales from the generator
+                    tmp_dict_trk, tmp_nTrks_loaded = next(
+                        trks_scaling_generator
+                    )
 
-            # Stack the arrays by their variable
-            X_trk_train = np.stack(
-                [np.nan_to_num(trks[v]) for v in trkVars], axis=-1
-            )
-
-            # Get the masking
-            mask = ~np.all(X_trk_train == self.mask_value, axis=-1)
-
-            # Add small value, so log(0) does not happen
-            eps = 1e-8
-
-            # Take the log of the desired variables
-            for i, v in enumerate(logNormVars):
-                X_trk_train[:, :, i][mask] = np.log(
-                    X_trk_train[:, :, i][mask] + eps
-                )
-
-            # Scale the variables
-            scale_dict_trk = self.get_scaling_tracks(
-                data=X_trk_train[:, :, :],
-                var_names=logNormVars + jointNormVars,
-                mask_value=self.mask_value,
-            )
+                    # Combine the scale dicts coming from the generator
+                    scale_dict_trk = self.join_scale_dicts_trks(
+                        first_scale_dict=scale_dict_trk,
+                        second_scale_dict=tmp_dict_trk,
+                        first_nTrks=nTrks_loaded,
+                        second_nTrks=tmp_nTrks_loaded,
+                    )
 
         # save scale/shift dictionary to json file
         scale_dict = {"jets": scale_dict, "tracks": scale_dict_trk}
@@ -247,6 +383,184 @@ class Scaling:
             json.dump(scale_dict, outfile, indent=4)
         logger.info(f"saved scale dictionary as {self.scale_dict_path}")
 
+    def get_scaling_generator(
+        self,
+        input_file: str,
+        nJets: int,
+        chunkSize: int = int(10000),
+    ):
+        """
+        Set up a generator that loads the jets in chunks and calculates the mean/std.
+
+        Input:
+        - input_file: File which is to be scaled.
+        - nJets: Number of jets which are to be scaled.
+        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
+
+        Output:
+        - scale_dict_trk: Dict with the scale/shift values for each variable.
+        - nJets: Number of jets used for scaling/shifting.
+        """
+
+        # Extract the correct variables
+        variables_header = self.variable_config["train_variables"]
+        var_list = [i for j in variables_header for i in variables_header[j]]
+
+        # Open the h5 file
+        with h5py.File(input_file, "r") as infile_all:
+            # Get the indices
+            start_ind = 0
+            tupled_indices = []
+
+            # Loop over indicies
+            while start_ind < nJets:
+                # Calculate end index of the chunk
+                end_ind = int(start_ind + chunkSize)
+
+                # Check if end index is bigger than Njets
+                if end_ind > nJets:
+                    end_ind = nJets
+
+                # Append to list
+                tupled_indices.append((start_ind, end_ind))
+
+                # Set the new start index
+                start_ind = end_ind
+
+            # Init a list for the scale values for the variables
+            scale_dict = []
+
+            # Loop over the chunks
+            for index_tuple in tupled_indices:
+                # Load jets
+                jets = pd.DataFrame(
+                    infile_all["/jets"].fields(var_list)[
+                        index_tuple[0] : index_tuple[1]
+                    ]
+                )
+
+                # Replace inf values
+                jets.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+                if "weight" not in jets:
+                    length = nJets if nJets < chunkSize else len(jets)
+                    jets["weight"] = np.ones(int(length))
+
+                # Iterate over the vars of the jets
+                for var in jets.columns.values:
+                    # Skip all label/weight variables
+                    if var in [self.variable_config["label"], "weight"]:
+                        continue
+
+                    # Set Default values for isDefaults variables
+                    elif "isDefaults" in var:
+                        logger.debug(
+                            f"Default scaling/shifting values (0, 1) are used for {var}"
+                        )
+                        scale_dict.append(self.dict_in(var, 0.0, 1.0, None))
+
+                    # Calculate scaling/shifting value for given variable
+                    else:
+
+                        # Get the dict entry
+                        dict_entry = self.get_scaling(
+                            vec=jets[var].values,
+                            w=jets["weight"].values,
+                            varname=var,
+                            custom_defaults_vars=self.variable_config[
+                                "custom_defaults_vars"
+                            ],
+                        )
+                        scale_dict.append(self.dict_in(*dict_entry))
+
+                # Yield the scale dict and the number of jets
+                yield scale_dict, len(jets)
+
+    def get_scaling_tracks_generator(
+        self,
+        input_file: str,
+        nJets: int,
+        chunkSize: int = int(10000),
+    ):
+        """
+        Set up a generator that loads the tracks in chunks and calculates the mean/std.
+
+        Input:
+        - input_file: File which is to be scaled.
+        - nJets: Number of jets which are to be scaled.
+        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
+
+        Output:
+        - scale_dict_trk: Dict with the scale/shift values for each variable.
+        - nTrks: Number of tracks used for scaling/shifting.
+        """
+
+        # Load the variables which are scaled/shifted
+        logNormVars = self.variable_config["track_train_variables"][
+            "logNormVars"
+        ]
+        jointNormVars = self.variable_config["track_train_variables"][
+            "jointNormVars"
+        ]
+        trkVars = logNormVars + jointNormVars
+
+        # Open h5 file
+        with h5py.File(input_file, "r") as infile_all:
+
+            # Get the indices
+            start_ind = 0
+            tupled_indices = []
+
+            # Loop over indicies
+            while start_ind < nJets:
+                # Calculate end index of the chunk
+                end_ind = int(start_ind + chunkSize)
+
+                # Check if end index is bigger than Njets
+                if end_ind > nJets:
+                    end_ind = nJets
+
+                # Append to list
+                tupled_indices.append((start_ind, end_ind))
+
+                # Set the new start index
+                start_ind = end_ind
+
+            # Loop over the chunks
+            for index_tuple in tupled_indices:
+
+                # Load tracks
+                trks = np.asarray(
+                    infile_all["/tracks"][index_tuple[0] : index_tuple[1]]
+                )
+
+                # Stack the arrays by their variable
+                X_trk_train = np.stack(
+                    [np.nan_to_num(trks[v]) for v in trkVars], axis=-1
+                )
+
+                # Get the masking
+                mask = ~np.all(X_trk_train == self.mask_value, axis=-1)
+
+                # Add small value, so log(0) does not happen
+                eps = 1e-8
+
+                # Take the log of the desired variables
+                for i, v in enumerate(logNormVars):
+                    X_trk_train[:, :, i][mask] = np.log(
+                        X_trk_train[:, :, i][mask] + eps
+                    )
+
+                # Scale the variables
+                scale_dict_trk, nTrks = self.get_scaling_tracks(
+                    data=X_trk_train[:, :, :],
+                    var_names=logNormVars + jointNormVars,
+                    mask_value=self.mask_value,
+                )
+
+                # Yield the scale dict and the number jets
+                yield scale_dict_trk, nTrks
+
     def scale_generator(
         self,
         input_file: str,
@@ -254,9 +568,6 @@ class Scaling:
         jets_scale_dict: dict,
         jets_default_dict: dict,
         nJets: int,
-        tracks_noNormVars: list = None,
-        tracks_logNormVars: list = None,
-        tracks_jointNormVars: list = None,
         tracks_scale_dict: dict = None,
         chunkSize: int = int(10000),
     ):
@@ -269,9 +580,6 @@ class Scaling:
         - jets_scale_dict: Scale dict of the jet variables with the values inside.
         - jets_default_dict: Default scale dict of the jets.
         - nJets: Number of jets which are to be scaled.
-        - tracks_noNormVars: Track variables which will not be scaled.
-        - tracks_logNormVars: Track variables where the log is used and then scaled.
-        - tracks_jointNormVars: Joint track variables.
         - tracks_scale_dict: Scale dict of the track variables.
         - chunkSize: The number of jets which are loaded and scaled/shifted per step.
 
@@ -303,7 +611,7 @@ class Scaling:
                 )
 
                 if "weight" not in jets:
-                    length = nJets if nJets < chunkSize else chunkSize
+                    length = nJets if nJets < chunkSize else len(jets)
                     jets["weight"] = np.ones(int(length))
 
                 if "weight" not in jets_variables:
@@ -342,6 +650,17 @@ class Scaling:
                     # Check masking
                     var_arr_list = []
                     trk_mask = ~np.isnan(trks["ptfrac"])
+
+                    # Get the track variables
+                    tracks_noNormVars = self.variable_config[
+                        "track_train_variables"
+                    ]["noNormVars"]
+                    tracks_logNormVars = self.variable_config[
+                        "track_train_variables"
+                    ]["logNormVars"]
+                    tracks_jointNormVars = self.variable_config[
+                        "track_train_variables"
+                    ]["jointNormVars"]
                     tracks_variables = (
                         tracks_noNormVars
                         + tracks_logNormVars
@@ -415,26 +734,11 @@ class Scaling:
 
         # Check if tracks are used
         if self.bool_use_tracks:
-
-            # Load variables for tracks
-            noNormVars = self.variable_config["track_train_variables"][
-                "noNormVars"
-            ]
-            logNormVars = self.variable_config["track_train_variables"][
-                "logNormVars"
-            ]
-            jointNormVars = self.variable_config["track_train_variables"][
-                "jointNormVars"
-            ]
-
             # Get the scale dict for tracks
             with open(self.scale_dict_path, "r") as infile:
                 tracks_scale_dict = json.load(infile)["tracks"]
 
         else:
-            noNormVars = None
-            jointNormVars = None
-            logNormVars = None
             tracks_scale_dict = None
 
         # Load jets
@@ -444,9 +748,6 @@ class Scaling:
             jets_scale_dict=jets_scale_dict,
             jets_default_dict=jets_default_dict,
             nJets=file_length,
-            tracks_noNormVars=noNormVars,
-            tracks_logNormVars=logNormVars,
-            tracks_jointNormVars=jointNormVars,
             tracks_scale_dict=tracks_scale_dict,
             chunkSize=chunkSize,
         )
