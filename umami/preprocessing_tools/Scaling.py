@@ -164,32 +164,33 @@ class Scaling:
         combined_dict_list = []
 
         # Loop over the list with the dicts from the variables
-        for first_counter in range(len(first_scale_dict)):
-            for second_counter in range(len(second_scale_dict)):
+        for counter in range(len(first_scale_dict)):
+            # Ensure the same variables are merged
+            if (
+                first_scale_dict[counter]["name"]
+                == second_scale_dict[counter]["name"]
+            ):
+                # Combine the means
+                combined_average, combined_std = self.join_mean_scale(
+                    first_scale_dict=first_scale_dict,
+                    second_scale_dict=second_scale_dict,
+                    variable=counter,
+                    first_N=first_nJets,
+                    second_N=second_nJets,
+                )
 
-                # Ensure the same variables are merged
-                if (
-                    first_scale_dict[first_counter]["name"]
-                    == second_scale_dict[second_counter]["name"]
-                ):
-                    # Combine the means
-                    combined_average, combined_std = self.join_mean_scale(
-                        first_scale_dict=first_scale_dict,
-                        second_scale_dict=second_scale_dict,
-                        variable=first_counter,
-                        first_N=first_nJets,
-                        second_N=second_nJets,
-                    )
+            else:
+                raise ValueError("")
 
-                    # Combine the mean/shift in a dict and append it
-                    combined_dict_list.append(
-                        self.dict_in(
-                            varname=first_scale_dict[first_counter]["name"],
-                            average=combined_average,
-                            std=combined_std,
-                            default=first_scale_dict[first_counter]["default"],
-                        )
-                    )
+            # Combine the mean/shift in a dict and append it
+            combined_dict_list.append(
+                self.dict_in(
+                    varname=first_scale_dict[counter]["name"],
+                    average=combined_average,
+                    std=combined_std,
+                    default=first_scale_dict[counter]["default"],
+                )
+            )
 
         return combined_dict_list
 

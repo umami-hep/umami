@@ -39,6 +39,12 @@ def GetParser():
         action="store_true",
         help="Shuffle output arrays in hybrid sample" " preparation.",
     )
+    parser.add_argument(
+        "--chunk_size",
+        type=int,
+        default=int(1e5),
+        help="Set the chunk size of the generators.",
+    )
     # possible job options for the different preprocessing steps
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument(
@@ -99,7 +105,7 @@ if __name__ == "__main__":
             ust.Run()
     if args.scaling:
         Scaling = upt.Scaling(config)
-        Scaling.GetScaleDict()
+        Scaling.GetScaleDict(chunkSize=args.chunk_size)
     if args.apply_scales:
         Scaling = upt.Scaling(config)
         Scaling.ApplyScales()

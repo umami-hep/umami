@@ -117,6 +117,8 @@ def runPreprocessing(config, tagger):
                 "-c",
                 f"{config}",
                 "--scaling",
+                "--chunk_size",
+                "1000",
             ]
         )
 
@@ -127,6 +129,8 @@ def runPreprocessing(config, tagger):
                 "-c",
                 f"{config}",
                 "--scaling",
+                "--chunk_size",
+                "1000",
                 "--tracks",
             ]
         )
