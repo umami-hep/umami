@@ -70,7 +70,7 @@ test_coverage:
     - coverage html
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami" && '$CI_MERGE_REQUEST_LABELS !~ /Skip-CI/'
   artifacts:
     when: always
     paths:
@@ -92,7 +92,7 @@ coverage_html_report:
         EOS_PATH: "/eos/user/u/umamibot/www/coverage_reports/master/"
         CI_OUTPUT_DIR: "coverage_files/htmlcov/"
         METHOD: rsync
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami" && '$CI_MERGE_REQUEST_LABELS !~ /Skip-CI/'
       variables:
         EOS_PATH: "/eos/user/u/umamibot/www/coverage_reports/${CI_MERGE_REQUEST_IID}/"
         CI_OUTPUT_DIR: "coverage_files/htmlcov/"
@@ -106,7 +106,7 @@ test_coverage_post_report:
     - pip install --upgrade pip setuptools wheel
     - pip install python-gitlab
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami" && '$CI_MERGE_REQUEST_LABELS !~ /Skip-CI/'
   script:
     - python pipelines/gitlab-mr-coverage-api-post.py
 
@@ -124,7 +124,7 @@ pages:
     - public
     expire_in: 1 hour
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
       when: always
 
 include:

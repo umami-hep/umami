@@ -22,7 +22,7 @@ unittest:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       variables:
         IMAGE_TYPE: "umamibase:latest"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami" && '$CI_MERGE_REQUEST_LABELS !~ /Skip-CI/'
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   dependencies:
     - linter
