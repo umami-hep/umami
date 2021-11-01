@@ -2,7 +2,6 @@
 # set to true if extended flavour labelling is used in preprocessing
 outfile_name: Null
 plot_name: Null
-cuts: Null
 dict_file: Null
 var_file: Null
 preparation:

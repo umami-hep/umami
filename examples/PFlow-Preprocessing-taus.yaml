@@ -72,7 +72,7 @@ preparation:
       path: *ntuple_path
       file_pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
 
-  class_labels: [ujets, cjets, bjets]
+  class_labels: [ujets, cjets, bjets, taujets]
 
   samples:
     training_ttbar_bjets:
@@ -186,7 +186,7 @@ preparation:
         file: MC16d-inclusive_testing_zprime_PFlow.h5
 
 sampling:
-  method: count
+  method: pdf
   # The options depend on the sampling method
   options:
     sampling_variables:
@@ -196,19 +196,20 @@ sampling:
           # For PDF sampling: must be the np.linspace arguments.
           #   - list of of list, one list for each category (in samples)
           #   - define the region of each category.
-          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+          bins: [[0, 25e4, 100], [25e4, 6e6, 100]]
       - absEta_btagJes:
-          # For PDF sampling: same structure as in pt_btagJes.
-          bins: [0, 2.5, 10]
+          bins: [[0, 2.5, 10], [0, 2.5, 10]]
     samples:
       ttbar:
         - training_ttbar_bjets
         - training_ttbar_cjets
         - training_ttbar_ujets
+        - training_ttbar_taujets
       zprime:
         - training_zprime_bjets
         - training_zprime_cjets
         - training_zprime_ujets
+        - training_zprime_taujets
     # this optional option allows to specify the jets which should be used per sample
     custom_njets_initial:
       # these are empiric values ensuring a smooth hybrid sample
@@ -224,12 +225,14 @@ sampling:
     max_upsampling_ratio:
       training_ttbar_cjets: 5
       training_zprime_cjets: 5
+      training_ttbar_taujets: 4
+      training_zprime_taujets: 4
 
     # number of training jets
     # For PDF sampling: this is the number of target jets to be taken (through all categories).
     #                   If set to -1: max out to target numbers (limited by fractions ratio)
-    njets: 25e6
-    save_tracks: True
+    njets: -1
+    save_tracks: False
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: indices.h5
     # outputfiles are split into 5 -> needs to be implemented

@@ -97,12 +97,12 @@ if __name__ == "__main__":
         preparation_tool.Run()
     if args.resampling:
         if config.sampling["method"] == "count":
-            us = upt.UnderSampling(config)
-            us.Run()
-        # here the other options such as PDFSampling etc. would be called
+            sampler = upt.UnderSampling(config)
+        elif config.sampling["method"] == "pdf":
+            sampler = upt.PDFSampling(config)
         if config.sampling["method"] == "probability_ratio":
-            ust = upt.ProbabilityRatioUnderSampling(config)
-            ust.Run()
+            sampler = upt.ProbabilityRatioUnderSampling(config)
+        sampler.Run()
     if args.scaling:
         Scaling = upt.Scaling(config)
         Scaling.GetScaleDict(chunkSize=args.chunk_size)
