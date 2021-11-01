@@ -41,6 +41,7 @@ def ResamplingPlots(
     Log: bool = True,
     after_sampling: bool = False,
     normalised: bool = False,
+    hist_input: bool = False,
 ):
     """Plots pt and eta distribution as nice plots for
     presentation.
@@ -60,6 +61,8 @@ def ResamplingPlots(
     Log: boolean indicating if plot is in log scale or not (default True)
     after_sampling: if False (default) using the synthax of `concat_samples`
     normalised: normalises the integral of the histogram to 1
+    hist_input: if True the concat_samples is a dictionary of histograms and
+                binning is already the full axes.
 
     Returns
     -------
@@ -81,15 +84,28 @@ def ResamplingPlots(
                 norm_factor = 1.0
 
             scale_val = 1
-            if varname == "pT":
-                scale_val = 1e-3
-            # Calculate Binning and counts for plotting
-            counts, Bins = np.histogram(
-                concat_samples[flav][:, varpos] / scale_val
-                if after_sampling
-                else concat_samples[flav]["jets"][:, varpos] / scale_val,
-                bins=binning[varname],
-            )
+            if (
+                varname in ["pT", "pt_btagJes"]
+                or varname == global_config.pTvariable
+            ):
+                scale_val = 1e3
+
+            if hist_input:
+                # Working directly on the x-D array
+                direction_sum = tuple(
+                    [i for i in positions_x_y if i != varpos]
+                )
+                counts = np.sum(concat_samples[flav], axis=direction_sum)
+                Bins = binning[varname] / scale_val
+
+            else:
+                # Calculate Binning and counts for plotting
+                counts, Bins = np.histogram(
+                    concat_samples[flav][:, varpos] / scale_val
+                    if after_sampling
+                    else concat_samples[flav]["jets"][:, varpos] / scale_val,
+                    bins=binning[varname],
+                )
             # Calculate the bin centers
             bincentres = [
                 (Bins[i] + Bins[i + 1]) / 2.0 for i in range(len(Bins) - 1)
@@ -132,12 +148,11 @@ def ResamplingPlots(
             ymin, ymax = plt.ylim()
             plt.ylim(ymin=ymin, ymax=1.2 * ymax)
 
-        if varname == "pT":
+        if varname == global_config.pTvariable:
             plt.xlabel(r"$p_T$ in GeV")
 
-        elif varname == "abseta":
+        elif varname == global_config.etavariable:
             plt.xlabel(r"$\eta$")
-
         else:
             plt.xlabel(varname)
 
@@ -257,7 +272,7 @@ def MakePlots(
             x=bins[:-1], y=ratio_cb, xerr=x_error, fmt="none", ecolor="#ff7f0e"
         )
         ax.set_ylabel("Ratio to b")
-        ax.set_ylim(bottom=-0.5, top=4.0)
+        ax.set_ylim(bottom=-0.1, top=2.1)
         ax.set_yticks([0, 1, 2, 3])
         ax.grid(True)
     plt.tight_layout()

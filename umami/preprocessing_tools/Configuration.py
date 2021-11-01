@@ -76,11 +76,21 @@ class Configuration(object):
         idx = out_file.index(".h5")
 
         if iteration is None:
-            inserttxt = f"-{option}"
+            if option is None:
+                inserttxt = ""
+            else:
+                inserttxt = f"-{option}"
         else:
-            inserttxt = (
-                f"-{option}-file-{iteration:.0f}" f"_{self.iterations:.0f}"
-            )
+            if option is None:
+                inserttxt = (
+                    f"-file-{iteration:.0f}"
+                    f"_{self.sampling['options']['iterations']:.0f}"
+                )
+            else:
+                inserttxt = (
+                    f"-{option}-file-{iteration:.0f}"
+                    f"_{self.sampling['options']['iterations']:.0f}"
+                )
         if custom_path is not None:
             name_base = out_file.split("/")[-1]
             idx = name_base.index(".h5")

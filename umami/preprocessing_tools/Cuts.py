@@ -34,6 +34,16 @@ def GetSampleCuts(jets, cuts):
     }
     cut_rejections = []
 
+    # flatten list of cuts in case these cuts are provided as lists inside of a list
+    clean_list = []
+    for sublist in cuts:
+        if type(sublist) == list:
+            for item in sublist:
+                clean_list.append(item)
+        else:
+            clean_list.append(sublist)
+    cuts = clean_list
+
     for cut_entry in cuts:
         # expect a dictionary with only one entry
         cut = list(cut_entry.keys())

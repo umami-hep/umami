@@ -45,10 +45,13 @@ class TrainSampleWriter:
 
             # Get the indices
             start_ind = 0
-            end_ind = int(start_ind + chunkSize)
 
             tupled_indices = []
-            while end_ind <= nJets or start_ind == 0:
+            while start_ind < nJets:
+                end_ind = int(start_ind + chunkSize)
+                if end_ind > nJets:
+                    end_ind = nJets
+
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
                 end_ind = int(start_ind + chunkSize)
@@ -142,18 +145,21 @@ class TrainSampleWriter:
                             "X_train",
                             data=jets,
                             compression=self.compression,
+                            maxshape=(None, jets.shape[1]),
                         )
 
                         h5file.create_dataset(
                             "Y_train",
                             data=labels,
                             compression=self.compression,
+                            maxshape=(None, labels.shape[1]),
                         )
 
                         h5file.create_dataset(
                             "weight",
                             data=weights,
                             compression=self.compression,
+                            maxshape=(None,),
                         )
 
                         if self.bool_use_tracks is True:
@@ -161,6 +167,11 @@ class TrainSampleWriter:
                                 "X_trk_train",
                                 data=tracks,
                                 compression=self.compression,
+                                maxshape=(
+                                    None,
+                                    tracks.shape[1],
+                                    tracks.shape[2],
+                                ),
                             )
 
                     else:
@@ -176,13 +187,14 @@ class TrainSampleWriter:
                             (h5file["Y_train"].shape[0] + labels.shape[0]),
                             axis=0,
                         )
+                        h5file["Y_train"][-labels.shape[0] :] = labels
 
                         # Appending weights
                         h5file["weight"].resize(
-                            (h5file["weight"].shape[0] + labels.shape[0]),
+                            (h5file["weight"].shape[0] + weights.shape[0]),
                             axis=0,
                         )
-                        h5file["weight"][-labels.shape[0] :] = labels
+                        h5file["weight"][-weights.shape[0] :] = weights
 
                         # Appending tracks if used
                         if self.bool_use_tracks is True:

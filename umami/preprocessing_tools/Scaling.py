@@ -593,10 +593,11 @@ class Scaling:
 
             # Get the indices
             start_ind = 0
-            end_ind = int(start_ind + chunkSize)
-
             tupled_indices = []
-            while end_ind <= nJets or start_ind == 0:
+            while start_ind < nJets:
+                end_ind = int(start_ind + chunkSize)
+                if end_ind > nJets:
+                    end_ind = nJets
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
                 end_ind = int(start_ind + chunkSize)
@@ -610,7 +611,6 @@ class Scaling:
                 labels = pd.DataFrame(
                     f["/labels"][index_tuple[0] : index_tuple[1]]
                 )
-
                 if "weight" not in jets:
                     length = nJets if nJets < chunkSize else len(jets)
                     jets["weight"] = np.ones(int(length))
@@ -708,7 +708,6 @@ class Scaling:
         Output:
         - scaled_file: Returns the scaled/shifted file
         """
-
         # Get input filename to calculate scaling and shifting
         if input_file is None:
             input_file = self.config.GetFileName(option="resampled")
@@ -724,6 +723,7 @@ class Scaling:
         file_length = len(
             h5py.File(input_file, "r")["/jets"][jets_variables[0]][:]
         )
+
         n_chunks = int(np.ceil(file_length / chunkSize))
 
         # Get scale dict
@@ -773,17 +773,24 @@ class Scaling:
                             "jets",
                             data=jets.to_records(index=False),
                             compression=self.compression,
+                            maxshape=(None,),
                         )
                         h5file.create_dataset(
                             "labels",
                             data=labels,
                             compression=self.compression,
+                            maxshape=(None, labels.shape[1]),
                         )
                         if self.bool_use_tracks is True:
                             h5file.create_dataset(
                                 "tracks",
                                 data=tracks,
                                 compression=self.compression,
+                                maxshape=(
+                                    None,
+                                    tracks.shape[1],
+                                    tracks.shape[2],
+                                ),
                             )
 
                     else:
@@ -792,12 +799,16 @@ class Scaling:
                             (h5file["jets"].shape[0] + jets.shape[0]),
                             axis=0,
                         )
-                        h5file["jets"][-jets.shape[0] :] = jets
+                        h5file["jets"][-jets.shape[0] :] = jets.to_records(
+                            index=False
+                        )  # jets
+
                         h5file["labels"].resize(
                             (h5file["labels"].shape[0] + labels.shape[0]),
                             axis=0,
                         )
                         h5file["labels"][-labels.shape[0] :] = labels
+
                         if self.bool_use_tracks is True:
                             h5file["tracks"].resize(
                                 (h5file["tracks"].shape[0] + tracks.shape[0]),
