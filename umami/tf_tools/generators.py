@@ -20,12 +20,22 @@ class Model_Generator(object):
         self.Y_Name = Y_Name
         self.batch_size = batch_size
         self.excluded_var = excluded_var
-        self.chunk_size = 1e6
+        self.chunk_size = 1e5
         if n_jets is not None:
             self.n_jets = int(n_jets)
         else:
-            with h5py.File(self.train_file_path, "r") as f:
-                self.n_jets = int(len(f[self.X_Name]))
+            if X_Name is not None:
+                with h5py.File(self.train_file_path, "r") as f:
+                    self.n_jets = int(len(f[self.X_Name]))
+
+            elif X_trk_Name is not None:
+                with h5py.File(self.train_file_path, "r") as f:
+                    self.n_jets = int(len(f[self.X_trk_Name]))
+
+            else:
+                raise ValueError(
+                    "You need to give either X_Name or X_Trk_Name to the generator!"
+                )
         self.length = int(self.n_jets / self.batch_size)
         self.step_size = self.batch_size * int(
             self.chunk_size / self.batch_size
