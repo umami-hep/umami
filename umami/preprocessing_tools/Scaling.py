@@ -670,11 +670,10 @@ class Scaling:
 
                     # Iterate over variables and scale/shift it
                     for var in tracks_variables:
+                        x = trks[var]
                         if var in tracks_logNormVars:
-                            x = np.log(trks[var])
-                            x -= tracks_scale_dict[var]["shift"]
-                            x /= tracks_scale_dict[var]["scale"]
-                        elif var in tracks_jointNormVars:
+                            x = np.log(x)
+                        elif var in tracks_jointNormVars or var in tracks_logNormVars:
                             x = np.where(
                                 trk_mask,
                                 x - tracks_scale_dict[var]["shift"],
@@ -685,8 +684,6 @@ class Scaling:
                                 x / tracks_scale_dict[var]["scale"],
                                 x,
                             )
-                        else:
-                            x = trks[var]
                         var_arr_list.append(np.nan_to_num(x))
 
                     # Stack the results for new dataset
