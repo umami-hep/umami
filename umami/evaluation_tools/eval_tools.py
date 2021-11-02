@@ -117,8 +117,8 @@ def GetScoresProbsDict(
     Input:
     - jets: Dataframe with the probabilites of the comparison taggers as columns
     - y_true: Internal truth labeling of the used jets.
-    - tagger_preds: Prediction output of the taggers listed. [pred_dips, pred_umami]
-    - tagger_names: Names of the freshly trained taggers. ["dips", "umami"]
+    - tagger_preds: Prediction output of the taggers listed. e.g. [pred_dips, pred_umami]
+    - tagger_names: Names of the freshly trained taggers. e.g. ["dips", "umami"]
     - tagger_list: List of the comparison tagger names.
     - class_labels: List of class labels which are used.
     - main_class: The main discriminant class. For b-tagging obviously "bjets"
@@ -144,6 +144,10 @@ def GetScoresProbsDict(
 
     # Adding trained tagger probabilities
     for counter, tagger in enumerate(tagger_names + tagger_list):
+
+        # Make a copy of the class_labels
+        class_labels_copy = copy.deepcopy(class_labels)
+
         for flav_index, flav in enumerate(class_labels):
             if tagger in tagger_names:
                 df_discs_dict[
@@ -151,11 +155,18 @@ def GetScoresProbsDict(
                 ] = tagger_preds[tagger_names.index(tagger)][:, flav_index]
 
             else:
-                df_discs_dict[
-                    f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                ] = jets[
-                    f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                ]
+                try:
+                    df_discs_dict[
+                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                    ] = jets[
+                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                    ]
+
+                except KeyError:
+                    logger.warning(
+                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]} is not in files! '
+                        + "Skipping..."
+                    )
 
         if tagger in tagger_names:
             y_pred = tagger_preds[counter]
@@ -164,28 +175,33 @@ def GetScoresProbsDict(
             # Shape the probabilities of the comparison taggers like the output of the networks
             for flav_index, flav in enumerate(class_labels):
 
-                # Append the output to a flat array
-                if flav_index == 0:
-                    tmp = jets[
-                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                    ].values
-
-                else:
-                    tmp = np.append(
-                        tmp,
-                        jets[
+                # Trying to load the output probs of the tagger from file
+                try:
+                    # Append the output to a flat array
+                    if flav_index == 0:
+                        tmp = jets[
                             f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                        ].values,
-                    )
+                        ].values
+
+                    else:
+                        tmp = np.append(
+                            tmp,
+                            jets[
+                                f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                            ].values,
+                        )
+
+                except KeyError:
+                    class_labels_copy.remove(flav)
 
             # Reshape to wrong sorted (transpose change it to correct shape)
-            y_pred = tmp.reshape((len(class_labels), -1))
+            y_pred = tmp.reshape((len(class_labels_copy), -1))
             y_pred = np.transpose(y_pred)
 
         # Adding scores of the trained network
         df_discs_dict[f"disc_{tagger}"] = utt.GetScore(
             y_pred=y_pred,
-            class_labels=class_labels,
+            class_labels=class_labels_copy,
             main_class=main_class,
             frac_dict=frac_values[f"{tagger}"]
             if tagger in tagger_names
