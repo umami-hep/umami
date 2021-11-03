@@ -10,7 +10,7 @@ In under-sampling, the simplest technique involves removing random records from 
 
 ### Hybrid samples
 Umami/DIPS and DL1r are trained on so-called hybrid samples which are created using both ttbar and Z' input jets.
-The hybrid samples for PFlow jets are created by combining events from ttbar and Z' samples based on a pt threshold, which is defined by the `GhostBHadronsFinalPt` variable for b-jets and by the `pt_btagJes` variable for other jet-flavours.
+The hybrid samples for PFlow jets are created by combining events from ttbar and Z' samples based on a pt threshold, which is defined by the `pt_btagJes` variable for all jet-flavours.
 Below a certain pt threshold (which needs to be defined for the preprocessing), ttbar events are used in the hybrid sample. Above this pt threshold, the jets are taken from Z' events.
 The advantage of these hybrid samples is the avaliability of sufficient jets with high pt, as the ttbar samples typically have lower-pt jets than those jets from the Z' sample.
 
