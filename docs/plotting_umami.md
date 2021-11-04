@@ -410,20 +410,29 @@ Dips_pT_vs_beff:
 | `alpha` | Float | Optional | The Alpha value of the plots. |
 
 #### Variable vs Efficiency
-Plot the b-tag efficiency for b, c, and light jets (+ optionaly tau jets) versus a given variable (not just pT). The variables must be included in the results h5 files from the evaluation step.
+Plot the efficiencies of all flavours versus any variable (not just pT). The variables must be included in the results h5 files from the evaluation step.
 
 ```yaml
-eff_vs_pt_:
+eff_vs_pt:
   type: "ROCvsVar"
-  data_set_name: "ttbar"
+  evaluation_file: 
+  data_set_name: "zpext_r21"
+  data_set_for_cut_name: "ttbar_r21"
+  recompute: False
+  class_labels: ["ujets", "cjets", "bjets", "taujets"]
+  main_class: "bjets"
+  tagger_name: "DL1"
+  frac_values: {
+    "cjets": 0.018,
+    "ujets": 0.882,
+    "taujets": 0.1,
+  }
+  variable: pt
   flat_eff: True 
-  cut_value: None
-  efficiency: 70 
-  fc: 0.018
-  prediction_labels: ["dips_pb", "dips_pc", "dips_pu"] 
-  variable: pt   
-  max_variable: 150
-  min_variable: 10 
+  efficiency: 70
+  cut_value:   
+  max_variable: 1500000
+  min_variable: 10000 
   nbin: 100 
   var_bins: [20, 30, 40, 50, 75, 100, 150, 250]
   xticksval: [20, 50, 100, 150, 200, 250]
@@ -433,19 +442,26 @@ eff_vs_pt_:
     minor_ticks_frequency: 10
     UseAtlasTag: True
     AtlasTag: "Internal"
-    SecondTag: "$\sqrt{s}$ = 13 TeV, $t\bar{t}$"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
     ThirdTag: "Flat efficiency DL1r"
-    SaveData: False 
+    Log: True
+    
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `flat_eff` | bool | Necessary | Whether to use a flat b-tag b-jet efficiency per variable bin or a global one. |
-| `cut_value` | None or float | Optional | Enforce a specific cut value on the b-discriminant. Can be used to apply R21 cut values to R22. `flat_eff` must be False. |
-| `efficiency` | int | Necessary | The desired b-jet b-tag efficiency in percent |
-| `fc` | float | Optional | The fc value to use |
-| `prediction_labels` | List | Necessary |A list of the probability outputs of a model. The order here is important! (pb, pc, pu). The different model outputs are maily build the same like `model_pX`. <br /> For DIPS: `["dips_pb", "dips_pc", "dips_pu"]` <br /> For UMAMI: `["umami_pb", "umami_pc", "umami_pu"]` <br /> For RNNIP: `["rnnip_pb", "rnnip_pc", "rnnip_pu"]` <br /> For DL1r: `["dl1r_pb", "dl1r_pc", "dl1r_pu"]` <br /> For the retrained DL1r (using `EvaluateModelDL1`): `["pb", "pc", "pu"]` <br /> If taus are included (only retrained DL1r so far): `["pb", "pc", "pu", "ptau"]` |
+
+| `data_set_name` | string | N | The dataset to use from the dataframe as specified in evaluation. |
+| `data_set_for_cut_name` | string | Optional | The dataset to use to compute the cut_value defining the working point. |
+| `recompute` | bool | Optional | Whether to recompute the score or load it (useful if different fractions). If recomputing, `flavour_fractions` must be defined. Will recompute by default. |
+| `class_labels` | List | Necessary | List of class labels that were used in the preprocessing/training. They must be the same as in preprocessing! Order is important! |
+| `main_class` | string | Necessary | The main class label to tagg. Must be in `class_labels`. |
+| `tagger_name` | string | Necessary | The name of the tagger to use (will be composed with probability of the flavour to retrieve the probability: e.g., "DL1" leads to "DL1_pb", "DL1_pc", ...). |
+| `frac_values` | dictionary | Optional | The flavour fractions used. Only necessary if recomputing the scores. Added to the tag if not None. |
 | `variable` |  String | Necessary | A variable contained in the h5 result file from `evaluate.py` (e.g., "pt"). <br /> To include any non-standard variable in this h5, include them in the list of the parameter `add_variables_eval` in the training configuration ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml#L69)). <br /> Note! pt variable is automatically transformed in GeV (divide by 1000)! |
+| `flat_eff` | bool | Optional | Whether to use a flat b-tag b-jet efficiency per variable bin or a global one. |
+| `efficiency` | int | Optional | The desired b-jet b-tag efficiency in percent |
+| `cut_value` | None or float | Optional | Enforce a specific cut value on the b-discriminant. Can be used to apply R21 cut values to R22. `flat_eff` must be False. |
 | `max_variable` | float | Optional | The maximum value to be considered for variable in the binning <br /> Note! For pt, value of variable is in GeV. |
 | `max_variable` | float | Optional | The minimum value to be considered for variable in the binning <br /> Note! For pt, value of variable is in GeV. |
 | `nbin` | int | Optional | The number of bin to be considered for variable in the binning |
@@ -458,10 +474,88 @@ eff_vs_pt_:
 | `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
 | `SecondTag` | String | Optional | Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag. |
 | `ThirdTag` | String | Optional | Write this text on the upper left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. |
-| `SaveData` | Bool | Optional | Saves the plotted data in a text file. |
+| `Log` | bool | Optional | Whether to  put the y-axis in log-scale. |
 
-#### Scanning fractions
-For DL1 with taus, the evaluation step of `evaluate.py` generates an extra h5 file giving the c/b, light, and tau rejection as a function of the c/b-fraction and the tau fraction. To produce the plot associated to this information, add (for example) this to the plotting config:
+#### Variable vs Efficiency Comparison
+Plot the efficiencies of each flavours versus any variable (not just pT) for all listed models. The variables must be included in the results h5 files from the evaluation step. 
+
+```yaml
+eff_vs_pt_small:
+  type: "ROCvsVar_comparison"
+  tagger_name: "DL1"
+  frac_values: {
+    "cjets": 0.018,
+    "ujets": 0.882,
+    "taujets": 0.1,
+  }
+  class_labels: ["ujets", "cjets", "bjets", "taujets"]
+  main_class: "bjets"
+  variable: pt
+  models_to_plot:
+    model1:
+      data_set_name: "ttbar_r22"
+      data_set_for_cut_name: "ttbar_r21"
+      label: "Model 1"
+    model2: 
+      evaluation_file: path_to_result_other.h5
+      data_set_name: "ttbar_r22"
+      data_set_for_cut_name: "ttbar_r21"
+      tagger_name: "DL1"
+      class_labels: ["ujets", "cjets", "bjets", "taujets"]
+      label: "Model 2"
+      cut_value: None
+      frac_values: {
+        "cjets": 0.018,
+        "ujets": 0.882,
+        "taujets": 0.1,
+      }
+  flat_eff: False 
+  efficiency: 70
+  max_variable: 1500000 
+  min_variable: 10000
+  nbin: 100 
+  var_bins: [20, 30, 40, 50, 75, 100, 150, 250]
+  xticksval: [20, 50, 100, 150, 200, 250]
+  xticks: ["", "$50$", "$100$", "$150$", "$200$", "$250$"]
+  plot_settings:
+    xlabel: "$p_T$ [GeV]"
+    minor_ticks_frequency: 10
+    UseAtlasTag: True
+    AtlasTag: "Internal"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
+    ThirdTag: "Flat efficiency DL1r"
+    Log: True
+```
+
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `tagger_name` | string | Necessary | The name of the tagger to use (will be composed with probability of the flavour to retrieve the probability: e.g., "DL1" leads to "DL1_pb", "DL1_pc", ...). If one is defined above the models, will serve as default. Redefining it for a specific model forces this model to use the specified tagger. |
+| `data_set_name` | string | Necessary (for each model) | The dataset to use from the dataframe as specified in evaluation. |
+| `data_set_for_cut_name` | string | Optional (for each model) | The dataset to use to compute the cut_value defining the working point. |
+| `recompute` | bool | Optional | Whether to recompute the score or load it (useful if different fractions). If recomputing, `flavour_fractions` must be defined for the model considered. Setting recompute above models set it as default. Will recompute by default. |
+| `class_labels` | List | Necessary (for each model or above all models) | List of class labels that were used in the preprocessing/training. They must be the same as in preprocessing! Order is important! |
+| `main_class` | string | Necessary | The main class label to tagg. Must be in `class_labels`. |
+| `frac_values` | dictionary | Optional (for each model or above all models, then serving as default) | The flavour fractions used. Necessary if recomputing the scores for a tagger. If defined above model, will be added to the tag if not None.|
+| `variable` |  String | Necessary | A variable contained in the h5 result file from `evaluate.py` (e.g., "pt"). <br /> To include any non-standard variable in this h5, include them in the list of the parameter `add_variables_eval` in the training configuration ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml#L69)). <br /> Note! pt variable is automatically transformed in GeV (divide by 1000)! |
+| `flat_eff` | bool | Optional | Whether to use a flat b-tag b-jet efficiency per variable bin or a global one. |
+| `efficiency` | int | Optional | The desired b-jet b-tag efficiency in percent |
+| `cut_value` | None or float | Optional (for each model) | Enforce a specific cut value on the b-discriminant. Can be used to apply R21 cut values to R22. `flat_eff` must be False. |
+| `max_variable` | float | Optional | The maximum value to be considered for variable in the binning <br /> Note! For pt, value of variable is in GeV. |
+| `max_variable` | float | Optional | The minimum value to be considered for variable in the binning <br /> Note! For pt, value of variable is in GeV. |
+| `nbin` | int | Optional | The number of bin to be considered for variable in the binning |
+| `var_bins` | List of float | Optional | The bins to use for variable. Overrides the three parameters above |
+| `xticksval` | List of float | Optional | Main ticks positions. <br /> Note! For pt, values are in GeV. |
+| `xticks` | List of  String | Optional | The ticks to write. Requires `xticksval` to work. |
+| `xlabel` |  String | Optional | To write as name of the x label |
+| `minor_ticks_frequency` | Int | Optional | Frequency of the minor ticks to draw <br /> Note! For pt, values are in GeV. |
+| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | String | Optional | Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag. |
+| `ThirdTag` | String | Optional | Write this text on the upper left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. |
+| `Log` | bool | Optional | Whether to  put the y-axis in log-scale. |
+
+#### Scanning fractions - DEPRECATED
+DEPRECATED: For DL1 with taus, the evaluation step of `evaluate.py` generated an extra h5 file giving the c/b, light, and tau rejection as a function of the c/b-fraction and the tau fraction (this evaluation is no longer performed). To produce the plot associated to this information (2d heatmap of rejection for the two flavour fractions), add (for example) this to the plotting config:
 
 ```yaml
 plot_scan_frac_tau:

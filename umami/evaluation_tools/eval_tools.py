@@ -395,3 +395,38 @@ def GetSaliencyMapDict(
                 )
 
     return map_dict
+
+
+def RecomputeScore(
+    df,
+    model_tagger,
+    main_class,
+    model_frac_values,
+    model_class_labels,
+):
+    flavour_categories = global_config.flavour_categories
+
+    # Shape the probability dataframe
+    for flav_index, flav in enumerate(model_class_labels):
+        if flav_index == 0:
+            unshaped_proba = df[
+                f"{model_tagger}_{flavour_categories[flav]['prob_var_name']}"
+            ]
+        else:
+            unshaped_proba = np.append(
+                unshaped_proba,
+                df[
+                    f"{model_tagger}_{flavour_categories[flav]['prob_var_name']}"
+                ].values,
+            )
+    # Reshape to wrong sorted (transpose change it to correct shape)
+    shaped_proba = unshaped_proba.reshape((len(model_class_labels), -1))
+    shaped_proba = np.transpose(shaped_proba)
+
+    # Returns the score
+    return utt.GetScore(
+        shaped_proba,
+        class_labels=model_class_labels,
+        main_class=main_class,
+        frac_dict=model_frac_values,
+    )
