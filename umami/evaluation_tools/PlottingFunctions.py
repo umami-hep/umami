@@ -22,23 +22,20 @@ def rej_err(x, N):
     return np.sqrt((1 / x) * (1 - (1 / x)) / N)
 
 
-def FlatEfficiencyPerBin(df, predictions, variable, var_bins, wp=0.7):
+def FlatEfficiencyPerBin(
+    df, predictions, variable, var_bins, classes, target="bjets", wp=0.7
+):
     """
     For each bin in var_bins of variable, cuts the score in
     predictions column to get the desired WP (working point)
     df must (at least) contain the following columns:
-        - bscore
+        - score
         - value of variable
         - labels (with the true labels)
-    Creates a column 'btag' with the tagged (1/0) info in df.
-
-    Note: labels indicate in fact the column in Y_true, so:
-        - labels = 3 for taus,
-        - labels = 2 for b,
-        - labels = 1 for c,
-        - labels = 0 for u.
+    Creates a column 'tag' with the tagged (1/0) info in df.
     """
-    df["btag"] = 0
+    target_index = classes.index(target)
+    df["tag"] = 0
     for i in range(len(var_bins) - 1):
         index_jets_in_bin = (var_bins[i] <= df[variable]) & (
             df[variable] < var_bins[i + 1]
@@ -46,15 +43,17 @@ def FlatEfficiencyPerBin(df, predictions, variable, var_bins, wp=0.7):
         df_in_bin = df[index_jets_in_bin]
         if len(df_in_bin) == 0:
             continue
-        bscores_b_in_bin = df_in_bin[df_in_bin["labels"] == 2][predictions]
-        if len(bscores_b_in_bin) == 0:
+        scores_b_in_bin = df_in_bin[df_in_bin["labels"] == target_index][
+            predictions
+        ]
+        if len(scores_b_in_bin) == 0:
             continue
-        cutvalue_in_bin = np.percentile(bscores_b_in_bin, 100.0 * (1.0 - wp))
-        df.loc[index_jets_in_bin, ["btag"]] = (
+        cutvalue_in_bin = np.percentile(scores_b_in_bin, 100.0 * (1.0 - wp))
+        df.loc[index_jets_in_bin, ["tag"]] = (
             df_in_bin[predictions] > cutvalue_in_bin
         ) * 1
 
-    return df["btag"]
+    return df["tag"]
 
 
 def calc_bins(input_array, Binning):
@@ -130,139 +129,119 @@ def calc_ratio(counter, denominator, counter_unc, denominator_unc):
 
 
 def plotEfficiencyVariable(
-    plot_name,
-    df,
-    variable,
-    var_bins,
-    fc=0.018,
-    ftau=None,
+    df: list,
+    class_labels_list: list,
+    main_class: str,
+    variable: str,
+    var_bins: np.float64,
+    plot_name: str,
+    ApplyAtlasStyle: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    ThirdTag="DL1r",
+    yAxisIncrease: float = 1.4,
+    yAxisAtlasTag: float = 0.9,
     efficiency=0.70,
-    include_taus=False,
+    frac_values=None,
     centralise_bins=True,
     xticksval=None,
     xticks=None,
     minor_ticks_frequency=None,
-    xlogscale=False,
     xlabel=None,
-    UseAtlasTag=True,
-    AtlasTag="Internal",
-    SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$",
-    ThirdTag="DL1r",
-    SaveData=False,
+    Log=False,
+    colors=None,
+    ymin: float = None,
+    ymax: float = None,
 ):
     """
-    For a given variable (string) in the panda dataframe df, plots:
-    - the b-eff of b, c, and light jets as a function of variable
+    For a given variable (string) in the panda dataframe df, plots
+    the eff for each flavour as a function of variable.
                  (discretised in bins as indicated by var_bins input)
-    - the variable distribution.
+
 
     The following options are needed:
-    - plot_name: the full path + the start of the name of the plot.
-    - df: panda dataframe with columns
-        - The efficiency is computed from the btag column of df.
-        - variable (next parameter)
-        - labels (2 for b, 1 for c, 0 for u, and 3 for taus)
-    - variable: String giving the variable to use in df
-    - var_bins: numpy array listing the bins of variable
-        Entry i and i+1 in var_bins define bin i of the variable.
+    - df: panda dataframe with columns:
+        - The efficiency is computed from the tag column of df.
+        - variable (see eponymous parameter)
+        - labels (as defined in the preprocessing, MUST MATCH class_labels_list)
+    - class_labels_list: list indicating the class order
+                         as defined in the preprocessing!
+                         WARNING: wrong behaviour if order is different.
+    - main_class: string of the main class label (in class labels_list).
+    - variable: string of the variable in the dataframe to plot against
+    - var_bins: numpy array of the bins to use
+    - plot_name: string of the base name for saving
+    - efficiency: the working point (b tagging). NOT IN PERCENT.
 
-    The following options are optional:
-    - fc: the charm fraction used to compute the score (btag)
-    - ftau: the tau fraction used to compute the score (btag)
-    - efficiency: the working point (b tagging). NOT IN PERCENT
-    - include_taus: boolean whether to plot taus or not
-    - centralise_bins: boolean to centralise point in the bins
+    Optional:
+    - ThirdTag: additional tag
+    - frac_values: dictionary of flavour fractions  centralise_bins: boolean to centralise point in the bins
     - xticksval: list of ticks values (must agree with the one below)
     - xticks: list of ticks (must agree with the one above)
     - minor_ticks_frequency: int,
                     if given, sets the frequency of minor ticks
-    - xlogscale: boolean, whether to set the x-axis in log-scale.
-    - xlabel: String: label to use for the x-axis.
+
+    - xlabel: string, label for x-axis.
+    - Log: boolean, whether to set the y-axis in log-scale.
+    - colors: Custom color list for the different models
     - UseAtlasTag: boolean, whether to use the ATLAS tag or not.
     - AtlasTag: string: tag to attached to ATLAS
     - SecondTag: string: second line of the ATLAS tag.
     - ThirdTag: tag on the top left of the plot, indicate model
         and fractions used.
 
-    Note: to get a flat efficiency plot, you need to produce a 'btag' column
+    Note: to get a flat efficiency plot, you need to produce a 'tag' column
     in df using FlatEfficiencyPerBin (defined above).
     """
-    data = df.copy()
-    total_var = []
-    b_lst, b_err_list = [], []
-    c_lst, c_err_list = [], []
-    u_lst, u_err_list = [], []
-    tau_lst, tau_err_list = [], []
-    null_value = np.nan
-    for i in range(len(var_bins) - 1):
-        df_in_bin = data[
-            (var_bins[i] <= data[variable])
-            & (data[variable] < var_bins[i + 1])
-        ]
-        total_b_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 2])
-        total_c_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 1])
-        total_u_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 0])
-        total_tau_tag_in_bin = len(df_in_bin[df_in_bin["labels"] == 3])
-        df_in_bin = df_in_bin.query("btag == 1")
-        total_in_bin = (
-            total_b_tag_in_bin + total_c_tag_in_bin + total_u_tag_in_bin
-        )
-        if include_taus:
-            total_in_bin += total_tau_tag_in_bin
 
-        if total_in_bin == 0:
-            total_var.append(null_value)
-            u_lst.append(null_value)
-            u_err_list.append(null_value)
-            c_lst.append(null_value)
-            c_err_list.append(null_value)
-            b_lst.append(null_value)
-            b_err_list.append(null_value)
-            tau_lst.append(null_value)
-            tau_err_list.append(null_value)
-        else:
-            total_var.append(total_in_bin)
+    # Apply the ATLAS Style with the bars on the axes
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
+
+    # Get flavour categories from global config file
+    flav_cat = global_config.flavour_categories
+
+    null_value = np.nan
+
+    store_dict = {
+        "store_eff_tagger": np.zeros(
+            (len(var_bins) - 1, len(class_labels_list))
+        ),
+        "store_err_tagger": np.zeros(
+            (len(var_bins) - 1, len(class_labels_list))
+        ),
+    }
+
+    for i in range(len(var_bins) - 1):
+        # all jets in bin
+        df_in_bin = df[
+            (var_bins[i] <= df[variable]) & (df[variable] < var_bins[i + 1])
+        ]
+        total_in_bin = len(df_in_bin)
+        # all tagged jets in bin. (note: can also work for other flavour)
+        df_in_bin_tagged = df_in_bin.query("tag == 1")
+        if total_in_bin != 0:
             index, counts = np.unique(
-                df_in_bin["labels"].values, return_counts=True
+                df_in_bin_tagged["labels"].values, return_counts=True
             )
-            in_b, in_c, in_u, in_tau = False, False, False, False
-            for item, count in zip(index, counts):
-                if item == 0:
-                    eff = count / total_u_tag_in_bin
-                    u_lst.append(eff)
-                    u_err_list.append(eff_err(eff, total_u_tag_in_bin))
-                    in_u = True
-                elif item == 1:
-                    eff = count / total_c_tag_in_bin
-                    c_lst.append(eff)
-                    c_err_list.append(eff_err(eff, total_c_tag_in_bin))
-                    in_c = True
-                elif item == 2:
-                    eff = count / total_b_tag_in_bin
-                    b_lst.append(eff)
-                    b_err_list.append(eff_err(eff, total_b_tag_in_bin))
-                    in_b = True
-                elif item == 3:
-                    eff = count / total_tau_tag_in_bin
-                    tau_lst.append(eff)
-                    tau_err_list.append(eff_err(eff, total_tau_tag_in_bin))
-                    in_tau = True
-                else:
-                    logger.info(f"Invaled value of index from labels: {item}")
-            if not (in_u):
-                u_lst.append(null_value)
-                u_err_list.append(null_value)
-            if not (in_c):
-                c_lst.append(null_value)
-                c_err_list.append(null_value)
-            if not (in_b):
-                b_lst.append(null_value)
-                b_err_list.append(null_value)
-            if not (in_tau):
-                tau_lst.append(null_value)
-                tau_err_list.append(null_value)
-    if plot_name[-4:] == ".pdf":
-        plot_name = plot_name[:-4]
+            count_dict = {ind: count for ind, count in zip(index, counts)}
+
+        else:
+            count_dict = {}
+        # store result for each flavour in store_dict
+        for label_ind, label in enumerate(class_labels_list):
+            label_in_bin = len(df_in_bin[df_in_bin["labels"] == label_ind])
+
+            if label_ind in count_dict and label_in_bin != 0:
+                eff = count_dict[label_ind] / label_in_bin
+                err = eff_err(eff, label_in_bin)
+            else:
+                eff = null_value
+                err = null_value
+
+            store_dict["store_eff_tagger"][i, label_ind] = eff
+            store_dict["store_err_tagger"][i, label_ind] = err
 
     if xlabel is None:
         xlabel = variable
@@ -271,20 +250,22 @@ def plotEfficiencyVariable(
         elif variable == "pt":
             xlabel = r"$p_T$ [GeV]"
 
-    if ftau is None:
+    if frac_values is None:
         ThirdTag = (
             ThirdTag
-            + "\n"
-            + "$\\epsilon_b$ = {}%, $f_c$ = {}".format(efficiency, fc)
+            + f"\n{efficiency}% {flav_cat[main_class]['legend_label']} WP"
         )
     else:
+        frac_string = ""
+        for frac in list(frac_values.keys()):
+            frac_string += f"{frac}: {frac_values[frac]} | "
+        frac_string = frac_string[:-3]
         ThirdTag = (
             ThirdTag
-            + "\n"
-            + "$\\epsilon_b$ = {}%, $f_c$ = {}, ".format(efficiency, fc)
-            + "$f_{tau}$ = "
-            + "{}".format(ftau)
+            + f"\n{efficiency}% {flav_cat[main_class]['legend_label']} WP,"
+            + f"\nFractions: {frac_string}"
         )
+
     # Divide pT values to express in GeV, not MeV
     if variable == "pt":
         var_bins = var_bins / 1000
@@ -318,107 +299,6 @@ def plotEfficiencyVariable(
             trimmed_label = x_label
             trimmed_label_val = x_label
 
-    if SaveData:
-        x_arr = np.asarray(x_value)
-        x_err_arr = np.asarray(x_err)
-        b_arr = np.asarray(b_lst)
-        b_err_arr = np.asarray(b_err_list)
-        c_arr = np.asarray(c_lst)
-        c_err_arr = np.asarray(c_err_list)
-        u_arr = np.asarray(u_lst)
-        u_err_arr = np.asarray(u_err_list)
-        if include_taus:
-            tau_arr = np.asarray(tau_lst)
-            tau_err_arr = np.asarray(tau_err_list)
-            np.savetxt(
-                plot_name + "_effTable_" + "old" + ".txt",
-                (
-                    x_arr,
-                    x_err_arr,
-                    b_arr,
-                    b_err_arr,
-                    c_arr,
-                    c_err_arr,
-                    u_arr,
-                    u_err_arr,
-                    tau_arr,
-                    tau_err_arr,
-                ),
-                delimiter=" ",
-            )
-        else:
-            np.savetxt(
-                plot_name + "_effTable_" + "old" + ".txt",
-                (
-                    x_arr,
-                    x_err_arr,
-                    b_arr,
-                    b_err_arr,
-                    c_arr,
-                    c_err_arr,
-                    u_arr,
-                    u_err_arr,
-                ),
-                delimiter=" ",
-            )
-
-    # First plot: variable
-    fig, ax1 = plt.subplots()
-    ax1.ticklabel_format(
-        style="sci", axis="y", scilimits=(0, 3), useMathText=True
-    )
-    ax1.ticklabel_format(
-        style="sci", axis="x", scilimits=(0, 3), useMathText=True
-    )
-    ax1.errorbar(x=x_value, y=total_var, xerr=x_err, fmt="o", markersize=2.0)
-    ax1.set_ylabel(r"Count")
-    if xlogscale:
-        ax1.set_xscale("log")
-        if xticks is not None:
-            ax1.set_xticks(trimmed_label_val)
-            ax1.set_xticklabels(trimmed_label)
-    else:
-        ax1.set_xticks(trimmed_label_val)
-        ax1.set_xticklabels(trimmed_label)
-        ax1.set_xlim(trimmed_label_val[0], trimmed_label_val[-1])
-    ax1.set_xlabel(xlabel)
-    if minor_ticks_frequency is not None:
-        ax1.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
-    ax_r = ax1.secondary_yaxis("right")
-    ax_t = ax1.secondary_xaxis("top")
-    ax_r.set_yticklabels([])
-    if xlogscale:
-        ax_t.set_xscale("log")
-        if xticks is not None:
-            ax_t.set_xticks(trimmed_label_val)
-    else:
-        ax_t.set_xticks(trimmed_label_val)
-    if minor_ticks_frequency is not None:
-        ax_t.xaxis.set_minor_locator(
-            plt.MultipleLocator(minor_ticks_frequency)
-        )
-    ax_t.set_xticklabels([])
-    ax_r.tick_params(axis="y", direction="in", which="both")
-    ax_t.tick_params(axis="x", direction="in", which="both")
-    ax1.grid(color="grey", linestyle="--", linewidth=0.5)
-    if UseAtlasTag:
-        pas.makeATLAStag(ax1, fig, AtlasTag, SecondTag, xmin=0.7, ymax=0.88)
-    ax1.text(
-        0.05,
-        0.815,
-        ThirdTag,
-        verticalalignment="bottom",
-        horizontalalignment="left",
-        transform=ax1.transAxes,
-        color="Black",
-        fontsize=10,
-        linespacing=1.7,
-    )
-    fig.tight_layout()
-    plt.savefig(plot_name + "_distr.pdf", transparent=True, dpi=200)
-    plt.close()
-
-    # Second plot: efficiency
     fig, ax = plt.subplots()
     ax.ticklabel_format(
         style="sci", axis="x", scilimits=(0, 3), useMathText=True
@@ -426,114 +306,358 @@ def plotEfficiencyVariable(
     ax.ticklabel_format(
         style="sci", axis="y", scilimits=(0, 3), useMathText=True
     )
-    ax.axhline(y=1, color="#696969", linestyle="-", zorder=1)
-    ax.errorbar(
-        x=x_value,
-        y=b_lst,
-        yerr=b_err_list,
-        xerr=x_err,
-        label=r"$b$-jets",
-        fmt="o",
-        markersize=2.0,
-        markeredgecolor="#1f77b4",
-        markerfacecolor="#1f77b4",
-        c="#1f77b4",
-        alpha=1,
-        zorder=10,
-    )
-    ax.errorbar(
-        x=x_value,
-        y=c_lst,
-        yerr=c_err_list,
-        xerr=x_err,
-        label=r"$c$-jets",
-        fmt="s",
-        markersize=2.0,
-        markeredgecolor="#ff7f0e",
-        markerfacecolor="#ff7f0e",
-        c="#ff7f0e",
-        alpha=1,
-        zorder=9,
-    )
-    ax.errorbar(
-        x=x_value,
-        y=u_lst,
-        yerr=u_err_list,
-        xerr=x_err,
-        label=r"$l$-jets",
-        fmt="o",
-        markersize=2.0,
-        markeredgecolor="#2ca02c",
-        markerfacecolor="#2ca02c",
-        c="#2ca02c",
-        alpha=0.7,
-        zorder=8,
-    )
-    if include_taus:
+
+    ax.axhline(y=1, color="#696969", linestyle="-")
+
+    for label_ind, label in enumerate(class_labels_list):
+        colour = flav_cat[label]["colour"]
         ax.errorbar(
             x=x_value,
-            y=tau_lst,
-            yerr=tau_err_list,
+            y=store_dict["store_eff_tagger"][:, label_ind],
+            yerr=store_dict["store_err_tagger"][:, label_ind],
             xerr=x_err,
-            label="tau-jets",
-            fmt="s",
+            label=flav_cat[label]["legend_label"],
+            fmt="o",
             markersize=2.0,
-            markeredgecolor="#7c5295",
-            markerfacecolor="#7c5295",
-            c="#7c5295",
-            alpha=0.7,
-            zorder=7,
+            markeredgecolor=colour,
+            markerfacecolor=colour,
+            c=colour,
+            alpha=1,
         )
-    if xlogscale:
-        ax.set_xscale("log")
-        if xticks is not None:
-            ax.set_xticks(trimmed_label_val)
-            ax.set_xticklabels(trimmed_label)
+
+    ax.set_xticks(trimmed_label_val)
+    ax.set_xticklabels(trimmed_label)
+    ax.set_xlim(trimmed_label_val[0], trimmed_label_val[-1])
+
+    # Increase ymax so atlas tag don't cut plot
+    if (ymin is None) and (ymax is None):
+        plot_ymin, plot_ymax = ax.get_ylim()
+
+    elif ymin is None:
+        plot_ymin, _ = ax.get_ylim()
+
+    elif ymax is None:
+        _, plot_ymax = ax.get_ylim()
+
+    # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
+    if Log is True:
+        ax.set_yscale("log")
+        if plot_ymin <= 0:
+            plot_ymin = 1e-4
+        ax.set_ylim(
+            plot_ymin,
+            plot_ymax * np.log(plot_ymax / plot_ymin) * 10 * yAxisIncrease,
+        )
     else:
-        ax.set_xticks(trimmed_label_val)
-        ax.set_xticklabels(trimmed_label)
-        ax.set_xlim(trimmed_label_val[0], trimmed_label_val[-1])
-    ax.set_yscale("log")
-    ax.set_ylim(1e-4, 2e1)
+        ax.set_ylim(bottom=plot_ymin, top=yAxisIncrease * plot_ymax)
+
     ax.set_xlabel(xlabel)
-    ax.set_ylabel(r"Efficiency")
+    ax.set_ylabel("Efficiency")
     if minor_ticks_frequency is not None:
         ax.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
     ax_r = ax.secondary_yaxis("right")
     ax_t = ax.secondary_xaxis("top")
     ax_r.set_yticklabels([])
-    if xlogscale:
-        ax_t.set_xscale("log")
-        if xticks is not None:
-            ax_t.set_xticks(trimmed_label_val)
-    else:
-        ax_t.set_xticks(trimmed_label_val)
+    ax_t.set_xticks(trimmed_label_val)
     if minor_ticks_frequency is not None:
         ax_t.xaxis.set_minor_locator(
             plt.MultipleLocator(minor_ticks_frequency)
         )
     ax_t.set_xticklabels([])
-    ax_r.set_yscale("log")
+    if Log:
+        ax_r.set_yscale("log")
     ax_r.tick_params(axis="y", direction="in", which="both")
     ax_t.tick_params(axis="x", direction="in", which="both")
     ax.grid(color="grey", linestyle="--", linewidth=0.5)
     ax.legend(loc="upper right")
     if UseAtlasTag:
-        pas.makeATLAStag(ax, fig, AtlasTag, SecondTag, xmin=0.55, ymax=0.88)
-    ax.text(
-        0.05,
-        0.815,
-        ThirdTag,
-        verticalalignment="bottom",
-        horizontalalignment="left",
-        transform=ax.transAxes,
-        color="Black",
-        fontsize=10,
-        linespacing=1.7,
-    )
+        pas.makeATLAStag(
+            ax, fig, AtlasTag, SecondTag + f"\n{ThirdTag}", ymax=yAxisAtlasTag
+        )
+
     fig.tight_layout()
-    plt.savefig(plot_name + "_efficiency.pdf", transparent=True, dpi=200)
+    plt.savefig(plot_name, transparent=True, dpi=200)
     plt.close()
+
+
+def plotEfficiencyVariableComparison(
+    df_list: list,
+    model_labels: list,
+    tagger_list: list,
+    class_labels_list: list,
+    main_class: str,
+    variable: str,
+    var_bins: np.float64,
+    plot_name: str,
+    ApplyAtlasStyle: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+    ThirdTag="DL1r",
+    yAxisIncrease: float = 1.3,
+    yAxisAtlasTag: float = 0.9,
+    efficiency=0.70,
+    frac_values=None,
+    centralise_bins=True,
+    xticksval=None,
+    xticks=None,
+    minor_ticks_frequency=None,
+    xlabel=None,
+    Log=False,
+    colors=None,
+    ymin: float = None,
+    ymax: float = None,
+):
+    """
+    For a given variable (string) in the panda dataframe df, plots
+    the eff of each flavour as a function of variable for several taggers.
+                 (discretised in bins as indicated by var_bins input)
+
+
+    The following options are needed:
+    - df_list: list of panda dataframe with columns (one per tagger)
+        - The efficiency is computed from the tag column of df.
+        - variable (see eponymous parameter)
+        - labels (as defined in the preprocessing, MUST MATCH class_labels_list)
+    - model_labels: list (1 label per model)
+    - tagger_list: list of tagger name
+    - class_labels_list: list of list (1 per tagger), indicating the class order
+                         as defined in the preprocessing!
+                         WARNING: wrong behaviour if order is different.
+    - main_class: string of the main class label (in class labels_list).
+                  Must be the same for all taggers
+    - variable: string of the variable in the dataframe to plot against
+    - var_bins: numpy array of the bins to use
+    - plot_name: string of the base name for saving
+    - efficiency: the working point (b tagging). NOT IN PERCENT.
+
+    Optional:
+    - ThirdTag: additional tag
+    - frac_values: dictionary of flavour fractions  centralise_bins: boolean to centralise point in the bins
+    - xticksval: list of ticks values (must agree with the one below)
+    - xticks: list of ticks (must agree with the one above)
+    - minor_ticks_frequency: int,
+                    if given, sets the frequency of minor ticks
+
+    - xlabel: string, label for x-axis.
+    - Log: boolean, whether to set the y-axis in log-scale.
+    - colors: Custom color list for the different models
+    - UseAtlasTag: boolean, whether to use the ATLAS tag or not.
+    - AtlasTag: string: tag to attached to ATLAS
+    - SecondTag: string: second line of the ATLAS tag.
+    - ThirdTag: tag on the top left of the plot, indicate model
+        and fractions used.
+
+    Note: to get a flat efficiency plot, you need to produce a 'tag' column
+    in df using FlatEfficiencyPerBin (defined above).
+    """
+
+    # Apply the ATLAS Style with the bars on the axes
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
+
+    # Get flavour categories from global config file
+    flav_cat = global_config.flavour_categories
+
+    null_value = np.nan
+
+    store_dict = {}
+    for label in class_labels_list[0]:
+        store_dict[label] = {
+            "store_eff_tagger": np.zeros(
+                (len(var_bins) - 1, len(tagger_list))
+            ),
+            "store_err_tagger": np.zeros(
+                (len(var_bins) - 1, len(tagger_list))
+            ),
+        }
+
+    for tagger_ind, (tagger_data, class_labels) in enumerate(
+        zip(df_list, class_labels_list)
+    ):
+        for i in range(len(var_bins) - 1):
+            # all jets in bin
+            df_in_bin = tagger_data[
+                (var_bins[i] <= tagger_data[variable])
+                & (tagger_data[variable] < var_bins[i + 1])
+            ]
+            total_in_bin = len(df_in_bin)
+            # all tagged jets in bin. (note: can also work for other flavour)
+            df_in_bin_tagged = df_in_bin.query("tag == 1")
+            if total_in_bin != 0:
+                index, counts = np.unique(
+                    df_in_bin_tagged["labels"].values, return_counts=True
+                )
+                count_dict = {ind: count for ind, count in zip(index, counts)}
+
+            else:
+                count_dict = {}
+            # store result for each flavour in store_dict
+            for label_ind, label in enumerate(class_labels):
+                label_in_bin = len(df_in_bin[df_in_bin["labels"] == label_ind])
+
+                if label_ind in count_dict and label_in_bin != 0:
+                    eff = count_dict[label_ind] / label_in_bin
+                    err = eff_err(eff, label_in_bin)
+                else:
+                    eff = null_value
+                    err = null_value
+
+                store_dict[label]["store_eff_tagger"][i, tagger_ind] = eff
+                store_dict[label]["store_err_tagger"][i, tagger_ind] = err
+
+    extension = plot_name.split(".")[-1]
+    plot_name = plot_name[
+        : -(len(extension) + 1)
+    ]  # remove ".{extension}" from plotname.
+
+    if xlabel is None:
+        xlabel = variable
+        if variable == "actualInteractionsPerCrossing":
+            xlabel = "Actual interactions per bunch crossing"
+        elif variable == "pt":
+            xlabel = r"$p_T$ [GeV]"
+
+    if frac_values is None:
+        ThirdTag = (
+            ThirdTag
+            + f"\n{efficiency}% {flav_cat[main_class]['legend_label']} WP"
+        )
+    else:
+        frac_string = ""
+        for frac in list(frac_values.keys()):
+            frac_string += f"{frac}: {frac_values[frac]} | "
+        frac_string = frac_string[:-3]
+        ThirdTag = (
+            ThirdTag
+            + f"\n{efficiency}% {flav_cat[main_class]['legend_label']} WP,"
+            + f"\nFractions: {frac_string}"
+        )
+
+    # Divide pT values to express in GeV, not MeV
+    if variable == "pt":
+        var_bins = var_bins / 1000
+
+    x_value, x_err = [], []
+    for i in range(len(var_bins[:-1])):
+        if centralise_bins:
+            x_value.append((var_bins[i] + var_bins[i + 1]) / 2)
+        else:
+            x_value.append(var_bins[i])
+        x_err.append(abs(var_bins[i] - var_bins[i + 1]) / 2)
+
+    x_label = var_bins
+    if xticksval is not None:
+        trimmed_label_val = xticksval
+        trimmed_label = xticksval
+        if xticksval is not None:
+            trimmed_label = xticks
+    else:
+        trimmed_label = []
+        trimmed_label_val = []
+        selected_indices = [int((len(x_label) - 1) / 4) * i for i in range(5)]
+        if len(x_label) > 5:
+            for i in range(len(x_label)):
+                if i in selected_indices:
+                    trimmed_label.append(
+                        np.format_float_scientific(x_label[i], precision=3)
+                    )
+                    trimmed_label_val.append(x_label[i])
+        else:
+            trimmed_label = x_label
+            trimmed_label_val = x_label
+
+    if colors is None:
+        colors = ["C{}".format(i) for i in range(len(model_labels))]
+
+    for label in class_labels_list[0]:
+        fig, ax = plt.subplots()
+        ax.ticklabel_format(
+            style="sci", axis="x", scilimits=(0, 3), useMathText=True
+        )
+        ax.ticklabel_format(
+            style="sci", axis="y", scilimits=(0, 3), useMathText=True
+        )
+        if label == main_class:
+            ax.axhline(y=1, color="#696969", linestyle="-")
+
+        for tagger_ind, tagger in enumerate(model_labels):
+            ax.errorbar(
+                x=x_value,
+                y=store_dict[label]["store_eff_tagger"][:, tagger_ind],
+                yerr=store_dict[label]["store_err_tagger"][:, tagger_ind],
+                xerr=x_err,
+                label=tagger,
+                fmt="o",
+                markersize=2.0,
+                markeredgecolor=colors[tagger_ind],
+                markerfacecolor=colors[tagger_ind],
+                c=colors[tagger_ind],
+                alpha=1,
+                # zorder=10,
+            )
+
+        ax.set_xticks(trimmed_label_val)
+        ax.set_xticklabels(trimmed_label)
+        ax.set_xlim(trimmed_label_val[0], trimmed_label_val[-1])
+
+        # Increase ymax so atlas tag don't cut plot
+        if (ymin is None) and (ymax is None):
+            plot_ymin, plot_ymax = ax.get_ylim()
+
+        elif ymin is None:
+            plot_ymin, _ = ax.get_ylim()
+
+        elif ymax is None:
+            _, plot_ymax = ax.get_ylim()
+
+        # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
+        if Log is True:
+            ax.set_yscale("log")
+            if plot_ymin <= 0:
+                plot_ymin = 1e-4
+            ax.set_ylim(
+                plot_ymin,
+                plot_ymax * np.log(plot_ymax / plot_ymin) * 10 * yAxisIncrease,
+            )
+        else:
+            ax.set_ylim(bottom=plot_ymin, top=yAxisIncrease * plot_ymax)
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f"Efficiency {flav_cat[label]['legend_label']}")
+        if minor_ticks_frequency is not None:
+            ax.xaxis.set_minor_locator(
+                plt.MultipleLocator(minor_ticks_frequency)
+            )
+        ax_r = ax.secondary_yaxis("right")
+        ax_t = ax.secondary_xaxis("top")
+        ax_r.set_yticklabels([])
+        ax_t.set_xticks(trimmed_label_val)
+        if minor_ticks_frequency is not None:
+            ax_t.xaxis.set_minor_locator(
+                plt.MultipleLocator(minor_ticks_frequency)
+            )
+        ax_t.set_xticklabels([])
+        if Log:
+            ax_r.set_yscale("log")
+        ax_r.tick_params(axis="y", direction="in", which="both")
+        ax_t.tick_params(axis="x", direction="in", which="both")
+        ax.grid(color="grey", linestyle="--", linewidth=0.5)
+        ax.legend(loc="upper right")
+        if UseAtlasTag:
+            pas.makeATLAStag(
+                ax,
+                fig,
+                AtlasTag,
+                SecondTag + f"\n{ThirdTag}",
+                ymax=yAxisAtlasTag,
+            )
+
+        fig.tight_layout()
+        plt.savefig(
+            plot_name + f"_{label}.{extension}", transparent=True, dpi=200
+        )
+        plt.close()
 
 
 def plotPtDependence(
@@ -2422,6 +2546,10 @@ def plotFractionScan(
     AtlasTag="Internal",
     SecondTag="$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$",
 ):
+    """
+    DEPRECATED. Plots a 2D heatmap of rej for a given eff (frac flavour X vs frac flavour Y).
+    Data needs to be a list of numpy arrays with the flavour
+    """
     if label == "umami_crej":
         draw_label = r"$c$-Jet Rejection from b ($1/\epsilon_{c}$)"
     elif label == "umami_urej":
