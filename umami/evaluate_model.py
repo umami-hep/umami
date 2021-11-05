@@ -140,7 +140,7 @@ def EvaluateModel(
 
         # Load the test jets
         X_test, X_test_trk, Y_test = utt.GetTestFile(
-            file=test_file,
+            input_file=test_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=class_labels,
