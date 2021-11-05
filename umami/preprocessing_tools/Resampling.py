@@ -440,8 +440,10 @@ class Resampling(object):
             pbar.update(jets.size)
             rng = np.random.default_rng(seed=self.rnd_seed)
             rng.shuffle(jets)
+            rng = np.random.default_rng(seed=42)
             rng.shuffle(labels)
             if self.save_tracks:
+                rng = np.random.default_rng(seed=42)
                 rng.shuffle(tracks)
 
             if create_file:
@@ -1234,8 +1236,10 @@ class PDFSampling(Resampling):
             pbar.update(jets.size)
             rng = np.random.default_rng(seed=42)
             rng.shuffle(jets)
+            rng = np.random.default_rng(seed=42)
             rng.shuffle(labels)
             if self.save_tracks:
+                rng = np.random.default_rng(seed=42)
                 rng.shuffle(tracks)
 
             if create_file:
@@ -1350,8 +1354,10 @@ class PDFSampling(Resampling):
             pbar.update(jets.size)
             rng = np.random.default_rng(seed=42)
             rng.shuffle(jets)
+            rng = np.random.default_rng(seed=42)
             rng.shuffle(labels)
             if self.save_tracks:
+                rng = np.random.default_rng(seed=42)
                 rng.shuffle(tracks)
 
             if create_file:

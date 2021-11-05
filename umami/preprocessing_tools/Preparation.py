@@ -133,6 +133,7 @@ class PrepareSamples:
                 rng = np.random.default_rng(seed=42)
                 rng.shuffle(jets)
                 if self.save_tracks:
+                    rng = np.random.default_rng(seed=42)
                     rng.shuffle(tracks)
 
             if self.create_file:
