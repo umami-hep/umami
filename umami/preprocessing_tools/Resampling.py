@@ -546,23 +546,25 @@ class PDFSampling(Resampling):
         in_file = GetPreparationSamplePath(preparation_sample)
         samples = {}
         with h5py.File(in_file, "r") as f:
-            Njets_initial = None
+            Njets_initial = len(f["jets"])
             if (
                 "custom_njets_initial" in self.options
                 and self.options["custom_njets_initial"] is not None
                 and sample in list(self.options["custom_njets_initial"])
             ):
-                Njets_initial = int(
-                    self.options["custom_njets_initial"][sample]
-                )
-            else:
-                Njets_initial = len(f["jets"])
+                Njets_asked = int(self.options["custom_njets_initial"][sample])
+                if Njets_initial <= Njets_asked:
+                    logger.warning(
+                        f"For sample {sample}, demanding more initial jets ({Njets_asked}) than available ({Njets_initial}). Forcing to available."
+                    )
+                else:
+                    Njets_initial = Njets_asked
 
             start_ind = 0
             end_ind = int(start_ind + chunk_size)
             # create indices and then shuffle those to be used in the loop below
             tupled_indices = []
-            while end_ind <= Njets_initial or start_ind == 0:
+            while end_ind < Njets_initial or start_ind == 0:
                 if end_ind + chunk_size > Njets_initial:
                     # Missing less then a chunk, joining to last chunk
                     end_ind = Njets_initial
@@ -618,15 +620,20 @@ class PDFSampling(Resampling):
         in_file = GetPreparationSamplePath(preparation_sample)
         samples = {}
         with h5py.File(in_file, "r") as f:
-            Njets_initial = None
+            Njets_initial = len(f["jets"])
             if (
                 "custom_njets_initial" in self.options
                 and self.options["custom_njets_initial"] is not None
                 and sample in list(self.options["custom_njets_initial"])
             ):
-                Njets_initial = int(
-                    self.options["custom_njets_initial"][sample]
-                )
+                Njets_asked = int(self.options["custom_njets_initial"][sample])
+                if Njets_initial <= Njets_asked:
+                    logger.warning(
+                        f"For sample {sample}, demanding more initial jets ({Njets_asked}) than available ({Njets_initial}). Forcing to available."
+                    )
+                else:
+                    Njets_initial = Njets_asked
+
             jets_x = np.asarray(f["jets"][self.var_x])[:Njets_initial]
             jets_y = np.asarray(f["jets"][self.var_y])[:Njets_initial]
             logger.info(
@@ -1153,9 +1160,8 @@ class PDFSampling(Resampling):
                 to_sample = self.number_to_sample[sample_name] - sampled_jets
 
             weights = weights / np.sum(weights)
-            selected_indices = self.Resample_chunk(
-                weights, size=round(to_sample)
-            )
+            selected_ind = self.Resample_chunk(weights, size=round(to_sample))
+            selected_indices = np.sort(selected_ind).astype(int)
             sampled_jets += len(selected_indices)
             pbar.update(selected_indices.size)
             if create_file:
@@ -2020,16 +2026,23 @@ class UnderSampling(Resampling):
                     f"Loading sampling variables from {preparation_sample_path}"
                 )
                 with h5py.File(preparation_sample_path, "r") as f:
-                    nJets_initial = None
+                    nJets_initial = len(f["jets"])
                     if (
                         "custom_njets_initial" in self.options
                         and self.options["custom_njets_initial"] is not None
                         and sample
                         in list(self.options["custom_njets_initial"])
                     ):
-                        nJets_initial = int(
+                        nJets_asked = int(
                             self.options["custom_njets_initial"][sample]
                         )
+                        if nJets_initial <= nJets_asked:
+                            logger.warning(
+                                f"For sample {sample}, demanding more initial jets ({nJets_asked}) than available ({nJets_initial}). Forcing to available."
+                            )
+                        else:
+                            nJets_initial = nJets_asked
+
                     jets_x = np.asarray(f["jets"][self.var_x])[:nJets_initial]
                     jets_y = np.asarray(f["jets"][self.var_y])[:nJets_initial]
                 logger.info(
