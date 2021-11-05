@@ -1144,17 +1144,18 @@ class PDFSampling(Resampling):
                 target_dist["sample_vector"][:, 1],
                 store_key=store_key,
             )
-            chunk_weights = np.sum(weights)
-            weights = weights / sum_of_weights
-            to_sample = self.number_to_sample[sample_name] / chunk_weights
+            # weight of the chunk
+            chunk_weights = np.sum(weights / sum_of_weights)
+            # Sample a fraction of jets proportional to the chunk weight
+            to_sample = self.number_to_sample[sample_name] * chunk_weights
             if not load_chunk:
                 # last chunk
                 to_sample = self.number_to_sample[sample_name] - sampled_jets
 
-            selected_ind = self.Resample_chunk(weights, size=round(to_sample))
-            # Important that the indices from the generator are not random!
-            # Otherwise this is very inefficient
-            selected_indices = np.sort(selected_ind).astype(int)
+            weights = weights / np.sum(weights)
+            selected_indices = self.Resample_chunk(
+                weights, size=round(to_sample)
+            )
             sampled_jets += len(selected_indices)
             pbar.update(selected_indices.size)
             if create_file:
@@ -1325,6 +1326,7 @@ class PDFSampling(Resampling):
             except StopIteration:
                 break
             load_chunk = load_more
+            indices = np.sort(indices).astype(int)
 
             labels = label_binarize(
                 (np.ones(len(indices)) * label),
