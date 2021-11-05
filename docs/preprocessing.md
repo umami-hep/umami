@@ -345,11 +345,17 @@ Also the `outfile_name` is defined (which is also included in `parameters`). The
 
 To run the sample preparation for the ttbar b-jet sample `training_ttbar_bjets`, which has been defined in the config file in the `preparation: samples:` block, execute:
 
-```
+```bash
 preprocessing.py --config <path to config file> --sample training_ttbar_bjets --prepare
 ```
 
 As a result, an output file will be written to the output path you specified via `sample_path`. The file will have the name defined in the `preparation` block.
+
+If you want to prepare all the samples defined in the `preparation: samples:` block, just leave out the `--sample` option. Also, if you want to use tracks, you need to add the flag `--tracks`. An example command would look like this:
+
+```bash
+preprocessing.py --config <path to config file> --prepare --tracks
+```
 
 ### Running the preprocessing
 
@@ -360,31 +366,31 @@ The steps defined in the following segment are only performed on the training sa
 1. Running the resampling:
 
 ```bash
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --resampling
+preprocessing.py --config <path to config file> --resampling
 ```
 
 If you want to also use the tracks of the jets, you need to give an extra flag `--tracks`. Track information are not needed for the DL1r but for DIPS and Umami. If you want to train one of those, you need to process the track information too with setting the `--tracks` flag:
 
 ```bash
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --resampling --tracks
+preprocessing.py --config <path to config file> --resampling --tracks
 ```
 
 2. Retrieving scaling and shifting factors:
 
 ```bash
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --scaling --tracks
+preprocessing.py --config <path to config file> --scaling --tracks
 ```
 
 3. Applying shifting and scaling factors
 
 ```bash
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --apply_scales --tracks
+preprocessing.py --config <path to config file> --apply_scales --tracks
 ```
 
 4. Writing the samples to disk in the correct format for training.
 
 ```bash
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --write --tracks
+preprocessing.py --config <path to config file> --write --tracks
 ```
 
 ## Full example

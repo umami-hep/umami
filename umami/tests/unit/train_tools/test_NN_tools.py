@@ -28,10 +28,47 @@ from umami.train_tools.NN_tools import (
     get_jet_feature_indices,
     get_parameters_from_validation_dict_name,
     get_validation_dict_name,
+    get_variable_cuts,
     load_validation_data_dips,
     load_validation_data_umami,
     setup_output_directory,
 )
+
+
+class get_variable_cuts_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.Eval_parameters = {
+            "variable_cuts": {
+                "validation_file": {
+                    "pt_btagJes": {
+                        "operator": "<=",
+                        "condition": 250000,
+                    }
+                }
+            }
+        }
+
+        self.file = "validation_file"
+        self.control_dict = {
+            "pt_btagJes": {
+                "operator": "<=",
+                "condition": 250000,
+            }
+        }
+
+    def test_get_variable_cuts(self):
+        # Get dict
+        cut_dict = get_variable_cuts(self.Eval_parameters, self.file)
+
+        # Check dict
+        self.assertEqual(cut_dict, self.control_dict)
+
+    def testtest_get_variable_cuts_None(self):
+        # Get dict
+        cut_dict = get_variable_cuts(self.Eval_parameters, "error")
+
+        # Check dict
+        self.assertEqual(cut_dict, None)
 
 
 class get_epoch_from_string_TestCase(unittest.TestCase):
@@ -733,6 +770,7 @@ class GetSamples_TestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        self.Eval_parameters_validation = {}
         self.NN_structure = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.preparation = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.test_dir = tempfile.TemporaryDirectory()
@@ -875,7 +913,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_GetTestFile(self):
         (X_valid, X_valid_trk, Y_valid,) = GetTestFile(
-            file=self.validation_file,
+            input_file=self.validation_file,
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
@@ -890,6 +928,22 @@ class GetSamples_TestCase(unittest.TestCase):
         self.assertEqual(Y_valid.shape, (len(Y_valid), 3))
 
     def test_load_validation_data_umami(self):
+        self.Eval_parameters_validation = {
+            "variable_cuts": {
+                "validation_file": {
+                    "pt_btagJes": {
+                        "operator": "<=",
+                        "condition": 50_000,
+                    }
+                },
+                "add_validation_file": {
+                    "pt_btagJes": {
+                        "operator": ">",
+                        "condition": 50_000,
+                    }
+                },
+            }
+        }
         val_data_dict = load_validation_data_umami(self, self, self.nJets)
 
         self.assertEqual(
@@ -905,6 +959,50 @@ class GetSamples_TestCase(unittest.TestCase):
         )
 
     def test_load_validation_data_dips(self):
+        self.Eval_parameters_validation = {
+            "variable_cuts": {
+                "validation_file": {
+                    "pt_btagJes": {
+                        "operator": "<=",
+                        "condition": 50_000,
+                    }
+                },
+                "add_validation_file": {
+                    "pt_btagJes": {
+                        "operator": ">",
+                        "condition": 50_000,
+                    }
+                },
+            }
+        }
+        val_data_dict = load_validation_data_dips(self, self, self.nJets)
+
+        self.assertEqual(
+            list(val_data_dict.keys()),
+            [
+                "X_valid",
+                "Y_valid",
+                "X_valid_add",
+                "Y_valid_add",
+            ],
+        )
+
+    def test_load_validation_data_umami_no_var_cuts(self):
+        val_data_dict = load_validation_data_umami(self, self, self.nJets)
+
+        self.assertEqual(
+            list(val_data_dict.keys()),
+            [
+                "X_valid",
+                "X_valid_trk",
+                "Y_valid",
+                "X_valid_add",
+                "Y_valid_add",
+                "X_valid_trk_add",
+            ],
+        )
+
+    def test_load_validation_data_dips_no_var_cuts(self):
         val_data_dict = load_validation_data_dips(self, self, self.nJets)
 
         self.assertEqual(

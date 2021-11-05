@@ -1,6 +1,7 @@
 import argparse
 
 import umami.preprocessing_tools as upt
+from umami.configuration import logger
 
 
 def GetParser():
@@ -92,23 +93,65 @@ if __name__ == "__main__":
     args = GetParser()
     config = upt.Configuration(args.config_file)
 
+    # Check for preparation
     if args.prepare:
-        preparation_tool = upt.PrepareSamples(args, config)
-        preparation_tool.Run()
-    if args.resampling:
+        # Check if one specific sample is given
+        if args.sample:
+            preparation_tool = upt.PrepareSamples(args, config)
+            preparation_tool.Run()
+
+        # If no specific sample is given
+        else:
+            logger.warning(
+                "No --sample was selected, using all in config file! This can take a lot of time!"
+            )
+
+            # Iterate over the samples defined in the config
+            for iter_sample in config.preparation["samples"].keys():
+
+                # Set the argument in args to this sample and run prepare
+                args.sample = iter_sample
+                preparation_tool = upt.PrepareSamples(args, config)
+                preparation_tool.Run()
+
+    # Check for resampling
+    elif args.resampling:
+
+        # Check the method which should be used for resampling
         if config.sampling["method"] == "count":
             sampler = upt.UnderSampling(config)
+
         elif config.sampling["method"] == "pdf":
             sampler = upt.PDFSampling(config)
-        if config.sampling["method"] == "probability_ratio":
+
+        elif config.sampling["method"] == "probability_ratio":
             sampler = upt.ProbabilityRatioUnderSampling(config)
+
+        else:
+            raise ValueError(
+                f'{config.sampling["method"]} as sampling method is not supported!'
+            )
+
+        # Run the sampling with the selected method
         sampler.Run()
-    if args.scaling:
+
+    # Calculate the scale dicts of the previous resampled files
+    elif args.scaling:
         Scaling = upt.Scaling(config)
         Scaling.GetScaleDict(chunkSize=args.chunk_size)
-    if args.apply_scales:
+
+    # Apply scaling of the previous calculated scale dicts
+    elif args.apply_scales:
         Scaling = upt.Scaling(config)
         Scaling.ApplyScales()
-    if args.write:
+
+    # Check for final writing to disk in train format
+    elif args.write:
         Writer = upt.TrainSampleWriter(config)
         Writer.WriteTrainSample()
+
+    # Give error when nothing is used
+    else:
+        raise ValueError(
+            "You need to define which part of the preprocessing you want to run!"
+        )

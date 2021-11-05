@@ -51,7 +51,7 @@ def GetParser():
         "-t",
         "--tagger",
         type=str,
-        default=None,
+        required=True,
         help="Model type which is used. You can either use 'dips', 'dl1' or 'umami'.",
     )
 
@@ -67,29 +67,31 @@ def main(args, train_config, preprocess_config):
     else:
         nJets = args.nJets
 
-    if args.tagger is None:
-        raise ValueError("You need to give a model type with -t or --tagger")
-
-    if args.dict:
-        output_file_name = args.dict
-        parameters = utt.get_parameters_from_validation_dict_name(
-            output_file_name
-        )
-        beff = parameters["WP"]
-
-    else:
-        output_file_name = utt.calc_validation_metrics(
-            train_config=train_config,
-            preprocess_config=preprocess_config,
-            target_beff=args.beff
-            if args.beff
-            else train_config.Eval_parameters_validation["WP"],
-            nJets=nJets,
-            tagger=args.tagger,
-        )
-        beff = train_config.Eval_parameters_validation["WP"]
-
+    # Check if the tagger given is supported
     if args.tagger in ["umami", "dl1", "dips"]:
+
+        # If dict is given, the re-calculation is skipped
+        if args.dict:
+            output_file_name = args.dict
+            parameters = utt.get_parameters_from_validation_dict_name(
+                output_file_name
+            )
+            beff = parameters["WP"]
+
+        else:
+            # Calculate the validation metrics and save them
+            output_file_name = utt.calc_validation_metrics(
+                train_config=train_config,
+                preprocess_config=preprocess_config,
+                target_beff=args.beff
+                if args.beff
+                else train_config.Eval_parameters_validation["WP"],
+                nJets=nJets,
+                tagger=args.tagger,
+            )
+            beff = train_config.Eval_parameters_validation["WP"]
+
+        # Run the Performance check with the values from the dict and plot them
         RunPerformanceCheck(
             train_config=train_config,
             tagger=args.tagger,
@@ -109,7 +111,7 @@ def main(args, train_config, preprocess_config):
 
     else:
         raise ValueError(
-            "You need to define a model type. You can either use 'dips', 'dl1' or 'umami'."
+            "You need to define a model type! You can either use 'dips', 'dl1' or 'umami'."
         )
 
 

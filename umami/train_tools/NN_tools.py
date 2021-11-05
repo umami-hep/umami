@@ -13,10 +13,11 @@ import pandas as pd
 import yaml
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import CustomObjectScope
 
+import umami.tf_tools as utf
 from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import Gen_default_dict, GetBinaryLabels
-from umami.tf_tools import Sum
 from umami.tools import replaceLineInFile, yaml_loader
 
 
@@ -38,6 +39,32 @@ def get_validation_dict_name(WP, n_jets, dir_name):
         dir_name,
         f"validation_WP{str(WP).replace('.','p')}_{int(n_jets)}jets_Dict.json",
     )
+
+
+def get_variable_cuts(
+    Eval_parameters: dict,
+    file: str,
+):
+    """
+    Get the variable cuts from the Eval parameters if there, else return None
+
+    Input:
+    - Eval_parameters: Loaded Eval_parameters from the train_config as dict
+    - file: Filetype or naming of the cuts you want to load (e.g validation_file)
+
+    Output:
+    - cut_vars_dict: Dict with the variables and their cuts.
+    """
+
+    if (
+        ("variable_cuts" in Eval_parameters)
+        and (Eval_parameters["variable_cuts"] is not None)
+        and (file in Eval_parameters["variable_cuts"])
+    ):
+        return Eval_parameters["variable_cuts"][file]
+
+    else:
+        return None
 
 
 def prepare_history_dict(hist_dict: dict):
@@ -298,6 +325,8 @@ def LoadJetsFromFile(
     - class_labels: List of class labels which are used.
     - nJets: Number of jets to load.
     - variables: Variables which are loaded.
+    - cut_vars_dict: Variable cuts that are applied when loading the jets.
+    - print_logger: Decide if the number of jets loaded from the file is printed.
 
     Output:
     - Jets: The jets as numpy ndarray
@@ -338,7 +367,7 @@ def LoadJetsFromFile(
     for j, file in enumerate(sorted(filepaths, key=natural_keys)):
         if variables:
             jets = pd.DataFrame(
-                h5py.File(file, "r")["/jets"][:nJets][variables]
+                h5py.File(file, "r")["/jets"].fields(variables)[:nJets]
             )
 
         else:
@@ -456,6 +485,8 @@ def LoadTrksFromFile(
     - filepath: Path to the .h5 file with the jets.
     - class_labels: List of class labels which are used.
     - nJets: Number of jets to load.
+    - cut_vars_dict: Variable cuts that are applied when loading the jets.
+    - print_logger: Decide if the number of jets loaded from the file is printed.
 
     Output:
     - Trks: The tracks of the jets as numpy ndarray
@@ -956,13 +987,14 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
 
 
 def GetTestSample(
-    input_file,
-    var_dict,
+    input_file: str,
+    var_dict: str,
     preprocess_config,
-    class_labels,
-    nJets=int(3e5),
-    exclude=[],
+    class_labels: list,
+    nJets: int = int(3e5),
+    exclude: list = [],
     cut_vars_dict: dict = None,
+    print_logger: bool = True,
 ):
     """
     Apply the scaling and shifting to dataset using numpy
@@ -1069,25 +1101,27 @@ def GetTestSample(
             break
 
     # Check if enough jets are loaded
-    if nJets_counter < nJets:
-        logger.warning(
-            f"Requested {nJets} but only {nJets_counter} could be loaded!"
-        )
+    if print_logger:
+        if nJets_counter < nJets:
+            logger.warning(
+                f"Requested {nJets} but only {nJets_counter} could be loaded!"
+            )
 
-    else:
-        logger.info(f"Loaded {nJets} jets!")
+        else:
+            logger.info(f"Loaded {nJets} jets!")
 
     # Return jets and labels
     return all_jets[:nJets], all_labels[:nJets]
 
 
 def GetTestSampleTrks(
-    input_file,
-    var_dict,
+    input_file: str,
+    var_dict: str,
     preprocess_config,
-    class_labels,
-    nJets=int(3e5),
-    cut_vars_dict=None,
+    class_labels: list,
+    nJets: int = int(3e5),
+    cut_vars_dict: dict = None,
+    print_logger: bool = True,
 ):
     """
     Apply the scaling and shifting to dataset using numpy
@@ -1181,78 +1215,172 @@ def GetTestSampleTrks(
             break
 
     # Check if enough jets are loaded
-    if nJets_counter < nJets:
-        logger.warning(
-            f"Requested {nJets} but only {nJets_counter} could be loaded!"
-        )
+    if print_logger:
+        if nJets_counter < nJets:
+            logger.warning(
+                f"Requested {nJets} but only {nJets_counter} could be loaded!"
+            )
 
-    else:
-        logger.info(f"Loaded {nJets} jets!")
+        else:
+            logger.info(f"Loaded {nJets} jets!")
 
     return all_trks[:nJets], all_labels[:nJets]
 
 
-def load_validation_data_umami(train_config, preprocess_config, nJets: int):
+def load_validation_data_umami(
+    train_config,
+    preprocess_config,
+    nJets: int,
+):
+    """
+    Load the validation data for UMAMI.
+
+    Input:
+    - train_config: Loaded train_config object.
+    - train_config: Loaded preprocess_config object.
+    - nJets: Number of jets to load.
+
+    Output:
+    - val_data_dict: Dict with the validation data
+    """
+
+    # Define NN_Structure and the Eval params
+    NN_structure = train_config.NN_structure
+    Eval_parameters = train_config.Eval_parameters_validation
+
+    # Get the cut vars dict if defined
+    cut_vars_dict = get_variable_cuts(
+        Eval_parameters=Eval_parameters,
+        file="validation_file",
+    )
+
+    # Check for excluded variables
     exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
+
+    # Init a new dict for the loaded val data
     val_data_dict = {}
+
+    # Load the validation data
     (
         val_data_dict["X_valid"],
         val_data_dict["X_valid_trk"],
         val_data_dict["Y_valid"],
     ) = GetTestFile(
-        file=train_config.validation_file,
+        input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
-        class_labels=train_config.NN_structure["class_labels"],
+        class_labels=NN_structure["class_labels"],
         nJets=nJets,
         exclude=exclude,
+        cut_vars_dict=cut_vars_dict,
     )
+
+    # Set placeholder Nones for the add_files
     (
         val_data_dict["X_valid_add"],
         val_data_dict["Y_valid_add"],
         val_data_dict["X_valid_trk_add"],
     ) = (None, None, None)
+
+    # Check if add_files are defined and load them
     if train_config.add_validation_file is not None:
+
+        # Get cut vars dict for add_validation file
+        cut_vars_dict_add = get_variable_cuts(
+            Eval_parameters=Eval_parameters,
+            file="add_validation_file",
+        )
+
         (
             val_data_dict["X_valid_add"],
             val_data_dict["X_valid_trk_add"],
             val_data_dict["Y_valid_add"],
         ) = GetTestFile(
-            file=train_config.add_validation_file,
+            input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
-            class_labels=train_config.NN_structure["class_labels"],
+            class_labels=NN_structure["class_labels"],
             nJets=nJets,
             exclude=exclude,
+            cut_vars_dict=cut_vars_dict_add,
         )
+
+        # Assert a correct shape
         assert (
             val_data_dict["X_valid"].shape[1]
             == val_data_dict["X_valid_add"].shape[1]
-        )
+        ), "validation_file and add_validation_file have different amounts of variables!"
+
+    # Return the val data dict
     return val_data_dict
 
 
-def load_validation_data_dl1(train_config, preprocess_config, nJets: int):
+def load_validation_data_dl1(
+    train_config,
+    preprocess_config,
+    nJets: int,
+):
+    """
+    Load the validation data for DL1.
+
+    Input:
+    - train_config: Loaded train_config object.
+    - train_config: Loaded preprocess_config object.
+    - nJets: Number of jets to load.
+
+    Output:
+    - val_data_dict: Dict with the validation data
+    """
+
+    # Define NN_Structure and the Eval params
+    NN_structure = train_config.NN_structure
+    Eval_parameters = train_config.Eval_parameters_validation
+
+    # Get cut vars dict for add_validation file
+    cut_vars_dict = get_variable_cuts(
+        Eval_parameters=Eval_parameters,
+        file="validation_file",
+    )
+
+    # Ensure the nJets is an int
     nJets = int(nJets)
+
+    # Check for excluded variables
     exclude = []
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
+
+    # Init a new dict for the loaded val data
     val_data_dict = {}
+
+    # Load the validation data
     (val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestSample(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
-        class_labels=train_config.NN_structure["class_labels"],
+        class_labels=NN_structure["class_labels"],
         nJets=nJets,
         exclude=exclude,
+        cut_vars_dict=cut_vars_dict,
     )
+
+    # Set placeholder Nones for the add_files
     (
         val_data_dict["X_valid_add"],
         val_data_dict["Y_valid_add"],
     ) = (None, None)
+
+    # Check if add_files are defined and load them
     if train_config.add_validation_file is not None:
+
+        # Get cut vars dict for add_validation file
+        cut_vars_dict_add = get_variable_cuts(
+            Eval_parameters=Eval_parameters,
+            file="add_validation_file",
+        )
+
         (
             val_data_dict["X_valid_add"],
             val_data_dict["Y_valid_add"],
@@ -1260,14 +1388,27 @@ def load_validation_data_dl1(train_config, preprocess_config, nJets: int):
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
-            class_labels=train_config.NN_structure["class_labels"],
+            class_labels=NN_structure["class_labels"],
             nJets=nJets,
             exclude=exclude,
+            cut_vars_dict=cut_vars_dict_add,
         )
+
+        # Assert a correct shape
+        assert (
+            val_data_dict["X_valid"].shape[1]
+            == val_data_dict["X_valid_add"].shape[1]
+        ), "validation_file and add_validation_file have different amounts of variables!"
+
+    # Return the val data dict
     return val_data_dict
 
 
-def load_validation_data_dips(train_config, preprocess_config, nJets: int):
+def load_validation_data_dips(
+    train_config,
+    preprocess_config,
+    nJets: int,
+):
     """
     Load the validation data for DIPS.
 
@@ -1280,19 +1421,41 @@ def load_validation_data_dips(train_config, preprocess_config, nJets: int):
     - val_data_dict: Dict with the validation data
     """
 
+    # Define NN_Structure and the Eval params
+    NN_structure = train_config.NN_structure
+    Eval_parameters = train_config.Eval_parameters_validation
+
+    # Get cut vars dict for add_validation file
+    cut_vars_dict = get_variable_cuts(
+        Eval_parameters=Eval_parameters,
+        file="validation_file",
+    )
+
     val_data_dict = {}
     (val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestSampleTrks(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
-        class_labels=train_config.NN_structure["class_labels"],
+        class_labels=NN_structure["class_labels"],
         nJets=nJets,
+        cut_vars_dict=cut_vars_dict,
     )
+
+    # Set placeholder Nones for the add_files
     (
         val_data_dict["X_valid_add"],
         val_data_dict["Y_valid_add"],
     ) = (None, None)
+
+    # Check if add_files are defined and load them
     if train_config.add_validation_file is not None:
+
+        # Get cut vars dict for add_validation file
+        cut_vars_dict_add = get_variable_cuts(
+            Eval_parameters=Eval_parameters,
+            file="add_validation_file",
+        )
+
         (
             val_data_dict["X_valid_add"],
             val_data_dict["Y_valid_add"],
@@ -1300,23 +1463,28 @@ def load_validation_data_dips(train_config, preprocess_config, nJets: int):
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
-            class_labels=train_config.NN_structure["class_labels"],
+            class_labels=NN_structure["class_labels"],
             nJets=nJets,
+            cut_vars_dict=cut_vars_dict_add,
         )
+
+        # Assert a correct shape
         assert (
             val_data_dict["X_valid"].shape[1]
             == val_data_dict["X_valid_add"].shape[1]
-        )
+        ), "validation_file and add_validation_file have different amounts of variables!"
+
+    # Return the val data dict
     return val_data_dict
 
 
 def GetTestFile(
-    file: str,
+    input_file: str,
     var_dict: str,
     preprocess_config: dict,
     class_labels: list,
     nJets: int,
-    exclude: list,
+    exclude: list = [],
     cut_vars_dict: dict = None,
 ):
     """
@@ -1335,22 +1503,24 @@ def GetTestFile(
     """
 
     X_trk, Y_trk = GetTestSampleTrks(
-        input_file=file,
+        input_file=input_file,
         var_dict=var_dict,
         preprocess_config=preprocess_config,
         class_labels=class_labels,
         nJets=int(nJets),
         cut_vars_dict=cut_vars_dict,
+        print_logger=False,
     )
 
     X, Y = GetTestSample(
-        input_file=file,
+        input_file=input_file,
         var_dict=var_dict,
         preprocess_config=preprocess_config,
         class_labels=class_labels,
         nJets=int(nJets),
         exclude=exclude,
         cut_vars_dict=cut_vars_dict,
+        print_logger=True,
     )
 
     assert np.equal(Y, Y_trk).all()
@@ -1626,8 +1796,9 @@ def calc_validation_metrics(
     train_config,
     preprocess_config,
     tagger: str,
-    target_beff=0.77,
-    nJets=int(3e5),
+    target_beff: float = 0.77,
+    nJets: int = int(3e5),
+    model_string: str = "model_epoch",
 ):
     """
     Calculates the validation metrics and rejections for each epoch
@@ -1647,13 +1818,31 @@ def calc_validation_metrics(
     # Get evaluation parameters and NN structure from train config
     Eval_parameters = train_config.Eval_parameters_validation
     NN_structure = train_config.NN_structure
+    Second_model_string = (
+        "dips_model_" if model_string == "model_epoch" else "model_epoch"
+    )
 
     # Make a list with the model epochs saves
     training_output = [
         os.path.join(train_config.model_name, f)
         for f in os.listdir(train_config.model_name)
-        if "model_epoch" in f
+        if model_string in f
     ]
+
+    if len(training_output) == 0:
+        logger.warning(
+            f"{model_string} models used but not found! Using {Second_model_string}"
+        )
+
+        # Set new model string
+        model_string = Second_model_string
+
+        # Make a list with the model epochs saves with second model name string
+        training_output = [
+            os.path.join(train_config.model_name, f)
+            for f in os.listdir(train_config.model_name)
+            if model_string in f
+        ]
 
     # Open the json file and load the training out
     try:
@@ -1678,36 +1867,64 @@ def calc_validation_metrics(
     # Init a results list
     results = []
 
+    # Check tagger and load the correct val data
+    if tagger == "umami":
+        data_dict = load_validation_data_umami(
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+            nJets=nJets,
+        )
+
+    elif tagger == "dl1":
+        data_dict = load_validation_data_dl1(
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+            nJets=nJets,
+        )
+
+    elif tagger == "dips":
+        data_dict = load_validation_data_dips(
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+            nJets=nJets,
+        )
+
     # Loop over the different model savepoints at each epoch
-    for n, model_file in enumerate(training_output):
+    for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
         logger.info(f"Working on {n+1}/{len(training_output)} input files")
 
         # Init results dict to save to
         result_dict = {}
 
         # Get the epoch number from the .h5 file
-        epoch = int(
-            model_file[
-                model_file.rfind("model_epoch")
-                + len("model_epoch") : model_file.find(".h5")
-            ]
-        )
+        try:
+            epoch = int(
+                model_file[
+                    model_file.rfind(f"{model_string}")
+                    + len(f"{model_string}") : model_file.find(".h5")
+                ]
+            )
+
+        except ValueError:
+            raise ValueError(f"Epoch could not be extracted from {model_string}!")
 
         # Load the epoch from json and add it to dict
         for train_epoch in training_output_list:
             if epoch == train_epoch["epoch"]:
                 result_dict = train_epoch
 
+        # Ensure the epoch is in the dict
+        result_dict["epoch"] = epoch
+
         if tagger == "umami":
             # Load UMAMI model
-            umami = load_model(model_file, {"Sum": Sum})
+            with CustomObjectScope({"Sum": utf.Sum}):
+                umami = load_model(model_file)
 
             # Evaluate Umami model
             val_result_dict = evaluate_model_umami(
                 model=umami,
-                data_dict=load_validation_data_umami(
-                    train_config, preprocess_config, nJets
-                ),
+                data_dict=data_dict,
                 class_labels=NN_structure["class_labels"],
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
@@ -1724,9 +1941,7 @@ def calc_validation_metrics(
             # Evaluate DL1 model
             val_result_dict = evaluate_model(
                 model=dl1,
-                data_dict=load_validation_data_dl1(
-                    train_config, preprocess_config, nJets
-                ),
+                data_dict=data_dict,
                 class_labels=NN_structure["class_labels"],
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
@@ -1738,14 +1953,13 @@ def calc_validation_metrics(
 
         elif tagger == "dips":
             # Load DIPS model
-            dips = load_model(model_file, {"Sum": Sum})
+            with CustomObjectScope({"Sum": utf.Sum}):
+                dips = load_model(model_file)
 
             # Validate dips
             val_result_dict = evaluate_model(
                 model=dips,
-                data_dict=load_validation_data_dips(
-                    train_config, preprocess_config, nJets
-                ),
+                data_dict=data_dict,
                 class_labels=NN_structure["class_labels"],
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
@@ -1758,6 +1972,8 @@ def calc_validation_metrics(
         # Save results in dict
         for k, v in val_result_dict.items():
             result_dict[k] = v
+
+        # Append results dict to list
         results.append(result_dict)
 
     # Sort the results after epoch
