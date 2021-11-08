@@ -1,6 +1,5 @@
 import h5py
 import numpy as np
-import pandas as pd
 import yaml
 from numpy.lib.recfunctions import repack_fields, structured_to_unstructured
 
@@ -108,7 +107,7 @@ class TrainSampleWriter:
         ]
 
         # Get the max length of the input file
-        file_length = len(pd.DataFrame(h5py.File(input_file, "r")["/jets"][:]))
+        file_length = len(h5py.File(input_file, "r")["/jets"])
 
         # Get the number of chunks that need to be processed
         n_chunks = int(np.ceil(file_length / chunkSize))
