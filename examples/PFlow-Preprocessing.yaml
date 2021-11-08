@@ -63,6 +63,8 @@ parameters: !include Preprocessing-parameters.yaml
     - *outlier_cuts
 
 preparation:
+  batchsize: 50000
+
   ntuples:
     ttbar:
       path: *ntuple_path

@@ -187,12 +187,11 @@ class PrepareSamplesTestCase(unittest.TestCase):
                 global_config.pTvariable: 5e3 * np.ones(3),
             },
         )
+        tracks = np.ones(shape=(3, 5, 40))
         self.tf = tempfile.NamedTemporaryFile()
         with h5py.File(self.tf, "w") as out_file:
-            out_file.create_dataset(
-                "jets",
-                data=jets.to_records(),
-            )
+            out_file.create_dataset("jets", data=jets.to_records())
+            out_file.create_dataset("tracks", data=tracks)
         self.output_file = tempfile.NamedTemporaryFile()
 
     def test_NoSampleProvided(self):
@@ -210,12 +209,48 @@ class PrepareSamplesTestCase(unittest.TestCase):
         with self.assertRaises(KeyError):
             PrepareSamples(self.args, self.config)
 
-    def test_GetJets(self):
+    def test_GetBatchesPerFile(self):
         ps = PrepareSamples(self.args, self.config)
-        jets, tracks = ps.get_jets(self.tf.name)
+        ps.ntuples = [self.tf.name]
+        files_in_batches = map(ps.GetBatchesPerFile, ps.ntuples)
+        for batch_tuple in list(files_in_batches):
+            # first entry of tuples is the filename
+            self.assertEqual(type(batch_tuple[0]), str)
+            # second entry of tuples is a list of tuples with the batch indices
+            for batch in batch_tuple[1]:
+                self.assertEqual(type(batch), tuple)
+
+    def test_jets_generator_fullcuts_wotracks(self):
+        ps = PrepareSamples(self.args, self.config)
+        ps.ntuples = [self.tf.name]
+        files_in_batches = map(ps.GetBatchesPerFile, ps.ntuples)
+        ps.save_tracks = None
         expected_jets = np.array([])
-        self.assertEqual(len(jets), len(expected_jets))
-        self.assertIsInstance(tracks, type(None))
+        for jets, tracks in ps.jets_generator(files_in_batches):
+            self.assertEqual(tracks, None)
+            self.assertEqual(len(jets), len(expected_jets))
+
+    def test_jets_generator_fullcuts(self):
+        ps = PrepareSamples(self.args, self.config)
+        ps.ntuples = [self.tf.name]
+        files_in_batches = map(ps.GetBatchesPerFile, ps.ntuples)
+        ps.save_tracks = True
+        expected_jets = np.array([])
+        expected_tracks = np.array([])
+        for jets, track in ps.jets_generator(files_in_batches):
+            self.assertEqual(len(track), len(expected_tracks))
+            self.assertEqual(len(jets), len(expected_jets))
+
+    def test_jets_generator_lightcut(self):
+        ps = PrepareSamples(self.args, self.config)
+        ps.ntuples = [self.tf.name]
+        files_in_batches = map(ps.GetBatchesPerFile, ps.ntuples)
+        ps.save_tracks = True
+        ps.cuts = [{"eventNumber": {"operator": "==", "condition": 0}}]
+        expected_jets_len = expected_tracks_len = 1
+        for jets, tracks in ps.jets_generator(files_in_batches):
+            self.assertEqual(len(tracks), expected_tracks_len)
+            self.assertEqual(len(jets), expected_jets_len)
 
     def test_Run(self):
         ps = PrepareSamples(self.args, self.config)
