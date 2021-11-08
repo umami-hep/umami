@@ -109,6 +109,8 @@ Another cut which can be applied is the `pt_btagJes`, which is a cut on the jet 
 #### File- and Flavour Preparation
 ```yaml
 preparation:
+  batchsize: 50000
+
   ntuples:
     ttbar:
       path: *ntuple_path
@@ -231,12 +233,15 @@ preparation:
         path: *sample_path
         file: MC16d-inclusive_testing_zprime_PFlow.h5
 ```
-In the `Preparation`, the exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.   
+In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.   
 
 Another important part are the `class_labels` which are defined here. You can define here which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/alfroch-scaling-followup/umami/configs/global_config.yaml). Add the names of those to the list here to add them to the preprocessing. PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT. This list must be the same as the one in the train config!
 
 The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. Also you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
 
+ Setting | Explanation      |
+| ------ | ---------------- |
+| `batchsize` | size of loaded batches |
 #### Sampling
 
 ```yaml

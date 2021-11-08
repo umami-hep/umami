@@ -86,44 +86,70 @@ class PrepareSamples:
         self.ntuples = glob(os.path.join(ntuple_path, ntuple_file_pattern))
         # ensure output path exists
         os.makedirs(output_path, exist_ok=True)
+        # get size of batches
+        if "batchsize" not in self.config.preparation:
+            logger.warning("no batch size given. Batch size set to 50 000")
+            self.batch_size = 50_000
+        else:
+            self.batch_size = self.config.preparation["batchsize"]
 
-    def get_jets(self, filename):
+    def GetBatchesPerFile(self, filename: str):
+        """
+        Split the file into batches to avoid that the loaded
+        data is too large
+        """
+        batch_size = self.batch_size
+        with h5py.File(filename, "r") as data_set:
+            # get total number of jets in file
+            total_n_jets = len(data_set["jets"])
+            logger.debug(f"Total number of jets in file: {total_n_jets}")
+            # first tuple is given by (0, batch_size)
+            start_batch = 0
+            end_batch = batch_size
+            indices_batches = [(start_batch, end_batch)]
+            # get remaining tuples of indices defining the batches
+            while end_batch <= total_n_jets:
+                start_batch += batch_size
+                end_batch = start_batch + batch_size
+                indices_batches.append((start_batch, end_batch))
+        return (filename, indices_batches)
+
+    def jets_generator(self, files_in_batches):
         """Helper function to extract jet and track information from a h5 ntuple.
 
         :param filename: path to the h5 ntuple
-        :returns: (jets, tracks), where jets is a numpy array of jets.
+        :returns: generates (jets, tracks), where jets is a numpy array of jets with the size of one batch.
                 Similarly, tracks is a numpy array of tracks but is only created
                 if `self.save_tracks` is set to True.
         """
-        data_set = h5py.File(filename, "r")
-        jets = data_set["jets"]
-        logger.debug(f"Total number of jets in file: {jets.size}")
-        if self.save_tracks:
-            tracks = data_set[self.tracks_name]
-            logger.debug(f"Tracks dataset: {self.tracks_name}")
-            logger.debug(f"Total number of tracks in file: {tracks.size}")
-
-        indices_to_remove = GetSampleCuts(jets, self.cuts)
-        jets = np.delete(jets, indices_to_remove)[: self.n_jets_to_get]
-        jets = jets[: self.n_jets_to_get]
-        if self.save_tracks:
-            tracks = np.delete(tracks, indices_to_remove, axis=0)[
-                : self.n_jets_to_get
-            ]
-            tracks = tracks[: self.n_jets_to_get]
-            return jets, tracks
-        else:
-            return jets, None
+        for filename, batches in files_in_batches:
+            if self.n_jets_to_get <= 0:
+                break
+            with h5py.File(filename, "r") as data_set:
+                for batch in batches:
+                    # load jets in batches
+                    jets = data_set["jets"][batch[0] : batch[1]]
+                    indices_to_remove = GetSampleCuts(jets, self.cuts)
+                    jets = np.delete(jets, indices_to_remove)
+                    # if tracks should be saved, also load them in batches
+                    if self.save_tracks:
+                        tracks = data_set[self.tracks_name][
+                            batch[0] : batch[1]
+                        ]
+                        tracks = np.delete(tracks, indices_to_remove, axis=0)
+                    else:
+                        tracks = None
+                    yield (jets, tracks)
 
     def Run(self):
         """Run over Ntuples to extract jets (and potentially also tracks)"""
         logger.info("Processing ntuples...")
         pbar = tqdm(total=self.n_jets_to_get)
-        for i, filename in enumerate(self.ntuples):
-            if self.n_jets_to_get <= 0:
-                break
-
-            jets, tracks = self.get_jets(filename)
+        # get list of batches for each file
+        files_in_batches = map(self.GetBatchesPerFile, self.ntuples)
+        # loop over batches for all files and load the batches separately
+        n_jets_check = self.n_jets_to_get
+        for jets, tracks in self.jets_generator(files_in_batches):
             pbar.update(jets.size)
             self.jets_loaded += jets.size
             self.n_jets_to_get -= jets.size
@@ -177,5 +203,5 @@ class PrepareSamples:
         pbar.close()
         if self.n_jets_to_get > 0:
             logger.warning(
-                f"Not enough selected jets from files, only {self.jets_loaded}"
+                f"Not as many jets selected as defined in config file. Only {self.jets_loaded} jets selected instead of {n_jets_check}"
             )
