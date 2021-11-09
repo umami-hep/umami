@@ -62,13 +62,13 @@ fi
 ##############################################
 #
 #(request gpu, this specific type is compatible with the latest umami singularity container)
-#$ -l gpu_type=nvidia_geforce_rtx_3090
+#$ -l gpu_type=nvidia_nvidia_geforce_rtx_3090
 #
 #(job's maximum time)
-#$-l h_rt=1:00:00
+#$-l h_rt=20:00:00
 #
 #(job's maximum resident memory usage)
-#$ -l h_rss=15G
+#$ -l h_rss=64G
 #
 #(job's maximum scratch space usage in $TMPDIR)
 #$ -l tmpdir_size=25G
