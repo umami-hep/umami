@@ -1,7 +1,6 @@
 import itertools
 import os
 import pickle
-import warnings
 from collections import Counter
 
 import h5py
@@ -2372,6 +2371,7 @@ class UnderSampling(Resampling):
             positions_x_y=[0, 1],
             variable_names=["pT", "abseta"],
             plot_base_name=plot_name_clean,
+            normalised=False,
             binning={"pT": 200, "abseta": 20},
             Log=True,
         )
@@ -2561,15 +2561,16 @@ class ProbabilityRatioUnderSampling(UnderSampling):
     The ProbabilityRatioUnderSampling is used to prepare the training dataset.
     It makes sure that all flavor fractions are equal and the flavours distributions
     have the same shape as the target distribution.
-    This is an alternative to the class UnderSampling, with the difference that
-    it always ensures the target distribution is the target distribution,
-    regardless of pre-sampling flavor fractions and low statistics.
+    This is an alternative to the UnderSampling class, with the difference that
+    it ensures that the predefined target distribution is always the final target distribution,
+    regardless of pre-sampling flavor fractions and low statistics. This method also ensures
+    that the final fractions are equal.
     Does not work well with taus as of now.
     """
 
     def GetIndices(self):
         """
-        Applies the UnderSampling to the given arrays.
+        Applies the undersampling to the given arrays.
 
         Parameters
         ----------
@@ -2620,30 +2621,28 @@ class ProbabilityRatioUnderSampling(UnderSampling):
 
         self.concat_samples = concat_samples
 
-        min_count_per_bin = np.amin(
-            [concat_samples[sample]["stat"] for sample in concat_samples],
-            axis=0,
-        )
-        max_probability_ratio = self.GetMaxProbabilityRatio(
-            {
-                sample: concat_samples[sample]["stat"]
-                for sample in concat_samples
-            },
+        stats = {
+            flavor: concat_samples[flavor]["stat"] for flavor in concat_samples
+        }
+
+        sampling_probabilities = self.GetSamplingProbabilities(
             target_distribution,
+            stats,
         )
-        with np.errstate(divide="ignore", invalid="ignore"):
-            prob_ratios = np.nan_to_num(
-                concat_samples[target_distribution]["stat"]
-                / min_count_per_bin
-                / max_probability_ratio
-            )
 
         rng = np.random.default_rng(seed=self.rnd_seed)
         indices_to_keep = {elem: [] for elem in self.class_categories}
         # retrieve the indices of the jets to keep
-        for bin_i, count, prob_ratio in zip(
-            bin_indices_flat, min_count_per_bin, prob_ratios
-        ):
+        for index, bin_i in enumerate(bin_indices_flat):
+            min_weighted_count = np.amin(
+                [
+                    (
+                        concat_samples[flav]["stat"][index]
+                        * sampling_probabilities[flav][index]
+                    )
+                    for flav in sampling_probabilities
+                ]
+            )
             for class_category in self.class_categories:
                 indices_to_keep[class_category].append(
                     rng.choice(
@@ -2651,7 +2650,7 @@ class ProbabilityRatioUnderSampling(UnderSampling):
                             concat_samples[class_category]["binnumbers"]
                             == bin_i
                         )[0],
-                        int(count * prob_ratio),
+                        int(min_weighted_count),
                         replace=False,
                     )
                 )
@@ -2724,46 +2723,81 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         logger.info(f"Using in total {size_total} jets.")
         return self.indices_to_keep
 
-    def GetMaxProbabilityRatio(self, stats: dict, target_distribution: str):
+    def GetSamplingProbability(self, target_stat, original_stat):
         """
-        Computes probability ratios against the target distribution and retuns the max.
-        This is used to scale the other distributions, i.e. cjets, ujets, taujets, so that
-        they are alwasy above the target distribution and with the same shape as the
-        target distribution.
+        Computes probability ratios against the target distribution.
+        The probability ratios are scaled by the max ratio to ensure the
+        original distribution gets sacled below the target distribution
+        and with the same shape as the target distribution.
 
         Parameters
         ----------
-        stats: Dictionary of stats such as bin count for different jet flavours
-        target_distribution: the target distribution, i.e. bjets, to compute
-        probability ratios against
+        target_stat: Target distribution or histogram, i.e. bjets histo, to compute
+        probability ratios against.
+        original_stat: Original distribution or histogram, i.e. cjets histo, to
+        scale using target_stat.
 
         Returns
         -------
-        The max probability ratio.
+        A dictionary of the sampling probabilities for each flavor.
 
         """
-        stat_target = stats.get(target_distribution)
-        if stat_target is None:
+
+        ratios = np.divide(
+            target_stat,
+            original_stat,
+            out=np.zeros(
+                original_stat.shape,
+                dtype=float,
+            ),
+            where=(original_stat != 0),
+        )
+        max_ratio = np.max(ratios)
+        return ratios / max_ratio
+
+    def GetSamplingProbabilities(
+        self,
+        target_distribution: str = "bjets",
+        stats: dict = {
+            "bjets": np.ndarray,
+            "cjets": np.ndarray,
+            "ujets": np.ndarray,
+            "taujets": np.ndarray,
+        },
+    ):
+        """
+        Computes probability ratios against the target distribution for each flavor.
+        The probability ratios are scaled by the max ratio to ensure all the flavor
+        distributions, i.e. cjets, ujets, taujets, are always below the target distribution
+        and with the same shape as the target distribution. Also ensures the resulting flavor
+        fractions are the same.
+
+        Parameters
+        ----------
+        target_distribution: Target distribution, i.e. bjets, to compute
+        probability ratios against.
+        stats: Dictionary of stats such as bin count for different jet flavours
+
+        Returns
+        -------
+        A dictionary of the sampling probabilities for each flavor.
+
+        """
+
+        if target_distribution is None:
             raise ValueError(
                 "Target distribution class does not exist in your sample classes."
             )
-        logger.info(f"target_distribution, {target_distribution}")
-        probability_ratios = []
-        for sample in stats:
-            if sample != target_distribution:
-                with np.errstate(
-                    divide="ignore", invalid="ignore"
-                ), warnings.catch_warnings():
-                    warnings.simplefilter("ignore", category=RuntimeWarning)
-                    ratios = stat_target.astype(float) / stats[sample]
-                    max_ratio = np.nanmax(ratios)
-                    logger.info(f"max_ratio for {sample}, {max_ratio}")
-                    probability_ratios.append(max_ratio)
+        target_stat = stats.get(target_distribution)
 
-        max_probability_ratio = np.amax(
-            probability_ratios, where=~np.isnan(probability_ratios), initial=-1
-        )
-        return max_probability_ratio
+        sampling_probabilities = {}
+        # For empty stats set the sampling probability to zero
+        for flav in stats:
+            sampling_probabilities[flav] = self.GetSamplingProbability(
+                target_stat, stats[flav]
+            )
+
+        return sampling_probabilities
 
 
 def GetScales(vec, w, varname, custom_defaults_vars):
