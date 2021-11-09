@@ -25,7 +25,7 @@ def SamplingGenerator(
     label_classes: list,
     use_tracks: bool = False,
     chunk_size: int = 10000,
-    seed=23,
+    seed=42,
     duplicate: bool = False,
 ):
     """
@@ -373,7 +373,7 @@ class Resampling(object):
         label_classes: list,
         use_tracks: bool = False,
         chunk_size: int = 10000,
-        seed=23,
+        seed: int = 42,
     ):
         raise NotImplementedError
 
@@ -406,7 +406,7 @@ class Resampling(object):
                 ],
                 label_classes=list(range(len(self.class_labels_map))),
                 use_tracks=self.save_tracks,
-                seed=23 + i,
+                seed=self.rnd_seed + i,
             )
             for i, sample in enumerate(indices)
         ]
@@ -438,13 +438,19 @@ class Resampling(object):
                     else:
                         break
             pbar.update(jets.size)
+
+            # Init a index list
+            rng_index = np.arange(len(jets))
+
+            # Shuffle the index list
             rng = np.random.default_rng(seed=self.rnd_seed)
-            rng.shuffle(jets)
-            rng = np.random.default_rng(seed=42)
-            rng.shuffle(labels)
+            rng.shuffle(rng_index)
+
+            # Shuffle the jets, labels (and tracks)
+            jets = jets[rng_index]
+            labels = labels[rng_index]
             if self.save_tracks:
-                rng = np.random.default_rng(seed=42)
-                rng.shuffle(tracks)
+                tracks = tracks[rng_index]
 
             if create_file:
                 create_file = False
@@ -506,6 +512,7 @@ class PDFSampling(Resampling):
         self.inter_func_dict = {}
         self._ratio_dict = {}
         self._bin_edges_dict = {}
+        self.rnd_seed = 42
         # Setting some limits: important for good spline approximation
         sampling_var = self.options.get("sampling_variables")
         bin_info = []
@@ -1215,7 +1222,7 @@ class PDFSampling(Resampling):
             label=self.class_labels_map[preparation_sample["category"]],
             label_classes=list(range(len(self.class_labels_map))),
             use_tracks=self.save_tracks,
-            seed=23,
+            seed=42,
             duplicate=True,
         )
 
@@ -1240,13 +1247,19 @@ class PDFSampling(Resampling):
             except StopIteration:
                 break
             pbar.update(jets.size)
-            rng = np.random.default_rng(seed=42)
-            rng.shuffle(jets)
-            rng = np.random.default_rng(seed=42)
-            rng.shuffle(labels)
+
+            # Init a index list
+            rng_index = np.arange(len(jets))
+
+            # Shuffle the index list
+            rng = np.random.default_rng(seed=self.rnd_seed)
+            rng.shuffle(rng_index)
+
+            # Shuffle the jets, labels (and tracks)
+            jets = jets[rng_index]
+            labels = labels[rng_index]
             if self.save_tracks:
-                rng = np.random.default_rng(seed=42)
-                rng.shuffle(tracks)
+                tracks = tracks[rng_index]
 
             if create_file:
                 create_file = False
@@ -1358,13 +1371,19 @@ class PDFSampling(Resampling):
                         use_tracks=use_tracks,
                     )
             pbar.update(jets.size)
-            rng = np.random.default_rng(seed=42)
-            rng.shuffle(jets)
-            rng = np.random.default_rng(seed=42)
-            rng.shuffle(labels)
+
+            # Init a index list
+            rng_index = np.arange(len(jets))
+
+            # Shuffle the index list
+            rng = np.random.default_rng(seed=self.rnd_seed)
+            rng.shuffle(rng_index)
+
+            # Shuffle the jets, labels (and tracks)
+            jets = jets[rng_index]
+            labels = labels[rng_index]
             if self.save_tracks:
-                rng = np.random.default_rng(seed=42)
-                rng.shuffle(tracks)
+                tracks = tracks[rng_index]
 
             if create_file:
                 create_file = False
@@ -2310,7 +2329,7 @@ class UnderSampling(Resampling):
         label_classes: list,
         use_tracks: bool = False,
         chunk_size: int = 10000,
-        seed=23,
+        seed: int = 42,
     ):
         with h5py.File(file, "r") as f:
             start_ind = 0
