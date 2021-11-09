@@ -36,6 +36,7 @@ class PrepareSamples:
     def __init__(self, args, config) -> None:
         self.config = config
         self.__setup(args)
+        self.rnd_seed = 42
 
     def __setup(self, args):
         # check if sample is provided, otherwise exit
@@ -156,10 +157,10 @@ class PrepareSamples:
 
             if self.shuffle_array:
                 pbar.write("Shuffling array")
-                rng = np.random.default_rng(seed=42)
+                rng = np.random.default_rng(seed=self.rnd_seed)
                 rng.shuffle(jets)
                 if self.save_tracks:
-                    rng = np.random.default_rng(seed=42)
+                    rng = np.random.default_rng(seed=self.rnd_seed)
                     rng.shuffle(tracks)
 
             if self.create_file:
