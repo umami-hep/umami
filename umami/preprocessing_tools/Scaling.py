@@ -673,7 +673,7 @@ class Scaling:
                         x = trks[var]
                         if var in tracks_logNormVars:
                             x = np.log(x)
-                        elif var in tracks_jointNormVars or var in tracks_logNormVars:
+                        if var in tracks_jointNormVars or var in tracks_logNormVars:
                             x = np.where(
                                 trk_mask,
                                 x - tracks_scale_dict[var]["shift"],
