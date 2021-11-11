@@ -14,13 +14,13 @@ The hybrid samples for PFlow jets are created by combining events from ttbar and
 Below a certain pt threshold (which needs to be defined for the preprocessing), ttbar events are used in the hybrid sample. Above this pt threshold, the jets are taken from Z' events.
 The advantage of these hybrid samples is the avaliability of sufficient jets with high pt, as the ttbar samples typically have lower-pt jets than those jets from the Z' sample.
 
-<img src="assets/pt_btagJes-cut_spectrum.png" alt="drawing" width="600"/>
+![Pt distribution of hybrid samples being composed from ttbar and Zjets samples](assets/pt_btagJes-cut_spectrum.png)
 
 The production of the hybrid samples in the preprocessing stage requires preparation of input files which are created from the training ntuples.
 
 Additional preprocessing steps for PFlow jets are required to ensure similar kinematic distributions for the jets of different flavours in the training samples in order to avoid kinematic biases. One of these techniques is downsampling which is used in the `Undersampling` approach.
 
-<img src="assets/pt_btagJes-downsampled.png" alt="drawing" width="600"/>
+![Pt distribution of downsampled hybrid samples](assets/pt_btagJes-downsampled.png)
 
 Finally, the input features are scaled and shifted to normalise the range of the independent variables.
 [Wikipedia](https://en.wikipedia.org/wiki/Feature_scaling) gives a motivation for the scaling + shifting step:
