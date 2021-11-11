@@ -972,7 +972,7 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
             excluded_variables.append(exclude_that)
             variables.remove(exclude_that)
         else:
-            logger.info(f"Variables to exclude not found: {exclude_that}")
+            logger.warning(f"Variables to exclude not found: {exclude_that}")
     # Get the index of the excluded variables for training
     excluded_var_indices = [
         i for i, excl in enumerate(all_variables) if excl in excluded_variables
