@@ -10,6 +10,7 @@ from shutil import copyfile
 import h5py
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 import yaml
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.models import load_model
@@ -1261,13 +1262,7 @@ def load_validation_data_umami(
 
     # Init a new dict for the loaded val data
     val_data_dict = {}
-
-    # Load the validation data
-    (
-        val_data_dict["X_valid"],
-        val_data_dict["X_valid_trk"],
-        val_data_dict["Y_valid"],
-    ) = GetTestFile(
+    (X_valid, X_valid_trk, Y_valid,) = GetTestFile(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
@@ -1277,27 +1272,29 @@ def load_validation_data_umami(
         cut_vars_dict=cut_vars_dict,
     )
 
+    # Transform to tf.tensors and add to val_dict
+    val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
+    val_data_dict["X_valid_trk"] = tf.convert_to_tensor(
+        X_valid_trk, dtype=tf.float64
+    )
+    val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
+
     # Set placeholder Nones for the add_files
     (
-        val_data_dict["X_valid_add"],
-        val_data_dict["Y_valid_add"],
-        val_data_dict["X_valid_trk_add"],
+        X_valid_add,
+        X_valid_trk_add,
+        Y_valid_add,
     ) = (None, None, None)
 
     # Check if add_files are defined and load them
     if train_config.add_validation_file is not None:
-
         # Get cut vars dict for add_validation file
         cut_vars_dict_add = get_variable_cuts(
             Eval_parameters=Eval_parameters,
             file="add_validation_file",
         )
 
-        (
-            val_data_dict["X_valid_add"],
-            val_data_dict["X_valid_trk_add"],
-            val_data_dict["Y_valid_add"],
-        ) = GetTestFile(
+        (X_valid_add, X_valid_trk_add, Y_valid_add,) = GetTestFile(
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
@@ -1305,6 +1302,17 @@ def load_validation_data_umami(
             nJets=nJets,
             exclude=exclude,
             cut_vars_dict=cut_vars_dict_add,
+        )
+
+        # Transform to tf.tensors and add to val_dict
+        val_data_dict["X_valid_add"] = tf.convert_to_tensor(
+            X_valid_add, dtype=tf.float64
+        )
+        val_data_dict["X_valid_trk_add"] = tf.convert_to_tensor(
+            X_valid_trk_add, dtype=tf.float64
+        )
+        val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
+            Y_valid_add, dtype=tf.int64
         )
 
         # Assert a correct shape
@@ -1356,7 +1364,7 @@ def load_validation_data_dl1(
     val_data_dict = {}
 
     # Load the validation data
-    (val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestSample(
+    (X_valid, Y_valid,) = GetTestSample(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
@@ -1366,10 +1374,14 @@ def load_validation_data_dl1(
         cut_vars_dict=cut_vars_dict,
     )
 
+    # Transform to tf.tensors and add to val_dict
+    val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
+    val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
+
     # Set placeholder Nones for the add_files
     (
-        val_data_dict["X_valid_add"],
-        val_data_dict["Y_valid_add"],
+        X_valid_add,
+        Y_valid_add,
     ) = (None, None)
 
     # Check if add_files are defined and load them
@@ -1381,10 +1393,7 @@ def load_validation_data_dl1(
             file="add_validation_file",
         )
 
-        (
-            val_data_dict["X_valid_add"],
-            val_data_dict["Y_valid_add"],
-        ) = GetTestSample(
+        (X_valid_add, Y_valid_add,) = GetTestSample(
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
@@ -1392,6 +1401,14 @@ def load_validation_data_dl1(
             nJets=nJets,
             exclude=exclude,
             cut_vars_dict=cut_vars_dict_add,
+        )
+
+        # Transform to tf.tensors and add to val_dict
+        val_data_dict["X_valid_add"] = tf.convert_to_tensor(
+            X_valid_add, dtype=tf.float64
+        )
+        val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
+            Y_valid_add, dtype=tf.int64
         )
 
         # Assert a correct shape
@@ -1432,7 +1449,7 @@ def load_validation_data_dips(
     )
 
     val_data_dict = {}
-    (val_data_dict["X_valid"], val_data_dict["Y_valid"],) = GetTestSampleTrks(
+    (X_valid, Y_valid,) = GetTestSampleTrks(
         input_file=train_config.validation_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
@@ -1441,10 +1458,14 @@ def load_validation_data_dips(
         cut_vars_dict=cut_vars_dict,
     )
 
+    # Transform to tf.tensors and add to val_dict
+    val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
+    val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
+
     # Set placeholder Nones for the add_files
     (
-        val_data_dict["X_valid_add"],
-        val_data_dict["Y_valid_add"],
+        X_valid_add,
+        Y_valid_add,
     ) = (None, None)
 
     # Check if add_files are defined and load them
@@ -1456,16 +1477,21 @@ def load_validation_data_dips(
             file="add_validation_file",
         )
 
-        (
-            val_data_dict["X_valid_add"],
-            val_data_dict["Y_valid_add"],
-        ) = GetTestSampleTrks(
+        (X_valid_add, Y_valid_add,) = GetTestSampleTrks(
             input_file=train_config.add_validation_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
             nJets=nJets,
             cut_vars_dict=cut_vars_dict_add,
+        )
+
+        # Transform to tf.tensors and add to val_dict
+        val_data_dict["X_valid_add"] = tf.convert_to_tensor(
+            X_valid_add, dtype=tf.float64
+        )
+        val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
+            Y_valid_add, dtype=tf.int64
         )
 
         # Assert a correct shape
@@ -1906,7 +1932,9 @@ def calc_validation_metrics(
             )
 
         except ValueError:
-            raise ValueError(f"Epoch could not be extracted from {model_string}!")
+            raise ValueError(
+                f"Epoch could not be extracted from {model_string}!"
+            )
 
         # Load the epoch from json and add it to dict
         for train_epoch in training_output_list:

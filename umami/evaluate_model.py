@@ -37,6 +37,7 @@ def GetParser():
         "-e",
         "--epoch",
         type=int,
+        required=True,
         help="Epoch which should be evaluated.",
     )
 

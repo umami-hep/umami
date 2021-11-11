@@ -6,11 +6,11 @@ unittest:
     - apt-get update
     - apt-get install -y wget
     - python setup.py develop
-    - pytest ./umami/tests/unit/preprocessing -v
-    - pytest ./umami/tests/unit/evaluation_tools -v
-    - pytest ./umami/tests/unit/train_tools -v
-    - pytest ./umami/tests/unit/input_vars_tools -v
-    - pytest ./umami/tests/unit/tf_tools -v
+    - pytest ./umami/tests/unit/preprocessing -v -s
+    - pytest ./umami/tests/unit/evaluation_tools -v -s
+    - pytest ./umami/tests/unit/train_tools -v -s
+    - pytest ./umami/tests/unit/input_vars_tools -v -s
+    - pytest ./umami/tests/unit/tf_tools -v -s
   rules:
     - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
 
@@ -39,29 +39,29 @@ unittest:
 unittest_preprocessing:
   <<: *unittest_template
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/unit/preprocessing/ -v --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/preprocessing/ -v -s --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_preprocessing
 
 unittest_evaluation_tools:
   <<: *unittest_template
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/unit/evaluation_tools/ -v --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/evaluation_tools/ -v -s --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_evaluation_tools
 
 unittest_train_tools:
   <<: *unittest_template
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/unit/train_tools/ -v --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/train_tools/ -v -s --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_train_tools
 
 unittest_input_vars_tools:
   <<: *unittest_template
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/unit/input_vars_tools/ -v --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/input_vars_tools/ -v -s --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_input_vars_tools
 
 unittest_tf_tools:
   <<: *unittest_template
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/unit/tf_tools/ -v --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/tf_tools/ -v -s --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_tf_tools

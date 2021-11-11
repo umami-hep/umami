@@ -211,23 +211,6 @@ def GetScoresProbsDict(
     return df_discs_dict
 
 
-def GetRejectionPerFractionDict(
-    jets,
-    tagger_preds: list,
-    tagger_names: list,
-    tagger_list: list,
-    class_labels: list,
-    main_class: str,
-    target_beff: float,
-    x_axis_granularity: int = 100,
-    eff_min: float = 0.49,
-    eff_max: float = 1.0,
-):
-
-    # TODO add fraction values scan
-    logger.info("calculating rejections per fraction values")
-
-
 def getDiscriminant(
     x,
     class_labels: list,

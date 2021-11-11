@@ -953,8 +953,8 @@ class GetSamples_TestCase(unittest.TestCase):
                 "X_valid_trk",
                 "Y_valid",
                 "X_valid_add",
-                "Y_valid_add",
                 "X_valid_trk_add",
+                "Y_valid_add",
             ],
         )
 
@@ -997,8 +997,8 @@ class GetSamples_TestCase(unittest.TestCase):
                 "X_valid_trk",
                 "Y_valid",
                 "X_valid_add",
-                "Y_valid_add",
                 "X_valid_trk_add",
+                "Y_valid_add",
             ],
         )
 

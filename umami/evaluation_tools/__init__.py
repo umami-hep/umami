@@ -1,5 +1,4 @@
 # flake8: noqa
-from umami.evaluation_tools.Configuration import Configuration
 from umami.evaluation_tools.eval_tools import (
     GetRejectionPerEfficiencyDict,
     GetSaliencyMapDict,
