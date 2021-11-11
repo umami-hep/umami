@@ -1,52 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-from umami.tf_tools import Attention, DenseNet
-
-
-class test_DenseNet(tf.test.TestCase):
-    def setUp(self):
-        """
-        Setting up the DenseNet
-        """
-
-        self.nodes = [3, 3, 3]
-        self.output_nodes = 3
-        self.activation = "relu"
-        self.batch_norm = True
-        super(test_DenseNet, self).setUp()
-
-        self.my_dense = DenseNet(
-            nodes=self.nodes,
-            output_nodes=self.output_nodes,
-            activation=self.activation,
-            batch_norm=self.batch_norm,
-        )
-
-    def test_get_config(self):
-        # Get configs from Dense Net
-        configs = self.my_dense.get_config()
-
-        # Test configs
-        self.assertEqual(self.output_nodes, configs["output_nodes"])
-        self.assertEqual(self.activation, configs["activation"])
-        self.assertEqual(self.batch_norm, configs["batch_norm"])
-        self.assertEqual(self.nodes, configs["nodes"])
-
-    def test_call(self):
-        inputs = np.array([[0, 1, 1], [1, 1, 0]])
-        expected_output = np.array(
-            [
-                [0.46534657, 0.23961703, 0.2950364],
-                [0.35827565, 0.31311923, 0.32860515],
-            ]
-        )
-
-        # Get net output
-        out = self.my_dense(inputs=inputs)
-
-        # Test output
-        np.testing.assert_almost_equal(expected_output, out)
+from umami.configuration import logger
+from umami.tf_tools import Attention, DeepSet, DenseNet
 
 
 class test_Attention(tf.test.TestCase):
@@ -210,3 +166,184 @@ class test_Attention(tf.test.TestCase):
                 inputs=inputs,
                 mask=None,
             )
+
+
+class test_DeepSet(tf.test.TestCase):
+    def setUp(self):
+        """
+        Setting up the DeepSet network
+        """
+
+        self.nodes = [2, 2, 2]
+        self.activation = "relu"
+        self.mask_zero = True
+        self.batch_norm = True
+        super(test_DeepSet, self).setUp()
+
+        self.my_deepset = DeepSet(
+            nodes=self.nodes,
+            activation=self.activation,
+            batch_norm=self.batch_norm,
+            mask_zero=self.mask_zero,
+        )
+
+    def test_get_config(self):
+        # Get configs from Dense Net
+        configs = self.my_deepset.get_config()
+
+        # Test configs
+        self.assertEqual(self.nodes, configs["nodes"])
+        self.assertEqual(self.activation, configs["activation"])
+        self.assertEqual(self.batch_norm, configs["batch_norm"])
+        self.assertEqual(self.mask_zero, configs["mask_zero"])
+
+    def test_call(self):
+        # Define an input
+        inputs = np.array(
+            [
+                [[0, 1, 1], [1, 1, 0], [1, 1, 1]],
+                [[0, 1, 1], [1, 1, 0], [1, 1, 1]],
+            ]
+        )
+
+        # Get the control output
+        expected_output = np.array(
+            [
+                [[0, 0.13140553], [0, 0.05430728], [0, 0.15379035]],
+                [[0, 0.13140553], [0, 0.05430728], [0, 0.15379035]],
+            ]
+        )
+
+        # Get network output
+        out = self.my_deepset(inputs=inputs, mask=None)
+
+        # Test output
+        np.testing.assert_almost_equal(expected_output, out)
+
+    def test_call_no_batch_norm(self):
+        deepset = DeepSet(
+            nodes=self.nodes,
+            activation=self.activation,
+            batch_norm=False,
+            mask_zero=self.mask_zero,
+        )
+
+        # Define an input
+        inputs = np.array(
+            [
+                [[0, 1, 1], [1, 1, 0], [1, 1, 1]],
+                [[0, 1, 1], [1, 1, 0], [1, 1, 1]],
+            ]
+        )
+
+        # Get the control output
+        expected_output = np.array(
+            [
+                [[0, 0.13153693], [0, 0.05436159], [0, 0.15394413]],
+                [[0, 0.13153693], [0, 0.05436159], [0, 0.15394413]],
+            ]
+        )
+
+        # Get net output
+        out = deepset(inputs=inputs, mask=None)
+
+        # Test output
+        np.testing.assert_almost_equal(expected_output, out)
+
+    def test_call_with_mask(self):
+        deepset = DeepSet(
+            nodes=self.nodes,
+            activation=self.activation,
+            batch_norm=self.batch_norm,
+            mask_zero=self.mask_zero,
+        )
+
+        inputs = np.array(
+            [
+                [[0, 1, 2], [1, 2, 0], [1, 2, 1]],
+                [[0, 1, 2], [1, 2, 0], [1, 2, 1]],
+            ]
+        )
+        expected_output = np.array(
+            [
+                [[0, 0.2308886], [0, 0.08622973], [0, 0.18571281]],
+                [[0, 0.2308886], [0, 0.08622973], [0, 0.18571281]],
+            ]
+        )
+
+        # Get net output
+        out = deepset(inputs=inputs, mask=2)
+        logger.warning(out)
+
+        # Test output
+        np.testing.assert_almost_equal(expected_output, out)
+
+    def test_call_AssertionError(self):
+        inputs = np.array([[0, 1, 1], [1, 1, 0]])
+
+        # Get net output
+        with self.assertRaises(AssertionError):
+            _ = self.my_deepset(inputs=inputs)
+
+    def test_compute_mask(self):
+        inputs = np.array(
+            [
+                [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
+                [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
+            ]
+        )
+        expected_output = np.array(
+            [[True, False, False], [True, False, False]]
+        )
+
+        mask = self.my_deepset.compute_mask(
+            inputs=inputs,
+            mask=None,
+        )
+
+        self.assertAllEqual(mask, expected_output)
+
+
+class test_DenseNet(tf.test.TestCase):
+    def setUp(self):
+        """
+        Setting up the DenseNet
+        """
+
+        self.nodes = [3, 3, 3]
+        self.output_nodes = 3
+        self.activation = "relu"
+        self.batch_norm = True
+        super(test_DenseNet, self).setUp()
+
+        self.my_dense = DenseNet(
+            nodes=self.nodes,
+            output_nodes=self.output_nodes,
+            activation=self.activation,
+            batch_norm=self.batch_norm,
+        )
+
+    def test_get_config(self):
+        # Get configs from Dense Net
+        configs = self.my_dense.get_config()
+
+        # Test configs
+        self.assertEqual(self.output_nodes, configs["output_nodes"])
+        self.assertEqual(self.activation, configs["activation"])
+        self.assertEqual(self.batch_norm, configs["batch_norm"])
+        self.assertEqual(self.nodes, configs["nodes"])
+
+    def test_call(self):
+        inputs = np.array([[0, 1, 1], [1, 1, 0]])
+        expected_output = np.array(
+            [
+                [0.46534657, 0.23961703, 0.2950364],
+                [0.35827565, 0.31311923, 0.32860515],
+            ]
+        )
+
+        # Get net output
+        out = self.my_dense(inputs=inputs)
+
+        # Test output
+        np.testing.assert_almost_equal(expected_output, out)

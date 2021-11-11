@@ -167,6 +167,9 @@ def TrainLargeFile(args, train_config, preprocess_config):
         nJets, nFeatures = f["X_train"].shape
         nJets, nDim = f["Y_train"].shape
 
+        if NN_structure["nJets_train"] is not None:
+            nJets = NN_structure["nJets_train"]
+
     # Print how much jets are used
     logger.info(f"Number of Jets used for training: {nJets}")
 
@@ -226,11 +229,11 @@ def TrainLargeFile(args, train_config, preprocess_config):
 
     # Load validation data for callback
     val_data_dict = None
-    if train_config.Eval_parameters_validation["n_jets"] > 0:
+    if Val_params["n_jets"] > 0:
         val_data_dict = utt.load_validation_data_dl1(
-            train_config,
-            preprocess_config,
-            train_config.Eval_parameters_validation["n_jets"],
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+            nJets=Val_params["n_jets"],
         )
 
     # Set my_callback as callback. Writes history information
@@ -253,6 +256,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     history = model.fit(
         x=train_dataset,
         epochs=nEpochs,
+        validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=[dl1_mChkPt, reduce_lr, my_callback],
         steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,

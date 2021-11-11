@@ -228,6 +228,12 @@ class TestDL1Training(unittest.TestCase):
         self.config_file["Eval_parameters_validation"]["n_jets"] = 4000
         self.config_file["Eval_parameters_validation"]["eff_min"] = 0.60
         self.config_file["Eval_parameters_validation"]["variable_cuts"] = None
+        self.config_file["Eval_parameters_validation"]["shapley"][
+            "feature_sets"
+        ] = 6
+        self.config_file["Eval_parameters_validation"]["shapley"][
+            "averaged_sets"
+        ] = 2
 
         # save the copy of training config file for test
         with open(self.config, "w") as config:

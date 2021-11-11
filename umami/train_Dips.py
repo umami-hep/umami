@@ -157,34 +157,13 @@ def Dips(args, train_config, preprocess_config):
     NN_structure = train_config.NN_structure
     Val_params = train_config.Eval_parameters_validation
 
-    # Load the validation tracks
-    X_valid, Y_valid = utt.GetTestSampleTrks(
-        input_file=train_config.validation_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config,
-        class_labels=NN_structure["class_labels"],
-        nJets=int(Val_params["n_jets"]),
-    )
-
-    # Load the extra validation tracks if defined.
-    # If not, set it to none
-    if train_config.add_validation_file is not None:
-        X_valid_add, Y_valid_add = utt.GetTestSampleTrks(
-            input_file=train_config.add_validation_file,
-            var_dict=train_config.var_dict,
-            preprocess_config=preprocess_config,
-            class_labels=NN_structure["class_labels"],
-            nJets=int(Val_params["n_jets"]),
-        )
-
-    else:
-        X_valid_add = None
-        Y_valid_add = None
-
     # Get the shapes for training
     with h5py.File(train_config.train_file, "r") as f:
         nJets, nTrks, nFeatures = f["X_trk_train"].shape
         nJets, nDim = f["Y_train"].shape
+
+        if NN_structure["nJets_train"] is not None:
+            nJets = NN_structure["nJets_train"]
 
     # Print how much jets are used
     logger.info(f"Number of Jets used for training: {nJets}")
@@ -243,38 +222,27 @@ def Dips(args, train_config, preprocess_config):
         min_lr=0.000001,
     )
 
-    # Convert numpy arrays to tensors to avoid memory leak in callbacks
-    X_valid_tensor = tf.convert_to_tensor(X_valid, dtype=tf.float64)
-    Y_valid_tensor = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
-    if train_config.add_validation_file is not None:
-        X_valid_add_tensor = tf.convert_to_tensor(
-            X_valid_add, dtype=tf.float64
+    # Load validation data for callback
+    val_data_dict = None
+    if Val_params["n_jets"] > 0:
+        val_data_dict = utt.load_validation_data_dips(
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+            nJets=Val_params["n_jets"],
         )
-        Y_valid_add_tensor = tf.convert_to_tensor(Y_valid_add, dtype=tf.int64)
-    else:
-        X_valid_add_tensor = None
-        Y_valid_add_tensor = None
-
-    # Forming a dict for Callback
-    val_data_dict = {
-        "X_valid": X_valid_tensor,
-        "Y_valid": Y_valid_tensor,
-        "X_valid_add": X_valid_add_tensor,
-        "Y_valid_add": Y_valid_add_tensor,
-    }
 
     # Set my_callback as callback. Writes history information
     # to json file.
     my_callback = utt.MyCallback(
         model_name=train_config.model_name,
-        class_labels=train_config.NN_structure["class_labels"],
-        main_class=train_config.NN_structure["main_class"],
+        class_labels=NN_structure["class_labels"],
+        main_class=NN_structure["main_class"],
         val_data_dict=val_data_dict,
-        target_beff=train_config.Eval_parameters_validation["WP"],
-        frac_dict=train_config.Eval_parameters_validation["frac_values"],
+        target_beff=Val_params["WP"],
+        frac_dict=Val_params["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
-            WP=train_config.Eval_parameters_validation["WP"],
-            n_jets=train_config.Eval_parameters_validation["n_jets"],
+            WP=Val_params["WP"],
+            n_jets=Val_params["n_jets"],
             dir_name=train_config.model_name,
         ),
     )
@@ -283,7 +251,7 @@ def Dips(args, train_config, preprocess_config):
     history = dips.fit(
         train_dataset,
         epochs=nEpochs,
-        validation_data=(X_valid, Y_valid),
+        validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=[dips_mChkPt, reduce_lr, my_callback],
         # callbacks=[reduce_lr, my_callback],
         # callbacks=[my_callback],
