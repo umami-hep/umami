@@ -166,6 +166,8 @@ def TrainLargeFile(args, train_config, preprocess_config):
     with h5py.File(train_config.train_file, "r") as f:
         nJets, nFeatures = f["X_train"].shape
         nJets, nDim = f["Y_train"].shape
+        if excluded_var is not None:
+            nFeatures -= len(excluded_var)
 
         if NN_structure["nJets_train"] is not None:
             nJets = NN_structure["nJets_train"]
