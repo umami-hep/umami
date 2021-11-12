@@ -10,6 +10,7 @@ class Model_Generator(object):
         Y_Name: str,
         n_jets: int,
         batch_size: int,
+        chunk_size: int = 1e5,
         X_Name: str = None,
         X_trk_Name: str = None,
         excluded_var: list = None,
@@ -20,7 +21,7 @@ class Model_Generator(object):
         self.Y_Name = Y_Name
         self.batch_size = batch_size
         self.excluded_var = excluded_var
-        self.chunk_size = 1e5
+        self.chunk_size = chunk_size
         if n_jets is not None:
             self.n_jets = int(n_jets)
         else:

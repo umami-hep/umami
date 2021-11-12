@@ -206,7 +206,7 @@ def Umami(args, train_config, preprocess_config):
         val_data_dict = utt.load_validation_data_umami(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            nJets=Val_params["n_jets"],
+            nJets=int(Val_params["n_jets"]),
         )
 
     # Load the excluded variables from train_config
@@ -231,7 +231,7 @@ def Umami(args, train_config, preprocess_config):
         nJets, njet_features = f["X_train"].shape
 
         if NN_structure["nJets_train"] is not None:
-            nJets = NN_structure["nJets_train"]
+            nJets = int(NN_structure["nJets_train"])
 
     logger.info(f"nJets: {nJets}, nTrks: {nTrks}")
     logger.info(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
@@ -249,7 +249,7 @@ def Umami(args, train_config, preprocess_config):
                 X_Name="X_train",
                 X_trk_Name="X_trk_train",
                 Y_Name="Y_train",
-                n_jets=NN_structure["nJets_train"],
+                n_jets=nJets,
                 batch_size=NN_structure["batch_size"],
                 excluded_var=excluded_var,
             ),
@@ -308,7 +308,7 @@ def Umami(args, train_config, preprocess_config):
         frac_dict=Val_params["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
             WP=Val_params["WP"],
-            n_jets=Val_params["n_jets"],
+            n_jets=int(Val_params["n_jets"]),
             dir_name=train_config.model_name,
         ),
     )
