@@ -222,10 +222,7 @@ def create_metadata_folder(
     # Get scale dict
     preprocess_config = Preprocess_Configuration(preprocess_config_path)
     scale_dict_path = preprocess_config.dict_file
-    preprocess_parameters_path = os.path.join(
-        os.path.dirname(preprocess_config_path),
-        "Preprocessing-parameters.yaml",
-    )
+    preprocess_parameters_path = preprocess_config.ParameterConfigPath
 
     # Copy files to metadata folder if not existing
     for file_path in [
@@ -494,6 +491,8 @@ def LoadTrksFromFile(
     - Umami_labels: The internal class label for each jet. Corresponds with the
                     index of the class label in class_labels.
     """
+    # Make sure the nJets argument is an integer
+    nJets = int(nJets)
 
     # Get the paths of the files as a iterable list
     filepaths = glob(filepath)
@@ -1133,6 +1132,8 @@ def GetTestSampleTrks(
         preprocess_config.preparation["class_labels"] == class_labels
     ), "class_labels from preprocessing_config and from train_config are different! They need to be the same!"
 
+    # making sure the nJets aregument is an integer
+    nJets = int(nJets)
     # Get the paths of the input file as list
     # In case there are multiple files (Wildcard etc.)
     filepaths = glob(input_file)
