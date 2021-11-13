@@ -17,6 +17,26 @@ class Configuration(object):
         self.LoadConfigFiles()
         self.GetConfiguration()
 
+    @property
+    def ConfigPath(self):
+        return self.yaml_config
+
+    @property
+    def ParameterConfigPath(self):
+        with open(self.yaml_config, "r") as conf:
+            first_line = conf.readline()
+        first_line = first_line.split("!include ")
+        if first_line[0] != "parameters: ":
+            raise ValueError(
+                "Please specify in the first line of the preprocessing config the 'parameters' with the !include option."
+            )
+
+        preprocess_parameters_path = os.path.join(
+            os.path.dirname(self.ConfigPath),
+            first_line[1].strip(),
+        )
+        return preprocess_parameters_path
+
     def LoadConfigFiles(self):
         self.yaml_default_config = os.path.join(
             os.path.dirname(__file__), self.yaml_default_config
