@@ -863,7 +863,7 @@ class MyCallback(Callback):
             "epoch": epoch,
             "learning_rate": logs["lr"].item(),
             "loss": logs["loss"],
-            "acc": logs["accuracy"],
+            "accuracy": logs["accuracy"],
         }
         if self.val_data_dict:
             result_dict = evaluate_model(
@@ -923,8 +923,8 @@ class MyCallbackUmami(Callback):
             "loss": logs["loss"],
             "dips_loss": logs["dips_loss"],
             "umami_loss": logs["umami_loss"],
-            "dips_acc": logs["dips_accuracy"],
-            "umami_acc": logs["umami_accuracy"],
+            "dips_accuracy": logs["dips_accuracy"],
+            "umami_accuracy": logs["umami_accuracy"],
         }
         if self.val_data_dict:
             result_dict = evaluate_model_umami(

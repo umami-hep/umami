@@ -841,7 +841,21 @@ def RunPerformanceCheck(
 
     # Get dict with training results from json
     tagger_rej_dict = pd.read_json(dict_file_name)
-    train_history_dict = pd.read_json(train_history_dict)
+
+    # Check if history file exists
+    if os.path.isfile(train_history_dict):
+        train_history_dict = pd.read_json(train_history_dict)
+
+    elif "accuracy" in tagger_rej_dict:
+        logger.warning(
+            "Metrics history file not found! Try extract metrics from validation file."
+        )
+
+        train_history_dict = tagger_rej_dict
+
+    else:
+        logger.warning("Not training metrics found! Not plotting acc/loss!")
+        train_history_dict = None
 
     if tagger_comp_vars is not None:
         # Dict
@@ -917,20 +931,6 @@ def RunPerformanceCheck(
                     **Plotting_settings,
                 )
 
-        plot_name = f"{plot_dir}/loss-plot"
-        PlotLossesUmami(
-            tagger_rej_dict,
-            plot_name,
-            train_history_dict=train_history_dict,
-            **Plotting_settings,
-        )
-        plot_name = f"{plot_dir}/accuracy-plot"
-        PlotAccuraciesUmami(
-            tagger_rej_dict,
-            plot_name,
-            train_history_dict=train_history_dict,
-            **Plotting_settings,
-        )
         plot_name = f"{plot_dir}/disc-cut-plot"
         PlotDiscCutPerEpochUmami(
             df_results=tagger_rej_dict,
@@ -939,6 +939,23 @@ def RunPerformanceCheck(
             target_beff=WP,
             **Plotting_settings,
         )
+
+        # Check if metrics are present
+        if train_history_dict is not None:
+            plot_name = f"{plot_dir}/loss-plot"
+            PlotLossesUmami(
+                tagger_rej_dict,
+                plot_name,
+                train_history_dict=train_history_dict,
+                **Plotting_settings,
+            )
+            plot_name = f"{plot_dir}/accuracy-plot"
+            PlotAccuraciesUmami(
+                tagger_rej_dict,
+                plot_name,
+                train_history_dict=train_history_dict,
+                **Plotting_settings,
+            )
 
     else:
         # Plot comparsion for the comparison taggers
@@ -971,20 +988,6 @@ def RunPerformanceCheck(
                 **Plotting_settings,
             )
 
-        plot_name = f"{plot_dir}/loss-plot"
-        PlotLosses(
-            tagger_rej_dict,
-            plot_name,
-            train_history_dict=train_history_dict,
-            **Plotting_settings,
-        )
-        plot_name = f"{plot_dir}/accuracy-plot"
-        PlotAccuracies(
-            tagger_rej_dict,
-            plot_name,
-            train_history_dict=train_history_dict,
-            **Plotting_settings,
-        )
         plot_name = f"{plot_dir}/disc-cut-plot"
         PlotDiscCutPerEpoch(
             df_results=tagger_rej_dict,
@@ -994,3 +997,20 @@ def RunPerformanceCheck(
             frac=frac_dict["cjets"],
             **Plotting_settings,
         )
+
+        # Check if metrics are present
+        if train_history_dict is not None:
+            plot_name = f"{plot_dir}/loss-plot"
+            PlotLosses(
+                tagger_rej_dict,
+                plot_name,
+                train_history_dict=train_history_dict,
+                **Plotting_settings,
+            )
+            plot_name = f"{plot_dir}/accuracy-plot"
+            PlotAccuracies(
+                tagger_rej_dict,
+                plot_name,
+                train_history_dict=train_history_dict,
+                **Plotting_settings,
+            )
