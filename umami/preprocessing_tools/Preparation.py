@@ -89,8 +89,8 @@ class PrepareSamples:
         os.makedirs(output_path, exist_ok=True)
         # get size of batches
         if "batchsize" not in self.config.preparation:
-            logger.warning("no batch size given. Batch size set to 50 000")
-            self.batch_size = 50_000
+            logger.warning("no batch size given. Batch size set to 1,000,000")
+            self.batch_size = 1_000_000
         else:
             self.batch_size = self.config.preparation["batchsize"]
 
@@ -144,7 +144,10 @@ class PrepareSamples:
 
     def Run(self):
         """Run over Ntuples to extract jets (and potentially also tracks)"""
-        logger.info("Processing ntuples...")
+        logger.info(
+            f"Preparing ntuples for {self.sample_type} {self.sample_category}..."
+        )
+
         pbar = tqdm(total=self.n_jets_to_get)
         # get list of batches for each file
         files_in_batches = map(self.GetBatchesPerFile, self.ntuples)

@@ -1,4 +1,4 @@
-parameters: !include Preprocessing-parameters.yaml
+parameters: !include Preprocessing-parameters-UCL.yaml
 
 .outlier_cuts: &outlier_cuts
   - JetFitterSecondaryVertex_mass:
@@ -13,18 +13,18 @@ parameters: !include Preprocessing-parameters.yaml
       operator: <
       condition: 0.6
       NaNcheck: True
-  - softMuon_pt:
-      operator: <
-      condition: 0.5e9
-      NaNcheck: True
-  - softMuon_momentumBalanceSignificance:
-      operator: <
-      condition: 50
-      NaNcheck: True
-  - softMuon_scatteringNeighbourSignificance:
-      operator: <
-      condition: 600
-      NaNcheck: True
+  #- softMuon_pt:
+  #    operator: <
+  #    condition: 0.5e9
+  #    NaNcheck: True
+  #- softMuon_momentumBalanceSignificance:
+  #    operator: <
+  #    condition: 50
+  #    NaNcheck: True
+  #- softMuon_scatteringNeighbourSignificance:
+  #    operator: <
+  #    condition: 600
+  #    NaNcheck: True
 
 
 # Defining yaml anchors to be used later, avoiding duplication
@@ -63,16 +63,14 @@ parameters: !include Preprocessing-parameters.yaml
     - *outlier_cuts
 
 preparation:
-  batchsize: 50000
-
   ntuples:
     ttbar:
       path: *ntuple_path
-      file_pattern: user.alfroch.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
+      file_pattern: user.svanstro.410470.btagTraining.e6337_e5984_s3126_r12629_p4724.EMPFlowGNN.2021-11-04-T164413-R19421_output.h5/*.h5
 
     zprime:
       path: *ntuple_path
-      file_pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
+      file_pattern: user.svanstro.800030.btagTraining.e7954_s3672_r12629_r12636_p4724.EMPFlowGNN.2021-11-04-T164413-R19421_output.h5/*.h5
 
   class_labels: [ujets, cjets, bjets]
 

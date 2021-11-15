@@ -8,18 +8,19 @@ from umami.tools import yaml_loader
 
 
 class TrainSampleWriter:
-    def __init__(self, config, compression="gzip") -> None:
+    def __init__(self, config, compression=None) -> None:
         """
         Init the needed configs and variables
 
         Input:
         - config: Loaded config file for the preprocessing.
         - compression: Type of compression which should be used.
-                       Default: gzip
+                       Default: None
         """
         self.config = config
         self.bool_use_tracks = config.sampling["options"]["save_tracks"]
         self.compression = compression
+        self.precision = config.config["precision"]
 
         with open(config.var_file, "r") as conf:
             self.variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -60,25 +61,35 @@ class TrainSampleWriter:
                 # Load jets
                 jets = f["/jets"][index_tuple[0] : index_tuple[1]]
                 labels = f["/labels"][index_tuple[0] : index_tuple[1]]
+                flavour = f["/flavour"][index_tuple[0] : index_tuple[1]]
 
                 if self.bool_use_tracks is False:
-                    yield jets, labels
+                    yield jets, labels, flavour
 
                 elif self.bool_use_tracks is True:
                     # Load tracks
                     trks = np.asarray(
                         h5py.File(input_file, "r")["/tracks"][
                             index_tuple[0] : index_tuple[1]
-                        ]
+                        ],
+                        dtype=self.precision,
                     )
+                    if "track_labels" in f.keys():
+                        track_labels = np.asarray(
+                            h5py.File(input_file, "r")["/track_labels"][
+                                index_tuple[0] : index_tuple[1]
+                            ]
+                        )
+                    else:
+                        track_labels = None
 
-                    yield jets, trks, labels
+                    yield jets, trks, labels, track_labels, flavour
 
     def WriteTrainSample(
         self,
         input_file: str = None,
         output_file: str = None,
-        chunkSize: int = int(1e5),
+        chunkSize: int = int(1e6),
     ):
         """
         Input:
@@ -107,30 +118,43 @@ class TrainSampleWriter:
         ]
 
         # Get the max length of the input file
-        file_length = len(h5py.File(input_file, "r")["/jets"])
+        n_jets = len(h5py.File(input_file, "r")["/jets"])
 
         # Get the number of chunks that need to be processed
-        n_chunks = int(np.ceil(file_length / chunkSize))
+        n_chunks = int(np.ceil(n_jets / chunkSize))
 
         load_generator = self.load_generator(
             input_file=input_file,
-            nJets=file_length,
+            nJets=n_jets,
             chunkSize=chunkSize,
         )
 
-        logger.info(f"Saving sample to {out_file}")
+        logger.info(f"Saving final train files to {out_file}")
+        logger.info(f"Using precision: {self.precision}")
+        logger.info(f"Using compression: {self.compression}")
+
         with h5py.File(out_file, "w") as h5file:
 
             # Set up chunk counter and start looping
             chunk_counter = 0
+            jet_idx = 0
+
             while chunk_counter <= n_chunks:
+                logger.info(
+                    f"Writing chunk {chunk_counter+1} of {n_chunks+1}."
+                )
                 try:
                     # Load jets from file
                     if self.bool_use_tracks is False:
-                        jets, labels = next(load_generator)
+                        jets, labels, flavour = next(load_generator)
 
                     else:
-                        jets, tracks, labels = next(load_generator)
+                        (jets, tracks, labels, track_labels, flavour) = next(
+                            load_generator
+                        )
+
+                    # final absolute jet index of this chunk
+                    jet_idx_end = jet_idx + len(jets)
 
                     # Get weights from jets
                     weights = jets["weight"]
@@ -142,71 +166,82 @@ class TrainSampleWriter:
                     if chunk_counter == 0:
                         h5file.create_dataset(
                             "X_train",
-                            data=jets,
                             compression=self.compression,
-                            maxshape=(None, jets.shape[1]),
+                            dtype=self.precision,
+                            shape=(n_jets, jets.shape[1]),
                         )
 
                         h5file.create_dataset(
                             "Y_train",
-                            data=labels,
                             compression=self.compression,
-                            maxshape=(None, labels.shape[1]),
+                            dtype=np.uint8,
+                            shape=(n_jets, labels.shape[1]),
+                        )
+
+                        h5file.create_dataset(
+                            "flavour",
+                            compression=self.compression,
+                            dtype=np.uint8,
+                            shape=(n_jets,),
                         )
 
                         h5file.create_dataset(
                             "weight",
-                            data=weights,
                             compression=self.compression,
-                            maxshape=(None,),
+                            dtype=self.precision,
+                            shape=(n_jets,),
                         )
 
                         if self.bool_use_tracks is True:
                             h5file.create_dataset(
                                 "X_trk_train",
-                                data=tracks,
                                 compression=self.compression,
-                                maxshape=(
-                                    None,
+                                dtype=self.precision,
+                                shape=(
+                                    n_jets,
                                     tracks.shape[1],
                                     tracks.shape[2],
                                 ),
                             )
+                            if track_labels is not None:
+                                h5file.create_dataset(
+                                    "Y_trk_train",
+                                    compression=self.compression,
+                                    dtype=np.int8,
+                                    shape=(
+                                        n_jets,
+                                        track_labels.shape[1],
+                                        track_labels.shape[2],
+                                    ),
+                                )
 
-                    else:
-                        # appending to existing dataset
-                        h5file["X_train"].resize(
-                            (h5file["X_train"].shape[0] + jets.shape[0]),
-                            axis=0,
-                        )
-                        h5file["X_train"][-jets.shape[0] :] = jets
+                    # Jet inputs
+                    h5file["X_train"][jet_idx:jet_idx_end] = jets
 
-                        # Appending Truth labels
-                        h5file["Y_train"].resize(
-                            (h5file["Y_train"].shape[0] + labels.shape[0]),
-                            axis=0,
-                        )
-                        h5file["Y_train"][-labels.shape[0] :] = labels
+                    # One-hot flavour labels
+                    h5file["Y_train"][jet_idx:jet_idx_end] = labels
 
-                        # Appending weights
-                        h5file["weight"].resize(
-                            (h5file["weight"].shape[0] + weights.shape[0]),
-                            axis=0,
-                        )
-                        h5file["weight"][-weights.shape[0] :] = weights
+                    # flavour int
+                    h5file["flavour"][jet_idx:jet_idx_end] = flavour
 
-                        # Appending tracks if used
-                        if self.bool_use_tracks is True:
-                            h5file["X_trk_train"].resize(
-                                (
-                                    h5file["X_trk_train"].shape[0]
-                                    + tracks.shape[0]
-                                ),
-                                axis=0,
-                            )
-                            h5file["X_trk_train"][-tracks.shape[0] :] = tracks
+                    # Weights
+                    h5file["weight"][jet_idx:jet_idx_end] = weights
+
+                    # Appending tracks if used
+                    if self.bool_use_tracks is True:
+
+                        # Track inputs
+                        h5file["X_trk_train"][jet_idx:jet_idx_end] = tracks
+
+                        if track_labels is not None:
+                            # Track labels
+                            h5file["Y_trk_train"][
+                                jet_idx:jet_idx_end
+                            ] = track_labels
 
                 except StopIteration:
                     break
 
+                # increment counters
                 chunk_counter += 1
+                jet_idx = jet_idx_end

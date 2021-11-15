@@ -18,15 +18,12 @@ from umami.preprocessing_tools.Preparation import (
 from umami.preprocessing_tools.Resampling import (
     CalculateBinning,
     CorrectFractions,
-    Gen_default_dict,
-    GetScales,
     PDFSampling,
     ProbabilityRatioUnderSampling,
     Resampling,
     SamplingGenerator,
     UnderSampling,
     UnderSamplingProp,
-    dict_in,
 )
 from umami.preprocessing_tools.Scaling import Gen_default_dict, Scaling
 from umami.preprocessing_tools.utils import (

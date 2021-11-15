@@ -43,7 +43,7 @@ def GetParser():
     parser.add_argument(
         "--chunk_size",
         type=int,
-        default=int(1e5),
+        default=int(1e6),
         help="Set the chunk size of the generators.",
     )
     # possible job options for the different preprocessing steps
@@ -147,7 +147,9 @@ if __name__ == "__main__":
 
     # Check for final writing to disk in train format
     elif args.write:
-        Writer = upt.TrainSampleWriter(config)
+        Writer = upt.TrainSampleWriter(
+            config, compression=config.config["compression"]
+        )
         Writer.WriteTrainSample()
 
     # Give error when nothing is used
