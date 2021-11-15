@@ -16,6 +16,7 @@ class Configuration(object):
         self.LoadConfigFile()
         self.logger = self.SetLoggingLevel()
         self.SetTFDebugLevel()
+        self.SetMPLPlottingBackend()
         self.GetConfiguration()
 
     def LoadConfigFile(self):
@@ -37,6 +38,14 @@ class Configuration(object):
                 raise KeyError(
                     f"You need to specify {item} in your" " config file!"
                 )
+
+    def SetMPLPlottingBackend(self):
+        """Setting the plotting backend of matplotlib."""
+        self.logger.debug(
+            f"Setting Matplotlib's backend to {self.config['MPLPlottingBackend']}"
+        )
+        import matplotlib
+        matplotlib.use(self.config['MPLPlottingBackend'])
 
     def SetTFDebugLevel(self):
         """Setting the Debug level of tensorflow.
