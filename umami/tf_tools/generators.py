@@ -1,4 +1,4 @@
-# from umami.configuration import logger  # isort:skip
+from umami.configuration import logger  # isort:skip
 import h5py
 import numpy as np
 
@@ -57,6 +57,10 @@ class Model_Generator(object):
         - Loads the part of data to memory.
         """
 
+        logger.info(
+            f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
+        )
+
         # Check that the correct X_Name and X_trk_Name is given
         if load_jets is True and self.X_Name is None:
             raise ValueError(
@@ -67,11 +71,7 @@ class Model_Generator(object):
             raise ValueError(
                 "X_trk_Name needs to be given when track features are to be loaded!"
             )
-        """
-        logger.info(
-            f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
-        )
-        """
+
         # Open train file
         with h5py.File(self.train_file_path, "r") as f:
             # Load jets if wanted
@@ -154,7 +154,7 @@ class umami_generator(Model_Generator):
         small_step = 0
         for idx in range(self.length):
             if (idx + 1) * self.batch_size > self.step_size * n:
-                self.load_in_memory(part=n, load_jets=True, load_tracks=False)
+                self.load_in_memory(part=n, load_jets=True, load_tracks=True)
                 n += 1
                 small_step = 0
             batch_x = self.x_in_mem[
