@@ -2,7 +2,7 @@ pTvariable: pt_btagJes
 etavariable: absEta_btagJes
 DebugLevel: INFO
 TFDebugLevel: 1
-
+MPLPlottingBackend: Agg
 # definition of the flavour categories
 flavour_categories:
   bjets:

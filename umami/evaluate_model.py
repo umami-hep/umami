@@ -105,18 +105,17 @@ def EvaluateModel(
     # Check the config if the trained model is also to be evaluated
     try:
         Eval_model_bool = train_config.evaluate_trained_model
-
     except AttributeError:
         Eval_model_bool = True
 
+    # Set epoch to use for evaluation of trained model or dummy value if tagger scores from derivations should be used
+    epoch = args.epoch if Eval_model_bool else 0
+
     # Test if multiple taggers are given or not
-    if type(Eval_params["tagger"]) is str:
-        tagger_list = [Eval_params["tagger"]]
-
-    elif type(Eval_params["tagger"]) is list:
-        tagger_list = Eval_params["tagger"]
-
-    else:
+    tagger_list = [Eval_params["tagger"]] if type(Eval_params["tagger"]) is str else Eval_params["tagger"]
+    try:
+        assert(type(tagger_list) == list)
+    except AssertionError:
         raise ValueError(
             """
             Tagger given in Eval_parameters_validation
@@ -124,14 +123,15 @@ def EvaluateModel(
             """
         )
 
-    if Eval_model_bool is True:
-        if args.epoch is None:
+    # evaluate trained model file (for evaluate_trained_model: True in config)
+    if Eval_model_bool:
+        if epoch is None:
             raise ValueError(
                 "You need to give an epoch which is to be evaluated!"
             )
 
         # Get model file path
-        model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
+        model_file = f"{train_config.model_name}/model_epoch{epoch}.h5"
         logger.info(f"Evaluating {model_file}")
 
         # Define excluded variables and laod them
@@ -219,7 +219,7 @@ def EvaluateModel(
 
     # Save dataframe to h5
     df_discs.to_hdf(
-        f"{train_config.model_name}/results/results-{args.epoch}.h5",
+        f"{train_config.model_name}/results/results-{epoch}.h5",
         data_set_name,
     )
 
@@ -252,7 +252,7 @@ def EvaluateModel(
 
     df_eff_rej.to_hdf(
         f"{train_config.model_name}/results/results-rej_per_eff"
-        f"-{args.epoch}.h5",
+        f"-{epoch}.h5",
         data_set_name,
     )
 
@@ -260,7 +260,7 @@ def EvaluateModel(
     # This is needed to calculate the binomial errors
     f = h5py.File(
         f"{train_config.model_name}/results/"
-        + f"results-rej_per_eff-{args.epoch}.h5",
+        + f"results-rej_per_eff-{epoch}.h5",
         "a",
     )
     f.attrs["N_test"] = len(jets)
