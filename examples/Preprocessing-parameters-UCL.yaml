@@ -1,0 +1,17 @@
+# Path where the ntuples are saved
+ntuple_path: &ntuple_path /unix/atlastracking/samples/gnn_training/r22/v1/source_data/
+
+# Path where the hybrid samples will be saved
+sample_path: &sample_path /unix/atlastracking/samples/gnn_training/r22/v1/hybrids/
+
+# Path where the merged and ready-to-train samples are saved
+file_path: &file_path /unix/atlastracking/samples/gnn_training/r22/v1/preprocessed/
+
+# Name of the output file from the preprocessing
+.outfile_name: &outfile_name /unix/atlastracking/samples/gnn_training/r22/v1/preprocessed/PFlow-hybrid.h5
+
+# Dictfile for the scaling and shifting (json)
+.var_file: &var_file /unix/atlastracking/svanstroud/gnn-tagger/umami_r22/umami/umami/configs/GNN_Variables_R22.yaml
+
+# Dictfile for the scaling and shifting (json)
+.dict_file: &dict_file /unix/atlastracking/samples/gnn_training/r22/v1/scale_dicts/PFlow-scale_dict-22M.json

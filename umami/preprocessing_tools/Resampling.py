@@ -376,7 +376,7 @@ class Resampling(object):
     ):
         raise NotImplementedError
 
-    def WriteFile(self, indices: dict, chunk_size: int = 4000):
+    def WriteFile(self, indices: dict, chunk_size: int = 10_000):
         """
         Takes the indices as input calculated in the GetIndices function and
         reads them in and writes them to disk.
@@ -453,6 +453,7 @@ class Resampling(object):
 
             if create_file:
                 create_file = False
+                os.makedirs(os.path.dirname(self.outfile_name), exist_ok=True)
                 # write to file by creating dataset
                 with h5py.File(self.outfile_name, "w") as out_file:
                     out_file.create_dataset(
@@ -2559,11 +2560,11 @@ class UnderSamplingProp(object):
 class ProbabilityRatioUnderSampling(UnderSampling):
     """
     The ProbabilityRatioUnderSampling is used to prepare the training dataset.
-    It makes sure that all flavor fractions are equal and the flavours distributions
+    It makes sure that all flavour fractions are equal and the flavours distributions
     have the same shape as the target distribution.
     This is an alternative to the UnderSampling class, with the difference that
     it ensures that the predefined target distribution is always the final target distribution,
-    regardless of pre-sampling flavor fractions and low statistics. This method also ensures
+    regardless of pre-sampling flavour fractions and low statistics. This method also ensures
     that the final fractions are equal.
     Does not work well with taus as of now.
     """
@@ -2622,7 +2623,8 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         self.concat_samples = concat_samples
 
         stats = {
-            flavor: concat_samples[flavor]["stat"] for flavor in concat_samples
+            flavour: concat_samples[flavour]["stat"]
+            for flavour in concat_samples
         }
 
         sampling_probabilities = self.GetSamplingProbabilities(
@@ -2739,7 +2741,7 @@ class ProbabilityRatioUnderSampling(UnderSampling):
 
         Returns
         -------
-        A dictionary of the sampling probabilities for each flavor.
+        A dictionary of the sampling probabilities for each flavour.
 
         """
 
@@ -2766,10 +2768,10 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         },
     ):
         """
-        Computes probability ratios against the target distribution for each flavor.
-        The probability ratios are scaled by the max ratio to ensure all the flavor
+        Computes probability ratios against the target distribution for each flavour.
+        The probability ratios are scaled by the max ratio to ensure all the flavour
         distributions, i.e. cjets, ujets, taujets, are always below the target distribution
-        and with the same shape as the target distribution. Also ensures the resulting flavor
+        and with the same shape as the target distribution. Also ensures the resulting flavour
         fractions are the same.
 
         Parameters
@@ -2780,7 +2782,7 @@ class ProbabilityRatioUnderSampling(UnderSampling):
 
         Returns
         -------
-        A dictionary of the sampling probabilities for each flavor.
+        A dictionary of the sampling probabilities for each flavour.
 
         """
 
@@ -2798,50 +2800,3 @@ class ProbabilityRatioUnderSampling(UnderSampling):
             )
 
         return sampling_probabilities
-
-
-def GetScales(vec, w, varname, custom_defaults_vars):
-    """
-    Calculates the weighted average and std for vector vec and weight w.
-    """
-    if np.sum(w) == 0:
-        raise ValueError("Sum of weights has to be >0.")
-    # find NaN values
-    nans = np.isnan(vec)
-    # check if variable has predefined default value
-    if varname in custom_defaults_vars:
-        default = custom_defaults_vars[varname]
-    # NaN values are not considered in calculation for average
-    else:
-        w_without_nan = w[~nans]
-        vec_without_nan = vec[~nans]
-        default = np.ma.average(vec_without_nan, weights=w_without_nan)
-    # replace NaN values with default values
-    vec[nans] = default
-    average = np.ma.average(vec, weights=w)
-    std = np.sqrt(np.average((vec - average) ** 2, weights=w))
-    return varname, average, std, default
-
-
-def dict_in(varname, average, std, default):
-    """
-    Creates dictionary entry containing scale and shift parameters.
-    """
-    return {
-        "name": varname,
-        "shift": average,
-        "scale": std,
-        "default": default,
-    }
-
-
-def Gen_default_dict(scale_dict):
-    """
-    Generates default value dictionary from scale/shift dictionary.
-    """
-    default_dict = {}
-    for elem in scale_dict:
-        if "isDefaults" in elem["name"]:
-            continue
-        default_dict[elem["name"]] = elem["default"]
-    return default_dict

@@ -247,3 +247,9 @@ var_file: *var_file
 
 # Dictfile for the scaling and shifting (json)
 dict_file: *dict_file
+
+# compression for final output files (null/gzip)
+compression: null
+
+# save final output files with specified precision
+precision: float16

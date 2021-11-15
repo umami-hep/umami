@@ -1,0 +1,42 @@
+label: HadronConeExclTruthLabelID
+
+track_labels:
+  - truthOriginLabel
+  - truthVertexIndex
+
+train_variables:
+  JetKinematics:
+    - eta_btagJes
+    - pt_btagJes
+    - energy
+
+track_train_variables:
+  noNormVars: []
+  logNormVars: []
+  jointNormVars:
+    - btagIp_d0
+    - btagIp_z0SinTheta
+    - dphi
+    - theta
+    - qOverP
+    - IP3D_signed_d0_significance
+    - IP3D_signed_z0_significance
+    - phiUncertainty
+    - thetaUncertainty
+    - qOpUncertainty
+    - numberOfPixelHits
+    - numberOfSCTHits
+    - numberOfInnermostPixelLayerHits
+    - numberOfNextToInnermostPixelLayerHits
+    - numberOfInnermostPixelLayerSharedHits
+    - numberOfInnermostPixelLayerSplitHits
+    - numberOfPixelSharedHits
+    - numberOfPixelSplitHits
+    - numberOfSCTSharedHits
+    - numberOfPixelHoles
+    - numberOfSCTHoles
+    #- AMVFWeightPV
+    #- ambiRank
+    #- chiSquaredOverNumberDoF
+
+custom_defaults_vars:
