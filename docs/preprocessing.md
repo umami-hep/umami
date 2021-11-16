@@ -77,7 +77,7 @@ This line specifies where the ntuples (which are used) are stored and where to s
         operator: mod_6_<=
         condition: 3
     - pt_btagJes:
-        operator: <=
+        operator: "<="
         condition: 2.5e5
 
 .cuts_template_zprime_train: &cuts_template_zprime_train
@@ -86,7 +86,7 @@ This line specifies where the ntuples (which are used) are stored and where to s
         operator: mod_6_<=
         condition: 3
     - pt_btagJes:
-        operator: >=
+        operator: ">="
         condition: 2.5e5
 
 .cuts_template_validation: &cuts_template_validation
@@ -105,6 +105,23 @@ This line specifies where the ntuples (which are used) are stored and where to s
 The cuts defined in this section are templates for the cuts of the different flavour for ttbar/zprime. We also split the ttbar/zprime in train/validation/test to ensure no jet is used twice. `ttbar_train` and `zprime_train` are the jets which are used for training while validation/test are the templates for validation and test.
 The cuts which are to be applied can be defined in these templates. For example, we can define a cut on the `eventNumber` with a modulo operator. This modulo operator defines that all jets are used, where the `eventNumber` is equal to something. The something can be defined by the `condition`.
 Another cut which can be applied is the `pt_btagJes`, which is a cut on the jet pT. Works the same as the modulo operator.
+
+??? info "Nested cuts on same variable"
+It is possible to also apply nested cuts on the same variable e.g. like this
+```yaml
+.cuts_template_zprime_train: &cuts_template_zprime_train
+  cuts:
+    - eventNumber:
+        operator: mod_6_<=
+        condition: 3
+    - pt_btagJes:
+        operator: ">="
+        condition: 2.5e5
+    - pt_btagJes:
+        operator: "<="
+        condition: 3e6
+```
+
 
 #### File- and Flavour Preparation
 ```yaml
