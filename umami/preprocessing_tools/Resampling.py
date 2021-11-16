@@ -222,10 +222,10 @@ def CorrectFractions(
             target_N_jets_reference_fraction = (
                 target_N_jets_reference / df["target_N_jets"][0]
             )
-            df.loc[: i - 1, "target_N_jets"] = int(
+            df.loc[: i - 1, "target_N_jets"] = (
                 df.loc[: i - 1, "target_N_jets"]
                 * target_N_jets_reference_fraction
-            )
+            ).astype(int)
 
     # print some information
     df.sort_values("original_order", inplace=True)
