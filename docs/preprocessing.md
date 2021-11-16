@@ -107,20 +107,20 @@ The cuts which are to be applied can be defined in these templates. For example,
 Another cut which can be applied is the `pt_btagJes`, which is a cut on the jet pT. Works the same as the modulo operator.
 
 ??? info "Nested cuts on same variable"
-It is possible to also apply nested cuts on the same variable e.g. like this
-```yaml
-.cuts_template_zprime_train: &cuts_template_zprime_train
-  cuts:
-    - eventNumber:
-        operator: mod_6_<=
-        condition: 3
-    - pt_btagJes:
-        operator: ">="
-        condition: 2.5e5
-    - pt_btagJes:
-        operator: "<="
-        condition: 3e6
-```
+    It is possible to also apply nested cuts on the same variable e.g. like this
+    ```yaml
+    .cuts_template_zprime_train: &cuts_template_zprime_train
+      cuts:
+        - eventNumber:
+            operator: mod_6_<=
+            condition: 3
+        - pt_btagJes:
+            operator: ">="
+            condition: 2.5e5
+        - pt_btagJes:
+            operator: "<="
+            condition: 3e6
+    ```
 
 
 #### File- and Flavour Preparation
