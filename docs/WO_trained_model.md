@@ -87,6 +87,19 @@ Eval_parameters_validation:
             }
         },
     }
+
+# Plotting settings for training metrics plots
+Plotting_settings:
+    # Enable/Disable atlas tag
+    UseAtlasTag: True
+
+    # fc_value and WP_b are autmoatically added to the plot label
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # Set the datatype of the plots
+    plot_datatype: "pdf"
+
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
