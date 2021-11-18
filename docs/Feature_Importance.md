@@ -10,7 +10,7 @@ and it will output a beeswarm plot into `modelname/plots/`. Each dot in this plo
 
 You have some options to play with in the `Eval_parameters_validation` section in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml)
  
-```bash
+```yaml
 Eval_parameters_validation:
 
     (...other stuff...)
