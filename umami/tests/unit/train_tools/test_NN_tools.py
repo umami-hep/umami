@@ -128,17 +128,19 @@ class Load_Files_TestCase(unittest.TestCase):
                 ),
                 class_labels=self.class_labels,
                 nJets=self.nJets,
-                cut_vars_dict={
-                    f"{global_config.pTvariable}": {
-                        "operator": operator,
-                        "condition": 250000,
+                cut_vars_dict=[
+                    {
+                        f"{global_config.pTvariable}": {
+                            "operator": operator,
+                            "condition": 250000,
+                        }
                     }
-                },
+                ],
             )
 
             self.assertEqual(len(jets), len(labels))
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             jets, labels = LoadJetsFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
@@ -146,13 +148,27 @@ class Load_Files_TestCase(unittest.TestCase):
                 ),
                 class_labels=self.class_labels,
                 nJets=self.nJets,
-                cut_vars_dict={
-                    f"{global_config.pTvariable}": {
-                        "operator": "=",
-                        "condition": 250000,
+                cut_vars_dict=[
+                    {
+                        f"{global_config.pTvariable}": {
+                            "operator": "=",
+                            "condition": 250000,
+                        }
                     }
-                },
+                ],
             )
+
+        jets, labels = LoadJetsFromFile(
+            filepath=os.path.join(
+                self.tmp_test_dir,
+                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+            ),
+            class_labels=self.class_labels,
+            nJets=self.nJets,
+            chunk_size=1000,
+        )
+
+        self.assertEqual(len(jets), len(labels))
 
     def test_LoadTrksFromFile(self):
         trks, labels = LoadTrksFromFile(
@@ -184,17 +200,19 @@ class Load_Files_TestCase(unittest.TestCase):
                 ),
                 class_labels=self.class_labels,
                 nJets=self.nJets,
-                cut_vars_dict={
-                    f"{global_config.pTvariable}": {
-                        "operator": operator,
-                        "condition": 250000,
+                cut_vars_dict=[
+                    {
+                        f"{global_config.pTvariable}": {
+                            "operator": operator,
+                            "condition": 250000,
+                        }
                     }
-                },
+                ],
             )
 
             self.assertEqual(len(trks), len(labels))
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             trks, labels = LoadTrksFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
@@ -202,13 +220,27 @@ class Load_Files_TestCase(unittest.TestCase):
                 ),
                 class_labels=self.class_labels,
                 nJets=self.nJets,
-                cut_vars_dict={
-                    f"{global_config.pTvariable}": {
-                        "operator": "=",
-                        "condition": 250000,
+                cut_vars_dict=[
+                    {
+                        f"{global_config.pTvariable}": {
+                            "operator": "=",
+                            "condition": 250000,
+                        }
                     }
-                },
+                ],
             )
+
+        trks, labels = LoadTrksFromFile(
+            filepath=os.path.join(
+                self.tmp_test_dir,
+                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+            ),
+            class_labels=self.class_labels,
+            nJets=self.nJets,
+            chunk_size=1000,
+        )
+
+        self.assertEqual(len(trks), len(labels))
 
 
 class setup_output_directory_TestCase(unittest.TestCase):
@@ -930,18 +962,22 @@ class GetSamples_TestCase(unittest.TestCase):
     def test_load_validation_data_umami(self):
         self.Eval_parameters_validation = {
             "variable_cuts": {
-                "validation_file": {
-                    "pt_btagJes": {
-                        "operator": "<=",
-                        "condition": 50_000,
+                "validation_file": [
+                    {
+                        f"{global_config.pTvariable}": {
+                            "operator": "<=",
+                            "condition": 50_000,
+                        }
                     }
-                },
-                "add_validation_file": {
-                    "pt_btagJes": {
-                        "operator": ">",
-                        "condition": 50_000,
+                ],
+                "add_validation_file": [
+                    {
+                        f"{global_config.pTvariable}": {
+                            "operator": ">",
+                            "condition": 50_000,
+                        }
                     }
-                },
+                ],
             }
         }
         val_data_dict = load_validation_data_umami(self, self, self.nJets)
@@ -961,18 +997,22 @@ class GetSamples_TestCase(unittest.TestCase):
     def test_load_validation_data_dips(self):
         self.Eval_parameters_validation = {
             "variable_cuts": {
-                "validation_file": {
-                    "pt_btagJes": {
-                        "operator": "<=",
-                        "condition": 50_000,
+                "validation_file": [
+                    {
+                        f"{global_config.pTvariable}": {
+                            "operator": "<=",
+                            "condition": 50_000,
+                        }
                     }
-                },
-                "add_validation_file": {
-                    "pt_btagJes": {
-                        "operator": ">",
-                        "condition": 50_000,
+                ],
+                "add_validation_file": [
+                    {
+                        f"{global_config.pTvariable}": {
+                            "operator": ">",
+                            "condition": 50_000,
+                        }
                     }
-                },
+                ],
             }
         }
         val_data_dict = load_validation_data_dips(self, self, self.nJets)

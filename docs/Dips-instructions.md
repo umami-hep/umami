@@ -122,32 +122,26 @@ Eval_parameters_validation:
     }
 
     # Cuts which are applied to the different datasets used for evaluation
-    variable_cuts: {
-        "ttbar_r21": {
-            "pt_btagJes": {
-                "operator": "<=",
-                "condition": 250000,
-            }
-        },
-        "ttbar_r22": {
-            "pt_btagJes": {
-                "operator": "<=",
-                "condition": 250000,
-            }
-        },
-        "zpext_r21": {
-            "pt_btagJes": {
-                "operator": ">",
-                "condition": 250000,
-            }
-        },
-        "zpext_r22": {
-            "pt_btagJes": {
-                "operator": ">",
-                "condition": 250000,
-            }
-        },
-    }
+    variable_cuts:
+        ttbar_r21:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
+
+        ttbar_r22:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
+
+        zpext_r21:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
+
+        zpext_r22:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
 
     # Working point used in the evaluation
     WP: 0.77
