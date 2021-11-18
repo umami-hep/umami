@@ -21,12 +21,13 @@ class TrainSampleWriter:
         self.bool_use_tracks = config.sampling["options"]["save_tracks"]
         self.compression = compression
         self.precision = config.config["precision"]
+        self.rnd_seed = 42
 
         with open(config.var_file, "r") as conf:
             self.variable_config = yaml.load(conf, Loader=yaml_loader)
 
     def load_generator(
-        self, input_file: str, nJets: int, chunkSize: int = 10000
+        self, input_file: str, index: int, nJets: int, chunkSize: int = 10000
     ):
         """
         Set up a generator who loads the scaled file and save it in the format for training.
@@ -58,10 +59,23 @@ class TrainSampleWriter:
 
             for index_tuple in tupled_indices:
 
+                # Retrieve the slice of indices randomly selected from whole file
+                indices_selected = index[index_tuple[0] : index_tuple[1]]
+                # Need to sort the indices
+                indices_selected = np.sort(indices_selected).astype(int)
+
                 # Load jets
-                jets = f["/jets"][index_tuple[0] : index_tuple[1]]
-                labels = f["/labels"][index_tuple[0] : index_tuple[1]]
-                flavour = f["/flavour"][index_tuple[0] : index_tuple[1]]
+                jets = f["/jets"][indices_selected]
+                labels = f["/labels"][indices_selected]
+                flavour = f["/flavour"][indices_selected]
+
+                # shuffling the chunk now (prior step still has ordered chunks)
+                rng_index = np.arange(len(jets))
+                rng = np.random.default_rng(seed=self.rnd_seed)
+                rng.shuffle(rng_index)
+                jets = jets[rng_index]
+                labels = labels[rng_index]
+                flavour = flavour[rng_index]
 
                 if self.bool_use_tracks is False:
                     yield jets, labels, flavour
@@ -70,20 +84,37 @@ class TrainSampleWriter:
                     # Load tracks
                     trks = np.asarray(
                         h5py.File(input_file, "r")["/tracks"][
-                            index_tuple[0] : index_tuple[1]
+                            indices_selected
                         ],
                         dtype=self.precision,
                     )
+                    trks = trks[rng_index]
                     if "track_labels" in f.keys():
                         track_labels = np.asarray(
                             h5py.File(input_file, "r")["/track_labels"][
-                                index_tuple[0] : index_tuple[1]
+                                indices_selected
                             ]
                         )
+                        track_labels = track_labels[rng_index]
                     else:
                         track_labels = None
 
                     yield jets, trks, labels, track_labels, flavour
+
+    def better_shuffling(self, thearray, nJets, slice_size=int(1e4)):
+        """
+        Shuffles the index list with fixed slices.
+        """
+        missing = slice_size - nJets % slice_size
+        adding = np.asarray([np.nan] * missing)
+        thearray = np.concatenate([thearray, adding])
+        thearray = thearray.reshape((-1, slice_size))
+        rng = np.random.default_rng(seed=self.rnd_seed)
+        rng.shuffle(thearray)
+        thearray = thearray.reshape((-1))
+
+        # Remove the nans that were introduced and return
+        return thearray[~np.isnan(thearray)]
 
     def WriteTrainSample(
         self,
@@ -123,8 +154,13 @@ class TrainSampleWriter:
         # Get the number of chunks that need to be processed
         n_chunks = int(np.ceil(n_jets / chunkSize))
 
+        # Create an absolute index list for the file and shuffle it
+        absolute_index = np.arange(n_jets)
+        absolute_index = self.better_shuffling(absolute_index, n_jets)
+
         load_generator = self.load_generator(
             input_file=input_file,
+            index=absolute_index,
             nJets=n_jets,
             chunkSize=chunkSize,
         )

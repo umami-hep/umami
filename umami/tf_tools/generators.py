@@ -57,7 +57,7 @@ class Model_Generator(object):
         - Loads the part of data to memory.
         """
 
-        logger.info(
+        logger.debug(
             f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
         )
 
