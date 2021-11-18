@@ -12,7 +12,7 @@ In under-sampling, the simplest technique involves removing random records from 
 Umami/DIPS and DL1r are trained on so-called hybrid samples which are created using both ttbar and Z' input jets.
 The hybrid samples for PFlow jets are created by combining events from ttbar and Z' samples based on a pt threshold, which is defined by the `pt_btagJes` variable for all jet-flavours.
 Below a certain pt threshold (which needs to be defined for the preprocessing), ttbar events are used in the hybrid sample. Above this pt threshold, the jets are taken from Z' events.
-The advantage of these hybrid samples is the avaliability of sufficient jets with high pt, as the ttbar samples typically have lower-pt jets than those jets from the Z' sample.
+The advantage of these hybrid samples is the availability of sufficient jets with high pt, as the ttbar samples typically have lower-pt jets than those jets from the Z' sample.
 
 ![Pt distribution of hybrid samples being composed from ttbar and Zjets samples](assets/pt_btagJes-cut_spectrum.png)
 
@@ -70,6 +70,33 @@ This line specifies where the ntuples (which are used) are stored and where to s
 
 #### Cut Templates
 ```yaml
+# Defining anchor with outlier cuts that are used over and over again
+.outlier_cuts: &outlier_cuts
+  - JetFitterSecondaryVertex_mass:
+      operator: <
+      condition: 25000
+      NaNcheck: True
+  - JetFitterSecondaryVertex_energy:
+      operator: <
+      condition: 1e8
+      NaNcheck: True
+  - JetFitter_deltaR:
+      operator: <
+      condition: 0.6
+      NaNcheck: True
+  - softMuon_pt:
+      operator: <
+      condition: 0.5e9
+      NaNcheck: True
+  - softMuon_momentumBalanceSignificance:
+      operator: <
+      condition: 50
+      NaNcheck: True
+  - softMuon_scatteringNeighbourSignificance:
+      operator: <
+      condition: 600
+      NaNcheck: True
+
 # Defining yaml anchors to be used later, avoiding duplication
 .cuts_template_ttbar_train: &cuts_template_ttbar_train
   cuts:
@@ -79,6 +106,7 @@ This line specifies where the ntuples (which are used) are stored and where to s
     - pt_btagJes:
         operator: "<="
         condition: 2.5e5
+    - *outlier_cuts
 
 .cuts_template_zprime_train: &cuts_template_zprime_train
   cuts:
@@ -88,18 +116,21 @@ This line specifies where the ntuples (which are used) are stored and where to s
     - pt_btagJes:
         operator: ">="
         condition: 2.5e5
+    - *outlier_cuts
 
 .cuts_template_validation: &cuts_template_validation
   cuts:
     - eventNumber:
         operator: mod_6_==
         condition: 4
+    - *outlier_cuts
 
 .cuts_template_test: &cuts_template_test
   cuts:
     - eventNumber:
         operator: mod_6_==
         condition: 5
+    - *outlier_cuts
 ```
 
 The cuts defined in this section are templates for the cuts of the different flavour for ttbar/zprime. We also split the ttbar/zprime in train/validation/test to ensure no jet is used twice. `ttbar_train` and `zprime_train` are the jets which are used for training while validation/test are the templates for validation and test.
@@ -252,7 +283,7 @@ preparation:
 ```
 In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.   
 
-Another important part are the `class_labels` which are defined here. You can define here which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/alfroch-scaling-followup/umami/configs/global_config.yaml). Add the names of those to the list here to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
+Another important part are the `class_labels` which are defined here. You can define here which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list here to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
 
 The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. Also you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
 
@@ -332,34 +363,6 @@ var_file: *var_file
 # Dictfile for the scaling and shifting (json)
 dict_file: *dict_file
 
-# TODO: move these cuts to the preparation step
-# cut definitions to be applied to remove outliers
-# possible operators: <, ==, >, >=, <=
-cuts:
-  JetFitterSecondaryVertex_mass:
-    operator: <
-    condition: 25000
-    NaNcheck: True
-  JetFitterSecondaryVertex_energy:
-    operator: <
-    condition: 1e8
-    NaNcheck: True
-  JetFitter_deltaR:
-    operator: <
-    condition: 0.6
-    NaNcheck: True
-  softMuon_pt:
-    operator: <
-    condition: 0.5e9
-    NaNcheck: True
-  softMuon_momentumBalanceSignificance:
-    operator: <
-    condition: 50
-    NaNcheck: True
-  softMuon_scatteringNeighbourSignificance:
-    operator: <
-    condition: 600
-    NaNcheck: True
 ```
 In the last part, the path to the variable dict `var_file` and the scale dict `dict_file` is defined. Those values are set in the `parameters` file. For example, the training variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
 
