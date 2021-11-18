@@ -85,6 +85,14 @@ def GetParser():
         training labels to disk""",
     )
 
+    parser.add_argument(
+        "--flavour",
+        nargs="+",
+        default=None,
+        help="Sets the flavour to process for PDF sampling. List with target, combining, plotting or index of flavour.",
+    )
+    # To pass a list, let a space between the list entries:
+    # e.g., --flavour target 0 1 2 plotting combining
     args = parser.parse_args()
     return args
 
@@ -122,7 +130,7 @@ if __name__ == "__main__":
             sampler = upt.UnderSampling(config)
 
         elif config.sampling["method"] == "pdf":
-            sampler = upt.PDFSampling(config)
+            sampler = upt.PDFSampling(config, flavour=args.flavour)
 
         elif config.sampling["method"] == "probability_ratio":
             sampler = upt.ProbabilityRatioUnderSampling(config)

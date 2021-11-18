@@ -1,7 +1,9 @@
 import itertools
+import json
 import os
 import pickle
 from collections import Counter
+from json import JSONEncoder
 
 import h5py
 import numpy as np
@@ -149,6 +151,22 @@ def read_dataframe_repetition(file_df, loading_indices, duplicate, use_tracks):
             )
         else:
             return file_df["jets"][loading_indices]
+
+
+class JsonNumpyEncoder(JSONEncoder):
+    """
+    This functions converts the numpy type to a json compatible format.
+    """
+
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(JsonNumpyEncoder, self).default(obj)
 
 
 def CorrectFractions(
@@ -507,7 +525,11 @@ class PDFSampling(Resampling):
     and a target as importance weights.
     """
 
-    def __init__(self, config) -> None:
+    def __init__(self, config, flavour=None) -> None:
+        """
+        Initialise class. Set flavour to 'target' or an int corresponding to the index
+        of the flavour to process (in the list of samples from config samples).
+        """
         super(PDFSampling, self).__init__(config)
         self.inter_func_dict = {}
         self._ratio_dict = {}
@@ -538,7 +560,34 @@ class PDFSampling(Resampling):
             "extreme_ranges": extreme_ranges,
         }
         self.number_to_sample = {}
-        self.iterations = self.options.get("iterations")
+
+        flavour_index = len(
+            self.options["samples"][list(self.options["samples"].keys())[0]]
+        )
+        self.do_target = False
+        self.do_plotting = False
+        self.do_combination = False
+        if flavour is not None:
+            new_flavour_list = []
+            for item in flavour:
+                if "target" == item:
+                    self.do_target = True
+                elif "plotting" == item:
+                    self.do_plotting = True
+                elif "combining" == item:
+                    self.do_combination = True
+                elif int(item) < flavour_index:
+                    new_flavour_list.append(int(item))
+                else:
+                    raise ValueError(
+                        f"Flavour key {item} unrecognised or out of range."
+                    )
+            self.do_flavours = new_flavour_list
+        else:
+            self.do_target = True
+            self.do_plotting = True
+            self.do_combination = True
+            self.do_flavours = np.arange(flavour_index)
 
     @property
     def Ratio(self):
@@ -571,43 +620,33 @@ class PDFSampling(Resampling):
 
             start_ind = 0
             end_ind = int(start_ind + chunk_size)
-            # create indices and then shuffle those to be used in the loop below
             tupled_indices = []
-            while end_ind < Njets_initial or start_ind == 0:
+            while end_ind <= Njets_initial or start_ind == 0:
                 if end_ind + chunk_size > Njets_initial:
                     # Missing less then a chunk, joining to last chunk
                     end_ind = Njets_initial
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
                 end_ind = int(start_ind + chunk_size)
-
             for index_tuple in tupled_indices:
-                loading_indices = np.arange(index_tuple[0], index_tuple[1])
-                jets_x = np.asarray(f["jets"][self.var_x])[loading_indices]
-                jets_y = np.asarray(f["jets"][self.var_y])[loading_indices]
-                sample_vector = np.asarray(
-                    [
-                        jets_x,
-                        jets_y,
-                        range(len(jets_x)),
-                        np.ones(len(jets_x)) * sample_id,
-                        np.ones(len(jets_x))
-                        * self.sample_categories[sample_category],
-                    ]
-                ).T
+                to_load = f["jets"][index_tuple[0] : index_tuple[1]]
+                jets_x = np.asarray(to_load[self.var_x])
+                jets_y = np.asarray(to_load[self.var_y])
+                sample_vector = np.column_stack((jets_x, jets_y))
                 samples = {
                     "file": in_file,
                     "sample_vector": sample_vector,
                     "category": preparation_sample.get("category"),
                 }
-                yield sample, samples, index_tuple[1] != Njets_initial
+                yield sample, samples, index_tuple[
+                    1
+                ] != Njets_initial, Njets_initial, index_tuple[0]
 
     def Load_Index_Generator(self, in_file, chunk_size):
         with h5py.File(in_file, "r") as f:
             Nindices = len(f["jets"])
             start_ind = 0
             end_ind = int(start_ind + chunk_size)
-            # create indices and then shuffle those to be used in the loop below
             tupled_indices = []
             while end_ind <= Nindices or start_ind == 0:
                 if end_ind + chunk_size > Nindices:
@@ -619,7 +658,7 @@ class PDFSampling(Resampling):
 
             for index_tuple in tupled_indices:
                 loading_indices = np.arange(index_tuple[0], index_tuple[1])
-                indices = np.asarray(f["jets"])[loading_indices]
+                indices = np.asarray(f["jets"][loading_indices])
                 yield indices, index_tuple[1] != Nindices
 
     def Load_Samples(self, sample_category, sample_id):
@@ -642,24 +681,13 @@ class PDFSampling(Resampling):
                     )
                 else:
                     Njets_initial = Njets_asked
-
-            jets_x = np.asarray(f["jets"][self.var_x])[:Njets_initial]
-            jets_y = np.asarray(f["jets"][self.var_y])[:Njets_initial]
+            to_load = f["jets"][:Njets_initial]
+            jets_x = np.asarray(to_load[self.var_x])
+            jets_y = np.asarray(to_load[self.var_y])
             logger.info(
                 f"Loaded {len(jets_x)} {preparation_sample.get('category')} jets from {sample}."
             )
-        # construct a flat array with 5 columns:
-        # x, y, index, sample_id, sample_class
-        sample_vector = np.asarray(
-            [
-                jets_x,
-                jets_y,
-                range(len(jets_x)),
-                np.ones(len(jets_x)) * sample_id,
-                np.ones(len(jets_x)) * self.sample_categories[sample_category],
-            ]
-        ).T
-
+        sample_vector = np.column_stack((jets_x, jets_y))
         samples = {
             "file": in_file,
             "sample_vector": sample_vector,
@@ -672,9 +700,15 @@ class PDFSampling(Resampling):
         sample_category,
         category_ind,
         sample_id,
-        iterator=False,
-        chunk_size=1e6,
+        iterator=True,
+        chunk_size=1e4,
+        bins=None,
+        range=None,
     ):
+        if bins is None:
+            bins = self.limit["bins"][category_ind]
+        if range is None:
+            range = self.limit["ranges"][category_ind]
         available_numbers = 0
         if iterator:
             generator = self.Load_Samples_Generator(
@@ -687,36 +721,40 @@ class PDFSampling(Resampling):
             chunk_counter = 0
             while load_chunk:
                 try:
-                    _, target_dist, load_more = next(generator)
+                    _, target_dist, load_more, total, _ = next(generator)
                 except StopIteration:
                     break
+                if chunk_counter == 0:
+                    pbar = tqdm(total=total)
                 load_chunk = load_more
                 if chunk_counter == 0:
                     h_target, x_bin_edges, y_bin_edges = np.histogram2d(
                         target_dist["sample_vector"][:, 0],
                         target_dist["sample_vector"][:, 1],
-                        bins=self.limit["bins"][category_ind],
-                        range=self.limit["ranges"][category_ind],
+                        bins=bins,
+                        range=range,
                     )
                 else:
                     new_hist, _, _ = np.histogram2d(
                         target_dist["sample_vector"][:, 0],
                         target_dist["sample_vector"][:, 1],
-                        bins=self.limit["bins"][category_ind],
-                        range=self.limit["ranges"][category_ind],
+                        bins=bins,
+                        range=range,
                     )
                     h_target += new_hist
-
-                available_numbers += len(target_dist["sample_vector"])
+                njets_added = len(target_dist["sample_vector"])
+                pbar.update(njets_added)
+                available_numbers += njets_added
                 chunk_counter += 1
+            pbar.close()
         else:
             _, target_dist = self.Load_Samples(sample_category, sample_id)
             available_numbers = len(target_dist["sample_vector"])
             h_target, x_bin_edges, y_bin_edges = np.histogram2d(
                 target_dist["sample_vector"][:, 0],
                 target_dist["sample_vector"][:, 1],
-                bins=self.limit["bins"][category_ind],
-                range=self.limit["ranges"][category_ind],
+                bins=bins,
+                range=range,
             )
 
         _, preparation_sample = self.sample_file_map[sample_category][
@@ -729,11 +767,9 @@ class PDFSampling(Resampling):
             "available_numbers": available_numbers,
             "category": preparation_sample.get("category"),
         }
-        if iterator:
-            return return_dict
-        else:
+        if not iterator:
             return_dict["target_dist"] = target_dist
-            return return_dict
+        return return_dict
 
     def Initialise_Flavour_Samples(self):
         """
@@ -958,28 +994,35 @@ class PDFSampling(Resampling):
                 y_bin_edges[-1],
             ],
         )
+        save_name = os.path.join(
+            self.outfile_path,
+            "PDF_sampling",
+            f"inter_func_{store_key}",
+        )
+        self.save(self.inter_func_dict[store_key], save_name)
 
-    def save(self, file_name: str, overwrite: bool = False):
+    def save(self, inter_func, file_name: str, overwrite: bool = True):
         """
         Save the interpolation function to file
 
         Input:
+        inter_func: Interpolation function to save
         file_name: Path where the pickle file is saved.
 
         Output:
         Pickle file of the PDF interpolation function.
         """
 
-        if self.inter_func is not None:
+        if inter_func is not None:
             if os.path.isfile(file_name) is True:
                 if overwrite is True:
                     logger.warning(
-                        "File already exists at given path! Overwrite existing file!"
+                        "File already exists at given path! Overwrite existing file to save interpolation function!"
                     )
 
                     # Dump function into pickle file
                     with open(file_name, "wb") as file:
-                        pickle.dump(self.inter_func, file)
+                        pickle.dump(inter_func, file)
 
                 else:
                     logger.warning(
@@ -989,7 +1032,7 @@ class PDFSampling(Resampling):
             else:
                 # Dump function into pickle file
                 with open(file_name, "wb") as file:
-                    pickle.dump(self.inter_func, file)
+                    pickle.dump(inter_func, file)
 
         else:
             raise ValueError("Interpolation function not calculated/given!")
@@ -1002,12 +1045,12 @@ class PDFSampling(Resampling):
         file_name: Path where the pickle file is saved.
 
         Output:
-        PDF interpolation function of the pickle file is added as property
-        to the class.
+        Returns the PDF interpolation function of the pickle file.
         """
 
         with open(file_name, "rb") as file:
-            self.inter_func = pickle.load(file)
+            inter_func = pickle.load(file)
+        return inter_func
 
     def inMemoryResample(
         self, x_values, y_values, size, store_key, replacement=True
@@ -1086,7 +1129,15 @@ class PDFSampling(Resampling):
         return sampled_indices
 
     def Return_unnormalised_PDF_weights(self, x_values, y_values, store_key):
-        r_resamp = self.inter_func_dict[store_key].ev(x_values, y_values)
+        # Get the inter_func
+        load_name = os.path.join(
+            self.outfile_path,
+            "PDF_sampling",
+            f"inter_func_{store_key}",
+        )
+        inter_func = self.load(load_name)
+
+        r_resamp = inter_func.ev(x_values, y_values)
 
         # Neutralise all datapoints where the ratio is less than 0
         indices = np.where(r_resamp < 0)[0]
@@ -1113,12 +1164,25 @@ class PDFSampling(Resampling):
         weights and then sampling with replacement based on the normalised
         weights.
         """
+
         _, preparation_sample = self.sample_file_map[sample_category][
             sample_id
         ]
         store_key = sample_category + "_" + preparation_sample.get("category")
 
+        # Load number to sample
+        load_name = os.path.join(
+            self.outfile_path,
+            "PDF_sampling",
+            "target_data.json",
+        )
+        with open(load_name, "r") as load_file:
+            target_data = json.load(load_file)
+        number_to_sample = target_data["number_to_sample"][sample_name]
+
         # First pass over data to get sum of weights
+        # Assuming chunk size is large enough to avoid the loop (all chunk have the same weight).
+        """
         load_chunk = True
         generator = self.Load_Samples_Generator(
             sample_category=sample_category,
@@ -1128,7 +1192,7 @@ class PDFSampling(Resampling):
         sum_of_weights = 0
         while load_chunk:
             try:
-                _, target_dist, load_more = next(generator)
+                _, target_dist, load_more, _, _ = next(generator)
             except StopIteration:
                 break
             load_chunk = load_more
@@ -1138,6 +1202,7 @@ class PDFSampling(Resampling):
                 store_key=store_key,
             )
             sum_of_weights += np.sum(weights)
+        """
 
         # second pass over data, normalising weights and sampling
         load_chunk = True
@@ -1148,10 +1213,12 @@ class PDFSampling(Resampling):
         )
         create_file = True
         sampled_jets = 0
-        pbar = tqdm(total=self.number_to_sample[sample_name])
+        pbar = tqdm(total=number_to_sample)
         while load_chunk:
             try:
-                _, target_dist, load_more = next(generator)
+                _, target_dist, load_more, total_number, start_ind = next(
+                    generator
+                )
             except StopIteration:
                 break
             load_chunk = load_more
@@ -1161,16 +1228,18 @@ class PDFSampling(Resampling):
                 store_key=store_key,
             )
             # weight of the chunk
-            chunk_weights = np.sum(weights / sum_of_weights)
+            chunk_weights = len(weights) / total_number
             # Sample a fraction of jets proportional to the chunk weight
-            to_sample = self.number_to_sample[sample_name] * chunk_weights
+            to_sample = number_to_sample * chunk_weights
             if not load_chunk:
                 # last chunk
-                to_sample = self.number_to_sample[sample_name] - sampled_jets
+                to_sample = number_to_sample - sampled_jets
 
             weights = weights / np.sum(weights)
             selected_ind = self.Resample_chunk(weights, size=round(to_sample))
             selected_indices = np.sort(selected_ind).astype(int)
+            # Need to turn chunk indices to full list indices
+            selected_indices += start_ind
             sampled_jets += len(selected_indices)
             pbar.update(selected_indices.size)
             if create_file:
@@ -1205,6 +1274,7 @@ class PDFSampling(Resampling):
         (generator) for writing only, writing in chunk of size chunk_size.
         The file is read in one go.
         """
+
         sample, preparation_sample = self.sample_file_map[sample_category][
             sample_id
         ]
@@ -1310,17 +1380,29 @@ class PDFSampling(Resampling):
         pbar.close()
 
     def Save_complete_iterator(
-        self, sample_category, category_id, sample_id, chunk_size: int = 1e4
+        self, sample_category, category_id, sample_id, chunk_size: int = 1e5
     ):
         """
         Save the selected data to an output file with an iterative approach
         (generator) for both writing and reading, in chunk of size chunk_size.
         """
+
         sample_name = self.options["samples"][sample_category][sample_id]
         sample, preparation_sample = self.sample_file_map[sample_category][
             sample_id
         ]
         in_file = GetPreparationSamplePath(preparation_sample)
+
+        # Load number to sample
+        load_name = os.path.join(
+            self.outfile_path,
+            "PDF_sampling",
+            "target_data.json",
+        )
+        with open(load_name, "r") as load_file:
+            target_data = json.load(load_file)
+        number_to_sample = target_data["number_to_sample"][sample_name]
+
         index_file = os.path.join(
             self.outfile_path,
             "PDF_sampling",
@@ -1342,14 +1424,13 @@ class PDFSampling(Resampling):
         logger.info(f"Writing to file {save_name}.")
         load_chunk = True
         create_file = True
-        pbar = tqdm(total=self.number_to_sample[sample_name])
+        pbar = tqdm(total=number_to_sample)
         while load_chunk:
             try:
                 indices, load_more = next(index_generator)
             except StopIteration:
                 break
             load_chunk = load_more
-            indices = np.sort(indices).astype(int)
 
             labels = label_binarize(
                 (np.ones(len(indices)) * label),
@@ -1453,12 +1534,12 @@ class PDFSampling(Resampling):
         self.target_histo = {}
 
         for cat_ind, sample_category in enumerate(self.options["samples"]):
+            logger.info(f"Loading target in category {sample_category}.")
             reading_dict = self.File_to_histogram(
                 sample_category=sample_category,
                 category_ind=cat_ind,
                 sample_id=0,
                 iterator=iterator,
-                chunk_size=1e6,
             )
             self.target_histo[sample_category] = {
                 "hist": reading_dict["hist"],
@@ -1503,67 +1584,98 @@ class PDFSampling(Resampling):
                 f"target - category {sample_category}: selected {self.target_number[sample_category]}/{available_numbers[cat_ind]} jets, giving the requested fraction of {self.target_fractions[cat_ind]}"
             )
 
-        # For each flavour type, set the target numbers, respecting flavour ratio and upsampling max ratio (if given)
-        for sample_id, sample in enumerate(
-            self.options["samples"][list(self.sample_categories.keys())[0]]
+        # Save the info to a json file
+        logger.info("Saving target histogram and numbers to sample")
+        save_data = {
+            "target_histo": self.target_histo,
+            "target_number": self.target_number,
+            "target_fraction": self.target_fractions,
+        }
+        save_name = os.path.join(
+            self.outfile_path,
+            "PDF_sampling",
+            "target_data.json",
+        )
+        if not os.path.exists(os.path.join(self.outfile_path, "PDF_sampling")):
+            os.mkdir(os.path.join(self.outfile_path, "PDF_sampling"))
+        with open(save_name, "w") as write_file:
+            json.dump(save_data, write_file, cls=JsonNumpyEncoder)
+
+    def Generate_Number_Sample(self, sample_id):
+        """
+        For a given sample, sets the target numbers, respecting flavour ratio and upsampling max ratio (if given).
+
+        Parameters
+        ----------
+        sample_id: int, position of the flavour in the sample list.
+        """
+
+        load_name = os.path.join(
+            self.outfile_path,
+            "PDF_sampling",
+            "target_data.json",
+        )
+        with open(load_name, "r") as load_file:
+            target_data = json.load(load_file)
+
+        flavour_names = []
+        for cat_ind, sample_category in enumerate(self.options["samples"]):
+            flavour_name = self.sample_file_map[sample_category][sample_id][0]
+            flavour_names.append(flavour_name)
+        if any(
+            flavour_name in self.max_upsampling
+            for flavour_name in flavour_names
         ):
-            flavour_names = []
-            for cat_ind, sample_category in enumerate(self.options["samples"]):
-                flavour_name = self.sample_file_map[sample_category][
-                    sample_id
-                ][0]
-                flavour_names.append(flavour_name)
-            if any(
-                flavour_name in self.max_upsampling
-                for flavour_name in flavour_names
-            ):
-                asked_num = []
-                for cat_ind, flavour_name in enumerate(flavour_names):
-                    num_asked = self.target_number[
-                        list(self.options["samples"])[cat_ind]
-                    ]
-                    if flavour_name in self.max_upsampling:
-                        upsampling, num_av = self.max_upsampling[flavour_name]
-                        upsampling_asked = float(num_asked) / num_av
-                        if upsampling < upsampling_asked:
-                            num_corrected = int(num_av * upsampling)
-                            asked_num.append(num_corrected)
-                            logger.warning(
-                                f"Upsampling ratio demanded to {flavour_name} is {upsampling_asked}, over limit of {upsampling}."
-                            )
-                            logger.warning(
-                                f"Number of {flavour_name} demanded will therefore be limited."
-                            )
-                        else:
-                            logger.info(
-                                f"Upsampling ratio demanded to {flavour_name} is {upsampling_asked}, below limit of {upsampling}."
-                            )
-                            asked_num.append(num_asked)
+            asked_num = []
+            for cat_ind, flavour_name in enumerate(flavour_names):
+                num_asked = target_data["target_number"][
+                    list(self.options["samples"])[cat_ind]
+                ]
+                if flavour_name in self.max_upsampling:
+                    upsampling, num_av = self.max_upsampling[flavour_name]
+                    upsampling_asked = float(num_asked) / num_av
+                    if upsampling < upsampling_asked:
+                        num_corrected = int(num_av * upsampling)
+                        asked_num.append(num_corrected)
+                        logger.warning(
+                            f"Upsampling ratio demanded to {flavour_name} is {upsampling_asked}, over limit of {upsampling}."
+                        )
+                        logger.warning(
+                            f"Number of {flavour_name} demanded will therefore be limited."
+                        )
                     else:
                         logger.info(
-                            f"No maximum upsampling ratio demanded to {flavour_name}."
+                            f"Upsampling ratio demanded to {flavour_name} is {upsampling_asked}, below limit of {upsampling}."
                         )
                         asked_num.append(num_asked)
-                asked_num_corr = CorrectFractions(
-                    N_jets=asked_num,
-                    target_fractions=self.target_fractions,
-                    verbose=False,
+                else:
+                    logger.info(
+                        f"No maximum upsampling ratio demanded to {flavour_name}."
+                    )
+                    asked_num.append(num_asked)
+            asked_num_corr = CorrectFractions(
+                N_jets=asked_num,
+                target_fractions=target_data["target_fraction"],
+                verbose=False,
+            )
+            for flavour_name, num in zip(flavour_names, asked_num_corr):
+                self.number_to_sample[flavour_name] = int(num)
+                logger.info(f"For {flavour_name}, demanding {int(num)} jets.")
+        else:
+            for sample_category, flavour_name in zip(
+                self.options["samples"], flavour_names
+            ):
+                self.number_to_sample[flavour_name] = target_data[
+                    "target_number"
+                ][sample_category]
+                logger.info(
+                    f"For {flavour_name}, demanding {target_data['target_number'][sample_category]} jets."
                 )
-                for flavour_name, num in zip(flavour_names, asked_num_corr):
-                    self.number_to_sample[flavour_name] = int(num)
-                    logger.info(
-                        f"For {flavour_name}, demanding {int(num)} jets."
-                    )
-            else:
-                for sample_category, flavour_name in zip(
-                    self.options["samples"], flavour_names
-                ):
-                    self.number_to_sample[flavour_name] = self.target_number[
-                        sample_category
-                    ]
-                    logger.info(
-                        f"For {flavour_name}, demanding {self.target_number[sample_category]} jets."
-                    )
+
+        # Save the number to sample to json
+        target_data["number_to_sample"] = self.number_to_sample
+        with open(load_name, "w") as load_file:
+            json.dump(target_data, load_file, cls=JsonNumpyEncoder)
 
     def Generate_Flavour_PDF(
         self,
@@ -1592,32 +1704,46 @@ class PDFSampling(Resampling):
 
         """
 
+        # Load the target data
+        load_name = os.path.join(
+            self.outfile_path,
+            "PDF_sampling",
+            "target_data.json",
+        )
+        with open(load_name, "r") as load_file:
+            target_data = json.load(load_file)
+
         reading_dict = self.File_to_histogram(
             sample_category=sample_category,
             category_ind=category_id,
             sample_id=sample_id,
             iterator=iterator,
-            chunk_size=1e6,
         )
         logger.info(
             f"Computing PDF in {sample_category} for the {reading_dict['category']}."
         )
         self.CalculatePDF(
             store_key=f"{sample_category}_{reading_dict['category']}",
-            target_hist=self.target_histo[sample_category]["hist"],
+            target_hist=np.asarray(
+                target_data["target_histo"][sample_category]["hist"]
+            ),
             original_hist=reading_dict["hist"],
             target_bins=(
-                self.target_histo[sample_category]["xbins"],
-                self.target_histo[sample_category]["ybins"],
+                np.asarray(
+                    target_data["target_histo"][sample_category]["xbins"]
+                ),
+                np.asarray(
+                    target_data["target_histo"][sample_category]["ybins"]
+                ),
             ),
             bins=self.limit["bins"][category_id],
             limits=self.limit["ranges"][category_id],
         )
 
         if iterator:
-            return None, reading_dict["hist"]
+            return None
         else:
-            return reading_dict["target_dist"], reading_dict["hist"]
+            return reading_dict["target_dist"]
 
     def Sample_Flavour(
         self,
@@ -1654,8 +1780,17 @@ class PDFSampling(Resampling):
             self.options["samples"][sample_category][sample_id]
             + "_indices.h5",
         )
-        if not os.path.exists(os.path.join(self.outfile_path, "PDF_sampling")):
-            os.mkdir(os.path.join(self.outfile_path, "PDF_sampling"))
+
+        # Load number to sample
+        load_name = os.path.join(
+            self.outfile_path,
+            "PDF_sampling",
+            "target_data.json",
+        )
+        with open(load_name, "r") as load_file:
+            target_data = json.load(load_file)
+        number_to_sample = target_data["number_to_sample"][sample_name]
+
         logger.info(f"Selecting indices for {sample_name}.")
         logger.info(f"Saving indices to: {save_name}")
         if flavour_distribution is None or iterator:
@@ -1670,14 +1805,10 @@ class PDFSampling(Resampling):
 
         else:
             logger.info("Using in-memory approach.")
-            print(
-                "Store Key",
-                sample_category + "_" + flavour_distribution["category"],
-            )
             selected_ind = self.inMemoryResample(
                 flavour_distribution["sample_vector"][:, 0],
                 flavour_distribution["sample_vector"][:, 1],
-                size=self.number_to_sample[sample_name],
+                size=number_to_sample,
                 store_key=sample_category
                 + "_"
                 + flavour_distribution["category"],
@@ -1698,7 +1829,7 @@ class PDFSampling(Resampling):
         category_id: int,
         sample_id: int,
         selected_indices: dict = None,
-        chunk_size: int = 1e3,
+        chunk_size: int = 1e5,
         iterator: bool = True,
     ):
         """
@@ -1757,7 +1888,6 @@ class PDFSampling(Resampling):
         Stores to memory the combined selected data
         into a single file.
         """
-        # self.iterations
         output_name = self.config.GetFileName(option="resampled")
         logger.info("Combining all the flavours into a single file.")
         logger.info(f"Storing to {self.outfile_path}")
@@ -1854,10 +1984,11 @@ class PDFSampling(Resampling):
                         chunk_number += 1
                     pbar.close()
 
-    def Make_plots(self, binning=[200, 20]):
+    def Make_plots(self, binning=[200, 20], chunk_size=1e4, iterator=True):
         """
         Produce plots of the variables used in resampling (before and after preprocessing).
         """
+
         ranges = self.limit["extreme_ranges"]
 
         logger.info("Making plots of variables before sampling.")
@@ -1866,35 +1997,43 @@ class PDFSampling(Resampling):
             self.options["samples"][list(self.sample_categories.keys())[0]]
         ):
             for cat_ind, sample_category in enumerate(self.options["samples"]):
-                _, flavour_distribution = self.Load_Samples(
-                    sample_category, sample_id
-                )
-                flavour_name = self.sample_file_map[sample_category][
-                    sample_id
-                ][1].get("category")
+                logger.info(f"Loading jets from {sample}.")
                 if sample_id == 0 and cat_ind == 0:
-                    thehist, binx, biny = np.histogram2d(
-                        flavour_distribution["sample_vector"][:, 0],
-                        flavour_distribution["sample_vector"][:, 1],
+                    reading_dict = self.File_to_histogram(
+                        sample_category=sample_category,
+                        category_ind=cat_ind,
+                        sample_id=sample_id,
+                        iterator=iterator,
+                        chunk_size=chunk_size,
                         bins=binning,
                         range=ranges,
                     )
+                    binx, biny = reading_dict["xbins"], reading_dict["ybins"]
                 else:
-                    thehist, _, _ = np.histogram2d(
-                        flavour_distribution["sample_vector"][:, 0],
-                        flavour_distribution["sample_vector"][:, 1],
+                    reading_dict = self.File_to_histogram(
+                        sample_category=sample_category,
+                        category_ind=cat_ind,
+                        sample_id=sample_id,
+                        iterator=iterator,
+                        chunk_size=chunk_size,
                         bins=(binx, biny),
+                        range=ranges,
                     )
+                flavour_name = reading_dict["category"]
                 if cat_ind == 0:
-                    histo_before_dict[flavour_name] = thehist
+                    histo_before_dict[flavour_name] = reading_dict["hist"]
                 else:
                     histo_before_dict[flavour_name] = np.add(
-                        histo_before_dict[flavour_name], thehist
+                        histo_before_dict[flavour_name], reading_dict["hist"]
                     )
+        logger.info("Plotting.")
         plot_name_clean = self.config.GetFileName(
             extension="",
             option="pt_eta-before_sampling",
-            custom_path="plots/",
+            custom_path=os.path.join(
+                os.path.abspath("."),
+                "plots/",
+            ),
         )
         ResamplingPlots(
             concat_samples=histo_before_dict,
@@ -1925,23 +2064,52 @@ class PDFSampling(Resampling):
                     logger.info(
                         f"Loading {len(f['jets'])} jets for {flavour_name} from {load_name}."
                     )
-                    jets_x = np.asarray(f["jets"][self.var_x])
-                    jets_y = np.asarray(f["jets"][self.var_y])
-                    thehist, binx, biny = np.histogram2d(
-                        jets_x,
-                        jets_y,
-                        bins=(binx, biny),
+                    total_size_file = len(f["jets"])
+                    load_per_iteration = chunk_size
+                    number_of_chunks = round(
+                        total_size_file / load_per_iteration + 0.5
                     )
+                    start_ind = 0
+                    chunk_number = 0
+                    pbar = tqdm(total=np.sum(total_size_file))
+                    while chunk_number < number_of_chunks:
+                        end_ind = int(start_ind + load_per_iteration)
+                        if chunk_number == number_of_chunks - 1:
+                            end_ind = int(total_size_file)
+                        jets = f["jets"][start_ind:end_ind]
+                        jets_x = np.asarray(jets[self.var_x])
+                        jets_y = np.asarray(jets[self.var_y])
+                        if chunk_number == 0:
+                            thehist, binx, biny = np.histogram2d(
+                                jets_x,
+                                jets_y,
+                                bins=(binx, biny),
+                            )
+                        else:
+                            newhist, _, _ = np.histogram2d(
+                                jets_x,
+                                jets_y,
+                                bins=(binx, biny),
+                            )
+                            thehist += newhist
+                        pbar.update(jets.size)
+                        chunk_number += 1
+                        start_ind = end_ind
+                    pbar.close()
                 if cat_ind == 0:
                     histo_after_dict[flavour_name] = thehist
                 else:
                     histo_after_dict[flavour_name] = np.add(
                         histo_after_dict[flavour_name], thehist
                     )
+        logger.info("Plotting.")
         plot_name_clean = self.config.GetFileName(
             extension="",
             option="pt_eta-after_sampling",
-            custom_path="plots/",
+            custom_path=os.path.join(
+                os.path.abspath("."),
+                "plots/",
+            ),
         )
         ResamplingPlots(
             concat_samples=histo_after_dict,
@@ -1960,14 +2128,26 @@ class PDFSampling(Resampling):
         iterator = True
 
         # Retrieve the PDF between target and all distribution
-        self.Generate_Target_PDF(iterator=iterator)
-
+        if self.do_target:
+            self.Generate_Target_PDF(iterator=iterator)
+        else:
+            logger.warning(
+                "Skipping target computation (not in list to execute)."
+            )
         for sample_id, sample in enumerate(
             self.options["samples"][list(self.sample_categories.keys())[0]]
         ):
+            # Before starting, get the number to sample
+            self.Generate_Number_Sample(sample_id)
             for cat_ind, sample_category in enumerate(self.options["samples"]):
+                if not (sample_id in self.do_flavours):
+                    logger.warning(
+                        f"Skipping {sample_category} - {sample} (not in list to execute)."
+                    )
+                    continue
+
                 # First step: generate the PDF of the Flavour to Target.
-                flavour_dist, _ = self.Generate_Flavour_PDF(
+                flavour_dist = self.Generate_Flavour_PDF(
                     sample_category=sample_category,
                     category_id=cat_ind,
                     sample_id=sample_id,
@@ -1990,13 +2170,17 @@ class PDFSampling(Resampling):
                     sample_id=sample_id,
                     selected_indices=selected_indices,
                     iterator=iterator,
-                    chunk_size=1e3,
+                    chunk_size=1e4,
                 )
 
-        self.Make_plots()
+        if self.do_plotting:
+            self.Make_plots(iterator=iterator)
 
         # Now that everything is saved, load each file and concatenate them into a single large file
-        self.Combine_Flavours()
+        if self.do_combination:
+            self.Combine_Flavours()
+        else:
+            logger.warning("Skipping combining step (not in list to execute).")
 
         logger.info("PDFsampling finished.")
 
@@ -2365,7 +2549,12 @@ class UnderSampling(Resampling):
 
         logger.info("Plotting distributions before undersampling.")
         plot_name_clean = self.config.GetFileName(
-            extension="", option="pt_eta-wider_bin", custom_path="plots/"
+            extension="",
+            option="pt_eta-wider_bin",
+            custom_path=os.path.join(
+                os.path.abspath("."),
+                "plots/",
+            ),
         )
         ResamplingPlots(
             concat_samples=self.concat_samples,
@@ -2381,7 +2570,10 @@ class UnderSampling(Resampling):
         plot_name_clean = self.config.GetFileName(
             extension="",
             option="downsampled-pt_eta-wider_bins",
-            custom_path="plots/",
+            custom_path=os.path.join(
+                os.path.abspath("."),
+                "plots/",
+            ),
         )
         ResamplingPlots(
             concat_samples=self.x_y_after_sampling,
