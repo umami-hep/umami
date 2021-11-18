@@ -1,5 +1,6 @@
 parameters: !include Preprocessing-parameters.yaml
 
+# Defining anchor with outlier cuts that are used over and over again
 .outlier_cuts: &outlier_cuts
   - JetFitterSecondaryVertex_mass:
       operator: <
