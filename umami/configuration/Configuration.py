@@ -27,6 +27,7 @@ class Configuration(object):
         config_items = [
             "pTvariable",
             "etavariable",
+            "MPLPlottingBackend",
             "flavour_categories",
             "hist_err_style",
         ]
@@ -45,7 +46,8 @@ class Configuration(object):
             f"Setting Matplotlib's backend to {self.config['MPLPlottingBackend']}"
         )
         import matplotlib
-        matplotlib.use(self.config['MPLPlottingBackend'])
+
+        matplotlib.use(self.config["MPLPlottingBackend"])
 
     def SetTFDebugLevel(self):
         """Setting the Debug level of tensorflow.
