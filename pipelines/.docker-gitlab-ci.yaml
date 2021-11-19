@@ -96,7 +96,7 @@ build_umamibase_cpu_MR:
     FROM: tensorflow/tensorflow:$TFTAG
     TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami" && '$CI_MERGE_REQUEST_LABELS !~ /Skip-CI/'
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
 
 # possibility to trigger also the GPU image in a MR - but only manually
 build_umamibase_gpu_MR:
@@ -107,7 +107,7 @@ build_umamibase_gpu_MR:
     FROM: tensorflow/tensorflow:$TFTAG-gpu
     TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-gpu-base'
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami" && '$CI_MERGE_REQUEST_LABELS !~ /Skip-CI/'
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
       when: manual
       allow_failure: true
 # ----------------------------------------------------------------------------

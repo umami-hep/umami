@@ -64,17 +64,20 @@ mr_labels, changed_files_in_docs = get_labels(changed_files, mr.labels)
 # define flag if only documentation is concerned
 only_docs = changed_files_in_docs == len(changed_files)
 # if only documentation is concerned adding a Skip-CI label
-if only_docs:
-    mr_labels.append("Skip-CI")
+# if only_docs:
+#     mr_labels.append("Skip-CI")
 # in case other files are changed in a later commit, removing the skip-ci flag
-if not only_docs:
-    if "Skip-CI" in mr_labels:
-        mr_labels.remove("Skip-CI")
+# if not only_docs:
+#     if "Skip-CI" in mr_labels:
+#         mr_labels.remove("Skip-CI")
 mr.labels = mr_labels
 mr.save()
 
 # approve MR if only documentation is concerned
 if only_docs:
     mr.notes.create({"body": "Only documentation is concerened - approving."})
-    mr.approve()
+    try:
+        mr.approve()
+    except gitlab.exceptions.GitlabAuthenticationError:
+        print("Approving not permitted.")
     mr.save()
