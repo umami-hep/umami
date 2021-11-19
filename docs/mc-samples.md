@@ -23,7 +23,7 @@ The round 2 release 22 samples with RNNIP, DL1* and DIPS. Muon information are a
 
 
 
-??? note "Release 22 - Round 2 Samples"
+??? info "Release 22 - Round 2 Samples"
 
 
 
@@ -40,7 +40,7 @@ The round 2 release 22 samples with RNNIP, DL1* and DIPS. Muon information are a
 
 
 
-??? note "Small Validation Release 22 Samples"
+??? info "Small Validation Release 22 Samples"
 
 
     The small validation release 22 samples with RNNIP, DL1* and DIPS.
@@ -80,7 +80,7 @@ The Z' & Z+jets FTAG 1 derivations were requested [here](https://its.cern.ch/jir
 ### Z+jets Samples for bb category
 
 
-??? note "MC16d"
+??? info "MC16d"
 
 
 
@@ -109,7 +109,7 @@ The Z' & Z+jets FTAG 1 derivations were requested [here](https://its.cern.ch/jir
 
 
 
-??? note "MC16a"
+??? info "MC16a"
 
 
     [Derivation request](https://prodtask-dev.cern.ch/prodtask/inputlist_with_request/30189/) for p4062
@@ -135,7 +135,7 @@ The Z' & Z+jets FTAG 1 derivations were requested [here](https://its.cern.ch/jir
 
 
 
-??? note "MC16e"
+??? info "MC16e"
 
     [Derivation request](https://prodtask-dev.cern.ch/prodtask/inputlist_with_request/30189/) for p4062
 
