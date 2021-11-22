@@ -115,12 +115,12 @@ singularity exec --nv docker://btagging/umami:latest-gpu bash
 
 If you work on AFS and want to explicitly state which paths should be made available, consider the `--contain` argument and mounting volumes inside the container with the `--bind` argument:
 ```bash
-singularity exec --contain --bind /afs  --bind /cvmfs --bind /eos docker://btagging/umami:latest bash
+singularity exec --contain --nv --bind /afs  --bind /cvmfs --bind /eos docker://btagging/umami:latest bash
 ```
 
 ???+ info "Using the base image instead"
     ```bash
-    singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest-gpu
+    singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest-gpu
     ```
 
 
