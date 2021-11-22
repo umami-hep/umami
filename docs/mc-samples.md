@@ -12,13 +12,13 @@ A detailed list with the available derivations can be fund in the [FTAG algorith
 
 ### Release 22 Samples with Muons
 
-The round 2 release 22 samples with RNNIP, DL1* and DIPS. Muon information are added (softMuon). Information for GNN training is added.
+The round 2 release 22 samples with RNNIP, DL1* and DIPS. Muon information are added (softMuon). Information for GNN training is added. The default and loose track selections are added. Default tracks are called `tracks` and loose tracks are called `tracks_loose`.
 
-| Sample | h5 ntuples | h5 ntuples (looser track selection)   |  DAOD_PHYSVAL derivations| AOD |
-| ------------- | ---------------- | ---------------- | ---------------- | ---------------- |
-| ttbar | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4724.EMPFlow.2021-10-25-T123922-R15042_output.h5 | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4724.EMPFlow_loose.2021-10-25-T124052-R11453_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_e5984_s3126_r12629_p4724 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_e5984_s3126_r12629
-| Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4724.EMPFlow.2021-10-25-T123922-R15042_output.h5 | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4724.EMPFlow_loose.2021-10-25-T124052-R11453_output.h5 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_r12636_p4724 |  |
-| Z' | user.alfroch.500567.btagTraining.e7954_e7400_s3672_r12629_r12636_p4724.EMPFlow.2021-10-25-T123922-R15042_output.h5 | user.alfroch.500567.btagTraining.e7954_e7400_s3672_r12629_r12636_p4724.EMPFlow_loose.2021-10-25-T124052-R11453_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_e7400_s3672_r12629_r12636_p4724 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.merge.AOD.e7954_e7400_s3672_r12629_r12636 |
+| Sample | h5 ntuples | DAOD_PHYSVAL derivations| AOD |
+| ------------- | ---------------- | ---------------- | ---------------- |
+| ttbar | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4724.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_e5984_s3126_r12629_p4724 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_e5984_s3126_r12629
+| Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4724.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_r12636_p4724 |  |
+| Z' | user.alfroch.500567.btagTraining.e7954_e7400_s3672_r12629_r12636_p4724.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_e7400_s3672_r12629_r12636_p4724 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.merge.AOD.e7954_e7400_s3672_r12629_r12636 |
 
 
 
@@ -27,13 +27,13 @@ The round 2 release 22 samples with RNNIP, DL1* and DIPS. Muon information are a
 
 
 
-    The Round 2 release 22 samples with RNNIP, DL1* and DIPS.
+    The Round 2 release 22 samples with RNNIP, DL1* and DIPS. The default and loose track selections are added. Default tracks are called `tracks` and loose tracks are called `tracks_loose`.
 
-    | Sample | h5 ntuples | h5 ntuples (looser track selection)   |  DAOD_PHYSVAL derivations| AOD |
-    | ------------- | ---------------- | ---------------- | ---------------- | ---------------- |
-    | ttbar | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4567.EMPFlow.2021-10-25-T123922-R15042_output.h5 | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4567.EMPFlow_loose.2021-10-25-T124052-R11453_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_e5984_s3126_r12629_p4567 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_e5984_s3126_r12629
-    | Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3672_r12629_p4567.EMPFlow.2021-10-25-T123922-R15042_output.h5 | user.alfroch.800030.btagTraining.e7954_s3672_r12629_p4567.EMPFlow_loose.2021-10-25-T124052-R11453_output.h5 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_p4567 | |
-    | Z' | user.alfroch.500567.btagTraining.e7954_s3672_r12629_p4567.EMPFlow.2021-10-25-T123922-R15042_output.h5 | user.alfroch.500567.btagTraining.e7954_s3672_r12629_p4567.EMPFlow_loose.2021-10-25-T124052-R11453_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_p4567 | |
+    | Sample | h5 ntuples | DAOD_PHYSVAL derivations| AOD |
+    | ------------- | ---------------- | ---------------- | ---------------- |
+    | ttbar | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4567.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_e5984_s3126_r12629_p4567 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_e5984_s3126_r12629
+    | Z' Extended (With QSP, Yes shower weights) | uuser.alfroch.800030.btagTraining.e7954_s3672_r12629_p4567.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_p4567 | |
+    | Z' | user.alfroch.500567.btagTraining.e7954_s3672_r12629_p4567.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_p4567 | |
 
 
 
