@@ -1,4 +1,3 @@
-
 It is recommended to use the Umami framework with a Docker image.
 
 You can either choose to use a fully build version where you are ready to run the code or a version where you are able to modify the code.
@@ -76,7 +75,7 @@ docker run --rm -it btagging/umami:latest-gpu
 
 ### Launching containers using Singularity (lxplus/institute cluster)
 If you work on a node of your institute's computing centre or on CERN's `lxplus`, you don't have access to Docker.
-Instead, you can use [singularity](https://sylabs.io/guides/3.7/user-guide/introduction.html), which provides similar features.
+Instead, you can use [singularity](https://sylabs.io/guides/3.7/user-guide/introduction.html), which provides similar features. How to use singularity on `lxplus` can be found [here](https://hsf-training.github.io/hsf-training-docker/10-singularity/index.html)
 
 You can run Umami in singularity with the following command:
 ```bash
@@ -97,11 +96,11 @@ singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/alg
     The above commands are often slow since they require a new conversion of the docker image to a singularity image.
     There is a possibility to avoid this by converting them once via
     ```bash
-    singualrity pull <folder_where_you_want_to_store_the_image>/umami_base_cpu.img docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest
+    singularity pull <folder_where_you_want_to_store_the_image>/umami_base_cpu.img docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest
     ```
     Afterwards you can use this local image e.g. like that
     ```bash
-    singualrity exec <folder_where_you_want_to_store_the_image>/umami_base_cpu.img bash
+    singularity exec <folder_where_you_want_to_store_the_image>/umami_base_cpu.img bash
     ```
 
 
