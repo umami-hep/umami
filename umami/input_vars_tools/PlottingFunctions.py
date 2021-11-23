@@ -1312,8 +1312,9 @@ def plot_input_vars_jets(
                 else:
                     # Append to array
                     jets = jets.append(tmp_jets, ignore_index=True)
-                    flavour_labels = flavour_labels.append(
-                        tmp_flavour_labels, ignore_index=True
+                    flavour_labels = np.append(
+                        flavour_labels,
+                        tmp_flavour_labels,
                     )
 
                 # Add number of loaded jets to counter
@@ -1606,8 +1607,9 @@ def plot_input_vars_jets_comparison(
                 else:
                     # Append to array
                     jets = jets.append(tmp_jets, ignore_index=True)
-                    flavour_labels = flavour_labels.append(
-                        tmp_flavour_labels, ignore_index=True
+                    flavour_labels = np.append(
+                        flavour_labels,
+                        tmp_flavour_labels,
                     )
 
                 # Add number of jets to counter
