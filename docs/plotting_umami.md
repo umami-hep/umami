@@ -1,12 +1,12 @@
 # Plotting the evaluation results
-The evaluation results can be plotted using different functions. There is the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/umami/plotting_umami.py), [plotting_epoch_performance](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/umami/plotting_epoch_performance.py) and the [plot_input_variables.py](). Each plotting script is explained in its dedicated section.
+The evaluation results can be plotted using different functions. There is the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/umami/plotting_umami.py), [plotting_epoch_performance](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/umami/plotting_epoch_performance.py) and the [plot_input_variables.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plot_input_variables.py). Each plotting script is explained in its dedicated section.
 
 ## plotting_umami.py
-The plotting_umami.py is used to plot the results of the evaluation script. Different plots can be produced with it which are fully customizable. All plots that are defined in the `plotting_umami_config_X.yaml`. The `X` defines the tagger here but its just a name. All config files are usable with the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/umami/plotting_umami.py) script.
+The plotting_umami.py is used to plot the results of the evaluation script. Different plots can be produced with it which are fully customizable. All plots that are defined in the `plotting_umami_config_X.yaml`. The `X` defines the tagger here but its just a name. All config files are usable with the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script.
 
 ### Yaml Config File
 **Important: The indentation in this .yaml is important due to the way the files are read by the script.**   
-A fully written one can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/examples/plotting_umami_config_dips.yaml).   
+A fully written one can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_umami_config_dips.yaml).   
 
 The config file starts with the `Eval_parameters`. Here the `Path_to_models_dir` is set, where the models are saved. Also the `model_name` and the `epoch` which is to be plotted is set. A boolean parameter can be set here to add the epoch to the end of the plot name. This is `epoch_to_name`. For example, this can look like this:
 
@@ -25,7 +25,7 @@ In the different available plots, there are options that are available in mostly
 | `Name_of_the_plot` | All plots start with no indentation and the name of plot. This will be the output name of the plot file and has no impact on the plot itself. |
 | `type` | This option specifies the plot function that is used. |
 | `data_set_name` | Decides which evaluated dataset (or file) is used. This `data_set_name` are set in the `train_config` yaml file which is used in the evaluation of the model. There the different files are getting their own `data_set_name` which needs to be the same as here! |
-| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
+| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! (Possible entries are defined in the [global_config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml))|
 | `models_to_plot` | In the comparison plots, the models which are to be plotted needs to be defined in here. You can add as many models as you want. For example this can be used to plot the results of the different taggers in one plot (e.g. for score comparison or ROC curves). The different models can be assisted with `evaluation_file` to point to the results file you have created with `evaluate_model.py`. e.g.`evaluation_file: YOURMODEL/results/results-rej_per_eff-229.h5` |
 | `plot_settings` | In this section, all optional plotting settings are defined. They don't need to be defined but you can. For the specific available options in each function, look in the corresponding section. |
 
@@ -634,10 +634,6 @@ nTracks_ttbar_loose:
     yAxisIncrease: 2
     figsize: [7, 5]
     Ratio_Cut: [0.5, 2]
-  flavours:
-    b: 5
-    c: 4
-    u: 0
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -659,7 +655,6 @@ nTracks_ttbar_loose:
  | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
 | `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `flavours` | None | Necessary | Here starts the flavours that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
 
 #### Input Variables Tracks
 To plot the track input variables, the following options are used.
@@ -702,10 +697,6 @@ input_vars_trks_ttbar_loose_ptfrac:
     numberOfSCTHits: [0, 19, 1]
     btagIp_d0: 100
     btagIp_z0SinTheta: 100
-  flavours:
-    b: 5
-    c: 4
-    u: 0
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -730,7 +721,6 @@ input_vars_trks_ttbar_loose_ptfrac:
 | `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
 | `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
 | `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second ist stop and third is the step width. The so aranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
-| `flavours` | None | Necessary | Here starts the flavours that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
 
 #### Input Variables Jets
 To plot the jet input variables, the following options are used.
@@ -836,10 +826,6 @@ input_vars_ttbar_loose:
     yAxisAtlasTag: 0.925
     yAxisIncrease: 2
     figsize: [7, 5]
-  flavours:
-    b: 5
-    c: 4
-    u: 0
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -862,4 +848,3 @@ input_vars_ttbar_loose:
  | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
 | `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `flavours` | None | Necessary | Here starts the flavours that are about to be plotted. Each entry name, for example `b` is also the label which is to be added to the plot legend. The number gives the particle ID of the wanted particle. |
