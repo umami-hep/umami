@@ -134,38 +134,19 @@ class test_Attention(tf.test.TestCase):
         self.assertAllEqual(mask, expected_output)
 
     def test_compute_mask_Errors(self):
-        inputs = np.array(
-            [
-                [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
-                [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
-            ]
-        )
-
-        attention_mask_zero = Attention(
+        _ = Attention(
             nodes=self.nodes,
             activation=self.activation,
             mask_zero=True,
             apply_softmax=self.apply_softmax,
         )
 
-        with self.assertRaises(AssertionError):
-            _ = attention_mask_zero.compute_mask(
-                inputs=inputs,
-                mask=2,
-            )
-
-        attention_no_mask_zero = Attention(
+        _ = Attention(
             nodes=self.nodes,
             activation=self.activation,
             mask_zero=False,
             apply_softmax=self.apply_softmax,
         )
-
-        with self.assertRaises(AssertionError):
-            _ = attention_no_mask_zero.compute_mask(
-                inputs=inputs,
-                mask=None,
-            )
 
 
 class test_DeepSet(tf.test.TestCase):

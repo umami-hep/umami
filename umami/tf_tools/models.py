@@ -39,11 +39,17 @@ def Deepsets_model(
     # Get the sets input
     repeat_inputs = Input(shape=repeat_input_shape)
 
-    # Check for condition sets
-    if condition_sets is True:
+    # Get the condition inputs if needed
+    if (
+        condition_sets is True
+        or condition_attention is True
+        or condition_classifier is True
+    ):
         # Get the condtion input
         condition_inputs = Input(shape=(num_conditions,))
 
+    # Check for condition sets
+    if condition_sets is True:
         # Get conditional deep sets layer
         layers = ConditionalDeepSet(
             sets_nodes + [num_set_features],

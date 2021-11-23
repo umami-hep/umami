@@ -1,7 +1,6 @@
 """
 Implementations by Johnny Raine
 """
-
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import BatchNormalization, Dense, Layer
 
@@ -241,18 +240,11 @@ class Attention(Layer):
             return attention
 
     def compute_mask(self, inputs, mask=None):
-        assert (self.mask_zero and mask is None) or (
-            self.mask_zero is False and mask is not None
-        ), "Wrong masking! Please check!"
-
-        if mask is None and self.mask_zero:
-            return K.equal(K.sum(inputs ** 2, axis=-1), 0)
-
-        elif mask is not None and self.mask_zero is False:
-            return K.equal(K.sum(inputs ** 2, axis=-1), mask)
+        if not self.mask_zero:
+            return None
 
         else:
-            return None
+            return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
         config = {

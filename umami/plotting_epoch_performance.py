@@ -52,7 +52,8 @@ def GetParser():
         "--tagger",
         type=str,
         required=True,
-        help="Model type which is used. You can either use 'dips', 'dl1' or 'umami'.",
+        help="""Model type which is used.
+        You can either use 'dips', 'dips_cond_att', 'dl1' or 'umami'.""",
     )
 
     args = parser.parse_args()
@@ -68,7 +69,7 @@ def main(args, train_config, preprocess_config):
         nJets = args.nJets
 
     # Check if the tagger given is supported
-    if args.tagger in ["umami", "dl1", "dips"]:
+    if args.tagger in ["umami", "dl1", "dips", "dips_cond_att"]:
 
         # If dict is given, the re-calculation is skipped
         if args.dict:
@@ -111,7 +112,10 @@ def main(args, train_config, preprocess_config):
 
     else:
         raise ValueError(
-            "You need to define a model type! You can either use 'dips', 'dl1' or 'umami'."
+            """
+            You need to define a model type!\n
+            You can either use 'dips', 'dips_cond_att', 'dl1' or 'umami'.
+            """
         )
 
 
