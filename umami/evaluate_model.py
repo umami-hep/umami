@@ -58,6 +58,12 @@ def GetParser():
     )
 
     parser.add_argument(
+        "--dips_cond_att",
+        action="store_true",
+        help="Evaluating Dips Conditional Attention tagger with model output.",
+    )
+
+    parser.add_argument(
         "--nJets",
         type=int,
         help="""Number of jets used for the testing. By default it will
@@ -112,9 +118,13 @@ def EvaluateModel(
     epoch = args.epoch if Eval_model_bool else 0
 
     # Test if multiple taggers are given or not
-    tagger_list = [Eval_params["tagger"]] if type(Eval_params["tagger"]) is str else Eval_params["tagger"]
+    tagger_list = (
+        [Eval_params["tagger"]]
+        if type(Eval_params["tagger"]) is str
+        else Eval_params["tagger"]
+    )
     try:
-        assert(type(tagger_list) == list)
+        assert type(tagger_list) == list
     except AssertionError:
         raise ValueError(
             """
@@ -308,23 +318,53 @@ def EvaluateModelDips(
     model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
     logger.info(f"Evaluating {model_file}")
 
-    # Get the testfile with the needed configs
-    X_test_trk, Y_test = utt.GetTestSampleTrks(
-        input_file=test_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config,
-        class_labels=class_labels,
-        nJets=nJets,
-        cut_vars_dict=var_cuts,
-    )
+    # Check which test files need to be loaded depending on the DIPS version
+    if args.dips_cond_att:
+        # Load the test jets
+        X_test, X_test_trk, Y_test = utt.GetTestFile(
+            input_file=test_file,
+            var_dict=train_config.var_dict,
+            preprocess_config=preprocess_config,
+            class_labels=class_labels,
+            nJets=nJets,
+            cut_vars_dict=var_cuts,
+        )
 
-    # Load the model for evaluation. Note: The Sum is needed here!
-    with CustomObjectScope({"Sum": utf.Sum}):
+        # Cut all not used jet variables
+        X_test = X_test[[global_config.etavariable, global_config.pTvariable]]
+
+        # Form the inputs for the network
+        X = [X_test_trk, X_test]
+
+    else:
+        # Get the testfile with the needed configs
+        X, Y_test = utt.GetTestSampleTrks(
+            input_file=test_file,
+            var_dict=train_config.var_dict,
+            preprocess_config=preprocess_config,
+            class_labels=class_labels,
+            nJets=nJets,
+            cut_vars_dict=var_cuts,
+        )
+
+    # Load the model for evaluation with the Custom layers
+    # needed for DIPS and DIPS Conditional Attention
+    with CustomObjectScope(
+        {
+            "Sum": utf.Sum,
+            "Attention": utf.Attention,
+            "DeepSet": utf.DeepSet,
+            "AttentionPooling": utf.AttentionPooling,
+            "DenseNet": utf.DenseNet,
+            "ConditionalAttention": utf.ConditionalAttention,
+            "ConditionalDeepSet": utf.ConditionalDeepSet,
+        }
+    ):
         model = load_model(model_file)
 
     # Get predictions from trained model
     pred_dips = model.predict(
-        X_test_trk,
+        X,
         batch_size=train_config.NN_structure["batch_size"],
         verbose=0,
     )
@@ -423,25 +463,29 @@ def EvaluateModelDips(
     f.attrs["N_test"] = len(jets)
     f.close()
 
-    # Get the saliency map dict
-    saliency_map_dict = uet.GetSaliencyMapDict(
-        model=model,
-        model_pred=pred_dips,
-        X_test=X_test_trk,
-        Y_test=Y_test,
-        class_labels=class_labels,
-        main_class=main_class,
-        frac_dict=Eval_params["frac_values"],
-    )
+    if (
+        "Calculate_Saliency" in Eval_params
+        and Eval_params["Calculate_Saliency"] is True
+    ):
+        # Get the saliency map dict
+        saliency_map_dict = uet.GetSaliencyMapDict(
+            model=model,
+            model_pred=pred_dips,
+            X_test=X,
+            Y_test=Y_test,
+            class_labels=class_labels,
+            main_class=main_class,
+            frac_dict=Eval_params["frac_values"],
+        )
 
-    # Create results dir and pickle file
-    os.system(f"mkdir -p {train_config.model_name}/results")
-    with open(
-        f"{train_config.model_name}/results/saliency_{args.epoch}"
-        + f"_{data_set_name}.pkl",
-        "wb",
-    ) as f:
-        pickle.dump(saliency_map_dict, f)
+        # Create results dir and pickle file
+        os.system(f"mkdir -p {train_config.model_name}/results")
+        with open(
+            f"{train_config.model_name}/results/saliency_{args.epoch}"
+            + f"_{data_set_name}.pkl",
+            "wb",
+        ) as f:
+            pickle.dump(saliency_map_dict, f)
 
 
 def EvaluateModelDL1(
@@ -698,7 +742,7 @@ if __name__ == "__main__":
                     zpext_models,
                 )
 
-    elif args.dips:
+    elif args.dips or args.dips_cond_att:
         if train_config.ttbar_test_files is not None:
             logger.info("Start evaluating DIPS with ttbar test files...")
             for ttbar_models in train_config.ttbar_test_files:

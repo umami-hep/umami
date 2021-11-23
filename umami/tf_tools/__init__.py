@@ -1,5 +1,6 @@
 # flake8: noqa
 from umami.tf_tools.generators import (
+    dips_condition_generator,
     dips_generator,
     dl1_generator,
     umami_generator,

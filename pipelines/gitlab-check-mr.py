@@ -4,7 +4,7 @@ import gitlab
 
 labels = {
     "Training": ["umami/train_", "umami/tf_tools/", "umami/train_tools/"],
-    "DIPS": ["umami/train_Dips.py"],
+    "DIPS": ["umami/train_Dips.py", "umami/train_Dips_cond_att.py"],
     "DL1": ["umami/train_DL1.py"],
     "Umami": ["umami/train_umami.py"],
     "Documentation": ["docs/", "README.md", "mkdocs.yml"],

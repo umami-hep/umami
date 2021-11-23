@@ -27,6 +27,17 @@ test_dips:
         - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
         - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
 
+test_dips_cond_att:
+    data_subfolder: 'dips_cond_att'
+    model_name: 'test_dips_cond_att_model'
+    config: 'examples/Dips-Cond-Att-PFlow-Training-config.yaml'
+    preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
+    plotting_config: 'examples/plotting_umami_config_dips.yaml'
+    testdir: '/tmp/umami/dips_cond_att'
+    files:
+        - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+        - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+
 test_dl1:
     data_subfolder: 'dl1'
     model_name: 'test_dl1_model'

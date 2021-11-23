@@ -146,6 +146,9 @@ Eval_parameters_validation:
     # Working point used in the evaluation
     WP: 0.77
 
+    # Decide, if the Saliency maps are calculated or not.
+    Calculate_Saliency: True
+
 # Plotting settings for training metrics plots
 Plotting_settings:
 
@@ -194,6 +197,7 @@ The different options are briefly explained here:
 | `frac_values` | Dict | Necessary | Dict with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `variable_cuts` | Dict | Necessary | Dict of cuts which are applied when loading the different test files. Only jet variables can be cut on. |
 | `WP` | Float | Necessary | Working point which is used in the validation and evaluation. |
+| `Calculate_Saliency` | Bool | Optional | Decide, if the saliency maps are calculated or not. This takes a lot of time and resources! |
 | `Plotting_settings` | None | Necessary | Plotting settings for the validation plots which are produced by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
 | `UseAtlasTag` | Bool | Necessary | Decide, if the ATLAS tag is printed at the top left of the plot. |
 | `AtlasTag` | String | Necessary | Main ATLAS tag which is right to "ATLAS" |

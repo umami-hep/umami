@@ -110,6 +110,21 @@ test_train_dips:
       - test_dips_model/
       - coverage_files/
 
+test_train_dips_cond_att:
+  <<: *test_template
+  stage: integration_test_tagger
+  needs: ["test_preprocessing_umami"]
+  dependencies:
+    - test_preprocessing_umami
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dips_cond_att.py -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_train_dips_cond_att
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_dips_cond_att_model/
+      - coverage_files/
+
 test_train_dl1r:
   <<: *test_template
   stage: integration_test_tagger

@@ -14,6 +14,8 @@ class Model_Generator(object):
         X_Name: str = None,
         X_trk_Name: str = None,
         excluded_var: list = None,
+        nConds: int = None,
+        print_logger: bool = False,
     ):
         self.train_file_path = train_file_path
         self.X_Name = X_Name
@@ -21,7 +23,10 @@ class Model_Generator(object):
         self.Y_Name = Y_Name
         self.batch_size = batch_size
         self.excluded_var = excluded_var
+        self.nConds = nConds
         self.chunk_size = chunk_size
+        self.nConds = nConds
+        self.print_logger = print_logger
         if n_jets is not None:
             self.n_jets = int(n_jets)
         else:
@@ -57,9 +62,10 @@ class Model_Generator(object):
         - Loads the part of data to memory.
         """
 
-        logger.debug(
-            f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
-        )
+        if self.print_logger is True:
+            logger.info(
+                f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
+            )
 
         # Check that the correct X_Name and X_trk_Name is given
         if load_jets is True and self.X_Name is None:
@@ -77,7 +83,8 @@ class Model_Generator(object):
             # Load jets if wanted
             if load_jets:
                 self.x_in_mem = f[self.X_Name][
-                    self.step_size * part : self.step_size * (part + 1)
+                    self.step_size * part : self.step_size * (part + 1),
+                    : self.nConds,
                 ]
 
                 # Exclude variables if needed
@@ -161,6 +168,36 @@ class umami_generator(Model_Generator):
                 small_step
                 * self.batch_size : (1 + small_step)
                 * self.batch_size
+            ]
+            batch_x_trk = self.x_trk_in_mem[
+                small_step
+                * self.batch_size : (1 + small_step)
+                * self.batch_size
+            ]
+            batch_y = self.y_in_mem[
+                small_step
+                * self.batch_size : (1 + small_step)
+                * self.batch_size
+            ]
+            small_step += 1
+            yield {"input_1": batch_x_trk, "input_2": batch_x}, batch_y
+
+
+class dips_condition_generator(Model_Generator):
+    def __call__(self):
+        self.load_in_memory(part=0, load_jets=True, load_tracks=True)
+        n = 1
+        small_step = 0
+        for idx in range(self.length):
+            if (idx + 1) * self.batch_size > self.step_size * n:
+                self.load_in_memory(part=n, load_jets=True, load_tracks=True)
+                n += 1
+                small_step = 0
+            batch_x = self.x_in_mem[
+                small_step
+                * self.batch_size : (1 + small_step)
+                * self.batch_size,
+                : self.nConds,
             ]
             batch_x_trk = self.x_trk_in_mem[
                 small_step

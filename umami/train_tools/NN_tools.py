@@ -1281,6 +1281,8 @@ def load_validation_data_umami(
     train_config,
     preprocess_config,
     nJets: int,
+    jets_var_list: list = [],
+    convert_to_tensor: bool = False,
 ):
     """
     Load the validation data for UMAMI.
@@ -1321,12 +1323,25 @@ def load_validation_data_umami(
         cut_vars_dict=cut_vars_dict,
     )
 
-    # Transform to tf.tensors and add to val_dict
-    val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
-    val_data_dict["X_valid_trk"] = tf.convert_to_tensor(
-        X_valid_trk, dtype=tf.float64
-    )
-    val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
+    if len(jets_var_list) != 0:
+        X_valid = X_valid[jets_var_list]
+
+    if convert_to_tensor:
+        # Transform to tf.tensors and add to val_dict
+        val_data_dict["X_valid"] = tf.convert_to_tensor(
+            X_valid, dtype=tf.float64
+        )
+        val_data_dict["X_valid_trk"] = tf.convert_to_tensor(
+            X_valid_trk, dtype=tf.float64
+        )
+        val_data_dict["Y_valid"] = tf.convert_to_tensor(
+            Y_valid, dtype=tf.int64
+        )
+
+    else:
+        val_data_dict["X_valid"] = X_valid
+        val_data_dict["X_valid_trk"] = X_valid_trk
+        val_data_dict["Y_valid"] = Y_valid
 
     # Set placeholder Nones for the add_files
     (
@@ -1353,16 +1368,25 @@ def load_validation_data_umami(
             cut_vars_dict=cut_vars_dict_add,
         )
 
-        # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid_add"] = tf.convert_to_tensor(
-            X_valid_add, dtype=tf.float64
-        )
-        val_data_dict["X_valid_trk_add"] = tf.convert_to_tensor(
-            X_valid_trk_add, dtype=tf.float64
-        )
-        val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
-            Y_valid_add, dtype=tf.int64
-        )
+        if len(jets_var_list) != 0:
+            X_valid_add = X_valid_add[jets_var_list]
+
+        if convert_to_tensor:
+            # Transform to tf.tensors and add to val_dict
+            val_data_dict["X_valid_add"] = tf.convert_to_tensor(
+                X_valid_add, dtype=tf.float64
+            )
+            val_data_dict["X_valid_trk_add"] = tf.convert_to_tensor(
+                X_valid_trk_add, dtype=tf.float64
+            )
+            val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
+                Y_valid_add, dtype=tf.int64
+            )
+
+        else:
+            val_data_dict["X_valid_add"] = X_valid_add
+            val_data_dict["X_valid_trk_add"] = X_valid_trk_add
+            val_data_dict["Y_valid_add"] = Y_valid_add
 
         # Assert a correct shape
         assert (
@@ -1378,6 +1402,7 @@ def load_validation_data_dl1(
     train_config,
     preprocess_config,
     nJets: int,
+    convert_to_tensor: bool = False,
 ):
     """
     Load the validation data for DL1.
@@ -1423,9 +1448,18 @@ def load_validation_data_dl1(
         cut_vars_dict=cut_vars_dict,
     )
 
-    # Transform to tf.tensors and add to val_dict
-    val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
-    val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
+    if convert_to_tensor:
+        # Transform to tf.tensors and add to val_dict
+        val_data_dict["X_valid"] = tf.convert_to_tensor(
+            X_valid, dtype=tf.float64
+        )
+        val_data_dict["Y_valid"] = tf.convert_to_tensor(
+            Y_valid, dtype=tf.int64
+        )
+
+    else:
+        val_data_dict["X_valid"] = X_valid
+        val_data_dict["Y_valid"] = Y_valid
 
     # Set placeholder Nones for the add_files
     (
@@ -1452,13 +1486,18 @@ def load_validation_data_dl1(
             cut_vars_dict=cut_vars_dict_add,
         )
 
-        # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid_add"] = tf.convert_to_tensor(
-            X_valid_add, dtype=tf.float64
-        )
-        val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
-            Y_valid_add, dtype=tf.int64
-        )
+        if convert_to_tensor:
+            # Transform to tf.tensors and add to val_dict
+            val_data_dict["X_valid_add"] = tf.convert_to_tensor(
+                X_valid_add, dtype=tf.float64
+            )
+            val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
+                Y_valid_add, dtype=tf.int64
+            )
+
+        else:
+            val_data_dict["X_valid_add"] = X_valid_add
+            val_data_dict["Y_valid_add"] = Y_valid_add
 
         # Assert a correct shape
         assert (
@@ -1474,6 +1513,7 @@ def load_validation_data_dips(
     train_config,
     preprocess_config,
     nJets: int,
+    convert_to_tensor: bool = False,
 ):
     """
     Load the validation data for DIPS.
@@ -1507,9 +1547,18 @@ def load_validation_data_dips(
         cut_vars_dict=cut_vars_dict,
     )
 
-    # Transform to tf.tensors and add to val_dict
-    val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
-    val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
+    if convert_to_tensor:
+        # Transform to tf.tensors and add to val_dict
+        val_data_dict["X_valid"] = tf.convert_to_tensor(
+            X_valid, dtype=tf.float64
+        )
+        val_data_dict["Y_valid"] = tf.convert_to_tensor(
+            Y_valid, dtype=tf.int64
+        )
+
+    else:
+        val_data_dict["X_valid"] = X_valid
+        val_data_dict["Y_valid"] = Y_valid
 
     # Set placeholder Nones for the add_files
     (
@@ -1535,13 +1584,18 @@ def load_validation_data_dips(
             cut_vars_dict=cut_vars_dict_add,
         )
 
-        # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid_add"] = tf.convert_to_tensor(
-            X_valid_add, dtype=tf.float64
-        )
-        val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
-            Y_valid_add, dtype=tf.int64
-        )
+        if convert_to_tensor:
+            # Transform to tf.tensors and add to val_dict
+            val_data_dict["X_valid_add"] = tf.convert_to_tensor(
+                X_valid_add, dtype=tf.float64
+            )
+            val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
+                Y_valid_add, dtype=tf.int64
+            )
+
+        else:
+            val_data_dict["X_valid_add"] = X_valid_add
+            val_data_dict["Y_valid_add"] = Y_valid_add
 
         # Assert a correct shape
         assert (
@@ -1637,7 +1691,7 @@ def evaluate_model_umami(
     ) = model.evaluate(
         [data_dict["X_valid_trk"], data_dict["X_valid"]],
         data_dict["Y_valid"],
-        batch_size=5000,
+        batch_size=5_000,
         use_multiprocessing=True,
         workers=8,
         verbose=0,
@@ -1646,7 +1700,7 @@ def evaluate_model_umami(
     # Evaluate with the model for predictions
     y_pred_dips, y_pred_umami = model.predict(
         [data_dict["X_valid_trk"], data_dict["X_valid"]],
-        batch_size=5000,
+        batch_size=5_000,
         use_multiprocessing=True,
         workers=8,
         verbose=0,
@@ -1692,7 +1746,7 @@ def evaluate_model_umami(
         ) = model.evaluate(
             [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]],
             data_dict["Y_valid_add"],
-            batch_size=5000,
+            batch_size=5_000,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -1701,7 +1755,7 @@ def evaluate_model_umami(
         # Evaluate with the model for predictions
         y_pred_dips_add, y_pred_umami_add = model.predict(
             [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]],
-            batch_size=5000,
+            batch_size=5_000,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -1788,18 +1842,28 @@ def evaluate_model(
     - Dict with validation metrics/rejections.
     """
 
+    # Check which input data need to be used
+    if "X_valid_trk" in data_dict and "X_valid" in data_dict:
+        x = [data_dict["X_valid_trk"], data_dict["X_valid"]]
+
+    elif "X_valid_trk" in data_dict and "X_valid" not in data_dict:
+        x = data_dict["X_valid_trk"]
+
+    else:
+        x = data_dict["X_valid"]
+
     loss, accuracy = model.evaluate(
-        data_dict["X_valid"],
-        data_dict["Y_valid"],
-        batch_size=5000,
+        x=x,
+        y=data_dict["Y_valid"],
+        batch_size=15_000,
         use_multiprocessing=True,
         workers=8,
         verbose=0,
     )
 
     y_pred_dips = model.predict(
-        data_dict["X_valid"],
-        batch_size=5000,
+        x=x,
+        batch_size=15_000,
         use_multiprocessing=True,
         workers=8,
         verbose=0,
@@ -1822,18 +1886,27 @@ def evaluate_model(
     ) = (None, None, None, None)
 
     if data_dict["X_valid_add"] is not None:
+        if "X_valid_trk_add" in data_dict and "X_valid_add" in data_dict:
+            x_add = [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]]
+
+        elif "X_valid_trk_add" in data_dict and "X_valid_add" not in data_dict:
+            x_add = data_dict["X_valid_trk_add"]
+
+        else:
+            x_add = data_dict["X_valid_add"]
+
         loss_add, accuracy_add = model.evaluate(
-            data_dict["X_valid_add"],
-            data_dict["Y_valid_add"],
-            batch_size=5000,
+            x=x_add,
+            y=data_dict["Y_valid_add"],
+            batch_size=15_000,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
         )
 
         y_pred_add = model.predict(
-            data_dict["X_valid_add"],
-            batch_size=5000,
+            x=x_add,
+            batch_size=15_000,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -1948,6 +2021,7 @@ def calc_validation_metrics(
             train_config=train_config,
             preprocess_config=preprocess_config,
             nJets=nJets,
+            convert_to_tensor=False,
         )
 
     elif tagger == "dl1":
@@ -1955,6 +2029,7 @@ def calc_validation_metrics(
             train_config=train_config,
             preprocess_config=preprocess_config,
             nJets=nJets,
+            convert_to_tensor=False,
         )
 
     elif tagger == "dips":
@@ -1962,7 +2037,23 @@ def calc_validation_metrics(
             train_config=train_config,
             preprocess_config=preprocess_config,
             nJets=nJets,
+            convert_to_tensor=False,
         )
+
+    elif tagger == "dips_cond_att":
+        data_dict = load_validation_data_umami(
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+            nJets=nJets,
+            jets_var_list=[
+                global_config.etavariable,
+                global_config.pTvariable,
+            ],
+            convert_to_tensor=False,
+        )
+
+    else:
+        raise ValueError(f"Tagger {tagger} is not supported!")
 
     # Loop over the different model savepoints at each epoch
     for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
@@ -1995,8 +2086,7 @@ def calc_validation_metrics(
 
         if tagger == "umami":
             # Load UMAMI model
-            with CustomObjectScope({"Sum": utf.Sum}):
-                umami = load_model(model_file)
+            umami = load_model(model_file, {"Sum": utf.Sum})
 
             # Evaluate Umami model
             val_result_dict = evaluate_model_umami(
@@ -2045,6 +2135,37 @@ def calc_validation_metrics(
 
             # Delete model
             del dips
+
+        elif tagger == "dips_cond_att":
+            # Load DIPS Conditional Attention model
+            with CustomObjectScope(
+                {
+                    "Sum": utf.Sum,
+                    "Attention": utf.Attention,
+                    "DeepSet": utf.DeepSet,
+                    "AttentionPooling": utf.AttentionPooling,
+                    "DenseNet": utf.DenseNet,
+                    "ConditionalAttention": utf.ConditionalAttention,
+                    "ConditionalDeepSet": utf.ConditionalDeepSet,
+                }
+            ):
+                dips_cond_add = load_model(model_file)
+
+            # Validate dips
+            val_result_dict = evaluate_model(
+                model=dips_cond_add,
+                data_dict=data_dict,
+                class_labels=NN_structure["class_labels"],
+                main_class=NN_structure["main_class"],
+                target_beff=target_beff,
+                frac_dict=Eval_parameters["frac_values"],
+            )
+
+            # Delete model
+            del dips_cond_add
+
+        else:
+            raise ValueError(f"Tagger {tagger} is not supported!")
 
         # Save results in dict
         for k, v in val_result_dict.items():

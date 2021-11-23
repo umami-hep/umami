@@ -39,6 +39,7 @@ setup(
         "umami/preprocessing.py",
         "umami/train_DL1.py",
         "umami/train_Dips.py",
+        "umami/train_Dips_cond_att.py",
         "umami/train_umami.py",
         "umami/evaluate_model.py",
         "umami/plotting_umami.py",
