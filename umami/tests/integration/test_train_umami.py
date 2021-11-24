@@ -24,16 +24,16 @@ def getConfiguration():
 
 
 def runTrainingUmami(config):
-    """Call train_umami.py.
+    """Call train.py for Umami.
     Return value `True` if training succeeded, `False` if one step did not succees."""
     isSuccess = True
 
-    logger.info("Test: running train_umami.py...")
-    run_train_Umami = run(["train_umami.py", "-c", f"{config}"])
+    logger.info("Test: running train.py for Umami...")
+    run_train_Umami = run(["train.py", "-c", f"{config}"])
     try:
         run_train_Umami.check_returncode()
     except CalledProcessError:
-        logger.info("Test failed: run_train_umami.py.")
+        logger.info("Test failed: train.py for Umami.")
         isSuccess = False
 
     if isSuccess is True:
@@ -45,8 +45,6 @@ def runTrainingUmami(config):
             "plotting_epoch_performance.py",
             "-c",
             f"{config}",
-            "--tagger",
-            "umami",
         ]
     )
     try:
@@ -220,5 +218,5 @@ class TestUmamiTraining(unittest.TestCase):
             run(["wget", path, "--directory-prefix", test_dir])
 
     def test_train_umami(self):
-        """Integration test of train_umami.py script."""
+        """Integration test of train.py for Umami script."""
         self.assertTrue(runTrainingUmami(self.config))

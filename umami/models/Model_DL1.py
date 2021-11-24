@@ -1,12 +1,11 @@
 from umami.configuration import logger  # isort:skip
-import argparse
 import json
 import os
 
 import h5py
 import tensorflow as tf
 import yaml
-from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.layers import (
     Activation,
     BatchNormalization,
@@ -20,67 +19,9 @@ from tensorflow.keras.optimizers import Adam
 import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.institutes.utils import is_qsub_available, submit_zeuthen
-from umami.preprocessing_tools import Configuration
 from umami.tools import yaml_loader
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
-
-
-def GetParser():
-    """Argument parser for Preprocessing script."""
-    parser = argparse.ArgumentParser(
-        description="Preprocessing command line" "options."
-    )
-
-    parser.add_argument(
-        "-c",
-        "--config_file",
-        type=str,
-        required=True,
-        help="Name of the training config file",
-    )
-
-    parser.add_argument(
-        "-e",
-        "--epochs",
-        type=int,
-        help="Number\
-        of training epochs.",
-    )
-
-    parser.add_argument(
-        "-cl",
-        "--chunk_loading",
-        action="store_true",
-        help="Load train dataset in chunks.",
-    )
-
-    parser.add_argument(
-        "-z",
-        "--zeuthen",
-        action="store_true",
-        help="Train on Zeuthen with GPU support",
-    )
-
-    # TODO: implementng vr_overlap
-    parser.add_argument(
-        "--vr_overlap",
-        action="store_true",
-        help="""Option to
-                        enable vr overlap removall for validation sets.""",
-    )
-    parser.add_argument(
-        "-o",
-        "--overwrite_config",
-        action="store_true",
-        help="Overwrite the configs files saved in metadata folder",
-    )
-    args = parser.parse_args()
-    return args
-
-
-# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-# TODO: add gpu support
 
 
 def DL1_model(train_config, input_shape):
@@ -219,15 +160,9 @@ def TrainLargeFile(args, train_config, preprocess_config):
         save_weights_only=False,
     )
 
-    reduce_lr = ReduceLROnPlateau(
-        monitor="loss",
-        factor=0.8,
-        patience=3,
-        verbose=1,
-        mode="auto",
-        cooldown=5,
-        min_lr=0.000001,
-    )
+    if "LRR" in NN_structure and NN_structure["LRR"] is True:
+        # Define LearningRate Reducer as Callback
+        reduce_lr = utf.GetLRReducer(**NN_structure)
 
     # Load validation data for callback
     val_data_dict = None
@@ -289,23 +224,4 @@ def TrainLargeFileZeuthen(args, train_config, preprocess_config):
         logger.warning(
             "No Zeuthen batch system found, training locally instead."
         )
-        TrainLargeFile(args, train_config, preprocess_config)
-
-
-if __name__ == "__main__":
-    args = GetParser()
-    train_config = utt.Configuration(args.config_file)
-    preprocess_config = Configuration(train_config.preprocess_config)
-
-    utt.create_metadata_folder(
-        train_config_path=args.config_file,
-        var_dict_path=train_config.var_dict,
-        model_name=train_config.model_name,
-        preprocess_config_path=train_config.preprocess_config,
-        overwrite_config=True if args.overwrite_config else False,
-    )
-
-    if args.zeuthen:
-        TrainLargeFileZeuthen(args, train_config, preprocess_config)
-    else:
         TrainLargeFile(args, train_config, preprocess_config)

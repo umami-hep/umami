@@ -17,3 +17,4 @@ from umami.tf_tools.layers import (
     Sum,
 )
 from umami.tf_tools.models import Deepsets_model
+from umami.tf_tools.tools import GetLRReducer

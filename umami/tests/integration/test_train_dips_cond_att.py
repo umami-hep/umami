@@ -24,18 +24,16 @@ def getConfiguration():
 
 
 def runTrainingDips(config):
-    """Call train_Dips_cond_att.py.
+    """Call train.py for DIPS Conditional Attention.
     Return value `True` if training succeeded, `False` if one step did not succees."""
     isSuccess = True
 
-    logger.info("Test: running train_Dips_cond_att.py...")
-    run_train_Dips_cond_att = run(
-        ["train_Dips_cond_att.py", "-c", f"{config}"]
-    )
+    logger.info("Test: running train.py for DIPS Conditional Attention...")
+    run_train_Dips_cond_att = run(["train.py", "-c", f"{config}"])
     try:
         run_train_Dips_cond_att.check_returncode()
     except CalledProcessError:
-        logger.info("Test failed: run_train_Dips_cond_att.py.")
+        logger.info("Test failed: train.py for DIPS Conditional Attention.")
         isSuccess = False
 
     if isSuccess is True:
@@ -49,8 +47,6 @@ def runTrainingDips(config):
             "plotting_epoch_performance.py",
             "-c",
             f"{config}",
-            "--tagger",
-            "dips_cond_att",
         ]
     )
     try:
@@ -74,7 +70,6 @@ def runTrainingDips(config):
             f"{config}",
             "-e",
             "1",
-            "--dips_cond_att",
         ]
     )
     try:
@@ -231,5 +226,5 @@ class TestDipsTraining(unittest.TestCase):
             run(["wget", path, "--directory-prefix", test_dir])
 
     def test_train_Dips_cond_att(self):
-        """Integration test of train_Dips_cond_att.py script."""
+        """Integration test of train.py for DIPS Conditional Attention script."""
         self.assertTrue(runTrainingDips(self.config))

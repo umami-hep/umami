@@ -41,6 +41,9 @@ exclude: []
 
 # Values for the neural network
 NN_structure:
+    # Decide, which tagger is used
+    tagger: "dips"
+
     # NN Training parameters
     lr: 0.001
     batch_size: 15000
@@ -68,6 +71,9 @@ NN_structure:
 
     # Structure of the dense layers after summing up the track outputs
     dense_sizes: [100, 100, 100, 30]
+
+    # Options for the Learning Rate reducer
+    LRR: True
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
