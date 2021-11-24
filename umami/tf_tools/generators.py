@@ -25,7 +25,6 @@ class Model_Generator(object):
         self.excluded_var = excluded_var
         self.nConds = nConds
         self.chunk_size = chunk_size
-        self.nConds = nConds
         self.print_logger = print_logger
         if n_jets is not None:
             self.n_jets = int(n_jets)
@@ -83,8 +82,7 @@ class Model_Generator(object):
             # Load jets if wanted
             if load_jets:
                 self.x_in_mem = f[self.X_Name][
-                    self.step_size * part : self.step_size * (part + 1),
-                    : self.nConds,
+                    self.step_size * part : self.step_size * (part + 1)
                 ]
 
                 # Exclude variables if needed
