@@ -233,6 +233,7 @@ sampling:
     #                   If set to -1: max out to target numbers (limited by fractions ratio)
     njets: 25e6
     save_tracks: True
+    tracks_name: "tracks"
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: indices.h5
     # outputfiles are split into 5 -> needs to be implemented

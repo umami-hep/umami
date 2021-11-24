@@ -160,8 +160,6 @@ class PrepareSamplesTestCase(unittest.TestCase):
         def __init__(self) -> None:
             self.sample = "ttbar"
             self.config_file = "test_preprocess_config.yaml"
-            self.tracks = False
-            self.tracks_name = "tracks"
             self.shuffle_array = True
 
     def setUp(self):
