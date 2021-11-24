@@ -328,6 +328,7 @@ sampling:
     # number of training jets
     njets: 25e6
     save_tracks: True
+    tracks_name: "tracks"
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: indices.h5
 ```
@@ -341,7 +342,7 @@ In `sampling`, we can define the method which is used in the preprocessing for r
 
 The `options` are some options for the different resampling methods. You need to define the sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins. 
 Another thing you need to define are the `samples` which are to be resampled. You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`.
-`fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The rest of the variables are pretty self-explanatory.
+`fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The `save_tracks` and the `tracks_name` options define the using of tracks. `save_tracks` is bool while `tracks_name` is a string. The latter is the name of the tracks how they are called in the .h5 files coming from the dumper. After the preparation stage, they will have the name `tracks`. The rest of the variables are pretty self-explanatory.
 If you want to use the PDF sampling, have a look at the example config [PFlow-Preprocessing-taus.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-taus.yaml).
 
 
@@ -398,28 +399,24 @@ The steps defined in the following segment are only performed on the training sa
 preprocessing.py --config <path to config file> --resampling
 ```
 
-If you want to also use the tracks of the jets, you need to give an extra flag `--tracks`. Track information are not needed for the DL1r but for DIPS and Umami. If you want to train one of those, you need to process the track information too with setting the `--tracks` flag:
-
-```bash
-preprocessing.py --config <path to config file> --resampling --tracks
-```
+If you want to also use the tracks of the jets, you need to set the option `save_tracks` in the preprocessing config to `True`. If the tracks have a different name than `"tracks"` in the .h5 files coming from the dumper, you can also set change `tracks_name` to your needs. Track information are not needed for the DL1r but for DIPS and Umami.
 
 2. Retrieving scaling and shifting factors:
 
 ```bash
-preprocessing.py --config <path to config file> --scaling --tracks
+preprocessing.py --config <path to config file> --scaling
 ```
 
 3. Applying shifting and scaling factors
 
 ```bash
-preprocessing.py --config <path to config file> --apply_scales --tracks
+preprocessing.py --config <path to config file> --apply_scales
 ```
 
 4. Writing the samples to disk in the correct format for training.
 
 ```bash
-preprocessing.py --config <path to config file> --write --tracks
+preprocessing.py --config <path to config file> --write
 ```
 
 ## Full example

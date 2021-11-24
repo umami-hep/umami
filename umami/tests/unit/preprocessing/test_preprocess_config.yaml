@@ -112,7 +112,8 @@ sampling:
       ttbar: 0.65
       zprime: 0.35
     # can change after applying resampling in the hybrid sample creation
-    save_tracks: True
+    save_tracks: False
+    tracks_name: "tracks"
     njets: 5.5e6
     intermediate_index_file: indices.h5
     # outputfiles are split into 5

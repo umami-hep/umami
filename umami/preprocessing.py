@@ -19,17 +19,6 @@ def GetParser():
         " hybrid sample.",
     )
     parser.add_argument(
-        "-t",
-        "--tracks",
-        action="store_true",
-        help="Stores also track information.",
-    )
-    parser.add_argument(
-        "--tracks_name",
-        default="tracks",
-        help="Enter the name of the tracks dataset.",
-    )
-    parser.add_argument(
         "--sample",
         default=None,
         help="Choose sample type for hybrid sample preparation"

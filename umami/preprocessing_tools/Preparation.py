@@ -70,8 +70,20 @@ class PrepareSamples:
             )
             self.cuts = cuts + category_cuts
         self.n_jets_to_get = int(sample.get("n_jets", 0))
-        self.save_tracks = args.tracks
-        self.tracks_name = args.tracks_name
+
+        # Check if tracks are used
+        self.save_tracks = self.config.sampling["options"]["save_tracks"]
+
+        # Check for tracks name. If not there, use default
+        if (
+            "tracks_name" in self.config.sampling["options"]
+            and self.config.sampling["options"]["tracks_name"] is not None
+        ):
+            self.tracks_name = self.config.sampling["options"]["tracks_name"]
+
+        else:
+            self.tracks_name = "tracks"
+
         output_path = sample.get("f_output")["path"]
         self.output_file = os.path.join(
             output_path, sample.get("f_output")["file"]

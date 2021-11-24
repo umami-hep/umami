@@ -45,30 +45,17 @@ def runPreprocessing(config, tagger):
         "training_zprime_cjets",
         "training_zprime_ujets",
     ]:
-        if tagger == "dl1r":
-            run_prepare = run(
-                [
-                    "preprocessing.py",
-                    "-c",
-                    f"{config}",
-                    "--sample",
-                    f"{sample}",
-                    "--prepare",
-                ]
-            )
+        run_prepare = run(
+            [
+                "preprocessing.py",
+                "-c",
+                f"{config}",
+                "--sample",
+                f"{sample}",
+                "--prepare",
+            ]
+        )
 
-        else:
-            run_prepare = run(
-                [
-                    "preprocessing.py",
-                    "-c",
-                    f"{config}",
-                    "--sample",
-                    f"{sample}",
-                    "--tracks",
-                    "--prepare",
-                ]
-            )
         try:
             run_prepare.check_returncode()
         except CalledProcessError:
@@ -79,26 +66,15 @@ def runPreprocessing(config, tagger):
             run_prepare
 
     logger.info("Test: running the resampling...")
-    if tagger == "dl1r":
-        run_resampling = run(
-            [
-                "preprocessing.py",
-                "-c",
-                f"{config}",
-                "--resampling",
-            ]
-        )
+    run_resampling = run(
+        [
+            "preprocessing.py",
+            "-c",
+            f"{config}",
+            "--resampling",
+        ]
+    )
 
-    else:
-        run_resampling = run(
-            [
-                "preprocessing.py",
-                "-c",
-                f"{config}",
-                "--tracks",
-                "--resampling",
-            ]
-        )
     try:
         run_resampling.check_returncode()
     except CalledProcessError:
@@ -109,31 +85,17 @@ def runPreprocessing(config, tagger):
         run_resampling
 
     logger.info("Test: retrieving scaling and shifting factors...")
+    run_scaling = run(
+        [
+            "preprocessing.py",
+            "-c",
+            f"{config}",
+            "--scaling",
+            "--chunk_size",
+            "1000",
+        ]
+    )
 
-    if tagger == "dl1r":
-        run_scaling = run(
-            [
-                "preprocessing.py",
-                "-c",
-                f"{config}",
-                "--scaling",
-                "--chunk_size",
-                "1000",
-            ]
-        )
-
-    else:
-        run_scaling = run(
-            [
-                "preprocessing.py",
-                "-c",
-                f"{config}",
-                "--scaling",
-                "--chunk_size",
-                "1000",
-                "--tracks",
-            ]
-        )
     try:
         run_scaling.check_returncode()
     except CalledProcessError:
@@ -144,26 +106,15 @@ def runPreprocessing(config, tagger):
         run_scaling
 
     logger.info("Test: applying shifting and scaling factors...")
-    if tagger == "dl1r":
-        run_apply_scales = run(
-            [
-                "preprocessing.py",
-                "-c",
-                f"{config}",
-                "--apply_scales",
-            ]
-        )
+    run_apply_scales = run(
+        [
+            "preprocessing.py",
+            "-c",
+            f"{config}",
+            "--apply_scales",
+        ]
+    )
 
-    else:
-        run_apply_scales = run(
-            [
-                "preprocessing.py",
-                "-c",
-                f"{config}",
-                "--apply_scales",
-                "--tracks",
-            ]
-        )
     try:
         run_apply_scales.check_returncode()
     except CalledProcessError:
@@ -176,26 +127,15 @@ def runPreprocessing(config, tagger):
     logger.info(
         "Test: shuffling the samples and writing the samples to disk..."
     )
-    if tagger == "dl1r":
-        run_write = run(
-            [
-                "preprocessing.py",
-                "-c",
-                f"{config}",
-                "--write",
-            ]
-        )
+    run_write = run(
+        [
+            "preprocessing.py",
+            "-c",
+            f"{config}",
+            "--write",
+        ]
+    )
 
-    else:
-        run_write = run(
-            [
-                "preprocessing.py",
-                "-c",
-                f"{config}",
-                "--write",
-                "--tracks",
-            ]
-        )
     try:
         run_write.check_returncode()
     except CalledProcessError:

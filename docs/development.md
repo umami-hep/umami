@@ -152,10 +152,10 @@ info_text_event = f"We are using the {jet_collection} jet collection and have {n
 In Python 3 a dedicated integer division was introduced. 
 
 ```python
-# standard division -> returns by default a flaot
+# standard division -> returns by default a flaot (no rounding)
 nEvents = nJets / 4
 
-# integer division -> returns an integer
+# integer division -> rounds to integer precision
 nEvents = nJets // 4
 ```
 
