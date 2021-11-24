@@ -24,16 +24,16 @@ def getConfiguration():
 
 
 def runTrainingDL1(config):
-    """Call train_DL1.py.
+    """Call train.py for DL1.
     Return value `True` if training succeeded, `False` if one step did not succees."""
     isSuccess = True
 
-    logger.info("Test: running train_DL1.py...")
-    run_train_DL1 = run(["train_DL1.py", "-c", f"{config}"])
+    logger.info("Test: running train.py for DL1...")
+    run_train_DL1 = run(["train.py", "-c", f"{config}"])
     try:
         run_train_DL1.check_returncode()
     except CalledProcessError:
-        logger.info("Test failed: run_train_DL1.py.")
+        logger.info("Test failed: train.py for DL1.")
         isSuccess = False
 
     if isSuccess is True:
@@ -45,8 +45,6 @@ def runTrainingDL1(config):
             "plotting_epoch_performance.py",
             "-c",
             f"{config}",
-            "--tagger",
-            "dl1",
         ]
     )
     try:
@@ -66,7 +64,6 @@ def runTrainingDL1(config):
             f"{config}",
             "-e",
             "1",
-            "--dl1",
         ]
     )
     try:
@@ -88,7 +85,6 @@ def runTrainingDL1(config):
             f"{config}",
             "-e",
             "1",
-            "--dl1",
             "--shapley",
         ]
     )
@@ -250,5 +246,5 @@ class TestDL1Training(unittest.TestCase):
             run(["wget", path, "--directory-prefix", test_dir])
 
     def test_train_DL1(self):
-        """Integration test of train_DL1.py script."""
+        """Integration test of train.py for DL1 script."""
         self.assertTrue(runTrainingDL1(self.config))

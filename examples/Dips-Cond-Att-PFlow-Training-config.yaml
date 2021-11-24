@@ -41,6 +41,9 @@ exclude: []
 
 # Values for the neural network
 NN_structure:
+    # Decide, which tagger is used
+    tagger: "dips_cond_att"
+
     # NN Training parameters
     lr: 0.001
     batch_size: 15000
@@ -86,6 +89,9 @@ NN_structure:
 
     # Decide, if the pT and eta info is folded into the attention network input
     attention_condition: True
+
+    # Options for the Learning Rate reducer
+    LRR: True
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:

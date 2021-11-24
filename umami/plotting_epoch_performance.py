@@ -51,7 +51,6 @@ def GetParser():
         "-t",
         "--tagger",
         type=str,
-        required=True,
         help="""Model type which is used.
         You can either use 'dips', 'dips_cond_att', 'dl1' or 'umami'.""",
     )
@@ -68,8 +67,15 @@ def main(args, train_config, preprocess_config):
     else:
         nJets = args.nJets
 
+    # Get the tagger from args. If not given, use the one from train config
+    if args.tagger:
+        tagger = args.tagger
+
+    else:
+        tagger = train_config.NN_structure["tagger"]
+
     # Check if the tagger given is supported
-    if args.tagger in ["umami", "dl1", "dips", "dips_cond_att"]:
+    if tagger in ["umami", "dl1", "dips", "dips_cond_att"]:
 
         # If dict is given, the re-calculation is skipped
         if args.dict:
@@ -88,14 +94,14 @@ def main(args, train_config, preprocess_config):
                 if args.beff
                 else train_config.Eval_parameters_validation["WP"],
                 nJets=nJets,
-                tagger=args.tagger,
+                tagger=tagger,
             )
             beff = train_config.Eval_parameters_validation["WP"]
 
         # Run the Performance check with the values from the dict and plot them
         RunPerformanceCheck(
             train_config=train_config,
-            tagger=args.tagger,
+            tagger=tagger,
             tagger_comp_vars={
                 f"{comp_tagger}": get_class_prob_var_names(
                     tagger_name=f"{comp_tagger}",

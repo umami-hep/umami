@@ -24,16 +24,16 @@ def getConfiguration():
 
 
 def runTrainingDips(config):
-    """Call train_Dips.py.
+    """Call train.py for DIPS.
     Return value `True` if training succeeded, `False` if one step did not succees."""
     isSuccess = True
 
-    logger.info("Test: running train_Dips.py...")
-    run_train_Dips = run(["train_Dips.py", "-c", f"{config}"])
+    logger.info("Test: running train.py for DIPS...")
+    run_train_Dips = run(["train.py", "-c", f"{config}"])
     try:
         run_train_Dips.check_returncode()
     except CalledProcessError:
-        logger.info("Test failed: run_train_Dips.py.")
+        logger.info("Test failed: train.py for DIPS.")
         isSuccess = False
 
     if isSuccess is True:
@@ -45,8 +45,6 @@ def runTrainingDips(config):
             "plotting_epoch_performance.py",
             "-c",
             f"{config}",
-            "--tagger",
-            "dips",
         ]
     )
     try:
@@ -66,7 +64,6 @@ def runTrainingDips(config):
             f"{config}",
             "-e",
             "1",
-            "--dips",
         ]
     )
     try:
@@ -219,5 +216,5 @@ class TestDipsTraining(unittest.TestCase):
             run(["wget", path, "--directory-prefix", test_dir])
 
     def test_train_dips(self):
-        """Integration test of train_dips.py script."""
+        """Integration test of train.py for DIPS script."""
         self.assertTrue(runTrainingDips(self.config))

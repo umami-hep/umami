@@ -24,22 +24,22 @@ After all the files are ready we can start with the training. The config file fo
 
 ```yaml
 # Set modelname and path to Pflow preprocessing config file
-model_name: dips_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
-preprocess_config: <path>/<to>/<umami>/umami/examples/PFlow-Preprocessing.yaml
+model_name: <MODELNAME>
+preprocess_config: <path>/<to>/<preprocessing>/<config>/PFlow-Preprocessing.yaml
 
 # Add here a pretrained model to start with.
 # Leave empty for a fresh start
 model_file:
 
 # Add training file
-train_file: <path>/<to>/<preprocessed>/<samples>/train_file.h5
+train_file: <path>/<to>/<train>/<samples>/train_file.h5
 
 # Add validation files
 # ttbar val
-validation_file: <path>/<to>/<preprocessed>/<samples>/ttbar_validation_file.h5
+validation_file: <path>/<to>/<validation>/<samples>/ttbar_r21_validation_file.h5
 
 # zprime val
-add_validation_file: <path>/<to>/<preprocessed>/<samples>/zpext_validation_file.h5
+add_validation_file:  <path>/<to>/<validation>/<samples>/zpext_r21_validation_file.h5
 
 ttbar_test_files:
     ttbar_r21:
@@ -60,12 +60,15 @@ zpext_test_files:
         data_set_name: "zpext_r22"
 
 # Path to Variable dict used in preprocessing
-var_dict: <path>/<to>/<umami>/umami/umami/configs/Dips_Variables.yaml
+var_dict: <path>/<to>/<variables>/Dips_Variables.yaml
 
 exclude: []
 
 # Values for the neural network
 NN_structure:
+    # Decide, which tagger is used
+    tagger: "dips"
+
     # NN Training parameters
     lr: 0.001
     batch_size: 15000
@@ -93,6 +96,9 @@ NN_structure:
 
     # Structure of the dense layers after summing up the track outputs
     dense_sizes: [100, 100, 100, 30]
+
+    # Options for the Learning Rate reducer
+    LRR: True
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
@@ -180,6 +186,7 @@ The different options are briefly explained here:
 | `var_dict` | String | Necessary | Path to the variable dict used in the `preprocess_config` to produce the train sample. |
 | `exclude` | List | Necessary | List of variables that are excluded from training. Only compatible with DL1r training. To include all, just give an empty list. |
 | `NN_structure` | None | Necessary | A dict where all important information for the training are defined. |
+| `tagger` | String | Necessary | Name of the tagger that is used/to be trained. |
 | `lr` | Float | Necessary | Learning rate which is used for training. |
 | `batch_size` | Int | Necessary | Batch size which is used for training. |
 | `epochs` | Int | Necessary | Number of epochs of the training. |
@@ -190,6 +197,14 @@ The different options are briefly explained here:
 | `Batch_Normalisation` | Bool | Necessary | Decide, if batch normalisation is used in the _ϕ_ network. |
 | `ppm_sizes` | List | Necessary | List of nodes per layer of the _ϕ_ network. Every entry is one layer. The numbers need to be ints! |
 | `dense_sizes` | List | Necessary | List of nodes per layer of the _F_ network. Every entry is one layer. The numbers need to be ints! |
+| `LRR` | Bool | Optional | Decide, if a Learning Rate Reducer (LRR) is used or not. If yes, the following options can be added. |
+| `LRR_monitor` | String | Optional | Quantity to be monitored. Default: "loss" |
+| `LRR_factor` | Float | Optional | Factor by which the learning rate will be reduced. `new_lr = lr * factor`. Default: 0.8 |
+| `LRR_patience` | Int | Optional | Number of epochs with no improvement after which learning rate will be reduced. Default: 3 |
+| `LRR_verbose` | Int | Optional | 0: Quiet, 1: Update messages. Default: 1 |
+| `LRR_mode` | String | Optional | One of `{"auto", "min", "max"}`. In "min" mode, the learning rate will be reduced when the quantity monitored has stopped decreasing; in "max" mode it will be reduced when the quantity monitored has stopped increasing; in "auto" mode, the direction is automatically inferred from the name of the monitored quantity. Default: "auto" |
+| `LRR_cooldown` | Int | Optional | Number of epochs to wait before resuming normal operation after lr has been reduced. Default: 5 |
+| `LRR_min_lr` | Float | Optional | Lower bound on the learning rate. Default: 0.000001 |
 | `Eval_parameters_validation` | None | Necessary | A dict where all important information for the training are defined. |
 | `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. | 
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
@@ -223,7 +238,7 @@ This script sets the python path to a specific folder where the executables are 
 After that, you can switch to the folder `umami/umami` and run the training, using the following command
 
 ```bash
-train_Dips.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml
+train.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml
 ```
 
 The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). 
@@ -231,13 +246,13 @@ The results after each epoch will be saved to the `umami/umami/MODELNAME/` folde
 If you want instant performance checks of the model after each epoch during the training, you can use
 
 ```bash
-plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips
+plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml
 ```
 
-which will write out plots for the not- main flavour rejections, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. The `--dips` option defines that the DIPS tagger is used. In this form, the performance measurements, like the rejection performances, will be recalculated using the working point, the `frac_values` and the number of validation jets defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). If you don't want to recalculate it, you can give the path to the existing dict with the option `--dict`. For example:
+which will write out plots for the not- main flavour rejections, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. In this form, the performance measurements, like the rejection performances, will be recalculated using the working point, the `frac_values` and the number of validation jets defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). If you don't want to recalculate it, you can give the path to the existing dict with the option `--dict`. For example:
 
 ```bash
-plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips --dict dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full/validation_WP0p77_fc0p018_300000jets_Dict.json
+plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dict dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full/validation_WP0p77_fc0p018_300000jets_Dict.json
 ```
 
 ### Train on Zeuthen Cluster
@@ -255,8 +270,8 @@ The job will output a log to the current working directory and copy the results 
 After the training is over, the different epochs can be evaluated with ROC plots, output scores, saliency maps and confusion matrices etc. using the build-in scripts. Before plotting these, the model needs to be evaluated using the [evaluate_model.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py).
 
 ```bash
-evaluate_model.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dips -e 5
+evaluate_model.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml -e 5
 ```
 
-The `-e` options (here `5`) allows to set the training epoch which should be evaluated. The `--dips` option defines that the DIPS tagger is used.
+The `-e` options (here `5`) allows to set the training epoch which should be evaluated.
 It will produce .h5 and .pkl files with the evaluations which will be saved in the model folder in an extra folder called `results/`. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. For an explanation, look in the [plotting_umami documentation](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting_umami.md)

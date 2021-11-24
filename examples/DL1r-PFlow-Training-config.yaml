@@ -42,6 +42,9 @@ bool_use_taus: False
 exclude: []
 
 NN_structure:
+    # Decide, which tagger is used
+    tagger: "dl1"
+
     # NN Training parameters
     lr: 0.001
     batch_size: 15000
@@ -69,6 +72,9 @@ NN_structure:
 
     # Activations of the layers. Starting with first dense layer.
     activations: ["relu", "relu", "relu", "relu", "relu", "relu", "relu", "relu"]
+
+    # Options for the Learning Rate reducer
+    LRR: True
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:

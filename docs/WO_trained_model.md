@@ -63,7 +63,7 @@ Eval_parameters_validation:
     # Cuts which are applied to the different datasets used for evaluation
     variable_cuts:
         ttbar_r21:
-            - pt_btagJes: 
+            - pt_btagJes:
                 operator: "<="
                 condition: 250000
 
@@ -93,7 +93,6 @@ Plotting_settings:
 
     # Set the datatype of the plots
     plot_datatype: "pdf"
-
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
