@@ -89,15 +89,15 @@ def plot_nTracks_per_Jet(
     trks_dict = {}
     flavour_label_dict = {}
 
-    # Init jet counter
-    nJets_counter = 0
-
     # Iterate over the different dataset filepaths and labels
     # defined in the config
     for (filepath, label) in zip(
         datasets_filepaths,
         datasets_labels,
     ):
+        # Init jet counter
+        nJets_counter = 0
+
         # Get the filepath of the dataset
         filepath = glob(filepath)
 
@@ -110,6 +110,7 @@ def plot_nTracks_per_Jet(
                     filepath=file,
                     class_labels=class_labels,
                     nJets=nJets,
+                    print_logger=False,
                 )
 
                 if file_counter == 0:
@@ -469,15 +470,15 @@ def plot_input_vars_trks_comparison(
     trks_dict = {}
     flavour_label_dict = {}
 
-    # Init jet counter
-    nJets_counter = 0
-
     # Iterate over the different dataset filepaths and labels
     # defined in the config
     for filepath, label in zip(
         datasets_filepaths,
         datasets_labels,
     ):
+        # Init jet counter
+        nJets_counter = 0
+
         # Get wildcard
         filepath = glob(filepath)
 
@@ -490,6 +491,7 @@ def plot_input_vars_trks_comparison(
                     filepath=file,
                     class_labels=class_labels,
                     nJets=nJets,
+                    print_logger=False,
                 )
 
                 if file_counter == 0:
@@ -937,15 +939,15 @@ def plot_input_vars_trks(
     trks_dict = {}
     flavour_label_dict = {}
 
-    # Init jet counter
-    nJets_counter = 0
-
     # Iterate over the different dataset filepaths and labels
     # defined in the config
     for (filepath, label) in zip(
         datasets_filepaths,
         datasets_labels,
     ):
+        # Init jet counter
+        nJets_counter = 0
+
         # Get wildcard
         filepath = glob(filepath)
 
@@ -958,6 +960,7 @@ def plot_input_vars_trks(
                     filepath=file,
                     class_labels=class_labels,
                     nJets=nJets,
+                    print_logger=False,
                 )
 
                 if file_counter == 0:
@@ -1281,15 +1284,15 @@ def plot_input_vars_jets(
     jets_dict = {}
     flavour_label_dict = {}
 
-    # Init jet counter
-    nJets_counter = 0
-
     # Iterate over the different dataset filepaths and labels
     # defined in the config
     for (filepath, label) in zip(
         datasets_filepaths,
         datasets_labels,
     ):
+        # Init jet counter
+        nJets_counter = 0
+
         # Get wildcard
         filepath = glob(filepath)
 
@@ -1302,6 +1305,7 @@ def plot_input_vars_jets(
                     filepath=file,
                     class_labels=class_labels,
                     nJets=nJets,
+                    print_logger=False,
                 )
 
                 if file_counter == 0:
@@ -1576,15 +1580,15 @@ def plot_input_vars_jets_comparison(
     jets_dict = {}
     flavour_label_dict = {}
 
-    # Init jet counter
-    nJets_counter = 0
-
     # Iterate over the different dataset filepaths and labels
     # defined in the config
     for (filepath, label) in zip(
         datasets_filepaths,
         datasets_labels,
     ):
+        # Init jet counter
+        nJets_counter = 0
+
         # Get wildcard
         filepath = glob(filepath)
 
@@ -1597,6 +1601,7 @@ def plot_input_vars_jets_comparison(
                     filepath=file,
                     class_labels=class_labels,
                     nJets=nJets,
+                    print_logger=False,
                 )
 
                 if file_counter == 0:
