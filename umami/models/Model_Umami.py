@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from umami.configuration import logger  # isort:skip
 import json
+import os
 
 import h5py
 import tensorflow as tf
@@ -177,13 +178,50 @@ def Umami(args, train_config, preprocess_config):
         variable_config["train_variables"], exclude
     )
 
-    with h5py.File(train_config.train_file, "r") as f:
-        nJets, nTrks, nFeatures = f["X_trk_train"].shape
-        nJets, nDim = f["Y_train"].shape
-        nJets, njet_features = f["X_train"].shape
+    if ".h5" in train_config.train_file:
+        with h5py.File(train_config.train_file, "r") as f:
+            nJets, nTrks, nFeatures = f["X_trk_train"].shape
+            nJets, nDim = f["Y_train"].shape
+            nJets, njet_features = f["X_train"].shape
+    elif os.path.isdir(train_config.train_file):
+        train_file_names = os.listdir(train_config.train_file)
+        for train_file_name in train_file_names:
+            if not (".tfrecord" in train_file_name) and not (
+                train_file_name == "metadata.json"
+            ):
+                raise ValueError(
+                    f"input file {train_config.train_file} is neither a .h5 file nor a directory with TF Record Files. You should check this."
+                )
+        if "metadata.json" not in train_file_names:
+            raise KeyError("No metadata file in directory.")
+        try:
+            nfiles = train_config.config["nfiles"]
+        except KeyError:
+            logger.warning(
+                "no number of files to be loaded in parallel defined. Set to 5"
+            )
+            nfiles = 5
+        tfrecord_reader = utf.TFRecordReader(
+            train_config.train_file, NN_structure["batch_size"], nfiles
+        )
+        train_dataset = tfrecord_reader.load_Dataset()
+        metadata_name = (train_config.train_file + "/metadata.json").replace(
+            "//", "/"
+        )
+        with open(metadata_name, "r") as metadata_file:
+            metadata = json.load(metadata_file)
+            nJets = metadata["nJets"]
+            nTrks = metadata["nTrks"]
+            nFeatures = metadata["nFeatures"]
+            njet_features = metadata["njet_features"]
+            nDim = metadata["nDim"]
+    else:
+        raise ValueError(
+            f"input file {train_config.train_file} is neither a .h5 file nor a directory with TF Record Files. You should check this."
+        )
 
-        if NN_structure["nJets_train"] is not None:
-            nJets = int(NN_structure["nJets_train"])
+    if NN_structure["nJets_train"] is not None:
+        nJets = int(NN_structure["nJets_train"])
 
     logger.info(f"nJets: {nJets}, nTrks: {nTrks}")
     logger.info(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
@@ -194,32 +232,33 @@ def Umami(args, train_config, preprocess_config):
         njet_features=njet_features,
     )
 
-    train_dataset = (
-        tf.data.Dataset.from_generator(
-            utf.umami_generator(
-                train_file_path=train_config.train_file,
-                X_Name="X_train",
-                X_trk_Name="X_trk_train",
-                Y_Name="Y_train",
-                n_jets=nJets,
-                batch_size=NN_structure["batch_size"],
-                excluded_var=excluded_var,
-            ),
-            output_types=(
-                {"input_1": tf.float32, "input_2": tf.float32},
-                tf.float32,
-            ),
-            output_shapes=(
-                {
-                    "input_1": tf.TensorShape([None, nTrks, nFeatures]),
-                    "input_2": tf.TensorShape([None, njet_features]),
-                },
-                tf.TensorShape([None, nDim]),
-            ),
+    if ".h5" in train_config.train_file:
+        train_dataset = (
+            tf.data.Dataset.from_generator(
+                utf.umami_generator(
+                    train_file_path=train_config.train_file,
+                    X_Name="X_train",
+                    X_trk_Name="X_trk_train",
+                    Y_Name="Y_train",
+                    n_jets=nJets,
+                    batch_size=NN_structure["batch_size"],
+                    excluded_var=excluded_var,
+                ),
+                output_types=(
+                    {"input_1": tf.float32, "input_2": tf.float32},
+                    tf.float32,
+                ),
+                output_shapes=(
+                    {
+                        "input_1": tf.TensorShape([None, nTrks, nFeatures]),
+                        "input_2": tf.TensorShape([None, njet_features]),
+                    },
+                    tf.TensorShape([None, nDim]),
+                ),
+            )
+            .repeat()
+            .prefetch(3)
         )
-        .repeat()
-        .prefetch(3)
-    )
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:

@@ -147,8 +147,23 @@ test_train_umami:
   dependencies:
     - test_preprocessing_umami
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v -s --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v -s --junitxml=report.xml -k "test_train_umami"
     - cp .coverage ./coverage_files/.coverage.test_train_umami
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_umami_model/
+      - coverage_files/
+
+test_train_umami_tfrecords:
+  <<: *test_template
+  stage: integration_test_tagger
+  needs: ["test_preprocessing_umami"]
+  dependencies:
+   - test_preprocessing_umami
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v -s --junitxml=report.xml -k "test_tfrecords_train_umami"
+    - cp .coverage ./coverage_files/.coverage.test_train_umami_tfrecords
   artifacts:
     <<: *artifact_template
     paths:

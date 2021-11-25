@@ -35,6 +35,7 @@ def GetParser():
         default=int(1e6),
         help="Set the chunk size of the generators.",
     )
+
     # possible job options for the different preprocessing steps
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument(
@@ -72,6 +73,13 @@ def GetParser():
         action="store_true",
         help="""Shuffles sample and writes training sample and
         training labels to disk""",
+    )
+
+    action.add_argument(
+        "-r",
+        "--to_records",
+        action="store_true",
+        help="convert h5 file into tf records",
     )
 
     parser.add_argument(
@@ -148,6 +156,10 @@ if __name__ == "__main__":
             config, compression=config.config["compression"]
         )
         Writer.WriteTrainSample()
+
+    elif args.to_records:
+        Converter = upt.h5toTFRecordConverter(config)
+        Converter.write_tfrecord()
 
     # Give error when nothing is used
     else:

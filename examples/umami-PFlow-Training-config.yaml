@@ -31,6 +31,9 @@ var_dict: /nfs/dust/atlas/user/ahnenjan/phd/umami/umami-git/umami/configs/Umami_
 
 exclude: []
 
+# number of files to be loaded in parallel when using TF Records as input files
+nfiles: 5
+
 NN_structure:
     # Decide, which tagger is used
     tagger: "umami"

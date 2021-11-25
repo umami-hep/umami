@@ -77,6 +77,9 @@ preparation:
 
   class_labels: [ujets, cjets, bjets]
 
+  convert:
+    chunk_size: 5000
+
   samples:
     training_ttbar_bjets:
       type: ttbar

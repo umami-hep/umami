@@ -170,6 +170,9 @@ preparation:
 
   class_labels: [ujets, cjets, bjets]
 
+  convert:
+    chunk_size: 5000
+
   samples:
     training_ttbar_bjets:
       type: ttbar
@@ -284,6 +287,13 @@ preparation:
 In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.   
 
 Another important part are the `class_labels` which are defined here. You can define here which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list here to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
+
+If you want to save the samples as TFRecord files you can specify under `convert` the `chunk_size`, i.e. the number of samples to be loaded and saved per file.
+
+??? info "TF records"
+
+    TF records are the Tensorflow's own file format to store datasets. Especially when working with large datasets this format can be useful. In TF records the data is saved as a sequence of binary strings. This has the advatage that reading the data is significatly faster than from a .h5 file. In addition the data can be saved in multiple files instead of one big file containing all data. This way the reading procedure can be parallised which speeds up the whole training.
+    Besides of this, since TF records are the Tensorflow's own file format, it is optimised for the usage with Tensorflow. For example, the dataset is not stored completely in memory but automatically loaded in batches as soon as needed.
 
 The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. Also you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
@@ -417,6 +427,12 @@ preprocessing.py --config <path to config file> --apply_scales
 
 ```bash
 preprocessing.py --config <path to config file> --write
+```
+
+If you are saving the tracks with the extra flag `--tracks` it might be useful to save your samples as a directory with tf Records. This can be done by using `--to_records`.
+
+```bash
+preprocessing.py --config <path to config file> --to_records --tracks
 ```
 
 ## Full example
