@@ -143,6 +143,29 @@ def runPreprocessing(config, tagger):
     if isSuccess is True:
         run_write
 
+    logger.info(
+        "Test: shuffling the samples, writing the samples to disk and convert them to tf record files..."
+    )
+
+    if tagger == "umami":
+        run_record = run(
+            [
+                "preprocessing.py",
+                "-c",
+                f"{config}",
+                "--to_records",
+            ]
+        )
+        try:
+            run_record.check_returncode()
+        except CalledProcessError:
+            logger.info("Test failed: preprocessing.py --to_records.")
+            isSuccess = False
+
+        if isSuccess is True:
+            run_record
+
+    if isSuccess is True:
         tagger_path = f"./preprocessing_{tagger}/"
         if not os.path.isdir(tagger_path):
             run(["mkdir", tagger_path])

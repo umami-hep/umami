@@ -125,6 +125,10 @@ class TestUmamiTraining(unittest.TestCase):
             "./preprocessing_umami/preprocessing/",
             "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
         )
+        self.train_tfrecords_files = os.path.join(
+            "./preprocessing_umami/preprocessing/",
+            "PFlow-hybrid_70-test-resampled_scaled_shuffled",
+        )
         self.test_file_ttbar = os.path.join(
             test_dir, "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
         )
@@ -207,6 +211,31 @@ class TestUmamiTraining(unittest.TestCase):
         with open(self.config, "w") as config:
             yaml.dump(self.config_file, config, default_flow_style=False)
 
+        # copy config file but change the train_file to the directory with the tf record files instead of the h5 file
+        # and change name of model to save model in new folder
+        self.tfrecords_config = (
+            self.config[:].replace(".yaml", "") + "_tfrecords.yaml"
+        )
+
+        with open(self.config, "r") as tfrecords_config:
+            self.config_tfrecords_file = yaml.load(
+                tfrecords_config, Loader=yaml_loader
+            )
+
+        self.config_tfrecords_file[
+            "train_file"
+        ] = f"{self.train_tfrecords_files}"
+        self.config_tfrecords_file["model_name"] = (
+            self.data["test_umami"]["model_name"] + "_tfrecords"
+        )
+
+        with open(self.tfrecords_config, "w") as tfrecords_config:
+            yaml.dump(
+                self.config_tfrecords_file,
+                tfrecords_config,
+                default_flow_style=False,
+            )
+
         logger.info("Downloading test data...")
         for file in self.data["test_umami"]["files"]:
             path = os.path.join(
@@ -220,3 +249,7 @@ class TestUmamiTraining(unittest.TestCase):
     def test_train_umami(self):
         """Integration test of train.py for Umami script."""
         self.assertTrue(runTrainingUmami(self.config))
+
+    def test_tfrecords_train_umami(self):
+        """Integration test of train_umami.py script with tf records as input."""
+        self.assertTrue(runTrainingUmami(self.tfrecords_config))
