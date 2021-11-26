@@ -298,10 +298,8 @@ class Resampling(object):
         """
         Parameters
         ----------
-        sampling_options: dict with the sampling options from the preprocessing
-                          config file
-        preparation_samples: dict with the preparation options from the
-                             preprocessing config file
+        config: umami.preprocessing_tools.Configuration object which stores
+                the config for the preprocessing
         Returns
         -------
         """
