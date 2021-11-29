@@ -53,12 +53,6 @@ def GetParser():
     )
 
     parser.add_argument(
-        "--dips_cond_att",
-        action="store_true",
-        help="Evaluating Dips Conditional Attention tagger with model output.",
-    )
-
-    parser.add_argument(
         "--nJets",
         type=int,
         help="""Number of jets used for the testing. By default it will
@@ -136,7 +130,9 @@ def EvaluateModel(
             )
 
         # Get model file path
-        model_file = f"{train_config.model_name}/model_epoch{epoch}.h5"
+        model_file = utt.GetModelPath(
+            model_name=train_config.model_name, epoch=args.epoch
+        )
         logger.info(f"Evaluating {model_file}")
 
         # Define excluded variables and laod them
@@ -310,7 +306,9 @@ def EvaluateModelDips(
         )
 
     # Get model file path
-    model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
+    model_file = utt.GetModelPath(
+        model_name=train_config.model_name, epoch=args.epoch
+    )
     logger.info(f"Evaluating {model_file}")
 
     # Check which test files need to be loaded depending on the DIPS version
@@ -526,7 +524,9 @@ def EvaluateModelDL1(
         )
 
     # Get model file path
-    model_file = f"{train_config.model_name}/model_epoch{args.epoch}.h5"
+    model_file = utt.GetModelPath(
+        model_name=train_config.model_name, epoch=args.epoch
+    )
     logger.info(f"Evaluating {model_file}")
 
     # Define excluded variables and laod them

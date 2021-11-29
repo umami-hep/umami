@@ -152,7 +152,8 @@ def TrainLargeFile(args, train_config, preprocess_config):
 
     # Set ModelCheckpoint as callback
     dl1_mChkPt = ModelCheckpoint(
-        f"{train_config.model_name}" + "/dl1_model_{epoch:03d}.h5",
+        f"{train_config.model_name}/model_files"
+        + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
