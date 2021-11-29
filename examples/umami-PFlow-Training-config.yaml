@@ -110,22 +110,22 @@ Eval_parameters_validation:
 
     # Cuts which are applied to the different datasets used for evaluation
     variable_cuts:
-        ttbar_r21:
+        validation_file:
             - pt_btagJes:
                 operator: "<="
                 condition: 250000
 
-        ttbar_r22:
-            - pt_btagJes:
-                operator: "<="
-                condition: 250000
-
-        zpext_r21:
+        add_validation_file:
             - pt_btagJes:
                 operator: ">"
                 condition: 250000
 
-        zpext_r22:
+        ttbar:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
+
+        zpext:
             - pt_btagJes:
                 operator: ">"
                 condition: 250000

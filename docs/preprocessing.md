@@ -391,10 +391,10 @@ preprocessing.py --config <path to config file> --sample training_ttbar_bjets --
 
 As a result, an output file will be written to the output path you specified via `sample_path`. The file will have the name defined in the `preparation` block.
 
-If you want to prepare all the samples defined in the `preparation: samples:` block, just leave out the `--sample` option. Also, if you want to use tracks, you need to add the flag `--tracks`. An example command would look like this:
+If you want to prepare all the samples defined in the `preparation: samples:` block, just leave out the `--sample` option.
 
 ```bash
-preprocessing.py --config <path to config file> --prepare --tracks
+preprocessing.py --config <path to config file> --prepare
 ```
 
 ### Running the preprocessing

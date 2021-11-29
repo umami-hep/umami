@@ -46,6 +46,28 @@ def get_validation_dict_name(WP, n_jets, dir_name):
     )
 
 
+def GetModelPath(model_name, epoch: int) -> str:
+    """
+    Get the path where the model will be saved/is saved.
+
+    Input:
+    - model_name: Name of the model that is to be saved/loaded.
+    - epoch: The epoch which is to be saved/loaded
+
+    Output:
+    - model_path: Path to the model file of the specified epoch.
+    """
+
+    # Get path
+    model_path = f"{model_name}/model_files/model_epoch{epoch:03d}.h5"
+
+    # Get logger output for debugging
+    logger.debug(f"Treating model {model_path}")
+
+    # Return path
+    return model_path
+
+
 def get_variable_cuts(
     Eval_parameters: dict,
     file: str,
@@ -222,6 +244,9 @@ def create_metadata_folder(
     # Check if model path already existing
     # If not, make it
     os.makedirs(os.path.join(model_name, "metadata"), exist_ok=True)
+
+    # Create directory for models
+    os.makedirs(os.path.join(model_name, "model_files"), exist_ok=True)
 
     # Get scale dict
     preprocess_config = Preprocess_Configuration(preprocess_config_path)
@@ -906,13 +931,15 @@ class MyCallback(Callback):
         self.dict_file_name = dict_file_name
 
     def on_epoch_end(self, epoch, logs=None):
-        self.model.save(f"{self.model_name}/model_epoch{epoch}.h5")
+        # Define the dict with the data that will be saved
         dict_epoch = {
             "epoch": epoch,
             "learning_rate": logs["lr"].item(),
             "loss": logs["loss"],
             "accuracy": logs["accuracy"],
         }
+
+        # Get the rejections et.c
         if self.val_data_dict:
             result_dict = evaluate_model(
                 model=self.model,
@@ -964,7 +991,7 @@ class MyCallbackUmami(Callback):
         self.dict_file_name = dict_file_name
 
     def on_epoch_end(self, epoch, logs=None):
-        self.model.save(f"{self.model_name}/model_epoch{epoch}.h5")
+        # Define the dict with the data that will be saved
         dict_epoch = {
             "epoch": epoch,
             "learning_rate": logs["lr"].item(),
@@ -1972,8 +1999,8 @@ def calc_validation_metrics(
 
     # Make a list with the model epochs saves
     training_output = [
-        os.path.join(train_config.model_name, f)
-        for f in os.listdir(train_config.model_name)
+        os.path.join(f"{train_config.model_name}/model_files/", f)
+        for f in os.listdir(f"{train_config.model_name}/model_files/")
         if model_string in f
     ]
 
@@ -1987,8 +2014,8 @@ def calc_validation_metrics(
 
         # Make a list with the model epochs saves with second model name string
         training_output = [
-            os.path.join(train_config.model_name, f)
-            for f in os.listdir(train_config.model_name)
+            os.path.join(f"{train_config.model_name}/model_files/", f)
+            for f in os.listdir(f"{train_config.model_name}/model_files/")
             if model_string in f
         ]
 

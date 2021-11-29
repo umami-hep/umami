@@ -209,7 +209,16 @@ class TestDipsTraining(unittest.TestCase):
         self.config_file["NN_structure"]["nJets_train"] = 100
         self.config_file["Eval_parameters_validation"]["n_jets"] = 4000
         self.config_file["Eval_parameters_validation"]["eff_min"] = 0.60
-        self.config_file["Eval_parameters_validation"]["variable_cuts"] = None
+        self.config_file["Eval_parameters_validation"]["variable_cuts"] = {
+            "validation_file": [
+                {"pt_btagJes": {"operator": "<=", "condition": 250000}}
+            ],
+            "add_validation_file": [
+                {"pt_btagJes": {"operator": ">", "condition": 250000}}
+            ],
+            "ttbar": [{"pt_btagJes": {"operator": "<=", "condition": 250000}}],
+            "zpext": [{"pt_btagJes": {"operator": ">", "condition": 250000}}],
+        }
 
         # save the copy of training config file for test
         with open(self.config, "w") as config:

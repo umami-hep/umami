@@ -11,6 +11,7 @@ from umami.tools import replaceLineInFile
 from umami.train_tools.Configuration import Configuration
 from umami.train_tools.NN_tools import (
     CalcDiscValues,
+    GetModelPath,
     GetRejection,
     GetScore,
     GetTestFile,
@@ -33,6 +34,20 @@ from umami.train_tools.NN_tools import (
     load_validation_data_umami,
     setup_output_directory,
 )
+
+
+class GetModelPath_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.model_name = "dips_test"
+        self.epoch = 50
+        self.control_model_path = "dips_test/model_files/model_epoch050.h5"
+
+    def test_GetModelPath(self):
+        test_model_path = GetModelPath(
+            model_name=self.model_name, epoch=self.epoch
+        )
+
+        self.assertEqual(self.control_model_path, test_model_path)
 
 
 class get_variable_cuts_TestCase(unittest.TestCase):
