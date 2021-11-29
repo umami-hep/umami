@@ -65,3 +65,14 @@ hist_err_style:
   linewidth: 0
   hatch: "/////"
   edgecolor: "#666666"
+
+# Track origin map
+OriginType:
+  Pileup: 0
+  Fake: 1
+  Primary: 2
+  FromB: 3
+  FromBC: 4
+  FromC: 5
+  FromTau: 6
+  OtherSecondary: 7

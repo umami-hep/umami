@@ -153,8 +153,8 @@ class JetPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "ptfrac/All/" + "dr_None.png",
-                self.tmp_plot_dir + "ptfrac/All/" + "dr_None.png",
+                self.Control_plots_dir + "ptfrac/All/" + "dr_None_All.png",
+                self.tmp_plot_dir + "ptfrac/All/" + "dr_None_All.png",
                 tol=1,
             ),
         )
@@ -164,10 +164,10 @@ class JetPlotting_TestCase(unittest.TestCase):
             compare_images(
                 self.Control_plots_dir
                 + "ptfrac/All/"
-                + "IP3D_signed_d0_significance_None.png",
+                + "IP3D_signed_d0_significance_None_All.png",
                 self.tmp_plot_dir
                 + "ptfrac/All/"
-                + "IP3D_signed_d0_significance_None.png",
+                + "IP3D_signed_d0_significance_None_All.png",
                 tol=1,
             ),
         )
@@ -177,10 +177,10 @@ class JetPlotting_TestCase(unittest.TestCase):
             compare_images(
                 self.Control_plots_dir
                 + "ptfrac/All/"
-                + "numberOfInnermostPixelLayerHits_None.png",
+                + "numberOfInnermostPixelLayerHits_None_All.png",
                 self.tmp_plot_dir
                 + "ptfrac/All/"
-                + "numberOfInnermostPixelLayerHits_None.png",
+                + "numberOfInnermostPixelLayerHits_None_All.png",
                 tol=1,
             ),
         )
@@ -188,21 +188,8 @@ class JetPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "ptfrac/0/" + "dr_0.png",
-                self.tmp_plot_dir + "ptfrac/0/" + "dr_0.png",
-                tol=1,
-            ),
-        )
-
-        self.assertEqual(
-            None,
-            compare_images(
-                self.Control_plots_dir
-                + "ptfrac/0/"
-                + "IP3D_signed_d0_significance_0.png",
-                self.tmp_plot_dir
-                + "ptfrac/0/"
-                + "IP3D_signed_d0_significance_0.png",
+                self.Control_plots_dir + "ptfrac/0/" + "dr_0_All.png",
+                self.tmp_plot_dir + "ptfrac/0/" + "dr_0_All.png",
                 tol=1,
             ),
         )
@@ -212,10 +199,23 @@ class JetPlotting_TestCase(unittest.TestCase):
             compare_images(
                 self.Control_plots_dir
                 + "ptfrac/0/"
-                + "numberOfInnermostPixelLayerHits_0.png",
+                + "IP3D_signed_d0_significance_0_All.png",
                 self.tmp_plot_dir
                 + "ptfrac/0/"
-                + "numberOfInnermostPixelLayerHits_0.png",
+                + "IP3D_signed_d0_significance_0_All.png",
+                tol=1,
+            ),
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.Control_plots_dir
+                + "ptfrac/0/"
+                + "numberOfInnermostPixelLayerHits_0_All.png",
+                self.tmp_plot_dir
+                + "ptfrac/0/"
+                + "numberOfInnermostPixelLayerHits_0_All.png",
                 tol=1,
             ),
         )
@@ -240,8 +240,8 @@ class JetPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "comp/ptfrac/All/" + "dr_None.png",
-                self.tmp_plot_dir + "comp/ptfrac/All/" + "dr_None.png",
+                self.Control_plots_dir + "comp/ptfrac/All/" + "dr_None_All.png",
+                self.tmp_plot_dir + "comp/ptfrac/All/" + "dr_None_All.png",
                 tol=1,
             ),
         )
@@ -251,10 +251,10 @@ class JetPlotting_TestCase(unittest.TestCase):
             compare_images(
                 self.Control_plots_dir
                 + "comp/ptfrac/All/"
-                + "IP3D_signed_d0_significance_None.png",
+                + "IP3D_signed_d0_significance_None_All.png",
                 self.tmp_plot_dir
                 + "comp/ptfrac/All/"
-                + "IP3D_signed_d0_significance_None.png",
+                + "IP3D_signed_d0_significance_None_All.png",
                 tol=1,
             ),
         )
@@ -264,10 +264,10 @@ class JetPlotting_TestCase(unittest.TestCase):
             compare_images(
                 self.Control_plots_dir
                 + "comp/ptfrac/All/"
-                + "numberOfInnermostPixelLayerHits_None.png",
+                + "numberOfInnermostPixelLayerHits_None_All.png",
                 self.tmp_plot_dir
                 + "comp/ptfrac/All/"
-                + "numberOfInnermostPixelLayerHits_None.png",
+                + "numberOfInnermostPixelLayerHits_None_All.png",
                 tol=1,
             ),
         )
@@ -275,21 +275,8 @@ class JetPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "comp/ptfrac/0/" + "dr_0.png",
-                self.tmp_plot_dir + "comp/ptfrac/0/" + "dr_0.png",
-                tol=1,
-            ),
-        )
-
-        self.assertEqual(
-            None,
-            compare_images(
-                self.Control_plots_dir
-                + "comp/ptfrac/0/"
-                + "IP3D_signed_d0_significance_0.png",
-                self.tmp_plot_dir
-                + "comp/ptfrac/0/"
-                + "IP3D_signed_d0_significance_0.png",
+                self.Control_plots_dir + "comp/ptfrac/0/" + "dr_0_All.png",
+                self.tmp_plot_dir + "comp/ptfrac/0/" + "dr_0_All.png",
                 tol=1,
             ),
         )
@@ -299,10 +286,23 @@ class JetPlotting_TestCase(unittest.TestCase):
             compare_images(
                 self.Control_plots_dir
                 + "comp/ptfrac/0/"
-                + "numberOfInnermostPixelLayerHits_0.png",
+                + "IP3D_signed_d0_significance_0_All.png",
                 self.tmp_plot_dir
                 + "comp/ptfrac/0/"
-                + "numberOfInnermostPixelLayerHits_0.png",
+                + "IP3D_signed_d0_significance_0_All.png",
+                tol=1,
+            ),
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.Control_plots_dir
+                + "comp/ptfrac/0/"
+                + "numberOfInnermostPixelLayerHits_0_All.png",
+                self.tmp_plot_dir
+                + "comp/ptfrac/0/"
+                + "numberOfInnermostPixelLayerHits_0_All.png",
                 tol=1,
             ),
         )
@@ -326,8 +326,8 @@ class JetPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "nTracks_per_Jet.png",
-                self.tmp_plot_dir + "nTracks_per_Jet.png",
+                self.Control_plots_dir + "nTracks_per_Jet_All.png",
+                self.tmp_plot_dir + "nTracks_per_Jet_All.png",
                 tol=1,
             ),
         )

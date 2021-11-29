@@ -63,6 +63,11 @@ def plot_trks_variables(plot_config, plot_type):
         logger.info(f"Start {plot_name}...\n")
         filepath_list = []
         labels_list = []
+        # Default to no selection based on track_origin
+        trk_origins = ['All']
+        # Update list of track origins if specified
+        if "track_origins" in plotting_config:
+            trk_origins = plotting_config["track_origins"]
 
         for model_name, model_config in plotting_config[
             "Datasets_to_plot"
@@ -84,65 +89,70 @@ def plot_trks_variables(plot_config, plot_type):
                     ]
                 )
 
-        if len(filepath_list) >= 2:
-            if ("nTracks" in plotting_config) and (
-                plotting_config["nTracks"] is True
-            ):
-                uit.plot_nTracks_per_Jet(
-                    datasets_filepaths=filepath_list,
-                    datasets_labels=labels_list,
-                    class_labels=plotting_config["class_labels"],
-                    var_dict=plot_config["Eval_parameters"]["var_dict"],
-                    nJets=int(plot_config["Eval_parameters"]["nJets"]),
-                    output_directory="input_vars_trks/"
-                    + plotting_config["folder_to_save"],
-                    plot_type=plot_type,
-                    **plotting_config["plot_settings"],
-                )
+        for trk_origin in trk_origins:
+            if len(filepath_list) >= 2:
+                if ("nTracks" in plotting_config) and (
+                    plotting_config["nTracks"] is True
+                ):
+                    uit.plot_nTracks_per_Jet(
+                        datasets_filepaths=filepath_list,
+                        datasets_labels=labels_list,
+                        class_labels=plotting_config["class_labels"],
+                        var_dict=plot_config["Eval_parameters"]["var_dict"],
+                        nJets=int(plot_config["Eval_parameters"]["nJets"]),
+                        output_directory="input_vars_trks/"
+                        + plotting_config["folder_to_save"],
+                        plot_type=plot_type,
+                        **plotting_config["plot_settings"],
+                        track_origin=trk_origin,
+                    )
+
+                else:
+                    uit.plot_input_vars_trks_comparison(
+                        datasets_filepaths=filepath_list,
+                        datasets_labels=labels_list,
+                        class_labels=plotting_config["class_labels"],
+                        var_dict=plot_config["Eval_parameters"]["var_dict"],
+                        nJets=int(plot_config["Eval_parameters"]["nJets"]),
+                        binning=plotting_config["binning"],
+                        output_directory="input_vars_trks/"
+                        + plotting_config["folder_to_save"],
+                        plot_type=plot_type,
+                        **plotting_config["plot_settings"],
+                        track_origin=trk_origin,
+                    )
 
             else:
-                uit.plot_input_vars_trks_comparison(
-                    datasets_filepaths=filepath_list,
-                    datasets_labels=labels_list,
-                    class_labels=plotting_config["class_labels"],
-                    var_dict=plot_config["Eval_parameters"]["var_dict"],
-                    nJets=int(plot_config["Eval_parameters"]["nJets"]),
-                    binning=plotting_config["binning"],
-                    output_directory="input_vars_trks/"
-                    + plotting_config["folder_to_save"],
-                    plot_type=plot_type,
-                    **plotting_config["plot_settings"],
-                )
+                if ("nTracks" in plotting_config) and (
+                    plotting_config["nTracks"] is True
+                ):
+                    uit.plot_nTracks_per_Jet(
+                        datasets_filepaths=filepath_list,
+                        datasets_labels=labels_list,
+                        class_labels=plotting_config["class_labels"],
+                        var_dict=plot_config["Eval_parameters"]["var_dict"],
+                        nJets=int(plot_config["Eval_parameters"]["nJets"]),
+                        output_directory="input_vars_trks/"
+                        + plotting_config["folder_to_save"],
+                        plot_type=plot_type,
+                        **plotting_config["plot_settings"],
+                        track_origin=trk_origin,
+                    )
 
-        else:
-            if ("nTracks" in plotting_config) and (
-                plotting_config["nTracks"] is True
-            ):
-                uit.plot_nTracks_per_Jet(
-                    datasets_filepaths=filepath_list,
-                    datasets_labels=labels_list,
-                    class_labels=plotting_config["class_labels"],
-                    var_dict=plot_config["Eval_parameters"]["var_dict"],
-                    nJets=int(plot_config["Eval_parameters"]["nJets"]),
-                    output_directory="input_vars_trks/"
-                    + plotting_config["folder_to_save"],
-                    plot_type=plot_type,
-                    **plotting_config["plot_settings"],
-                )
-
-            else:
-                uit.plot_input_vars_trks(
-                    datasets_filepaths=filepath_list,
-                    datasets_labels=labels_list,
-                    class_labels=plotting_config["class_labels"],
-                    var_dict=plot_config["Eval_parameters"]["var_dict"],
-                    nJets=int(plot_config["Eval_parameters"]["nJets"]),
-                    binning=plotting_config["binning"],
-                    output_directory="input_vars_trks/"
-                    + plotting_config["folder_to_save"],
-                    plot_type=plot_type,
-                    **plotting_config["plot_settings"],
-                )
+                else:
+                    uit.plot_input_vars_trks(
+                        datasets_filepaths=filepath_list,
+                        datasets_labels=labels_list,
+                        class_labels=plotting_config["class_labels"],
+                        var_dict=plot_config["Eval_parameters"]["var_dict"],
+                        nJets=int(plot_config["Eval_parameters"]["nJets"]),
+                        binning=plotting_config["binning"],
+                        output_directory="input_vars_trks/"
+                        + plotting_config["folder_to_save"],
+                        plot_type=plot_type,
+                        **plotting_config["plot_settings"],
+                        track_origin=trk_origin,
+                    )
 
 
 def plot_jets_variables(plot_config, plot_type):

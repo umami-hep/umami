@@ -51,6 +51,7 @@ def plot_nTracks_per_Jet(
     ncol=2,
     Ratio_Cut=None,
     Bin_Width_y_axis=True,
+    track_origin="All",
 ):
     """
     Plotting the number of tracks per jet as a histogram.
@@ -145,6 +146,9 @@ def plot_nTracks_per_Jet(
     if not os.path.isdir(f"{output_directory}/"):
         os.makedirs(f"{output_directory}/")
 
+    logger.info(f"Path: {output_directory}")
+    logger.info(f"Track origin: {track_origin}\n")
+
     # Define the figure with two subplots of unequal sizes
     axis_dict = {}
 
@@ -179,7 +183,12 @@ def plot_nTracks_per_Jet(
     ):
         # Sort after given variable
         trks = np.asarray(trks_dict[label])
-        nTracks = np.sum(~np.isnan(trks["ptfrac"]), axis=1)
+        if track_origin == 'All':
+            nTracks = np.sum(~np.isnan(trks["ptfrac"]), axis=1)
+        else:
+            nTracks = np.sum(np.logical_and(~np.isnan(trks["ptfrac"]),
+                                            trks['truthOriginLabel'] == global_config.OriginType[track_origin]
+                                            ), axis=1)
 
         if model_number == 0:
             # Calculate unified Binning
@@ -307,7 +316,8 @@ def plot_nTracks_per_Jet(
     axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
 
     axis_dict["left"]["ratio"].set_xlabel(
-        "Number of tracks per Jet",
+        "Number of tracks per Jet" if track_origin == 'All'
+        else f"Number of tracks per Jet ({track_origin})",
         fontsize=12,
         horizontalalignment="right",
         x=1.0,
@@ -366,7 +376,7 @@ def plot_nTracks_per_Jet(
         )
 
     # Save and close figure
-    plt.savefig(f"{output_directory}/nTracks_per_Jet.{plot_type}")
+    plt.savefig(f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}")
     plt.close()
     plt.clf()
 
@@ -396,6 +406,7 @@ def plot_input_vars_trks_comparison(
     ncol=2,
     Ratio_Cut=None,
     Bin_Width_y_axis=True,
+    track_origin="All",
 ):
     """
     Plotting the track variable in comparison to another model with ratio plot.
@@ -552,7 +563,8 @@ def plot_input_vars_trks_comparison(
 
         logger.info(f"Path: {filedir}")
         logger.info(f"Sorting: {sorting_variable}")
-        logger.info(f"nLeading track: {nLeading}\n")
+        logger.info(f"nLeading track: {nLeading}")
+        logger.info(f"Track origin: {track_origin}\n")
 
         # Loop over vars
         for var in trksVars:
@@ -597,18 +609,32 @@ def plot_input_vars_trks_comparison(
                     )
 
                     # Sort the variables and tracks after given variable
-                    tmp = np.asarray(
-                        [
-                            trks_dict[label][var][k][sorting[k]]
-                            for k in range(
-                                len(trks_dict[label][sorting_variable])
-                            )
-                        ]
-                    )
+                    if track_origin == 'All':
+                        tmp = np.asarray(
+                            [
+                                trks_dict[label][var][k][sorting[k]]
+                                for k in range(
+                                    len(trks_dict[label][sorting_variable])
+                                )
+                            ]
+                        )
+                    else:
+                        # Select tracks of a given origin, so keep truthOriginLabel
+                        tmp = np.asarray(
+                            [
+                                trks_dict[label][[var, 'truthOriginLabel']][k][sorting[k]]
+                                for k in range(
+                                    len(trks_dict[label][sorting_variable])
+                                )
+                            ]
+                        )
 
                     if model_number == 0:
                         # Calculate unified Binning
-                        first_flav = tmp[flavour_label_dict[label] == 0]
+                        if track_origin == 'All':
+                            first_flav = tmp[flavour_label_dict[label] == 0]
+                        else:
+                            first_flav = tmp[var][flavour_label_dict[label] == 0]
 
                         if nBins_dict[var] is None:
                             _, Binning = np.histogram(
@@ -629,9 +655,16 @@ def plot_input_vars_trks_comparison(
                         jets = tmp[flavour_label_dict[label] == flav_label]
 
                         # Get number of tracks
-                        Tracks = jets[:, nLeading][
-                            ~np.isnan(jets[:, nLeading])
-                        ]
+                        if track_origin == 'All':
+                            Tracks = jets[:, nLeading][
+                                ~np.isnan(jets[:, nLeading])
+                            ]
+                        else:
+                            mask_nan = ~np.isnan(jets[var][:, nLeading])
+                            mask_origin = np.asarray(jets[:, nLeading]['truthOriginLabel'] == global_config.OriginType[track_origin])
+                            Tracks = jets[:, nLeading][
+                                np.logical_and(mask_nan, mask_origin)
+                            ][var]
 
                         # Calculate bins
                         bins, weights, unc, band = uet.calc_bins(
@@ -768,12 +801,15 @@ def plot_input_vars_trks_comparison(
 
                 if nLeading is None:
                     axis_dict["left"]["ratio"].set_xlabel(
-                        var, fontsize=12, horizontalalignment="right", x=1.0
+                        f"{var}" if track_origin == 'All'
+                        else f"{var} ({track_origin})",
+                        fontsize=12, horizontalalignment="right", x=1.0
                     )
 
                 else:
                     axis_dict["left"]["ratio"].set_xlabel(
-                        f"{nLeading+1} leading tracks {var}",
+                        f"{nLeading+1} leading tracks {var}" if track_origin == 'All'
+                        else f"{nLeading+1} leading tracks {var} ({track_origin})",
                         fontsize=12,
                         horizontalalignment="right",
                         x=1.0,
@@ -834,7 +870,7 @@ def plot_input_vars_trks_comparison(
                     )
 
                 # Save and close figure
-                plt.savefig(f"{filedir}/{var}_{nLeading}.{plot_type}")
+                plt.savefig(f"{filedir}/{var}_{nLeading}_{track_origin}.{plot_type}")
                 plt.close()
                 plt.clf()
         logger.info(
@@ -866,6 +902,7 @@ def plot_input_vars_trks(
     legFontSize=10,
     ncol=2,
     Bin_Width_y_axis=True,
+    track_origin="All",
 ):
     """
     Plotting the track variable.
@@ -1021,7 +1058,8 @@ def plot_input_vars_trks(
 
         logger.info(f"Path: {filedir}")
         logger.info(f"Sorting: {sorting_variable}")
-        logger.info(f"nLeading track: {nLeading}\n")
+        logger.info(f"nLeading track: {nLeading}")
+        logger.info(f"Track origin: {track_origin}\n")
 
         for var in nBins_dict:
             if var not in trksVars:
@@ -1049,17 +1087,31 @@ def plot_input_vars_trks(
                     )
 
                     # Sort the variables and tracks after given variable
-                    tmp = np.asarray(
-                        [
-                            trks_dict[label][var][k][sorting[k]]
-                            for k in range(
-                                len(trks_dict[label][sorting_variable])
-                            )
-                        ]
-                    )
+                    if track_origin == 'All':
+                        tmp = np.asarray(
+                            [
+                                trks_dict[label][var][k][sorting[k]]
+                                for k in range(
+                                    len(trks_dict[label][sorting_variable])
+                                )
+                            ]
+                        )
+                    else:
+                        # Select tracks of a given origin, so keep truthOriginLabel
+                        tmp = np.asarray(
+                            [
+                                trks_dict[label][[var, 'truthOriginLabel']][k][sorting[k]]
+                                for k in range(
+                                    len(trks_dict[label][sorting_variable])
+                                )
+                            ]
+                        )
 
                     # Calculate unified Binning
-                    first_flav = tmp[flavour_label_dict[label] == 0]
+                    if track_origin == 'All':
+                        first_flav = tmp[flavour_label_dict[label] == 0]
+                    else:
+                        first_flav = tmp[var][flavour_label_dict[label] == 0]
 
                     # Check if binning is already set
                     if nBins_dict[var] is None:
@@ -1098,9 +1150,16 @@ def plot_input_vars_trks(
                         jets = tmp[flavour_label_dict[label] == flav_label]
 
                         # Get number of tracks
-                        Tracks = jets[:, nLeading][
-                            ~np.isnan(jets[:, nLeading])
-                        ]
+                        if track_origin == 'All':
+                            Tracks = jets[:, nLeading][
+                                ~np.isnan(jets[:, nLeading])
+                            ]
+                        else:
+                            mask_nan = ~np.isnan(jets[var][:, nLeading])
+                            mask_origin = np.asarray(jets[:, nLeading]['truthOriginLabel'] == global_config.OriginType[track_origin])
+                            Tracks = jets[:, nLeading][
+                                np.logical_and(mask_nan, mask_origin)
+                            ][var]
 
                         # Calculate bins
                         bins, weights, unc, band = uet.calc_bins(
@@ -1146,10 +1205,16 @@ def plot_input_vars_trks(
                             )
 
                     if nLeading is None:
-                        plt.xlabel(var)
+                        plt.xlabel(
+                            f"{var}" if track_origin == 'All'
+                            else f"{var} ({track_origin})"
+                        )
 
                     else:
-                        plt.xlabel(f"{nLeading+1} leading tracks {var}")
+                        plt.xlabel(
+                            f"{nLeading+1} leading tracks {var}" if track_origin == 'All'
+                            else f"{nLeading+1} leading tracks {var} ({track_origin})"
+                        )
 
                     # Add axes, titels and the legend
                     if Bin_Width_y_axis is True:
@@ -1195,7 +1260,7 @@ def plot_input_vars_trks(
                             ymax=yAxisAtlasTag,
                         )
 
-                    plt.savefig(f"{filedir}/{var}_{nLeading}.{plot_type}")
+                    plt.savefig(f"{filedir}/{var}_{nLeading}_{track_origin}.{plot_type}")
                     plt.close()
                     plt.clf()
                     logger.info(f"{filedir}/{var}.{plot_type}\n")

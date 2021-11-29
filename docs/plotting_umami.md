@@ -347,7 +347,7 @@ Dips_saliency_b_WP77_passed_ttbar:
 | `target_beff` | Float | Necessary | The WP which needs to be passed/not passed. |
 | `jet_flavour` | Int | Necessary | Class which is to be plotted. |
 | `PassBool` | Bool | Necessary | Decide if the b-tagging discriminant of the jets, which will be used, needs to be above the WP cut value or not. |
-| `FlipAxis` | Bool | Optional | If True, the y and x axis will be switched. Usefull for presenation plots. True: landscape format. |
+| `FlipAxis` | Bool | Optional | If True, the y and x axis will be switched. Useful for presentation plots. True: landscape format. |
 | `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
 | `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
@@ -455,7 +455,7 @@ eff_vs_pt:
 | `data_set_for_cut_name` | string | Optional | The dataset to use to compute the cut_value defining the working point. |
 | `recompute` | bool | Optional | Whether to recompute the score or load it (useful if different fractions). If recomputing, `flavour_fractions` must be defined. Will recompute by default. |
 | `class_labels` | List | Necessary | List of class labels that were used in the preprocessing/training. They must be the same as in preprocessing! Order is important! |
-| `main_class` | string | Necessary | The main class label to tagg. Must be in `class_labels`. |
+| `main_class` | string | Necessary | The main class label to tag. Must be in `class_labels`. |
 | `tagger_name` | string | Necessary | The name of the tagger to use (will be composed with probability of the flavour to retrieve the probability: e.g., "DL1" leads to "DL1_pb", "DL1_pc", ...). |
 | `frac_values` | dictionary | Optional | The flavour fractions used. Only necessary if recomputing the scores. Added to the tag if not None. |
 | `variable` |  String | Necessary | A variable contained in the h5 result file from `evaluate.py` (e.g., "pt"). <br /> To include any non-standard variable in this h5, include them in the list of the parameter `add_variables_eval` in the training configuration ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml#L69)). <br /> Note! pt variable is automatically transformed in GeV (divide by 1000)! |
@@ -534,7 +534,7 @@ eff_vs_pt_small:
 | `data_set_for_cut_name` | string | Optional (for each model) | The dataset to use to compute the cut_value defining the working point. |
 | `recompute` | bool | Optional | Whether to recompute the score or load it (useful if different fractions). If recomputing, `flavour_fractions` must be defined for the model considered. Setting recompute above models set it as default. Will recompute by default. |
 | `class_labels` | List | Necessary (for each model or above all models) | List of class labels that were used in the preprocessing/training. They must be the same as in preprocessing! Order is important! |
-| `main_class` | string | Necessary | The main class label to tagg. Must be in `class_labels`. |
+| `main_class` | string | Necessary | The main class label to tag. Must be in `class_labels`. |
 | `frac_values` | dictionary | Optional (for each model or above all models, then serving as default) | The flavour fractions used. Necessary if recomputing the scores for a tagger. If defined above model, will be added to the tag if not None.|
 | `variable` |  String | Necessary | A variable contained in the h5 result file from `evaluate.py` (e.g., "pt"). <br /> To include any non-standard variable in this h5, include them in the list of the parameter `add_variables_eval` in the training configuration ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml#L69)). <br /> Note! pt variable is automatically transformed in GeV (divide by 1000)! |
 | `flat_eff` | bool | Optional | Whether to use a flat b-tag b-jet efficiency per variable bin or a global one. |
@@ -618,6 +618,7 @@ nTracks_ttbar_loose:
   variables: "tracks"
   folder_to_save: input_vars_trks_ttbar_loose
   nTracks: True
+  track_origins: ['All', 'Pileup', 'Fake', 'Primary', 'FromB', 'FromBC', 'FromC', 'FromTau', 'OtherSecondary']
   Datasets_to_plot:
     R21:
       files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
@@ -644,7 +645,7 @@ nTracks_ttbar_loose:
 | `nTracks` | Bool | Necessary | MUST BE TRUE HERE! Decide if the Tracks per Jets are plotted or the input variable. |
 | `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
 | `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
+| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
 | `label` | String | Necessary | Plot label for the plot legend. |
 | `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |
 | `Log` | Bool | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
@@ -655,6 +656,7 @@ nTracks_ttbar_loose:
  | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
 | `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `track_origins` | List | Optional | List that gives the desired track origins when plotting. |
 
 #### Input Variables Tracks
 To plot the track input variables, the following options are used.
@@ -663,6 +665,7 @@ To plot the track input variables, the following options are used.
 input_vars_trks_ttbar_loose_ptfrac:
   variables: "tracks"
   folder_to_save: input_vars_trks_ttbar_loose
+  track_origins: ['All', 'Pileup', 'Fake', 'Primary', 'FromB', 'FromBC', 'FromC', 'FromTau', 'OtherSecondary']
   Datasets_to_plot:
     R21:
       files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
@@ -707,7 +710,7 @@ input_vars_trks_ttbar_loose_ptfrac:
 | `nTracks` | Bool | Necessary | To plot the input variable distributions, this must be `False`. |  
 | `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
 | `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
+| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
 | `label` | String | Necessary | Plot label for the plot legend. |
 | `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |
 | `sorting_variable` | String | Optional | Variable Name to sort after. |
@@ -720,7 +723,8 @@ input_vars_trks_ttbar_loose_ptfrac:
  | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
 | `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second ist stop and third is the step width. The so aranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
+| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second is stop and third is the step width. The so arranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
+| `track_origins` | List | Optional | List that gives the desired track origins when plotting. |
 
 #### Input Variables Jets
 To plot the jet input variables, the following options are used.
@@ -835,10 +839,10 @@ input_vars_ttbar_loose:
 | `folder_to_save` | String | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. | 
 | `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
 | `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achive the number of jets given in the `Eval_parameters`. |
+| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
 | `label` | String | Necessary | Plot label for the plot legend. |
 | `special_param_jets` | None | Necessary | Here starts the special x axis limits for a variable. If you want to set the x range by hand, add the variable here and also the `lim_left` for xmin and `lift_right` for xmax. |
-| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second ist stop and third is the step width. The so aranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. Variables that are not in here are not plotted! |
+| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second is stop and third is the step width. The so arranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. Variables that are not in here are not plotted! |
 | `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |  
 | `Log` | Bool | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
 | `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |

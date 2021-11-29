@@ -30,6 +30,7 @@ class Configuration(object):
             "MPLPlottingBackend",
             "flavour_categories",
             "hist_err_style",
+            "OriginType",
         ]
         for item in config_items:
             if item in self.config:
