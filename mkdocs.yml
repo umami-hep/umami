@@ -21,7 +21,9 @@ nav:
     - Running Umami: Umami-instructions.md
     - LWTNN Conversion: LWTNN-conversion.md
     - Evaluate Taggers in Samples: WO_trained_model.md
-    - Plotting evaluated Results: plotting_umami.md
+    - Plotting:
+        - "Input variables": plotting/plotting_inputs.md
+        - "Tagger performance": plotting/plotting_umami.md
     - Feature Importance: Feature_Importance.md
 
 plugins:
