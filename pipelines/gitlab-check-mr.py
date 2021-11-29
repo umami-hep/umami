@@ -3,10 +3,10 @@ import os
 import gitlab
 
 labels = {
-    "Training": ["umami/train_", "umami/tf_tools/", "umami/train_tools/"],
-    "DIPS": ["umami/train_Dips.py", "umami/train_Dips_cond_att.py"],
-    "DL1": ["umami/train_DL1.py"],
-    "Umami": ["umami/train_umami.py"],
+    "Training": ["umami/models/", "umami/tf_tools/", "umami/train_tools/"],
+    "DIPS": ["umami/models/Model_Dips.py", "umami/models/Model_Dips_cond_att.py"],
+    "DL1": ["umami/models/Model_DL1.py"],
+    "Umami": ["umami/models/Model_Umami.py"],
     "Documentation": ["docs/", "README.md", "mkdocs.yml"],
     "Evaluation": ["umami/evaluation_tools/", "umami/evaluate_model.py"],
     "Plotting": [
