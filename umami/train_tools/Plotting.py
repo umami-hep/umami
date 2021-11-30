@@ -20,7 +20,6 @@ from umami.train_tools import (
 
 def CompTaggerRejectionDict(
     file,
-    tagger_comp_name: str,
     tagger_comp_var: list,
     recommended_frac_dict: dict,
     WP: float,
@@ -33,7 +32,6 @@ def CompTaggerRejectionDict(
 
     Input:
     - file: Filepath to validation file.
-    - tagger_comp_name: Name of the comparison tagger.
     - tagger_comp_var: List of the comparison tagger probability variable names.
     - recommended_frac_dict: Dict with the fractions.
     - class_labels: List with the used class_labels.
@@ -866,7 +864,6 @@ def RunPerformanceCheck(
         for comp_tagger in tagger_comp_vars:
             comp_tagger_rej_dict[comp_tagger] = CompTaggerRejectionDict(
                 file=train_config.validation_file,
-                tagger_comp_name=comp_tagger,
                 tagger_comp_var=tagger_comp_vars[comp_tagger],
                 recommended_frac_dict=recommended_frac_dict[comp_tagger],
                 WP=WP,
@@ -879,7 +876,6 @@ def RunPerformanceCheck(
                     comp_tagger
                 ] = CompTaggerRejectionDict(
                     file=train_config.add_validation_file,
-                    tagger_comp_name=comp_tagger,
                     tagger_comp_var=tagger_comp_vars[comp_tagger],
                     recommended_frac_dict=recommended_frac_dict[comp_tagger],
                     WP=WP,

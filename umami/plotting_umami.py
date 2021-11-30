@@ -160,13 +160,12 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
             "binomialErrors" in plot_config["plot_settings"]
             and plot_config["plot_settings"]["binomialErrors"]
         ):
-            h5_file = h5py.File(
+            with h5py.File(
                 eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
-            )
-            plot_config["plot_settings"]["nTest"].append(
-                h5_file.attrs["N_test"]
-            )
-            h5_file.close()
+            ) as h5_file:
+                plot_config["plot_settings"]["nTest"].append(
+                    h5_file.attrs["N_test"]
+                )
         else:
             plot_config["plot_settings"]["nTest"] = 0
 
@@ -241,13 +240,12 @@ def plot_ROC_Comparison(
             "binomialErrors" in plot_config["plot_settings"]
             and plot_config["plot_settings"]["binomialErrors"]
         ):
-            h5_file = h5py.File(
+            with h5py.File(
                 eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
-            )
-            plot_config["plot_settings"]["nTest"].append(
-                h5_file.attrs["N_test"]
-            )
-            h5_file.close()
+            ) as h5_file:
+                plot_config["plot_settings"]["nTest"].append(
+                    h5_file.attrs["N_test"]
+                )
         else:
             plot_config["plot_settings"]["nTest"] = 0
 
