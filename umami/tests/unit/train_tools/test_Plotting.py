@@ -236,7 +236,6 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
     def test_CompTaggerRejectionDict_umami(self):
         comp_rej_dict = CompTaggerRejectionDict(
             file=self.validation_file,
-            tagger_comp_name="rnnip",
             tagger_comp_var=self.tagger_comp_var_rnnip,
             recommended_frac_dict=self.recommended_frac_dict,
             WP=self.WP,
@@ -253,7 +252,6 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
     def test_CompTaggerRejectionDict_dips_dl1(self):
         comp_rej_dict = CompTaggerRejectionDict(
             file=self.validation_file,
-            tagger_comp_name="DL1r",
             tagger_comp_var=self.tagger_comp_var_dl1r,
             recommended_frac_dict=self.recommended_frac_dict,
             WP=self.WP,

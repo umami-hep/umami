@@ -259,13 +259,12 @@ def EvaluateModel(
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
-    f = h5py.File(
+    with h5py.File(
         f"{train_config.model_name}/results/"
         + f"results-rej_per_eff-{epoch}.h5",
         "a",
-    )
-    f.attrs["N_test"] = len(jets)
-    f.close()
+    ) as f:
+        f.attrs["N_test"] = len(jets)
 
 
 def EvaluateModelDips(
@@ -448,13 +447,12 @@ def EvaluateModelDips(
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
-    f = h5py.File(
+    with h5py.File(
         f"{train_config.model_name}/results/"
         + f"results-rej_per_eff-{args.epoch}.h5",
         "a",
-    )
-    f.attrs["N_test"] = len(jets)
-    f.close()
+    ) as f:
+        f.attrs["N_test"] = len(jets)
 
     if (
         "Calculate_Saliency" in Eval_params
@@ -664,13 +662,12 @@ def EvaluateModelDL1(
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
-    f = h5py.File(
+    with h5py.File(
         f"{train_config.model_name}/results/"
         + f"results-rej_per_eff-{args.epoch}.h5",
         "a",
-    )
-    f.attrs["N_test"] = len(jets)
-    f.close()
+    ) as f:
+        f.attrs["N_test"] = len(jets)
 
     if args.shapley:
         logger.info("Explaining feature importance with SHAPley")
