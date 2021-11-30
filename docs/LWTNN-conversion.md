@@ -258,4 +258,38 @@ wait
 
 ```
 
-After having the hdf5 ntuples produced, the script [`check_lwtnn-model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn_vardict.py) can be used to compare the athena evaluation with the keras evaluation. Typically, we are happy when the scores match within 1e-5.
+After having the hdf5 ntuples produced, the script [`check_lwtnn-model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn_vardict.py) can be used to compare the athena evaluation with the keras evaluation. The script requiries several arguments to be correctly runned. Here is a usage example:
+```
+# Path to the variables yaml file
+VARIABLESDICT=examples/Dips_Variables.yaml
+# Path to the trained model
+MODEL=trained_models/MyDipsTraining/model_epochXX.h5
+# Name of the output file (optional)
+ADDPATH=MyDipsTraining-diff
+# Name of the tagger
+TAGGER=MyDipsTraining
+# Path to the prepared ntuple
+HDFFILE=ftag-output.h5
+# Then only one of the two following options needs to be give: 
+# - 1 Path to the config file used for the training
+CONFIG=examples/Dips-PFlow-Training-config.yaml
+# - 2 Path to the scale dictionary
+SCALEDICT=MyDipsTraining_scale_dict.json
+
+
+# Execute the script
+python scripts/check_lwtnn-model.py -i ${HDFFILE} -v ${VARIABLESDICT} -t ${TAGGER} -m ${MODEL} -c ${CONFIG} -o ${ADDPATH}
+# or
+python scripts/check_lwtnn-model.py -i ${HDFFILE} -v ${VARIABLESDICT} -t ${TAGGER} -m ${MODEL} -s ${SCALEDICT} -o ${ADDPATH}
+``` 
+
+The output should look like, for example, to something like this:
+```
+Differences off 1e-6 1.34 %
+Differences off 2e-6 0.12 %
+Differences off 3e-6 0.03 %
+Differences off 4e-6 0.02 %
+Differences off 5e-6 0.01 %
+Differences off 1e-5 0.0 %
+```
+This means that the networks scores are matching within a precision of 1e-5 for all the jets in the produced ntuple, 0.01% of the tested jets have a difference in the predicted probabilities between 5e-6 and 1e-6, and so on... Typically, we are happy when the scores match within 1e-5.

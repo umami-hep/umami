@@ -6,9 +6,11 @@ import pandas as pd
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import CustomObjectScope
 
+import umami.preprocessing_tools as upt
 import umami.train_tools as utt
 from umami.configuration import logger
 from umami.tf_tools import Sum
+from umami.configuration.Configuration import Configuration
 
 
 def GetParser():
@@ -25,8 +27,8 @@ def GetParser():
     parser.add_argument(
         "-s",
         "--scale_dict",
-        required=True,
         type=str,
+        default=None,
         help="""scale_dict file containing scaling and shifting
                         values.""",
     )
@@ -58,6 +60,13 @@ def GetParser():
         required=True,
         help="Keras model for comparison.",
     )
+    parser.add_argument(
+        "-c",
+        "--config",
+        type=str,
+        default=None,
+        help="Training Config yaml file.",
+    )
 
     return parser.parse_args()
 
@@ -76,6 +85,7 @@ def load_model_umami(model_file, X_test_trk, X_test_jet):
 class config:
     def __init__(self, preprocess_config):
         self.dict_file = preprocess_config
+        self.preparation = {"class_labels": ["ujets", "cjets", "bjets"]}
 
 
 def __run():
@@ -85,7 +95,21 @@ def __run():
         df = pd.DataFrame(file["jets"][:])
 
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
-    preprocess_config = config(args.scale_dict)
+    if args.config is not None:
+        if args.scale_dict is not None:
+            raise ValueError(
+                "Both --confing and --scale_dict options were given, only one of them needs to be used"
+            )
+        training_config = utt.Configuration(args.config)
+        preprocess_config = upt.Configuration(training_config.preprocess_config)
+        class_labels = training_config.NN_structure["class_labels"]
+    elif args.scale_dict is not None:
+        preprocess_config = config(args.scale_dict)
+        class_labels = preprocess_config.preparation["class_labels"]
+    else:
+        raise ValueError(
+            "Missing option, either --config or --scale_dict needs to be specified (only one of them)"
+        )
 
     logger.info(f"Evaluating {args.model}")
 
@@ -95,6 +119,7 @@ def __run():
             args.input,
             args.var_dict,
             preprocess_config,
+            class_labels,
             nJets=int(10e6),
             exclude=None,
         )
@@ -109,6 +134,7 @@ def __run():
             args.input,
             args.var_dict,
             preprocess_config,
+            class_labels,
             nJets=int(10e6),
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")
@@ -121,6 +147,7 @@ def __run():
             args.input,
             args.var_dict,
             preprocess_config,
+            class_labels,
             nJets=int(10e6),
             exclude=None,
         )
@@ -148,31 +175,31 @@ def __run():
 
     evaluated = "eval_pu"
     df["diff"] = abs(df[evaluated] - df[f"{args.tagger}_pu"])
-    df_select = df.query("diff>1e-6")
+    df_select = df.query("diff>1e-6").copy()
     print(
         "Differences off 1e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>2e-6")
+    df_select = df.query("diff>2e-6").copy()
     print(
         "Differences off 2e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>3e-6")
+    df_select = df.query("diff>3e-6").copy()
     print(
         "Differences off 3e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>4e-6")
+    df_select = df.query("diff>4e-6").copy()
     print(
         "Differences off 4e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>5e-6")
+    df_select = df.query("diff>5e-6").copy()
     print(
         "Differences off 5e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>1e-5")
+    df_select = df.query("diff>1e-5").copy()
     print(
         "Differences off 1e-5", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>1e-6")
+    df_select = df.query("diff>1e-6").copy()
     df_select["diff"] = abs(
         df_select[evaluated] - df_select[f"{args.tagger}_pu"]
     )
