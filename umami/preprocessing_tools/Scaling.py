@@ -179,18 +179,15 @@ class Scaling:
                     second_N=second_nJets,
                 )
 
-            else:
-                raise ValueError("")
-
-            # Combine the mean/shift in a dict and append it
-            combined_dict_list.append(
-                self.dict_in(
-                    varname=first_scale_dict[counter]["name"],
-                    average=combined_average,
-                    std=combined_std,
-                    default=first_scale_dict[counter]["default"],
+                # Combine the mean/shift in a dict and append it
+                combined_dict_list.append(
+                    self.dict_in(
+                        varname=first_scale_dict[counter]["name"],
+                        average=combined_average,
+                        std=combined_std,
+                        default=first_scale_dict[counter]["default"],
+                    )
                 )
-            )
 
         return combined_dict_list
 
@@ -333,6 +330,7 @@ class Scaling:
             if chunk_counter == 0:
                 # Get the first chunk of scales from the generator
                 scale_dict, nJets_loaded = next(jets_scaling_generator)
+
             else:
                 # Get the next chunk of scales from the generator
                 tmp_scale_dict, tmp_nJets_loaded = next(jets_scaling_generator)
@@ -436,11 +434,11 @@ class Scaling:
                 # Set the new start index
                 start_ind = end_ind
 
-            # Init a list for the scale values for the variables
-            scale_dict = []
-
             # Loop over the chunks
             for index_tuple in tupled_indices:
+                # Init a list for the scale values for the variables
+                scale_dict = []
+
                 # Load jets
                 jets = pd.DataFrame(
                     infile_all["/jets"].fields(var_list)[
