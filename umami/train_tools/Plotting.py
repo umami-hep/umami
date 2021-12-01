@@ -97,19 +97,21 @@ def CompTaggerRejectionDict(
 
 
 def PlotDiscCutPerEpoch(
-    df_results,
-    plot_name,
+    df_results: dict,
+    plot_name: str,
     frac_class: str,
-    target_beff=0.77,
+    trained_taggers: list = None,
+    target_beff: float = 0.77,
     frac: float = 0.018,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisAtlasTag=0.9,
-    yAxisIncrease=1.3,
-    ncol=1,
-    plot_datatype="pdf",
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag: float = 0.9,
+    yAxisIncrease: float = 1.3,
+    ncol: int = 1,
+    plot_datatype: str = "pdf",
+    **kwargs,
 ):
     """
     Plot the discriminant cut value for a specific working point
@@ -175,18 +177,19 @@ def PlotDiscCutPerEpoch(
 
 
 def PlotDiscCutPerEpochUmami(
-    df_results,
-    plot_name,
+    df_results: dict,
+    plot_name: str,
     frac_class: str,
-    target_beff=0.77,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisAtlasTag=0.9,
-    yAxisIncrease=1.3,
-    ncol=1,
-    plot_datatype="pdf",
+    target_beff: float = 0.77,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag: float = 0.9,
+    yAxisIncrease: float = 1.35,
+    ncol: int = 1,
+    plot_datatype: str = "pdf",
+    **kwargs,
 ):
     """
     Plot the discriminant cut value for a specific working point
@@ -256,8 +259,9 @@ def PlotDiscCutPerEpochUmami(
     plt.clf()
 
 
-def PlotRejPerEpoch(
+def PlotRejPerEpochComparison(
     df_results: dict,
+    tagger: str,
     frac_dict: dict,
     comp_tagger_rej_dict: dict,
     comp_tagger_frac_dict: dict,
@@ -266,16 +270,20 @@ def PlotRejPerEpoch(
     main_class: str,
     label_extension: str,
     rej_string: str,
-    target_beff=0.77,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisAtlasTag=0.9,
-    yAxisIncrease=1.3,
-    ncol=1,
-    legend_loc=(0.6, 0.65),
-    plot_datatype="pdf",
+    trained_taggers: list = None,
+    target_beff: float = 0.77,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag: float = 0.95,
+    yAxisIncrease: float = 1.1,
+    ncol: int = 1,
+    figsize: list = [8, 6],
+    legend_loc: str = "upper right",
+    plot_datatype: str = "pdf",
+    legFontSize: int = 10,
+    **kwargs,
 ):
     """
     Plotting the Rejections per Epoch for the trained tagger and
@@ -283,6 +291,7 @@ def PlotRejPerEpoch(
 
     Input:
     - df_results: Dict with the rejections of the trained tagger.
+    - tagger: Name of trained tagger.
     - frac_dict: Dict with the fractions of the trained tagger.
     - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
     - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
@@ -291,17 +300,24 @@ def PlotRejPerEpoch(
     - main_class: The main discriminant class. For b-tagging obviously "bjets"
     - label_extension: Extension of the legend label giving the process type.
     - rej_string: String that is added after the class for the key.
+    - trained_taggers: List of dicts with needed info about local available taggers.
     - target_beff: Target Working point.
     - UseAtlasTag: Bool to decide if you want the ATLAS tag.
+    - ApplyATLASStyle: Decide, if the ATLAS Plotting style is used.
     - AtlasTag: Main tag. Mainly "Internal Simulation".
     - SecondTag: Lower tag in the ATLAS label with infos.
     - yAxisAtlasTag: Y axis position of the ATLAS label.
     - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
     - ncol: Number of columns in the legend.
+    - figsize: Size of the figure.
+    - legend_loc: Position of the legend.
     - plot_datatype: Datatype of the plot.
+    - legFontSize: Fontsize of the legend.
 
     Output:
-    - Plot of the rejections of the taggers per epoch.
+    - Plot of the rejections of the taggers per epoch in a comparison plot.
+      This is only available for two rejections at once due to limiting of
+      axes.
     """
 
     # Apply ATLAS style
@@ -314,133 +330,332 @@ def PlotRejPerEpoch(
 
     # Get flavour categories from global config
     flav_cat = global_config.flavour_categories
-    linestyle_list = ["-", (0, (5, 10)), (0, (5, 5)), (0, (5, 1))]
+    linestyle_list = [
+        "-",
+        (0, (5, 1)),
+        "--",
+        (0, (1, 1)),
+        (0, (5, 10)),
+    ]
 
-    if len(class_labels_wo_main) == 2:
-        # Set global plot configs
-        fig, ax1 = plt.subplots(constrained_layout=True)
-        ax1.set_xlabel("Epoch")
-        ax2 = ax1.twinx()
-        axes = [ax1, ax2]
+    # Set global plot configs
+    fig = plt.figure(figsize=figsize)
+    ax1 = fig.add_subplot()
+    ax1.set_xlabel("Epoch")
+    ax2 = ax1.twinx()
+    axes = [ax1, ax2]
 
-        for counter, iter_class in enumerate(class_labels_wo_main):
-            # Plot rejection
-            axes[counter].plot(
-                df_results["epoch"],
-                df_results[f"{iter_class}_{rej_string}"],
-                ":",
-                color=flav_cat[iter_class]["colour"],
-                label=f"{flav_cat[iter_class]['legend_label']} - {label_extension}",
-            )
-            axes[counter].set_ylabel(
-                f'{flav_cat[iter_class]["legend_label"]} Rejection',
-                color=flav_cat[iter_class]["colour"],
-            )
+    # Define a list for the lines which are plotted
+    lines = []
 
-            if comp_tagger_rej_dict is None:
-                logger.info(
-                    "No comparison tagger defined. Plotting only trained tagger rejections!"
-                )
+    for counter, iter_class in enumerate(class_labels_wo_main):
+        # Init a linestyle counter
+        counter_models = 0
 
-            else:
-                for comp_counter, comp_tagger in enumerate(
-                    comp_tagger_rej_dict
+        # Plot rejection
+        lines = lines + axes[counter].plot(
+            df_results["epoch"],
+            df_results[f"{iter_class}_{rej_string}"],
+            linestyle=linestyle_list[counter],
+            color=f"C{counter_models}",
+            label=tagger,
+        )
+
+        # Set up the counter
+        counter_models += 1
+
+        # Set y label
+        axes[counter].set_ylabel(
+            f'{flav_cat[iter_class]["legend_label"]} Rejection',
+        )
+
+        if comp_tagger_rej_dict is None:
+            logger.info("No comparison tagger defined. Not plotting those!")
+
+        else:
+            for comp_counter, comp_tagger in enumerate(comp_tagger_rej_dict):
+                try:
+                    tmp_line = axes[counter].axhline(
+                        comp_tagger_rej_dict[comp_tagger][f"{iter_class}_rej"],
+                        0,
+                        df_results["epoch"].max(),
+                        color=f"C{counter_models}",
+                        linestyle=linestyle_list[counter],
+                        label=f"Recomm. {comp_tagger}",
+                    )
+
+                    # Set up the counter
+                    counter_models += 1
+
+                    # Add the horizontal line to the lines list
+                    lines += [tmp_line]
+
+                except KeyError:
+                    logger.info(
+                        f"{iter_class} rejection for {comp_tagger} not in dict! Skipping ..."
+                    )
+
+        if trained_taggers is None:
+            logger.info("No local taggers defined. Not plotting those!")
+
+        else:
+            for tt_counter, tt in enumerate(trained_taggers):
+                try:
+                    # Get the needed rejection info from json
+                    tt_rej_dict = pd.read_json(trained_taggers[tt]["path"])
+
+                except FileNotFoundError(
+                    f'No .json file found at {trained_taggers[tt]["path"]}. Skipping {trained_taggers[tt]["label"]}'
                 ):
-                    try:
-                        axes[counter].axhline(
-                            comp_tagger_rej_dict[comp_tagger][
-                                f"{iter_class}_rej"
-                            ],
-                            0,
-                            df_results["epoch"].max(),
-                            color=flav_cat[iter_class]["colour"],
-                            lw=1.0,
-                            alpha=1,
-                            linestyle=linestyle_list[comp_counter]
-                            if comp_counter < len(linestyle_list)
-                            else "-",
-                            label=f"Recomm. {comp_tagger}",
-                        )
+                    continue
 
-                    except KeyError:
-                        logger.info(
-                            f"{iter_class} rejection for {comp_tagger} not in dict! Skipping ..."
-                        )
-
-            # Set color of axis
-            axes[counter].tick_params(
-                axis="y", labelcolor=flav_cat[iter_class]["colour"]
-            )
-
-        # Set the x axis locator
-        ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
-
-        # Increase y limit for ATLAS Logo
-        ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
-        ax2.set_ylim(top=ax2.get_ylim()[1] * yAxisIncrease)
-
-    else:
-        fig, ax1 = plt.subplots(constrained_layout=True)
-        ax1.set_xlabel("Epoch")
-        ax1.set_ylabel("Rejection")
-
-        for counter, iter_class in enumerate(class_labels_wo_main):
-            # Plot rejection
-            ax1.plot(
-                df_results["epoch"],
-                df_results[f"{iter_class}_{rej_string}"],
-                fmt=":",
-                color=flav_cat[iter_class]["colour"],
-                label=flav_cat[iter_class]["legend_label"],
-            )
-
-            if comp_tagger_rej_dict is None:
-                logger.info(
-                    "No comparison tagger defined. Plotting only trained tagger rejections!"
+                lines = lines + axes[counter].plot(
+                    tt_rej_dict["epoch"],
+                    tt_rej_dict[f"{iter_class}_{rej_string}"],
+                    linestyle=linestyle_list[counter],
+                    color=f"C{counter_models}",
+                    label=trained_taggers[tt]["label"],
                 )
 
-            else:
-                for comp_tagger in comp_tagger_rej_dict:
-                    try:
-                        ax1.axhline(
-                            comp_tagger_rej_dict[comp_tagger][
-                                f"{iter_class}_rej"
-                            ],
-                            0,
-                            df_results["epoch"].max(),
-                            color=flav_cat[iter_class]["colour"],
-                            lw=1.0,
-                            alpha=1,
-                            linestyle=(0, (5, 10)),
-                            label=f"Recomm. {comp_tagger} - {flav_cat[iter_class]['legend_label']}",
-                        )
+                # Set up the counter
+                counter_models += 1
 
-                    except KeyError:
-                        logger.info(
-                            f"{iter_class} rejection for {comp_tagger} not in dict! Skipping ..."
-                        )
+    ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-        # Increase y limit for ATLAS Logo
-        ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
+    # Increase y limit for ATLAS Logo
+    ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
+    ax2.set_ylim(top=ax2.get_ylim()[1] * yAxisIncrease)
+
+    # Create the two legends for rejection and model
+    line_list_rej = []
+
+    # Get lines for each rejection
+    for counter, iter_class in enumerate(class_labels_wo_main):
+        line = ax1.plot(
+            np.nan,
+            np.nan,
+            color="k",
+            label=f'{flav_cat[iter_class]["legend_label"]} rejection',
+            linestyle=linestyle_list[counter],
+        )
+        line_list_rej += line
+
+    # Get the middle legend
+    legend1 = ax1.legend(
+        handles=line_list_rej,
+        labels=[tmp.get_label() for tmp in line_list_rej],
+        loc="upper center",
+        fontsize=legFontSize,
+        ncol=ncol,
+    )
+
+    # Add the second legend to plot
+    ax1.add_artist(legend1)
+
+    # Get the labels for the legends
+    labels_list = []
+    lines_list = []
+
+    for line in lines:
+        if line.get_label() not in labels_list:
+            labels_list.append(line.get_label())
+            lines_list.append(line)
 
     if UseAtlasTag is True:
-        SecondTag = SecondTag + f"\nWP={int(target_beff * 100):02d}%"
-
-        # Increase y limit for ATLAS Logo
-        ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
+        SecondTag = SecondTag + f"\nWP={int(target_beff * 100):02d}% "
 
         makeATLAStag(
             ax=plt.gca(),
             fig=plt.gcf(),
             first_tag=AtlasTag,
-            second_tag=SecondTag,
+            second_tag=SecondTag + label_extension + " sample",
             ymax=yAxisAtlasTag,
         )
 
-    fig.legend(ncol=ncol, loc=legend_loc)
+    # Define the legend
+    ax1.legend(
+        handles=lines_list,
+        labels=labels_list,
+        loc=legend_loc,
+        fontsize=legFontSize,
+        ncol=ncol,
+    )
+    plt.tight_layout()
     plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
+
+
+def PlotRejPerEpoch(
+    df_results: dict,
+    tagger: str,
+    frac_dict: dict,
+    comp_tagger_rej_dict: dict,
+    comp_tagger_frac_dict: dict,
+    plot_name: str,
+    class_labels: list,
+    main_class: str,
+    label_extension: str,
+    rej_string: str,
+    trained_taggers: list = None,
+    target_beff: float = 0.77,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisAtlasTag: float = 0.9,
+    yAxisIncrease: float = 1.1,
+    ncol: int = 1,
+    figsize: list = [8, 6],
+    legend_loc: str = "upper right",
+    plot_datatype: str = "pdf",
+    legFontSize: int = 10,
+    **kwargs,
+):
+    """
+    Plotting the Rejections per Epoch for the trained tagger and
+    the provided comparison taggers.
+
+    Input:
+    - df_results: Dict with the rejections of the trained tagger.
+    - tagger: Name of trained tagger.
+    - frac_dict: Dict with the fractions of the trained tagger.
+    - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
+    - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
+    - plot_name: Path where the plots is saved.
+    - class_labels: A list of the class_labels which are used
+    - main_class: The main discriminant class. For b-tagging obviously "bjets"
+    - label_extension: Extension of the legend label giving the process type.
+    - rej_string: String that is added after the class for the key.
+    - trained_taggers: List of dicts with needed info about local available taggers.
+    - target_beff: Target Working point.
+    - UseAtlasTag: Bool to decide if you want the ATLAS tag.
+    - ApplyATLASStyle: Decide, if the ATLAS Plotting style is used.
+    - AtlasTag: Main tag. Mainly "Internal Simulation".
+    - SecondTag: Lower tag in the ATLAS label with infos.
+    - yAxisAtlasTag: Y axis position of the ATLAS label.
+    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    - ncol: Number of columns in the legend.
+    - figsize: Size of the figure.
+    - legend_loc: Position of the legend.
+    - plot_datatype: Datatype of the plot.
+    - legFontSize: Fontsize of the legend.
+
+    Output:
+    - Plot of the rejections of the taggers per epoch in seperate plots. One per rejection.
+    """
+
+    # Apply ATLAS style
+    if ApplyATLASStyle is True:
+        applyATLASstyle(mtp)
+
+    # Get a list of the background classes
+    class_labels_wo_main = copy.deepcopy(class_labels)
+    class_labels_wo_main.remove(main_class)
+
+    # Get flavour categories from global config
+    flav_cat = global_config.flavour_categories
+
+    for counter, iter_class in enumerate(class_labels_wo_main):
+        # Set global plot configs
+        fig = plt.figure(figsize=figsize)
+        axes = fig.add_subplot()
+        axes.set_xlabel("Epoch")
+        axes.set_ylabel(f'{flav_cat[iter_class]["legend_label"]} Rejection')
+
+        # Init a linestyle counter
+        counter_models = 0
+
+        # Plot rejection
+        axes.plot(
+            df_results["epoch"],
+            df_results[f"{iter_class}_{rej_string}"],
+            linestyle="-",
+            color=f"C{counter_models}",
+            label=tagger,
+        )
+
+        # Set up the counter
+        counter_models += 1
+
+        if comp_tagger_rej_dict is None:
+            logger.info("No comparison tagger defined. Not plotting those!")
+
+        else:
+            for comp_counter, comp_tagger in enumerate(comp_tagger_rej_dict):
+                try:
+                    axes.axhline(
+                        comp_tagger_rej_dict[comp_tagger][f"{iter_class}_rej"],
+                        0,
+                        df_results["epoch"].max(),
+                        color=f"C{counter_models}",
+                        linestyle="-",
+                        label=f"Recomm. {comp_tagger}",
+                    )
+
+                    # Set up the counter
+                    counter_models += 1
+
+                except KeyError:
+                    logger.info(
+                        f"{iter_class} rejection for {comp_tagger} not in dict! Skipping ..."
+                    )
+
+        if trained_taggers is None:
+            logger.info("No local taggers defined. Not plotting those!")
+
+        else:
+            for tt_counter, tt in enumerate(trained_taggers):
+                try:
+                    # Get the needed rejection info from json
+                    tt_rej_dict = pd.read_json(trained_taggers[tt]["path"])
+
+                except FileNotFoundError(
+                    f'No .json file found at {trained_taggers[tt]["path"]}. Skipping {trained_taggers[tt]["label"]}'
+                ):
+                    continue
+
+                axes.plot(
+                    tt_rej_dict["epoch"],
+                    tt_rej_dict[f"{iter_class}_{rej_string}"],
+                    linestyle="-",
+                    color=f"C{counter_models}",
+                    label=trained_taggers[tt]["label"],
+                )
+
+                # Set up the counter
+                counter_models += 1
+
+        # Increase y limit for ATLAS Logo
+        axes.set_ylim(top=axes.get_ylim()[1] * yAxisIncrease)
+
+        if UseAtlasTag is True:
+            makeATLAStag(
+                ax=plt.gca(),
+                fig=plt.gcf(),
+                first_tag=AtlasTag,
+                second_tag=(
+                    SecondTag
+                    + f"\nWP={int(target_beff * 100):02d}% "
+                    + label_extension
+                    + " sample"
+                ),
+                ymax=yAxisAtlasTag,
+            )
+
+        # Define the legend
+        axes.legend(
+            loc=legend_loc,
+            fontsize=legFontSize,
+            ncol=ncol,
+        )
+        plt.tight_layout()
+        plt.savefig(
+            plot_name + f"_{iter_class}_rejection.{plot_datatype}",
+            transparent=True,
+        )
+        plt.cla()
+        plt.clf()
 
 
 def PlotLosses(
@@ -456,6 +671,7 @@ def PlotLosses(
     plot_datatype="pdf",
     ymin=None,
     ymax=None,
+    **kwargs,
 ):
     """
     Plot the training loss and the validation losses per epoch.
@@ -537,6 +753,7 @@ def PlotAccuracies(
     plot_datatype="pdf",
     ymin=None,
     ymax=None,
+    **kwargs,
 ):
     """
     Plot the training and validation accuracies per epoch.
@@ -618,6 +835,7 @@ def PlotLossesUmami(
     plot_datatype="pdf",
     ymin=None,
     ymax=None,
+    **kwargs,
 ):
     """
     Plot the training loss and the validation losses per epoch for
@@ -716,6 +934,7 @@ def PlotAccuraciesUmami(
     plot_datatype="pdf",
     ymin=None,
     ymax=None,
+    **kwargs,
 ):
     """
     Plot the training and validation accuracies per epoch for
@@ -828,14 +1047,14 @@ def RunPerformanceCheck(
 
     # Load parameters from train config
     Eval_parameters = train_config.Eval_parameters_validation
-    Plotting_settings = train_config.Plotting_settings
+    Val_settings = train_config.Validation_metrics_settings
     frac_dict = Eval_parameters["frac_values"]
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     recommended_frac_dict = Eval_parameters["frac_values_comp"]
 
     if WP is None:
-        WP = Eval_parameters["WP"]
+        WP = Val_settings["WP"]
 
     # Get dict with training results from json
     tagger_rej_dict = pd.read_json(dict_file_name)
@@ -846,7 +1065,7 @@ def RunPerformanceCheck(
 
     elif "accuracy" in tagger_rej_dict:
         logger.warning(
-            "Metrics history file not found! Try extract metrics from validation file."
+            "Metrics history file not found! Extract metrics from validation file."
         )
 
         train_history_dict = tagger_rej_dict
@@ -896,10 +1115,49 @@ def RunPerformanceCheck(
     logger.info(f"saving plots to {plot_dir}")
     os.makedirs(plot_dir, exist_ok=True)
 
+    # Check how many rejections are needed to be plotted
+    class_labels_wo_main = copy.deepcopy(class_labels)
+    class_labels_wo_main.remove(main_class)
+    n_rej = len(class_labels_wo_main)
+
     if tagger == "umami":
         for subtagger in ["umami", "dips"]:
+            if n_rej == 2:
+                # Plot comparsion for the comparison taggers
+                PlotRejPerEpochComparison(
+                    df_results=tagger_rej_dict,
+                    tagger=tagger,
+                    frac_dict=frac_dict,
+                    comp_tagger_rej_dict=comp_tagger_rej_dict,
+                    comp_tagger_frac_dict=recommended_frac_dict,
+                    plot_name=f"{plot_dir}/rej-plot_val_{subtagger}",
+                    class_labels=class_labels,
+                    main_class=main_class,
+                    label_extension=r"$t\bar{t}$",
+                    rej_string=f"rej_{subtagger}",
+                    target_beff=WP,
+                    **Val_settings,
+                )
+
+                if tagger_comp_vars is not None:
+                    PlotRejPerEpochComparison(
+                        df_results=tagger_rej_dict,
+                        tagger=tagger,
+                        frac_dict=frac_dict,
+                        comp_tagger_rej_dict=comp_tagger_rej_dict_add,
+                        comp_tagger_frac_dict=recommended_frac_dict,
+                        plot_name=f"{plot_dir}/rej-plot_val_{subtagger}_add",
+                        class_labels=class_labels,
+                        main_class=main_class,
+                        label_extension=r"ext. $Z'$",
+                        rej_string=f"rej_{subtagger}_add",
+                        target_beff=WP,
+                        **Val_settings,
+                    )
+
             PlotRejPerEpoch(
                 df_results=tagger_rej_dict,
+                tagger=tagger,
                 frac_dict=frac_dict,
                 comp_tagger_rej_dict=comp_tagger_rej_dict,
                 comp_tagger_frac_dict=recommended_frac_dict,
@@ -909,12 +1167,13 @@ def RunPerformanceCheck(
                 label_extension=r"$t\bar{t}$",
                 rej_string=f"rej_{subtagger}",
                 target_beff=WP,
-                **Plotting_settings,
+                **Val_settings,
             )
 
             if tagger_comp_vars is not None:
                 PlotRejPerEpoch(
                     df_results=tagger_rej_dict,
+                    tagger=tagger,
                     frac_dict=frac_dict,
                     comp_tagger_rej_dict=comp_tagger_rej_dict_add,
                     comp_tagger_frac_dict=recommended_frac_dict,
@@ -924,7 +1183,7 @@ def RunPerformanceCheck(
                     label_extension=r"ext. $Z'$",
                     rej_string=f"rej_{subtagger}_add",
                     target_beff=WP,
-                    **Plotting_settings,
+                    **Val_settings,
                 )
 
         plot_name = f"{plot_dir}/disc-cut-plot"
@@ -933,7 +1192,7 @@ def RunPerformanceCheck(
             plot_name=plot_name,
             frac_class="cjets",
             target_beff=WP,
-            **Plotting_settings,
+            **Val_settings,
         )
 
         # Check if metrics are present
@@ -943,20 +1202,54 @@ def RunPerformanceCheck(
                 tagger_rej_dict,
                 plot_name,
                 train_history_dict=train_history_dict,
-                **Plotting_settings,
+                **Val_settings,
             )
             plot_name = f"{plot_dir}/accuracy-plot"
             PlotAccuraciesUmami(
                 tagger_rej_dict,
                 plot_name,
                 train_history_dict=train_history_dict,
-                **Plotting_settings,
+                **Val_settings,
             )
 
     else:
-        # Plot comparsion for the comparison taggers
+        if n_rej == 2:
+            # Plot comparsion for the comparison taggers
+            PlotRejPerEpochComparison(
+                df_results=tagger_rej_dict,
+                tagger=tagger,
+                frac_dict=frac_dict,
+                comp_tagger_rej_dict=comp_tagger_rej_dict,
+                comp_tagger_frac_dict=recommended_frac_dict,
+                plot_name=f"{plot_dir}/rej-plot_val",
+                class_labels=class_labels,
+                main_class=main_class,
+                label_extension=r"$t\bar{t}$",
+                rej_string="rej",
+                target_beff=WP,
+                **Val_settings,
+            )
+
+            if tagger_comp_vars is not None:
+                PlotRejPerEpochComparison(
+                    df_results=tagger_rej_dict,
+                    tagger=tagger,
+                    frac_dict=frac_dict,
+                    comp_tagger_rej_dict=comp_tagger_rej_dict_add,
+                    comp_tagger_frac_dict=recommended_frac_dict,
+                    plot_name=f"{plot_dir}/rej-plot_val_add",
+                    class_labels=class_labels,
+                    main_class=main_class,
+                    label_extension=r"ext. $Z'$",
+                    rej_string="rej_add",
+                    target_beff=WP,
+                    **Val_settings,
+                )
+
+        # Plot rejections in one plot per rejection
         PlotRejPerEpoch(
             df_results=tagger_rej_dict,
+            tagger=tagger,
             frac_dict=frac_dict,
             comp_tagger_rej_dict=comp_tagger_rej_dict,
             comp_tagger_frac_dict=recommended_frac_dict,
@@ -966,12 +1259,13 @@ def RunPerformanceCheck(
             label_extension=r"$t\bar{t}$",
             rej_string="rej",
             target_beff=WP,
-            **Plotting_settings,
+            **Val_settings,
         )
 
         if tagger_comp_vars is not None:
             PlotRejPerEpoch(
                 df_results=tagger_rej_dict,
+                tagger=tagger,
                 frac_dict=frac_dict,
                 comp_tagger_rej_dict=comp_tagger_rej_dict_add,
                 comp_tagger_frac_dict=recommended_frac_dict,
@@ -981,7 +1275,7 @@ def RunPerformanceCheck(
                 label_extension=r"ext. $Z'$",
                 rej_string="rej_add",
                 target_beff=WP,
-                **Plotting_settings,
+                **Val_settings,
             )
 
         plot_name = f"{plot_dir}/disc-cut-plot"
@@ -991,7 +1285,7 @@ def RunPerformanceCheck(
             target_beff=WP,
             frac_class="cjets",
             frac=frac_dict["cjets"],
-            **Plotting_settings,
+            **Val_settings,
         )
 
         # Check if metrics are present
@@ -1001,12 +1295,12 @@ def RunPerformanceCheck(
                 tagger_rej_dict,
                 plot_name,
                 train_history_dict=train_history_dict,
-                **Plotting_settings,
+                **Val_settings,
             )
             plot_name = f"{plot_dir}/accuracy-plot"
             PlotAccuracies(
                 tagger_rej_dict,
                 plot_name,
                 train_history_dict=train_history_dict,
-                **Plotting_settings,
+                **Val_settings,
             )

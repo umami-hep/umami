@@ -16,7 +16,7 @@ After the previous step the ntuples need to be further processed. We can use dif
 This processing can be done using the preprocessing capabilities of Umami via the [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py) script.
 
 Please refer to the [documentation on preprocessing](preprocessing.md) for additional information.
-Note, that for running Dips tracks have to be stored in the output hybrid sample. Therefore, the `--tracks` argument needs to be set.
+Note, that for running Dips tracks have to be stored in the output hybrid sample. Therefore, the `save_tracks` argument in the preprocessing config need to be set while the preprocessing the samples.
 
 ## Config File
 
@@ -100,6 +100,27 @@ NN_structure:
     # Options for the Learning Rate reducer
     LRR: True
 
+# Plotting settings for training metrics plots
+Validation_metrics_settings:
+    # Define which taggers should also be plotted
+    taggers_from_file: ["rnnip", "DL1r"]
+
+    # Define which freshly trained taggers should be plotted
+    trained_taggers:
+        dipsReference:
+            path: "dips_Loose/validation_WP0p77_300000jets_Dict.json"
+            label: "DIPS Reference"
+
+    # Enable/Disable atlas tag
+    UseAtlasTag: True
+
+    # fc_value and WP_b are autmoatically added to the plot label
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # Set the datatype of the plots
+    plot_datatype: "pdf"
+
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
     # Number of jets used for validation
@@ -154,19 +175,6 @@ Eval_parameters_validation:
 
     # Decide, if the Saliency maps are calculated or not.
     Calculate_Saliency: True
-
-# Plotting settings for training metrics plots
-Plotting_settings:
-
-    # Enable/Disable atlas tag
-    UseAtlasTag: True
-
-    # fc_value and WP_b are autmoatically added to the plot label
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
-
-    # Set the datatype of the plots
-    plot_datatype: "pdf"
 ```
 
 It contains the information about the neural network architecture and the training as well as about the files for training, validation and testing. Also evaluation parameters are given for the training evaluation which is performed by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script.
@@ -206,6 +214,13 @@ The different options are briefly explained here:
 | `LRR_mode` | String | Optional | One of `{"auto", "min", "max"}`. In "min" mode, the learning rate will be reduced when the quantity monitored has stopped decreasing; in "max" mode it will be reduced when the quantity monitored has stopped increasing; in "auto" mode, the direction is automatically inferred from the name of the monitored quantity. Default: "auto" |
 | `LRR_cooldown` | Int | Optional | Number of epochs to wait before resuming normal operation after lr has been reduced. Default: 5 |
 | `LRR_min_lr` | Float | Optional | Lower bound on the learning rate. Default: 0.000001 |
+| `Validation_metrics_settings` | None | Necessary | Plotting settings for the validation plots which are produced by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
+| `taggers_from_file` | List | Optional | List of taggers that are available in the .h5 samples. The here given taggers are plotted as reference lines in the rejection per epoch plots. |
+| `trained_taggers` | Dict | Optional | A dict with local trained taggers which shall be plotted in the rejection per epoch plots. You need to provide a dict with a `path` and a `label`. The path is the path to the validation metrics .json file, where the rejections per epoch are saved. The `label` is the label which will be shown in the legend in the rejection per epoch plots. The `dipsReference` in the example here is just an internal naming. It will not be shown anywhere. |
+| `UseAtlasTag` | Bool | Optional | Decide, if the ATLAS tag is printed at the top left of the plot. |
+| `AtlasTag` | String | Optional | Main ATLAS tag which is right to "ATLAS" |
+| `SecondTag` | String | Optional | Second line below the ATLAS tag |
+| `plot_datatype` | String | Necessary | Datatype of the plots that are produced using the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
 | `Eval_parameters_validation` | None | Necessary | A dict where all important information for the training are defined. |
 | `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. | 
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
@@ -214,11 +229,6 @@ The different options are briefly explained here:
 | `variable_cuts` | Dict | Necessary | Dict of cuts which are applied when loading the different test files. Only jet variables can be cut on. |
 | `WP` | Float | Necessary | Working point which is used in the validation and evaluation. |
 | `Calculate_Saliency` | Bool | Optional | Decide, if the saliency maps are calculated or not. This takes a lot of time and resources! |
-| `Plotting_settings` | None | Necessary | Plotting settings for the validation plots which are produced by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
-| `UseAtlasTag` | Bool | Necessary | Decide, if the ATLAS tag is printed at the top left of the plot. |
-| `AtlasTag` | String | Necessary | Main ATLAS tag which is right to "ATLAS" |
-| `SecondTag` | String | Necessary | Second line below the ATLAS tag |
-| `plot_datatype` | String | Necessary | Datatype of the plots that are produced using the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
 
 ## Training
 

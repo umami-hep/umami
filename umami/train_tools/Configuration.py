@@ -33,7 +33,7 @@ class Configuration(object):
             "var_dict",
             "NN_structure",
             "Eval_parameters_validation",
-            "Plotting_settings",
+            "Validation_metrics_settings",
             "ttbar_test_files",
             "zpext_test_files",
         ]
@@ -44,7 +44,7 @@ class Configuration(object):
             "evaluate_trained_model",
             "NN_structure",
             "Eval_parameters_validation",
-            "Plotting_settings",
+            "Validation_metrics_settings",
         ]
         if "evaluate_trained_model" in self.config.keys():
             if self.config["evaluate_trained_model"] is True:
@@ -55,6 +55,14 @@ class Configuration(object):
 
         else:
             iterate_list = config_train_items
+
+        if "Plotting_settings" in self.config.keys():
+            raise KeyError(
+                """
+                You defined Plotting_settings. This option is deprecated. Please use
+                Validation_metrics_settings instead.
+                """
+            )
 
         for item in iterate_list:
             if item in self.config:

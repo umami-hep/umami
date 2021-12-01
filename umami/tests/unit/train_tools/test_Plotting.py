@@ -15,6 +15,7 @@ from umami.train_tools.Plotting import (
     PlotLosses,
     PlotLossesUmami,
     PlotRejPerEpoch,
+    PlotRejPerEpochComparison,
 )
 
 
@@ -86,9 +87,35 @@ class GetRejection_TestCase(unittest.TestCase):
         self.label_extension = r"$t\bar{t}$"
         self.frac_class = "cjets"
 
+    def test_PlotRejPerEpochComparison(self):
+        PlotRejPerEpochComparison(
+            df_results=self.df_results,
+            tagger="dips",
+            frac_dict=self.frac_dict,
+            comp_tagger_rej_dict=self.comp_tagger_rej_dict,
+            comp_tagger_frac_dict=self.comp_tagger_frac_dict,
+            plot_name=self.tmp_plot_dir + "PlotRejPerEpochComparison",
+            class_labels=self.class_labels,
+            main_class=self.main_class,
+            label_extension=self.label_extension,
+            rej_string="rej",
+            plot_datatype="png",
+            legend_loc="upper right",
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.Control_plots_dir + "PlotRejPerEpochComparison.png",
+                self.tmp_plot_dir + "PlotRejPerEpochComparison.png",
+                tol=1,
+            ),
+        )
+
     def test_PlotRejPerEpoch(self):
         PlotRejPerEpoch(
             df_results=self.df_results,
+            tagger="dips",
             frac_dict=self.frac_dict,
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
             comp_tagger_frac_dict=self.comp_tagger_frac_dict,
@@ -98,14 +125,23 @@ class GetRejection_TestCase(unittest.TestCase):
             label_extension=self.label_extension,
             rej_string="rej",
             plot_datatype="png",
-            legend_loc=(0.6, 0.75),
+            legend_loc="upper right",
         )
 
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotRejPerEpoch.png",
-                self.tmp_plot_dir + "PlotRejPerEpoch.png",
+                self.Control_plots_dir + "PlotRejPerEpoch_cjets_rejection.png",
+                self.tmp_plot_dir + "PlotRejPerEpoch_cjets_rejection.png",
+                tol=1,
+            ),
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.Control_plots_dir + "PlotRejPerEpoch_ujets_rejection.png",
+                self.tmp_plot_dir + "PlotRejPerEpoch_ujets_rejection.png",
                 tol=1,
             ),
         )
