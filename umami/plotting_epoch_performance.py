@@ -107,10 +107,12 @@ def main(args, train_config, preprocess_config):
                     tagger_name=f"{comp_tagger}",
                     class_labels=train_config.NN_structure["class_labels"],
                 )
-                for comp_tagger in train_config.Eval_parameters_validation[
-                    "tagger"
+                for comp_tagger in train_config.Validation_metrics_settings[
+                    "taggers_from_file"
                 ]
-            },
+            }
+            if "taggers_from_file" in train_config.Validation_metrics_settings
+            else None,
             dict_file_name=output_file_name,
             train_history_dict=f"{train_config.model_name}/history.json",
             WP=beff,

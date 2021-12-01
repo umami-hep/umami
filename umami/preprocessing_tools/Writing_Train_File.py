@@ -120,7 +120,7 @@ class TrainSampleWriter:
         self,
         input_file: str = None,
         output_file: str = None,
-        chunkSize: int = int(1e6),
+        chunkSize: int = int(1e5),
     ):
         """
         Input:

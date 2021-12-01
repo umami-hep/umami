@@ -79,6 +79,21 @@ NN_structure:
     # Option if you want to use sample weights for training
     use_sample_weights: False
 
+# Plotting settings for training metrics plots
+Validation_metrics_settings:
+    # Define which taggers should also be plotted
+    taggers_from_file: ["rnnip", "DL1r"]
+
+    # Enable/Disable atlas tag
+    UseAtlasTag: True
+
+    # fc_value and WP_b are autmoatically added to the plot label
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # Set the datatype of the plots
+    plot_datatype: "pdf"
+
 Eval_parameters_validation:
     # Number of jets used for each validation sample. Set this to 0 if you have memory problems
     n_jets: 3e5
@@ -135,16 +150,3 @@ Eval_parameters_validation:
 
     # Working point used in the evaluation
     WP: 0.77
-
-# Plotting settings for training metrics plots
-Plotting_settings:
-
-    # Enable/Disable atlas tag
-    UseAtlasTag: True
-
-    # fc_value and WP_b are autmoatically added to the plot label
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
-
-    # Set the datatype of the plots
-    plot_datatype: "pdf"

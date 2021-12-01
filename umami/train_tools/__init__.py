@@ -39,5 +39,6 @@ from umami.train_tools.Plotting import (
     PlotLosses,
     PlotLossesUmami,
     PlotRejPerEpoch,
+    PlotRejPerEpochComparison,
     RunPerformanceCheck,
 )
