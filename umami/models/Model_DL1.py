@@ -116,6 +116,20 @@ def TrainLargeFile(args, train_config, preprocess_config):
     # Print how much jets are used
     logger.info(f"Number of Jets used for training: {nJets}")
 
+    # pass correct tensor types/shapes depending on using sample weights
+    if NN_structure["use_sample_weights"]:
+        tensor_types = (tf.float32, tf.float32, tf.float32)
+        tensor_shapes = (
+            tf.TensorShape([None, nFeatures]),
+            tf.TensorShape([None, nDim]),
+            tf.TensorShape([None]),
+        )
+    else:
+        tensor_types = (tf.float32, tf.float32)
+        tensor_shapes = (
+            tf.TensorShape([None, nFeatures]),
+            tf.TensorShape([None, nDim]),
+        )
     # Build train_datasets for training
     train_dataset = (
         tf.data.Dataset.from_generator(
@@ -126,12 +140,10 @@ def TrainLargeFile(args, train_config, preprocess_config):
                 n_jets=nJets,
                 batch_size=NN_structure["batch_size"],
                 excluded_var=excluded_var,
+                sample_weights=NN_structure["use_sample_weights"],
             ),
-            (tf.float32, tf.float32),
-            (
-                tf.TensorShape([None, nFeatures]),
-                tf.TensorShape([None, nDim]),
-            ),
+            tensor_types,
+            tensor_shapes,
         )
         .repeat()
         .prefetch(3)

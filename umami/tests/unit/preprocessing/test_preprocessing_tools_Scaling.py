@@ -190,7 +190,6 @@ class ScalingTestCase(unittest.TestCase):
 
         varname, average, std, default = scaling_class.get_scaling(
             vec=self.vec,
-            w=self.w,
             varname=self.varname,
             custom_defaults_vars=self.custom_defaults_vars,
         )
@@ -202,7 +201,6 @@ class ScalingTestCase(unittest.TestCase):
 
         varname, average, std, default = scaling_class.get_scaling(
             vec=self.vec,
-            w=self.w,
             varname="variable_2",
             custom_defaults_vars=self.custom_defaults_vars,
         )

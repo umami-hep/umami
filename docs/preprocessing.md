@@ -6,7 +6,8 @@ Training ntuples are produced using the [training-dataset-dumper](https://gitlab
 ### Preprocessing
 The motivation for preprocessing the training samples results from the fact that the input datasets are highly imbalanced in their flavour composition. While there are large quantities of light jets, the fraction of b-jets is small and the fraction of other flavours is even smaller.
 A widely adopted technique for dealing with highly unbalanced datasets is called resampling. It consists of removing samples from the majority class (under-sampling) and / or adding more examples from the minority class (over-sampling).
-In under-sampling, the simplest technique involves removing random records from the majority class, which can cause loss of information.
+In under-sampling, the simplest technique involves removing random records from the majority class, which can cause loss of information. 
+Another approach can be to tell the network how important samples from each class are. For e.g. a majority class you can reduce the impact of samples from this class to the training. You can do this by assigning a weight to each sample and use it to weight the loss function used in the training.
 
 ### Hybrid samples
 Umami/DIPS and DL1r are trained on so-called hybrid samples which are created using both ttbar and Z' input jets.
@@ -348,7 +349,7 @@ In `sampling`, we can define the method which is used in the preprocessing for r
 | Method | Explanation      |
 | ------ | ---------------- |
 | `count`                   | Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used |
-| `pdf`  | NOTE: If your sample's statistics are small and/or your lowest distribution is other than the b-jet distribution, you can force the b-jet distribution shape on the other jet flavor distributions. This will ensure ensure all the distributions have the b-shape and the same fractions. Additionally, when building the target distribution for "probability_ratio", `pT_max` (set in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml)) will be used to compute the probability ratios or PDFs. Not setting `pT_max` will allow you to keep more jets (bigger fractions) but with more noise (uncertainty) loosing the guarantee that all the distributions will have the same b-jet distribution shape. WARNING: The `pdf` method does not work well with taus as of now.|
+| `pdf`  | NOTE: If your sample's statistics are small and/or your lowest distribution is other than the b-jet distribution, you can force the b-jet distribution shape on the other jet flavour distributions. This will ensure ensure all the distributions have the b-shape and the same fractions. Additionally, when building the target distribution for "probability_ratio", `pT_max` (set in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml)) will be used to compute the probability ratios or PDFs. Not setting `pT_max` will allow you to keep more jets (bigger fractions) but with more noise (uncertainty) loosing the guarantee that all the distributions will have the same b-jet distribution shape. WARNING: The `pdf` method does not work well with taus as of now.|
 
 The `options` are some options for the different resampling methods. You need to define the sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins. 
 Another thing you need to define are the `samples` which are to be resampled. You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`.
@@ -360,12 +361,17 @@ If you want to use the PDF sampling, have a look at the example config [PFlow-Pr
 
 | Setting | Explanation      |
 | ------ | ---------------- |
+| `weighting_target_flavour` | Target distribution for weights calculation |
 | `outfile_name` | name of the output file of the preprocessing |
 | `plot_name` | defines the names of the control plots which are produced in the preprocessing |
 | `var_file` | path to the variable dict |
 | `dict_file` | path to the scale dict |
 
 ```yaml
+# relative to which distribution the weights should be calculated for the
+# weighting preprocessing method
+weighting_target_flavour: 'bjets'
+
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name
 plot_name: PFlow_ext-hybrid
@@ -375,6 +381,7 @@ var_file: *var_file
 
 # Dictfile for the scaling and shifting (json)
 dict_file: *dict_file
+
 
 ```
 In the last part, the path to the variable dict `var_file` and the scale dict `dict_file` is defined. Those values are set in the `parameters` file. For example, the training variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
@@ -401,29 +408,33 @@ preprocessing.py --config <path to config file> --prepare
 
 After the preparation of the samples, the next step is the processing for the training itself which is also done with the [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/preprocessing.py) script. Again, the configurations for the preprocessing are defined in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml) which you need to adapt to your needs.
 
-The steps defined in the following segment are only performed on the training samples! You do not need to resample/scale/write the validation/test samples!
+The steps defined in the following segment are only performed on the training samples! You do not need to resample/scale/write the validation/test samples! You can choose to **resample (1a)** or to calculate **weights (1b)**.
 
-1. Running the resampling:
-
+1a\. Running the resampling:
 ```bash
 preprocessing.py --config <path to config file> --resampling
 ```
 
+1b\. Running the weighting:
+```bash
+preprocessing.py --config <path to config file> --weighting
+```
+
 If you want to also use the tracks of the jets, you need to set the option `save_tracks` in the preprocessing config to `True`. If the tracks have a different name than `"tracks"` in the .h5 files coming from the dumper, you can also set change `tracks_name` to your needs. Track information are not needed for the DL1r but for DIPS and Umami.
 
-2. Retrieving scaling and shifting factors:
+2\. Retrieving scaling and shifting factors:
 
 ```bash
 preprocessing.py --config <path to config file> --scaling
 ```
 
-3. Applying shifting and scaling factors
+3\. Applying shifting and scaling factors
 
 ```bash
 preprocessing.py --config <path to config file> --apply_scales
 ```
 
-4. Writing the samples to disk in the correct format for training.
+4\. Writing the samples to disk in the correct format for training.
 
 ```bash
 preprocessing.py --config <path to config file> --write

@@ -353,6 +353,10 @@ class Resampling(object):
 
     def GetBins(self, x, y):
         """
+        Calculates the bin statistics for a 2D histogram. This post might be
+        helpful to understand the flattened bin numbering:
+        https://stackoverflow.com/questions/63275441/can-i-get-binned-statistic-2d-to-return-bin-numbers-for-only-bins-in-range
+
         Parameters
         ----------
         x: numpy array with values from variable x
@@ -390,7 +394,33 @@ class Resampling(object):
         chunk_size: int = 10000,
         seed: int = 42,
     ):
-        raise NotImplementedError
+        with h5py.File(file, "r") as f:
+            start_ind = 0
+            end_ind = int(start_ind + chunk_size)
+            # create indices and then shuffle those to be used in the loop below
+            tupled_indices = []
+            while end_ind <= len(indices) or start_ind == 0:
+                tupled_indices.append((start_ind, end_ind))
+                start_ind = end_ind
+                end_ind = int(start_ind + chunk_size)
+            rng = np.random.default_rng(seed=seed)
+            tupled_indices = rng.choice(
+                tupled_indices, len(tupled_indices), replace=False
+            )
+
+            for index_tuple in tupled_indices:
+                loading_indices = indices[index_tuple[0] : index_tuple[1]]
+                labels = label_binarize(
+                    (np.ones(index_tuple[1] - index_tuple[0]) * label),
+                    classes=label_classes,
+                )
+
+                if use_tracks:
+                    yield f["jets"][loading_indices], f["tracks"][
+                        loading_indices
+                    ], labels
+                else:
+                    yield f["jets"][loading_indices], labels
 
     def WriteFile(self, indices: dict, chunk_size: int = 10_000):
         """
@@ -515,6 +545,181 @@ class Resampling(object):
                         out_file["tracks"][-tracks.shape[0] :] = tracks
             chunk_counter += 1
         pbar.close()
+
+
+class ResamplingTools(Resampling):
+    def InitialiseSamples(self):
+        """
+        Initialising input files.
+        Parameters
+        ----------
+
+        Returns
+        -------
+        At this point the arrays of the 2 variables are loaded which are used
+        for the sampling and saved into class variables.
+        """
+        self.samples = {}
+        try:
+            samples = self.options["samples"]
+        except KeyError:
+            raise KeyError(
+                "You chose the 'count' or 'probability_ratio' option "
+                "for the sampling but didn't provide the samples to use. "
+                "Please specify them in the configuration file!"
+            )
+
+        # list of sample classes, bjets, cjets, etc
+        valid_class_categories = self.GetValidClassCategories(samples)
+        self.class_categories = valid_class_categories[
+            next(iter(samples.keys()))
+        ]
+        # map of sample categories and indexes as IDs
+        self.sample_categories = {
+            elem: i
+            for i, elem in enumerate(list(valid_class_categories.keys()))
+        }
+        # map of sample categories
+        self.sample_map = {
+            elem: {} for elem in list(valid_class_categories.keys())
+        }
+        self.sample_file_map = {}
+        for sample_category in self.sample_categories:
+            sample_id = self.sample_categories[sample_category]
+            self.samples[sample_category] = []
+            for sample in samples[sample_category]:
+                preparation_sample = self.preparation_samples.get(sample)
+                preparation_sample_path = GetPreparationSamplePath(
+                    preparation_sample
+                )
+                self.sample_file_map[sample] = preparation_sample_path
+                logger.info(
+                    f"Loading sampling variables from {preparation_sample_path}"
+                )
+                with h5py.File(preparation_sample_path, "r") as f:
+                    nJets_initial = None
+                    if (
+                        "custom_njets_initial" in self.options
+                        and sample
+                        in list(self.options["custom_njets_initial"])
+                    ):
+                        nJets_initial = int(
+                            self.options["custom_njets_initial"][sample]
+                        )
+                    jets_x = np.asarray(f["jets"][self.var_x])[:nJets_initial]
+                    jets_y = np.asarray(f["jets"][self.var_y])[:nJets_initial]
+                logger.info(
+                    f"Loaded {len(jets_x)} {preparation_sample.get('category')} jets from {sample}."
+                )
+                # construct a flat array with 5 columns:
+                # x, y, index, sample_id, sample_class
+                sample_vector = np.asarray(
+                    [
+                        jets_x,
+                        jets_y,
+                        range(len(jets_x)),
+                        np.ones(len(jets_x)) * sample_id,
+                        np.ones(len(jets_x))
+                        * self.sample_categories[sample_category],
+                    ]
+                ).T
+                self.samples[sample_category].append(
+                    {
+                        "file": preparation_sample_path,
+                        "sample_vector": sample_vector,
+                        "category": preparation_sample.get("category"),
+                        "sample": sample,
+                        "sample_id": sample_id,
+                    }
+                )
+                self.sample_map[sample_category] = {
+                    **self.sample_map[sample_category],
+                    preparation_sample.get("category"): sample,
+                }
+
+    def GetValidClassCategories(self, samples):
+        """helper function to check sample categories requested in resampling were
+        also defined in the sample preparation step. Returns sample classes."""
+        # ttbar or zprime are the categories, samples are bjets, cjets, etc.
+        categories = samples.keys()
+        check_consistency = {}
+        for category in categories:
+            check_consistency[category] = []
+            for sample in samples[category]:
+                preparation_sample = self.preparation_samples.get(sample)
+                if preparation_sample is None:
+                    raise KeyError(
+                        f"'{sample}' was requested in sampling/samples block, "
+                        "however, it was not defined in preparation/samples in"
+                        "the preprocessing config file!"
+                    )
+                check_consistency[category].append(
+                    preparation_sample["category"]
+                )
+        combs = list(itertools.combinations(check_consistency.keys(), 2))
+        combs_check = [
+            sorted(check_consistency[elem[0]])
+            == sorted(check_consistency[elem[1]])
+            for elem in combs
+        ]
+        if not all(combs_check):
+            raise RuntimeError(
+                "Your specified samples in the sampling/samples "
+                "block need to have the same samples in each sample category."
+            )
+        return check_consistency
+
+    def ConcatenateSamples(self):
+        """
+        Takes initialized object from InitialiseSamples() and concatenates
+        samples with the same category into dict which contains the
+        samplevector: array(sample_size x 5)
+        with pt, eta, jet_count, sample_id (ttbar:0, zprime:1), sample_class
+
+        Returns
+        -------
+        self.concat_samples = {
+            "bjets": {"jets": array(sample_size x 5)},
+            "cjets": {"jets": array(sample_size x 5)},
+            ...
+        }
+
+        """
+
+        concat_samples = {
+            elem: {"jets": None} for elem in self.class_categories
+        }
+
+        for sample_category in self.samples:
+            for sample in self.samples[sample_category]:
+                if concat_samples[sample["category"]]["jets"] is None:
+                    concat_samples[sample["category"]]["jets"] = sample[
+                        "sample_vector"
+                    ]
+
+                else:
+                    concat_samples[sample["category"]][
+                        "jets"
+                    ] = np.concatenate(
+                        [
+                            concat_samples[sample["category"]]["jets"],
+                            sample["sample_vector"],
+                        ]
+                    )
+        self.concat_samples = concat_samples
+        return concat_samples
+
+    def GetPtEtaBinStatistics(self):
+        # calculate the 2D bin statistics for each sample and add it to
+        # concat_samples dict with keys 'binnumbers','bin_indices_flat', 'stat'
+        for class_category in self.class_categories:
+            binnumbers, ind, stat = self.GetBins(
+                self.concat_samples[class_category]["jets"][:, 0],
+                self.concat_samples[class_category]["jets"][:, 1],
+            )
+            self.concat_samples[class_category]["binnumbers"] = binnumbers
+            self.concat_samples[class_category]["stat"] = stat
+            self.bin_indices_flat = ind
 
 
 class PDFSampling(Resampling):
@@ -2183,136 +2388,170 @@ class PDFSampling(Resampling):
         logger.info("PDFsampling finished.")
 
 
-class UnderSampling(Resampling):
-    def InitialiseSamples(self):
+class Weighting(ResamplingTools):
+    def GetSampleWeights(self, config):
         """
-        Initialising input files.
-        Parameters
-        ----------
+        calculate ratios from bins in 2d (pt,eta) histogram between different
+        flavours and puts them as 'weight' keys onto the concat_samples dict
+        """
 
-        Returns
-        -------
-        At this point the arrays of the 2 variables are loaded which are used
-        for the sampling and saved into class variables.
-        """
-        self.samples = {}
-        try:
-            samples = self.options["samples"]
-        except KeyError:
-            raise KeyError(
-                "You chose the 'count' or 'probability_ratio' option "
-                "for the sampling but didn't provide the samples to use. "
-                "Please specify them in the configuration file!"
+        # calculate the 2D bin statistics for each sample and add it to
+        # concat_samples dict with keys 'binnumbers','bin_indices_flat', 'stat'
+        self.GetPtEtaBinStatistics()
+
+        # target distribution
+        target_jets_stats = self.concat_samples[
+            config.config["weighting_target_flavour"]
+        ]["stat"]
+
+        # calculate ratios between flavours of pt, eta distribution
+        for flavour in self.class_categories:
+            # jets by flavours to be ratioed
+            flavour_jets_stats = self.concat_samples[flavour]["stat"]
+            # make sure there is no zero divsion
+            self.concat_samples[flavour]["ratios"] = np.divide(
+                target_jets_stats,
+                flavour_jets_stats,
+                out=np.zeros_like(target_jets_stats),
+                where=flavour_jets_stats != 0,
             )
 
-        # list of sample classes, bjets, cjets, etc
-        valid_class_categories = self.GetValidClassCategories(samples)
-        self.class_categories = valid_class_categories[
-            next(iter(samples.keys()))
-        ]
-        # map of sample categories and indexes as IDs
-        self.sample_categories = {
-            elem: i
-            for i, elem in enumerate(list(valid_class_categories.keys()))
-        }
-        # map of sample categories
-        self.sample_map = {
-            elem: {} for elem in list(valid_class_categories.keys())
-        }
-        self.sample_file_map = {}
-        for sample_category in self.sample_categories:
-            sample_id = self.sample_categories[sample_category]
-            self.samples[sample_category] = []
-            for sample in samples[sample_category]:
-                preparation_sample = self.preparation_samples.get(sample)
-                preparation_sample_path = GetPreparationSamplePath(
-                    preparation_sample
-                )
-                self.sample_file_map[sample] = preparation_sample_path
-                logger.info(
-                    f"Loading sampling variables from {preparation_sample_path}"
-                )
-                with h5py.File(preparation_sample_path, "r") as f:
-                    nJets_initial = len(f["jets"])
-                    if (
-                        "custom_njets_initial" in self.options
-                        and self.options["custom_njets_initial"] is not None
-                        and sample
-                        in list(self.options["custom_njets_initial"])
-                    ):
-                        nJets_asked = int(
-                            self.options["custom_njets_initial"][sample]
-                        )
-                        if nJets_initial <= nJets_asked:
-                            logger.warning(
-                                f"For sample {sample}, demanding more initial jets ({nJets_asked}) than available ({nJets_initial}). Forcing to available."
-                            )
-                        else:
-                            nJets_initial = nJets_asked
+        # loop over samples
+        for flavour in self.class_categories:
+            # init weights array
+            self.concat_samples[flavour]["weight"] = np.ones(
+                self.concat_samples[flavour]["binnumbers"].shape[0]
+            )
+            logger.info("Processing " + flavour)
+            pbar = tqdm(
+                total=len(self.concat_samples[flavour]["jets"]),
+            )
+            # loop over binnumbers assigned to jet
+            for i, binnumber in enumerate(
+                self.concat_samples[flavour]["binnumbers"]
+            ):
+                # look where in flattened 2D bin array this binnumber is
+                ratio_index = np.where(self.bin_indices_flat == binnumber)
+                # extract weight from ratios with the ratio_index
+                weight = self.concat_samples[flavour]["ratios"][ratio_index]
+                # if its out of the defined bin bounds, default to 1
+                if not weight:
+                    weight = 1
+                self.concat_samples[flavour]["weight"][i] = weight
+                pbar.update(1)
+            pbar.close()
 
-                    jets_x = np.asarray(f["jets"][self.var_x])[:nJets_initial]
-                    jets_y = np.asarray(f["jets"][self.var_y])[:nJets_initial]
-                logger.info(
-                    f"Loaded {len(jets_x)} {preparation_sample.get('category')} jets from {sample}."
-                )
-                # construct a flat array with 5 columns:
-                # x, y, index, sample_id, sample_class
-                sample_vector = np.asarray(
-                    [
-                        jets_x,
-                        jets_y,
-                        range(len(jets_x)),
-                        np.ones(len(jets_x)) * sample_id,
-                        np.ones(len(jets_x))
-                        * self.sample_categories[sample_category],
+    def Plotting(self):
+        plot_name_raw = self.config.GetFileName(
+            extension="",
+            option="pt_eta_raw_",
+            custom_path="plots/",
+        )
+        ResamplingPlots(
+            concat_samples=self.concat_samples,
+            positions_x_y=[0, 1],
+            variable_names=["pT", "abseta"],
+            plot_base_name=plot_name_raw,
+            binning={"pT": 200, "abseta": 20},
+            Log=True,
+            use_weights=False,
+        )
+        plot_name_weights = self.config.GetFileName(
+            extension="",
+            option="pt_eta_weighted_",
+            custom_path="plots/",
+        )
+        ResamplingPlots(
+            concat_samples=self.concat_samples,
+            positions_x_y=[0, 1],
+            variable_names=["pT", "abseta"],
+            plot_base_name=plot_name_weights,
+            binning={"pT": 200, "abseta": 20},
+            Log=True,
+            use_weights=True,
+        )
+
+    def GetIndices(self):
+        # To include it into the preprocessing chain write out indices.h5 and
+        # fill indices_to_keep with all jets for weighting method
+        indices_to_keep = {elem: [] for elem in self.class_categories}
+        for class_category in self.class_categories:
+            size_class_category = len(
+                self.concat_samples[class_category]["jets"]
+            )
+            indices_to_keep[class_category] = np.arange(size_class_category)
+
+        # Write out indices.h5 with keys as samplenames, e.g.
+        # "training_ttbar_bjets"
+        size_total = 0
+        self.indices_to_keep = {}
+        with h5py.File(self.options["intermediate_index_file"], "w") as f:
+            for class_category in self.class_categories:
+                sample_categories = self.concat_samples[class_category][
+                    "jets"
+                ][indices_to_keep[class_category], 4]
+                sample_indices = self.concat_samples[class_category]["jets"][
+                    indices_to_keep[class_category], 2
+                ]
+                for sample_category in self.sample_categories:
+                    sample_name = self.sample_map[sample_category][
+                        class_category
                     ]
-                ).T
-                self.samples[sample_category].append(
-                    {
-                        "file": preparation_sample_path,
-                        "sample_vector": sample_vector,
-                        "category": preparation_sample.get("category"),
-                        "sample": sample,
-                        "sample_id": sample_id,
-                    }
-                )
-                self.sample_map[sample_category] = {
-                    **self.sample_map[sample_category],
-                    preparation_sample.get("category"): sample,
-                }
-
-    def GetValidClassCategories(self, samples):
-        """helper function to check sample categories requested in resampling were
-        also defined in the sample preparation step. Returns sample classes."""
-        # ttbar or zprime are the categories, samples are bjets, cjets, etc.
-        categories = samples.keys()
-        check_consistency = {}
-        for category in categories:
-            check_consistency[category] = []
-            for sample in samples[category]:
-                preparation_sample = self.preparation_samples.get(sample)
-                if preparation_sample is None:
-                    raise KeyError(
-                        f"'{sample}' was requested in sampling/samples block, "
-                        "however, it was not defined in preparation/samples in"
-                        "the preprocessing config file!"
+                    self.indices_to_keep[sample_name] = np.sort(
+                        sample_indices[
+                            sample_categories
+                            == self.sample_categories[sample_category]
+                        ]
+                    ).astype(int)
+                    f.create_dataset(
+                        sample_name,
+                        data=self.indices_to_keep[sample_name],
+                        compression="gzip",
                     )
-                check_consistency[category].append(
-                    preparation_sample["category"]
-                )
-        combs = list(itertools.combinations(check_consistency.keys(), 2))
-        combs_check = [
-            sorted(check_consistency[elem[0]])
-            == sorted(check_consistency[elem[1]])
-            for elem in combs
-        ]
-        if not all(combs_check):
-            raise RuntimeError(
-                "Your specified samples in the sampling/samples "
-                "block need to have the same samples in each sample category."
-            )
-        return check_consistency
+                    sample_size = len(self.indices_to_keep[sample_name])
+                    size_total += sample_size
+                    logger.info(
+                        f"Using {sample_size} jets from {sample_name}."
+                    )
+        logger.info(f"Using in total {size_total} jets.")
+        return self.indices_to_keep
 
+    def AddWeightsToHybrids(self):
+        # split up weights into ttbar/zprime to match with indices structure
+        # categorized_weights: {'training_ttbar_bjets': weightsarray, ...}
+        self.categorized_weights = {}
+        for sample_name in self.indices_to_keep.keys():
+            sample_type = self.preparation_samples[sample_name]["type"]
+            sample_flavour = self.preparation_samples[sample_name]["category"]
+            sample_id = self.sample_categories[sample_type]
+            self.categorized_weights[sample_name] = self.concat_samples[
+                sample_flavour
+            ]["weight"][
+                self.concat_samples[sample_flavour]["jets"][:, 4] == sample_id
+            ]
+            # write weights onto files
+            with h5py.File(self.sample_file_map[sample_name], "a") as file:
+                file["jets"]["weight"] = self.categorized_weights[sample_name]
+
+    def Run(self):
+        logger.info("Starting weights calculation")
+        # loading pt and eta from files and put them into dict
+        self.InitialiseSamples()
+        # put ttbar and zprime together
+        self.ConcatenateSamples()
+        # calculate ratios between 2d (pt,eta) bin distributions of different
+        # flavours
+        self.GetSampleWeights(self.config)
+        logger.info("Making Plots")
+        # Plots pt and eta with and without weights
+        self.Plotting()
+        # write out indices.h5 to use preprocessing chain
+        self.GetIndices()
+        self.AddWeightsToHybrids()
+        self.WriteFile(self.indices_to_keep)
+
+
+class UnderSampling(ResamplingTools):
     def GetIndices(self):
         """
         Applies the UnderSampling to the given arrays.
@@ -2329,52 +2568,28 @@ class UnderSampling(Resampling):
         # concatenate samples with the same category
         # no fraction between different samples is ensured at this stage,
         # this will be done at the end
-        concat_samples = {
-            elem: {"jets": None} for elem in self.class_categories
-        }
-        for sample_category in self.samples:
-            for sample in self.samples[sample_category]:
-                if concat_samples[sample["category"]]["jets"] is None:
-                    concat_samples[sample["category"]]["jets"] = sample[
-                        "sample_vector"
-                    ]
-                else:
-                    concat_samples[sample["category"]][
-                        "jets"
-                    ] = np.concatenate(
-                        [
-                            concat_samples[sample["category"]]["jets"],
-                            sample["sample_vector"],
-                        ]
-                    )
+        self.ConcatenateSamples()
 
         # calculate the 2D bin statistics for each sample
-        for class_category in self.class_categories:
-            binnumbers, ind, stat = self.GetBins(
-                concat_samples[class_category]["jets"][:, 0],
-                concat_samples[class_category]["jets"][:, 1],
-            )
-            concat_samples[class_category]["binnumbers"] = binnumbers
-            concat_samples[class_category]["stat"] = stat
-
-            self.bins_indices_flat = ind
-
-        self.concat_samples = concat_samples
+        self.GetPtEtaBinStatistics()
 
         min_count_per_bin = np.amin(
-            [concat_samples[sample]["stat"] for sample in concat_samples],
+            [
+                self.concat_samples[sample]["stat"]
+                for sample in self.concat_samples
+            ],
             axis=0,
         )
 
         rng = np.random.default_rng(seed=self.rnd_seed)
         indices_to_keep = {elem: [] for elem in self.class_categories}
         # retrieve the indices of the jets to keep
-        for bin_i, count in zip(self.bins_indices_flat, min_count_per_bin):
+        for bin_i, count in zip(self.bin_indices_flat, min_count_per_bin):
             for class_category in self.class_categories:
                 indices_to_keep[class_category].append(
                     rng.choice(
                         np.nonzero(
-                            concat_samples[class_category]["binnumbers"]
+                            self.concat_samples[class_category]["binnumbers"]
                             == bin_i
                         )[0],
                         int(count),
@@ -2394,9 +2609,9 @@ class UnderSampling(Resampling):
         reference_class_category = self.class_categories[0]
         target_fractions = []
         N_jets = []
-        sample_categories = concat_samples[reference_class_category]["jets"][
-            indices_to_keep[reference_class_category], 4
-        ]
+        sample_categories = self.concat_samples[reference_class_category][
+            "jets"
+        ][indices_to_keep[reference_class_category], 4]
         for sample_category in self.sample_categories:
             target_fractions.append(self.options["fractions"][sample_category])
             N_jets.append(
@@ -2417,7 +2632,7 @@ class UnderSampling(Resampling):
             for i in range(len(target_N_jets))
         }
         for class_category in self.class_categories:
-            sample_categories = concat_samples[class_category]["jets"][
+            sample_categories = self.concat_samples[class_category]["jets"][
                 indices_to_keep[class_category], 4
             ]
             indices_to_keep_tmp = np.asarray([])
@@ -2471,13 +2686,13 @@ class UnderSampling(Resampling):
         size_total = 0
         with h5py.File(self.options["intermediate_index_file"], "w") as f:
             for class_category in self.class_categories:
-                self.x_y_after_sampling[class_category] = concat_samples[
+                self.x_y_after_sampling[class_category] = self.concat_samples[
                     class_category
                 ]["jets"][indices_to_keep[class_category], :2]
-                sample_categories = concat_samples[class_category]["jets"][
-                    indices_to_keep[class_category], 4
-                ]
-                sample_indices = concat_samples[class_category]["jets"][
+                sample_categories = self.concat_samples[class_category][
+                    "jets"
+                ][indices_to_keep[class_category], 4]
+                sample_indices = self.concat_samples[class_category]["jets"][
                     indices_to_keep[class_category], 2
                 ]
                 for sample_category in self.sample_categories:
@@ -2502,43 +2717,6 @@ class UnderSampling(Resampling):
                     )
         logger.info(f"Using in total {size_total} jets.")
         return self.indices_to_keep
-
-    def ResamplingGenerator(
-        self,
-        file: str,
-        indices: list,
-        label: int,
-        label_classes: list,
-        use_tracks: bool = False,
-        chunk_size: int = 10000,
-        seed: int = 42,
-    ):
-        with h5py.File(file, "r") as f:
-            start_ind = 0
-            end_ind = int(start_ind + chunk_size)
-            # create indices and then shuffle those to be used in the loop below
-            tupled_indices = []
-            while end_ind <= len(indices) or start_ind == 0:
-                tupled_indices.append((start_ind, end_ind))
-                start_ind = end_ind
-                end_ind = int(start_ind + chunk_size)
-            rng = np.random.default_rng(seed=seed)
-            tupled_indices = rng.choice(
-                tupled_indices, len(tupled_indices), replace=False
-            )
-
-            for index_tuple in tupled_indices:
-                loading_indices = indices[index_tuple[0] : index_tuple[1]]
-                labels = label_binarize(
-                    (np.ones(index_tuple[1] - index_tuple[0]) * label),
-                    classes=label_classes,
-                )
-                if use_tracks:
-                    yield f["jets"][loading_indices], f["tracks"][
-                        loading_indices
-                    ], labels
-                else:
-                    yield f["jets"][loading_indices], labels
 
     def Run(self):
         logger.info("Starting undersampling.")
@@ -2780,41 +2958,14 @@ class ProbabilityRatioUnderSampling(UnderSampling):
                 "in the options block of the configuration file (i.e. bjets, cjets, ujets)."
             )
 
-        concat_samples = {
-            elem: {"jets": None} for elem in self.class_categories
-        }
-        for sample_category in self.samples:
-            for sample in self.samples[sample_category]:
-                if concat_samples[sample["category"]]["jets"] is None:
-                    concat_samples[sample["category"]]["jets"] = sample[
-                        "sample_vector"
-                    ]
-                else:
-                    concat_samples[sample["category"]][
-                        "jets"
-                    ] = np.concatenate(
-                        [
-                            concat_samples[sample["category"]]["jets"],
-                            sample["sample_vector"],
-                        ]
-                    )
+        self.ConcatenateSamples()
 
         # calculate the 2D bin statistics for each sample
-        bin_indices_flat = []
-        for class_category in self.class_categories:
-            binnumbers, ind, stat = self.GetBins(
-                concat_samples[class_category]["jets"][:, 0],
-                concat_samples[class_category]["jets"][:, 1],
-            )
-            concat_samples[class_category]["binnumbers"] = binnumbers
-            concat_samples[class_category]["stat"] = stat
-            bin_indices_flat = ind
-
-        self.concat_samples = concat_samples
+        self.GetPtEtaBinStatistics()
 
         stats = {
-            flavour: concat_samples[flavour]["stat"]
-            for flavour in concat_samples
+            flavour: self.concat_samples[flavour]["stat"]
+            for flavour in self.concat_samples
         }
 
         sampling_probabilities = self.GetSamplingProbabilities(
@@ -2825,11 +2976,11 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         rng = np.random.default_rng(seed=self.rnd_seed)
         indices_to_keep = {elem: [] for elem in self.class_categories}
         # retrieve the indices of the jets to keep
-        for index, bin_i in enumerate(bin_indices_flat):
+        for index, bin_i in enumerate(self.bin_indices_flat):
             min_weighted_count = np.amin(
                 [
                     (
-                        concat_samples[flav]["stat"][index]
+                        self.concat_samples[flav]["stat"][index]
                         * sampling_probabilities[flav][index]
                     )
                     for flav in sampling_probabilities
@@ -2839,7 +2990,7 @@ class ProbabilityRatioUnderSampling(UnderSampling):
                 indices_to_keep[class_category].append(
                     rng.choice(
                         np.nonzero(
-                            concat_samples[class_category]["binnumbers"]
+                            self.concat_samples[class_category]["binnumbers"]
                             == bin_i
                         )[0],
                         int(min_weighted_count),
@@ -2883,13 +3034,13 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         size_total = 0
         with h5py.File(self.options["intermediate_index_file"], "w") as f:
             for class_category in self.class_categories:
-                self.x_y_after_sampling[class_category] = concat_samples[
+                self.x_y_after_sampling[class_category] = self.concat_samples[
                     class_category
                 ]["jets"][indices_to_keep[class_category], :2]
-                sample_categories = concat_samples[class_category]["jets"][
-                    indices_to_keep[class_category], 4
-                ]
-                sample_indices = concat_samples[class_category]["jets"][
+                sample_categories = self.concat_samples[class_category][
+                    "jets"
+                ][indices_to_keep[class_category], 4]
+                sample_indices = self.concat_samples[class_category]["jets"][
                     indices_to_keep[class_category], 2
                 ]
                 for sample_category in self.sample_categories:

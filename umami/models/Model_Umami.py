@@ -232,6 +232,33 @@ def Umami(args, train_config, preprocess_config):
         njet_features=njet_features,
     )
 
+    if NN_structure["use_sample_weights"]:
+        tensor_types = (
+            {"input_1": tf.float32, "input_2": tf.float32},
+            tf.float32,
+            tf.float32,
+        )
+        tensor_shapes = (
+            {
+                "input_1": tf.TensorShape([None, nTrks, nFeatures]),
+                "input_2": tf.TensorShape([None, njet_features]),
+            },
+            tf.TensorShape([None, nDim]),
+            tf.TensorShape([None]),
+        )
+    else:
+        tensor_types = (
+            {"input_1": tf.float32, "input_2": tf.float32},
+            tf.float32,
+        )
+        tensor_shapes = (
+            {
+                "input_1": tf.TensorShape([None, nTrks, nFeatures]),
+                "input_2": tf.TensorShape([None, njet_features]),
+            },
+            tf.TensorShape([None, nDim]),
+        )
+
     if ".h5" in train_config.train_file:
         train_dataset = (
             tf.data.Dataset.from_generator(
@@ -243,18 +270,10 @@ def Umami(args, train_config, preprocess_config):
                     n_jets=nJets,
                     batch_size=NN_structure["batch_size"],
                     excluded_var=excluded_var,
+                    sample_weights=NN_structure["use_sample_weights"],
                 ),
-                output_types=(
-                    {"input_1": tf.float32, "input_2": tf.float32},
-                    tf.float32,
-                ),
-                output_shapes=(
-                    {
-                        "input_1": tf.TensorShape([None, nTrks, nFeatures]),
-                        "input_2": tf.TensorShape([None, njet_features]),
-                    },
-                    tf.TensorShape([None, nDim]),
-                ),
+                output_types=tensor_types,
+                output_shapes=tensor_shapes,
             )
             .repeat()
             .prefetch(3)

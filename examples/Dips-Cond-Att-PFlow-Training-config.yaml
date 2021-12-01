@@ -93,6 +93,9 @@ NN_structure:
     # Options for the Learning Rate reducer
     LRR: True
 
+    # Option if you want to use sample weights for training
+    use_sample_weights: False
+
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
     # Number of jets used for validation
@@ -103,22 +106,14 @@ Eval_parameters_validation:
     tagger: ["rnnip", "DL1r"]
 
     # Define fc values for the taggers
-    frac_values_comp: {
-        "rnnip": {
-            "cjets": 0.08,
-            "ujets": 0.92,
-        },
-        "DL1r": {
-            "cjets": 0.018,
-            "ujets": 0.982,
-        },
-    }
+    frac_values_comp:
+        {
+            "rnnip": {"cjets": 0.08, "ujets": 0.92},
+            "DL1r": {"cjets": 0.018, "ujets": 0.982},
+        }
 
     # Charm fraction value used for evaluation of the trained model
-    frac_values: {
-        "cjets": 0.018,
-        "ujets": 0.982,
-    }
+    frac_values: {"cjets": 0.018, "ujets": 0.982}
 
     # Cuts which are applied to the different datasets used for evaluation
     variable_cuts:
@@ -134,23 +129,23 @@ Eval_parameters_validation:
 
         ttbar_r21:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+                  operator: "<="
+                  condition: 250000
 
         ttbar_r22:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+                  operator: "<="
+                  condition: 250000
 
         zpext_r21:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+                  operator: ">"
+                  condition: 250000
 
         zpext_r22:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+                  operator: ">"
+                  condition: 250000
 
     # Working point used in the evaluation
     WP: 0.77
@@ -160,7 +155,6 @@ Eval_parameters_validation:
 
 # Plotting settings for training metrics plots
 Plotting_settings:
-
     # Enable/Disable atlas tag
     UseAtlasTag: True
 

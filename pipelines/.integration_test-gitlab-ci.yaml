@@ -69,6 +69,45 @@ test_preprocessing_dips_pdf:
       - preprocessing_dips_pdf/
       - coverage_files/
 
+test_preprocessing_dl1r_weighting:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_weighting.py -k "test_preprocessing_dl1r_weighting" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dl1r_weighting
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - plots/
+      - preprocessing_dl1r_weighting/
+      - coverage_files/
+
+test_preprocessing_umami_weighting:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_weighting.py -k "test_preprocessing_umami_weighting" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_umami_weighting
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - plots/
+      - preprocessing_umami_weighting/
+      - coverage_files/
+
+test_preprocessing_dips_weighting:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_weighting.py -k "test_preprocessing_dips_weighting" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips_weighting
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - plots/
+      - preprocessing_dips_weighting/
+      - coverage_files/
+
 test_preprocessing_dl1r_pdf:
   <<: *test_template
   stage: integration_test_preprocessing
@@ -94,7 +133,6 @@ test_preprocessing_umami_pdf:
       - plots/
       - preprocessing_umami_pdf/
       - coverage_files/
-
 test_train_dips:
   <<: *test_template
   stage: integration_test_tagger

@@ -10,6 +10,7 @@ class Model_Generator(object):
         Y_Name: str,
         n_jets: int,
         batch_size: int,
+        sample_weights: bool,
         chunk_size: int = 1e5,
         X_Name: str = None,
         X_trk_Name: str = None,
@@ -26,6 +27,7 @@ class Model_Generator(object):
         self.nConds = nConds
         self.chunk_size = chunk_size
         self.print_logger = print_logger
+        self.sample_weights = sample_weights
         if n_jets is not None:
             self.n_jets = int(n_jets)
         else:
@@ -91,6 +93,11 @@ class Model_Generator(object):
                     if self.excluded_var is not None
                     else self.x_in_mem
                 )
+                if self.sample_weights:
+                    # load weights
+                    self.weight_in_mem = f["weight"][
+                        self.step_size * part : self.step_size * (part + 1)
+                    ]
 
             # Load tracks if wanted
             if load_tracks:
@@ -124,8 +131,17 @@ class dips_generator(Model_Generator):
                 * self.batch_size : (1 + small_step)
                 * self.batch_size
             ]
-            small_step += 1
-            yield (batch_x_trk, batch_y)
+            if self.sample_weights:
+                batch_sample_weight = self.weight_in_mem[
+                    small_step
+                    * self.batch_size : (1 + small_step)
+                    * self.batch_size
+                ]
+                small_step += 1
+                yield (batch_x_trk, batch_y, batch_sample_weight)
+            else:
+                small_step += 1
+                yield (batch_x_trk, batch_y)
 
 
 class dl1_generator(Model_Generator):
@@ -148,8 +164,17 @@ class dl1_generator(Model_Generator):
                 * self.batch_size : (1 + small_step)
                 * self.batch_size
             ]
-            small_step += 1
-            yield (batch_x, batch_y)
+            if self.sample_weights:
+                batch_sample_weight = self.weight_in_mem[
+                    small_step
+                    * self.batch_size : (1 + small_step)
+                    * self.batch_size
+                ]
+                small_step += 1
+                yield (batch_x, batch_y, batch_sample_weight)
+            else:
+                small_step += 1
+                yield (batch_x, batch_y)
 
 
 class umami_generator(Model_Generator):
