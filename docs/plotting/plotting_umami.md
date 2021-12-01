@@ -445,12 +445,10 @@ eff_vs_pt:
     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
     ThirdTag: "Flat efficiency DL1r"
     Log: True
-
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-
 | `data_set_name` | string | N | The dataset to use from the dataframe as specified in evaluation. |
 | `data_set_for_cut_name` | string | Optional | The dataset to use to compute the cut_value defining the working point. |
 | `recompute` | bool | Optional | Whether to recompute the score or load it (useful if different fractions). If recomputing, `flavour_fractions` must be defined. Will recompute by default. |

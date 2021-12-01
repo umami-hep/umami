@@ -440,7 +440,8 @@ preprocessing.py --config <path to config file> --apply_scales
 preprocessing.py --config <path to config file> --write
 ```
 
-If you are saving the tracks with the extra flag `--tracks` it might be useful to save your samples as a directory with tf Records. This can be done by using `--to_records`.
+If you are saving the tracks with the extra flag `--tracks` it might be useful to save your samples as a directory with [tf Records](https://www.tensorflow.org/tutorials/load_data/tfrecord). This can be done by using `--to_records` instead of `--write`.
+Important: you need to have ran `--write` beforehand.
 
 ```bash
 preprocessing.py --config <path to config file> --to_records --tracks
