@@ -7,6 +7,7 @@ from glob import glob
 import h5py
 import numpy as np
 from tqdm import tqdm
+import pandas as pd
 
 from umami.configuration import global_config, logger
 from umami.preprocessing_tools import GetCategoryCuts, GetSampleCuts
@@ -141,7 +142,10 @@ class PrepareSamples:
             with h5py.File(filename, "r") as data_set:
                 for batch in batches:
                     # load jets in batches
-                    jets = data_set["jets"][batch[0] : batch[1]]
+                    jets = pd.DataFrame(data_set["jets"][batch[0] : batch[1]])
+                    # initialize weights
+                    jets["weight"] = np.ones(jets.shape[0])
+                    jets = jets.to_records(index=False)
                     indices_to_remove = GetSampleCuts(jets, self.cuts)
                     jets = np.delete(jets, indices_to_remove)
                     # if tracks should be saved, also load them in batches
@@ -166,6 +170,8 @@ class PrepareSamples:
         # loop over batches for all files and load the batches separately
         n_jets_check = self.n_jets_to_get
         for jets, tracks in self.jets_generator(files_in_batches):
+            if jets.shape[0] == 0:
+                continue
             pbar.update(jets.size)
             self.jets_loaded += jets.size
             self.n_jets_to_get -= jets.size

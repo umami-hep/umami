@@ -198,6 +198,7 @@ The different options are briefly explained here:
 | `ppm_sizes` | List | Necessary | List of nodes per layer of the _ϕ_ network. Every entry is one layer. The numbers need to be ints! |
 | `dense_sizes` | List | Necessary | List of nodes per layer of the _F_ network. Every entry is one layer. The numbers need to be ints! |
 | `LRR` | Bool | Optional | Decide, if a Learning Rate Reducer (LRR) is used or not. If yes, the following options can be added. |
+| `use_sample_weights` | Bool | Optional | Applies the weights, you calculated with the `--weighting` flag from the preprocessing to the training loss function. |
 | `LRR_monitor` | String | Optional | Quantity to be monitored. Default: "loss" |
 | `LRR_factor` | Float | Optional | Factor by which the learning rate will be reduced. `new_lr = lr * factor`. Default: 0.8 |
 | `LRR_patience` | Int | Optional | Number of epochs with no improvement after which learning rate will be reduced. Default: 3 |

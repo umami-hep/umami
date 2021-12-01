@@ -41,6 +41,7 @@ def ResamplingPlots(
     Log: bool = True,
     after_sampling: bool = False,
     normalised: bool = False,
+    use_weights: bool = False,
     hist_input: bool = False,
 ):
     """Plots pt and eta distribution as nice plots for
@@ -84,6 +85,7 @@ def ResamplingPlots(
                 norm_factor = 1.0
 
             scale_val = 1
+
             if (
                 varname in ["pT", "pt_btagJes"]
                 or varname == global_config.pTvariable
@@ -105,7 +107,11 @@ def ResamplingPlots(
                     if after_sampling
                     else concat_samples[flav]["jets"][:, varpos] / scale_val,
                     bins=binning[varname],
+                    weights=concat_samples[flav]["weight"]
+                    if use_weights
+                    else None,
                 )
+
             # Calculate the bin centers
             bincentres = [
                 (Bins[i] + Bins[i + 1]) / 2.0 for i in range(len(Bins) - 1)

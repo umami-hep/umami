@@ -50,8 +50,11 @@ def GetParser():
         action="store_true",
         help="Runs resampling.",
     )
-    # action.add_argument('--weighting', action='store_true',
-    #                     help="Runs weighting.")
+    action.add_argument(
+        "--weighting",
+        action="store_true",
+        help="Runs weighting.",
+    )
 
     action.add_argument(
         "-s",
@@ -140,6 +143,9 @@ if __name__ == "__main__":
         # Run the sampling with the selected method
         sampler.Run()
 
+    elif args.weighting:
+        weights = upt.Weighting(config)
+        weights.Run()
     # Calculate the scale dicts of the previous resampled files
     elif args.scaling:
         Scaling = upt.Scaling(config)

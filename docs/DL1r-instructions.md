@@ -80,7 +80,7 @@ If you don't want to process some samples yourself, you can use the already prep
 
 After all the files are ready we can start with the training. The config file for the DL1r training is [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml).
 
-It contains the information about the neural network architecture as well as about the files for training, validation and testing. To use taus in training, the preprocessing given in the training config must have the parameter `bool_process_taus` set to `True` and the parameter `bool_use_taus` in the training config should also be set to `True`. 
+It contains the information about the neural network architecture as well as about the files for training, validation and testing. To use taus in training, the preprocessing given in the training config must have the parameter `bool_process_taus` set to `True` and the parameter `bool_use_taus` in the training config should also be set to `True`. If you want the weights, you calculated with the `--weighting` flag from the preprocessing, applied to the training loss function, you need to set `use_sample_weights` to `True`.
 
 To run the training, use the following command
 

@@ -223,13 +223,12 @@ class Scaling:
 
         return scale_dict, nTrks
 
-    def get_scaling(self, vec, w, varname, custom_defaults_vars):
+    def get_scaling(self, vec, varname, custom_defaults_vars):
         """
-        Calculates the weighted average and std for vector vec and weight w.
+        Calculates the weighted average and std for vector vec.
 
         Input:
         - vec: Array with variable values for the jets
-        - w: Jet weights
         - varname: Name of the variable which is to be scaled
         - custom_defaults_var: Dict with custom default variable values
 
@@ -240,8 +239,6 @@ class Scaling:
         - default: Default value of the variable
         """
 
-        if np.sum(w) == 0:
-            raise ValueError("Sum of weights has to be >0.")
         # find NaN values
         nans = np.isnan(vec)
         # check if variable has predefined default value
@@ -252,13 +249,12 @@ class Scaling:
             default = custom_defaults_vars[varname]
         # NaN values are not considered in calculation for average
         else:
-            w_without_nan = w[~nans]
             vec_without_nan = vec[~nans]
-            default = np.ma.average(vec_without_nan, weights=w_without_nan)
+            default = np.float64(np.ma.average(vec_without_nan))
         # replace NaN values with default values
         vec[nans] = default
-        average = np.ma.average(vec, weights=w)
-        std = np.sqrt(np.average((vec - average) ** 2, weights=w))
+        average = np.float64(np.ma.average(vec))
+        std = np.float64(np.sqrt(np.average((vec - average) ** 2)))
         return varname, average, std, default
 
     def dict_in(self, varname, average, std, default):
@@ -472,7 +468,6 @@ class Scaling:
                         # Get the dict entry
                         dict_entry = self.get_scaling(
                             vec=jets[var].values,
-                            w=jets["weight"].values,
                             varname=var,
                             custom_defaults_vars=self.variable_config[
                                 "custom_defaults_vars"
@@ -617,9 +612,6 @@ class Scaling:
                 labels = pd.DataFrame(
                     f["/labels"][index_tuple[0] : index_tuple[1]]
                 )
-                if "weight" not in jets:
-                    length = nJets if nJets < chunkSize else len(jets)
-                    jets["weight"] = np.ones(int(length))
 
                 if "weight" not in jets_variables:
                     jets_variables += ["weight"]

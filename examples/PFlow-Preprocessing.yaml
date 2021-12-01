@@ -200,7 +200,7 @@ sampling:
           # bins take either a list containing the np.linspace arguments
           # or a list of them
           # For PDF sampling: must be the np.linspace arguments.
-          #   - list of of list, one list for each category (in samples)
+          #   - list of list, one list for each category (in samples)
           #   - define the region of each category.
           bins: [[0, 600000, 351], [650000, 6000000, 84]]
       - absEta_btagJes:
@@ -241,6 +241,10 @@ sampling:
     intermediate_index_file: indices.h5
     # outputfiles are split into 5 -> needs to be implemented
     iterations: 5
+
+# relative to which distribution the weights should be calculated for the
+# weighting preprocessing method
+weighting_target_flavour: 'bjets'
 
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name

@@ -128,6 +128,19 @@ def Dips(args, train_config, preprocess_config):
         train_config=train_config, input_shape=(nTrks, nFeatures)
     )
 
+    if NN_structure["use_sample_weights"]:
+        tensor_types = (tf.float32, tf.float32, tf.float32)
+        tensor_shapes = (
+            tf.TensorShape([None, nTrks, nFeatures]),
+            tf.TensorShape([None, nDim]),
+            tf.TensorShape([None]),
+        )
+    else:
+        tensor_types = (tf.float32, tf.float32)
+        tensor_shapes = (
+            tf.TensorShape([None, nTrks, nFeatures]),
+            tf.TensorShape([None, nDim]),
+        )
     # Get training set from generator
     train_dataset = (
         tf.data.Dataset.from_generator(
@@ -137,12 +150,10 @@ def Dips(args, train_config, preprocess_config):
                 Y_Name="Y_train",
                 n_jets=nJets,
                 batch_size=NN_structure["batch_size"],
+                sample_weights=NN_structure["use_sample_weights"],
             ),
-            (tf.float32, tf.float32),
-            (
-                tf.TensorShape([None, nTrks, nFeatures]),
-                tf.TensorShape([None, nDim]),
-            ),
+            tensor_types,
+            tensor_shapes,
         )
         .repeat()
         .prefetch(3)
