@@ -20,7 +20,7 @@ A detailed list with the available derivations can be fund in the [FTAG algorith
 | Z' (Herwig 7) |  |  |  |  |
 
 
-??? info "Wrong scores stored for VR track jet taggers"
+???+ warning "Wrong scores stored for VR track jet taggers"
 
 
 
