@@ -3,7 +3,46 @@ import unittest
 
 import numpy as np
 
-from umami.preprocessing_tools import Configuration, Scaling
+from umami.preprocessing_tools import (
+    Configuration,
+    Scaling,
+    apply_scaling_trks,
+)
+
+
+class apply_scaling_trks_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.var_config = {
+            "track_train_variables": {
+                "noNormVars": ["IP3D_signed_d0_significance"],
+                "logNormVars": ["ptfrac"],
+                "jointNormVars": ["numberOfPixelHits"],
+            }
+        }
+        self.scale_dict = {
+            "ptfrac": {"shift": 5, "scale": 2},
+            "numberOfPixelHits": {"shift": 4, "scale": 2},
+        }
+        self.trks = np.array(
+            [(50, 2, 30), (100, 2, 40)],
+            dtype=[
+                ("ptfrac", "f4"),
+                ("numberOfPixelHits", "i4"),
+                ("IP3D_signed_d0_significance", "f4"),
+            ],
+        )
+        self.control_trks = np.array(
+            [[30, -0.54398847, -1], [40, -0.19741488, -1]]
+        )
+
+    def test_apply_scaling_trks(self):
+        scaled_trks, _ = apply_scaling_trks(
+            trks=self.trks,
+            variable_config=self.var_config,
+            scale_dict=self.scale_dict,
+        )
+
+        np.testing.assert_array_almost_equal(scaled_trks, self.control_trks)
 
 
 class ScalingTestCase(unittest.TestCase):

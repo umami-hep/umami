@@ -320,10 +320,11 @@ def EvaluateModelDips(
             class_labels=class_labels,
             nJets=nJets,
             cut_vars_dict=var_cuts,
+            jet_variables=[
+                global_config.etavariable,
+                global_config.pTvariable,
+            ],
         )
-
-        # Cut all not used jet variables
-        X_test = X_test[[global_config.etavariable, global_config.pTvariable]]
 
         # Form the inputs for the network
         X = [X_test_trk, X_test]

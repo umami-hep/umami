@@ -37,9 +37,7 @@ zpext_test_files:
 # Path to Variable dict used in preprocessing
 var_dict: umami/configs/DL1r_Variables.yaml
 
-bool_use_taus: False
-
-exclude: []
+exclude: null
 
 NN_structure:
     # Decide, which tagger is used
