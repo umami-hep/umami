@@ -240,7 +240,9 @@ class JetPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "comp/ptfrac/All/" + "dr_None_All.png",
+                self.Control_plots_dir
+                + "comp/ptfrac/All/"
+                + "dr_None_All.png",
                 self.tmp_plot_dir + "comp/ptfrac/All/" + "dr_None_All.png",
                 tol=1,
             ),

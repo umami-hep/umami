@@ -64,7 +64,7 @@ def plot_trks_variables(plot_config, plot_type):
         filepath_list = []
         labels_list = []
         # Default to no selection based on track_origin
-        trk_origins = ['All']
+        trk_origins = ["All"]
         # Update list of track origins if specified
         if "track_origins" in plotting_config:
             trk_origins = plotting_config["track_origins"]
