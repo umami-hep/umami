@@ -27,7 +27,11 @@ from umami.preprocessing_tools.Resampling import (
     UnderSamplingProp,
     Weighting,
 )
-from umami.preprocessing_tools.Scaling import Gen_default_dict, Scaling
+from umami.preprocessing_tools.Scaling import (
+    Gen_default_dict,
+    Scaling,
+    apply_scaling_trks,
+)
 from umami.preprocessing_tools.utils import (
     GetBinaryLabels,
     MakePlots,

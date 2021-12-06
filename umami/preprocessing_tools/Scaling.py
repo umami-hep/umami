@@ -30,6 +30,80 @@ def Gen_default_dict(scale_dict):
     return default_dict
 
 
+def apply_scaling_trks(
+    trks,
+    variable_config: dict,
+    scale_dict: dict,
+):
+    """
+    Apply the scaling/shifting to the tracks
+
+    Input:
+    - trks: Loaded tracks as numpy array.
+    - variable_config: Loaded variable config.
+    - scale_dict: Loaded scale dict.
+
+    Output:
+    - scaled_trks: The tracks scaled and shifted.
+    - trk_labels: The track labels, if defined in the variable config.
+    """
+
+    # Init a list for the variables
+    var_arr_list = []
+
+    # Check masking
+    trk_mask = ~np.isnan(trks["ptfrac"])
+
+    # Get the track variables
+    tracks_noNormVars = variable_config["track_train_variables"]["noNormVars"]
+    tracks_logNormVars = variable_config["track_train_variables"][
+        "logNormVars"
+    ]
+    tracks_jointNormVars = variable_config["track_train_variables"][
+        "jointNormVars"
+    ]
+    tracks_variables = (
+        tracks_noNormVars + tracks_logNormVars + tracks_jointNormVars
+    )
+
+    # Iterate over variables and scale/shift it
+    for var in tracks_variables:
+        x = trks[var]
+
+        if var in tracks_logNormVars:
+            x = np.log(x)
+        if var in tracks_jointNormVars or var in tracks_logNormVars:
+            shift = np.float32(scale_dict[var]["shift"])
+            scale = np.float32(scale_dict[var]["scale"])
+            x = np.where(
+                trk_mask,
+                x - shift,
+                x,
+            )
+            x = np.where(
+                trk_mask,
+                x / scale,
+                x,
+            )
+        var_arr_list.append(np.nan_to_num(x))
+
+        # track vertex and origin labels
+        if "track_labels" in variable_config:
+            trkLabels = variable_config["track_labels"]
+            trk_labels = np.stack(
+                [np.nan_to_num(trks[v]) for v in trkLabels],
+                axis=-1,
+            )
+        else:
+            trk_labels = None
+
+    # Stack the results for new dataset
+    scaled_trks = np.stack(var_arr_list, axis=-1)
+
+    # Return the scaled and tracks and, if defined, the track labels
+    return scaled_trks, trk_labels
+
+
 class Scaling:
     """
     Scaling class. Can calculate the scaling and shifting for training dataset
@@ -649,62 +723,12 @@ class Scaling:
                         ]
                     )
 
-                    # Check masking
-                    var_arr_list = []
-                    trk_mask = ~np.isnan(trks["ptfrac"])
-
-                    # Get the track variables
-                    tracks_noNormVars = self.variable_config[
-                        "track_train_variables"
-                    ]["noNormVars"]
-                    tracks_logNormVars = self.variable_config[
-                        "track_train_variables"
-                    ]["logNormVars"]
-                    tracks_jointNormVars = self.variable_config[
-                        "track_train_variables"
-                    ]["jointNormVars"]
-                    tracks_variables = (
-                        tracks_noNormVars
-                        + tracks_logNormVars
-                        + tracks_jointNormVars
+                    # Apply scaling to the tracks
+                    trks, trk_labels = apply_scaling_trks(
+                        trks=trks,
+                        variable_config=self.variable_config,
+                        scale_dict=tracks_scale_dict,
                     )
-
-                    # Iterate over variables and scale/shift it
-                    for var in tracks_variables:
-                        x = trks[var]
-
-                        if var in tracks_logNormVars:
-                            x = np.log(x)
-                        if (
-                            var in tracks_jointNormVars
-                            or var in tracks_logNormVars
-                        ):
-                            shift = np.float32(tracks_scale_dict[var]["shift"])
-                            scale = np.float32(tracks_scale_dict[var]["scale"])
-                            x = np.where(
-                                trk_mask,
-                                x - shift,
-                                x,
-                            )
-                            x = np.where(
-                                trk_mask,
-                                x / scale,
-                                x,
-                            )
-                        var_arr_list.append(np.nan_to_num(x))
-
-                        # track vertex and origin labels
-                        if "track_labels" in self.variable_config:
-                            trkLabels = self.variable_config["track_labels"]
-                            trk_labels = np.stack(
-                                [np.nan_to_num(trks[v]) for v in trkLabels],
-                                axis=-1,
-                            )
-                        else:
-                            trk_labels = None
-
-                    # Stack the results for new dataset
-                    trks = np.stack(var_arr_list, axis=-1)
 
                     # Yield jets, labels and tracks
                     yield jets, trks, labels, trk_labels, flavour

@@ -150,13 +150,36 @@ def DipsCondAtt(args, train_config, preprocess_config):
     # Load validation data for callback
     val_data_dict = None
     if Val_params["n_jets"] > 0:
-        val_data_dict = utt.load_validation_data_umami(
-            train_config=train_config,
-            preprocess_config=preprocess_config,
-            nJets=int(Val_params["n_jets"]),
-            convert_to_tensor=True,
-            jets_var_list=["absEta_btagJes", "pt_btagJes"],
-        )
+        if NN_structure["N_Conditions"] is None:
+            val_data_dict = utt.load_validation_data_dips(
+                train_config=train_config,
+                preprocess_config=preprocess_config,
+                nJets=int(Val_params["n_jets"]),
+            )
+
+            # Create the validation data tuple for the fit function
+            validation_data = (
+                val_data_dict["X_valid"],
+                val_data_dict["Y_valid"],
+            )
+
+        else:
+            val_data_dict = utt.load_validation_data_umami(
+                train_config=train_config,
+                preprocess_config=preprocess_config,
+                nJets=int(Val_params["n_jets"]),
+                convert_to_tensor=True,
+                jets_var_list=["absEta_btagJes", "pt_btagJes"],
+            )
+
+            # Create the validation data tuple for the fit function
+            validation_data = (
+                [
+                    val_data_dict["X_valid_trk"],
+                    val_data_dict["X_valid"],
+                ],
+                val_data_dict["Y_valid"],
+            )
 
     # Set my_callback as callback. Writes history information
     # to json file.
@@ -178,13 +201,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
     history = dips.fit(
         train_dataset,
         epochs=nEpochs,
-        validation_data=(
-            [
-                val_data_dict["X_valid_trk"],
-                val_data_dict["X_valid"],
-            ],
-            val_data_dict["Y_valid"],
-        ),
+        validation_data=validation_data,
         callbacks=[dips_mChkPt, reduce_lr, my_callback],
         steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,

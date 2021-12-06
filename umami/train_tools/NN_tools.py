@@ -22,6 +22,7 @@ from umami.preprocessing_tools import (
     Gen_default_dict,
     GetBinaryLabels,
     GetSampleCuts,
+    apply_scaling_trks,
 )
 from umami.tools import replaceLineInFile, yaml_loader
 
@@ -365,11 +366,20 @@ def LoadJetsFromFile(
     nJets = int(nJets)
     chunk_size = int(chunk_size)
 
-    # Check if the chunk size is small than nJets, if yes change it
+    # Check if the chunk size is smaller than nJets, if yes change it
     chunk_size = chunk_size if chunk_size >= nJets else nJets
 
-    # Get the paths of the files as a iterable list
-    filepaths = glob(filepath)
+    if type(filepath) is str:
+        # Get the paths of the files as a iterable list
+        filepaths = glob(filepath)
+
+    elif type(filepath) is list:
+        filepaths = filepath
+
+    else:
+        raise KeyError(
+            f"Given filepath is {type(filepath)}, not a string or a list!"
+        )
 
     # Check if filepaths is empty
     if len(filepaths) == 0:
@@ -388,12 +398,18 @@ def LoadJetsFromFile(
 
     # Load variables for cuts if given
     if variables and cut_vars_dict:
+        # Deepcopy the variables list
+        variables_list = copy.deepcopy(variables)
+
+        # Add the class label variables to the variables list
+        variables_list += class_label_vars
+
         # Iterate over the cuts and get the needed variables
         for variable in cut_vars_dict:
-            variables += list(variable.keys())
+            variables_list += list(variable.keys())
 
         # Ensure each variable is only once in the list
-        variables = list(set(variables))
+        variables_list = list(set(variables_list))
 
     # Init a counter for the number of loaded jets
     nJets_counter = 0
@@ -411,7 +427,7 @@ def LoadJetsFromFile(
         for infile_counter in range(n_chunks):
             if variables:
                 jets = pd.DataFrame(
-                    h5py.File(file, "r")["/jets"].fields(variables)[
+                    h5py.File(file, "r")["/jets"].fields(variables_list)[
                         infile_counter
                         * chunk_size : (infile_counter + 1)
                         * chunk_size
@@ -546,8 +562,17 @@ def LoadTrksFromFile(
     # Check if the chunk size is small than nJets, if yes change it
     chunk_size = chunk_size if chunk_size >= nJets else nJets
 
-    # Get the paths of the files as a iterable list
-    filepaths = glob(filepath)
+    if type(filepath) is str:
+        # Get the paths of the files as a iterable list
+        filepaths = glob(filepath)
+
+    elif type(filepath) is list:
+        filepaths = filepath
+
+    else:
+        raise KeyError(
+            f"Given filepath is {type(filepath)}, not a string or a list!"
+        )
 
     # Check if filepaths is empty
     if len(filepaths) == 0:
@@ -1067,13 +1092,35 @@ def GetTestSample(
     preprocess_config,
     class_labels: list,
     nJets: int = int(3e5),
-    exclude: list = [],
+    exclude: list = None,
     cut_vars_dict: dict = None,
+    jet_variables: list = None,
     print_logger: bool = True,
 ):
     """
-    Apply the scaling and shifting to dataset using numpy
+    Load the jet variables from the validation/evaluation files and apply scaling/shifting.
+
+    Input:
+    - input_file: Path to the file which is to be loaded.
+    - var_dict: Variable dict with the wanted jet variables inside.
+    - preprocess_config: Loaded preprocessing config that was used.
+    - class_labels: List of classes used for training of the model.
+    - nJets: Number of jets that should be loaded.
+    - exclude: List of variables that are not loaded.
+    - cut_vars_dict: Dict with the cuts that should be applied.
+    - jet_variables: List of variables that are used.
+    - print_logger: Decide, if the logger info is printed or not.
+
+    Output:
+    - all_jets: X values of the jets for the NN's.
+    - all_labels: Y values ready to be used in the NN's.
     """
+
+    # Assert that the jet variables and exlude are not called at the same time
+    if jet_variables and exclude:
+        raise ValueError(
+            "You can't set exclude and jet_variables. Choose one!"
+        )
 
     # Adding class_labels check between preprocess_config and given labels
     assert (
@@ -1101,44 +1148,46 @@ def GetTestSample(
     with open(preprocess_config.dict_file, "r") as infile:
         scale_dict = json.load(infile)["jets"]
 
-    # Define a counter for the number of jets already loaded
-    nJets_counter = 0
+    jets, Umami_labels = LoadJetsFromFile(
+        filepath=filepaths,
+        class_labels=class_labels,
+        nJets=nJets,
+        cut_vars_dict=cut_vars_dict,
+        variables=jet_variables,
+        print_logger=False,
+    )
 
-    # Iterate over the list of input files
-    for j, file in enumerate(sorted(filepaths, key=natural_keys)):
-        logger.info(f"Input file is {file}")
+    # Binarize Labels
+    labels = GetBinaryLabels(Umami_labels)
 
-        jets, Umami_labels = LoadJetsFromFile(
-            filepath=file,
-            class_labels=class_labels,
-            nJets=nJets,
-            cut_vars_dict=cut_vars_dict,
-            print_logger=False,
-        )
+    # Check if jet_variables is defined
+    if jet_variables:
+        # Retrieve the defined variables
+        variables = jet_variables
+        excluded_variables = []
 
-        # Binarize Labels
-        labels = GetBinaryLabels(Umami_labels)
-
+    else:
         # Retrieve variables and the excluded variables from the config
         variables, excluded_variables, _ = get_jet_feature_indices(
             variable_config["train_variables"], exclude
         )
 
-        # Select only wanted variables
-        jets = jets[variables]
+    # Select only wanted variables
+    jets = jets[variables]
 
-        # Replace inf with nans
-        jets = jets.replace([np.inf, -np.inf], np.nan)
+    # Replace inf with nans
+    jets = jets.replace([np.inf, -np.inf], np.nan)
 
-        logger.info("Replacing default values.")
-        default_dict = Gen_default_dict(scale_dict)
-        jets = jets.fillna(default_dict)
+    logger.info("Replacing default values.")
+    default_dict = Gen_default_dict(scale_dict)
+    jets = jets.fillna(default_dict)
 
-        logger.info("Applying scaling and shifting.")
-        scale_dict_variables = []
-        for elem in scale_dict:
-            scale_dict_variables.append(elem["name"])
-            if elem["name"] not in variables:
+    logger.info("Applying scaling and shifting.")
+    scale_dict_variables = []
+    for elem in scale_dict:
+        scale_dict_variables.append(elem["name"])
+        if elem["name"] not in variables:
+            if print_logger:
                 if elem["name"] in excluded_variables:
                     logger.info(
                         f"{elem['name']} has been excluded from variable config (is in scale dict)."
@@ -1147,46 +1196,19 @@ def GetTestSample(
                     logger.warning(
                         f"{elem['name']} in scale dict but not in variable config."
                     )
-                continue
-            if "isDefaults" in elem["name"]:
-                continue
-            else:
-                jets[elem["name"]] -= elem["shift"]
-                jets[elem["name"]] /= elem["scale"]
-        if not set(variables).issubset(scale_dict_variables):
-            raise KeyError(
-                f"Requested {(set(variables).difference(scale_dict_variables))} which are not in scale dict."
-            )
-
-        # If not the first file processed, append to the global one
-        if j == 0:
-            all_jets = jets
-            all_labels = labels
-
-        # if the first file processed, set as global one
+            continue
+        if "isDefaults" in elem["name"]:
+            continue
         else:
-            all_jets = all_jets.append(jets, ignore_index=True)
-            all_labels = all_labels.append(labels, ignore_index=True)
-
-        # Adding the loaded jets to counter
-        nJets_counter += len(jets)
-
-        # Stop loading if enough jets are loaded
-        if nJets_counter >= nJets:
-            break
-
-    # Check if enough jets are loaded
-    if print_logger:
-        if nJets_counter < nJets:
-            logger.warning(
-                f"Requested {nJets} but only {nJets_counter} could be loaded!"
-            )
-
-        else:
-            logger.info(f"Loaded {nJets} jets!")
+            jets[elem["name"]] -= elem["shift"]
+            jets[elem["name"]] /= elem["scale"]
+    if not set(variables).issubset(scale_dict_variables):
+        raise KeyError(
+            f"Requested {(set(variables).difference(scale_dict_variables))} which are not in scale dict."
+        )
 
     # Return jets and labels
-    return all_jets[:nJets], all_labels[:nJets]
+    return jets, labels
 
 
 def GetTestSampleTrks(
@@ -1230,78 +1252,25 @@ def GetTestSampleTrks(
     with open(preprocess_config.dict_file, "r") as infile:
         scale_dict = json.load(infile)["tracks"]
 
-    # Define a counter for the number of jets already loaded
-    nJets_counter = 0
+    trks, labels = LoadTrksFromFile(
+        filepath=filepaths,
+        class_labels=class_labels,
+        nJets=nJets,
+        cut_vars_dict=cut_vars_dict,
+        print_logger=False,
+    )
 
-    # Iterate over the list of input files
-    for j, file in enumerate(sorted(filepaths, key=natural_keys)):
-        logger.info(f"Loading validation data tracks from file {file}")
+    # Binarize the labels
+    binary_labels = GetBinaryLabels(labels)
 
-        trks, labels = LoadTrksFromFile(
-            filepath=file,
-            class_labels=class_labels,
-            nJets=nJets,
-            cut_vars_dict=cut_vars_dict,
-            print_logger=False,
-        )
+    # Apply scaling to the tracks
+    trks, _ = apply_scaling_trks(
+        trks=trks,
+        variable_config=variable_config,
+        scale_dict=scale_dict,
+    )
 
-        # Binarize the labels
-        binary_labels = GetBinaryLabels(labels)
-
-        # Retrieve variables from config
-        noNormVars = variable_config["track_train_variables"]["noNormVars"]
-        logNormVars = variable_config["track_train_variables"]["logNormVars"]
-        jointNormVars = variable_config["track_train_variables"][
-            "jointNormVars"
-        ]
-        trkVars = noNormVars + logNormVars + jointNormVars
-
-        var_arr_list = []
-        trk_mask = ~np.isnan(trks["ptfrac"])
-        for var in trkVars:
-            if var in logNormVars:
-                x = np.log(trks[var])
-            else:
-                x = trks[var]
-            if var in logNormVars:
-                x -= scale_dict[var]["shift"]
-                x /= scale_dict[var]["scale"]
-            elif var in jointNormVars:
-                x = np.where(trk_mask, x - scale_dict[var]["shift"], x)
-                x = np.where(trk_mask, x / scale_dict[var]["scale"], x)
-            var_arr_list.append(np.nan_to_num(x))
-
-        # Stack the track variables
-        trks = np.stack(var_arr_list, axis=-1)
-
-        # If not the first file processed, append to the global one
-        if j == 0:
-            all_trks = trks
-            all_labels = binary_labels
-
-        # if the first file processed, set as global one
-        else:
-            all_trks = np.append(all_trks, trks, axis=0)
-            all_labels = np.append(all_labels, binary_labels, axis=0)
-
-        # Adding the loaded jets to counter
-        nJets_counter += len(trks)
-
-        # Stop loading if enough jets are loaded
-        if nJets_counter >= nJets:
-            break
-
-    # Check if enough jets are loaded
-    if print_logger:
-        if nJets_counter < nJets:
-            logger.warning(
-                f"Requested {nJets} but only {nJets_counter} could be loaded!"
-            )
-
-        else:
-            logger.info(f"Loaded {nJets} jets!")
-
-    return all_trks[:nJets], all_labels[:nJets]
+    return trks, binary_labels
 
 
 def load_validation_data_umami(
@@ -1347,11 +1316,9 @@ def load_validation_data_umami(
         class_labels=NN_structure["class_labels"],
         nJets=nJets,
         exclude=exclude,
+        jet_variables=jets_var_list,
         cut_vars_dict=cut_vars_dict,
     )
-
-    if len(jets_var_list) != 0:
-        X_valid = X_valid[jets_var_list]
 
     if convert_to_tensor:
         # Transform to tf.tensors and add to val_dict
@@ -1392,6 +1359,7 @@ def load_validation_data_umami(
             class_labels=NN_structure["class_labels"],
             nJets=nJets,
             exclude=exclude,
+            jet_variables=jets_var_list,
             cut_vars_dict=cut_vars_dict_add,
         )
 
@@ -1457,7 +1425,7 @@ def load_validation_data_dl1(
     nJets = int(nJets)
 
     # Check for excluded variables
-    exclude = []
+    exclude = None
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
 
@@ -1640,8 +1608,9 @@ def GetTestFile(
     preprocess_config: dict,
     class_labels: list,
     nJets: int,
-    exclude: list = [],
+    exclude: list = None,
     cut_vars_dict: dict = None,
+    jet_variables: list = None,
 ):
     """
     Load the training jets and tracks.
@@ -1653,6 +1622,8 @@ def GetTestFile(
     - class_labels: List of classes used for training of the model.
     - nJets: Number of jets used for evaluation.
     - exclude: List of variables that are to be excluded.
+    - cut_vars_dict: Dict with the variable cuts which should be applied.
+    - jet_variables: Jet variables that are to be loaded.
 
     Output:
     - Returns the X, X_trk and Y for training/evaluation.
@@ -1676,6 +1647,7 @@ def GetTestFile(
         nJets=int(nJets),
         exclude=exclude,
         cut_vars_dict=cut_vars_dict,
+        jet_variables=jet_variables,
         print_logger=True,
     )
 

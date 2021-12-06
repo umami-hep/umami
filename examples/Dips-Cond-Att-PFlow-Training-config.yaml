@@ -37,7 +37,7 @@ zpext_test_files:
 # Path to Variable dict used in preprocessing
 var_dict: /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
 
-exclude: []
+exclude: null
 
 # Values for the neural network
 NN_structure:
