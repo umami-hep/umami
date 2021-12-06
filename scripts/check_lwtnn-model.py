@@ -101,7 +101,9 @@ def __run():
                 "Both --confing and --scale_dict options were given, only one of them needs to be used"
             )
         training_config = utt.Configuration(args.config)
-        preprocess_config = upt.Configuration(training_config.preprocess_config)
+        preprocess_config = upt.Configuration(
+            training_config.preprocess_config
+        )
         class_labels = training_config.NN_structure["class_labels"]
     elif args.scale_dict is not None:
         preprocess_config = config(args.scale_dict)
