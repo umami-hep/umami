@@ -38,9 +38,9 @@ A detailed list with the available derivations can be fund in the [FTAG algorith
 
     | Sample | h5 ntuples | DAOD_PHYSVAL derivations| AOD |
     | ------------- | ---------------- | ---------------- | ---------------- |
-    | ttbar | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4724.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_e5984_s3126_r12629_p4724 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_e5984_s3126_r12629
-    | Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4724.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_r12636_p4724 |  |
-    | Z' (Herwig 7) | user.alfroch.500567.btagTraining.e7954_e7400_s3672_r12629_r12636_p4724.EMPFlow.2021-11-22-T133600-R31908_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_e7400_s3672_r12629_r12636_p4724 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.merge.AOD.e7954_e7400_s3672_r12629_r12636 |
+    | ttbar | user.alfroch.410470.btagTraining.e6337_e5984_s3126_r12629_p4724.EMPFlowAll.2021-12-01-T215644-R3135_output.h5 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_e5984_s3126_r12629_p4724 | mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_e5984_s3126_r12629
+    | Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3672_r12629_r12636_p4724.EMPFlowAll.2021-12-01-T215644-R3135_output.h5 | mc16_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3672_r12629_r12636_p4724 |  |
+    | Z' (Herwig 7) | user.alfroch.500567.btagTraining.e7954_e7400_s3672_r12629_r12636_p4724.EMPFlowAll.2021-12-01-T215644-R3135_output.h5 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_e7400_s3672_r12629_r12636_p4724 | mc16_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.merge.AOD.e7954_e7400_s3672_r12629_r12636 |
 
 
 
