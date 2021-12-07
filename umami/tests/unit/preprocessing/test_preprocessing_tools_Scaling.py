@@ -63,7 +63,7 @@ class ScalingTestCase(unittest.TestCase):
         self.first_scale_dict = {"variable": {"shift": 5, "scale": 2}}
         self.second_scale_dict = {"variable": {"shift": 3, "scale": 1}}
         self.combined_mean = 3.8
-        self.combined_std = 4.1952353926806065
+        self.combined_std = 1.7776388834631178
 
         scaling_class = Scaling(self.config)
 
@@ -88,8 +88,8 @@ class ScalingTestCase(unittest.TestCase):
             "variable_2": {"shift": 1, "scale": 0.5},
         }
         self.control_dict = {
-            "variable": {"shift": 3.8, "scale": 4.1952353926806065},
-            "variable_2": {"shift": 2.2, "scale": 2.958039891549808},
+            "variable": {"shift": 3.8, "scale": 1.7776388834631178},
+            "variable_2": {"shift": 2.2, "scale": 1.977371993328519},
         }
 
         scaling_class = Scaling(self.config)
@@ -124,13 +124,13 @@ class ScalingTestCase(unittest.TestCase):
             {
                 "name": "variable",
                 "shift": 3.8,
-                "scale": 4.1952353926806065,
+                "scale": 1.7776388834631178,
                 "default": None,
             },
             {
                 "name": "variable_2",
                 "shift": 2.2,
-                "scale": 2.958039891549808,
+                "scale": 1.977371993328519,
                 "default": None,
             },
         ]
