@@ -1,7 +1,6 @@
-# Instructions to train DL1r with the umami framework
+# Instructions to train DL1 with the umami framework
 
-The following instructions are meant to give a guideline how to reproduce the DL1r results obtained in the last [retraining campaign](http://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PLOTS/FTAG-2019-005/). It is focused on the PFlow training.
-
+The following instructions are meant to give a guideline how to reproduce the DL1r results obtained in the last [retraining campaign](http://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PLOTS/FTAG-2019-005/). It is focused on the PFlow training. The approach can also be used to train DL1d and, more generally, any variation to the list of input of the DL1 tagger.
 
 ## Sample Preparation
 
@@ -9,115 +8,304 @@ The first step is to obtain the samples for the training. All the samples are li
 
 The training ntuples are produced using the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) which dumps the jets from the FTAG1 derivations directly into hdf5 files. The processed ntuples are also listed in the table in [mc-samples.md](mc-samples.md) which can be used for training.
 
-### Ntuple preparation for b-,c- & light-jets (+tau-jets)
+### Ntuple preparation
 
-After the previous step the ntuples need to be further processed. We use an undersampling approach to achieve the same pt and eta distribution for all three flavour categories.
-In order to reduce the memory usage we first extract the 3 jet categories separately since e.g. c-jets only make up 8% of the ttbar sample.
+After the previous step the ntuples need to be further processed. We can use different resampling approaches to achieve the same pt and eta distribution for all of the used flavour categories. In order to reduce the memory usage, we first extract the different jet categories separately, since, e.g., c-jets only make up 8% of the ttbar sample.
 
 This processing can be done using the preprocessing capabilities of Umami via the [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py) script.
 
 Please refer to the [documentation on preprocessing](preprocessing.md) for additional information.
-Note, that for running DL1r no tracks have to be stored in the output hybrid sample. Therefore, the `--tracks` argument can be omitted.
+Note, that for running DL1 no tracks have to be stored in the output hybrid sample. Therefore, the `save_tracks` argument in the preprocessing config does not need to be set while preprocessing the samples.
 
-There are several training and validation/test samples to produce. See below a list of all the necessary ones:
+Note that the training Variables for DL1r R21 and DL1r R22 are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml) and [DL1r_Variables_R22.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables_R22.yaml).
 
-##### Training Samples (even EventNumber)
-
-* ttbar (pT < 250 GeV)
-    * b-jets
-    * c-jets
-    * light-jets
-* Z' (pT > 250 GeV) -> extended Z'
-    * b, c, light-jets combined
-
-Note: to uses taus, the parameter `bool_process_taus` in the preprocessing must be activated and a ttbar sample of taus (pT < 250 GeV) must be generated, similarly to the other flavours. In the configuration, (for the samples entry in preparation), the taus set can be collected by specifying `taujets` as `category` for ttbar (as shown [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/taus/examples/PFlow-Preprocessing.yaml#L59-69)).
-
-##### Validation and Test Samples (odd EventNumber)
-
-* ttbar
-* Z' (extended and standard)
-
-### Preprocessing
-
-After you produced these samples during the preparation step and merged the output files, you can run the
-preprocessing remaining four stages:
-
-
-1. Running the undersampling
-```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/DL1r_Variables.yaml --undersampling
-```
-
-2. Retrieving scaling and shifting factors
-
-```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/DL1r_Variables.yaml --scaling
-```
-
-3. Applying shifting and scaling factors
-
-```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/DL1r_Variables.yaml --apply_scales
-```
-
-4. Shuffling the samples and writing the samples to disk
-
-```
-preprocessing.py -c examples/PFlow-Preprocessing.yaml --var_dict umami/configs/DL1r_Variables.yaml --write
-```
-
-The training Variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
-
-Important: when using taus, it is not advised to use the `count` sampling method, as defined in the [preprocessing configuration](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/taus/examples/PFlow-Preprocessing.yaml#L127-130). Indeed, the tau statistics is much lower in the data and this would throw away far too many jets. Instead, use `count_bcl_weight_tau` sampling method to have an exact match of the jets flavour and a proportional distribution of taus. 
+Important note about the preprocessing: when using taus, it is not advised to use the `count` sampling method. Indeed, the tau statistics is much lower, which would result in throwing away far too many jets. Instead, use the `pdf` or the `probability_ratio` sampling methods to have an exact match of the jets flavour and a proportional distribution of taus. 
 
 If you don't want to process some samples yourself, you can use the already preprocessed samples uploaded to rucio in the datasets `user.mdraguet.dl1r.R21.PFlowJetsDemoSamples` for DL1r or `user.mdraguet.dl1d.R21.PFlowJetsDemoSamples` for DL1d (RNNIP replaced by DIPS). These datasets do not have taus included. Note that you need to download both the datasets and the associated dictionary with scaling factors (+ the dictionary of variable). There are two test samples available: an hybrid (ttbar + Z'-ext) and a Z'-ext solely. Each should be manually cut in 2 to get a test and validation file. The data comes from:
 - mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_FTAG1.e6337_s3126_r10201_p4060
 - mc16_13TeV.427081.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_FTAG1.e6928_e5984_s3126_r10201_r10210_p4060
 
+## Config File
 
+After all the files are ready we can start with the training. The config file for the DL1r training is [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). This will look for example like this:
+
+```yaml
+# Set modelname and path to Pflow preprocessing config file
+model_name: <MODELNAME>
+preprocess_config: <path>/<to>/<preprocessing>/<config>/PFlow-Preprocessing.yaml
+
+# Add here a pretrained model to start with.
+# Leave empty for a fresh start
+model_file:
+
+# Add training file
+train_file: <path>/<to>/<train>/<samples>/train_file.h5
+
+# Add validation files
+# ttbar val
+validation_file: <path>/<to>/<validation>/<samples>/ttbar_r21_validation_file.h5
+
+# zprime val
+add_validation_file:  <path>/<to>/<validation>/<samples>/zpext_r21_validation_file.h5
+
+ttbar_test_files:
+    ttbar_r21:
+        Path: <path>/<to>/<preprocessed>/<samples>/ttbar_r21_test_file.h5
+        data_set_name: "ttbar_r21"
+
+    ttbar_r22:
+        Path: <path>/<to>/<preprocessed>/<samples>/ttbar_r22_test_file.h5
+        data_set_name: "ttbar_r22"
+
+zpext_test_files:
+    zpext_r21:
+        Path: <path>/<to>/<preprocessed>/<samples>/zpext_r21_test_file.h5
+        data_set_name: "zpext_r21"
+
+    zpext_r22:
+        Path: <path>/<to>/<preprocessed>/<samples>/zpext_r22_test_file.h5
+        data_set_name: "zpext_r22"
+
+# Path to Variable dict used in preprocessing
+var_dict: <path>/<to>/<variables>/DL1r_Variables.yaml
+
+# Variables or Variable Headers to exclude from the tagger 
+#      but contained in <path>/<to>/<variables>/DL1r_Variables.yaml
+exclude: null
+
+# Values for the neural network
+NN_structure:
+    # Decide, which tagger is used
+    tagger: "dl1"
+
+    # NN Training parameters
+    lr: 0.001
+    batch_size: 15000
+    epochs: 200
+
+    # Number of jets used for training
+    # To use all: Fill nothing
+    nJets_train:
+
+    # Dropout rate. If = 0, dropout is disabled
+    dropout: 0
+
+    # Define which classes are used for training
+    # These are defined in the global_config
+    class_labels: ["ujets", "cjets", "bjets"]
+
+    # Main class which is to be tagged
+    main_class: "bjets"
+
+    # Decide if Batch Normalisation is used
+    Batch_Normalisation: True
+
+    # Nodes per dense layer. Starting with first dense layer.
+    dense_sizes: [256, 128, 60, 48, 36, 24, 12, 6]
+
+    # Activations of the layers. Starting with first dense layer.
+    activations: ["relu", "relu", "relu", "relu", "relu", "relu", "relu", "relu"]
+
+    # Options for the Learning Rate reducer
+    LRR: True
+
+    # Option if you want to use sample weights for training
+    use_sample_weights: False
+
+
+# Plotting settings for training metrics plots
+Validation_metrics_settings:
+    # Define which taggers should also be plotted
+    taggers_from_file: ["RNNIP", "DL1r"]
+
+    # Enable/Disable atlas tag
+    UseAtlasTag: True
+
+    # fc_value and WP_b are autmoatically added to the plot label
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+
+    # Set the datatype of the plots
+    plot_datatype: "pdf"
+
+# Eval parameters for validation evaluation while training
+Eval_parameters_validation:
+    # Number of jets used for validation
+    n_jets: 3e5
+
+    # Define taggers that are used for comparison in evaluate_model
+    # This can be a list or a string for only one tagger
+    tagger: ["rnnip", "DL1r"]
+
+    # Define fc values for the taggers
+    frac_values_comp: {
+        "rnnip": {
+            "cjets": 0.08,
+            "ujets": 0.92,
+        },
+        "DL1r": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
+    }
+
+    # Charm fraction value used for evaluation of the trained model
+    frac_values: {
+        "cjets": 0.018,
+        "ujets": 0.982,
+    }
+
+    # Cuts which are applied to the different datasets used for evaluation
+    variable_cuts:
+        ttbar_r21:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
+
+        ttbar_r22:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
+
+        zpext_r21:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
+
+        zpext_r22:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
+        
+        validation_file:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
+
+        add_validation_file:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
+
+    # Working point used in the evaluation
+    WP: 0.77
+
+    # Minimal efficiency considered in ROC computation
+    eff_min: 0.49
+```
+
+It contains the information about the neural network architecture and the training as well as about the files for training, validation and testing. Also evaluation parameters are given for the training evaluation which is performed by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script.
+
+The different options are briefly explained here:
+
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `model_name` | String | Necessary | Name of the model which is to be trained. Also the foldername where everything of the model will be saved. |
+| `preprocess_config` | String | Necessary | Path to the `preprocess_config` which was used to produce the training samples. |
+| `model_file` | String | Optional | If you already have a model and want to continue the training of this model, you can give the path to this model here. This model will be loaded and used instead of init a new one. |
+| `train_file` | String | Necessary | Path to the training sample. This is given by the `preprocessing` step of Umami |
+| `validation_file` | String | Necessary | Path to the validation sample (ttbar). This is given by the `preprocessing` step of Umami |
+| `add_validation_file` | String | Necessary | Path to the validation sample (zpext). This is given by the `preprocessing` step of Umami |
+| `ttbar_test_files` | Dict | Optional | Here you can define different ttbar test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is irrelevant while the `Path` and `data_set_name` are important. The `data_set_name` needs to be unique. Its the identifier/name of the dataset in the evaluation file which is used for plotting. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
+| `zpext_test_files` | Dict | Optional | Here you can define different zpext test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is irrelevant while the `Path` and `data_set_name` are important. The `data_set_name` needs to be unique. Its the identifier/name of the dataset in the evaluation file which is used for plotting. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
+| `var_dict` | String | Necessary | Path to the variable dict used in the `preprocess_config` to produce the train sample. |
+| `exclude` | List | Necessary | List of variables that are excluded from training. Only compatible with DL1r training. To include all, just give an empty list. |
+| `NN_structure` | None | Necessary | A dict where all important information for the training are defined. |
+| `tagger` | String | Necessary | Name of the tagger that is used/to be trained. |
+| `lr` | Float | Necessary | Learning rate which is used for training. |
+| `batch_size` | Int | Necessary | Batch size which is used for training. |
+| `epochs` | Int | Necessary | Number of epochs of the training. |
+| `nJets_train` | Int | Necessary | Number of jets used for training. Leave empty to use all. |
+| `dropout` | Float | Necessary | Dropout factor used in the network. If 0, dropout is not used. |
+| `class_labels` | List | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
+| `main_class` | String | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. |
+| `Batch_Normalisation` | Bool | Necessary | Decide, if batch normalisation is used in the network. |
+| `activations` | List | Necessary | List of activation function for each layer of the network. Every entry is one layer. The entries need to be string recognised as activation functions! |
+| `dense_sizes` | List | Necessary | List of nodes per layer of the network. Every entry is one layer. The numbers need to be ints! |
+| `LRR` | Bool | Optional | Decide, if a Learning Rate Reducer (LRR) is used or not. If yes, the following options can be added. |
+| `use_sample_weights` | Bool | Optional | Applies the weights, you calculated with the `--weighting` flag from the preprocessing to the training loss function. |
+| `LRR_monitor` | String | Optional | Quantity to be monitored. Default: "loss" |
+| `LRR_factor` | Float | Optional | Factor by which the learning rate will be reduced. `new_lr = lr * factor`. Default: 0.8 |
+| `LRR_patience` | Int | Optional | Number of epochs with no improvement after which learning rate will be reduced. Default: 3 |
+| `LRR_verbose` | Int | Optional | 0: Quiet, 1: Update messages. Default: 1 |
+| `LRR_mode` | String | Optional | One of `{"auto", "min", "max"}`. In "min" mode, the learning rate will be reduced when the quantity monitored has stopped decreasing; in "max" mode it will be reduced when the quantity monitored has stopped increasing; in "auto" mode, the direction is automatically inferred from the name of the monitored quantity. Default: "auto" |
+| `LRR_cooldown` | Int | Optional | Number of epochs to wait before resuming normal operation after lr has been reduced. Default: 5 |
+| `LRR_min_lr` | Float | Optional | Lower bound on the learning rate. Default: 0.000001 |
+| `Validation_metrics_settings` | None | Necessary | Plotting settings for the validation plots which are produced by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
+| `taggers_from_file` | List | Optional | List of taggers that are available in the .h5 samples. The here given taggers are plotted as reference lines in the rejection per epoch plots. |
+| `trained_taggers` | Dict | Optional | A dict with local trained taggers which shall be plotted in the rejection per epoch plots. You need to provide a dict with a `path` and a `label`. The path is the path to the validation metrics .json file, where the rejections per epoch are saved. The `label` is the label which will be shown in the legend in the rejection per epoch plots. The `dipsReference` in the example here is just an internal naming. It will not be shown anywhere. |
+| `UseAtlasTag` | Bool | Optional | Decide, if the ATLAS tag is printed at the top left of the plot. |
+| `AtlasTag` | String | Optional | Main ATLAS tag which is right to "ATLAS" |
+| `SecondTag` | String | Optional | Second line below the ATLAS tag |
+| `plot_datatype` | String | Necessary | Datatype of the plots that are produced using the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
+| `Eval_parameters_validation` | None | Necessary | A dict where all important information for the training are defined. |
+| `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. | 
+| `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
+| `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
+| `frac_values` | Dict | Necessary | Dict with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
+| `variable_cuts` | Dict | Necessary | Dict of cuts which are applied when loading the different test files. Only jet variables can be cut on. |
+| `WP` | Float | Necessary | Working point which is used in the validation and evaluation. |
+| `eff_min` | Float | Optional | Minimal main class efficiency considered for ROC. |
 
 ## Training
 
-After all the files are ready we can start with the training. The config file for the DL1r training is [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml).
-
-It contains the information about the neural network architecture as well as about the files for training, validation and testing. To use taus in training, the preprocessing given in the training config must have the parameter `bool_process_taus` set to `True` and the parameter `bool_use_taus` in the training config should also be set to `True`. If you want the weights, you calculated with the `--weighting` flag from the preprocessing, applied to the training loss function, you need to set `use_sample_weights` to `True`.
-
-To run the training, use the following command
+Before starting the training, you need to set some paths for the umami package to find all the tools. Change to the umami dir and run the `setup.py`.
 
 ```bash
-train_DL1.py -c examples/DL1r-PFlow-Training-config.yaml
+python setup.py install
+```
+
+Note that with the `install` setup, changes that are performed to the scripts after setup are not included! For development and usage of changes without resetup everything, use 
+
+```bash
+source run_setup.sh
+```
+
+This script sets the python path to a specific folder where the executables are directly the code you are working on.
+
+After that, you can switch to the folder `umami/umami` and run the training, using the following command
+
+```bash
+train.py -c ${EXAMPLES}/DL1r-PFlow-Training-config.yaml
 ```
 
 The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). 
 
+If you want instant performance checks of the model after each epoch during the training, you can use
+
+```bash
+plotting_epoch_performance.py -c ${EXAMPLES}/DL1r-PFlow-Training-config.yaml
+```
+
+which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. In this form, the performance measurements, like light- and c-rejection, will be recalculated using the working point, the `frac_values` value and the number of validation jets defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). If taus are used in the training too, they will be included in these plots. 
+
+If you don't want to recalculate it, you can give the path to the existing dict with the option `--dict`. For example:
+
+```bash
+plotting_epoch_performance.py -c ${EXAMPLES}/DL1r-PFlow-Training-config.yaml --dict MODELNAME/validation_WP0p77_fc0p018_300000jets_Dict.json
+```
+
+### Train on Zeuthen Cluster
+
 Alternatively, if you are working out of the DESY Zeuthen servers, `warp.zeuthen.desy.de`, you can train using the batch system via `qsub` and GPU support by giving it the `zeuthen` flag
 
 ```bash
-train_DL1.py -c examples/DL1r-PFlow-Training-config.yaml --zeuthen
+train_Dips.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --zeuthen
 ```
 
 The job will output a log to the current working directory and copy the results to the current working directory when it's done. The options for the job (time, memory, space, etc.) can be changed in `umami/institutes/zeuthen/train_job.sh`.
 
-If you want instant performance checks of the model after each epoch during the training, you can use
+## Evaluating the Results
+
+After the training is over, the different epochs can be evaluated with ROC plots, output scores, variable vs efficiency, confusion matrices, etc. using the build-in scripts. Before plotting these, the model needs to be evaluated using the [evaluate_model.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py) script.
 
 ```bash
-plotting_epoch_performance.py -c examples/DL1r-PFlow-Training-config.yaml --dl1
+evaluate_model.py -c ${EXAMPLES}/DL1r-PFlow-Training-config.yaml -e 5
 ```
 
-which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. In this form, the performance measurements, like light- and c-rejection, will be recalculated using the working point, the `fc` value and the number of validation jets defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). If taus are used in the training too, they will be included in these plots. 
-
-## Performance Evaluation
-
-Finally we can evaluate our model. These scripts are being continuously updated.
-
-You first need to choose which epoch you want to use for the evaluation (easiest by looking at the performance plots vs. epochs) and then run
+The `-e` options (here `5`) allows to set the training epoch which should be evaluated.
+It will produce .h5 and .pkl files with the evaluations which will be saved in the model folder in an extra folder called `results/`. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. For an explanation, look in the [plotting_umami documentation](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting_umami.md). The plots can then be retrieved running the following command
 
 ```bash
-python umami/evaluate_model.py -c examples/DL1r-PFlow-Training-config.yaml -e 230 --dl1
-```
-
-Next you need to adapt the plotting config file [plotting_umami_config_DL1r.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_umami_config_DL1r.yaml) providing the epoch and model name. You can use the parameter `bool_use_taus` to include taus in the plotting. When including taus, some plot configs have to been modified accordingly (e.g., `prediction_labels` must have a `ptau` as final entry in the list). The plots can then be retrieved running the following command
-
-```bash
-python umami/plotting_umami.py -c examples/plotting_umami_config_DL1r.yaml
+python umami/plotting_umami.py -c ${EXAMPLES}/plotting_umami_config_DL1r.yaml -o eval_plots
 ```
