@@ -168,8 +168,11 @@ class Scaling:
         combined_std = np.sqrt(
             (
                 (
-                    ((mean ** 2 + std ** 2) * first_N)
-                    + ((tmp_mean ** 2 + tmp_std ** 2) * second_N)
+                    (((mean - combined_mean) ** 2 + std ** 2) * first_N)
+                    + (
+                        ((tmp_mean - combined_mean) ** 2 + tmp_std ** 2)
+                        * second_N
+                    )
                 )
             )
             / (first_N + second_N)
