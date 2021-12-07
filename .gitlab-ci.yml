@@ -57,6 +57,18 @@ yaml_linter:
     - if: $CI_COMMIT_BRANCH != ''
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
+doc_string_check:
+  stage: linting
+  image: python:3.7-slim
+  script:
+    - pip install darglint
+    - darglint --list-errors
+    - darglint * -s numpy -z full  --log-level INFO
+  rules:
+    - if: $CI_COMMIT_BRANCH != ''
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  allow_failure: True
+
 include:
   - 'pipelines/.unit_test-gitlab-ci.yaml'
   - 'pipelines/.docker-gitlab-ci.yaml'
