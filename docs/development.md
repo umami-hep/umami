@@ -14,6 +14,14 @@ If you want to only run unit tests, this can be done via
 pytest ./umami/tests/unit/ -v
 ```
 
+???+ warning "local execution of unit tests"
+    the unit tests are currently failing when executing them all together, also documented in [issue #94](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/issues/94)
+    as a workaround please execute the different unit test sub-directories separately
+    e.g.
+    ```
+    pytest ./umami/tests/unit/evaluation_tools -v
+    ```
+
 and the integration test similarly via
 
 ```bash
@@ -39,6 +47,11 @@ In order to format the code using [`black`](https://github.com/psf/black) use th
 black ./umami
 ```
 
+Checking doc strings (more infos below)
+```bash
+darglint * -s numpy -z full  --log-level INFO
+```
+
 
 ### Commiting changes and pre-commit hooks
 
@@ -54,7 +67,7 @@ This will run `isort`, `black` and `flake8` on staged python files when commitin
 
 In the following we are listing some good code practices, we are asking to follow when making merge requests to the repository.
 
-## Commenting your Code
+### Commenting your Code
 If you write new code for Umami, please keep in mind to comment your code properly. It is very hard to understand what you are doing something and why you are doing it. Please keep this in mind! This will make it easier to revise your code.
 
 To make the framework modular, new code that is repeated should be written in a function. When defining a function, please provide a proper doc string and type of the input variables. For example:
@@ -71,27 +84,48 @@ def LoadJetsFromFile(
     """
     Load jets from file. Only jets from classes in class_labels are returned.
 
-    Input:
-    - filepath: Path to the .h5 file with the jets.
-    - class_labels: List of class labels which are used.
-    - nJets: Number of jets to load.
-    - variables: Variables which are loaded.
-    - cut_vars_dict: Variable cuts that are applied when loading the jets.
-    - print_logger: Decide if the number of jets loaded from the file is printed.
+    Parameters
+    ----------
+    filepath : str
+        Path to the .h5 file with the jets.
+    class_labels : list
+        List of class labels which are used.
+    nJets : int
+        Number of jets to load.
+    variables : list
+        Variables which are loaded.
+    cut_vars_dict : dict
+        Variable cuts that are applied when loading the jets.
+    print_logger : bool
+        Decide if the number of jets loaded from the file is printed.
 
-    Output:
-    - Jets: The jets as numpy ndarray
-    - Umami_labels: The internal class label for each jet. Corresponds with the
-                    index of the class label in class_labels.
+    Returns
+    -------
+    Jets : numpy ndarray
+        The jets as numpy ndarray
+    Umami_labels : numpy ndarray
+        The internal class label for each jet. Corresponds with the index of
+        the class label in class_labels.
     """
 
+```
+
+
+### Doc strings
+
+Each function and class should have a doc string describing its functionality.
+The numpy style for doc strings is being used which is documented [here](https://numpydoc.readthedocs.io/en/latest/format.html)
+
+To check if your doc string is compatible with the recommended style you can use
+```bash
+darglint * -s numpy -z full  --log-level INFO
 ```
 
 ### Unit/Integration Tests
 If you contribute to Umami, please keep in mind that all code should be tested by unit- and integration tests. Normally, the integration test will cover small changes in the pipeline directly, but unit test should be added for all new functions added! Please make sure that all cases of the new functions are tested!
 
 ### Readability of numbers
-To make large number better readable, please use a `_` to separate them (typically the thousand separator) which was introduced in python 3.6 [PEP515](https://www.python.org/dev/peps/pep-0515/#literal-grammar). 
+To make large number better readable, please use a `_` to separate them (typically the thousand separator) which was introduced in python 3.6 [PEP515](https://www.python.org/dev/peps/pep-0515/#literal-grammar).
 For examle instead of `6728339` please use `6_728_339`.
 
 ### Usage of Generators
@@ -149,7 +183,7 @@ info_text_event = f"We are using the {jet_collection} jet collection and have {n
 
 ### Integer division
 
-In Python 3 a dedicated integer division was introduced. 
+In Python 3 a dedicated integer division was introduced.
 
 ```python
 # standard division -> returns by default a flaot (no rounding)
@@ -176,7 +210,7 @@ def GetNumberOfEvents(nJets: int, avg_nJets_per_event: float=4.3) -> float:
 
 
 ### Logging
-The umami framework has a custom logging module defined in [umami/configuration/Configuration.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configuration/Configuration.py). Do not use the `print()` function but rather the logging. To make use of the module you need to import it via 
+The umami framework has a custom logging module defined in [umami/configuration/Configuration.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configuration/Configuration.py). Do not use the `print()` function but rather the logging. To make use of the module you need to import it via
 ```python
 from umami.configuration import logger
 ```
