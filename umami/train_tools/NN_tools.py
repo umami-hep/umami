@@ -926,37 +926,94 @@ def GetRejection(
     return rej_dict, cutvalue
 
 
-class MyCallback(Callback):
+class CallbackBase(Callback):
+    """Base class for the callbacks of the different models.
+
+    This class provides the base functionalites for the different
+    callbacks needed for the models that are available.
+    """
+
     def __init__(
         self,
         class_labels: list,
         main_class: str,
-        val_data_dict=None,
-        log_file=None,
-        verbose=False,
-        model_name="test",
-        target_beff=0.77,
-        frac_dict={
+        val_data_dict: dict = None,
+        model_name: str = "test",
+        target_beff: float = 0.77,
+        frac_dict: dict = {
             "cjets": 0.018,
             "ujets": 0.982,
         },
-        dict_file_name="DictFile.json",
+        dict_file_name: str = "DictFile.json",
     ):
+        """Init the parameters needed for the callback
+
+        Parameters
+        ----------
+        class_labels : list
+            List of class labels used in training (ORDER MATTERS!).
+        main_class : str
+            Name of the main class which is used. For b-tagging
+            obviously `bjets`.
+        val_data_dict : dict
+            Dict with the loaded validation data. These are loaded
+            using the `load_validation_data_*` functions.
+        model_name : str
+            Name of the model used to evaluate. This is important
+            for the path where the results are of the callback are saved.
+        target_beff : float
+            Float value between 0 and 1 for which main class efficiency
+            the rejections are calculated.
+        frac_dict : dict
+            Dict with the fraction values for the non-main classes. The
+            values need to add up to 1.
+        dict_file_name : str
+            Name of the file where the dict with the results of the callback
+            are saved.
+        """
+
+        # Add parameters to as attributes
         self.class_labels = class_labels
         self.main_class = main_class
         self.val_data_dict = val_data_dict
         self.target_beff = target_beff
         self.frac_dict = frac_dict
-        self.result = []
-        self.log = open(log_file, "w") if log_file else None
-        self.verbose = verbose
         self.model_name = model_name
-        setup_output_directory(self.model_name)
-        self.dict_list = []
         self.dict_file_name = dict_file_name
 
-    def on_epoch_end(self, epoch, logs=None):
-        # Define the dict with the data that will be saved
+        # Init a list for the result dicts for each epoch
+        self.dict_list = []
+
+        # Init the directory and clean it from previous training
+        setup_output_directory(self.model_name)
+
+
+class MyCallback(CallbackBase):
+    """Callback class for the standard taggers
+
+    This class is the callback for the standard taggers. Only one
+    output (not like the umami tagger) is given.
+    """
+
+    def on_epoch_end(self, epoch: int, logs: dict = None):
+        """Get the needed metrics at epoch end and calculate rest.
+
+        This method saves the training metrics at the end of the
+        epoch and also calculates the validation metrics and
+        the rejections for each non-main class for given
+        efficiency and fraction values. Those are also saved.
+
+        Parameters
+        ----------
+        epoch : int
+            Number of the epoch which just finished and is now
+            evaluated and saved.
+        logs : dict
+            Dict with the training metrics of the just finished
+            epoch.
+        """
+
+        # Define a dict with the epoch and the training metrics
         dict_epoch = {
             "epoch": epoch,
             "learning_rate": logs["lr"].item(),
@@ -964,7 +1021,7 @@ class MyCallback(Callback):
             "accuracy": logs["accuracy"],
         }
 
-        # Get the rejections et.c
+        # If val data is given, calculate validaton metrics and rejections
         if self.val_data_dict:
             result_dict = evaluate_model(
                 model=self.model,
@@ -974,49 +1031,44 @@ class MyCallback(Callback):
                 target_beff=self.target_beff,
                 frac_dict=self.frac_dict,
             )
+
             # Once we use python >=3.9 (see https://www.python.org/dev/peps/pep-0584/#specification) switch to the following: dict_epoch |= result_dict
             dict_epoch = {**dict_epoch, **result_dict}
 
+        # Append the dict to the list
         self.dict_list.append(dict_epoch)
+
+        # Dump the list in json file
         with open(self.dict_file_name, "w") as outfile:
             json.dump(self.dict_list, outfile, indent=4)
 
-    def on_train_end(self, logs=None):
-        if self.log:
-            self.log.close()
 
+class MyCallbackUmami(CallbackBase):
+    """Callback class for the umami tagger
 
-class MyCallbackUmami(Callback):
-    def __init__(
-        self,
-        class_labels: list,
-        main_class: str,
-        val_data_dict=None,
-        log_file=None,
-        verbose=False,
-        model_name="test",
-        target_beff=0.77,
-        frac_dict={
-            "cjets": 0.018,
-            "ujets": 0.982,
-        },
-        dict_file_name="DictFile.json",
-    ):
-        self.class_labels = class_labels
-        self.main_class = main_class
-        self.val_data_dict = val_data_dict
-        self.target_beff = target_beff
-        self.frac_dict = frac_dict
-        self.result = []
-        self.log = open(log_file, "w") if log_file else None
-        self.verbose = verbose
-        self.model_name = model_name
-        setup_output_directory(self.model_name)
-        self.dict_list = []
-        self.dict_file_name = dict_file_name
+    This class is the callback for the umami tagger. Due to the
+    two outputs of the tagger, we need special metrics etc.
+    """
 
-    def on_epoch_end(self, epoch, logs=None):
-        # Define the dict with the data that will be saved
+    def on_epoch_end(self, epoch: int, logs: dict = None):
+        """Get the needed metrics at epoch end and calculate rest.
+
+        This method saves the training metrics at the end of the
+        epoch and also calculates the validation metrics and
+        the rejections for each non-main class for given
+        efficiency and fraction values. Those are also saved.
+
+        Parameters
+        ----------
+        epoch : int
+            Number of the epoch which just finished and is now
+            evaluated and saved.
+        logs : dict
+            Dict with the training metrics of the just finished
+            epoch.
+        """
+
+        # Define a dict with the epoch and the training metrics
         dict_epoch = {
             "epoch": epoch,
             "learning_rate": logs["lr"].item(),
@@ -1026,6 +1078,8 @@ class MyCallbackUmami(Callback):
             "dips_accuracy": logs["dips_accuracy"],
             "umami_accuracy": logs["umami_accuracy"],
         }
+
+        # If val data is given, calculate validaton metrics and rejections
         if self.val_data_dict:
             result_dict = evaluate_model_umami(
                 model=self.model,
@@ -1035,16 +1089,16 @@ class MyCallbackUmami(Callback):
                 target_beff=self.target_beff,
                 frac_dict=self.frac_dict,
             )
+
             # Once we use python >=3.9 (see https://www.python.org/dev/peps/pep-0584/#specification) switch to the following: dict_epoch |= result_dict
             dict_epoch = {**dict_epoch, **result_dict}
 
+        # Append the dict to the list
         self.dict_list.append(dict_epoch)
+
+        # Dump the list in json file
         with open(self.dict_file_name, "w") as outfile:
             json.dump(self.dict_list, outfile, indent=4)
-
-    def on_train_end(self, logs=None):
-        if self.log:
-            self.log.close()
 
 
 def get_jet_feature_indices(variable_header: dict, exclude=None):
