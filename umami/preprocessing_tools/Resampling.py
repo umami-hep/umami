@@ -2131,6 +2131,12 @@ class PDFSampling(Resampling):
 
                         pbar.update(jets.size)
                         if create_file:
+                            logger.info(
+                                "Creating output directory if doesn't exist yet"
+                            )
+                            os.makedirs(
+                                output_name.rsplit("/", 1)[0], exist_ok=True
+                            )
                             create_file = False
                             with h5py.File(output_name, "w") as out_file:
                                 out_file.create_dataset(
