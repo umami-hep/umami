@@ -396,20 +396,37 @@ def LoadJetsFromFile(
         class_labels
     )
 
-    # Load variables for cuts if given
-    if variables and cut_vars_dict:
-        # Deepcopy the variables list
+    if variables:
+
+        # Get list with all available variables
+        avai_var_list = list(
+            h5py.File(filepaths[0], "r")["/jets"].dtype.fields.keys()
+        )
+
+        # Make a copy of the variables list to loop over it
         variables_list = copy.deepcopy(variables)
 
-        # Add the class label variables to the variables list
-        variables_list += class_label_vars
+        # Check if all variables from variable_list are available
+        for var in variables:
+            if var not in avai_var_list:
+                variables_list.remove(var)
 
-        # Iterate over the cuts and get the needed variables
-        for variable in cut_vars_dict:
-            variables_list += list(variable.keys())
+                # Check for logger
+                if print_logger:
+                    logger.warning(f"{var} not available in files!")
 
-        # Ensure each variable is only once in the list
-        variables_list = list(set(variables_list))
+        # Load variables for cuts if given
+        if cut_vars_dict:
+
+            # Add the class label variables to the variables list
+            variables_list += class_label_vars
+
+            # Iterate over the cuts and get the needed variables
+            for variable in cut_vars_dict:
+                variables_list += list(variable.keys())
+
+            # Ensure each variable is only once in the list
+            variables_list = list(set(variables_list))
 
     # Init a counter for the number of loaded jets
     nJets_counter = 0
@@ -1665,6 +1682,7 @@ def GetTestFile(
     exclude: list = None,
     cut_vars_dict: dict = None,
     jet_variables: list = None,
+    print_logger: bool = True,
 ):
     """
     Load the training jets and tracks.
@@ -1678,6 +1696,7 @@ def GetTestFile(
     - exclude: List of variables that are to be excluded.
     - cut_vars_dict: Dict with the variable cuts which should be applied.
     - jet_variables: Jet variables that are to be loaded.
+    - print_logger: Decide, if the logger is printed or not.
 
     Output:
     - Returns the X, X_trk and Y for training/evaluation.
@@ -1702,7 +1721,7 @@ def GetTestFile(
         exclude=exclude,
         cut_vars_dict=cut_vars_dict,
         jet_variables=jet_variables,
-        print_logger=True,
+        print_logger=print_logger,
     )
 
     assert np.equal(Y, Y_trk).all()

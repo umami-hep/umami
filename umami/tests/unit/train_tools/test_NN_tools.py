@@ -185,6 +185,26 @@ class Load_Files_TestCase(unittest.TestCase):
 
         self.assertEqual(len(jets), len(labels))
 
+        jets, labels = LoadJetsFromFile(
+            filepath=os.path.join(
+                self.tmp_test_dir,
+                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+            ),
+            class_labels=self.class_labels,
+            nJets=self.nJets,
+            variables=["dipsLoose20210729_pu", "dipsLoose20210729_pb"],
+            cut_vars_dict=[
+                {
+                    f"{global_config.pTvariable}": {
+                        "operator": "<=",
+                        "condition": 250000,
+                    }
+                }
+            ],
+        )
+
+        self.assertEqual(len(jets), len(labels))
+
     def test_LoadTrksFromFile(self):
         trks, labels = LoadTrksFromFile(
             filepath=os.path.join(

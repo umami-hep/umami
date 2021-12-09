@@ -324,6 +324,7 @@ def EvaluateModelDips(
                 global_config.etavariable,
                 global_config.pTvariable,
             ],
+            print_logger=False,
         )
 
         # Form the inputs for the network
