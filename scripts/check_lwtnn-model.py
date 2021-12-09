@@ -10,11 +10,14 @@ import umami.preprocessing_tools as upt
 import umami.train_tools as utt
 from umami.configuration import logger
 from umami.tf_tools import Sum
-from umami.configuration.Configuration import Configuration
 
 
 def GetParser():
-    """Argparse option for create_vardict script."""
+    """Argparse option for create_vardict script.
+
+    Returns:
+        Parsed arguments.
+    """
     parser = argparse.ArgumentParser(description="""Options lwtnn check""")
 
     parser.add_argument(
@@ -98,7 +101,8 @@ def __run():
     if args.config is not None:
         if args.scale_dict is not None:
             raise ValueError(
-                "Both --confing and --scale_dict options were given, only one of them needs to be used"
+                "Both --confing and --scale_dict options were given, "
+                "only one of them needs to be used"
             )
         training_config = utt.Configuration(args.config)
         preprocess_config = upt.Configuration(
@@ -110,7 +114,8 @@ def __run():
         class_labels = preprocess_config.preparation["class_labels"]
     else:
         raise ValueError(
-            "Missing option, either --config or --scale_dict needs to be specified (only one of them)"
+            "Missing option, either --config or --scale_dict "
+            "needs to be specified (only one of them)"
         )
 
     logger.info(f"Evaluating {args.model}")
@@ -177,38 +182,33 @@ def __run():
 
     evaluated = "eval_pu"
     df["diff"] = abs(df[evaluated] - df[f"{args.tagger}_pu"])
-    df_select = df.query("diff>1e-6").copy()
+    df_select = df.query("diff>1e-6")
     print(
         "Differences off 1e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>2e-6").copy()
+    df_select = df.query("diff>2e-6")
     print(
         "Differences off 2e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>3e-6").copy()
+    df_select = df.query("diff>3e-6")
     print(
         "Differences off 3e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>4e-6").copy()
+    df_select = df.query("diff>4e-6")
     print(
         "Differences off 4e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>5e-6").copy()
+    df_select = df.query("diff>5e-6")
     print(
         "Differences off 5e-6", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>1e-5").copy()
+    df_select = df.query("diff>1e-5")
     print(
         "Differences off 1e-5", round(len(df_select) / len(df) * 100, 2), "%"
     )
-    df_select = df.query("diff>1e-6").copy()
-    df_select["diff"] = abs(
-        df_select[evaluated] - df_select[f"{args.tagger}_pu"]
-    )
-    df_select.sort_values("diff", ascending=False, inplace=True)
 
     if args.output is not None:
-        df_select = df_select[
+        df_select = df[
             [
                 "diff",
                 "eval_pu",
@@ -221,7 +221,8 @@ def __run():
                 "ntrks",
             ]
         ]
-        # df_select.query("diff>1e-5", inplace=True)
+        df_select = df_select.copy()
+        df_select.sort_values("diff", ascending=False, inplace=True)
         out_file = f"{args.output}.csv"
         logger.info(f"Writing output file {out_file}")
         df_select.to_csv(out_file, index=False)
