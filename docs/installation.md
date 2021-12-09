@@ -119,7 +119,7 @@ singularity exec --contain --nv --bind /afs  --bind /cvmfs --bind /eos docker://
 
 ???+ info "Using the base image instead"
     ```bash
-    singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest-gpu
+    singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest-gpu bash
     ```
 
 

@@ -23,6 +23,7 @@ setup(
         "umami.evaluation_tools",
         "umami.input_vars_tools",
         "umami.institutes",
+        "umami.models"
     ],
     # install_requires=[
     #     "h5py",
