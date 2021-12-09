@@ -198,15 +198,29 @@ def GetScoresProbsDict(
             y_pred = tmp.reshape((len(class_labels_copy), -1))
             y_pred = np.transpose(y_pred)
 
+            # Check if tagger is in file
+            if len(class_labels_copy) == 0:
+                logger.warning(
+                    f"Tagger {tagger} not in .h5 files! Skipping..."
+                )
+                continue
+
         # Adding scores of the trained network
-        df_discs_dict[f"disc_{tagger}"] = utt.GetScore(
-            y_pred=y_pred,
-            class_labels=class_labels_copy,
-            main_class=main_class,
-            frac_dict=frac_values[f"{tagger}"]
-            if tagger in tagger_names
-            else frac_values_comp[f"{tagger}"],
-        )
+        try:
+            df_discs_dict[f"disc_{tagger}"] = utt.GetScore(
+                y_pred=y_pred,
+                class_labels=class_labels_copy,
+                main_class=main_class,
+                frac_dict=frac_values[f"{tagger}"]
+                if tagger in tagger_names
+                else frac_values_comp[f"{tagger}"],
+            )
+
+        except KeyError:
+            logger.error(
+                f"{tagger} is in files, but not in frac_dict! Skipping..."
+            )
+            continue
 
     return df_discs_dict
 
