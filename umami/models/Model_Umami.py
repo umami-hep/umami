@@ -160,6 +160,7 @@ def Umami(args, train_config, preprocess_config):
             train_config=train_config,
             preprocess_config=preprocess_config,
             nJets=int(Val_params["n_jets"]),
+            convert_to_tensor=True,
         )
 
     # Load the excluded variables from train_config
