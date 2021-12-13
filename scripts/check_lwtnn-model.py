@@ -63,6 +63,15 @@ def GetParser():
         required=True,
         help="Keras model for comparison.",
     )
+
+    parser.add_argument(
+        "-n",
+        "--ntracks_max",
+        type=int,
+        default=np.inf,
+        help="Number of tracks per jet to ignore.",
+    )
+
     parser.add_argument(
         "-c",
         "--config",
@@ -98,6 +107,7 @@ def __run():
         df = pd.DataFrame(file["jets"][:])
 
     df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
+
     if args.config is not None:
         if args.scale_dict is not None:
             raise ValueError(
@@ -182,30 +192,24 @@ def __run():
 
     evaluated = "eval_pu"
     df["diff"] = abs(df[evaluated] - df[f"{args.tagger}_pu"])
-    df_select = df.query("diff>1e-6")
-    print(
-        "Differences off 1e-6", round(len(df_select) / len(df) * 100, 2), "%"
-    )
-    df_select = df.query("diff>2e-6")
-    print(
-        "Differences off 2e-6", round(len(df_select) / len(df) * 100, 2), "%"
-    )
-    df_select = df.query("diff>3e-6")
-    print(
-        "Differences off 3e-6", round(len(df_select) / len(df) * 100, 2), "%"
-    )
-    df_select = df.query("diff>4e-6")
-    print(
-        "Differences off 4e-6", round(len(df_select) / len(df) * 100, 2), "%"
-    )
-    df_select = df.query("diff>5e-6")
-    print(
-        "Differences off 5e-6", round(len(df_select) / len(df) * 100, 2), "%"
-    )
-    df_select = df.query("diff>1e-5")
-    print(
-        "Differences off 1e-5", round(len(df_select) / len(df) * 100, 2), "%"
-    )
+    sampleDiffs = np.array(
+        [
+            np.linspace(1e-6, 5e-6, 5),
+            np.linspace(1e-5, 5e-5, 5),
+            np.linspace(1e-4, 5e-4, 5),
+            np.linspace(1e-3, 5e-3, 5),
+            np.linspace(1e-2, 5e-2, 5),
+            np.linspace(1e-1, 5e-1, 5),
+        ]
+    ).flatten()
+    for sampleDiff in sampleDiffs:
+        df_select = df.query(f"diff>{sampleDiff} and ntrks<{args.ntracks_max}")
+        diff = round(
+            len(df_select) / len(df[df["ntrks"] < args.ntracks_max]) * 100, 2
+        )
+        print(f"Differences off {'{:.1e}'.format(sampleDiff)} {diff}%")
+        if diff == 0:
+            break
 
     if args.output is not None:
         df_select = df[
