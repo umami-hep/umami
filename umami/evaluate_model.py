@@ -37,7 +37,6 @@ def GetParser():
         "-e",
         "--epoch",
         type=int,
-        required=True,
         help="Epoch which should be evaluated.",
     )
 
@@ -57,12 +56,6 @@ def GetParser():
         type=int,
         help="""Number of jets used for the testing. By default it will
         use all available jets in the test files.""",
-    )
-
-    parser.add_argument(
-        "--beff",
-        type=float,
-        help="b efficiency used for the charm fraction scan",
     )
 
     parser.add_argument(

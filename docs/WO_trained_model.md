@@ -39,6 +39,10 @@ NN_structure:
     # Main class which is to be tagged
     main_class: "bjets"
 
+# Plotting settings for training metrics plots.
+# Those are not used here. Only when running plotting_epoch_performance.py
+Validation_metrics_settings:
+
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
     # Number of jets used for validation
@@ -49,50 +53,39 @@ Eval_parameters_validation:
     tagger: ["rnnip", "DL1r"]
 
     # Define fc values for the taggers
-    frac_values_comp: {
-        "rnnip": {
-            "cjets": 0.08,
-            "ujets": 0.92,
-        },
-        "DL1r": {
-            "cjets": 0.018,
-            "ujets": 0.982,
-        },
-    }
+    frac_values_comp:
+        {
+            "rnnip": {"cjets": 0.07, "ujets": 0.93},
+            "DL1r": {"cjets": 0.018, "ujets": 0.982},
+        }
+
+    # Charm fraction value used for evaluation of the trained model
+    frac_values: {"cjets": 0.018, "ujets": 0.982}
 
     # Cuts which are applied to the different datasets used for evaluation
     variable_cuts:
         ttbar_r21:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+                  operator: "<="
+                  condition: 250000
 
         ttbar_r22:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+                  operator: "<="
+                  condition: 250000
 
         zpext_r21:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+                  operator: ">"
+                  condition: 250000
 
         zpext_r22:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+                  operator: ">"
+                  condition: 250000
 
-# Plotting settings for training metrics plots
-Plotting_settings:
-    # Enable/Disable atlas tag
-    UseAtlasTag: True
-
-    # fc_value and WP_b are autmoatically added to the plot label
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
-
-    # Set the datatype of the plots
-    plot_datatype: "pdf"
+    # Working point used in the evaluation
+    WP: 0.77
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -108,12 +101,14 @@ Plotting_settings:
 | `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. | 
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
+| `frac_values` | Dict | Necessary | Dict with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `variable_cuts` | Dict | Necessary | Dict of cuts which are applied when loading the different test files. Only jet variables can be cut on. |
+| `WP` | Float | Necessary | Working point that is used for evaluation. |
 
 To run the evaluation, you can now execute the following command in the `umami/umami` folder where the `evaluate_model.py` is:
 
 ```bash
-evaluate_model.py -c ../examples/Dips-PFlow-Training-config.yaml
+evaluate_model.py -c ../examples/evalute_comp_taggers.yaml
 ```
 
 The `evaluate_model.py` will now output a results file which has the results of your defined taggers inside. You can now use it like a regular one with a freshly trained model inside. An explanation how to plot the results is given in the [plotting_umami](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting_umami.md) documentation.

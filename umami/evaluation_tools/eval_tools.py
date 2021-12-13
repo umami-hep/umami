@@ -217,7 +217,7 @@ def GetScoresProbsDict(
             )
 
         except KeyError:
-            logger.error(
+            logger.warning(
                 f"{tagger} is in files, but not in frac_dict! Skipping..."
             )
             continue
