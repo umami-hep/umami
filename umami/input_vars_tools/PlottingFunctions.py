@@ -495,51 +495,18 @@ def plot_input_vars_trks_comparison(
         datasets_filepaths,
         datasets_labels,
     ):
-        # Init jet counter
-        nJets_counter = 0
 
-        # Get wildcard
-        filepath = glob(filepath)
-
-        # Loop over files and get the amount of jets needed.
-        for file_counter, file in enumerate(
-            sorted(filepath, key=natural_keys)
-        ):
-            if nJets_counter < nJets:
-                tmp_trks, tmp_flavour_labels = utt.LoadTrksFromFile(
-                    filepath=file,
-                    class_labels=class_labels,
-                    nJets=nJets,
-                    print_logger=False,
-                )
-
-                if file_counter == 0:
-                    # Append to array
-                    trks = tmp_trks
-                    flavour_labels = tmp_flavour_labels
-
-                else:
-                    # Append to array
-                    trks = np.concatenate((trks, tmp_trks))
-                    flavour_labels = np.concatenate(
-                        (flavour_labels, tmp_flavour_labels)
-                    )
-
-                # Add number of jets to counter
-                nJets_counter += len(tmp_trks)
-
-            else:
-                break
-
-        if len(trks) < nJets:
-            n_trks = len(trks)
-            logger.warning(
-                f"{nJets} were set to be used, but only {n_trks} are available for {label} files!"
-            )
+        # Get the tracks and the labels from the file/files
+        trks, flavour_labels = utt.LoadTrksFromFile(
+            filepath=filepath,
+            class_labels=class_labels,
+            nJets=nJets,
+            print_logger=False,
+        )
 
         # Append trks to dict
-        trks_dict.update({label: trks[:nJets]})
-        flavour_label_dict.update({label: flavour_labels[:nJets]})
+        trks_dict.update({label: trks})
+        flavour_label_dict.update({label: flavour_labels})
 
     # Load var dict
     with open(var_dict, "r") as conf:
@@ -1003,51 +970,18 @@ def plot_input_vars_trks(
         datasets_filepaths,
         datasets_labels,
     ):
-        # Init jet counter
-        nJets_counter = 0
 
-        # Get wildcard
-        filepath = glob(filepath)
-
-        # Loop over files and get the amount of jets needed.
-        for file_counter, file in enumerate(
-            sorted(filepath, key=natural_keys)
-        ):
-            if nJets_counter < nJets:
-                tmp_trks, tmp_flavour_labels = utt.LoadTrksFromFile(
-                    filepath=file,
-                    class_labels=class_labels,
-                    nJets=nJets,
-                    print_logger=False,
-                )
-
-                if file_counter == 0:
-                    # Append to array
-                    trks = tmp_trks
-                    flavour_labels = tmp_flavour_labels
-
-                else:
-                    # Append to array
-                    trks = np.concatenate((trks, tmp_trks))
-                    flavour_labels = np.concatenate(
-                        (flavour_labels, tmp_flavour_labels)
-                    )
-
-                # Add number of jets to counter
-                nJets_counter += len(tmp_trks)
-
-            else:
-                break
-
-        if len(trks) < nJets:
-            n_trks = len(trks)
-            logger.warning(
-                f"{nJets} were set to be used, but only {n_trks} are available for {label} files!"
-            )
+        # Get the tracks and the labels from the file/files
+        trks, flavour_labels = utt.LoadTrksFromFile(
+            filepath=filepath,
+            class_labels=class_labels,
+            nJets=nJets,
+            print_logger=False,
+        )
 
         # Append trks to dict
-        trks_dict.update({label: trks[:nJets]})
-        flavour_label_dict.update({label: flavour_labels[:nJets]})
+        trks_dict.update({label: trks})
+        flavour_label_dict.update({label: flavour_labels})
 
     # Load var dict
     with open(var_dict, "r") as conf:
@@ -1385,52 +1319,18 @@ def plot_input_vars_jets(
         datasets_filepaths,
         datasets_labels,
     ):
-        # Init jet counter
-        nJets_counter = 0
 
-        # Get wildcard
-        filepath = glob(filepath)
-
-        # Loop over files and get the amount of jets needed.
-        for file_counter, file in enumerate(
-            sorted(filepath, key=natural_keys)
-        ):
-            if nJets_counter < nJets:
-                tmp_jets, tmp_flavour_labels = utt.LoadJetsFromFile(
-                    filepath=file,
-                    class_labels=class_labels,
-                    nJets=nJets,
-                    print_logger=False,
-                )
-
-                if file_counter == 0:
-                    # Append to array
-                    jets = tmp_jets
-                    flavour_labels = tmp_flavour_labels
-
-                else:
-                    # Append to array
-                    jets = jets.append(tmp_jets, ignore_index=True)
-                    flavour_labels = np.append(
-                        flavour_labels,
-                        tmp_flavour_labels,
-                    )
-
-                # Add number of loaded jets to counter
-                nJets_counter += len(tmp_jets)
-
-            else:
-                break
-
-        if len(jets) < nJets:
-            n_jets = len(jets)
-            logger.warning(
-                f"{nJets} were set to be used, but only {n_jets} are available for {label} files!"
-            )
+        # Get the tracks and the labels from the file/files
+        jets, flavour_labels = utt.LoadJetsFromFile(
+            filepath=filepath,
+            class_labels=class_labels,
+            nJets=nJets,
+            print_logger=False,
+        )
 
         # Append jets to dict
-        jets_dict.update({label: jets[:nJets]})
-        flavour_label_dict.update({label: flavour_labels[:nJets]})
+        jets_dict.update({label: jets})
+        flavour_label_dict.update({label: flavour_labels})
 
     # Loading jet variables
     jetsVars = [
@@ -1681,52 +1581,18 @@ def plot_input_vars_jets_comparison(
         datasets_filepaths,
         datasets_labels,
     ):
-        # Init jet counter
-        nJets_counter = 0
 
-        # Get wildcard
-        filepath = glob(filepath)
-
-        # Loop over files and get the amount of jets needed.
-        for file_counter, file in enumerate(
-            sorted(filepath, key=natural_keys)
-        ):
-            if nJets_counter < nJets:
-                tmp_jets, tmp_flavour_labels = utt.LoadJetsFromFile(
-                    filepath=file,
-                    class_labels=class_labels,
-                    nJets=nJets,
-                    print_logger=False,
-                )
-
-                if file_counter == 0:
-                    # Append to array
-                    jets = tmp_jets
-                    flavour_labels = tmp_flavour_labels
-
-                else:
-                    # Append to array
-                    jets = jets.append(tmp_jets, ignore_index=True)
-                    flavour_labels = np.append(
-                        flavour_labels,
-                        tmp_flavour_labels,
-                    )
-
-                # Add number of jets to counter
-                nJets_counter += len(tmp_jets)
-
-            else:
-                break
-
-        if len(jets) < nJets:
-            n_jets = len(jets)
-            logger.warning(
-                f"{nJets} were set to be used, but only {n_jets} are available for {label} files!"
-            )
+        # Get the tracks and the labels from the file/files
+        jets, flavour_labels = utt.LoadJetsFromFile(
+            filepath=filepath,
+            class_labels=class_labels,
+            nJets=nJets,
+            print_logger=False,
+        )
 
         # Append jets to dict
-        jets_dict.update({label: jets[:nJets]})
-        flavour_label_dict.update({label: flavour_labels[:nJets]})
+        jets_dict.update({label: jets})
+        flavour_label_dict.update({label: flavour_labels})
 
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)

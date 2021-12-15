@@ -87,6 +87,7 @@ Dips_prob_pb:
 | `x_label` | String | Optional | Set the x-axis label. Default is "DNN Output" |
 | `yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 | `yAxisIncrease` | Float | Optional | Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### Probability Comparison
 Plotting the DNN probability output for different models. For example:
@@ -137,6 +138,7 @@ Dips_prob_comparison_pb:
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
 | `yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 | `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### Scores
 Plotting the b-tagging discriminant scores for the different jet flavors. For example:
@@ -170,6 +172,7 @@ scores_Dips_ttbar:
 | `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
 | `yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### Scores Comparison
 Plotting the b-tagging discriminant scores for the different jet flavors for different models in the same plot. For example:
@@ -217,6 +220,7 @@ scores_Dips_ttbar_comparison:
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
 | `yAxisAtlasTag` | Float | Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
 | `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### ROC Curves
 Plotting the ROC Curves of the rejection rates against the b-tagging efficiency. For example:
@@ -264,6 +268,7 @@ Dips_light_flavour_ttbar:
 | `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
 | `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### Comparison ROC Curves (Double Rejection ROC)
 Plotting the ROC Curves of two rejection rates against a efficiency. You need to define a model for each model/rejection pair. For example:
@@ -315,12 +320,13 @@ Dips_Comparison_flavour_ttbar:
 | `xmin` | Float | Optional | Set the minimum b efficiency in the plot (which is the xmin limit). |
 | `ymax` | Float | Optional | The maximum y axis. |
 | `WorkingPoints` | List | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
- | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | List | Optional |A list of the width and hight of the plot.
 | `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
 | `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
 | `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### Saliency Maps
 Plotting the Saliency Map of the model. For example:
@@ -352,6 +358,7 @@ Dips_saliency_b_WP77_passed_ttbar:
 | `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
 | `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### pT vs Efficiency
 Plot the b efficiency/c-rejection/light-rejection against the pT. For example:
@@ -381,6 +388,8 @@ Dips_pT_vs_beff:
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
     yAxisAtlasTag: 0.9
     yAxisIncrease: 1.3
+    labelFontSize: 12
+    legFontSize: 12
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -404,10 +413,14 @@ Dips_pT_vs_beff:
 | `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
 | `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. Don't add fc value here! Its automatically added also the WP. |
 | `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
- | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `ymin` | Float | Optional | Set the y axis minimum. Leave empty (=None) for automatically set border. |
 | `ymax` | Float | Optional | Set the y axis maximum. Leave empty (=None) for automatically set border. |
 | `alpha` | Float | Optional | The Alpha value of the plots. |
+| `labelFontSize` | Int | Optional | Set the fontsize of the axis labels and ticks. |
+| `legFontSize` | Int | Optional | Set the fontsize of the legend. |
+| `Ratio_Cut` | List | List with the lower and upper y-limit which is to be set for the ratio plot. |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### Variable vs Efficiency
 Plot the efficiencies of all flavours versus any variable (not just pT). The variables must be included in the results h5 files from the evaluation step.
@@ -473,6 +486,7 @@ eff_vs_pt:
 | `SecondTag` | String | Optional | Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag. |
 | `ThirdTag` | String | Optional | Write this text on the upper left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. |
 | `Log` | bool | Optional | Whether to  put the y-axis in log-scale. |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### Variable vs Efficiency Comparison
 Plot the efficiencies of each flavours versus any variable (not just pT) for all listed models. The variables must be included in the results h5 files from the evaluation step.
@@ -551,6 +565,7 @@ eff_vs_pt_small:
 | `SecondTag` | String | Optional | Second line of text right below the 'ATLAS' and the AtlasTag. Don't add fc value nor efficiency here! They are automatically added to the third tag. |
 | `ThirdTag` | String | Optional | Write this text on the upper left corner. Usually meant to indicate efficiency format (global or flat) and the tagger used (DIPS, DL1r, ...). The fc value and the b-jet efficiency are automatically added to this tag. |
 | `Log` | bool | Optional | Whether to  put the y-axis in log-scale. |
+| `dpi` | Int | Optional | Set the DPI value for the plot. Default is 400 |
 
 #### Scanning fractions - DEPRECATED
 DEPRECATED: For DL1 with taus, the evaluation step of `evaluate.py` generated an extra h5 file giving the c/b, light, and tau rejection as a function of the c/b-fraction and the tau fraction (this evaluation is no longer performed). To produce the plot associated to this information (2d heatmap of rejection for the two flavour fractions), add (for example) this to the plotting config:
