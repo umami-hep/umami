@@ -114,9 +114,7 @@ class DeepSet(Layer):
         # Assert that the tensor shape is at least rank 3
         assert (
             len(inputs.shape) == 3
-        ), "DeepSets layer requires tensor of rank 3. Shape of tensor received {}".format(
-            inputs.shape
-        )
+        ), f"DeepSets layer requires tensor of rank 3. Shape of tensor received {inputs.shape}"
 
         # Check if mask is None and the standard zero mask is used
         if mask is None and self.mask_zero:
@@ -216,9 +214,7 @@ class Attention(Layer):
     def call(self, inputs, mask=None):
         assert (
             len(inputs.shape) == 3
-        ), "Attention layer requires tensor of rank 3. Shape of tensor received {}".format(
-            inputs.shape
-        )
+        ), f"Attention layer requires tensor of rank 3. Shape of tensor received {inputs.shape}"
 
         if mask is None and self.mask_zero:
             mask = self.compute_mask(inputs, mask)
@@ -320,9 +316,7 @@ class ConditionalAttention(Layer):
         # Assert correct shapes
         assert (len(repeat.shape) == 3) & (
             len(condition.shape) == 2
-        ), "Repeated vector must be rank 3 input, condition vector must be rank 2. Tensors provided have shapes {}, {}".format(
-            repeat.shape, condition.shape
-        )
+        ), f"Repeated vector must be rank 3 input, condition vector must be rank 2. Tensors provided have shapes {repeat.shape}, {condition.shape}"
 
         # Get the number of repeat
         nrepeat = repeat.shape[1]
@@ -398,9 +392,7 @@ class ConditionalDeepSet(Layer):
         # Assert correct shape of the repeated and conditions vector
         assert (len(repeat.shape) == 3) & (
             len(condition.shape) == 2
-        ), "Repeated vector must be rank 3 input, condition vector must be rank 2. Tensors provided have shapes {}, {}".format(
-            repeat.shape, condition.shape
-        )
+        ), f"Repeated vector must be rank 3 input, condition vector must be rank 2. Tensors provided have shapes {repeat.shape}, {condition.shape}"
 
         # Get the number of repeat vectors
         nrepeat = repeat.shape[1]

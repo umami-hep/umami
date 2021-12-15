@@ -257,12 +257,10 @@ def plot_nTracks_per_Jet(
         if model_number != 0:
             for flavour in class_labels:
                 step, step_unc = hist_ratio(
-                    nominator=bincounts["{}{}".format(flavour, model_number)],
-                    denominator=bincounts["{}{}".format(flavour, 0)],
-                    nominator_unc=bincounts_unc[
-                        "{}{}".format(flavour, model_number)
-                    ],
-                    denominator_unc=bincounts_unc["{}{}".format(flavour, 0)],
+                    nominator=bincounts[f"{flavour}{model_number}"],
+                    denominator=bincounts[f"{flavour}0"],
+                    nominator_unc=bincounts_unc[f"{flavour}{model_number}"],
+                    denominator_unc=bincounts_unc[f"{flavour}0"],
                 )
 
                 axis_dict["left"]["ratio"].step(
@@ -302,7 +300,7 @@ def plot_nTracks_per_Jet(
     if Bin_Width_y_axis is True:
         Bin_Width = abs(Binning[1] - Binning[0])
         axis_dict["left"]["top"].set_ylabel(
-            ylabel + " / {:.2f}".format(Bin_Width),
+            f"{ylabel} / {Bin_Width:.2f}",
             fontsize=12,
             horizontalalignment="right",
             y=1.0,
@@ -710,17 +708,13 @@ def plot_input_vars_trks_comparison(
                         for flavour in class_labels:
                             step, step_unc = hist_ratio(
                                 nominator=bincounts[
-                                    "{}{}".format(flavour, model_number)
+                                    f"{flavour}{model_number}"
                                 ],
-                                denominator=bincounts[
-                                    "{}{}".format(flavour, 0)
-                                ],
+                                denominator=bincounts[f"{flavour}0"],
                                 nominator_unc=bincounts_unc[
-                                    "{}{}".format(flavour, model_number)
+                                    f"{flavour}{model_number}"
                                 ],
-                                denominator_unc=bincounts_unc[
-                                    "{}{}".format(flavour, 0)
-                                ],
+                                denominator_unc=bincounts_unc[f"{flavour}0"],
                             )
 
                             axis_dict["left"]["ratio"].step(
@@ -766,7 +760,7 @@ def plot_input_vars_trks_comparison(
                 if Bin_Width_y_axis is True:
                     Bin_Width = abs(Binning[1] - Binning[0])
                     axis_dict["left"]["top"].set_ylabel(
-                        ylabel + " / {:.2f}".format(Bin_Width),
+                        f"{ylabel} / {Bin_Width:.2f}",
                         fontsize=12,
                         horizontalalignment="right",
                         y=1.0,
@@ -1187,7 +1181,7 @@ def plot_input_vars_trks(
                     if Bin_Width_y_axis is True:
                         Bin_Width = abs(Binning[1] - Binning[0])
                         plt.ylabel(
-                            ylabel + " / {:.2f}".format(Bin_Width),
+                            f"{ylabel} / {Bin_Width:.2f}",
                             fontsize=12,
                             horizontalalignment="right",
                             y=1.0,
@@ -1452,7 +1446,7 @@ def plot_input_vars_jets(
                 if Bin_Width_y_axis is True:
                     Bin_Width = abs(Binning[1] - Binning[0])
                     plt.ylabel(
-                        ylabel + " / {:.2f}".format(Bin_Width),
+                        f"{ylabel} / {Bin_Width:.2f}",
                         fontsize=12,
                         horizontalalignment="right",
                         y=1.0,
@@ -1745,16 +1739,12 @@ def plot_input_vars_jets_comparison(
                 if model_number != 0:
                     for flavour in class_labels:
                         step, step_unc = hist_ratio(
-                            nominator=bincounts[
-                                "{}{}".format(flavour, model_number)
-                            ],
-                            denominator=bincounts["{}{}".format(flavour, 0)],
+                            nominator=bincounts[f"{flavour}{model_number}"],
+                            denominator=bincounts[f"{flavour}0"],
                             nominator_unc=bincounts_unc[
-                                "{}{}".format(flavour, model_number)
+                                f"{flavour}{model_number}"
                             ],
-                            denominator_unc=bincounts_unc[
-                                "{}{}".format(flavour, 0)
-                            ],
+                            denominator_unc=bincounts_unc[f"{flavour}0"],
                         )
 
                         axis_dict["left"]["ratio"].step(
@@ -1800,7 +1790,7 @@ def plot_input_vars_jets_comparison(
             if Bin_Width_y_axis is True:
                 Bin_Width = abs(Binning[1] - Binning[0])
                 axis_dict["left"]["top"].set_ylabel(
-                    ylabel + " / {:.2f}".format(Bin_Width),
+                    f"{ylabel} / {Bin_Width:.2f}",
                     fontsize=12,
                     horizontalalignment="right",
                     y=1.0,

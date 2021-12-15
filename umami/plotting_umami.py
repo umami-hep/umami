@@ -1026,16 +1026,13 @@ def SetUpPlots(
         if epoch_to_name is True:
             save_plot_to = os.path.join(
                 plot_directory,
-                plot_name
-                + "_{}".format(int(eval_params["epoch"]))
-                + "."
-                + format,
+                f"{plot_name}_{int(eval_params['epoch'])}.{format}",
             )
 
         else:
             save_plot_to = os.path.join(
                 plot_directory,
-                plot_name + "." + format,
+                f"{plot_name}.{format}",
             )
 
         # Check for plot type and use the needed function
@@ -1135,7 +1132,7 @@ def SetUpPlots(
 
         else:
             raise NameError(
-                "Plot type {} is not supported".format(plot_config["type"])
+                f"Plot type {plot_config['type']} is not supported"
             )
 
         if print_model:

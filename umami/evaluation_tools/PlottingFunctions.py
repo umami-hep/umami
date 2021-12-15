@@ -499,7 +499,7 @@ def plotEfficiencyVariableComparison(
             trimmed_label_val = x_label
 
     if colors is None:
-        colors = ["C{}".format(i) for i in range(len(model_labels))]
+        colors = [f"C{i}" for i in range(len(model_labels))]
 
     for label in class_labels_list[0]:
         fig, ax = plt.subplots()
@@ -701,7 +701,7 @@ def plotPtDependence(
 
     # Set color if not provided
     if colors is None:
-        colors = ["C{}".format(i) for i in range(len(df_list))]
+        colors = [f"C{i}" for i in range(len(df_list))]
 
     # Define the figure with two subplots of unequal sizes
     axis_dict = {}
@@ -1076,6 +1076,7 @@ def plotPtDependence(
             + "\nConstant "
             + r"$\epsilon_b$ = {}% per bin".format(int(WP * 100))
         )
+        # TODO: is here a better way than .format?
 
     else:
         SecondTag = (
@@ -1083,6 +1084,7 @@ def plotPtDependence(
             + "\nInclusive "
             + r"$\epsilon_b$ = {}%".format(int(WP * 100))
         )
+        # TODO: is here a better way than .format?
 
     # Set the ATLAS Tag
     if UseAtlasTag is True:
@@ -1187,8 +1189,8 @@ def plotROCRatio(
     if styles is None:
         styles = ["-" for i in labels]
     if colors is None:
-        colors = ["C{}".format(i) for i in range(len(labels))]
-        colors_WP = "C{}".format(len(colors) + 1)
+        colors = [f"C{i}" for i in range(len(labels))]
+        colors_WP = f"C{len(colors) + 1}"
 
     else:
         colors_WP = "red"
@@ -1913,9 +1915,7 @@ def plotSaliency(
     # Little Workaround
     AtlasTag = " " + AtlasTag
 
-    gradient_map = maps_dict[
-        "{}_{}_{}".format(int(target_beff), jet_flavour, PassBool)
-    ]
+    gradient_map = maps_dict[f"{int(target_beff)}_{jet_flavour}_{PassBool}"]
 
     colorScale = np.max(np.abs(gradient_map))
     cmaps = {
@@ -2168,7 +2168,7 @@ def plot_score(
 
             # Set the number above the line
             ax.annotate(
-                "{}%".format(int(WP * 100)),
+                f"{int(WP * 100)}%",
                 xy=(x_value, WP * ymax),
                 xytext=(x_value, WP * ymax),
                 textcoords="offset points",
@@ -2361,10 +2361,10 @@ def plot_score_comparison(
 
                 # Calculate the step and step_unc for ratio
                 step, step_unc = hist_ratio(
-                    nominator=bincounts["{}{}".format(flavour, i)],
-                    denominator=bincounts["{}{}".format(flavour, 0)],
-                    nominator_unc=bincounts_unc["{}{}".format(flavour, i)],
-                    denominator_unc=bincounts_unc["{}{}".format(flavour, 0)],
+                    nominator=bincounts[f"{flavour}{i}"],
+                    denominator=bincounts[f"{flavour}0"],
+                    nominator_unc=bincounts_unc[f"{flavour}{i}"],
+                    denominator_unc=bincounts_unc[f"{flavour}0"],
                 )
 
                 axis_dict["left"]["ratio"].step(
@@ -2494,7 +2494,7 @@ def plot_score_comparison(
 
             # Set the number above the line
             axis_dict["left"]["top"].annotate(
-                "{}%".format(int(WP * 100)),
+                f"{int(WP * 100)}%",
                 xy=(
                     x_value,
                     0.75 * WP * axis_dict["left"]["top"].get_ylim()[1],
@@ -2911,10 +2911,10 @@ def plot_prob_comparison(
 
                 # Calculate the step and step_unc for ratio
                 step, step_unc = hist_ratio(
-                    nominator=bincounts["{}{}".format(iter_flav, i)],
-                    denominator=bincounts["{}{}".format(iter_flav, 0)],
-                    nominator_unc=bincounts_unc["{}{}".format(iter_flav, i)],
-                    denominator_unc=bincounts_unc["{}{}".format(iter_flav, 0)],
+                    nominator=bincounts[f"{iter_flav}{i}"],
+                    denominator=bincounts[f"{iter_flav}0"],
+                    nominator_unc=bincounts_unc[f"{iter_flav}{i}"],
+                    denominator_unc=bincounts_unc[f"{iter_flav}0"],
                 )
 
                 axis_dict["left"]["ratio"].step(
