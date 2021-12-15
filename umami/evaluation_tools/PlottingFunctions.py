@@ -11,6 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import pchip
 
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
+from umami.helper_tools import hist_ratio, hist_w_unc
 from umami.tools import applyATLASstyle
 
 
@@ -54,78 +55,6 @@ def FlatEfficiencyPerBin(
         ) * 1
 
     return df["tag"]
-
-
-def calc_bins(input_array, Binning):
-    """
-    This method calculates the bin content and uncertainty
-    for a given input.
-    Returns the bins, weights, uncertainites and lower band
-    as numpy arrays.
-    """
-    # Calculate the number of jets per flavour
-    arr_length = len(input_array)
-
-    # Calculate the counts and the bin edges
-    counts, bins = np.histogram(input_array, bins=Binning)
-
-    unc = np.sqrt(counts) / arr_length
-    band = counts / arr_length - unc
-    weights = counts / arr_length
-
-    return bins, weights, unc, band
-
-
-def calc_ratio(counter, denominator, counter_unc, denominator_unc):
-    """
-    This method calculates the ratio of the given bincounts and
-    returns the input for a step function that plots the ratio
-    """
-    step = np.divide(
-        counter,
-        denominator,
-        out=np.ones(
-            counter.shape,
-            dtype=float,
-        ),
-        where=(denominator != 0),
-    )
-
-    # Add an extra bin in the beginning to have the same binning as the input
-    # Otherwise, the ratio will not be exactly above each other (due to step)
-    step = np.append(np.array([step[0]]), step)
-
-    # Calculate rel uncertainties
-    counter_rel_unc = np.divide(
-        counter_unc,
-        counter,
-        out=np.zeros(
-            counter.shape,
-            dtype=float,
-        ),
-        where=(counter != 0),
-    )
-
-    denominator_rel_unc = np.divide(
-        denominator_unc,
-        denominator,
-        out=np.zeros(
-            denominator.shape,
-            dtype=float,
-        ),
-        where=(denominator != 0),
-    )
-
-    # Calculate rel uncertainty
-    step_rel_unc = np.sqrt(counter_rel_unc ** 2 + denominator_rel_unc ** 2)
-
-    # Add the first value again (same reason as for the step calculation)
-    step_rel_unc = np.append(np.array([step_rel_unc[0]]), step_rel_unc)
-
-    # Calculate final uncertainty
-    step_unc = step * step_rel_unc
-
-    return step, step_unc
 
 
 def plotEfficiencyVariable(
@@ -2100,9 +2029,9 @@ def plot_score(
         ]
 
         # Calculate bins
-        bins, weights, unc, band = calc_bins(
-            input_array=flav_tracks,
-            Binning=Binning,
+        bins, weights, unc, band = hist_w_unc(
+            a=flav_tracks,
+            bins=Binning,
         )
 
         plt.hist(
@@ -2328,9 +2257,9 @@ def plot_score_comparison(
                 f"disc_{tagger}"
             ]
 
-            bins, weights, unc, band = calc_bins(
-                input_array=flav_tracks,
-                Binning=Binning,
+            bins, weights, unc, band = hist_w_unc(
+                a=flav_tracks,
+                bins=Binning,
             )
 
             hist_counts, _, _ = axis_dict[which_a]["top"].hist(
@@ -2373,10 +2302,10 @@ def plot_score_comparison(
             for flavour in class_labels:
 
                 # Calculate the step and step_unc for ratio
-                step, step_unc = calc_ratio(
-                    counter=bincounts["{}{}".format(flavour, i)],
+                step, step_unc = hist_ratio(
+                    nominator=bincounts["{}{}".format(flavour, i)],
                     denominator=bincounts["{}{}".format(flavour, 0)],
-                    counter_unc=bincounts_unc["{}{}".format(flavour, i)],
+                    nominator_unc=bincounts_unc["{}{}".format(flavour, i)],
                     denominator_unc=bincounts_unc["{}{}".format(flavour, 0)],
                 )
 
@@ -2681,9 +2610,9 @@ def plot_prob(
             f'{tagger_name}_{flav_cat[iter_flavour]["prob_var_name"]}'
         ]
 
-        bins, weights, unc, band = calc_bins(
-            input_array=flav_tracks,
-            Binning=Binning,
+        bins, weights, unc, band = hist_w_unc(
+            a=flav_tracks,
+            bins=Binning,
         )
 
         plt.hist(
@@ -2875,9 +2804,9 @@ def plot_prob_comparison(
             ]
 
             # Calculate bins
-            bins, weights, unc, band = calc_bins(
-                input_array=flav_tracks,
-                Binning=Binning,
+            bins, weights, unc, band = hist_w_unc(
+                a=flav_tracks,
+                bins=Binning,
             )
 
             hist_counts, _, _ = axis_dict[which_a]["top"].hist(
@@ -2920,10 +2849,10 @@ def plot_prob_comparison(
             for iter_flav in class_labels:
 
                 # Calculate the step and step_unc for ratio
-                step, step_unc = calc_ratio(
-                    counter=bincounts["{}{}".format(iter_flav, i)],
+                step, step_unc = hist_ratio(
+                    nominator=bincounts["{}{}".format(iter_flav, i)],
                     denominator=bincounts["{}{}".format(iter_flav, 0)],
-                    counter_unc=bincounts_unc["{}{}".format(iter_flav, i)],
+                    nominator_unc=bincounts_unc["{}{}".format(iter_flav, i)],
                     denominator_unc=bincounts_unc["{}{}".format(iter_flav, 0)],
                 )
 
