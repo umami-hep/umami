@@ -14,14 +14,6 @@ If you want to only run unit tests, this can be done via
 pytest ./umami/tests/unit/ -v
 ```
 
-???+ warning "local execution of unit tests"
-    the unit tests are currently failing when executing them all together, also documented in [issue #94](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/issues/94)
-    as a workaround please execute the different unit test sub-directories separately
-    e.g.
-    ```
-    pytest ./umami/tests/unit/evaluation_tools -v
-    ```
-
 and the integration test similarly via
 
 ```bash

@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from subprocess import run
 
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.testing.compare import compare_images
 
@@ -24,6 +25,9 @@ class GetRejection_TestCase(unittest.TestCase):
         """
         Create a default dataset for testing.
         """
+        # reset matplotlib parameters
+        plt.rcdefaults()
+        plt.close("all")
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_plot_dir = f"{self.tmp_dir.name}/"
@@ -251,6 +255,9 @@ class GetRejection_TestCase(unittest.TestCase):
 
 class CompTaggerRejectionDict_TestCase(unittest.TestCase):
     def setUp(self):
+        # reset matplotlib parameters
+        plt.rcdefaults()
+        plt.close("all")
         self.test_dir = tempfile.TemporaryDirectory()
         self.validation_file = f"{self.test_dir.name}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
         self.add_validation_file = f"{self.test_dir.name}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"

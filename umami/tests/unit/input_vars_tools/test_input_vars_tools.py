@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from subprocess import run
 
+import matplotlib.pyplot as plt
 import yaml
 from matplotlib.testing.compare import compare_images
 
@@ -21,6 +22,9 @@ class JetPlotting_TestCase(unittest.TestCase):
         """
         Create a default dataset for testing.
         """
+        # reset matplotlib parameters
+        plt.rcdefaults()
+        plt.close("all")
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_plot_dir = f"{self.tmp_dir.name}/"
