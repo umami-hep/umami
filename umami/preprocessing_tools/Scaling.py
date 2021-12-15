@@ -52,7 +52,7 @@ def apply_scaling_trks(
     var_arr_list = []
 
     # Check masking
-    trk_mask = ~np.isnan(trks["ptfrac"])
+    trk_mask = ~np.isnan(trks[trks.dtype.names[0]])
 
     # Get the track variables
     tracks_noNormVars = variable_config["track_train_variables"]["noNormVars"]
