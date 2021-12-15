@@ -207,7 +207,7 @@ def __run():
         diff = round(
             len(df_select) / len(df[df["ntrks"] < args.ntracks_max]) * 100, 2
         )
-        print(f"Differences off {'{:.1e}'.format(sampleDiff)} {diff}%")
+        print(f"Differences off {sampleDiff:.1e} {diff}%")
         if diff == 0:
             break
 
