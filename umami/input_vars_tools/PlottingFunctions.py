@@ -15,9 +15,9 @@ import numpy as np
 import yaml
 from matplotlib import gridspec
 
-import umami.evaluation_tools as uet
 import umami.train_tools as utt
 from umami.configuration import global_config, logger
+from umami.helper_tools import hist_ratio, hist_w_unc
 from umami.tools import applyATLASstyle, makeATLAStag, yaml_loader
 
 
@@ -208,9 +208,9 @@ def plot_nTracks_per_Jet(
             nTracks_flavour = nTracks[flavour_label_dict[label] == flav_label]
 
             # Calculate bins
-            bins, weights, unc, band = uet.calc_bins(
-                input_array=nTracks_flavour,
-                Binning=Binning,
+            bins, weights, unc, band = hist_w_unc(
+                a=nTracks_flavour,
+                bins=Binning,
             )
 
             hist_counts, _, _ = axis_dict["left"]["top"].hist(
@@ -256,10 +256,10 @@ def plot_nTracks_per_Jet(
         # Start ratio plot
         if model_number != 0:
             for flavour in class_labels:
-                step, step_unc = uet.calc_ratio(
-                    counter=bincounts["{}{}".format(flavour, model_number)],
+                step, step_unc = hist_ratio(
+                    nominator=bincounts["{}{}".format(flavour, model_number)],
                     denominator=bincounts["{}{}".format(flavour, 0)],
-                    counter_unc=bincounts_unc[
+                    nominator_unc=bincounts_unc[
                         "{}{}".format(flavour, model_number)
                     ],
                     denominator_unc=bincounts_unc["{}{}".format(flavour, 0)],
@@ -546,10 +546,15 @@ def plot_input_vars_trks_comparison(
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
     # Loading track variables
-    noNormVars = variable_config["track_train_variables"]["noNormVars"]
-    logNormVars = variable_config["track_train_variables"]["logNormVars"]
-    jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
-    trksVars = noNormVars + logNormVars + jointNormVars
+    try:
+        trksVars = variable_config["tracks"]
+    except KeyError:
+        noNormVars = variable_config["track_train_variables"]["noNormVars"]
+        logNormVars = variable_config["track_train_variables"]["logNormVars"]
+        jointNormVars = variable_config["track_train_variables"][
+            "jointNormVars"
+        ]
+        trksVars = noNormVars + logNormVars + jointNormVars
 
     for nLeading in n_Leading:
         if nLeading == "None":
@@ -682,9 +687,9 @@ def plot_input_vars_trks_comparison(
                             ][var]
 
                         # Calculate bins
-                        bins, weights, unc, band = uet.calc_bins(
-                            input_array=Tracks,
-                            Binning=Binning,
+                        bins, weights, unc, band = hist_w_unc(
+                            a=Tracks,
+                            bins=Binning,
                         )
 
                         hist_counts, _, _ = axis_dict["left"]["top"].hist(
@@ -736,14 +741,14 @@ def plot_input_vars_trks_comparison(
                     # Start ratio plot
                     if model_number != 0:
                         for flavour in class_labels:
-                            step, step_unc = uet.calc_ratio(
-                                counter=bincounts[
+                            step, step_unc = hist_ratio(
+                                nominator=bincounts[
                                     "{}{}".format(flavour, model_number)
                                 ],
                                 denominator=bincounts[
                                     "{}{}".format(flavour, 0)
                                 ],
-                                counter_unc=bincounts_unc[
+                                nominator_unc=bincounts_unc[
                                     "{}{}".format(flavour, model_number)
                                 ],
                                 denominator_unc=bincounts_unc[
@@ -1188,9 +1193,9 @@ def plot_input_vars_trks(
                             ][var]
 
                         # Calculate bins
-                        bins, weights, unc, band = uet.calc_bins(
-                            input_array=Tracks,
-                            Binning=Binning,
+                        bins, weights, unc, band = hist_w_unc(
+                            a=Tracks,
+                            bins=Binning,
                         )
 
                         plt.hist(
@@ -1501,9 +1506,9 @@ def plot_input_vars_jets(
                     ]
 
                     # Calculate bins
-                    bins, weights, unc, band = uet.calc_bins(
-                        input_array=jets_flavour,
-                        Binning=Binning,
+                    bins, weights, unc, band = hist_w_unc(
+                        a=jets_flavour,
+                        bins=Binning,
                     )
 
                     plt.hist(
@@ -1821,9 +1826,9 @@ def plot_input_vars_jets_comparison(
                     ]
 
                     # Calculate bins
-                    bins, weights, unc, band = uet.calc_bins(
-                        input_array=jets_flavour,
-                        Binning=Binning,
+                    bins, weights, unc, band = hist_w_unc(
+                        a=jets_flavour,
+                        bins=Binning,
                     )
 
                     hist_counts, _, _ = axis_dict["left"]["top"].hist(
@@ -1873,12 +1878,12 @@ def plot_input_vars_jets_comparison(
                 # Start ratio plot
                 if model_number != 0:
                     for flavour in class_labels:
-                        step, step_unc = uet.calc_ratio(
-                            counter=bincounts[
+                        step, step_unc = hist_ratio(
+                            nominator=bincounts[
                                 "{}{}".format(flavour, model_number)
                             ],
                             denominator=bincounts["{}{}".format(flavour, 0)],
-                            counter_unc=bincounts_unc[
+                            nominator_unc=bincounts_unc[
                                 "{}{}".format(flavour, model_number)
                             ],
                             denominator_unc=bincounts_unc[

@@ -13,17 +13,17 @@ setup(
     version="0.0.0",  # Also change in module
     packages=[
         "umami",
-        "umami.tests",
         "umami.configuration",
         "umami.train_tools",
         "umami.tf_tools",
         "umami.tools",
+        "umami.helper_tools",
         "umami.preprocessing_tools",
         "umami.tools.PyATLASstyle",
         "umami.evaluation_tools",
         "umami.input_vars_tools",
         "umami.institutes",
-        "umami.models"
+        "umami.models",
     ],
     # install_requires=[
     #     "h5py",
