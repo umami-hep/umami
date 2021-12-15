@@ -83,6 +83,9 @@ Validation_metrics_settings:
     # Define which taggers should also be plotted
     taggers_from_file: ["rnnip", "DL1r"]
 
+    # Label for the freshly trained tagger
+    tagger_label: "DIPS"
+
     # Enable/Disable atlas tag
     UseAtlasTag: True
 

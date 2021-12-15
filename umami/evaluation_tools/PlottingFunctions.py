@@ -82,6 +82,7 @@ def plotEfficiencyVariable(
     colors=None,
     ymin: float = None,
     ymax: float = None,
+    dpi: int = 400,
 ):
     """
     For a given variable (string) in the panda dataframe df, plots
@@ -305,7 +306,7 @@ def plotEfficiencyVariable(
         )
 
     fig.tight_layout()
-    plt.savefig(plot_name, transparent=True, dpi=200)
+    plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
 
 
@@ -336,6 +337,7 @@ def plotEfficiencyVariableComparison(
     colors=None,
     ymin: float = None,
     ymax: float = None,
+    dpi: int = 400,
 ):
     """
     For a given variable (string) in the panda dataframe df, plots
@@ -584,7 +586,7 @@ def plotEfficiencyVariableComparison(
 
         fig.tight_layout()
         plt.savefig(
-            plot_name + f"_{label}.{extension}", transparent=True, dpi=200
+            plot_name + f"_{label}.{extension}", transparent=True, dpi=dpi
         )
         plt.close()
 
@@ -618,12 +620,16 @@ def plotPtDependence(
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.1,
     frameon: bool = False,
+    labelFontSize: int = 10,
+    legFontSize: int = 10,
+    Ratio_Cut: list = None,
     ncol: int = 1,
     ymin: float = None,
     ymax: float = None,
     alpha: float = 0.8,
     trans: bool = True,
     linewidth: float = 1.6,
+    dpi: int = 400,
 ):
     """
     For a given list of models, plot the b-eff, l and c-rej as a function
@@ -663,12 +669,16 @@ def plotPtDependence(
     - yAxisAtlasTag: Relative y axis position of the ATLAS Tag in
     - yAxisIncrease: Increasing the y axis to fit the ATLAS Tag in
     - frameon: Set the frame around legend off/on
+    - labelFontSize: Fontsize of the labels of the axes.
+    - legFontSize: Fontsize of the legend.
+    - Ratio_Cut: List of the lower and upper y-limit for the ratio plot.
     - ncol: Number of columns in the legend
     - ymin: y axis minimum
     - ymax: y axis maximum
     - alpha: Value for visibility of the plot lines
     - trans: Sets the transparity of the background. If true, the background erased.
              If False, the background is white
+    - dpi: Sets a DPI value for the plot that is produced (mainly for png).
     """
 
     # Apply ATLAS style
@@ -938,8 +948,13 @@ def plotPtDependence(
 
     # Set labels
     axis_dict["left"]["ratio"].set_xlabel(
-        xlabel, horizontalalignment="right", x=1.0
+        xlabel,
+        horizontalalignment="right",
+        x=1.0,
+        fontsize=labelFontSize,
     )
+
+    axis_dict["left"]["ratio"].tick_params(axis="x", labelsize=labelFontSize)
 
     # Set metric
     if flavour == main_class:
@@ -960,10 +975,19 @@ def plotPtDependence(
         f'{Fixed_WP_Label} {flav_cat[flavour]["legend_label"]} {metric}',
         horizontalalignment="right",
         y=1.0,
+        fontsize=labelFontSize,
     )
 
+    axis_dict["left"]["top"].tick_params(axis="y", labelsize=labelFontSize)
+
     # Set ratio y label
-    axis_dict["left"]["ratio"].set_ylabel("Ratio")
+    axis_dict["left"]["ratio"].set_ylabel(
+        "Ratio",
+        y=1.0,
+        fontsize=labelFontSize,
+    )
+
+    axis_dict["left"]["ratio"].tick_params(axis="y", labelsize=labelFontSize)
 
     # Check for Logscale
     if Log is True:
@@ -992,6 +1016,23 @@ def plotPtDependence(
     else:
         axis_dict["left"]["top"].set_ylim(
             bottom=ymin, top=yAxisIncrease * ymax
+        )
+
+    # Apply y-limits for the ratio plot
+    if Ratio_Cut is not None:
+        if type(Ratio_Cut) == list and len(Ratio_Cut) == 2:
+            axis_dict["left"]["ratio"].set_ylim(
+                bottom=Ratio_Cut[0], top=Ratio_Cut[1]
+            )
+
+        else:
+            raise ValueError(f"{Ratio_Cut} can't be used as ratio cut!")
+
+    elif ApplyAtlasStyle is True:
+        ymin_ratio, ymax_ratio = axis_dict["left"]["ratio"].get_ylim()
+        axis_dict["left"]["ratio"].set_ylim(
+            bottom=0.8 if ymin_ratio >= 1 else ymin_ratio * 0.8,
+            top=ymax_ratio * 1.1,
         )
 
     # Get xlim for the horizontal and vertical lines
@@ -1051,13 +1092,14 @@ def plotPtDependence(
             first_tag=AtlasTag,
             second_tag=SecondTag,
             ymax=yAxisAtlasTag,
+            fontsize=legFontSize,
         )
 
     # Set tight layout
     plt.tight_layout()
 
     # Save figure
-    plt.savefig(plot_name, transparent=trans)
+    plt.savefig(plot_name, transparent=trans, dpi=dpi)
     plt.close()
 
 
@@ -1100,6 +1142,7 @@ def plotROCRatio(
     ycolor: str = "black",
     ycolor_right: str = "black",
     set_logy: bool = True,
+    dpi: int = 400,
 ):
     """
     Plot the ROC curves with binomial errors with the ratio plot in a subpanel
@@ -1415,7 +1458,7 @@ def plotROCRatio(
     plt.tight_layout()
 
     # Save plot
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
     plt.clf()
 
@@ -1456,6 +1499,7 @@ def plotROCRatioComparison(
     ycolor: str = "black",
     ycolor_right: str = "black",
     set_logy: bool = True,
+    dpi: int = 400,
 ):
     """
     Plot the ROC curves with binomial errors with the two ratio plot in a subpanel
@@ -1584,7 +1628,7 @@ def plotROCRatioComparison(
                 transform=axis_dict["left"]["top"].get_xaxis_text1_transform(
                     0
                 )[0],
-                fontsize=10,
+                fontsize=legFontSize,
             )
 
             # Draw the WP lines in the ratio plots
@@ -1708,7 +1752,9 @@ def plotROCRatioComparison(
         color=ycolor,
     )
     axis_dict["left"]["top"].set_title(title)
-    axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
+    axis_dict["left"]["top"].tick_params(
+        axis="y", labelcolor=ycolor, labelsize=labelFontSize
+    )
     axis_dict["left"]["top"].grid()
 
     # Check for log scale
@@ -1726,12 +1772,20 @@ def plotROCRatioComparison(
             fontsize=labelFontSize,
         )
 
+        axis_dict["left"][flav].tick_params(
+            axis="y", labelcolor=ycolor, labelsize=labelFontSize
+        )
+
     # Set xlabel for lowest ratio plot
     axis_dict["left"][flav_list[1]].set_xlabel(
         f'{flav_cat[main_class]["legend_label"]} efficiency',
         fontsize=labelFontSize,
         horizontalalignment="right",
         x=1.0,
+    )
+
+    axis_dict["left"][flav_list[1]].tick_params(
+        axis="x", labelsize=labelFontSize
     )
 
     # Hide the xlabels of the upper ratio and the main plot
@@ -1824,13 +1878,14 @@ def plotROCRatioComparison(
             first_tag=AtlasTag,
             second_tag=SecondTag,
             ymax=yAxisAtlasTag,
+            fontsize=legFontSize,
         )
 
     # Set tight layout
     plt.tight_layout()
 
     # Set filename and save figure
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
     plt.clf()
 
@@ -1839,17 +1894,18 @@ def plotSaliency(
     maps_dict,
     plot_name,
     title,
-    target_beff=0.77,
-    jet_flavour="bjets",
-    PassBool=True,
-    nFixedTrks=8,
-    fontsize=14,
-    xlabel="Tracks sorted by $s_{d0}$",
-    UseAtlasTag=True,
-    AtlasTag="Internal Simulation",
-    SecondTag=r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets",
-    yAxisAtlasTag=0.925,
-    FlipAxis=False,
+    target_beff: float = 0.77,
+    jet_flavour: str = "bjets",
+    PassBool: bool = True,
+    nFixedTrks: int = 8,
+    fontsize: int = 14,
+    xlabel: str = "Tracks sorted by $s_{d0}$",
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets",
+    yAxisAtlasTag: float = 0.925,
+    FlipAxis: bool = False,
+    dpi: int = 400,
 ):
     # Transform to percent
     target_beff = 100 * target_beff
@@ -1979,7 +2035,7 @@ def plotSaliency(
         t.set_fontsize(fontsize)
 
     # Save the figure
-    plt.savefig(plot_name, transparent=True, bbox_inches="tight")
+    plt.savefig(plot_name, transparent=True, bbox_inches="tight", dpi=dpi)
 
 
 def plot_score(
@@ -1998,6 +2054,7 @@ def plot_score(
     yAxisAtlasTag: float = 0.9,
     xlabel: str = None,
     WorkingPoints_Legend: bool = False,
+    dpi: int = 400,
 ):
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
@@ -2148,7 +2205,7 @@ def plot_score(
         )
 
     plt.tight_layout()
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
 
 
@@ -2184,6 +2241,7 @@ def plot_score_comparison(
     ycolor: str = "black",
     ycolor_right: str = "black",
     title: str = None,
+    dpi: int = 400,
 ):
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
@@ -2461,7 +2519,7 @@ def plot_score_comparison(
         )
 
     plt.tight_layout()
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
 
 
@@ -2471,9 +2529,10 @@ def plotFractionScan(
     plot_name,
     x_val,
     y_val,
-    UseAtlasTag=True,
-    AtlasTag="Internal",
-    SecondTag="$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$",
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal",
+    SecondTag: str = "$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$",
+    dpi: int = 400,
 ):
     """
     DEPRECATED. Plots a 2D heatmap of rej for a given eff (frac flavour X vs frac flavour Y).
@@ -2553,7 +2612,7 @@ def plotFractionScan(
 
     plt.tight_layout()
     if plot_name is not None:
-        plt.savefig(plot_name, transparent=True)
+        plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
 
 
@@ -2576,6 +2635,7 @@ def plot_prob(
     x_label: str = None,
     yAxisIncrease: float = 1.3,
     yAxisAtlasTag: float = 0.9,
+    dpi: int = 400,
 ):
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
@@ -2693,7 +2753,7 @@ def plot_prob(
         )
 
     plt.tight_layout()
-    plt.savefig(plot_name, transparent=True)
+    plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
 
 
@@ -2730,6 +2790,7 @@ def plot_prob_comparison(
     ycolor_right: str = "black",
     title: str = None,
     set_logy: bool = False,
+    dpi: int = 400,
 ):
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
@@ -2964,7 +3025,7 @@ def plot_prob_comparison(
 
     plt.tight_layout()
     if plot_name is not None:
-        plt.savefig(plot_name, transparent=True)
+        plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
     # plt.show()
 
@@ -2978,6 +3039,7 @@ def plot_confusion(
     show_absolute: bool = False,
     show_normed: bool = True,
     transparent_bkg: bool = True,
+    dpi: int = 400,
 ):
     """
     Plotting the confusion matrix for a given tagger.
@@ -2991,6 +3053,7 @@ def plot_confusion(
     - show_absolute: Show the absolute.
     - show_normed: Show the output normed.
     - transparent_bkg: Decide, if the background is transparent or not.
+    - dpi: DPI value for the output plot.
 
     Output:
     - Confusion Matrix
@@ -3027,5 +3090,5 @@ def plot_confusion(
     plt.tight_layout()
 
     # Save the plot to path
-    plt.savefig(plot_name, transparent=transparent_bkg)
+    plt.savefig(plot_name, transparent=transparent_bkg, dpi=dpi)
     plt.close()

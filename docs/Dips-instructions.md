@@ -62,7 +62,7 @@ zpext_test_files:
 # Path to Variable dict used in preprocessing
 var_dict: <path>/<to>/<variables>/Dips_Variables.yaml
 
-exclude: []
+exclude: null
 
 # Values for the neural network
 NN_structure:
@@ -104,6 +104,9 @@ NN_structure:
 Validation_metrics_settings:
     # Define which taggers should also be plotted
     taggers_from_file: ["rnnip", "DL1r"]
+
+    # Label for the freshly trained tagger
+    tagger_label: "DIPS"
 
     # Define which freshly trained taggers should be plotted
     trained_taggers:
@@ -216,6 +219,7 @@ The different options are briefly explained here:
 | `LRR_min_lr` | Float | Optional | Lower bound on the learning rate. Default: 0.000001 |
 | `Validation_metrics_settings` | None | Necessary | Plotting settings for the validation plots which are produced by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
 | `taggers_from_file` | List | Optional | List of taggers that are available in the .h5 samples. The here given taggers are plotted as reference lines in the rejection per epoch plots. |
+| `tagger_label` | String | Optional | Name for the legend of the freshly trained tagger for the rejection per epoch plots. |
 | `trained_taggers` | Dict | Optional | A dict with local trained taggers which shall be plotted in the rejection per epoch plots. You need to provide a dict with a `path` and a `label`. The path is the path to the validation metrics .json file, where the rejections per epoch are saved. The `label` is the label which will be shown in the legend in the rejection per epoch plots. The `dipsReference` in the example here is just an internal naming. It will not be shown anywhere. |
 | `UseAtlasTag` | Bool | Optional | Decide, if the ATLAS tag is printed at the top left of the plot. |
 | `AtlasTag` | String | Optional | Main ATLAS tag which is right to "ATLAS" |

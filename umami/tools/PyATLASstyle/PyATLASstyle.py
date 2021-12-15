@@ -53,7 +53,15 @@ def applyATLASstyle(mtp):
     # mtp.rcParams["axes.axisbelow"] = False
 
 
-def makeATLAStag(ax, fig, first_tag="", second_tag="", xmin=0.04, ymax=0.85):
+def makeATLAStag(
+    ax,
+    fig,
+    first_tag: str = "",
+    second_tag: str = "",
+    xmin: float = 0.04,
+    ymax: float = 0.85,
+    fontsize: int = 10,
+):
     line_spacing = 0.6
     box0 = ax.text(
         xmin,
@@ -63,6 +71,7 @@ def makeATLAStag(ax, fig, first_tag="", second_tag="", xmin=0.04, ymax=0.85):
         fontstyle="italic",
         verticalalignment="bottom",
         transform=ax.transAxes,
+        fontsize=fontsize,
     )
     box0_ext_tr = ax.transAxes.inverted().transform(
         box0.get_window_extent(renderer=fig.canvas.get_renderer())
@@ -73,6 +82,7 @@ def makeATLAStag(ax, fig, first_tag="", second_tag="", xmin=0.04, ymax=0.85):
         " ",
         verticalalignment="bottom",
         transform=ax.transAxes,
+        fontsize=fontsize,
     )
     box1_ext_tr = ax.transAxes.inverted().transform(
         box1.get_window_extent(renderer=fig.canvas.get_renderer())
@@ -83,6 +93,7 @@ def makeATLAStag(ax, fig, first_tag="", second_tag="", xmin=0.04, ymax=0.85):
         first_tag,
         verticalalignment="bottom",
         transform=ax.transAxes,
+        fontsize=fontsize,
     )
     ax.text(
         xmin,
@@ -92,4 +103,5 @@ def makeATLAStag(ax, fig, first_tag="", second_tag="", xmin=0.04, ymax=0.85):
         second_tag,
         verticalalignment="bottom",
         transform=ax.transAxes,
+        fontsize=fontsize,
     )

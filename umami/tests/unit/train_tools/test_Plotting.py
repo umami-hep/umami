@@ -90,7 +90,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_PlotRejPerEpochComparison(self):
         PlotRejPerEpochComparison(
             df_results=self.df_results,
-            tagger="dips",
+            tagger_label="dips",
             frac_dict=self.frac_dict,
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
             comp_tagger_frac_dict=self.comp_tagger_frac_dict,
@@ -115,7 +115,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_PlotRejPerEpoch(self):
         PlotRejPerEpoch(
             df_results=self.df_results,
-            tagger="dips",
+            tagger_label="dips",
             frac_dict=self.frac_dict,
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
             comp_tagger_frac_dict=self.comp_tagger_frac_dict,

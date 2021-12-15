@@ -261,7 +261,7 @@ def PlotDiscCutPerEpochUmami(
 
 def PlotRejPerEpochComparison(
     df_results: dict,
-    tagger: str,
+    tagger_label: str,
     frac_dict: dict,
     comp_tagger_rej_dict: dict,
     comp_tagger_frac_dict: dict,
@@ -291,7 +291,7 @@ def PlotRejPerEpochComparison(
 
     Input:
     - df_results: Dict with the rejections of the trained tagger.
-    - tagger: Name of trained tagger.
+    - tagger_label: Name of trained tagger.
     - frac_dict: Dict with the fractions of the trained tagger.
     - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
     - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
@@ -358,7 +358,7 @@ def PlotRejPerEpochComparison(
             df_results[f"{iter_class}_{rej_string}"],
             linestyle=linestyle_list[counter],
             color=f"C{counter_models}",
-            label=tagger,
+            label=tagger_label,
         )
 
         # Set up the counter
@@ -488,7 +488,7 @@ def PlotRejPerEpochComparison(
 
 def PlotRejPerEpoch(
     df_results: dict,
-    tagger: str,
+    tagger_label: str,
     frac_dict: dict,
     comp_tagger_rej_dict: dict,
     comp_tagger_frac_dict: dict,
@@ -518,7 +518,7 @@ def PlotRejPerEpoch(
 
     Input:
     - df_results: Dict with the rejections of the trained tagger.
-    - tagger: Name of trained tagger.
+    - tagger_label: Name of trained tagger.
     - frac_dict: Dict with the fractions of the trained tagger.
     - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
     - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
@@ -572,7 +572,7 @@ def PlotRejPerEpoch(
             df_results[f"{iter_class}_{rej_string}"],
             linestyle="-",
             color=f"C{counter_models}",
-            label=tagger,
+            label=tagger_label,
         )
 
         # Set up the counter
@@ -1126,7 +1126,7 @@ def RunPerformanceCheck(
                 # Plot comparsion for the comparison taggers
                 PlotRejPerEpochComparison(
                     df_results=tagger_rej_dict,
-                    tagger=tagger,
+                    tagger_label=subtagger,
                     frac_dict=frac_dict,
                     comp_tagger_rej_dict=comp_tagger_rej_dict,
                     comp_tagger_frac_dict=recommended_frac_dict,
@@ -1142,7 +1142,7 @@ def RunPerformanceCheck(
                 if tagger_comp_vars is not None:
                     PlotRejPerEpochComparison(
                         df_results=tagger_rej_dict,
-                        tagger=tagger,
+                        tagger_label=subtagger,
                         frac_dict=frac_dict,
                         comp_tagger_rej_dict=comp_tagger_rej_dict_add,
                         comp_tagger_frac_dict=recommended_frac_dict,
@@ -1157,7 +1157,7 @@ def RunPerformanceCheck(
 
             PlotRejPerEpoch(
                 df_results=tagger_rej_dict,
-                tagger=tagger,
+                tagger_label=subtagger,
                 frac_dict=frac_dict,
                 comp_tagger_rej_dict=comp_tagger_rej_dict,
                 comp_tagger_frac_dict=recommended_frac_dict,
@@ -1173,7 +1173,7 @@ def RunPerformanceCheck(
             if tagger_comp_vars is not None:
                 PlotRejPerEpoch(
                     df_results=tagger_rej_dict,
-                    tagger=tagger,
+                    tagger_label=subtagger,
                     frac_dict=frac_dict,
                     comp_tagger_rej_dict=comp_tagger_rej_dict_add,
                     comp_tagger_frac_dict=recommended_frac_dict,
@@ -1213,11 +1213,17 @@ def RunPerformanceCheck(
             )
 
     else:
+        # If no freshly trained tagger label is given, give tagger
+        if not (
+            "tagger_label" in Val_settings
+            and Val_settings["tagger_label"] is not None
+        ):
+            Val_settings["tagger_label"] = tagger
+
         if n_rej == 2:
             # Plot comparsion for the comparison taggers
             PlotRejPerEpochComparison(
                 df_results=tagger_rej_dict,
-                tagger=tagger,
                 frac_dict=frac_dict,
                 comp_tagger_rej_dict=comp_tagger_rej_dict,
                 comp_tagger_frac_dict=recommended_frac_dict,
@@ -1233,7 +1239,6 @@ def RunPerformanceCheck(
             if tagger_comp_vars is not None:
                 PlotRejPerEpochComparison(
                     df_results=tagger_rej_dict,
-                    tagger=tagger,
                     frac_dict=frac_dict,
                     comp_tagger_rej_dict=comp_tagger_rej_dict_add,
                     comp_tagger_frac_dict=recommended_frac_dict,
@@ -1249,7 +1254,6 @@ def RunPerformanceCheck(
         # Plot rejections in one plot per rejection
         PlotRejPerEpoch(
             df_results=tagger_rej_dict,
-            tagger=tagger,
             frac_dict=frac_dict,
             comp_tagger_rej_dict=comp_tagger_rej_dict,
             comp_tagger_frac_dict=recommended_frac_dict,
@@ -1265,7 +1269,6 @@ def RunPerformanceCheck(
         if tagger_comp_vars is not None:
             PlotRejPerEpoch(
                 df_results=tagger_rej_dict,
-                tagger=tagger,
                 frac_dict=frac_dict,
                 comp_tagger_rej_dict=comp_tagger_rej_dict_add,
                 comp_tagger_frac_dict=recommended_frac_dict,
