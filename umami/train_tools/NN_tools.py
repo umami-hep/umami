@@ -28,35 +28,103 @@ from umami.tools import replaceLineInFile, yaml_loader
 
 
 def atoi(text):
+    """
+    Return string as int, if the given string is a int.
+
+    Parameters
+    ----------
+    text : str
+        String with int inside.
+
+    Returns
+    -------
+    Int_string : int/str
+        Returning the string if it is not a digit, otherwise
+        return string as int.
+    """
+
     return int(text) if text.isdigit() else text
 
 
 def natural_keys(text):
+    """
+    Sorting strings by natural keys.
+
+    Parameters
+    ----------
+    text : str
+        String with int inside.
+
+    Returns
+    -------
+    sorted_list : list
+        List with the sorted strings inside.
+    """
     return [atoi(c) for c in re.split(r"(\d+)", text)]
 
 
 def get_epoch_from_string(string):
+    """
+    Get the epoch from the model file string.
+
+    Parameters
+    ----------
+    string : str
+        Path of the model file.
+
+    Returns
+    -------
+    epoch : int
+        Epoch of the model file.
+    """
+
     m = re.search("model_epoch(.+?).h5", string)
     return m.group(1)
 
 
-def get_validation_dict_name(WP, n_jets, dir_name):
-    return os.path.join(
+def get_validation_dict_name(WP: float, n_jets: int, dir_name: str) -> str:
+    """
+    Get the validation dict name based on WP, number of jets and dir_name.
+
+    Parameters
+    ----------
+    WP : float
+        Working point that was used to calculate validation dict.
+    n_jets : int
+        Number of jets that was used to calculate validation dict.
+    dir_name : str
+        Path of the directory where the validation dict is saved.
+
+    Returns
+    -------
+    validation_dict_path : str
+        Path of the validation dict.
+    """
+
+    # Get the path of the validation dict
+    validation_dict_path = os.path.join(
         dir_name,
         f"validation_WP{str(WP).replace('.','p')}_{int(n_jets)}jets_Dict.json",
     )
 
+    return validation_dict_path
 
-def GetModelPath(model_name, epoch: int) -> str:
+
+def GetModelPath(model_name: str, epoch: int) -> str:
     """
     Get the path where the model will be saved/is saved.
 
-    Input:
-    - model_name: Name of the model that is to be saved/loaded.
-    - epoch: The epoch which is to be saved/loaded
+    Parameters
+    ----------
+    model_name : str
+        Name of the model that is to be saved/loaded.
+    epoch : int
+        The epoch which is to be saved/loaded
 
-    Output:
-    - model_path: Path to the model file of the specified epoch.
+    Returns
+    -------
+    model_path : str
+        Path to the model file of the specified epoch.
     """
 
     # Get path
@@ -72,16 +140,21 @@ def GetModelPath(model_name, epoch: int) -> str:
 def get_variable_cuts(
     Eval_parameters: dict,
     file: str,
-):
+) -> dict:
     """
     Get the variable cuts from the Eval parameters if there, else return None
 
-    Input:
-    - Eval_parameters: Loaded Eval_parameters from the train_config as dict
-    - file: Filetype or naming of the cuts you want to load (e.g validation_file)
+    Parameters
+    ----------
+    Eval_parameters : dict
+        Loaded Eval_parameters from the train_config as dict
+    file : str
+        Filetype or naming of the cuts you want to load (e.g validation_file)
 
-    Output:
-    - cut_vars_dict: Dict with the variables and their cuts.
+    Returns
+    -------
+    cut_vars_dict : dict
+        Dict with the variables and their cuts.
     """
 
     if (
@@ -95,10 +168,19 @@ def get_variable_cuts(
         return None
 
 
-def prepare_history_dict(hist_dict: dict):
+def prepare_history_dict(hist_dict: dict) -> list:
     """
-    Make the history dict from keras the same shape as the one from the
-    Callbacks
+    Make the history dict from keras the same shape as the one from the callbacks.
+
+    Parameters
+    ----------
+    hist_dict : dict
+        Dict with the history inside.
+
+    Returns
+    -------
+    history_dict_list : list
+        Reshaped history dict as list. Same shape as the one from the callbacks
     """
 
     # Init a new list
@@ -121,10 +203,20 @@ def prepare_history_dict(hist_dict: dict):
     return history_dict_list
 
 
-def get_class_label_ids(class_labels):
+def get_class_label_ids(class_labels: list) -> list:
     """
-    This function retrieves the flavour ids of the class_labels provided
+    Retrieves the flavour ids of the class_labels provided
     and returns them as a list.
+
+    Parameters
+    ----------
+    class_labels : list
+        List with the class labels.
+
+    Returns
+    -------
+    id_list : list
+        List of the class label ids.
     """
 
     # Get the global_config
@@ -148,10 +240,21 @@ def get_class_label_ids(class_labels):
     return id_list.tolist()
 
 
-def get_class_label_variables(class_labels):
+def get_class_label_variables(class_labels: list):
     """
-    This function returns a list of the label variables used for the
-    provided class_labels.
+    Returns a list of the label variables used for the provided class_labels.
+
+    Parameters
+    ----------
+    class_labels : list
+        List with the class labels.
+
+    Returns
+    -------
+    label_var_list : list
+        List with the truth label variables needed for the classes.
+    flatten_class_labels : list
+        Same shape as label_var_list. List with class labels.
     """
 
     # Get the global_config
@@ -162,16 +265,25 @@ def get_class_label_variables(class_labels):
     flatten_class_labels = []
 
     for class_label in class_labels:
+
+        # Check if multiple label values are defined for that flavour
         if type(flavour_categories[class_label]["label_value"]) is list:
+
+            # If x ids are defined, loop over them and add the
+            # truth variable x times to the label_var_list
             for i in range(
                 len(flavour_categories[class_label]["label_value"])
             ):
+                # Append the truth variable to the label_var_list
                 label_var_list.append(
                     flavour_categories[class_label]["label_var"]
                 )
+
+                # Add the class_label to the flatten class list
                 flatten_class_labels.append(class_label)
 
         else:
+            # Add the label variable and class label to list
             label_var_list.append(flavour_categories[class_label]["label_var"])
             flatten_class_labels.append(class_label)
 
@@ -182,10 +294,23 @@ def get_class_label_variables(class_labels):
     return label_var_list, flatten_class_labels
 
 
-def get_class_prob_var_names(tagger_name, class_labels):
+def get_class_prob_var_names(tagger_name: str, class_labels: list):
     """
-    This function returns a list of the probability variable names used for the
+    Returns a list of the probability variable names used for the
     provided class_labels.
+
+    Parameters
+    ----------
+    tagger_name : str
+        Name of the tagger that is used e.g. dips20210729.
+    class_labels : list
+        List with the class labels.
+
+    Returns
+    -------
+    prob_var_list : list
+        List with the tagger_name and probabilites merged e.g.
+        ["dips20210729_pb", "dips20210729_pc", "dips20210729_pu"].
     """
 
     # Get the global_config
@@ -206,20 +331,66 @@ def get_class_prob_var_names(tagger_name, class_labels):
     return prob_var_list
 
 
-def get_parameters_from_validation_dict_name(dict_name):
+def get_parameters_from_validation_dict_name(dict_name: str) -> dict:
+    """
+    Get the parameters used to calculate the validation dict from the
+    validation dict name.
+
+    Parameters
+    ----------
+    dict_name : str
+        Name of the validation dict.
+
+    Returns
+    -------
+    parameters : dict
+        Dict with the parameters (WP, n_jets, dir_name) used to calculate
+        the validation dict.
+
+    Raises
+    ------
+    Exception
+        If the name of the validation dict could be rebuild from the
+        extracted parameters.
+    """
+
+    # Split the path and only get the dict name
     sp = dict_name.split("/")[-1].split("_")
+
+    # Init a new dict for the parameters
     parameters = {}
+
+    # Get the parameters from the name and add them to the dict
     parameters["WP"] = float(sp[1].replace("WP", "").replace("p", "."))
     parameters["n_jets"] = int(sp[2].replace("jets", ""))
     parameters["dir_name"] = str(Path(dict_name).parent)
+
+    # Check if the values are correct extracted. Try to build the name
+    # from the parameters and check if they are identical.
     if get_validation_dict_name(**parameters) != dict_name:
         raise Exception(
             f"Can't infer parameters correctly for {dict_name}. Parameters: {parameters}"
         )
+
+    # Return the parameters
     return parameters
 
 
-def setup_output_directory(dir_name):
+def setup_output_directory(dir_name: str) -> None:
+    """
+    Check the output directory path and init/clean it.
+
+    Parameters
+    ----------
+    dir_name : str
+        Path of the output directory.
+
+    Raises
+    ------
+    Exception
+        If the dir_name is an existing file.
+    """
+
     outdir = Path(dir_name)
     if outdir.is_dir():
         logger.info("Removing model*.h5 and *.json files.")
@@ -236,12 +407,32 @@ def setup_output_directory(dir_name):
 
 
 def create_metadata_folder(
-    train_config_path,
-    var_dict_path,
-    model_name,
-    preprocess_config_path,
-    overwrite_config=False,
-):
+    train_config_path: str,
+    var_dict_path: str,
+    model_name: str,
+    preprocess_config_path: str,
+    overwrite_config: bool = False,
+) -> None:
+    """
+    Create a metadata folder in the new model_name dir and
+    copy all configs there and change the paths inside the
+    configs to the new metadata directory path.
+
+    Parameters
+    ----------
+    train_config_path : str
+        Path to the train config that is used.
+    var_dict_path : str
+        Path to the variable dict that is used.
+    model_name : str
+        Model name that is used.
+    preprocess_config_path : str
+        Path to the preprocessing config that is used.
+    overwrite_config : bool
+        If configs already in metadata folder, overwrite
+        them or not.
+    """
+
     # Check if model path already existing
     # If not, make it
     os.makedirs(os.path.join(model_name, "metadata"), exist_ok=True)
@@ -349,19 +540,39 @@ def LoadJetsFromFile(
     """
     Load jets from file. Only jets from classes in class_labels are returned.
 
-    Input:
-    - filepath: Path to the .h5 file with the jets.
-    - class_labels: List of class labels which are used.
-    - nJets: Number of jets to load.
-    - variables: Variables which are loaded.
-    - cut_vars_dict: Variable cuts that are applied when loading the jets.
-    - print_logger: Decide if the number of jets loaded from the file is printed.
+    Parameters
+    ----------
+    filepath : str
+        Path to the .h5 file with the jets.
+    class_labels : list
+        List of class labels which are used.
+    nJets : int
+        Number of jets to load.
+    variables : list
+        Variables which are loaded.
+    cut_vars_dict : dict
+        Variable cuts that are applied when loading the jets.
+    print_logger : bool
+        Decide if the number of jets loaded from the file is printed.
+    chunk_size : int
+        Chunk size how much jets are loaded in on go.
 
-    Output:
-    - Jets: The jets as numpy ndarray
-    - Umami_labels: The internal class label for each jet. Corresponds with the
-                    index of the class label in class_labels.
+    Returns
+    -------
+    all_jets : pandas.DataFrame
+        The jets as numpy ndarray
+    all_labels : numpy.ndarray
+        The internal class label for each jet. Corresponds with the
+        index of the class label in class_labels.
+
+    Raises
+    ------
+    KeyError
+        If filepath is not a list or a string
+    RuntimeError
+        If no files could be found in filepath
     """
+
     # Make sure the nJets argument is an integer
     nJets = int(nJets)
     chunk_size = int(chunk_size)
@@ -560,18 +771,37 @@ def LoadTrksFromFile(
     """
     Load tracks from file. Only jets from classes in class_labels are returned.
 
-    Input:
-    - filepath: Path to the .h5 file with the jets.
-    - class_labels: List of class labels which are used.
-    - nJets: Number of jets to load.
-    - cut_vars_dict: Variable cuts that are applied when loading the jets.
-    - print_logger: Decide if the number of jets loaded from the file is printed.
+    Parameters
+    ----------
+    filepath : str
+        Path to the .h5 file with the jets.
+    class_labels : list
+        List of class labels which are used.
+    nJets : int
+        Number of jets to load.
+    cut_vars_dict : dict
+        Variable cuts that are applied when loading the jets.
+    print_logger : bool
+        Decide if the number of jets loaded from the file is printed.
+    chunk_size : int
+        Chunk size how much jets are loaded in on go.
 
-    Output:
-    - Trks: The tracks of the jets as numpy ndarray
-    - Umami_labels: The internal class label for each jet. Corresponds with the
-                    index of the class label in class_labels.
+    Returns
+    -------
+    all_trks : pandas.DataFrame
+        The tracks of the jets as numpy ndarray
+    all_labels : numpy.ndarray
+        The internal class label for each jet. Corresponds with the
+        index of the class label in class_labels.
+
+    Raises
+    ------
+    KeyError
+        If filepath is not a list or a string
+    RuntimeError
+        If no files could be found in filepath
     """
+
     # Make sure the nJets argument is an integer
     nJets = int(nJets)
     chunk_size = int(chunk_size)
@@ -763,20 +993,28 @@ def CalcDiscValues(
     index_dict: dict,
     main_class: str,
     frac_dict: dict,
-    rej_class=None,
+    rej_class: str = None,
 ):
     """
-    Calculate the disc value based on the flavours used.
+    Load tracks from file. Only jets from classes in class_labels are returned.
 
-    Input:
-    - jets_dict: A dict with the class_labels and their jets.
-    - index_dict: A dict with the class_labels and their respective indices.
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - frac_dict: A dict with the respective fractions for each class provided
-            except main_class
+    Parameters
+    ----------
+    jets_dict : dict
+        Dict with the jets inside.
+    index_dict : dict
+        Dict with the indicies of the classes.
+    main_class : str
+        String of the main class. "bjets" for b-tagging.
+    frac_dict : dict
+        Dict with the fractions used to calculate the disc score.
+    rej_class : str
+        String with the rejection class.
 
-    Output:
-    - disc_score: Tagging discriminator score for the main flavour
+    Returns
+    -------
+    disc_score : numpy.ndarray
+        Array with the discriminant score values for the jets.
     """
 
     # Set the rejection class for rejection calculation
@@ -813,17 +1051,24 @@ def GetScore(
     frac_dict: dict,
 ):
     """
-    Calculates the scores for the provided jets.
+    Calculates the output scores for the provided jets.
 
-    Input:
-    - y_pred: The prediction output of the NN
-    - class_labels: A list of the class_labels which are used
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - frac_dict: A dict with the respective fractions for each class provided
-                 except main_class
+    Parameters
+    ----------
+    y_pred : numpy.ndarray
+        The prediction output of the NN.
+    class_labels : list
+        A list of the class_labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets".
+    frac_dict : dict
+        A dict with the respective fractions for each class provided
+        except main_class.
 
-    Output:
-    - Discriminant Score for the jets provided.
+    Returns
+    -------
+    disc_score : numpy.ndarray
+        Discriminant Score for the jets provided.
     """
 
     # Init index dict
@@ -861,24 +1106,42 @@ def GetRejection(
     class_labels: list,
     main_class: str,
     frac_dict: dict = {"cjets": 0.018, "ujets": 0.982},
-    target_eff=0.77,
+    target_eff: float = 0.77,
 ):
     """
     Calculates the rejections for a specific WP for all provided
     classes except the discriminant class (main_class).
 
-    Input:
-    - y_pred: The prediction output of the NN
-    - y_true: The true class of the jets
-    - class_labels: A list of the class_labels which are used
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - frac_dict: A dict with the respective fractions for each class provided
-            except main_class
-    - target_eff: WP which is used for discriminant calculation.
+    Parameters
+    ----------
+    y_pred : numpy.ndarray
+        The prediction output of the NN.
+    y_true : numpy.ndarray
+        The true class of the jets.
+    class_labels : list
+        A list of the class_labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets".
+    frac_dict : dict
+        A dict with the respective fractions for each class provided
+        except main_class.
+    target_eff : float
+        WP which is used for discriminant calculation.
 
-    Output:
-    - Rejection_Dict: Dict of the rejections. The keys of the dict
-                      are the provided class_labels without main_class
+    Returns
+    -------
+    Rejection_Dict : dict
+        Dict of the rejections. The keys of the dict
+        are the provided class_labels without main_class
+    cut_value : float
+        Cut value that is calculated for the given working point.
+
+    Raises
+    ------
+    ZeroDivisionError
+        If no jets which passes the cut value are given. E.g. if
+        no light jet is passing the WP cut, the rejection would
+        be infinite.
     """
 
     # Init new dict for jets and indices
@@ -1118,12 +1381,27 @@ class MyCallbackUmami(CallbackBase):
             json.dump(self.dict_list, outfile, indent=4)
 
 
-def get_jet_feature_indices(variable_header: dict, exclude=None):
+def get_jet_feature_indices(variable_header: dict, exclude: list = None):
     """
-    Deletes from the jet samples the keys listed in exclude
-    Example of algorithm keys: SV1 or JetFitter
-    Works for both sub-aglorithm and variables
+    Deletes from the jet samples the keys listed in exclude.
+
+    Parameters
+    ----------
+    variable_header : dict
+        List with the variables.
+    exclude : list
+        List with the variables that are to be excluded.
+
+    Returns
+    -------
+    variables : list
+        List with the new variables without the excluded ones.
+    excluded_variables : list
+        List of the excluded variables.
+    excluded_var_indices : list
+        List of the indicies of the excluded variables.
     """
+
     excluded_variables = []
     all_variables = [i for j in variable_header for i in variable_header[j]]
     if exclude is None:
@@ -1160,7 +1438,7 @@ def get_jet_feature_indices(variable_header: dict, exclude=None):
 def GetTestSample(
     input_file: str,
     var_dict: str,
-    preprocess_config,
+    preprocess_config: object,
     class_labels: list,
     nJets: int = int(3e5),
     exclude: list = None,
@@ -1169,22 +1447,45 @@ def GetTestSample(
     print_logger: bool = True,
 ):
     """
-    Load the jet variables from the validation/evaluation files and apply scaling/shifting.
+    Load the jet variables and labels. Scale the jet variables for validation
+    use in the NN's.
 
-    Input:
-    - input_file: Path to the file which is to be loaded.
-    - var_dict: Variable dict with the wanted jet variables inside.
-    - preprocess_config: Loaded preprocessing config that was used.
-    - class_labels: List of classes used for training of the model.
-    - nJets: Number of jets that should be loaded.
-    - exclude: List of variables that are not loaded.
-    - cut_vars_dict: Dict with the cuts that should be applied.
-    - jet_variables: List of variables that are used.
-    - print_logger: Decide, if the logger info is printed or not.
+    Parameters
+    ----------
+    input_file : str
+        Path to the file which is to be loaded.
+    var_dict : str
+        Variable dict with the wanted jet variables inside.
+    preprocess_config : object
+        Loaded preprocessing config that was used.
+    class_labels : list
+        List of classes used for training of the model.
+    nJets : int
+        Number of jets that should be loaded.
+    exclude : list
+        List of variables that are not loaded.
+    cut_vars_dict : dict
+        Dict with the cuts that should be applied.
+    jet_variables : list
+        List of variables that are used.
+    print_logger : bool
+        Decide, if the logger info is printed or not.
 
-    Output:
-    - all_jets: X values of the jets for the NN's.
-    - all_labels: Y values ready to be used in the NN's.
+    Returns
+    -------
+    jets : numpy.ndarray
+        X values of the jets ready to be used in the NN's.
+    labels : numpy.ndarray
+        Y values ready to be used in the NN's.
+
+    Raises
+    ------
+    ValueError
+        If jet_variables and exclude are used at the same time.
+    RuntimeError
+        If no file could be found in the given filepath.
+    KeyError
+        If variable is used which is not in the scale dict.
     """
 
     # Assert that the jet variables and exlude are not called at the same time
@@ -1285,14 +1586,44 @@ def GetTestSample(
 def GetTestSampleTrks(
     input_file: str,
     var_dict: str,
-    preprocess_config,
+    preprocess_config: object,
     class_labels: list,
     nJets: int = int(3e5),
     cut_vars_dict: dict = None,
-    print_logger: bool = True,
+    print_logger: bool = False,
 ):
     """
-    Apply the scaling and shifting to dataset using numpy
+    Load the track variables and labels. Scale the track variables for validation
+    use in the NN's.
+
+    Parameters
+    ----------
+    input_file : str
+        Path to the file which is to be loaded.
+    var_dict : str
+        Variable dict with the wanted track variables inside.
+    preprocess_config : object
+        Loaded preprocessing config that was used.
+    class_labels : list
+        List of classes used for training of the model.
+    nJets : int
+        Number of jets that should be loaded.
+    cut_vars_dict : dict
+        Dict with the cuts that should be applied.
+    print_logger : bool
+        Decide, if the logger info is printed or not.
+
+    Returns
+    -------
+    trks : numpy.ndarray
+        X values of the tracks ready to be used in the NN's.
+    binary_labels : numpy.ndarray
+        Y values ready to be used in the NN's.
+
+    Raises
+    ------
+    RuntimeError
+        If no file could be found in the given filepath.
     """
 
     # Adding class_labels check between preprocess_config and given labels
@@ -1328,7 +1659,7 @@ def GetTestSampleTrks(
         class_labels=class_labels,
         nJets=nJets,
         cut_vars_dict=cut_vars_dict,
-        print_logger=False,
+        print_logger=print_logger,
     )
 
     # Binarize the labels
@@ -1345,22 +1676,33 @@ def GetTestSampleTrks(
 
 
 def load_validation_data_umami(
-    train_config,
-    preprocess_config,
+    train_config: object,
+    preprocess_config: object,
     nJets: int,
     jets_var_list: list = [],
     convert_to_tensor: bool = False,
-):
+) -> dict:
     """
     Load the validation data for UMAMI.
 
-    Input:
-    - train_config: Loaded train_config object.
-    - train_config: Loaded preprocess_config object.
-    - nJets: Number of jets to load.
+    Parameters
+    ----------
+    train_config : object
+        Loaded train_config object.
+    preprocess_config : object
+        Loaded preprocess_config object.
+    nJets : int
+        Number of jets to load.
+    jets_var_list : list
+        List with jet variables that are to be loaded.
+    convert_to_tensor : bool
+        Decide, if the validation data are converted to
+        tensorflow tensors to avoid memory leaks.
 
-    Output:
-    - val_data_dict: Dict with the validation data
+    Returns
+    -------
+    val_data_dict : dict
+        Dict with the validation data.
     """
 
     # Define NN_Structure and the Eval params
@@ -1465,21 +1807,30 @@ def load_validation_data_umami(
 
 
 def load_validation_data_dl1(
-    train_config,
-    preprocess_config,
+    train_config: object,
+    preprocess_config: object,
     nJets: int,
     convert_to_tensor: bool = False,
-):
+) -> dict:
     """
     Load the validation data for DL1.
 
-    Input:
-    - train_config: Loaded train_config object.
-    - train_config: Loaded preprocess_config object.
-    - nJets: Number of jets to load.
+    Parameters
+    ----------
+    train_config : object
+        Loaded train_config object.
+    preprocess_config : object
+        Loaded preprocess_config object.
+    nJets : int
+        Number of jets to load.
+    convert_to_tensor : bool
+        Decide, if the validation data are converted to
+        tensorflow tensors to avoid memory leaks.
 
-    Output:
-    - val_data_dict: Dict with the validation data
+    Returns
+    -------
+    val_data_dict : dict
+        Dict with the validation data.
     """
 
     # Define NN_Structure and the Eval params
@@ -1576,21 +1927,30 @@ def load_validation_data_dl1(
 
 
 def load_validation_data_dips(
-    train_config,
-    preprocess_config,
+    train_config: object,
+    preprocess_config: object,
     nJets: int,
     convert_to_tensor: bool = False,
-):
+) -> dict:
     """
     Load the validation data for DIPS.
 
-    Input:
-    - train_config: Loaded train_config object.
-    - train_config: Loaded preprocess_config object.
-    - nJets: Number of jets to load.
+    Parameters
+    ----------
+    train_config : object
+        Loaded train_config object.
+    preprocess_config : object
+        Loaded preprocess_config object.
+    nJets : int
+        Number of jets to load.
+    convert_to_tensor : bool
+        Decide, if the validation data are converted to
+        tensorflow tensors to avoid memory leaks.
 
-    Output:
-    - val_data_dict: Dict with the validation data
+    Returns
+    -------
+    val_data_dict : dict
+        Dict with the validation data.
     """
 
     # Define NN_Structure and the Eval params
@@ -1676,7 +2036,7 @@ def load_validation_data_dips(
 def GetTestFile(
     input_file: str,
     var_dict: str,
-    preprocess_config: dict,
+    preprocess_config: object,
     class_labels: list,
     nJets: int,
     exclude: list = None,
@@ -1685,21 +2045,38 @@ def GetTestFile(
     print_logger: bool = True,
 ):
     """
-    Load the training jets and tracks.
+    Load the jet and track variables and labels. Scale the jet
+    and track variables for validation use in the NN's.
 
-    Input:
-    - file: Filepath to the file where the data are loaded from.
-    - var_dict: Path to the dict with the variables which are used.
-    - preprocess_config: The loaded preprocess config object.
-    - class_labels: List of classes used for training of the model.
-    - nJets: Number of jets used for evaluation.
-    - exclude: List of variables that are to be excluded.
-    - cut_vars_dict: Dict with the variable cuts which should be applied.
-    - jet_variables: Jet variables that are to be loaded.
-    - print_logger: Decide, if the logger is printed or not.
+    Parameters
+    ----------
+    input_file : str
+        Path to the file which is to be loaded.
+    var_dict : str
+        Variable dict with the wanted jet variables inside.
+    preprocess_config : object
+        Loaded preprocessing config that was used.
+    class_labels : list
+        List of classes used for training of the model.
+    nJets : int
+        Number of jets that should be loaded.
+    exclude : list
+        List of variables that are not loaded.
+    cut_vars_dict : dict
+        Dict with the cuts that should be applied.
+    jet_variables : list
+        List of variables that are used.
+    print_logger : bool
+        Decide, if the logger info is printed or not.
 
-    Output:
-    - Returns the X, X_trk and Y for training/evaluation.
+    Returns
+    -------
+    X : numpy.ndarray
+        X values of the jets ready to be used in the NN's.
+    X_trk : numpy.ndarray
+        X values of the tracks ready to be used in the NN's.
+    Y : numpy.ndarray
+        Y values ready to be used in the NN's.
     """
 
     X_trk, Y_trk = GetTestSampleTrks(
@@ -1730,27 +2107,36 @@ def GetTestFile(
 
 
 def evaluate_model_umami(
-    model,
+    model: object,
     data_dict: dict,
     class_labels: list,
     main_class: str,
     frac_dict: dict,
     target_beff: float = 0.77,
-):
+) -> dict:
     """
     Evaluate the UMAMI model on the data provided.
 
-    Input:
-    - model: Loaded UMAMI model for evaluation.
-    - data_dict: Dict with the loaded data which are to be evaluated.
-    - class_labels: List of classes used for training of the model.
-    - main_class: Main class which is to be tagged.
-    - target_beff: Working Point which is to be used for evaluation.
-    - frac_dict: Dict with the fractions of the non-main classes.
-                 Sum needs to be one!
+    Parameters
+    ----------
+    model : object
+        Loaded UMAMI model for evaluation.
+    data_dict : dict
+        Dict with the loaded data which are to be evaluated.
+    class_labels : list
+        List of classes used for training of the model.
+    main_class : str
+        Main class which is to be tagged.
+    target_beff : float
+        Working Point which is to be used for evaluation.
+    frac_dict : dict
+        Dict with the fractions of the non-main classes.
+        Sum needs to be one!
 
-    Output:
-    - Dict with validation metrics/rejections.
+    Returns
+    -------
+    result_dict : dict
+        Dict with validation metrics/rejections.
     """
 
     # Calculate accuracy andloss of UMAMI and Dips part
@@ -1897,21 +2283,30 @@ def evaluate_model(
     main_class: str,
     target_beff: float = 0.77,
     frac_dict: dict = {"cjets": 0.018, "ujets": 0.982},
-):
+) -> dict:
     """
     Evaluate the DIPS/DL1 model on the data provided.
 
-    Input:
-    - model: Loaded DIPS/DL1 model for evaluation.
-    - data_dict: Dict with the loaded data which are to be evaluated.
-    - class_labels: List of classes used for training of the model.
-    - main_class: Main class which is to be tagged.
-    - target_beff: Working Point which is to be used for evaluation.
-    - frac_dict: Dict with the fractions of the non-main classes.
-                 Sum needs to be one!
+    Parameters
+    ----------
+    model : object
+        Loaded UMAMI model for evaluation.
+    data_dict : dict
+        Dict with the loaded data which are to be evaluated.
+    class_labels : list
+        List of classes used for training of the model.
+    main_class : str
+        Main class which is to be tagged.
+    target_beff : float
+        Working Point which is to be used for evaluation.
+    frac_dict : dict
+        Dict with the fractions of the non-main classes.
+        Sum needs to be one!
 
-    Output:
-    - Dict with validation metrics/rejections.
+    Returns
+    -------
+    result_dict : dict
+        Dict with validation metrics/rejections.
     """
 
     # Check which input data need to be used
@@ -2013,26 +2408,41 @@ def evaluate_model(
 
 
 def calc_validation_metrics(
-    train_config,
-    preprocess_config,
+    train_config: object,
+    preprocess_config: object,
     tagger: str,
     target_beff: float = 0.77,
     nJets: int = int(3e5),
     model_string: str = "model_epoch",
-):
+) -> str:
     """
     Calculates the validation metrics and rejections for each epoch
     and dump it into a json.
 
-    Input:
-    - train_config: The loaded train config object
-    - preprocess_config: The loaded preprocess config object
-    - frac_dict: Dict with the fractions for discriminant calculation
-    - target_beff: Target efficiency for main_class
-    - nJets: Number of jets used for evaluation
+    Parameters
+    ----------
+    train_config : object
+        The loaded train config object.
+    preprocess_config : object
+        The loaded preprocess config object.
+    tagger : str
+        Name of the tagger that is used to calcualte metrics.
+    target_beff : float
+        Working point that is to be used.
+    nJets : int
+        Number of jets to use for calculation.
+    model_string : str
+        Name of the model files.
 
-    Output:
-    - Json file with validation metrics and rejections for each epoch
+    Returns
+    -------
+    output_file_path
+        Path to the validation dict where the results are saved in.
+
+    Raises
+    ------
+    ValueError
+        If "tagger" is not dips, dl1, umami or dips_cond_att.
     """
 
     # Get evaluation parameters and NN structure from train config
