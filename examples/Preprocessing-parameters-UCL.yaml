@@ -11,7 +11,7 @@ file_path: &file_path /unix/atlastracking/samples/gnn_training/r22/v1/preprocess
 .outfile_name: &outfile_name /unix/atlastracking/samples/gnn_training/r22/v1/preprocessed/PFlow-hybrid.h5
 
 # Dictfile for the scaling and shifting (json)
-.var_file: &var_file /unix/atlastracking/svanstroud/gnn-tagger/umami_r22/umami/umami/configs/GNN_Variables_R22.yaml
+.var_file: &var_file /unix/atlastracking/svanstroud/gnn-tagger/umami_r22/umami/umami/configs/GNN_Variables.yaml
 
 # Dictfile for the scaling and shifting (json)
-.dict_file: &dict_file /unix/atlastracking/samples/gnn_training/r22/v1/scale_dicts/PFlow-scale_dict-22M.json
+.dict_file: &dict_file /unix/atlastracking/samples/gnn_training/r22/v1/PFlow-scale_dict.json

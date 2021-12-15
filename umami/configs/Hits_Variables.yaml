@@ -1,0 +1,18 @@
+label: HadronConeExclTruthLabelID
+
+train_variables:
+  JetKinematics:
+    - eta_btagJes
+    - pt_btagJes
+    - energy
+    - mass
+
+track_train_variables:
+  noNormVars: []
+  logNormVars: []
+  jointNormVars:
+    - x_local
+    - y_local
+    - z_local
+
+custom_defaults_vars:

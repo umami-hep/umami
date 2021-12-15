@@ -27,7 +27,7 @@ class TrainSampleWriter:
             self.variable_config = yaml.load(conf, Loader=yaml_loader)
 
     def load_generator(
-        self, input_file: str, index: int, nJets: int, chunkSize: int = 10000
+        self, input_file: str, index: int, nJets: int, chunkSize: int = 100_000
     ):
         """
         Set up a generator who loads the scaled file and save it in the format for training.
@@ -120,7 +120,7 @@ class TrainSampleWriter:
         self,
         input_file: str = None,
         output_file: str = None,
-        chunkSize: int = int(1e5),
+        chunkSize: int = 100_000,
     ):
         """
         Input:
