@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from subprocess import run
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.testing.compare import compare_images
@@ -28,6 +29,9 @@ class Small_funcs_TestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        # reset matplotlib parameters
+        plt.rcdefaults()
+        plt.close("all")
         self.x_eff = np.array([0.25, 0.5, 0.75])
         self.x_rej = np.array([20, 50, 100])
         self.error_eff = np.array([0.043301, 0.05, 0.043301])
@@ -55,6 +59,9 @@ class Small_funcs_TestCase(unittest.TestCase):
 
 class plot_score_TestCase(unittest.TestCase):
     def setUp(self):
+        # reset matplotlib parameters
+        plt.rcdefaults()
+        plt.close("all")
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_plot_dir = f"{self.tmp_dir.name}/"
         self.plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
