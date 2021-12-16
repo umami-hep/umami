@@ -6,9 +6,16 @@ import tensorflow as tf
 class TFRecordReader:
     def __init__(self, path, batch_size, nfiles):
         """
-        :param path: path where TFRecord is saved
-        batch_size: size of batches for the training
-        nfiles: number of tf record files loaded in parallel
+        Reads the tf records dataset.
+
+        Parameters
+        ----------
+        path : str
+            path where TFRecord is saved
+        batch_size : int
+            size of batches for the training
+        nfiles : int
+            number of tf record files loaded in parallel
         """
         self.path = path
         self.batch_size = batch_size
@@ -17,6 +24,10 @@ class TFRecordReader:
     def load_Dataset(self):
         """
         Load TFRecord and create Dataset for training
+
+        Returns
+        -------
+        tf_Dataset
         """
         data_files = tf.io.gfile.glob(
             (self.path + "/*.tfrecord").replace("//", "/")
@@ -42,8 +53,20 @@ class TFRecordReader:
 
     def decode_fn(self, record_bytes):
         """
-        :param record_bytes: serialized Dataset
-        Convert serialized Dataset to dictionary and return inputs and labels
+        Convert serialised Dataset to dictionary and return inputs and labels
+
+        Parameters
+        ----------
+        record_bytes : serialised object
+            serialised Dataset
+
+        Returns
+        -------
+        inputs : dict
+            Dictionary of tf_data of jet and track inputs
+        labels : tf_data
+            tf data stream of labels
+
         """
         metadata_name = (self.path + "/metadata.json").replace("//", "/")
         with open(metadata_name, "r") as metadata_file:

@@ -8,7 +8,13 @@ import umami.train_tools as utt
 
 
 def GetParser():
-    """Argument parser for the train executable."""
+    """
+    Argument parser for the train executable.
+
+    Returns
+    -------
+    args: parse_args
+    """
     parser = argparse.ArgumentParser(description="Train command line options.")
 
     parser.add_argument(

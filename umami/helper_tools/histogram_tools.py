@@ -49,7 +49,9 @@ def step_divide(nominator, denominator, default=1.0):
     Parameters
     ----------
     nominator: array_like
+        Nominator in the ratio calculation.
     denominator: array_like
+        Denominator in the ratio calculation.
     default: float
         default value which is returned if denominator is 0.
 
@@ -78,9 +80,14 @@ def hist_ratio(nominator, denominator, nominator_unc, denominator_unc):
     Parameters
     ----------
     nominator : array_like
+        Nominator in the ratio calculation.
     denominator : array_like
+        Denominator in the ratio calculation.
     nominator_unc : array_like
+        Uncertainty of the nominator.
     denominator_unc : array_like
+        Uncertainty of the denominator.
+
 
     Returns
     -------
@@ -88,6 +95,12 @@ def hist_ratio(nominator, denominator, nominator_unc, denominator_unc):
         Ratio returning 1 in case the denominator is 0.
     step_ratio_unc : array_like
         Stat. uncertainty of the step_ratio
+
+    Raises
+    ------
+    AssertionError
+        If inputs don't have the same shape.
+
     """
     if nominator.shape != denominator.shape:
         raise (

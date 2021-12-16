@@ -25,7 +25,13 @@ from umami.configuration import logger
 
 
 def GetParser():
-    """Argument parser for Preprocessing script."""
+    """
+    Argument parser for Preprocessing script.
+
+    Returns
+    -------
+    args: parse_args
+    """
     parser = argparse.ArgumentParser(
         description="Plotting command line options."
     )
@@ -281,12 +287,23 @@ def plot_ROCvsVar(
     eval_file_dir,
 ):
     """
-    "flat_eff": bool whether to plot a flat b-efficiency as a function of var
-    "efficiency": the targeted efficiency
-    "variable": which variable to plot the efficiency as a function of.
-    "max_variable": maximum value of the range of variable.
-    "min_variable": minimum value of the range of variable.
-    "nbin": number of bin to use
+    Plots ROC curve as a function of specified variable.
+
+    Parameters
+    ----------
+    plot_name : str
+        Name of the saved plot.
+    plot_config : dict
+        Plotting configuration
+    eval_params : dict
+        Evaluation parameters
+    eval_file_dir : str
+        Directory of the results file to be used for plotting.
+
+    Raises
+    ------
+    ValueError
+        If specified variable is not contained in results dataframe.
     """
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
@@ -500,12 +517,27 @@ def plot_ROCvsVar_comparison(
     plot_name, plot_config, eval_params, eval_file_dir, print_model
 ):
     """
-    "flat_eff": bool whether to plot a flat b-efficiency as a function of var
-    "efficiency": the targeted efficiency
-    "variable": which variable to plot the efficiency as a function of.
-    "max_variable": maximum value of the range of variable.
-    "min_variable": minimum value of the range of variable.
-    "nbin": number of bin to use
+     Plots ROC curve as a function of specified variable and compares it to
+     another tagger.
+
+     Parameters
+     ----------
+    plot_name : str
+         Name of the saved plot.
+     plot_config : dict
+         Plotting configuration
+     eval_params : dict
+         Evaluation parameters
+     eval_file_dir : str
+         Directory of the results file to be used for plotting.
+     print_model : bool
+         Prints model name if set to True
+
+     Raises
+     ------
+     ValueError
+         If specified variable is not contained in results dataframe.
+
     """
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
