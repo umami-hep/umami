@@ -3,17 +3,17 @@ Eval_parameters:
   nJets: 3e4
 
   # Path to variable dict
-  var_dict: /work/ws/nemo/fr_af1100-Training-Simulations-0/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
+  var_dict: <path_palce_holder>/umami/umami/configs/Dips_Variables.yaml
 
 jets_input_vars:
   variables: "jets"
   folder_to_save: jets_input_vars
   Datasets_to_plot:
     R21:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
+      files: <path_palce_holder>/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
       label: "R21 Loose"
     R22:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4441/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
+      files: <path_palce_holder>/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
       label: "R22 Loose"
   plot_settings:
     Log: True
@@ -118,10 +118,10 @@ nTracks:
   nTracks: True
   Datasets_to_plot:
     R21:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
+      files: <path_palce_holder>/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
       label: "R21 Loose"
     R22:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4441/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
+      files: <path_palce_holder>/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
       label: "R22 Loose"
   plot_settings:
     Log: True
@@ -139,10 +139,10 @@ tracks_input_vars:
   folder_to_save: tracks_input_vars
   Datasets_to_plot:
     R21:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
+      files: <path_palce_holder>/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
       label: "R21 Loose"
     R22:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4441/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
+      files: <path_palce_holder>/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
       label: "R22 Loose"
   plot_settings:
     sorting_variable: "ptfrac"

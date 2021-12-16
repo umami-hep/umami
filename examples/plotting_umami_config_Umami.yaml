@@ -1,6 +1,6 @@
 # Evaluation parameters, these are global parmeters defining the default evaluation file.
 Eval_parameters:
-  Path_to_models_dir: /nfs/dust/atlas/user/ahnenjan/phd/umami/run/models/24_1_umami_dlw_1_lt22M/
+  Path_to_models_dir: <Path_to_models_dir>
   model_name: umami_looseTrack_22M
   epoch: 249
   epoch_to_name: True

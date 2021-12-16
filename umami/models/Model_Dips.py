@@ -19,7 +19,6 @@ from tensorflow.keras.optimizers import Adam
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
-from umami.institutes.utils import is_qsub_available, submit_zeuthen
 
 
 def Dips_model(train_config=None, input_shape=None):
@@ -232,15 +231,3 @@ def Dips(args, train_config, preprocess_config):
     # Dump history file to json
     with open(f"{train_config.model_name}/history.json", "w") as outfile:
         json.dump(hist_dict, outfile, indent=4)
-
-
-def DipsZeuthen(args, train_config, preprocess_config):
-    if is_qsub_available():
-        args.model_name = train_config.model_name
-        args.dips = True
-        submit_zeuthen(args)
-    else:
-        logger.warning(
-            "No Zeuthen batch system found, training locally instead."
-        )
-        Dips(args, train_config, preprocess_config)

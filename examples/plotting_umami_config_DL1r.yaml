@@ -1,6 +1,6 @@
 # Evaluation parameters
 Eval_parameters:
-  Path_to_models_dir: /nfs/dust/atlas/user/ahnenjan/phd/DL1/run/models/new_DL1r_22M/
+  Path_to_models_dir: <Path_to_models_dir>
   model_name: DL1r_22M
   epoch: 10
   epoch_to_name: True
