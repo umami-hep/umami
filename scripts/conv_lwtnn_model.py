@@ -10,7 +10,13 @@ from umami.tf_tools import Sum
 
 
 def GetParser():
-    """Argparse option for conv_model script."""
+    """
+    Argparse option for conv_model script.
+
+    Returns
+    -------
+    args: parse_args
+    """
     parser = argparse.ArgumentParser(
         description="""Options for DL1
                                      conv_model"""

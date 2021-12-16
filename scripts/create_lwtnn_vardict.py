@@ -10,7 +10,13 @@ from umami.tools import yaml_loader
 
 
 def GetParser():
-    """Argparse option for create_vardict script."""
+    """
+    Argparse option for create_vardict script.
+
+    Returns
+    -------
+    args: parse_args
+    """
     parser = argparse.ArgumentParser(
         description="""Options for DL1
                                      create_vardict"""

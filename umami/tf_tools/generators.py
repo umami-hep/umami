@@ -54,13 +54,20 @@ class Model_Generator(object):
         """
         Load the jets or tracks or both step by step in memory.
 
-        Input:
-        - load_jets, bool: Define, if jets are loaded or not.
-        - load_tracks, bool: Define, if tracks are loaded or not.
-        - part, int: Part of the data which is to be loaded.
+        Parameters
+        ----------
+        load_jets : bool
+            Define, if jets are loaded or not.
+        load_tracks : bool
+            Define, if tracks are loaded or not.
+        part : int
+            Part of the data which is to be loaded.
 
-        Output:
-        - Loads the part of data to memory.
+        Raises
+        ------
+        ValueError
+            If X_Name or X_trk_Name are not given when requesting jets or
+            tracks, respectively.
         """
 
         if self.print_logger is True:

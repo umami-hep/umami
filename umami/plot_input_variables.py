@@ -15,7 +15,13 @@ from umami.tools import yaml_loader
 
 
 def GetParser():
-    """Argument parser for Preprocessing script."""
+    """
+    Argument parser for Preprocessing script.
+
+    Returns
+    -------
+    args: parse_args
+    """
     parser = argparse.ArgumentParser(
         description="Plotting command line options."
     )

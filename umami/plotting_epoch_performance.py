@@ -10,7 +10,13 @@ from umami.train_tools import RunPerformanceCheck, get_class_prob_var_names
 
 
 def GetParser():
-    """Argument parser for Preprocessing script."""
+    """
+    Argument parser for Preprocessing script.
+
+    Returns
+    -------
+    args: parse_args
+    """
     parser = argparse.ArgumentParser(
         description="Preprocessing command line" "options."
     )

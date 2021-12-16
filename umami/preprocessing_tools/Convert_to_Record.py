@@ -19,13 +19,26 @@ class h5toTFRecordConverter:
             logger.info(f"Save {self.chunk_size} entries in one file")
         except KeyError:
             logger.warning(
-                "Chunk size for conversion into tf records not set in config file. Set to 5000"
+                "Chunk size for conversion into tf records not set in config"
+                "file. Set to 5000"
             )
             self.chunk_size = 5_000
 
     def load_h5File_Train(self):
         """
-        load the numbers of entries given by the chunk size for the jets, tracks and labels from train file
+        load the numbers of entries given by the chunk size for the jets,
+        tracks and labels from train file.
+
+        Yields
+        ------
+        X_jets : array_like
+            Training jets
+        X_trks : array_like
+            Training tracks
+        Y : array_like
+            Training labels
+        Weights : array_like
+            Training weights
         """
 
         with h5py.File(self.path_h5, "r") as hFile:
@@ -48,8 +61,12 @@ class h5toTFRecordConverter:
 
     def save_parameters(self, record_dir):
         """
-        :param record_dir: directory where metadata should be saved
         write metadata into metadata.json and save it with tf record files
+
+        Parameters
+        ----------
+        record_dir : str
+            directory where metadata should be saved
         """
         with h5py.File(self.path_h5) as h5file:
             nJets = len(h5file["X_train"])

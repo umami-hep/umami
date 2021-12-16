@@ -13,10 +13,12 @@ from umami.tf_tools import Sum
 
 
 def GetParser():
-    """Argparse option for create_vardict script.
+    """
+    Argparse option for create_vardict script.
 
-    Returns:
-        Parsed arguments.
+    Returns
+    -------
+    args: parse_args
     """
     parser = argparse.ArgumentParser(description="""Options lwtnn check""")
 

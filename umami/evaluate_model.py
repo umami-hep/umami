@@ -20,7 +20,13 @@ tf.compat.v1.disable_eager_execution()
 
 
 def GetParser():
-    """Argument parser for Preprocessing script."""
+    """
+    Argument parser for Preprocessing script.
+
+    Returns
+    -------
+    args: parse_args
+    """
     parser = argparse.ArgumentParser(
         description="Preprocessing command line options."
     )
