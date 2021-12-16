@@ -1,17 +1,17 @@
 # Path where the ntuples are saved
-ntuple_path: &ntuple_path /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/
+ntuple_path: &ntuple_path <path_palce_holder>/ntuples/
 
 # Path where the hybrid samples will be saved
-sample_path: &sample_path /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/
+sample_path: &sample_path <path_palce_holder>/hybrids/
 
 # Path where the merged and ready-to-train samples are saved
-file_path: &file_path /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/
+file_path: &file_path <path_palce_holder>/preprocessed/
 
 # Name of the output file from the preprocessing
-.outfile_name: &outfile_name /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid.h5
+.outfile_name: &outfile_name <path_palce_holder>/PFlow-hybrid.h5
 
 # List of variables for training (yaml)
-.var_file: &var_file /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami/configs/Dips_Variables.yaml
+.var_file: &var_file <path_palce_holder>/umami/umami/configs/Dips_Variables.yaml
 
 # Dictfile for the scaling and shifting (json)
-.dict_file: &dict_file /home/fr/fr_fr/fr_af1100/b-Tagging/scale_dicts/PFlow-scale_dict-22M.json
+.dict_file: &dict_file <path_palce_holder>/scale_dicts/PFlow-scale_dict-22M.json

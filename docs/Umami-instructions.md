@@ -17,14 +17,6 @@ To run the training, use the following command
 train_umami.py -c examples/umami-PFlow-Training-config.yaml
 ```
 
-Alternatively, if you are working out of the DESY Zeuthen servers, `warp.zeuthen.desy.de`, you can train using the batch system via `qsub` and GPU support by giving it the `zeuthen` flag
-
-```bash
-train_umami.py -c examples/umami-PFlow-Training-config.yaml --zeuthen
-```
-
-The job will output a log to the current working directory and copy the results to the current working directory when it's done. The options for the job (time, memory, space, etc.) can be changed in `umami/institutes/zeuthen/train_job.sh`.
-
 ## Plotting
 
 ### Rejection Rates for Validation Sample

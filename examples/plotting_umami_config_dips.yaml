@@ -1,6 +1,6 @@
 # Evaluation parameters
 Eval_parameters:
-  Path_to_models_dir: /home/fr/fr_fr/fr_af1100/b-Tagging/packages/umami/umami
+  Path_to_models_dir: <path_palce_holder>/umami/umami
   model_name: dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
   epoch: 59
   epoch_to_name: True

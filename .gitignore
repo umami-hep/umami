@@ -22,3 +22,5 @@ env/*
 .vscode/*
 !umami/tests/unit/**/*.png
 python_install/
+# ignoring insitute dependent parameter files
+Preprocessing-parameters-*.yaml

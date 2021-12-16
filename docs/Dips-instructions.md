@@ -226,7 +226,7 @@ The different options are briefly explained here:
 | `SecondTag` | String | Optional | Second line below the ATLAS tag |
 | `plot_datatype` | String | Necessary | Datatype of the plots that are produced using the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
 | `Eval_parameters_validation` | None | Necessary | A dict where all important information for the training are defined. |
-| `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. | 
+| `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. |
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `frac_values` | Dict | Necessary | Dict with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
@@ -242,7 +242,7 @@ Before starting the training, you need to set some paths for the umami package t
 python setup.py install
 ```
 
-Note that with the `install` setup, changes that are performed to the scripts after setup are not included! For development and usage of changes without resetup everything, use 
+Note that with the `install` setup, changes that are performed to the scripts after setup are not included! For development and usage of changes without resetup everything, use
 
 ```bash
 source run_setup.sh
@@ -256,7 +256,7 @@ After that, you can switch to the folder `umami/umami` and run the training, usi
 train.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml
 ```
 
-The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml). 
+The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [Dips-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Dips-PFlow-Training-config.yaml).
 
 If you want instant performance checks of the model after each epoch during the training, you can use
 
@@ -270,15 +270,6 @@ which will write out plots for the not- main flavour rejections, accuracy and lo
 plotting_epoch_performance.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --dict dips_Loose_lr_0.001_bs_15000_epoch_200_nTrainJets_Full/validation_WP0p77_fc0p018_300000jets_Dict.json
 ```
 
-### Train on Zeuthen Cluster
-
-Alternatively, if you are working out of the DESY Zeuthen servers, `warp.zeuthen.desy.de`, you can train using the batch system via `qsub` and GPU support by giving it the `zeuthen` flag
-
-```bash
-train_Dips.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --zeuthen
-```
-
-The job will output a log to the current working directory and copy the results to the current working directory when it's done. The options for the job (time, memory, space, etc.) can be changed in `umami/institutes/zeuthen/train_job.sh`.
 
 ## Evaluating the results
 

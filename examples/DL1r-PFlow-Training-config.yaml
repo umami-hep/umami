@@ -7,31 +7,31 @@ preprocess_config: examples/PFlow-Preprocessing.yaml
 model_file:
 
 # Add training file
-train_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/preprocessed/PFlow-hybrid-preprocessed_shuffled.h5
+train_file: <path_palce_holder>/PFlow-hybrid-preprocessed_shuffled.h5
 
 # Add validation files
 # ttbar val
-validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+validation_file: <path_palce_holder>/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
 
 # zprime val
-add_validation_file: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+add_validation_file: <path_palce_holder>/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
 
 ttbar_test_files:
     ttbar_r21:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
+        Path: <path_palce_holder>/hybrids/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
         data_set_name: "ttbar_r21"
 
     ttbar_r22:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
+        Path: <path_palce_holder>/hybrids_r22/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
         data_set_name: "ttbar_r22"
 
 zpext_test_files:
     zpext_r21:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        Path: <path_palce_holder>/hybrids/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
         data_set_name: "zpext_r21"
 
     zpext_r22:
-        Path: /work/ws/nemo/fr_af1100-Training-Simulations-0/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        Path: <path_palce_holder>/hybrids_r22/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
         data_set_name: "zpext_r22"
 
 # Path to Variable dict used in preprocessing

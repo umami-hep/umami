@@ -19,7 +19,7 @@ Note, that for running DL1 no tracks have to be stored in the output hybrid samp
 
 Note that the training Variables for DL1r R21 and DL1r R22 are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml) and [DL1r_Variables_R22.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables_R22.yaml).
 
-Important note about the preprocessing: when using taus, it is not advised to use the `count` sampling method. Indeed, the tau statistics is much lower, which would result in throwing away far too many jets. Instead, use the `pdf` or the `probability_ratio` sampling methods to have an exact match of the jets flavour and a proportional distribution of taus. 
+Important note about the preprocessing: when using taus, it is not advised to use the `count` sampling method. Indeed, the tau statistics is much lower, which would result in throwing away far too many jets. Instead, use the `pdf` or the `probability_ratio` sampling methods to have an exact match of the jets flavour and a proportional distribution of taus.
 
 If you don't want to process some samples yourself, you can use the already preprocessed samples uploaded to rucio in the datasets `user.mdraguet.dl1r.R21.PFlowJetsDemoSamples` for DL1r or `user.mdraguet.dl1d.R21.PFlowJetsDemoSamples` for DL1d (RNNIP replaced by DIPS). These datasets do not have taus included. Note that you need to download both the datasets and the associated dictionary with scaling factors (+ the dictionary of variable). There are two test samples available: an hybrid (ttbar + Z'-ext) and a Z'-ext solely. Each should be manually cut in 2 to get a test and validation file. The data comes from:
 - mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_FTAG1.e6337_s3126_r10201_p4060
@@ -69,7 +69,7 @@ zpext_test_files:
 # Path to Variable dict used in preprocessing
 var_dict: <path>/<to>/<variables>/DL1r_Variables.yaml
 
-# Variables or Variable Headers to exclude from the tagger 
+# Variables or Variable Headers to exclude from the tagger
 #      but contained in <path>/<to>/<variables>/DL1r_Variables.yaml
 exclude: null
 
@@ -179,7 +179,7 @@ Eval_parameters_validation:
             - pt_btagJes:
                 operator: ">"
                 condition: 250000
-        
+
         validation_file:
             - pt_btagJes:
                 operator: "<="
@@ -243,7 +243,7 @@ The different options are briefly explained here:
 | `SecondTag` | String | Optional | Second line below the ATLAS tag |
 | `plot_datatype` | String | Necessary | Datatype of the plots that are produced using the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
 | `Eval_parameters_validation` | None | Necessary | A dict where all important information for the training are defined. |
-| `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. | 
+| `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. |
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `frac_values` | Dict | Necessary | Dict with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
@@ -259,7 +259,7 @@ Before starting the training, you need to set some paths for the umami package t
 python setup.py install
 ```
 
-Note that with the `install` setup, changes that are performed to the scripts after setup are not included! For development and usage of changes without resetup everything, use 
+Note that with the `install` setup, changes that are performed to the scripts after setup are not included! For development and usage of changes without resetup everything, use
 
 ```bash
 source run_setup.sh
@@ -273,7 +273,7 @@ After that, you can switch to the folder `umami/umami` and run the training, usi
 train.py -c ${EXAMPLES}/DL1r-PFlow-Training-config.yaml
 ```
 
-The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). 
+The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml).
 
 If you want instant performance checks of the model after each epoch during the training, you can use
 
@@ -281,23 +281,13 @@ If you want instant performance checks of the model after each epoch during the 
 plotting_epoch_performance.py -c ${EXAMPLES}/DL1r-PFlow-Training-config.yaml
 ```
 
-which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. In this form, the performance measurements, like light- and c-rejection, will be recalculated using the working point, the `frac_values` value and the number of validation jets defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). If taus are used in the training too, they will be included in these plots. 
+which will write out plots for the light- and c-rejection, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. In this form, the performance measurements, like light- and c-rejection, will be recalculated using the working point, the `frac_values` value and the number of validation jets defined in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/DL1r-PFlow-Training-config.yaml). If taus are used in the training too, they will be included in these plots.
 
 If you don't want to recalculate it, you can give the path to the existing dict with the option `--dict`. For example:
 
 ```bash
 plotting_epoch_performance.py -c ${EXAMPLES}/DL1r-PFlow-Training-config.yaml --dict MODELNAME/validation_WP0p77_fc0p018_300000jets_Dict.json
 ```
-
-### Train on Zeuthen Cluster
-
-Alternatively, if you are working out of the DESY Zeuthen servers, `warp.zeuthen.desy.de`, you can train using the batch system via `qsub` and GPU support by giving it the `zeuthen` flag
-
-```bash
-train_Dips.py -c ${EXAMPLES}/Dips-PFlow-Training-config.yaml --zeuthen
-```
-
-The job will output a log to the current working directory and copy the results to the current working directory when it's done. The options for the job (time, memory, space, etc.) can be changed in `umami/institutes/zeuthen/train_job.sh`.
 
 ## Evaluating the Results
 

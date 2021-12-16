@@ -24,13 +24,6 @@ def GetParser():
     )
 
     parser.add_argument(
-        "-z",
-        "--zeuthen",
-        action="store_true",
-        help="Train on Zeuthen with GPU support",
-    )
-
-    parser.add_argument(
         "-o",
         "--overwrite_config",
         action="store_true",
@@ -69,68 +62,32 @@ if __name__ == "__main__":
     # Check for DIPS
     # TODO: Switch to case syntax with python 3.10
     if tagger_name == "dips":
-        # Check for Zeuthen flag
-        if args.zeuthen:
-            utm.DipsZeuthen(
-                args=args,
-                train_config=train_config,
-                preprocess_config=preprocess_config,
-            )
-
-        else:
-            utm.Dips(
-                args=args,
-                train_config=train_config,
-                preprocess_config=preprocess_config,
-            )
+        utm.Dips(
+            args=args,
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+        )
 
     elif tagger_name == "dl1":
-        # Check for Zeuthen flag
-        if args.zeuthen:
-            utm.TrainLargeFileZeuthen(
-                args=args,
-                train_config=train_config,
-                preprocess_config=preprocess_config,
-            )
-
-        else:
-            utm.TrainLargeFile(
-                args=args,
-                train_config=train_config,
-                preprocess_config=preprocess_config,
-            )
+        utm.TrainLargeFile(
+            args=args,
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+        )
 
     elif tagger_name == "umami":
-        # Check for Zeuthen flag
-        if args.zeuthen:
-            utm.UmamiZeuthen(
-                args=args,
-                train_config=train_config,
-                preprocess_config=preprocess_config,
-            )
-
-        else:
-            utm.Umami(
-                args=args,
-                train_config=train_config,
-                preprocess_config=preprocess_config,
-            )
+        utm.Umami(
+            args=args,
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+        )
 
     elif tagger_name == "dips_cond_att":
-        # Check for Zeuthen flag
-        if args.zeuthen:
-            utm.DipsCondAttZeuthen(
-                args=args,
-                train_config=train_config,
-                preprocess_config=preprocess_config,
-            )
-
-        else:
-            utm.DipsCondAtt(
-                args=args,
-                train_config=train_config,
-                preprocess_config=preprocess_config,
-            )
+        utm.DipsCondAtt(
+            args=args,
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+        )
 
     else:
         raise ValueError(

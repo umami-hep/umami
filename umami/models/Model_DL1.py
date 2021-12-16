@@ -18,7 +18,6 @@ from tensorflow.keras.optimizers import Adam
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
-from umami.institutes.utils import is_qsub_available, submit_zeuthen
 from umami.tools import yaml_loader
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
@@ -226,15 +225,3 @@ def TrainLargeFile(args, train_config, preprocess_config):
         json.dump(hist_dict, outfile, indent=4)
 
     logger.info(f"Models saved {train_config.model_name}")
-
-
-def TrainLargeFileZeuthen(args, train_config, preprocess_config):
-    if is_qsub_available():
-        args.model_name = train_config.model_name
-        args.dl1 = True
-        submit_zeuthen(args)
-    else:
-        logger.warning(
-            "No Zeuthen batch system found, training locally instead."
-        )
-        TrainLargeFile(args, train_config, preprocess_config)
