@@ -36,5 +36,6 @@ from umami.preprocessing_tools.utils import (
     GetBinaryLabels,
     MakePlots,
     ResamplingPlots,
+    generate_process_tag,
 )
 from umami.preprocessing_tools.Writing_Train_File import TrainSampleWriter

@@ -43,27 +43,41 @@ def ResamplingPlots(
     normalised: bool = False,
     use_weights: bool = False,
     hist_input: bool = False,
+    second_tag: str = "",
+    fileformat: str = "pdf",
 ):
-    """Plots pt and eta distribution as nice plots for
-    presentation.
+    """
+    Plots pt and eta distribution as nice plots for presentation.
 
     Parameters
     ----------
-    concat_samples: dict with the format given in the Undersampling class
-                    by the class object `concat_samples` or the
-                    `x_y_after_sampling` depending on the `after_sampling`
-                    option
-    positions_x_y: the position where the variables are stored the
-                   sub-dict `jets`
-    variable_names: the name of the 2 variables which will be plotted
-    plot_base_name: folder and name of the plot w/o extension, this will be
-                    appened as well as the variable name
-    binning: dict of the bin_edges used for plotting
-    Log: boolean indicating if plot is in log scale or not (default True)
-    after_sampling: if False (default) using the synthax of `concat_samples`
-    normalised: normalises the integral of the histogram to 1
-    hist_input: if True the concat_samples is a dictionary of histograms and
-                binning is already the full axes.
+    concat_samples: dict
+        dict with the format given in the Undersampling class by the class object
+        `concat_samples` or the `x_y_after_sampling` depending on the `after_sampling`
+        option
+    positions_x_y:  list
+        The position where the variables are stored the sub-dict `jets`
+    variable_names: list
+        The name of the 2 variables which will be plotted
+    plot_base_name: str
+        Folder and name of the plot w/o extension, this will be appened as well as
+        the variable name
+    binning: dict
+        dict of the bin_edges used for plotting
+    Log: bool
+        boolean indicating if plot is in log scale or not (default True)
+    after_sampling: bool
+        If False (default) using the synthax of `concat_samples`
+    normalised: bool
+        Normalises the integral of the histogram to 1
+    hist_input: bool
+        If True the concat_samples is a dictionary of histograms and binning is
+        already the full axes.
+    second_tag: str
+        Second tag which is inserted below the ATLAS tag (using the makeATLAStag
+        function)
+    fileformat: str
+        Fileending of the plot. Default is "pdf"
 
     Returns
     -------
@@ -160,16 +174,15 @@ def ResamplingPlots(
             ax=plt.gca(),
             fig=plt.gcf(),
             first_tag="Internal Simulation",
-            second_tag=(
-                r"$\sqrt{s}$ = 13 TeV, Combined $t\bar{t} + $ ext. $Z'$ PFlow" r" Jets"
-            ),
+            second_tag=second_tag,
             ymax=0.9,
         )
 
         plt.tight_layout()
         if not os.path.exists(os.path.abspath("./plots")):
             os.makedirs(os.path.abspath("./plots"))
-        plt.savefig(f"{plot_base_name}{varname}.pdf")
+
+        plt.savefig(f"{plot_base_name}{varname}.{fileformat}")
         plt.close()
         plt.clf()
 
@@ -312,3 +325,56 @@ def Plot_vars(bjets, cjets, ujets, plot_name="InfoPlot"):
     plotname = "plots/%s_all_vars.pdf" % plot_name
     logger.info(f"Save plot as {plotname}")
     plt.savefig(plotname, transparent=True)
+
+
+def generate_process_tag(preparation_ntuples_keys):
+    """
+    Builds a tag that contains the used processes (e.g. Z' and ttbar)
+    which can then be used for plots.
+
+    Parameters
+    ----------
+    preparation_ntuples_keys : dict_keys
+        Dict keys from the preparation.ntuples section of the preprocessing
+        config
+
+    Returns
+    -------
+    second_tag_for_plot : str
+        String which is used as 'second_tag' parameter  by the makeATLAStag
+        function.
+    """
+    # Loop over the keys in the "preparation.ntuples" section of the
+    # preprocessing config. For each process, try to extract the
+    # corresponding plot label from the global config and add it to
+    # the string that is inserted as "second_tag" in the plot
+    processes = ""
+    combined_sample = False
+    logger.info("Looking for different processes in preprocessing config.")
+    # for process in self.config.preparation["ntuples"].keys():
+    for process in preparation_ntuples_keys:
+        try:
+            label = global_config.process_labels[process]["label"]
+            if processes == "":
+                processes += f"{label}"
+            else:
+                combined_sample = True
+                processes += f" + {label}"
+            logger.info(f"Found the process '{process}' with the label '{label}'")
+        except KeyError:
+            raise KeyError(
+                f"Plot label for the process {process} was not"
+                "found. Make sure your entries in the 'ntuples'"
+                "section are valid entries that have a matching entry"
+                "in the global config."
+            )
+    # Combine the string that contains the latex code for the processes
+    # and the "sqrt(s)..." and "PFlow Jets" part
+    if combined_sample is True:
+        second_tag_for_plot = r"$\sqrt{s}$ = 13 TeV, Combined " + processes
+    else:
+        second_tag_for_plot = r"$\sqrt{s}$ = 13 TeV, " + processes
+
+    second_tag_for_plot += " PFlow Jets"
+
+    return second_tag_for_plot
