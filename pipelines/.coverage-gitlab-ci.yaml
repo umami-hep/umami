@@ -4,7 +4,7 @@
 
 test_coverage:
   stage: coverage_test_stage
-  image: python:3.7-slim
+  image: python:3.8-slim
   script:
     - pip install --upgrade pip setuptools wheel
     - pip install pytest==6.2.4
@@ -46,7 +46,7 @@ coverage_html_report:
 
 test_coverage_post_report:
   stage: publish
-  image: python:3.7-slim
+  image: python:3.8-slim
   needs: ["test_coverage"]
   before_script:
     - pip install --upgrade pip setuptools wheel

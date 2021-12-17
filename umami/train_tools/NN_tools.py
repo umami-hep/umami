@@ -2471,8 +2471,10 @@ def calc_validation_metrics(
                 ]
             )
 
-        except ValueError:
-            raise ValueError(f"Epoch could not be extracted from {model_string}!")
+        except ValueError as val_error:
+            raise ValueError(
+                f"Epoch could not be extracted from {model_string}!"
+            ) from val_error
 
         # Load the epoch from json and add it to dict
         for train_epoch in training_output_list:

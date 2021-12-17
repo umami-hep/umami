@@ -29,8 +29,7 @@ class CompositingComposer(ruamel.yaml.composer.Composer):
         compositor = self.get_compositor(event.tag, nodeType) or callback
         if isinstance(compositor, types.MethodType):
             return compositor(anchor)
-        else:
-            return compositor(self, anchor)
+        return compositor(self, anchor)
 
     def compose_scalar_node(self, anchor):
         return self.__compose_dispatch(anchor, ScalarNode, super().compose_scalar_node)
@@ -50,11 +49,11 @@ class ExcludingConstructor(ruamel.yaml.constructor.Constructor):
     filters = {k: [] for k in (MappingNode, SequenceNode)}
 
     @classmethod
-    def add_filter(cls, filter, *, nodeTypes=(MappingNode,)):
+    def add_filter(cls, filter_yaml, *, nodeTypes=(MappingNode,)):
         for nodeType in nodeTypes:
-            cls.filters[nodeType].append(filter)
+            cls.filters[nodeType].append(filter_yaml)
 
-    def construct_mapping(self, node):
+    def construct_mapping(self, node):  # pylint: disable=arguments-differ
         node.value = [
             (key_node, value_node)
             for key_node, value_node in node.value
@@ -62,7 +61,7 @@ class ExcludingConstructor(ruamel.yaml.constructor.Constructor):
         ]
         return super().construct_mapping(node)
 
-    def construct_sequence(self, node):
+    def construct_sequence(self, node):  # pylint: disable=arguments-differ
         node.value = [
             value_node
             for value_node in node.value
@@ -75,7 +74,7 @@ class YAML(ruamel.yaml.YAML):
     def __init__(self, *args, **kwargs):
         if "typ" not in kwargs:
             kwargs["typ"] = "safe"
-        if type(kwargs["typ"]) is list and len(kwargs["typ"]) == 1:
+        if isinstance(kwargs["typ"], list) and len(kwargs["typ"]) == 1:
             kwargs["typ"] = kwargs["typ"][0]
         elif kwargs["typ"] not in ["safe", "unsafe"]:
             raise Exception(
@@ -101,7 +100,7 @@ class YAML(ruamel.yaml.YAML):
         If either the Scanner or Reader are set, you cannot use the non-pure Parser,
             so reset it to the pure parser and set the Reader resp. Scanner if necessary
         """
-        constructor, parser = self.get_constructor_parser(stream)
+        _, parser = self.get_constructor_parser(stream)
         try:
             return self.composer.get_single_node()
         finally:
@@ -116,17 +115,17 @@ class YAML(ruamel.yaml.YAML):
                 pass
 
     def fork(self):
-        yaml = type(self)(typ=self.typ, pure=self.pure)
-        yaml.composer.anchors = self.composer.anchors
-        return yaml
+        yml = type(self)(typ=self.typ, pure=self.pure)
+        yml.composer.anchors = self.composer.anchors
+        return yml
 
 
-def include_compositor(self, anchor):
+def include_compositor(self, anchor):  # pylint: disable=unused-argument
     event = self.parser.get_event()
-    yaml = self.loader.fork()
+    yml = self.loader.fork()
     path = os.path.join(os.path.dirname(self.loader.reader.name), event.value)
     with open(path) as f:
-        return yaml.compose(f)
+        return yml.compose(f)
 
 
 def exclude_filter(key_node, value_node=None):
@@ -143,10 +142,10 @@ if __name__ == "__main__":
     import pprint
 
     yaml = YAML(typ="safe", pure=True)
-    parser = argparse.ArgumentParser()
-    parser.add_argument("file")
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("file")
 
-    args = parser.parse_args()
+    parse_args = argparser.parse_args()
 
-    with open(args.file) as f:
-        pprint.pprint(yaml.load(f))
+    with open(parse_args.file) as yaml_file:
+        pprint.pprint(yaml.load(yaml_file))
