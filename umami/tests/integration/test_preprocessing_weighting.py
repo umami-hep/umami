@@ -23,7 +23,8 @@ def getConfiguration():
 
 def runPreprocessing(config, tagger):
     """
-    Call all steps of the preprocessing for a certain configuration and variable dict input.
+    Call all steps of the preprocessing for a certain configuration and variable dict
+    input.
     Return value `True` if all steps succeeded, `False` if one step did not succees.
 
     Input:
@@ -122,9 +123,7 @@ def runPreprocessing(config, tagger):
     if isSuccess is True:
         run_apply_scales
 
-    logger.info(
-        "Test: shuffling the samples and writing the samples to disk..."
-    )
+    logger.info("Test: shuffling the samples and writing the samples to disk...")
     run_write = run(
         [
             "preprocessing.py",
@@ -161,7 +160,8 @@ def runPreprocessing(config, tagger):
 
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
-        """Download test files for running the preprocessing and dress preprocessing config file."""
+        """Download test files for running the preprocessing and dress preprocessing
+        config file."""
         # Get test configuration
         self.data = getConfiguration()
 

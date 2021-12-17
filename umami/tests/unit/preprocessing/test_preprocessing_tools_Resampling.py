@@ -34,9 +34,7 @@ class CorrectFractionsTestCase(unittest.TestCase):
 
     def test_CorrectFractions_different_input_length_class_names(self):
         with self.assertRaises(AssertionError):
-            CorrectFractions(
-                [5000, 6000, 3000], [0.2, 0.6, 0.2], ["Zjets", "ttbar"]
-            )
+            CorrectFractions([5000, 6000, 3000], [0.2, 0.6, 0.2], ["Zjets", "ttbar"])
 
     def test_CorrectFractions_zero_Njets(self):
         with self.assertRaises(ValueError):
@@ -50,9 +48,7 @@ class CorrectFractionsTestCase(unittest.TestCase):
 
     def test_CorrectFractions_input_correct_fractions(self):
         N_jets = [2000, 6000, 2000]
-        self.assertListEqual(
-            list(CorrectFractions(N_jets, [0.2, 0.6, 0.2])), N_jets
-        )
+        self.assertListEqual(list(CorrectFractions(N_jets, [0.2, 0.6, 0.2])), N_jets)
 
     def test_CorrectFractions_scaling_down_largest(self):
         self.assertListEqual(
@@ -77,15 +73,11 @@ class CalculateBinningTestCase(unittest.TestCase):
             CalculateBinning(1)
 
     def test_SingleListCase(self):
-        np.testing.assert_array_equal(
-            CalculateBinning([1, 2, 3]), np.linspace(1, 2, 3)
-        )
+        np.testing.assert_array_equal(CalculateBinning([1, 2, 3]), np.linspace(1, 2, 3))
 
     def test_NestedListCase(self):
         bins = [[1, 2, 3], [3, 4, 5]]
-        expected_outcome = np.concatenate(
-            [np.linspace(*elem) for elem in bins]
-        )
+        expected_outcome = np.concatenate([np.linspace(*elem) for elem in bins])
         np.testing.assert_array_equal(CalculateBinning(bins), expected_outcome)
 
 
@@ -123,32 +115,20 @@ class UnderSamplingTestCase(unittest.TestCase):
 
         self.df_bjets = pd.DataFrame(
             {
-                global_config.pTvariable: abs(
-                    np.random.normal(300000, 30000, 10000)
-                ),
-                global_config.etavariable: abs(
-                    np.random.normal(1.25, 1, 10000)
-                ),
+                global_config.pTvariable: abs(np.random.normal(300000, 30000, 10000)),
+                global_config.etavariable: abs(np.random.normal(1.25, 1, 10000)),
             }
         )
         self.df_cjets = pd.DataFrame(
             {
-                global_config.pTvariable: abs(
-                    np.random.normal(280000, 28000, 10000)
-                ),
-                global_config.etavariable: abs(
-                    np.random.normal(1.4, 1, 10000)
-                ),
+                global_config.pTvariable: abs(np.random.normal(280000, 28000, 10000)),
+                global_config.etavariable: abs(np.random.normal(1.4, 1, 10000)),
             }
         )
         self.df_ujets = pd.DataFrame(
             {
-                global_config.pTvariable: abs(
-                    np.random.normal(250000, 25000, 10000)
-                ),
-                global_config.etavariable: abs(
-                    np.random.normal(1.0, 1, 10000)
-                ),
+                global_config.pTvariable: abs(np.random.normal(250000, 25000, 10000)),
+                global_config.etavariable: abs(np.random.normal(1.0, 1, 10000)),
             }
         )
 
@@ -258,16 +238,16 @@ class PDFResamplingTestCase(unittest.TestCase):
         )
         self.config = Configuration(self.config_file)
         sampling_config = self.config.sampling
-        sampling_config["options"]["sampling_variables"][0][
-            global_config.pTvariable
-        ]["bins"] = [
+        sampling_config["options"]["sampling_variables"][0][global_config.pTvariable][
+            "bins"
+        ] = [
             0,
             15e5,
             21,
         ]
-        sampling_config["options"]["sampling_variables"][1][
-            global_config.etavariable
-        ]["bins"] = [
+        sampling_config["options"]["sampling_variables"][1][global_config.etavariable][
+            "bins"
+        ] = [
             0,
             2.5,
             2,
@@ -280,9 +260,7 @@ class PDFResamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(250000, 30000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.25, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.25, 1, 10000)),
                 }
             ),
             "training_ttbar_cjets": pd.DataFrame(
@@ -290,9 +268,7 @@ class PDFResamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(220000, 28000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.4, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.4, 1, 10000)),
                 }
             ),
             "training_ttbar_ujets": pd.DataFrame(
@@ -300,9 +276,7 @@ class PDFResamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(230000, 25000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.0, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.0, 1, 10000)),
                 }
             ),
             "training_zprime_bjets": pd.DataFrame(
@@ -310,9 +284,7 @@ class PDFResamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(260000, 30000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.5, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.5, 1, 10000)),
                 }
             ),
             "training_zprime_cjets": pd.DataFrame(
@@ -320,9 +292,7 @@ class PDFResamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(260000, 28000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.6, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.6, 1, 10000)),
                 }
             ),
             "training_zprime_ujets": pd.DataFrame(
@@ -330,9 +300,7 @@ class PDFResamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(350000, 25000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.2, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.2, 1, 10000)),
                 }
             ),
         }
@@ -346,7 +314,9 @@ class PDFResamplingTestCase(unittest.TestCase):
         ]
         for sample in training_ttbar_samples:
             sample_config_output = self.samples_config[sample]["f_output"]
-            test_h5_file_name = f"{sample_config_output['path']}/{sample_config_output['file']}"
+            test_h5_file_name = (
+                f"{sample_config_output['path']}/{sample_config_output['file']}"
+            )
             with h5py.File(test_h5_file_name, "w") as f:
                 jets = f.create_dataset(
                     "jets",
@@ -383,16 +353,16 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
         self.config = Configuration(self.config_file)
         sampling_config = self.config.sampling
         sampling_config["options"]["target_distribution"] = "bjets"
-        sampling_config["options"]["sampling_variables"][0][
-            global_config.pTvariable
-        ]["bins"] = [
+        sampling_config["options"]["sampling_variables"][0][global_config.pTvariable][
+            "bins"
+        ] = [
             0,
             15e5,
             21,
         ]
-        sampling_config["options"]["sampling_variables"][1][
-            global_config.etavariable
-        ]["bins"] = [
+        sampling_config["options"]["sampling_variables"][1][global_config.etavariable][
+            "bins"
+        ] = [
             0,
             2.5,
             2,
@@ -405,9 +375,7 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(250000, 30000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.25, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.25, 1, 10000)),
                 }
             ),
             "training_ttbar_cjets": pd.DataFrame(
@@ -415,9 +383,7 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(220000, 28000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.4, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.4, 1, 10000)),
                 }
             ),
             "training_ttbar_ujets": pd.DataFrame(
@@ -425,9 +391,7 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(230000, 25000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.0, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.0, 1, 10000)),
                 }
             ),
             "training_zprime_bjets": pd.DataFrame(
@@ -435,9 +399,7 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(260000, 30000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.5, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.5, 1, 10000)),
                 }
             ),
             "training_zprime_cjets": pd.DataFrame(
@@ -445,9 +407,7 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(260000, 28000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.6, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.6, 1, 10000)),
                 }
             ),
             "training_zprime_ujets": pd.DataFrame(
@@ -455,9 +415,7 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
                     global_config.pTvariable: abs(
                         np.random.normal(350000, 25000, 10000)
                     ),
-                    global_config.etavariable: abs(
-                        np.random.normal(1.2, 1, 10000)
-                    ),
+                    global_config.etavariable: abs(np.random.normal(1.2, 1, 10000)),
                 }
             ),
         }
@@ -471,7 +429,9 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
         ]
         for sample in training_ttbar_samples:
             sample_config_output = self.samples_config[sample]["f_output"]
-            test_h5_file_name = f"{sample_config_output['path']}/{sample_config_output['file']}"
+            test_h5_file_name = (
+                f"{sample_config_output['path']}/{sample_config_output['file']}"
+            )
             with h5py.File(test_h5_file_name, "w") as f:
                 jets = f.create_dataset(
                     "jets",

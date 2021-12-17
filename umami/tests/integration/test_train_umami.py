@@ -89,9 +89,7 @@ class TestUmamiTraining(unittest.TestCase):
         logger.info(f"Creating test directory in {test_dir}")
 
         # config files, will be copied to test dir
-        config_source = os.path.join(
-            os.getcwd(), self.data["test_umami"]["config"]
-        )
+        config_source = os.path.join(os.getcwd(), self.data["test_umami"]["config"])
         self.config = os.path.join(test_dir, os.path.basename(config_source))
 
         preprocessing_config_source = os.path.join(
@@ -111,9 +109,7 @@ class TestUmamiTraining(unittest.TestCase):
 
         var_dict_umami_source = os.path.join(
             "./preprocessing_umami/preprocessing/",
-            os.path.basename(
-                self.data["test_preprocessing"]["var_dict_umami"]
-            ),
+            os.path.basename(self.data["test_preprocessing"]["var_dict_umami"]),
         )
         self.var_dict_umami = os.path.join(
             test_dir, os.path.basename(var_dict_umami_source)
@@ -147,9 +143,7 @@ class TestUmamiTraining(unittest.TestCase):
         # Copy configs and var dict
         copyfile(config_source, self.config)
         copyfile(preprocessing_config_source, self.preprocessing_config)
-        copyfile(
-            preprocessing_config_paths_source, self.preprocessing_config_paths
-        )
+        copyfile(preprocessing_config_paths_source, self.preprocessing_config_paths)
         copyfile(var_dict_umami_source, self.var_dict_umami)
 
         # modify copy of preprocessing config file for test
@@ -220,20 +214,15 @@ class TestUmamiTraining(unittest.TestCase):
         with open(self.config, "w") as config:
             yaml.dump(self.config_file, config, default_flow_style=False)
 
-        # copy config file but change the train_file to the directory with the tf record files instead of the h5 file
+        # copy config file but change the train_file to the directory with the tf
+        # record files instead of the h5 file
         # and change name of model to save model in new folder
-        self.tfrecords_config = (
-            self.config[:].replace(".yaml", "") + "_tfrecords.yaml"
-        )
+        self.tfrecords_config = self.config[:].replace(".yaml", "") + "_tfrecords.yaml"
 
         with open(self.config, "r") as tfrecords_config:
-            self.config_tfrecords_file = yaml.load(
-                tfrecords_config, Loader=yaml_loader
-            )
+            self.config_tfrecords_file = yaml.load(tfrecords_config, Loader=yaml_loader)
 
-        self.config_tfrecords_file[
-            "train_file"
-        ] = f"{self.train_tfrecords_files}"
+        self.config_tfrecords_file["train_file"] = f"{self.train_tfrecords_files}"
         self.config_tfrecords_file["model_name"] = (
             self.data["test_umami"]["model_name"] + "_tfrecords"
         )

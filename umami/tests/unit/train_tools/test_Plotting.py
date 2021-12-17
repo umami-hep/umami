@@ -31,9 +31,7 @@ class GetRejection_TestCase(unittest.TestCase):
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_plot_dir = f"{self.tmp_dir.name}/"
-        self.Control_plots_dir = os.path.join(
-            os.path.dirname(__file__), "plots/"
-        )
+        self.Control_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
         list_of_keys = [
             "cjets_rej",
             "ujets_rej",
@@ -81,9 +79,7 @@ class GetRejection_TestCase(unittest.TestCase):
                 "dips_loss",
             ]
         }
-        self.comp_tagger_frac_dict = {
-            "RNNIP": {"cjets": 0.018, "ujets": 0.982}
-        }
+        self.comp_tagger_frac_dict = {"RNNIP": {"cjets": 0.018, "ujets": 0.982}}
         self.frac_dict = {"cjets": 0.018, "ujets": 0.982}
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.main_class = "bjets"
@@ -259,8 +255,12 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
         plt.rcdefaults()
         plt.close("all")
         self.test_dir = tempfile.TemporaryDirectory()
-        self.validation_file = f"{self.test_dir.name}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
-        self.add_validation_file = f"{self.test_dir.name}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
+        self.validation_file = (
+            f"{self.test_dir.name}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
+        )
+        self.add_validation_file = (
+            f"{self.test_dir.name}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
+        )
         self.tagger_comp_var_rnnip = ["rnnip_pb", "rnnip_pc", "rnnip_pu"]
         self.tagger_comp_var_dl1r = ["DL1r_pb", "DL1r_pc", "DL1r_pu"]
         self.recommended_frac_dict = {"cjets": 0.018, "ujets": 0.982}
@@ -270,7 +270,8 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/umami/"
+                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]
@@ -286,9 +287,7 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
             main_class=self.main_class,
         )
 
-        self.assertTrue(
-            "cjets_rej" in comp_rej_dict and "ujets_rej" in comp_rej_dict
-        )
+        self.assertTrue("cjets_rej" in comp_rej_dict and "ujets_rej" in comp_rej_dict)
 
         self.assertFalse("bjets_rej" in comp_rej_dict)
 
@@ -302,8 +301,6 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
             main_class=self.main_class,
         )
 
-        self.assertTrue(
-            "cjets_rej" in comp_rej_dict and "ujets_rej" in comp_rej_dict
-        )
+        self.assertTrue("cjets_rej" in comp_rej_dict and "ujets_rej" in comp_rej_dict)
 
         self.assertFalse("bjets_rej" in comp_rej_dict)

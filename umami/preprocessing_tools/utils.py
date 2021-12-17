@@ -86,17 +86,12 @@ def ResamplingPlots(
 
             scale_val = 1
 
-            if (
-                varname in ["pT", "pt_btagJes"]
-                or varname == global_config.pTvariable
-            ):
+            if varname in ["pT", "pt_btagJes"] or varname == global_config.pTvariable:
                 scale_val = 1e3
 
             if hist_input:
                 # Working directly on the x-D array
-                direction_sum = tuple(
-                    [i for i in positions_x_y if i != varpos]
-                )
+                direction_sum = tuple([i for i in positions_x_y if i != varpos])
                 counts = np.sum(concat_samples[flav], axis=direction_sum)
                 Bins = binning[varname] / scale_val
 
@@ -107,15 +102,11 @@ def ResamplingPlots(
                     if after_sampling
                     else concat_samples[flav]["jets"][:, varpos] / scale_val,
                     bins=binning[varname],
-                    weights=concat_samples[flav]["weight"]
-                    if use_weights
-                    else None,
+                    weights=concat_samples[flav]["weight"] if use_weights else None,
                 )
 
             # Calculate the bin centers
-            bincentres = [
-                (Bins[i] + Bins[i + 1]) / 2.0 for i in range(len(Bins) - 1)
-            ]
+            bincentres = [(Bins[i] + Bins[i + 1]) / 2.0 for i in range(len(Bins) - 1)]
             # Calculate poisson uncertainties and lower bands
             unc = np.sqrt(counts) / norm_factor
             band_lower = counts / norm_factor - unc
@@ -169,7 +160,9 @@ def ResamplingPlots(
             ax=plt.gca(),
             fig=plt.gcf(),
             first_tag="Internal Simulation",
-            second_tag=r"$\sqrt{s}$ = 13 TeV, Combined $t\bar{t} + $ ext. $Z'$ PFlow Jets",
+            second_tag=(
+                r"$\sqrt{s}$ = 13 TeV, Combined $t\bar{t} + $ ext. $Z'$ PFlow" r" Jets"
+            ),
             ymax=0.9,
         )
 
@@ -214,9 +207,7 @@ def MakePlots(
         # plt.subplot(2, 2, i + 1)
         ax = fig.add_subplot(spec[0, i])
 
-        ax.ticklabel_format(
-            style="sci", axis="x", scilimits=(0, 3), useMathText=True
-        )
+        ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 3), useMathText=True)
         if bool_plot_taujets:
             array_entries, bins, _ = ax.hist(
                 [taujets[var], ujets[var], cjets[var], bjets[var]],
@@ -243,9 +234,7 @@ def MakePlots(
 
         # Do ratios now:
         ax = fig.add_subplot(spec[1, i])
-        ax.ticklabel_format(
-            style="sci", axis="x", scilimits=(0, 3), useMathText=True
-        )
+        ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 3), useMathText=True)
         b_data = array_entries[-1]
         x_error = np.zeros((2, len(b_data)))
         x_error[1, :] = bins[1] - bins[0]
@@ -271,12 +260,8 @@ def MakePlots(
                 ratio_cb = array_entries[1].astype(float) / b_data
                 ratio_ub[~np.isfinite(ratio_ub)] = 1000
                 ratio_cb[~np.isfinite(ratio_cb)] = 1000
-        ax.errorbar(
-            x=bins[:-1], y=ratio_ub, xerr=x_error, fmt="none", ecolor="#2ca02c"
-        )
-        ax.errorbar(
-            x=bins[:-1], y=ratio_cb, xerr=x_error, fmt="none", ecolor="#ff7f0e"
-        )
+        ax.errorbar(x=bins[:-1], y=ratio_ub, xerr=x_error, fmt="none", ecolor="#2ca02c")
+        ax.errorbar(x=bins[:-1], y=ratio_cb, xerr=x_error, fmt="none", ecolor="#ff7f0e")
         ax.set_ylabel("Ratio to b")
         ax.set_ylim(bottom=-0.1, top=2.1)
         ax.set_yticks([0, 1, 2, 3])

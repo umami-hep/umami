@@ -85,12 +85,8 @@ class TestInput_Vars_Plotting(unittest.TestCase):
 
         # input files, will be downloaded to test dir
         logging.info("Retrieving files from preprocessing...")
-        self.test_file_r21 = os.path.join(
-            test_dir, "plot_input_vars_r21_check.h5"
-        )
-        self.test_file_r22 = os.path.join(
-            test_dir, "plot_input_vars_r22_check.h5"
-        )
+        self.test_file_r21 = os.path.join(test_dir, "plot_input_vars_r21_check.h5")
+        self.test_file_r22 = os.path.join(test_dir, "plot_input_vars_r22_check.h5")
         self.config_path = os.path.join(test_dir, "config.yaml")
 
         copyfile("examples/plotting_input_vars.yaml", self.config_path)
@@ -100,9 +96,7 @@ class TestInput_Vars_Plotting(unittest.TestCase):
 
         # Changing eval params
         self.config["Eval_parameters"]["nJets"] = 3e3
-        self.config["Eval_parameters"][
-            "var_dict"
-        ] = "umami/configs/Dips_Variables.yaml"
+        self.config["Eval_parameters"]["var_dict"] = "umami/configs/Dips_Variables.yaml"
 
         # Change datasets for all
         for plot in self.config:
@@ -110,15 +104,11 @@ class TestInput_Vars_Plotting(unittest.TestCase):
                 self.config[plot]["Datasets_to_plot"]["R21"][
                     "files"
                 ] = f"{test_dir}plot_input_vars_r21_check.h5"
-                self.config[plot]["Datasets_to_plot"]["R21"][
-                    "label"
-                ] = "R21 Test"
+                self.config[plot]["Datasets_to_plot"]["R21"]["label"] = "R21 Test"
                 self.config[plot]["Datasets_to_plot"]["R22"][
                     "files"
                 ] = f"{test_dir}plot_input_vars_r22_check.h5"
-                self.config[plot]["Datasets_to_plot"]["R22"][
-                    "label"
-                ] = "R22 Test"
+                self.config[plot]["Datasets_to_plot"]["R22"]["label"] = "R22 Test"
                 self.config[plot]["plot_settings"][
                     "SecondTag"
                 ] = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"

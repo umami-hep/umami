@@ -42,9 +42,7 @@ class DenseNet(Layer):
 
         # Define output activation function based on output node size
         output_activation = "sigmoid" if output_nodes == 1 else "softmax"
-        self.layers.append(
-            Dense(units=output_nodes, activation=output_activation)
-        )
+        self.layers.append(Dense(units=output_nodes, activation=output_activation))
 
         # Assert that there are nodes defined
         assert len(nodes), "No layers in DenseNet"
@@ -112,9 +110,10 @@ class DeepSet(Layer):
 
     def call(self, inputs, mask=None):
         # Assert that the tensor shape is at least rank 3
-        assert (
-            len(inputs.shape) == 3
-        ), f"DeepSets layer requires tensor of rank 3. Shape of tensor received {inputs.shape}"
+        assert len(inputs.shape) == 3, (
+            "DeepSets layer requires tensor of rank 3. Shape of tensor"
+            f" received {inputs.shape}"
+        )
 
         # Check if mask is None and the standard zero mask is used
         if mask is None and self.mask_zero:
@@ -212,9 +211,10 @@ class Attention(Layer):
         super().__init__(**kwargs)
 
     def call(self, inputs, mask=None):
-        assert (
-            len(inputs.shape) == 3
-        ), f"Attention layer requires tensor of rank 3. Shape of tensor received {inputs.shape}"
+        assert len(inputs.shape) == 3, (
+            "Attention layer requires tensor of rank 3. Shape of tensor"
+            f" received {inputs.shape}"
+        )
 
         if mask is None and self.mask_zero:
             mask = self.compute_mask(inputs, mask)
@@ -267,9 +267,10 @@ class AttentionPooling(Layer):
         attention, features = inputs[:2]
 
         # Assert correct shape
-        assert (len(attention.shape) == 2) & (
-            len(features.shape) == 3
-        ), "Please provide attention tensor as first argument (rank 2), followed by feature tensor (rank 3)"
+        assert (len(attention.shape) == 2) & (len(features.shape) == 3), (
+            "Please provide attention tensor as first argument (rank 2),"
+            " followed by feature tensor (rank 3)"
+        )
 
         # Pool with dot product
         pool = K.batch_dot(K.expand_dims(attention, 1), features)
@@ -314,9 +315,11 @@ class ConditionalAttention(Layer):
         repeat, condition = inputs[:2]
 
         # Assert correct shapes
-        assert (len(repeat.shape) == 3) & (
-            len(condition.shape) == 2
-        ), f"Repeated vector must be rank 3 input, condition vector must be rank 2. Tensors provided have shapes {repeat.shape}, {condition.shape}"
+        assert (len(repeat.shape) == 3) & (len(condition.shape) == 2), (
+            "Repeated vector must be rank 3 input, condition vector must be"
+            f" rank 2. Tensors provided have shapes {repeat.shape},"
+            f" {condition.shape}"
+        )
 
         # Get the number of repeat
         nrepeat = repeat.shape[1]
@@ -376,9 +379,7 @@ class ConditionalDeepSet(Layer):
         self.supports_masking = True
 
         # Get a DeepSet layer with the correct attributes
-        self.deepsets = DeepSet(
-            nodes, activation, batch_norm, mask_zero, **kwargs
-        )
+        self.deepsets = DeepSet(nodes, activation, batch_norm, mask_zero, **kwargs)
 
         # Get layers from deep sets layer
         self.layers = self.deepsets.layers
@@ -390,9 +391,11 @@ class ConditionalDeepSet(Layer):
         repeat, condition = inputs[:2]
 
         # Assert correct shape of the repeated and conditions vector
-        assert (len(repeat.shape) == 3) & (
-            len(condition.shape) == 2
-        ), f"Repeated vector must be rank 3 input, condition vector must be rank 2. Tensors provided have shapes {repeat.shape}, {condition.shape}"
+        assert (len(repeat.shape) == 3) & (len(condition.shape) == 2), (
+            "Repeated vector must be rank 3 input, condition vector must be"
+            f" rank 2. Tensors provided have shapes {repeat.shape},"
+            f" {condition.shape}"
+        )
 
         # Get the number of repeat vectors
         nrepeat = repeat.shape[1]

@@ -172,15 +172,9 @@ class PrepareSamplesTestCase(unittest.TestCase):
         jets = pd.DataFrame(
             {
                 "eventNumber": np.array([0, 1, 2], dtype=np.uint8),
-                "JetFitterSecondaryVertex_mass": np.array(
-                    [0, 0, 0], dtype=np.uint8
-                ),
-                "JetFitterSecondaryVertex_energy": np.array(
-                    [0, 0, 0], dtype=np.uint8
-                ),
-                "HadronConeExclTruthLabelID": np.array(
-                    [5, 4, 0], dtype=np.uint8
-                ),
+                "JetFitterSecondaryVertex_mass": np.array([0, 0, 0], dtype=np.uint8),
+                "JetFitterSecondaryVertex_energy": np.array([0, 0, 0], dtype=np.uint8),
+                "HadronConeExclTruthLabelID": np.array([5, 4, 0], dtype=np.uint8),
                 "GhostBHadronsFinalPt": 5e5 * np.ones(3),
                 global_config.pTvariable: 5e3 * np.ones(3),
             },

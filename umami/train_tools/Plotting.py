@@ -43,9 +43,7 @@ def CompTaggerRejectionDict(
 
     # Get class_labels variables
     class_ids = get_class_label_ids(class_labels)
-    class_label_vars, flatten_class_labels = get_class_label_variables(
-        class_labels
-    )
+    class_label_vars, flatten_class_labels = get_class_label_variables(class_labels)
 
     # Get the tagger variables and the class label variables
     variables = list(dict.fromkeys(class_label_vars)) + tagger_comp_var
@@ -70,9 +68,7 @@ def CompTaggerRejectionDict(
         df["Umami_string_labels"].values[indices_tochange] = class_label
 
         # Add the right column label to class
-        df["Umami_labels"].values[indices_tochange] = class_labels.index(
-            class_label
-        )
+        df["Umami_labels"].values[indices_tochange] = class_labels.index(class_label)
 
     # Get the indices of the jets that are not used
     indices_toremove = np.where(df["Umami_string_labels"] == "0")[0]
@@ -392,7 +388,8 @@ def PlotRejPerEpochComparison(
 
                 except KeyError:
                     logger.info(
-                        f"{iter_class} rejection for {comp_tagger} not in dict! Skipping ..."
+                        f"{iter_class} rejection for {comp_tagger} not in"
+                        " dict! Skipping ..."
                     )
 
         if trained_taggers is None:
@@ -405,7 +402,8 @@ def PlotRejPerEpochComparison(
                     tt_rej_dict = pd.read_json(trained_taggers[tt]["path"])
 
                 except FileNotFoundError(
-                    f'No .json file found at {trained_taggers[tt]["path"]}. Skipping {trained_taggers[tt]["label"]}'
+                    f'No .json file found at {trained_taggers[tt]["path"]}.'
+                    f' Skipping {trained_taggers[tt]["label"]}'
                 ):
                     continue
 
@@ -542,7 +540,8 @@ def PlotRejPerEpoch(
     - legFontSize: Fontsize of the legend.
 
     Output:
-    - Plot of the rejections of the taggers per epoch in seperate plots. One per rejection.
+    - Plot of the rejections of the taggers per epoch in seperate plots.
+      One per rejection.
     """
 
     # Apply ATLAS style
@@ -598,7 +597,8 @@ def PlotRejPerEpoch(
 
                 except KeyError:
                     logger.info(
-                        f"{iter_class} rejection for {comp_tagger} not in dict! Skipping ..."
+                        f"{iter_class} rejection for {comp_tagger} not in"
+                        " dict! Skipping ..."
                     )
 
         if trained_taggers is None:
@@ -611,7 +611,8 @@ def PlotRejPerEpoch(
                     tt_rej_dict = pd.read_json(trained_taggers[tt]["path"])
 
                 except FileNotFoundError(
-                    f'No .json file found at {trained_taggers[tt]["path"]}. Skipping {trained_taggers[tt]["label"]}'
+                    f'No .json file found at {trained_taggers[tt]["path"]}.'
+                    f' Skipping {trained_taggers[tt]["label"]}'
                 ):
                     continue
 
@@ -1091,9 +1092,7 @@ def RunPerformanceCheck(
             )
 
             if train_config.add_validation_file is not None:
-                comp_tagger_rej_dict_add[
-                    comp_tagger
-                ] = CompTaggerRejectionDict(
+                comp_tagger_rej_dict_add[comp_tagger] = CompTaggerRejectionDict(
                     file=train_config.add_validation_file,
                     tagger_comp_var=tagger_comp_vars[comp_tagger],
                     recommended_frac_dict=recommended_frac_dict[comp_tagger],
@@ -1215,8 +1214,7 @@ def RunPerformanceCheck(
     else:
         # If no freshly trained tagger label is given, give tagger
         if not (
-            "tagger_label" in Val_settings
-            and Val_settings["tagger_label"] is not None
+            "tagger_label" in Val_settings and Val_settings["tagger_label"] is not None
         ):
             Val_settings["tagger_label"] = tagger
 

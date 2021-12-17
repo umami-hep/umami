@@ -29,9 +29,7 @@ class TFRecordReader:
         -------
         tf_Dataset
         """
-        data_files = tf.io.gfile.glob(
-            (self.path + "/*.tfrecord").replace("//", "/")
-        )
+        data_files = tf.io.gfile.glob((self.path + "/*.tfrecord").replace("//", "/"))
         Dataset_shards = tf.data.Dataset.from_tensor_slices([data_files])
         Dataset_shards.shuffle(tf.cast(tf.shape(data_files)[0], tf.int64))
         tf_Dataset = Dataset_shards.interleave(
@@ -85,9 +83,7 @@ class TFRecordReader:
                 "X_trks": tf.io.FixedLenFeature(
                     shape=shapes["shape_Xtrks"], dtype=tf.float32
                 ),
-                "Y": tf.io.FixedLenFeature(
-                    shape=shapes["shape_Y"], dtype=tf.int64
-                ),
+                "Y": tf.io.FixedLenFeature(shape=shapes["shape_Y"], dtype=tf.int64),
                 "Weights": tf.io.FixedLenFeature(shape=[1], dtype=tf.float32),
             },
         )

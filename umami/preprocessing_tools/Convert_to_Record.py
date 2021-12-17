@@ -11,9 +11,7 @@ import tqdm
 class h5toTFRecordConverter:
     def __init__(self, config):
         self.config = config
-        self.path_h5 = self.config.GetFileName(
-            option="resampled_scaled_shuffled"
-        )
+        self.path_h5 = self.config.GetFileName(option="resampled_scaled_shuffled")
         try:
             self.chunk_size = config.preparation["convert"]["chunk_size"]
             logger.info(f"Save {self.chunk_size} entries in one file")
@@ -44,7 +42,8 @@ class h5toTFRecordConverter:
         with h5py.File(self.path_h5, "r") as hFile:
             length_dataset = len(hFile["X_train"])
             logger.info(
-                f"Total length of the dataset is {length_dataset}. Load {self.chunk_size} samples at a time"
+                f"Total length of the dataset is {length_dataset}. Load"
+                f" {self.chunk_size} samples at a time"
             )
             total_loads = int(length_dataset / self.chunk_size)
             if length_dataset % self.chunk_size != 0:
@@ -105,22 +104,18 @@ class h5toTFRecordConverter:
                 + ".tfrecord"
             )
             with tf.io.TFRecordWriter(filename) as file_writer:
-                for (x_jets, x_trks, y, weight) in zip(
-                    X_jets, X_trks, Y, Weights
-                ):
+                for (x_jets, x_trks, y, weight) in zip(X_jets, X_trks, Y, Weights):
                     record_bytes = tf.train.Example()
-                    record_bytes.features.feature[
-                        "X_jets"
-                    ].float_list.value.extend(x_jets.reshape(-1))
-                    record_bytes.features.feature[
-                        "X_trks"
-                    ].float_list.value.extend(x_trks.reshape(-1))
-                    record_bytes.features.feature["Y"].int64_list.value.extend(
-                        y
+                    record_bytes.features.feature["X_jets"].float_list.value.extend(
+                        x_jets.reshape(-1)
                     )
-                    record_bytes.features.feature[
-                        "Weights"
-                    ].float_list.value.extend(weight.reshape(-1))
+                    record_bytes.features.feature["X_trks"].float_list.value.extend(
+                        x_trks.reshape(-1)
+                    )
+                    record_bytes.features.feature["Y"].int64_list.value.extend(y)
+                    record_bytes.features.feature["Weights"].float_list.value.extend(
+                        weight.reshape(-1)
+                    )
                     file_writer.write(record_bytes.SerializeToString())
                 logger.info(f"Data written in {filename}")
         self.save_parameters(record_dir=record_dir)

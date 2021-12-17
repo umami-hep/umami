@@ -17,9 +17,7 @@ def GetParser():
     -------
     args: parse_args
     """
-    parser = argparse.ArgumentParser(
-        description="Preprocessing command line" "options."
-    )
+    parser = argparse.ArgumentParser(description="Preprocessing command lineoptions.")
 
     parser.add_argument(
         "-c",
@@ -86,9 +84,7 @@ def main(args, train_config, preprocess_config):
         # If dict is given, the re-calculation is skipped
         if args.dict:
             output_file_name = args.dict
-            parameters = utt.get_parameters_from_validation_dict_name(
-                output_file_name
-            )
+            parameters = utt.get_parameters_from_validation_dict_name(output_file_name)
             beff = parameters["WP"]
 
         else:

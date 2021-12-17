@@ -27,9 +27,7 @@ def GetParser():
     -------
     args: parse_args
     """
-    parser = argparse.ArgumentParser(
-        description="Preprocessing command line options."
-    )
+    parser = argparse.ArgumentParser(description="Preprocessing command line options.")
 
     parser.add_argument(
         "-c",
@@ -74,9 +72,7 @@ def GetParser():
     return args
 
 
-def EvaluateModel(
-    args, train_config, preprocess_config, test_file, data_set_name
-):
+def EvaluateModel(args, train_config, preprocess_config, test_file, data_set_name):
     # Get train parameters
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
@@ -84,8 +80,7 @@ def EvaluateModel(
     frac_values_comp = Eval_params["frac_values_comp"]
     var_cuts = (
         Eval_params["variable_cuts"][f"{data_set_name}"]
-        if "variable_cuts" in Eval_params
-        and Eval_params["variable_cuts"] is not None
+        if "variable_cuts" in Eval_params and Eval_params["variable_cuts"] is not None
         else None
     )
 
@@ -102,7 +97,8 @@ def EvaluateModel(
     except AttributeError:
         Eval_model_bool = True
 
-    # Set epoch to use for evaluation of trained model or dummy value if tagger scores from derivations should be used
+    # Set epoch to use for evaluation of trained model or dummy value if
+    # tagger scores from derivations should be used
     epoch = args.epoch if Eval_model_bool else 0
 
     # Test if multiple taggers are given or not
@@ -124,9 +120,7 @@ def EvaluateModel(
     # evaluate trained model file (for evaluate_trained_model: True in config)
     if Eval_model_bool:
         if epoch is None:
-            raise ValueError(
-                "You need to give an epoch which is to be evaluated!"
-            )
+            raise ValueError("You need to give an epoch which is to be evaluated!")
 
         # Get model file path
         model_file = utt.GetModelPath(
@@ -239,28 +233,22 @@ def EvaluateModel(
         if tagger_preds != []
         else None,
         frac_values_comp=frac_values_comp,
-        eff_min=0.49
-        if "eff_min" not in Eval_params
-        else Eval_params["eff_min"],
-        eff_max=1.0
-        if "eff_max" not in Eval_params
-        else Eval_params["eff_max"],
+        eff_min=0.49 if "eff_min" not in Eval_params else Eval_params["eff_min"],
+        eff_max=1.0 if "eff_max" not in Eval_params else Eval_params["eff_max"],
     )
 
     df_eff_rej = pd.DataFrame(tagger_rej_dicts)
     del tagger_rej_dicts
 
     df_eff_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_eff"
-        f"-{epoch}.h5",
+        f"{train_config.model_name}/results/results-rej_per_eff-{epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/"
-        + f"results-rej_per_eff-{epoch}.h5",
+        f"{train_config.model_name}/results/" + f"results-rej_per_eff-{epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -280,8 +268,7 @@ def EvaluateModelDips(
     frac_values_comp = Eval_params["frac_values_comp"]
     var_cuts = (
         Eval_params["variable_cuts"][f"{data_set_name}"]
-        if "variable_cuts" in Eval_params
-        and Eval_params["variable_cuts"] is not None
+        if "variable_cuts" in Eval_params and Eval_params["variable_cuts"] is not None
         else None
     )
 
@@ -304,9 +291,7 @@ def EvaluateModelDips(
         )
 
     # Get model file path
-    model_file = utt.GetModelPath(
-        model_name=train_config.model_name, epoch=args.epoch
-    )
+    model_file = utt.GetModelPath(model_name=train_config.model_name, epoch=args.epoch)
     logger.info(f"Evaluating {model_file}")
 
     # Check which test files need to be loaded depending on the DIPS version
@@ -428,12 +413,8 @@ def EvaluateModelDips(
         main_class=main_class,
         frac_values={"dips": Eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
-        eff_min=0.49
-        if "eff_min" not in Eval_params
-        else Eval_params["eff_min"],
-        eff_max=1.0
-        if "eff_max" not in Eval_params
-        else Eval_params["eff_max"],
+        eff_min=0.49 if "eff_min" not in Eval_params else Eval_params["eff_min"],
+        eff_max=1.0 if "eff_max" not in Eval_params else Eval_params["eff_max"],
     )
 
     # Form the dict to a Dataframe and save it
@@ -441,16 +422,14 @@ def EvaluateModelDips(
     del tagger_rej_dicts
 
     df_eff_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_eff"
-        f"-{args.epoch}.h5",
+        f"{train_config.model_name}/results/results-rej_per_eff-{args.epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/"
-        + f"results-rej_per_eff-{args.epoch}.h5",
+        f"{train_config.model_name}/results/" + f"results-rej_per_eff-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -495,8 +474,7 @@ def EvaluateModelDL1(
     frac_values_comp = Eval_params["frac_values_comp"]
     var_cuts = (
         Eval_params["variable_cuts"][f"{data_set_name}"]
-        if "variable_cuts" in Eval_params
-        and Eval_params["variable_cuts"] is not None
+        if "variable_cuts" in Eval_params and Eval_params["variable_cuts"] is not None
         else None
     )
 
@@ -523,9 +501,7 @@ def EvaluateModelDL1(
         )
 
     # Get model file path
-    model_file = utt.GetModelPath(
-        model_name=train_config.model_name, epoch=args.epoch
-    )
+    model_file = utt.GetModelPath(model_name=train_config.model_name, epoch=args.epoch)
     logger.info(f"Evaluating {model_file}")
 
     # Define excluded variables and laod them
@@ -574,9 +550,7 @@ def EvaluateModelDL1(
         )
 
     # Load extra variables
-    add_variables = train_config.Eval_parameters_validation[
-        "add_variables_eval"
-    ]
+    add_variables = train_config.Eval_parameters_validation["add_variables_eval"]
     add_variables_available = None
     if add_variables is not None:
         available_variables = list(
@@ -643,12 +617,8 @@ def EvaluateModelDL1(
         main_class=main_class,
         frac_values={"DL1": Eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
-        eff_min=0.49
-        if "eff_min" not in Eval_params
-        else Eval_params["eff_min"],
-        eff_max=1.0
-        if "eff_max" not in Eval_params
-        else Eval_params["eff_max"],
+        eff_min=0.49 if "eff_min" not in Eval_params else Eval_params["eff_min"],
+        eff_max=1.0 if "eff_max" not in Eval_params else Eval_params["eff_max"],
     )
 
     # Add dict to Dataframe and delete dict
@@ -656,16 +626,14 @@ def EvaluateModelDL1(
     del tagger_rej_dicts
 
     df_eff_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_eff"
-        f"-{args.epoch}.h5",
+        f"{train_config.model_name}/results/results-rej_per_eff-{args.epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/"
-        + f"results-rej_per_eff-{args.epoch}.h5",
+        f"{train_config.model_name}/results/" + f"results-rej_per_eff-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -728,9 +696,7 @@ if __name__ == "__main__":
                     args=args,
                     train_config=train_config,
                     preprocess_config=preprocess_config,
-                    test_file=train_config.ttbar_test_files[ttbar_models][
-                        "Path"
-                    ],
+                    test_file=train_config.ttbar_test_files[ttbar_models]["Path"],
                     data_set_name=train_config.ttbar_test_files[ttbar_models][
                         "data_set_name"
                     ],
@@ -744,9 +710,7 @@ if __name__ == "__main__":
                     args=args,
                     train_config=train_config,
                     preprocess_config=preprocess_config,
-                    test_file=train_config.zpext_test_files[zpext_models][
-                        "Path"
-                    ],
+                    test_file=train_config.zpext_test_files[zpext_models]["Path"],
                     data_set_name=train_config.zpext_test_files[zpext_models][
                         "data_set_name"
                     ],
@@ -761,9 +725,7 @@ if __name__ == "__main__":
                     args=args,
                     train_config=train_config,
                     preprocess_config=preprocess_config,
-                    test_file=train_config.ttbar_test_files[ttbar_models][
-                        "Path"
-                    ],
+                    test_file=train_config.ttbar_test_files[ttbar_models]["Path"],
                     data_set_name=train_config.ttbar_test_files[ttbar_models][
                         "data_set_name"
                     ],
@@ -777,9 +739,7 @@ if __name__ == "__main__":
                     args=args,
                     train_config=train_config,
                     preprocess_config=preprocess_config,
-                    test_file=train_config.zpext_test_files[zpext_models][
-                        "Path"
-                    ],
+                    test_file=train_config.zpext_test_files[zpext_models]["Path"],
                     data_set_name=train_config.zpext_test_files[zpext_models][
                         "data_set_name"
                     ],
@@ -794,9 +754,7 @@ if __name__ == "__main__":
                     args=args,
                     train_config=train_config,
                     preprocess_config=preprocess_config,
-                    test_file=train_config.ttbar_test_files[ttbar_models][
-                        "Path"
-                    ],
+                    test_file=train_config.ttbar_test_files[ttbar_models]["Path"],
                     data_set_name=train_config.ttbar_test_files[ttbar_models][
                         "data_set_name"
                     ],
@@ -809,9 +767,7 @@ if __name__ == "__main__":
                     args=args,
                     train_config=train_config,
                     preprocess_config=preprocess_config,
-                    test_file=train_config.zpext_test_files[zpext_models][
-                        "Path"
-                    ],
+                    test_file=train_config.zpext_test_files[zpext_models]["Path"],
                     data_set_name=train_config.zpext_test_files[zpext_models][
                         "data_set_name"
                     ],

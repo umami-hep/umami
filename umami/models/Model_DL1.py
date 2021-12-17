@@ -149,9 +149,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     )
 
     # Load model and epochs
-    model, epochs = DL1_model(
-        train_config=train_config, input_shape=(nFeatures,)
-    )
+    model, epochs = DL1_model(train_config=train_config, input_shape=(nFeatures,))
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
@@ -163,8 +161,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
 
     # Set ModelCheckpoint as callback
     dl1_mChkPt = ModelCheckpoint(
-        f"{train_config.model_name}/model_files"
-        + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
@@ -213,9 +210,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     )
 
     # Dump dict into json
-    logger.info(
-        f"Dumping history file to {train_config.model_name}/history.json"
-    )
+    logger.info(f"Dumping history file to {train_config.model_name}/history.json")
 
     # Make the history dict the same shape as the dict from the callbacks
     hist_dict = utt.prepare_history_dict(history.history)

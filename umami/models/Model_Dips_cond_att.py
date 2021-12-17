@@ -67,9 +67,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
     logger.info(f"Number of Jets used for training: {nJets}")
 
     # Init dips model
-    dips, epochs = Dips_model(
-        train_config=train_config, input_shape=(nTrks, nFeatures)
-    )
+    dips, epochs = Dips_model(train_config=train_config, input_shape=(nTrks, nFeatures))
 
     if NN_structure["use_sample_weights"]:
         tensor_types = (
@@ -80,9 +78,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
         tensor_shapes = (
             {
                 "input_1": tf.TensorShape([None, nTrks, nFeatures]),
-                "input_2": tf.TensorShape(
-                    [None, NN_structure["N_Conditions"]]
-                ),
+                "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
             },
             tf.TensorShape([None, nDim]),
             tf.TensorShape([None]),
@@ -95,9 +91,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
         tensor_shapes = (
             {
                 "input_1": tf.TensorShape([None, nTrks, nFeatures]),
-                "input_2": tf.TensorShape(
-                    [None, NN_structure["N_Conditions"]]
-                ),
+                "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
             },
             tf.TensorShape([None, nDim]),
         )
@@ -133,8 +127,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
 
     # Set ModelCheckpoint as callback
     dips_mChkPt = ModelCheckpoint(
-        f"{train_config.model_name}/model_files"
-        + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
@@ -209,9 +202,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
     )
 
     # Dump dict into json
-    logger.info(
-        f"Dumping history file to {train_config.model_name}/history.json"
-    )
+    logger.info(f"Dumping history file to {train_config.model_name}/history.json")
 
     # Make the history dict the same shape as the dict from the callbacks
     hist_dict = utt.prepare_history_dict(history.history)

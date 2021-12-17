@@ -24,9 +24,7 @@ class ConvertTest(unittest.TestCase):
         x_trks_train = np.ones(shape=(3, 40, 5))
         y_train = np.ones(shape=(3, 3))
         # save dummy data to temporary file
-        self.tfh5 = tempfile.NamedTemporaryFile(
-            suffix="-resampled_scaled_shuffled.h5"
-        )
+        self.tfh5 = tempfile.NamedTemporaryFile(suffix="-resampled_scaled_shuffled.h5")
         with h5py.File(self.tfh5, "w") as out_file:
             out_file.create_dataset("X_train", data=x_train)
             out_file.create_dataset("X_trk_train", data=x_trks_train)

@@ -38,9 +38,7 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
     if train_config.model_file is not None:
         # Load DIPS model from file
         logger.info(f"Loading model from: {train_config.model_file}")
-        umami = load_model(
-            train_config.model_file, {"Sum": utf.Sum}, compile=False
-        )
+        umami = load_model(train_config.model_file, {"Sum": utf.Sum}, compile=False)
 
     else:
         logger.info("No modelfile provided! Initialize a new one!")
@@ -65,13 +63,13 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
                 )(tdd)
 
             if dropout != 0:
-                tdd = TimeDistributed(
-                    Dropout(rate=dropout), name=f"Phi{i}_Dropout"
-                )(tdd)
+                tdd = TimeDistributed(Dropout(rate=dropout), name=f"Phi{i}_Dropout")(
+                    tdd
+                )
 
-            tdd = TimeDistributed(
-                Activation(activations.relu), name=f"Phi{i}_ReLU"
-            )(tdd)
+            tdd = TimeDistributed(Activation(activations.relu), name=f"Phi{i}_ReLU")(
+                tdd
+            )
 
         # This is where the magic happens... sum up the track features!
         F = utf.Sum(name="Sum")(tdd)
@@ -90,9 +88,7 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
                 F = Dropout(rate=p, name=f"F{j}_Dropout")(F)
             F = Activation(activations.relu, name=f"F{j}_ReLU")(F)
 
-        dips_output = Dense(
-            len(class_labels), activation="softmax", name="dips"
-        )(F)
+        dips_output = Dense(len(class_labels), activation="softmax", name="dips")(F)
 
         # Input layer
         jet_inputs = Input(shape=(njet_features,))
@@ -190,7 +186,9 @@ def Umami(args, train_config, preprocess_config):
                 train_file_name == "metadata.json"
             ):
                 raise ValueError(
-                    f"input file {train_config.train_file} is neither a .h5 file nor a directory with TF Record Files. You should check this."
+                    f"input file {train_config.train_file} is neither a .h5"
+                    " file nor a directory with TF Record Files. You should"
+                    " check this."
                 )
         if "metadata.json" not in train_file_names:
             raise KeyError("No metadata file in directory.")
@@ -205,9 +203,7 @@ def Umami(args, train_config, preprocess_config):
             train_config.train_file, NN_structure["batch_size"], nfiles
         )
         train_dataset = tfrecord_reader.load_Dataset()
-        metadata_name = (train_config.train_file + "/metadata.json").replace(
-            "//", "/"
-        )
+        metadata_name = (train_config.train_file + "/metadata.json").replace("//", "/")
         with open(metadata_name, "r") as metadata_file:
             metadata = json.load(metadata_file)
             nJets = metadata["nJets"]
@@ -217,7 +213,8 @@ def Umami(args, train_config, preprocess_config):
             nDim = metadata["nDim"]
     else:
         raise ValueError(
-            f"input file {train_config.train_file} is neither a .h5 file nor a directory with TF Record Files. You should check this."
+            f"input file {train_config.train_file} is neither a .h5 file nor a"
+            " directory with TF Record Files. You should check this."
         )
 
     if NN_structure["nJets_train"] is not None:
@@ -293,8 +290,7 @@ def Umami(args, train_config, preprocess_config):
 
     # Set ModelCheckpoint as callback
     umami_mChkPt = ModelCheckpoint(
-        f"{train_config.model_name}/model_files"
-        + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
@@ -336,9 +332,7 @@ def Umami(args, train_config, preprocess_config):
     )
 
     # Dump dict into json
-    logger.info(
-        f"Dumping history file to {train_config.model_name}/history.json"
-    )
+    logger.info(f"Dumping history file to {train_config.model_name}/history.json")
 
     # Make the history dict the same shape as the dict from the callbacks
     hist_dict = utt.prepare_history_dict(history.history)

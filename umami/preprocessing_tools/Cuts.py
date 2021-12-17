@@ -18,7 +18,8 @@ def GetSampleCuts(jets, cuts):
 
     Args:
         jets (array of jets): array of jets which need to pass certain cuts
-        cuts (list): list from config file which contains dict objects for individual cuts
+        cuts (list): list from config file which contains dict objects for individual
+                     cuts
 
     Returns:
         indices_to_remove: numpy array of indices to be removed by the cuts
@@ -66,42 +67,36 @@ def GetSampleCuts(jets, cuts):
                 op = found.group(2)
             except AttributeError:
                 raise RuntimeError(
-                    "Incorrect use of modulo cut for sample: \
-                    specify in config as mod_N_op \
-                    with N as an integer and \
-                    op the operator used for testing the condition."
+                    "Incorrect use of modulo cut for sample:                  "
+                    "   specify in config as mod_N_op                     with"
+                    " N as an integer and                     op the operator"
+                    " used for testing the condition."
                 )
             except KeyError:
                 raise RuntimeError(
-                    f"Incorrect use of modulo cut for sample: \
-                    only supported operators 'op' in mod_N_op are: \
-                    {list(inverted_ops.keys())}."
+                    "Incorrect use of modulo cut for sample:                 "
+                    "    only supported operators 'op' in mod_N_op are:      "
+                    f"               {list(inverted_ops.keys())}."
                 )
             cut_rejection = inverted_ops[op]((jets[cut] % modulo), cond)
         else:
             if op in list(inverted_ops.keys()):
                 if type(cond) is list:
-                    indices = [
-                        inverted_ops[op](jets[cut], cond_i) for cond_i in cond
-                    ]
+                    indices = [inverted_ops[op](jets[cut], cond_i) for cond_i in cond]
                     cut_rejection = reduce(operator.and_, indices)
                 else:
                     cond = float(cond)
                     cut_rejection = inverted_ops[op](jets[cut], cond)
                     if NaNCheck:
-                        cut_rejection = cut_rejection & (
-                            jets[cut] == jets[cut]
-                        )
+                        cut_rejection = cut_rejection & (jets[cut] == jets[cut])
             else:
                 raise KeyError(
-                    f"Only supported operators are: \
-                    {list(inverted_ops.keys())}."
+                    "Only supported operators are:                    "
+                    f" {list(inverted_ops.keys())}."
                 )
         cut_rejections.append(cut_rejection)
 
-    indices_to_remove = np.where(reduce(operator.or_, cut_rejections, False))[
-        0
-    ]
+    indices_to_remove = np.where(reduce(operator.or_, cut_rejections, False))[0]
     del cut_rejections
 
     return indices_to_remove
@@ -128,7 +123,8 @@ def GetCategoryCuts(label_var, label_value):
         )
     else:
         raise ValueError(
-            "The 'label_value' in the global config has a not allowed type. Should be either an integer or a list of integers."
+            "The 'label_value' in the global config has a not allowed type."
+            " Should be either an integer or a list of integers."
         )
 
     return cut_object

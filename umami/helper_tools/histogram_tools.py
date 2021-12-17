@@ -103,22 +103,12 @@ def hist_ratio(nominator, denominator, nominator_unc, denominator_unc):
 
     """
     if nominator.shape != denominator.shape:
-        raise (
-            AssertionError(
-                "Nominator and denominator don't have the same " "legth"
-            )
-        )
+        raise (AssertionError("Nominator and denominator don't have the same legth"))
     if nominator.shape != nominator_unc.shape:
-        raise (
-            AssertionError(
-                "Nominator and nominator_unc don't have the same " "legth"
-            )
-        )
+        raise (AssertionError("Nominator and nominator_unc don't have the same legth"))
     if denominator.shape != denominator_unc.shape:
         raise (
-            AssertionError(
-                "Denominator and denominator_unc don't have the " "same legth"
-            )
+            AssertionError("Denominator and denominator_unc don't have the same legth")
         )
     step_ratio = step_divide(nominator, denominator)
     # Add an extra bin in the beginning to have the same binning as the input

@@ -33,9 +33,7 @@ class CompositingComposer(ruamel.yaml.composer.Composer):
             return compositor(self, anchor)
 
     def compose_scalar_node(self, anchor):
-        return self.__compose_dispatch(
-            anchor, ScalarNode, super().compose_scalar_node
-        )
+        return self.__compose_dispatch(anchor, ScalarNode, super().compose_scalar_node)
 
     def compose_sequence_node(self, anchor):
         return self.__compose_dispatch(
@@ -60,9 +58,7 @@ class ExcludingConstructor(ruamel.yaml.constructor.Constructor):
         node.value = [
             (key_node, value_node)
             for key_node, value_node in node.value
-            if not any(
-                f(key_node, value_node) for f in self.filters[MappingNode]
-            )
+            if not any(f(key_node, value_node) for f in self.filters[MappingNode])
         ]
         return super().construct_mapping(node)
 
@@ -83,8 +79,7 @@ class YAML(ruamel.yaml.YAML):
             kwargs["typ"] = kwargs["typ"][0]
         elif kwargs["typ"] not in ["safe", "unsafe"]:
             raise Exception(
-                f"Can't do typ={kwargs['typ']} parsing w/ composition time"
-                "directives!"
+                f"Can't do typ={kwargs['typ']} parsing w/ composition timedirectives!"
             )
 
         if "pure" not in kwargs:
@@ -140,9 +135,7 @@ def exclude_filter(key_node, value_node=None):
 
 
 CompositingComposer.add_compositor("!include", include_compositor)
-ExcludingConstructor.add_filter(
-    exclude_filter, nodeTypes=(MappingNode, SequenceNode)
-)
+ExcludingConstructor.add_filter(exclude_filter, nodeTypes=(MappingNode, SequenceNode))
 
 
 if __name__ == "__main__":

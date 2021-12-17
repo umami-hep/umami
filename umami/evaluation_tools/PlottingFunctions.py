@@ -44,9 +44,7 @@ def FlatEfficiencyPerBin(
         df_in_bin = df[index_jets_in_bin]
         if len(df_in_bin) == 0:
             continue
-        scores_b_in_bin = df_in_bin[df_in_bin["labels"] == target_index][
-            predictions
-        ]
+        scores_b_in_bin = df_in_bin[df_in_bin["labels"] == target_index][predictions]
         if len(scores_b_in_bin) == 0:
             continue
         cutvalue_in_bin = np.percentile(scores_b_in_bin, 100.0 * (1.0 - wp))
@@ -106,7 +104,8 @@ def plotEfficiencyVariable(
 
     Optional:
     - ThirdTag: additional tag
-    - frac_values: dictionary of flavour fractions  centralise_bins: boolean to centralise point in the bins
+    - frac_values: dictionary of flavour fractions
+    - centralise_bins: boolean to centralise point in the bins
     - xticksval: list of ticks values (must agree with the one below)
     - xticks: list of ticks (must agree with the one above)
     - minor_ticks_frequency: int,
@@ -135,19 +134,13 @@ def plotEfficiencyVariable(
     null_value = np.nan
 
     store_dict = {
-        "store_eff_tagger": np.zeros(
-            (len(var_bins) - 1, len(class_labels_list))
-        ),
-        "store_err_tagger": np.zeros(
-            (len(var_bins) - 1, len(class_labels_list))
-        ),
+        "store_eff_tagger": np.zeros((len(var_bins) - 1, len(class_labels_list))),
+        "store_err_tagger": np.zeros((len(var_bins) - 1, len(class_labels_list))),
     }
 
     for i in range(len(var_bins) - 1):
         # all jets in bin
-        df_in_bin = df[
-            (var_bins[i] <= df[variable]) & (df[variable] < var_bins[i + 1])
-        ]
+        df_in_bin = df[(var_bins[i] <= df[variable]) & (df[variable] < var_bins[i + 1])]
         total_in_bin = len(df_in_bin)
         # all tagged jets in bin. (note: can also work for other flavour)
         df_in_bin_tagged = df_in_bin.query("tag == 1")
@@ -182,8 +175,7 @@ def plotEfficiencyVariable(
 
     if frac_values is None:
         ThirdTag = (
-            ThirdTag
-            + f"\n{efficiency}% {flav_cat[main_class]['legend_label']} WP"
+            ThirdTag + f"\n{efficiency}% {flav_cat[main_class]['legend_label']} WP"
         )
     else:
         frac_string = ""
@@ -230,12 +222,8 @@ def plotEfficiencyVariable(
             trimmed_label_val = x_label
 
     fig, ax = plt.subplots()
-    ax.ticklabel_format(
-        style="sci", axis="x", scilimits=(0, 3), useMathText=True
-    )
-    ax.ticklabel_format(
-        style="sci", axis="y", scilimits=(0, 3), useMathText=True
-    )
+    ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 3), useMathText=True)
+    ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 3), useMathText=True)
 
     ax.axhline(y=1, color="#696969", linestyle="-")
 
@@ -290,9 +278,7 @@ def plotEfficiencyVariable(
     ax_r.set_yticklabels([])
     ax_t.set_xticks(trimmed_label_val)
     if minor_ticks_frequency is not None:
-        ax_t.xaxis.set_minor_locator(
-            plt.MultipleLocator(minor_ticks_frequency)
-        )
+        ax_t.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
     ax_t.set_xticklabels([])
     if Log:
         ax_r.set_yscale("log")
@@ -364,7 +350,8 @@ def plotEfficiencyVariableComparison(
 
     Optional:
     - ThirdTag: additional tag
-    - frac_values: dictionary of flavour fractions  centralise_bins: boolean to centralise point in the bins
+    - frac_values: dictionary of flavour fractions
+    - centralise_bins: boolean to centralise point in the bins
     - xticksval: list of ticks values (must agree with the one below)
     - xticks: list of ticks (must agree with the one above)
     - minor_ticks_frequency: int,
@@ -395,12 +382,8 @@ def plotEfficiencyVariableComparison(
     store_dict = {}
     for label in class_labels_list[0]:
         store_dict[label] = {
-            "store_eff_tagger": np.zeros(
-                (len(var_bins) - 1, len(tagger_list))
-            ),
-            "store_err_tagger": np.zeros(
-                (len(var_bins) - 1, len(tagger_list))
-            ),
+            "store_eff_tagger": np.zeros((len(var_bins) - 1, len(tagger_list))),
+            "store_err_tagger": np.zeros((len(var_bins) - 1, len(tagger_list))),
         }
 
     for tagger_ind, (tagger_data, class_labels) in enumerate(
@@ -451,8 +434,7 @@ def plotEfficiencyVariableComparison(
 
     if frac_values is None:
         ThirdTag = (
-            ThirdTag
-            + f"\n{efficiency}% {flav_cat[main_class]['legend_label']} WP"
+            ThirdTag + f"\n{efficiency}% {flav_cat[main_class]['legend_label']} WP"
         )
     else:
         frac_string = ""
@@ -503,12 +485,8 @@ def plotEfficiencyVariableComparison(
 
     for label in class_labels_list[0]:
         fig, ax = plt.subplots()
-        ax.ticklabel_format(
-            style="sci", axis="x", scilimits=(0, 3), useMathText=True
-        )
-        ax.ticklabel_format(
-            style="sci", axis="y", scilimits=(0, 3), useMathText=True
-        )
+        ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 3), useMathText=True)
+        ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 3), useMathText=True)
         if label == main_class:
             ax.axhline(y=1, color="#696969", linestyle="-")
 
@@ -557,17 +535,13 @@ def plotEfficiencyVariableComparison(
         ax.set_xlabel(xlabel)
         ax.set_ylabel(f"Efficiency {flav_cat[label]['legend_label']}")
         if minor_ticks_frequency is not None:
-            ax.xaxis.set_minor_locator(
-                plt.MultipleLocator(minor_ticks_frequency)
-            )
+            ax.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
         ax_r = ax.secondary_yaxis("right")
         ax_t = ax.secondary_xaxis("top")
         ax_r.set_yticklabels([])
         ax_t.set_xticks(trimmed_label_val)
         if minor_ticks_frequency is not None:
-            ax_t.xaxis.set_minor_locator(
-                plt.MultipleLocator(minor_ticks_frequency)
-            )
+            ax_t.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
         ax_t.set_xticklabels([])
         if Log:
             ax_r.set_yscale("log")
@@ -585,9 +559,7 @@ def plotEfficiencyVariableComparison(
             )
 
         fig.tight_layout()
-        plt.savefig(
-            plot_name + f"_{label}.{extension}", transparent=True, dpi=dpi
-        )
+        plt.savefig(plot_name + f"_{label}.{extension}", transparent=True, dpi=dpi)
         plt.close()
 
 
@@ -616,7 +588,7 @@ def plotPtDependence(
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",  # noqa: E501
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.1,
     frameon: bool = False,
@@ -753,10 +725,7 @@ def plotPtDependence(
                 elif Disc_Cut_Value is not None:
                     disc_cut = Disc_Cut_Value
 
-            elif (
-                SWP_Comparison is True
-                and SWP_label_list[i] not in SWP_Cut_Dict
-            ):
+            elif SWP_Comparison is True and SWP_label_list[i] not in SWP_Cut_Dict:
                 # Calc disc cut value for the SWP label model
                 disc_cut = np.percentile(
                     df_results.query(f"labels=={index_dict[main_class]}")[
@@ -779,9 +748,7 @@ def plotPtDependence(
         # the same shape as the the # of pT bins that we have
         nTest = np.zeros(Npts)
 
-        for j, pt_min, pt_max in zip(
-            np.arange(Npts), bin_edges[:-1], bin_edges[1:]
-        ):
+        for j, pt_min, pt_max in zip(np.arange(Npts), bin_edges[:-1], bin_edges[1:]):
 
             # Cut on selected flavour jets with the wanted pt range
             den_mask = (
@@ -793,14 +760,10 @@ def plotPtDependence(
             if Fixed_WP_Bin is False:
                 # Cut on jets which passed the WP
                 if Passed is True:
-                    num_mask = den_mask & (
-                        df_results[f"disc_{tagger}"] > disc_cut
-                    )
+                    num_mask = den_mask & (df_results[f"disc_{tagger}"] > disc_cut)
 
                 else:
-                    num_mask = den_mask & (
-                        df_results[f"disc_{tagger}"] <= disc_cut
-                    )
+                    num_mask = den_mask & (df_results[f"disc_{tagger}"] <= disc_cut)
 
             else:
                 # Setting pT mask for the selected bin to calculate
@@ -819,10 +782,7 @@ def plotPtDependence(
                         (1 - WP) * 100,
                     )
 
-                elif (
-                    SWP_Comparison is True
-                    and SWP_label_list[i] not in SWP_Cut_Dict
-                ):
+                elif SWP_Comparison is True and SWP_label_list[i] not in SWP_Cut_Dict:
                     # Calc disc cut value for the SWP label model
                     disc_cut = np.percentile(
                         df_results.query(f"labels=={index_dict[main_class]}")[
@@ -834,23 +794,16 @@ def plotPtDependence(
                     # Set Value globally for the SWP label
                     SWP_Cut_Dict.update({SWP_label_list[i]: disc_cut})
 
-                elif (
-                    SWP_Comparison is True
-                    and SWP_label_list[i] in SWP_Cut_Dict
-                ):
+                elif SWP_Comparison is True and SWP_label_list[i] in SWP_Cut_Dict:
                     # Set disc_cut for the model after its SWP label
                     disc_cut = SWP_Cut_Dict[SWP_label_list[i]]
 
                 # Cut on jets which passed the WP
                 if Passed is True:
-                    num_mask = den_mask & (
-                        df_results[f"disc_{tagger}"] > disc_cut
-                    )
+                    num_mask = den_mask & (df_results[f"disc_{tagger}"] > disc_cut)
 
                 else:
-                    num_mask = den_mask & (
-                        df_results[f"disc_{tagger}"] <= disc_cut
-                    )
+                    num_mask = den_mask & (df_results[f"disc_{tagger}"] <= disc_cut)
 
             # Sum masks for binominal error calculation
             nTest[j] = den_mask.sum()
@@ -901,11 +854,7 @@ def plotPtDependence(
         else:
             # Calculate rejection
             rej = 1 / effs
-            yerr = (
-                np.power(rej, 2) * eff_err(effs, nTest)
-                if binomialErrors
-                else None
-            )
+            yerr = np.power(rej, 2) * eff_err(effs, nTest) if binomialErrors else None
 
             # Plot the "hists"
             axis_dict["left"]["top"].errorbar(
@@ -1014,16 +963,12 @@ def plotPtDependence(
         )
 
     else:
-        axis_dict["left"]["top"].set_ylim(
-            bottom=ymin, top=yAxisIncrease * ymax
-        )
+        axis_dict["left"]["top"].set_ylim(bottom=ymin, top=yAxisIncrease * ymax)
 
     # Apply y-limits for the ratio plot
     if Ratio_Cut is not None:
         if type(Ratio_Cut) == list and len(Ratio_Cut) == 2:
-            axis_dict["left"]["ratio"].set_ylim(
-                bottom=Ratio_Cut[0], top=Ratio_Cut[1]
-            )
+            axis_dict["left"]["ratio"].set_ylim(bottom=Ratio_Cut[0], top=Ratio_Cut[1])
 
         else:
             raise ValueError(f"{Ratio_Cut} can't be used as ratio cut!")
@@ -1065,9 +1010,7 @@ def plotPtDependence(
         axis_dict["left"]["ratio"].grid()
 
     # Define legend
-    axis_dict["left"]["top"].legend(
-        loc="upper right", ncol=ncol, frameon=frameon
-    )
+    axis_dict["left"]["top"].legend(loc="upper right", ncol=ncol, frameon=frameon)
 
     # Redefine Second Tag with inclusive or fixed tag
     if Fixed_WP_Bin is True:
@@ -1080,9 +1023,7 @@ def plotPtDependence(
 
     else:
         SecondTag = (
-            SecondTag
-            + "\nInclusive "
-            + r"$\epsilon_b$ = {}%".format(int(WP * 100))
+            SecondTag + "\nInclusive " + r"$\epsilon_b$ = {}%".format(int(WP * 100))
         )
         # TODO: is here a better way than .format?
 
@@ -1117,7 +1058,7 @@ def plotROCRatio(
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",  # noqa: E501
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.3,
     styles: list = None,
@@ -1156,8 +1097,8 @@ def plotROCRatio(
     - rlabel: The label for the y-axis for the ratio panel
     - binomialErrors: whether to include binomial errors for the rejection
                       curves
-    - nTest: A list of the same length as class_rejections, with the number of events used
-             to calculate the background efficiencies.
+    - nTest: A list of the same length as class_rejections, with the number of events
+             used to calculate the background efficiencies.
              We need this To calculate the binomial errors on the background
              rejection,
              using the formula given by
@@ -1182,7 +1123,8 @@ def plotROCRatio(
 
         if nTest == 0 and not all(nTest_in_file):
             logger.error(
-                "Requested binomialErrors, but not all models have nTest. Will NOT plot rej errors."
+                "Requested binomialErrors, but not all models have nTest. Will"
+                " NOT plot rej errors."
             )
             binomialErrors = False
 
@@ -1242,9 +1184,7 @@ def plotROCRatio(
                 x=WP - 0.005,
                 y=ytext + 0.005,
                 s=f"{int(WP * 100)}%",
-                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(
-                    0
-                )[0],
+                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(0)[0],
                 fontsize=10,
             )
 
@@ -1370,9 +1310,7 @@ def plotROCRatio(
         horizontalalignment="right",
         x=1.0,
     )
-    axis_dict["left"]["ratio"].set_ylabel(
-        rlabel, labelpad=labelpad, fontsize=12
-    )
+    axis_dict["left"]["ratio"].set_ylabel(rlabel, labelpad=labelpad, fontsize=12)
     axis_dict["left"]["ratio"].grid()
 
     if "right" in axis_dict:
@@ -1383,9 +1321,7 @@ def plotROCRatio(
             y=1.0,
             color=ycolor_right,
         )
-        axis_dict["right"]["top"].tick_params(
-            axis="y", labelcolor=ycolor_right
-        )
+        axis_dict["right"]["top"].tick_params(axis="y", labelcolor=ycolor_right)
         if set_logy:
             axis_dict["right"]["top"].set_yscale("log")
 
@@ -1423,13 +1359,9 @@ def plotROCRatio(
 
     if "right" in axis_dict:
         right_y_limits = axis_dict["right"]["top"].get_ylim()
-        new_ymin_right = (
-            right_y_limits[0] if ymin_right is None else ymin_right
-        )
+        new_ymin_right = right_y_limits[0] if ymin_right is None else ymin_right
         new_ymax_right = (
-            right_y_limits[1] * yAxisIncrease
-            if ymax_right is None
-            else ymax_right
+            right_y_limits[1] * yAxisIncrease if ymax_right is None else ymax_right
         )
         axis_dict["right"]["top"].set_ylim(new_ymin_right, new_ymax_right)
 
@@ -1574,7 +1506,8 @@ def plotROCRatioComparison(
 
         if nTest == 0 and not all(nTest_in_file):
             logger.error(
-                "Requested binomialErrors, but not all models have nTest. Will NOT plot rej errors."
+                "Requested binomialErrors, but not all models have nTest. Will"
+                " NOT plot rej errors."
             )
             binomialErrors = False
 
@@ -1627,9 +1560,7 @@ def plotROCRatioComparison(
                 x=WP - 0.005,
                 y=ytext + 0.005,
                 s=f"{int(WP * 100)}%",
-                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(
-                    0
-                )[0],
+                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(0)[0],
                 fontsize=legFontSize,
             )
 
@@ -1786,9 +1717,7 @@ def plotROCRatioComparison(
         x=1.0,
     )
 
-    axis_dict["left"][flav_list[1]].tick_params(
-        axis="x", labelsize=labelFontSize
-    )
+    axis_dict["left"][flav_list[1]].tick_params(axis="x", labelsize=labelFontSize)
 
     # Hide the xlabels of the upper ratio and the main plot
     plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
@@ -1856,10 +1785,7 @@ def plotROCRatioComparison(
 
     for line in lines:
         for model in model_list:
-            if (
-                line.get_label() == model
-                and line.get_label() not in labels_list
-            ):
+            if line.get_label() == model and line.get_label() not in labels_list:
                 labels_list.append(line.get_label())
                 lines_list.append(line)
 
@@ -1996,9 +1922,7 @@ def plotSaliency(
             r"$z_0 \sin \theta$",
         ]
 
-        plt.yticks(
-            np.arange(nFeatures), yticklabels[:nFeatures], fontsize=fontsize
-        )
+        plt.yticks(np.arange(nFeatures), yticklabels[:nFeatures], fontsize=fontsize)
 
     im = plt.imshow(
         gradient_map,
@@ -2068,9 +1992,7 @@ def plot_score(
 
     # Calculate the binning for all flavours
     _, Binning = np.histogram(
-        df_results.query(f"labels=={index_dict[main_class]}")[
-            f"disc_{tagger_name}"
-        ],
+        df_results.query(f"labels=={index_dict[main_class]}")[f"disc_{tagger_name}"],
         bins=nBins,
     )
 
@@ -2251,9 +2173,7 @@ def plot_score_comparison(
     flav_cat = global_config.flavour_categories
 
     # Get index dict
-    index_dict = {
-        f"{flavour}": i for i, flavour in enumerate(class_labels_list[0])
-    }
+    index_dict = {f"{flavour}": i for i, flavour in enumerate(class_labels_list[0])}
 
     if type(which_axis) != list:
         which_axis = [which_axis] * len(df_list)
@@ -2276,9 +2196,7 @@ def plot_score_comparison(
 
     # Get binning for the plot
     _, Binning = np.histogram(
-        df_list[0].query(f"labels=={index_dict[main_class]}")[
-            f"disc_{tagger_list[0]}"
-        ],
+        df_list[0].query(f"labels=={index_dict[main_class]}")[f"disc_{tagger_list[0]}"],
         bins=nBins,
     )
 
@@ -2305,9 +2223,7 @@ def plot_score_comparison(
         )
     ):
         # Get index dict
-        index_dict = {
-            f"{flavour}": i for i, flavour in enumerate(class_labels)
-        }
+        index_dict = {f"{flavour}": i for i, flavour in enumerate(class_labels)}
 
         for flavour in class_labels:
             # Select correct jets
@@ -2409,9 +2325,7 @@ def plot_score_comparison(
     )
 
     if Ratio_Cut is not None:
-        axis_dict["left"]["ratio"].set_ylim(
-            bottom=Ratio_Cut[0], top=Ratio_Cut[1]
-        )
+        axis_dict["left"]["ratio"].set_ylim(bottom=Ratio_Cut[0], top=Ratio_Cut[1])
 
     plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
 
@@ -2460,9 +2374,7 @@ def plot_score_comparison(
         for WP in WorkingPoints:
 
             # Get tagger for WP calculation
-            tagger_name_WP = (
-                tagger_list[0] if tagger_for_WP is None else tagger_for_WP
-            )
+            tagger_name_WP = tagger_list[0] if tagger_for_WP is None else tagger_for_WP
 
             # Calculate x value of WP line
             x_value = np.percentile(
@@ -2535,7 +2447,8 @@ def plotFractionScan(
     dpi: int = 400,
 ):
     """
-    DEPRECATED. Plots a 2D heatmap of rej for a given eff (frac flavour X vs frac flavour Y).
+    DEPRECATED. Plots a 2D heatmap of rej for a given eff
+        (frac flavour X vs frac flavour Y).
     Data needs to be a list of numpy arrays with the flavour
     """
     if label == "umami_crej":
@@ -2800,9 +2713,7 @@ def plot_prob_comparison(
     flav_cat = global_config.flavour_categories
 
     # Get index dict
-    index_dict = {
-        f"{iter_flav}": i for i, iter_flav in enumerate(class_labels_list[0])
-    }
+    index_dict = {f"{iter_flav}": i for i, iter_flav in enumerate(class_labels_list[0])}
 
     if type(which_axis) != list:
         which_axis = [which_axis] * len(df_list)
@@ -2854,9 +2765,7 @@ def plot_prob_comparison(
         )
     ):
         # Get index dict
-        index_dict = {
-            f"{iter_flav}": i for i, iter_flav in enumerate(class_labels)
-        }
+        index_dict = {f"{iter_flav}": i for i, iter_flav in enumerate(class_labels)}
 
         for iter_flav in class_labels:
             # Select correct jets
@@ -2959,9 +2868,7 @@ def plot_prob_comparison(
     )
 
     if Ratio_Cut is not None:
-        axis_dict["left"]["ratio"].set_ylim(
-            bottom=Ratio_Cut[0], top=Ratio_Cut[1]
-        )
+        axis_dict["left"]["ratio"].set_ylim(bottom=Ratio_Cut[0], top=Ratio_Cut[1])
 
     plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
 
@@ -3004,8 +2911,7 @@ def plot_prob_comparison(
     elif set_logy is True:
         axis_dict["left"]["top"].set_ylim(
             left_y_limits[0] * 0.5,
-            left_y_limits[0]
-            * ((left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease),
+            left_y_limits[0] * ((left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease),
         )
 
     axis_dict["left"]["top"].legend(
@@ -3073,9 +2979,7 @@ def plot_confusion(
     y_predicted = np.argmax(df_results[prob_list].values, axis=1)
 
     # Define the confusion matrix
-    cm = confusion_matrix(
-        y_target=y_target, y_predicted=y_predicted, binary=False
-    )
+    cm = confusion_matrix(y_target=y_target, y_predicted=y_predicted, binary=False)
 
     # Plot the colormap
     mlxtend_plot_cm(

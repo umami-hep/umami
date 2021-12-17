@@ -85,9 +85,7 @@ class plot_score_TestCase(unittest.TestCase):
         self.class_labels = ["ujets", "cjets", "bjets"]
         self.main_class = "bjets"
 
-        run(
-            ["wget", self.results_url, "--directory-prefix", self.tmp_plot_dir]
-        )
+        run(["wget", self.results_url, "--directory-prefix", self.tmp_plot_dir])
         run(["wget", self.rej_url, "--directory-prefix", self.tmp_plot_dir])
         run(
             [

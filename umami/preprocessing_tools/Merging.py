@@ -15,8 +15,7 @@ def check_size(data):
 
     if max(sizes) != min(sizes):
         raise ValueError(
-            "Each dataset within a file must have the "
-            "same number of entries!"
+            "Each dataset within a file must have the same number of entries!"
         )
 
     return sizes[0]
@@ -92,9 +91,7 @@ def create_datasets(output, source, size):
     for key in source:
         shape = list(source[key].shape)
         shape[0] = size
-        output.create_dataset(
-            key, shape, dtype=source[key].dtype, compression="gzip"
-        )
+        output.create_dataset(key, shape, dtype=source[key].dtype, compression="gzip")
     if close_file:
         source.close()
 
