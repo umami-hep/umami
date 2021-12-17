@@ -249,5 +249,5 @@ class TestUmamiTraining(unittest.TestCase):
         self.assertTrue(runTrainingUmami(self.config))
 
     def test_tfrecords_train_umami(self):
-        """Integration test of train_umami.py script with tf records as input."""
+        """Integration test of train.py script with tf records as input."""
         self.assertTrue(runTrainingUmami(self.tfrecords_config))

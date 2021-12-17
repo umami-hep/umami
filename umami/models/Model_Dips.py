@@ -1,5 +1,6 @@
 from umami.configuration import logger  # isort:skip
 import json
+import os
 
 import h5py
 import tensorflow as tf
@@ -107,50 +108,109 @@ def Dips(args, train_config, preprocess_config):
     NN_structure = train_config.NN_structure
     Val_params = train_config.Eval_parameters_validation
 
-    # Get the shapes for training
-    with h5py.File(train_config.train_file, "r") as f:
-        nJets, nTrks, nFeatures = f["X_trk_train"].shape
-        nJets, nDim = f["Y_train"].shape
+    if ".h5" in train_config.train_file:
+        # Get the shapes for training
+        with h5py.File(train_config.train_file, "r") as f:
+            nJets, nTrks, nFeatures = f["X_trk_train"].shape
+            nJets, nDim = f["Y_train"].shape
 
-        if NN_structure["nJets_train"] is not None:
-            nJets = int(NN_structure["nJets_train"])
+            if NN_structure["nJets_train"] is not None:
+                nJets = int(NN_structure["nJets_train"])
+
+        if NN_structure["use_sample_weights"]:
+            tensor_types = (tf.float32, tf.float32, tf.float32)
+            tensor_shapes = (
+                tf.TensorShape([None, nTrks, nFeatures]),
+                tf.TensorShape([None, nDim]),
+                tf.TensorShape([None]),
+            )
+
+        else:
+            tensor_types = (tf.float32, tf.float32)
+            tensor_shapes = (
+                tf.TensorShape([None, nTrks, nFeatures]),
+                tf.TensorShape([None, nDim]),
+            )
+
+        # Get training set from generator
+        train_dataset = (
+            tf.data.Dataset.from_generator(
+                utf.dips_generator(
+                    train_file_path=train_config.train_file,
+                    X_trk_Name="X_trk_train",
+                    Y_Name="Y_train",
+                    n_jets=nJets,
+                    batch_size=NN_structure["batch_size"],
+                    sample_weights=NN_structure["use_sample_weights"],
+                ),
+                tensor_types,
+                tensor_shapes,
+            )
+            .repeat()
+            .prefetch(3)
+        )
+
+    elif os.path.isdir(train_config.train_file):
+
+        # Get the files in dir
+        train_file_names = os.listdir(train_config.train_file)
+
+        # Loop over files in dir
+        for train_file_name in train_file_names:
+
+            # Check if file is tfrecords or .h5
+            if not (".tfrecord" in train_file_name) and not (
+                train_file_name == "metadata.json"
+            ):
+                raise ValueError(
+                    f"input file {train_config.train_file} is neither a "
+                    ".h5 file nor a directory with TF Record Files. "
+                    "You should check this."
+                )
+
+        # Check if train file is in metadata
+        if "metadata.json" not in train_file_names:
+            raise KeyError("No metadata file in directory.")
+
+        # Check if nfiles is given. Otherwise set to 5
+        try:
+            nfiles = train_config.config["nfiles"]
+
+        except KeyError:
+            logger.warning(
+                "no number of files to be loaded in parallel defined. Set to 5"
+            )
+            nfiles = 5
+
+        # Get the tfrecords
+        tfrecord_reader = utf.TFRecordReader(
+            train_config.train_file, NN_structure["batch_size"], nfiles
+        )
+
+        # Load the dataset from reader
+        train_dataset = tfrecord_reader.load_Dataset()
+
+        # Get the metadata name
+        metadata_name = (train_config.train_file + "/metadata.json").replace("//", "/")
+
+        # Load metadata in file
+        with open(metadata_name, "r") as metadata_file:
+            metadata = json.load(metadata_file)
+            nJets = metadata["nJets"]
+            nTrks = metadata["nTrks"]
+            nFeatures = metadata["nFeatures"]
+            nDim = metadata["nDim"]
+    else:
+        raise ValueError(
+            f"input file {train_config.train_file} is neither a .h5 file nor "
+            "a directory with TF Record Files. You should check this."
+        )
 
     # Print how much jets are used
     logger.info(f"Number of Jets used for training: {nJets}")
 
     # Init dips model
     dips, epochs = Dips_model(train_config=train_config, input_shape=(nTrks, nFeatures))
-
-    if NN_structure["use_sample_weights"]:
-        tensor_types = (tf.float32, tf.float32, tf.float32)
-        tensor_shapes = (
-            tf.TensorShape([None, nTrks, nFeatures]),
-            tf.TensorShape([None, nDim]),
-            tf.TensorShape([None]),
-        )
-    else:
-        tensor_types = (tf.float32, tf.float32)
-        tensor_shapes = (
-            tf.TensorShape([None, nTrks, nFeatures]),
-            tf.TensorShape([None, nDim]),
-        )
-    # Get training set from generator
-    train_dataset = (
-        tf.data.Dataset.from_generator(
-            utf.dips_generator(
-                train_file_path=train_config.train_file,
-                X_trk_Name="X_trk_train",
-                Y_Name="Y_train",
-                n_jets=nJets,
-                batch_size=NN_structure["batch_size"],
-                sample_weights=NN_structure["use_sample_weights"],
-            ),
-            tensor_types,
-            tensor_shapes,
-        )
-        .repeat()
-        .prefetch(3)
-    )
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
