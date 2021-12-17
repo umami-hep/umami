@@ -72,7 +72,38 @@ def GetParser():
     return args
 
 
-def EvaluateModel(args, train_config, preprocess_config, test_file, data_set_name):
+def EvaluateModel(
+    args: object,
+    train_config: object,
+    preprocess_config: object,
+    test_file: str,
+    data_set_name: str,
+):
+    """
+    Evaluate only the taggers in the files or also the UMAMI tagger.
+
+    Parameters
+    ----------
+    args : object
+        Loaded argparser.
+    train_config : object
+        Loaded train config.
+    preprocess_config : object
+        Loaded preprocessing config.
+    test_file : str
+        Path to the files which are to be tested. Wildcards are supported.
+    data_set_name : str
+        Dataset name for the results files. The results will be saved in
+        dicts. The key will be this dataset name.
+
+    Raises
+    ------
+    ValueError
+        If no epoch is given when evaluating UMAMI.
+    ValueError
+        If the given tagger argument in train config is not a list.
+    """
+
     # Get train parameters
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
@@ -255,8 +286,42 @@ def EvaluateModel(args, train_config, preprocess_config, test_file, data_set_nam
 
 
 def EvaluateModelDips(
-    args, train_config, preprocess_config, test_file, data_set_name, tagger
+    args: object,
+    train_config: object,
+    preprocess_config: object,
+    test_file: str,
+    data_set_name: str,
+    tagger: str,
 ):
+    """
+    Evaluate the DIPS models.
+
+    Parameters
+    ----------
+    args : object
+        Loaded argparser.
+    train_config : object
+        Loaded train config.
+    preprocess_config : object
+        Loaded preprocessing config.
+    test_file : str
+        Path to the files which are to be tested. Wildcards are supported.
+    data_set_name : str
+        Dataset name for the results files. The results will be saved in
+        dicts. The key will be this dataset name.
+    tagger : str
+        Name of the tagger that is to be evaluated. Can either be dips or
+        dips_cond_att depending which architecture is used.
+
+    Raises
+    ------
+    ValueError
+        If no epoch is given when evaluating.
+    ValueError
+        If the given tagger argument in train config is neither a
+        list nor a string.
+    """
+
     # Check if epochs are set
     if args.epoch is None:
         raise ValueError("You need to give an epoch which is to be evaluated!")
@@ -460,13 +525,42 @@ def EvaluateModelDips(
 
 
 def EvaluateModelDL1(
-    args,
-    train_config,
-    preprocess_config,
-    test_file,
-    data_set_name,
-    test_file_entry,
+    args: object,
+    train_config: object,
+    preprocess_config: object,
+    test_file: str,
+    data_set_name: str,
+    test_file_entry: str,
 ):
+    """
+    Evaluate the various DL1* models.
+
+    Parameters
+    ----------
+    args : object
+        Loaded argparser.
+    train_config : object
+        Loaded train config.
+    preprocess_config : object
+        Loaded preprocessing config.
+    test_file : str
+        Path to the files which are to be tested. Wildcards are supported.
+    data_set_name : str
+        Dataset name for the results files. The results will be saved in
+        dicts. The key will be this dataset name.
+    test_file_entry : str
+        Name of the test files that are currently used for the SHAPley
+        files.
+
+    Raises
+    ------
+    ValueError
+        If no epoch is given when evaluating.
+    ValueError
+        If the given tagger argument in train config is neither a
+        list nor a string.
+    """
+
     # Get train parameters
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
@@ -748,7 +842,12 @@ if __name__ == "__main__":
 
     elif tagger == "umami" or tagger is None:
         if train_config.ttbar_test_files is not None:
-            logger.info("Start evaluating UMAMI with ttbar test files...")
+            if tagger is None:
+                logger.info("Start evaluating taggers in ttbar test files...")
+
+            else:
+                logger.info("Start evaluating UMAMI with ttbar test files...")
+
             for ttbar_models in train_config.ttbar_test_files:
                 EvaluateModel(
                     args=args,
@@ -761,7 +860,12 @@ if __name__ == "__main__":
                 )
 
         if train_config.zpext_test_files is not None:
-            logger.info("Start evaluating UMAMI with Z' test files...")
+            if tagger is None:
+                logger.info("Start evaluating taggers in Z' test files...")
+
+            else:
+                logger.info("Start evaluating UMAMI with Z' test files...")
+
             for zpext_models in train_config.zpext_test_files:
                 EvaluateModel(
                     args=args,

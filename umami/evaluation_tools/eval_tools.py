@@ -22,27 +22,43 @@ def GetRejectionPerEfficiencyDict(
     x_axis_granularity: int = 100,
     eff_min: float = 0.49,
     eff_max: float = 1.0,
-):
+) -> dict:
     """
     Calculates the rejections for the classes and taggers provided for
     different efficiencies of the main class.
 
-    Input:
-    - jets: Dataframe with the probabilites of the comparison taggers as columns
-    - tagger_preds: Prediction output of the taggers listed. [pred_dips, pred_umami]
-    - tagger_names: Names of the freshly trained taggers. ["dips", "umami"]
-    - tagger_list: List of the comparison tagger names.
-    - class_labels: List of class labels which are used.
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - frac_values: Dict with the fraction values for the fresh taggers.
-    - frac_values_comp: Dict with the fraction values for the comparison taggers.
-    - x_axis_granularity: Granularity of the efficiencies.
-    - eff_min: Lowest value for the efficiencies linspace.
-    - eff_max: Highst value for the efficiencies linspace.
+    Parameters
+    ----------
+    jets : pandas.DataFrame
+        Dataframe with jets and the probabilites of the comparison taggers as columns.
+    y_true : numpy.ndarray
+        Truth labels of the jets.
+    tagger_preds : list
+        Prediction output of the taggers listed. [pred_dips, pred_umami]
+    tagger_names : list
+        Names of the freshly trained taggers. ["dips", "umami"]
+    tagger_list : list
+        List of the comparison tagger names.
+    class_labels : list
+        List of class labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    frac_values : dict
+        Dict with the fraction values for the fresh taggers.
+    frac_values_comp : dict
+        Dict with the fraction values for the comparison taggers.
+    x_axis_granularity : int
+        Granularity of the efficiencies.
+    eff_min : float
+        Lowest value for the efficiencies linspace.
+    eff_max : float
+        Highst value for the efficiencies linspace.
 
-    Output:
-    - tagger_rej_dicts: Dict with the rejections for each tagger/class (wo main),
-                        disc cuts per effs and the effs.
+    Returns
+    -------
+    tagger_rej_dicts : dict
+        Dict with the rejections for each tagger/class (wo main),
+        disc cuts per effs and the effs.
     """
 
     # Get flavour categories
@@ -64,6 +80,9 @@ def GetRejectionPerEfficiencyDict(
     tagger_rej_dicts["effs"] = effs
     tagger_disc_cut_dicts = {f"disc_{tagger}": [] for tagger in extended_tagger_list}
 
+    # Init a tagger-skipped list
+    skipped_taggers = []
+
     # Loop over effs for ROC plots
     for eff in effs:
         for tagger in extended_tagger_list:
@@ -71,12 +90,19 @@ def GetRejectionPerEfficiencyDict(
                 y_pred = tagger_preds[tagger_names.index(tagger)]
 
             else:
-                y_pred = jets[
-                    [
-                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                        for flav in class_labels
-                    ]
-                ].values
+                try:
+                    y_pred = jets[
+                        [
+                            f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                            for flav in class_labels
+                        ]
+                    ].values
+
+                except KeyError:
+                    # Skipping this tagger if not in all flavours
+                    # or the tagger present in file
+                    skipped_taggers.append(tagger)
+                    continue
 
             rej_dict_tmp, disc_cut_dict_tmp = utt.GetRejection(
                 y_pred=y_pred,
@@ -93,6 +119,17 @@ def GetRejectionPerEfficiencyDict(
             for rej_type in rej_dict_tmp:
                 tagger_rej_dicts[f"{tagger}_{rej_type}"].append(rej_dict_tmp[rej_type])
 
+    # Remove double entries and print warning
+    skipped_taggers = list(dict.fromkeys(skipped_taggers))
+    logger.warning(f"Following taggers are skipped for file: {skipped_taggers}")
+
+    # Remove entries of not loaded taggers from the dicts
+    for skipped_tagger in skipped_taggers:
+        del tagger_disc_cut_dicts[f"disc_{skipped_tagger}"]
+
+        for rej in class_labels_wo_main:
+            del tagger_rej_dicts[f"{skipped_tagger}_{rej}_rej"]
+
     return {**tagger_disc_cut_dicts, **tagger_rej_dicts}
 
 
@@ -106,25 +143,36 @@ def GetScoresProbsDict(
     main_class: str,
     frac_values: dict,
     frac_values_comp: dict,
-):
+) -> dict:
     """
     Get the probabilites in a new dict and calculate the discriminant scores.
 
-    Input:
-    - jets: Dataframe with the probabilites of the comparison taggers as columns
-    - y_true: Internal truth labeling of the used jets.
-    - tagger_preds: Prediction output of the taggers listed.
-                    e.g. [pred_dips, pred_umami]
-    - tagger_names: Names of the freshly trained taggers. e.g. ["dips", "umami"]
-    - tagger_list: List of the comparison tagger names.
-    - class_labels: List of class labels which are used.
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - frac_values: Dict with the fraction values for the fresh taggers.
-    - frac_values_comp: Dict with the fraction values for the comparison taggers.
+    Parameters
+    ----------
+    jets : pandas.DataFrame
+        Dataframe with the probabilites of the comparison taggers as columns
+    y_true : numpy.ndarray
+        Internal truth labeling of the used jets.
+    tagger_preds : list
+        Prediction output of the taggers listed. e.g. [pred_dips, pred_umami]
+    tagger_names : list
+        Names of the freshly trained taggers. e.g. ["dips", "umami"]
+    tagger_list : list
+        List of the comparison tagger names.
+    class_labels : list
+        List of class labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    frac_values : dict
+        Dict with the fraction values for the fresh taggers.
+    frac_values_comp : dict
+        Dict with the fraction values for the comparison taggers.
 
-    Output:
-    - df_discs_dict: Dict with the discriminant scores of each jet and the probabilities
-                     of the different taggers for the used jets.
+    Returns
+    -------
+    df_discs_dict : dict
+        Dict with the discriminant scores of each jet and the probabilities
+        of the different taggers for the used jets.
     """
 
     logger.info("Calculate discriminant scores")
@@ -158,11 +206,9 @@ def GetScoresProbsDict(
                     ] = jets[f'{tagger}_{flavour_categories[flav]["prob_var_name"]}']
 
                 except KeyError:
-                    logger.warning(
-                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                        " is not in files! "
-                        + "Skipping..."
-                    )
+
+                    # Skipping not available taggers probabilities
+                    continue
 
         if tagger in tagger_names:
             y_pred = tagger_preds[counter]
@@ -191,14 +237,14 @@ def GetScoresProbsDict(
                 except KeyError:
                     class_labels_copy.remove(flav)
 
-            # Reshape to wrong sorted (transpose change it to correct shape)
-            y_pred = tmp.reshape((len(class_labels_copy), -1))
-            y_pred = np.transpose(y_pred)
-
             # Check if tagger is in file
             if len(class_labels_copy) == 0:
                 logger.warning(f"Tagger {tagger} not in .h5 files! Skipping...")
                 continue
+
+            # Reshape to wrong sorted (transpose change it to correct shape)
+            y_pred = tmp.reshape((len(class_labels_copy), -1))
+            y_pred = np.transpose(y_pred)
 
         # Adding scores of the trained network
         try:
@@ -225,9 +271,25 @@ def getDiscriminant(
     frac_dict: dict,
 ):
     """
-    This method returns the score of the input (like GetScore)
-    but calculated with the Keras Backend due to conflicts of
-    numpy functions inside a layer in a keras model.
+    Returns the score of the input (like GetScore) but calculated with the
+    Keras Backend due to conflicts of numpy functions inside a layer in a
+    keras model.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        Jets with the probabilities in columns.
+    class_labels : list
+        List of class labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    frac_dict : dict
+        Dict with the fraction values of the freshly trained tagger.
+
+    Returns
+    -------
+    Scores : tensorflow.Tensor
+        Scores of the given jets as tensorflow tensor.
     """
 
     # Init index dict
@@ -256,19 +318,51 @@ def getDiscriminant(
     return K.log(counter / denominator)
 
 
-def discriminant_output_shape(input_shape):
+def discriminant_output_shape(input_shape: tuple) -> tuple:
+    """
+    Ensure the correct output shape of the discriminant.
+
+    Parameters
+    ----------
+    input_shape : tuple
+        Input shape that is used.
+
+    Returns
+    -------
+    shape : tuple
+        The shape of the first dimension of the input as tuple.
+    """
     shape = list(input_shape)
     assert len(shape) == 2  # only valid for 2D tensors
     return (shape[0],)
 
 
-def get_gradients(model, X, nJets):
+def get_gradients(
+    model: object,
+    X,
+    nJets: int,
+):
     """
     Calculating the gradients with respect to the input variables.
     Note that only Keras backend functions can be used here because
     the gradients are tensorflow tensors and are not compatible with
     numpy.
+
+    Parameters
+    ----------
+    model : object
+        Loaded keras model.
+    X : numpy.ndarray
+        Track inputs of the jets.
+    nJets : int
+        Number of jets to be used.
+
+    Returns
+    -------
+    gradients : tensorflow.Tensor
+        Gradients of the network for the given inputs.
     """
+
     gradients = K.gradients(model.output, model.inputs)
 
     input_tensors = model.inputs + [K.learning_phase()]
@@ -282,7 +376,7 @@ def get_gradients(model, X, nJets):
 
 
 def GetSaliencyMapDict(
-    model,
+    model: object,
     model_pred,
     X_test,
     Y_test,
@@ -290,20 +384,33 @@ def GetSaliencyMapDict(
     main_class: str,
     frac_dict: dict,
     nJets: int = int(10e4),
-):
+) -> dict:
     """
     Calculating the saliency maps dict.
 
-    Input:
-    - model: Loaded Keras model.
-    - model_pred: Model predictions of the model.
-    - Y_test: Truth labels in one-hot-encoded format.
-    - class_labels: List of class labels which are used.
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - frac_dict: Dict with the fraction values for the tagger.
+    Parameters
+    ----------
+    model : object
+        Loaded Keras model.
+    model_pred : numpy.ndarray
+        Model predictions of the model.
+    X_test : numpy.ndarray
+        Inputs to the model.
+    Y_test : numpy.ndarray
+        Truth labels in one-hot-encoded format.
+    class_labels : list
+        List of class labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets".
+    frac_dict : dict
+        Dict with the fraction values for the tagger.
+    nJets : int
+        Number of jets to use to calculate the saliency maps.
 
-    Output:
-    - Map_dict: Dict with the saliency values
+    Returns
+    -------
+    Map_dict : dict
+        Dict with the saliency values
     """
 
     logger.info("Calculate gradients for inputs")
@@ -385,11 +492,34 @@ def GetSaliencyMapDict(
 
 def RecomputeScore(
     df,
-    model_tagger,
-    main_class,
-    model_frac_values,
-    model_class_labels,
+    model_tagger: str,
+    main_class: str,
+    model_frac_values: dict,
+    model_class_labels: list,
 ):
+    """
+    Recompute the output scores of a given tagger.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe with the tagger probabilities inside.
+    model_tagger : str
+        Name of the tagger to use.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets".
+    model_frac_values : dict
+        Dict with the fraction values for the given model.
+    model_class_labels : list
+        List with the class labels which are to be used.
+
+    Returns
+    -------
+    Scores : numpy.ndarray
+        Array with the tagger scores for the given jets.
+    """
+
+    # Get the flavour categories
     flavour_categories = global_config.flavour_categories
 
     # Shape the probability dataframe
