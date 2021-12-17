@@ -1,8 +1,9 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import colors
-import shap
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+import shap
+from matplotlib import colors
 
 
 def ShapleyOneFlavor(
@@ -70,9 +71,7 @@ def ShapleyAllFlavors(
     """
 
     # it is just calculating mean values, not an actual kmeans algorithm
-    averaged_data = shap.kmeans(
-        test_data.values[:feature_sets, :], averaged_sets
-    )
+    averaged_data = shap.kmeans(test_data.values[:feature_sets, :], averaged_sets)
     explainer = shap.KernelExplainer(model.predict, data=averaged_data)
     shap_values = explainer.shap_values(test_data.values[:feature_sets, :])
 

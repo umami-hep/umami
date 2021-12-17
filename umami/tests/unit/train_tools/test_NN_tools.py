@@ -43,9 +43,7 @@ class GetModelPath_TestCase(unittest.TestCase):
         self.control_model_path = "dips_test/model_files/model_epoch050.h5"
 
     def test_GetModelPath(self):
-        test_model_path = GetModelPath(
-            model_name=self.model_name, epoch=self.epoch
-        )
+        test_model_path = GetModelPath(model_name=self.model_name, epoch=self.epoch)
 
         self.assertEqual(self.control_model_path, test_model_path)
 
@@ -107,7 +105,8 @@ class Load_Files_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/umami/"
+                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
                 "--directory-prefix",
                 self.tmp_test_dir,
             ]
@@ -431,9 +430,7 @@ class GetRejection_TestCase(unittest.TestCase):
         self.y_true = rng.random(size=(10000, 3))
         self.y_pred_tau = rng.random(size=(10000, 4))
         self.y_true_tau = rng.random(size=(10000, 4))
-        self.y_true = (self.y_true == self.y_true.max(axis=1)[:, None]).astype(
-            int
-        )
+        self.y_true = (self.y_true == self.y_true.max(axis=1)[:, None]).astype(int)
         self.y_true_tau = (
             self.y_true_tau == self.y_true_tau.max(axis=1)[:, None]
         ).astype(int)
@@ -491,9 +488,7 @@ class GetScore_TestCase(unittest.TestCase):
         self.y_true = rng.random(size=(10000, 3))
         self.y_pred_tau = rng.random(size=(10000, 4))
         self.y_true_tau = rng.random(size=(10000, 4))
-        self.y_true = (self.y_true == self.y_true.max(axis=1)[:, None]).astype(
-            int
-        )
+        self.y_true = (self.y_true == self.y_true.max(axis=1)[:, None]).astype(int)
         self.y_true_tau = (
             self.y_true_tau == self.y_true_tau.max(axis=1)[:, None]
         ).astype(int)
@@ -566,9 +561,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_test_dir = f"{self.tmp_dir.name}"
         self.model_name = os.path.join(self.tmp_test_dir, "test_model")
-        self.train_config_path = os.path.join(
-            self.tmp_test_dir, "train_config.yaml"
-        )
+        self.train_config_path = os.path.join(self.tmp_test_dir, "train_config.yaml")
         self.preprocess_config = os.path.join(
             self.tmp_test_dir, "preprocess_config.yaml"
         )
@@ -576,17 +569,13 @@ class create_metadata_folder_TestCase(unittest.TestCase):
             self.tmp_test_dir, "Preprocessing-parameters.yaml"
         )
         self.var_dict_path = os.path.join(self.tmp_test_dir, "Var_Dict.yaml")
-        self.scale_dict_path = os.path.join(
-            self.tmp_test_dir, "scale_dict.json"
-        )
+        self.scale_dict_path = os.path.join(self.tmp_test_dir, "scale_dict.json")
 
         run(["touch", f"{self.var_dict_path}"])
         run(["touch", f"{self.scale_dict_path}"])
 
         copyfile(
-            os.path.join(
-                os.getcwd(), "examples/Dips-PFlow-Training-config.yaml"
-            ),
+            os.path.join(os.getcwd(), "examples/Dips-PFlow-Training-config.yaml"),
             self.train_config_path,
         )
         copyfile(
@@ -594,9 +583,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
             self.preprocess_config,
         )
         copyfile(
-            os.path.join(
-                os.getcwd(), "examples/Preprocessing-parameters.yaml"
-            ),
+            os.path.join(os.getcwd(), "examples/Preprocessing-parameters.yaml"),
             self.preprocess_config_include,
         )
 
@@ -622,9 +609,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         )
 
         self.assertTrue(
-            os.path.isfile(
-                os.path.join(self.model_name, "metadata/train_config.yaml")
-            )
+            os.path.isfile(os.path.join(self.model_name, "metadata/train_config.yaml"))
         )
 
         self.assertTrue(
@@ -652,9 +637,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
 
         self.assertTrue(
             os.path.isfile(
-                os.path.join(
-                    self.model_name, "metadata", "preprocess_config.yaml"
-                )
+                os.path.join(self.model_name, "metadata", "preprocess_config.yaml")
             )
         )
 
@@ -731,9 +714,7 @@ class MyCallback_TestCase(unittest.TestCase):
         self.val_data_dict = {
             "X_valid": np.random.random((10000, self.nTrks, self.nFeatures)),
             "Y_valid": np.random.random((10000, self.nClasses)),
-            "X_valid_add": np.random.random(
-                (10000, self.nTrks, self.nFeatures)
-            ),
+            "X_valid_add": np.random.random((10000, self.nTrks, self.nFeatures)),
             "Y_valid_add": np.random.random((10000, self.nClasses)),
         }
         self.frac_dict = {
@@ -774,9 +755,7 @@ class MyCallbackUmami_TestCase(unittest.TestCase):
         self.val_data_dict = {
             "X_valid": np.random.random((10000, self.nFeatures_Jets)),
             "X_valid_add": np.random.random((10000, self.nFeatures_Jets)),
-            "X_valid_trk": np.random.random(
-                (10000, self.nTrks, self.nFeatures_Trks)
-            ),
+            "X_valid_trk": np.random.random((10000, self.nTrks, self.nFeatures_Trks)),
             "X_valid_trk_add": np.random.random(
                 (10000, self.nTrks, self.nFeatures_Trks)
             ),
@@ -841,8 +820,12 @@ class GetSamples_TestCase(unittest.TestCase):
         self.NN_structure = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.preparation = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.test_dir = tempfile.TemporaryDirectory()
-        self.validation_file = f"{self.test_dir.name}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
-        self.add_validation_file = f"{self.test_dir.name}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
+        self.validation_file = (
+            f"{self.test_dir.name}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
+        )
+        self.add_validation_file = (
+            f"{self.test_dir.name}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
+        )
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.class_labels_extended = [
             "singlebjets",
@@ -853,7 +836,8 @@ class GetSamples_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid"
+                "_odd_100_PFlow-no_pTcuts-file_0.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]
@@ -861,7 +845,8 @@ class GetSamples_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid-"
+                "ext_odd_0_PFlow-no_pTcuts-file_0.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]
@@ -909,9 +894,7 @@ class GetSamples_TestCase(unittest.TestCase):
             )
 
     def test_GetTestSampleTrks_Extended_Labeling(self):
-        self.preparation = {
-            "class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]
-        }
+        self.preparation = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
 
         X_trk, Y_trk = GetTestSampleTrks(
             input_file=self.validation_file,
@@ -958,9 +941,7 @@ class GetSamples_TestCase(unittest.TestCase):
             )
 
     def test_GetTestSample_Extended_Labeling(self):
-        self.preparation = {
-            "class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]
-        }
+        self.preparation = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
 
         X, Y = GetTestSample(
             input_file=self.validation_file,

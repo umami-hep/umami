@@ -28,7 +28,8 @@ class Configuration(object):
         first_line = first_line.split("!include ")
         if first_line[0] != "parameters: ":
             raise ValueError(
-                "Please specify in the first line of the preprocessing config the 'parameters' with the !include option."
+                "Please specify in the first line of the preprocessing config"
+                " the 'parameters' with the !include option."
             )
 
         preprocess_parameters_path = os.path.join(
@@ -77,13 +78,10 @@ class Configuration(object):
                 else:
                     setattr(self, elem, self.config[elem])
             elif self.default_config[elem] is None:
-                raise KeyError(
-                    f"You need to specify {elem} in your" "config file!"
-                )
+                raise KeyError(f"You need to specify {elem} in yourconfig file!")
             else:
                 warnings.warn(
-                    f"setting {elem} to default value "
-                    f"{self.default_config[elem]}"
+                    f"setting {elem} to default value {self.default_config[elem]}"
                 )
                 setattr(self, elem, self.default_config[elem])
 

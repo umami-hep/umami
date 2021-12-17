@@ -56,15 +56,9 @@ def apply_scaling_trks(
 
     # Get the track variables
     tracks_noNormVars = variable_config["track_train_variables"]["noNormVars"]
-    tracks_logNormVars = variable_config["track_train_variables"][
-        "logNormVars"
-    ]
-    tracks_jointNormVars = variable_config["track_train_variables"][
-        "jointNormVars"
-    ]
-    tracks_variables = (
-        tracks_noNormVars + tracks_logNormVars + tracks_jointNormVars
-    )
+    tracks_logNormVars = variable_config["track_train_variables"]["logNormVars"]
+    tracks_jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
+    tracks_variables = tracks_noNormVars + tracks_logNormVars + tracks_jointNormVars
 
     # Iterate over variables and scale/shift it
     for var in tracks_variables:
@@ -160,19 +154,14 @@ class Scaling:
         tmp_std = second_scale_dict[variable]["scale"]
 
         # Combine the means
-        combined_mean = (mean * first_N + tmp_mean * second_N) / (
-            first_N + second_N
-        )
+        combined_mean = (mean * first_N + tmp_mean * second_N) / (first_N + second_N)
 
         # Combine the std
         combined_std = np.sqrt(
             (
                 (
                     (((mean - combined_mean) ** 2 + std ** 2) * first_N)
-                    + (
-                        ((tmp_mean - combined_mean) ** 2 + tmp_std ** 2)
-                        * second_N
-                    )
+                    + (((tmp_mean - combined_mean) ** 2 + tmp_std ** 2) * second_N)
                 )
             )
             / (first_N + second_N)
@@ -243,10 +232,7 @@ class Scaling:
         # Loop over the list with the dicts from the variables
         for counter in range(len(first_scale_dict)):
             # Ensure the same variables are merged
-            if (
-                first_scale_dict[counter]["name"]
-                == second_scale_dict[counter]["name"]
-            ):
+            if first_scale_dict[counter]["name"] == second_scale_dict[counter]["name"]:
                 # Combine the means
                 combined_average, combined_std = self.join_mean_scale(
                     first_scale_dict=first_scale_dict,
@@ -319,10 +305,7 @@ class Scaling:
         # find NaN values
         nans = np.isnan(vec)
         # check if variable has predefined default value
-        if (
-            custom_defaults_vars is not None
-            and varname in custom_defaults_vars
-        ):
+        if custom_defaults_vars is not None and varname in custom_defaults_vars:
             default = custom_defaults_vars[varname]
         # NaN values are not considered in calculation for average
         else:
@@ -370,9 +353,7 @@ class Scaling:
         if input_file is None:
             input_file = self.config.GetFileName(option="resampled")
 
-        logger.info(
-            "Calculating scaling and shifting values for the jet variables"
-        )
+        logger.info("Calculating scaling and shifting values for the jet variables")
         logger.info(f"Using {input_file} for calculation of scaling/shifting")
 
         # Extract the correct variables
@@ -380,9 +361,7 @@ class Scaling:
         var_list = [i for j in variables_header for i in variables_header[j]]
 
         # Get the file_length
-        file_length = len(
-            h5py.File(input_file, "r")["/jets"].fields(var_list[0])[:]
-        )
+        file_length = len(h5py.File(input_file, "r")["/jets"].fields(var_list[0])[:])
 
         # Get the number of chunks we need to load
         n_chunks = int(np.ceil(file_length / chunkSize))
@@ -416,9 +395,7 @@ class Scaling:
                     second_nJets=tmp_nJets_loaded,
                 )
 
-        logger.info(
-            "Calculating scaling and shifting values for the track variables"
-        )
+        logger.info("Calculating scaling and shifting values for the track variables")
 
         # Init a empty scale dict for the tracks
         scale_dict_trk = {}
@@ -436,7 +413,8 @@ class Scaling:
             # Loop over chunks
             for chunk_counter in range(n_chunks):
                 logger.info(
-                    f"Calculating track scales for chunk {chunk_counter+1} of {n_chunks}"
+                    f"Calculating track scales for chunk {chunk_counter+1} of"
+                    f" {n_chunks}"
                 )
                 # Check if this is the first time loading from the generator
                 if chunk_counter == 0:
@@ -444,9 +422,7 @@ class Scaling:
                     scale_dict_trk, nTrks_loaded = next(trks_scaling_generator)
                 else:
                     # Get the next chunk of scales from the generator
-                    tmp_dict_trk, tmp_nTrks_loaded = next(
-                        trks_scaling_generator
-                    )
+                    tmp_dict_trk, tmp_nTrks_loaded = next(trks_scaling_generator)
 
                     # Combine the scale dicts coming from the generator
                     scale_dict_trk = self.join_scale_dicts_trks(
@@ -575,12 +551,8 @@ class Scaling:
         """
 
         # Load the variables which are scaled/shifted
-        logNormVars = self.variable_config["track_train_variables"][
-            "logNormVars"
-        ]
-        jointNormVars = self.variable_config["track_train_variables"][
-            "jointNormVars"
-        ]
+        logNormVars = self.variable_config["track_train_variables"]["logNormVars"]
+        jointNormVars = self.variable_config["track_train_variables"]["jointNormVars"]
         trkVars = logNormVars + jointNormVars
 
         # Open h5 file
@@ -683,12 +655,8 @@ class Scaling:
             for index_tuple in tupled_indices:
 
                 # Load jets
-                jets = pd.DataFrame(
-                    f["/jets"][index_tuple[0] : index_tuple[1]]
-                )
-                labels = pd.DataFrame(
-                    f["/labels"][index_tuple[0] : index_tuple[1]]
-                )
+                jets = pd.DataFrame(f["/jets"][index_tuple[0] : index_tuple[1]])
+                labels = pd.DataFrame(f["/labels"][index_tuple[0] : index_tuple[1]])
 
                 if "weight" not in jets_variables:
                     jets_variables += ["weight"]
@@ -704,10 +672,7 @@ class Scaling:
                 jets = jets.fillna(jets_default_dict)
 
                 for elem in jets_scale_dict:
-                    if (
-                        "isDefaults" in elem["name"]
-                        or "weight" in elem["name"]
-                    ):
+                    if "isDefaults" in elem["name"] or "weight" in elem["name"]:
                         continue
 
                     else:
@@ -762,9 +727,7 @@ class Scaling:
             i for j in variables_header_jets for i in variables_header_jets[j]
         ]
 
-        file_length = len(
-            h5py.File(input_file, "r")["/jets"][jets_variables[0]][:]
-        )
+        file_length = len(h5py.File(input_file, "r")["/jets"][jets_variables[0]][:])
 
         n_chunks = int(np.ceil(file_length / chunkSize))
 

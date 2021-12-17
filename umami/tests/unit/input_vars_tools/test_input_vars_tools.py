@@ -28,25 +28,17 @@ class JetPlotting_TestCase(unittest.TestCase):
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_plot_dir = f"{self.tmp_dir.name}/"
-        self.data_url = (
-            "https://umami-ci-provider.web.cern.ch/plot_input_vars/"
-        )
+        self.data_url = "https://umami-ci-provider.web.cern.ch/plot_input_vars/"
 
-        self.Control_plots_dir = os.path.join(
-            os.path.dirname(__file__), "plots/"
-        )
+        self.Control_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
 
         self.yaml_file = os.path.join(
             os.path.dirname(__file__), "fixtures/plot_input_variables.yaml"
         )
 
-        self.r21_url = os.path.join(
-            self.data_url, "plot_input_vars_r21_check.h5"
-        )
+        self.r21_url = os.path.join(self.data_url, "plot_input_vars_r21_check.h5")
 
-        self.r22_url = os.path.join(
-            self.data_url, "plot_input_vars_r22_check.h5"
-        )
+        self.r22_url = os.path.join(self.data_url, "plot_input_vars_r22_check.h5")
 
         self.r21_test_file = os.path.join(
             self.tmp_plot_dir, "plot_input_vars_r21_check.h5"
@@ -74,8 +66,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             binning=plotting_config["binning"],
-            output_directory=f"{self.tmp_plot_dir}"
-            + plotting_config["folder_to_save"],
+            output_directory=f"{self.tmp_plot_dir}" + plotting_config["folder_to_save"],
             plot_type="png",
             special_param_jets=plotting_config["special_param_jets"],
             **plotting_config["plot_settings"],
@@ -244,9 +235,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir
-                + "comp/ptfrac/All/"
-                + "dr_None_All.png",
+                self.Control_plots_dir + "comp/ptfrac/All/" + "dr_None_All.png",
                 self.tmp_plot_dir + "comp/ptfrac/All/" + "dr_None_All.png",
                 tol=1,
             ),

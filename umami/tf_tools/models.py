@@ -141,9 +141,7 @@ def Deepsets_model(
     if (
         condition_attention and (pooling == "attention")
     ) or condition_classifier is True:
-        deepsets = Model(
-            inputs=[repeat_inputs, condition_inputs], outputs=output
-        )
+        deepsets = Model(inputs=[repeat_inputs, condition_inputs], outputs=output)
 
     # Else build "normal" deep sets model
     else:

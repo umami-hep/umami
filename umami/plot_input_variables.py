@@ -22,9 +22,7 @@ def GetParser():
     -------
     args: parse_args
     """
-    parser = argparse.ArgumentParser(
-        description="Plotting command line options."
-    )
+    parser = argparse.ArgumentParser(description="Plotting command line options.")
 
     parser.add_argument(
         "-c",
@@ -75,24 +73,16 @@ def plot_trks_variables(plot_config, plot_type):
         if "track_origins" in plotting_config:
             trk_origins = plotting_config["track_origins"]
 
-        for model_name, model_config in plotting_config[
-            "Datasets_to_plot"
-        ].items():
+        for model_name, model_config in plotting_config["Datasets_to_plot"].items():
             if (
-                not plotting_config["Datasets_to_plot"][f"{model_name}"][
-                    "files"
-                ]
+                not plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
                 is None
             ):
                 filepath_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"][
-                        "files"
-                    ]
+                    plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
                 )
                 labels_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"][
-                        "label"
-                    ]
+                    plotting_config["Datasets_to_plot"][f"{model_name}"]["label"]
                 )
 
         for trk_origin in trk_origins:
@@ -174,24 +164,16 @@ def plot_jets_variables(plot_config, plot_type):
         filepath_list = []
         labels_list = []
 
-        for model_name, model_config in plotting_config[
-            "Datasets_to_plot"
-        ].items():
+        for model_name, model_config in plotting_config["Datasets_to_plot"].items():
             if (
-                not plotting_config["Datasets_to_plot"][f"{model_name}"][
-                    "files"
-                ]
+                not plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
                 is None
             ):
                 filepath_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"][
-                        "files"
-                    ]
+                    plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
                 )
                 labels_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"][
-                        "label"
-                    ]
+                    plotting_config["Datasets_to_plot"][f"{model_name}"]["label"]
                 )
 
         if len(filepath_list) >= 2:
@@ -202,8 +184,7 @@ def plot_jets_variables(plot_config, plot_type):
                 var_dict=plot_config["Eval_parameters"]["var_dict"],
                 nJets=int(plot_config["Eval_parameters"]["nJets"]),
                 binning=plotting_config["binning"],
-                output_directory="input_vars_jets/"
-                + plotting_config["folder_to_save"],
+                output_directory="input_vars_jets/" + plotting_config["folder_to_save"],
                 plot_type=plot_type,
                 special_param_jets=plotting_config["special_param_jets"],
                 **plotting_config["plot_settings"],
@@ -217,8 +198,7 @@ def plot_jets_variables(plot_config, plot_type):
                 var_dict=plot_config["Eval_parameters"]["var_dict"],
                 nJets=int(plot_config["Eval_parameters"]["nJets"]),
                 binning=plotting_config["binning"],
-                output_directory="input_vars_jets/"
-                + plotting_config["folder_to_save"],
+                output_directory="input_vars_jets/" + plotting_config["folder_to_save"],
                 plot_type=plot_type,
                 special_param_jets=plotting_config["special_param_jets"],
                 **plotting_config["plot_settings"],

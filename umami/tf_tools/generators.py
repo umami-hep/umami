@@ -44,13 +44,9 @@ class Model_Generator(object):
                     "You need to give either X_Name or X_Trk_Name to the generator!"
                 )
         self.length = int(self.n_jets / self.batch_size)
-        self.step_size = self.batch_size * int(
-            self.chunk_size / self.batch_size
-        )
+        self.step_size = self.batch_size * int(self.chunk_size / self.batch_size)
 
-    def load_in_memory(
-        self, load_jets: bool, load_tracks: bool, part: int = 0
-    ):
+    def load_in_memory(self, load_jets: bool, load_tracks: bool, part: int = 0):
         """
         Load the jets or tracks or both step by step in memory.
 
@@ -129,20 +125,14 @@ class dips_generator(Model_Generator):
                 n += 1
                 small_step = 0
             batch_x_trk = self.x_trk_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             batch_y = self.y_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             if self.sample_weights:
                 batch_sample_weight = self.weight_in_mem[
-                    small_step
-                    * self.batch_size : (1 + small_step)
-                    * self.batch_size
+                    small_step * self.batch_size : (1 + small_step) * self.batch_size
                 ]
                 small_step += 1
                 yield (batch_x_trk, batch_y, batch_sample_weight)
@@ -162,20 +152,14 @@ class dl1_generator(Model_Generator):
                 n += 1
                 small_step = 0
             batch_x = self.x_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             batch_y = self.y_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             if self.sample_weights:
                 batch_sample_weight = self.weight_in_mem[
-                    small_step
-                    * self.batch_size : (1 + small_step)
-                    * self.batch_size
+                    small_step * self.batch_size : (1 + small_step) * self.batch_size
                 ]
                 small_step += 1
                 yield (batch_x, batch_y, batch_sample_weight)
@@ -195,19 +179,13 @@ class umami_generator(Model_Generator):
                 n += 1
                 small_step = 0
             batch_x = self.x_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             batch_x_trk = self.x_trk_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             batch_y = self.y_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             small_step += 1
             yield {"input_1": batch_x_trk, "input_2": batch_x}, batch_y
@@ -224,20 +202,14 @@ class dips_condition_generator(Model_Generator):
                 n += 1
                 small_step = 0
             batch_x = self.x_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size,
+                small_step * self.batch_size : (1 + small_step) * self.batch_size,
                 : self.nConds,
             ]
             batch_x_trk = self.x_trk_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             batch_y = self.y_in_mem[
-                small_step
-                * self.batch_size : (1 + small_step)
-                * self.batch_size
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             small_step += 1
             yield {"input_1": batch_x_trk, "input_2": batch_x}, batch_y

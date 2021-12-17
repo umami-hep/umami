@@ -6,8 +6,8 @@ from glob import glob
 
 import h5py
 import numpy as np
-from tqdm import tqdm
 import pandas as pd
+from tqdm import tqdm
 
 from umami.configuration import global_config, logger
 from umami.preprocessing_tools import GetCategoryCuts, GetSampleCuts
@@ -18,9 +18,7 @@ def GetPreparationSamplePath(sample):
     Retrieves the output sample path of the samples defined in the
     'samples' block in the preprocessing config.
     """
-    return os.path.join(
-        sample.get("f_output")["path"], sample.get("f_output")["file"]
-    )
+    return os.path.join(sample.get("f_output")["path"], sample.get("f_output")["file"])
 
 
 class PrepareSamples:
@@ -57,12 +55,11 @@ class PrepareSamples:
             self.cuts = cuts
         else:
             try:
-                category_setup = global_config.flavour_categories[
-                    self.sample_category
-                ]
+                category_setup = global_config.flavour_categories[self.sample_category]
             except KeyError:
                 raise KeyError(
-                    f"Requested sample category {self.sample_category} not defined in global config."
+                    f"Requested sample category {self.sample_category} not"
+                    " defined in global config."
                 )
 
             # retrieving the cuts for the category selection
@@ -86,9 +83,7 @@ class PrepareSamples:
             self.tracks_name = "tracks"
 
         output_path = sample.get("f_output")["path"]
-        self.output_file = os.path.join(
-            output_path, sample.get("f_output")["file"]
-        )
+        self.output_file = os.path.join(output_path, sample.get("f_output")["file"])
         # bookkeeping variables for running over the ntuples
         self.jets_loaded = 0
         self.create_file = True
@@ -132,7 +127,8 @@ class PrepareSamples:
         """Helper function to extract jet and track information from a h5 ntuple.
 
         :param filename: path to the h5 ntuple
-        :returns: generates (jets, tracks), where jets is a numpy array of jets with the size of one batch.
+        :returns: generates (jets, tracks), where jets is a numpy array of jets with
+                  the size of one batch.
                 Similarly, tracks is a numpy array of tracks but is only created
                 if `self.save_tracks` is set to True.
         """
@@ -150,9 +146,7 @@ class PrepareSamples:
                     jets = np.delete(jets, indices_to_remove)
                     # if tracks should be saved, also load them in batches
                     if self.save_tracks:
-                        tracks = data_set[self.tracks_name][
-                            batch[0] : batch[1]
-                        ]
+                        tracks = data_set[self.tracks_name][batch[0] : batch[1]]
                         tracks = np.delete(tracks, indices_to_remove, axis=0)
                     else:
                         tracks = None
@@ -225,5 +219,6 @@ class PrepareSamples:
         pbar.close()
         if self.n_jets_to_get > 0:
             logger.warning(
-                f"Not as many jets selected as defined in config file. Only {self.jets_loaded} jets selected instead of {n_jets_check}"
+                "Not as many jets selected as defined in config file. Only"
+                f" {self.jets_loaded} jets selected instead of {n_jets_check}"
             )

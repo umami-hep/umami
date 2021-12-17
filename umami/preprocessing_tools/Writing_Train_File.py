@@ -30,7 +30,8 @@ class TrainSampleWriter:
         self, input_file: str, index: int, nJets: int, chunkSize: int = 100_000
     ):
         """
-        Set up a generator who loads the scaled file and save it in the format for training.
+        Set up a generator who loads the scaled file and save it in the format for
+        training.
 
         Input:
         - input_file: File which is to be scaled.
@@ -83,9 +84,7 @@ class TrainSampleWriter:
                 elif self.bool_use_tracks is True:
                     # Load tracks
                     trks = np.asarray(
-                        h5py.File(input_file, "r")["/tracks"][
-                            indices_selected
-                        ],
+                        h5py.File(input_file, "r")["/tracks"][indices_selected],
                         dtype=self.precision,
                     )
                     trks = trks[rng_index]
@@ -124,8 +123,10 @@ class TrainSampleWriter:
     ):
         """
         Input:
-        - input_file: File with scaled/shifted jets. Default is name from config + resampled_scaled
-        - output_file: Name of the output file. Default is name from config + resampled_scaled_shuffled.
+        - input_file: File with scaled/shifted jets. Default is name from
+                        config + resampled_scaled
+        - output_file: Name of the output file. Default is name from
+                        config + resampled_scaled_shuffled.
         - chunkSize: The number of jets which are loaded and scaled/shifted per step.
 
         Output:
@@ -138,9 +139,7 @@ class TrainSampleWriter:
 
         # Define outfile name
         if output_file is None:
-            out_file = self.config.GetFileName(
-                option="resampled_scaled_shuffled"
-            )
+            out_file = self.config.GetFileName(option="resampled_scaled_shuffled")
 
         # Extract the correct variables
         variables_header_jets = self.variable_config["train_variables"]
@@ -176,9 +175,7 @@ class TrainSampleWriter:
             jet_idx = 0
 
             while chunk_counter <= n_chunks:
-                logger.info(
-                    f"Writing chunk {chunk_counter+1} of {n_chunks+1}."
-                )
+                logger.info(f"Writing chunk {chunk_counter+1} of {n_chunks+1}.")
                 try:
                     # Load jets from file
                     if self.bool_use_tracks is False:
@@ -271,9 +268,7 @@ class TrainSampleWriter:
 
                         if track_labels is not None:
                             # Track labels
-                            h5file["Y_trk_train"][
-                                jet_idx:jet_idx_end
-                            ] = track_labels
+                            h5file["Y_trk_train"][jet_idx:jet_idx_end] = track_labels
 
                 except StopIteration:
                     break

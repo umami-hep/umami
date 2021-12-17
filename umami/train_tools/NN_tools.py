@@ -226,9 +226,7 @@ def get_class_label_ids(class_labels: list) -> list:
 
     for counter, class_label in enumerate(class_labels):
         if counter == 0:
-            id_list = np.asarray(
-                flavour_categories[class_label]["label_value"]
-            )
+            id_list = np.asarray(flavour_categories[class_label]["label_value"])
 
         else:
             id_list = np.append(
@@ -271,13 +269,9 @@ def get_class_label_variables(class_labels: list):
 
             # If x ids are defined, loop over them and add the
             # truth variable x times to the label_var_list
-            for i in range(
-                len(flavour_categories[class_label]["label_value"])
-            ):
+            for i in range(len(flavour_categories[class_label]["label_value"])):
                 # Append the truth variable to the label_var_list
-                label_var_list.append(
-                    flavour_categories[class_label]["label_var"]
-                )
+                label_var_list.append(flavour_categories[class_label]["label_var"])
 
                 # Add the class_label to the flatten class list
                 flatten_class_labels.append(class_label)
@@ -322,9 +316,7 @@ def get_class_prob_var_names(tagger_name: str, class_labels: list):
     # Append the prob var names to new list
     for class_label in class_labels:
         prob_var_list.append(
-            tagger_name
-            + "_"
-            + flavour_categories[class_label]["prob_var_name"]
+            tagger_name + "_" + flavour_categories[class_label]["prob_var_name"]
         )
 
     # Return list of prob var names in correct order
@@ -369,7 +361,8 @@ def get_parameters_from_validation_dict_name(dict_name: str) -> dict:
     # from the parameters and check if they are identical.
     if get_validation_dict_name(**parameters) != dict_name:
         raise Exception(
-            f"Can't infer parameters correctly for {dict_name}. Parameters: {parameters}"
+            f"Can't infer parameters correctly for {dict_name}. Parameters:"
+            f" {parameters}"
         )
 
     # Return the parameters
@@ -459,12 +452,11 @@ def create_metadata_folder(
             logger.info(f"Copy {file_path} to metadata folder!")
             copyfile(
                 file_path,
-                os.path.join(
-                    model_name, "metadata", os.path.basename(file_path)
-                ),
+                os.path.join(model_name, "metadata", os.path.basename(file_path)),
             )
 
-            # Change the paths for the preprocess config and var dict in the train_config
+            # Change the paths for the preprocess config and var dict in the
+            # train_config
             if file_path == train_config_path:
                 metadata_preprocess_config_path = os.path.join(
                     os.getcwd(),
@@ -481,17 +473,13 @@ def create_metadata_folder(
                 )
 
                 replaceLineInFile(
-                    os.path.join(
-                        model_name, "metadata", os.path.basename(file_path)
-                    ),
+                    os.path.join(model_name, "metadata", os.path.basename(file_path)),
                     "preprocess_config:",
                     f"preprocess_config: {metadata_preprocess_config_path}",
                 )
 
                 replaceLineInFile(
-                    os.path.join(
-                        model_name, "metadata", os.path.basename(file_path)
-                    ),
+                    os.path.join(model_name, "metadata", os.path.basename(file_path)),
                     "var_dict:",
                     f"var_dict: {metadata_var_dict_path}",
                 )
@@ -512,17 +500,13 @@ def create_metadata_folder(
                 )
 
                 replaceLineInFile(
-                    os.path.join(
-                        model_name, "metadata", os.path.basename(file_path)
-                    ),
+                    os.path.join(model_name, "metadata", os.path.basename(file_path)),
                     ".dict_file: &dict_file",
                     f".dict_file: &dict_file {metadata_scale_dict_path}",
                 )
 
                 replaceLineInFile(
-                    os.path.join(
-                        model_name, "metadata", os.path.basename(file_path)
-                    ),
+                    os.path.join(model_name, "metadata", os.path.basename(file_path)),
                     ".var_file: &var_file",
                     f".var_file: &var_file {metadata_var_dict_path}",
                 )
@@ -588,9 +572,7 @@ def LoadJetsFromFile(
         filepaths = filepath
 
     else:
-        raise KeyError(
-            f"Given filepath is {type(filepath)}, not a string or a list!"
-        )
+        raise KeyError(f"Given filepath is {type(filepath)}, not a string or a list!")
 
     # Check if filepaths is empty
     if len(filepaths) == 0:
@@ -603,16 +585,12 @@ def LoadJetsFromFile(
 
     # Get class_labels variables etc. from global config
     class_ids = get_class_label_ids(class_labels)
-    class_label_vars, flatten_class_labels = get_class_label_variables(
-        class_labels
-    )
+    class_label_vars, flatten_class_labels = get_class_label_variables(class_labels)
 
     if variables:
 
         # Get list with all available variables
-        avai_var_list = list(
-            h5py.File(filepaths[0], "r")["/jets"].dtype.fields.keys()
-        )
+        avai_var_list = list(h5py.File(filepaths[0], "r")["/jets"].dtype.fields.keys())
 
         # Make a copy of the variables list to loop over it
         variables_list = copy.deepcopy(variables)
@@ -656,25 +634,19 @@ def LoadJetsFromFile(
             if variables:
                 jets = pd.DataFrame(
                     h5py.File(file, "r")["/jets"].fields(variables_list)[
-                        infile_counter
-                        * chunk_size : (infile_counter + 1)
-                        * chunk_size
+                        infile_counter * chunk_size : (infile_counter + 1) * chunk_size
                     ]
                 )
 
             else:
                 jets = pd.DataFrame(
                     h5py.File(file, "r")["/jets"][
-                        infile_counter
-                        * chunk_size : (infile_counter + 1)
-                        * chunk_size
+                        infile_counter * chunk_size : (infile_counter + 1) * chunk_size
                     ]
                 )
 
             # Init new column for string labels
-            jets["Umami_string_labels"] = np.zeros_like(
-                jets[class_label_vars[0]]
-            )
+            jets["Umami_string_labels"] = np.zeros_like(jets[class_label_vars[0]])
             jets["Umami_labels"] = np.zeros_like(jets[class_label_vars[0]])
 
             # Change type of column to string
@@ -684,41 +656,30 @@ def LoadJetsFromFile(
             for class_id, class_label_var, class_label in zip(
                 class_ids, class_label_vars, flatten_class_labels
             ):
-                indices_tochange = np.where(
-                    jets[class_label_var].values == class_id
-                )
+                indices_tochange = np.where(jets[class_label_var].values == class_id)
 
                 # Add a string description which this class is
-                jets["Umami_string_labels"].values[
-                    indices_tochange
-                ] = class_label
+                jets["Umami_string_labels"].values[indices_tochange] = class_label
 
                 # Add the right column label to class
-                jets["Umami_labels"].values[
-                    indices_tochange
-                ] = class_labels.index(class_label)
+                jets["Umami_labels"].values[indices_tochange] = class_labels.index(
+                    class_label
+                )
 
             # Define the conditions to remove
             toremove_conditions = jets["Umami_string_labels"] == "0"
 
             # Get the indices of the jets that are not used
-            indices_toremove = np.where(
-                toremove_conditions == True  # noqa: E712
-            )[0]
+            indices_toremove = np.where(toremove_conditions == True)[0]  # noqa: E712
 
             if cut_vars_dict:
                 # Apply cuts and get a list of which jets to remove
-                indices_toremove_cuts = GetSampleCuts(
-                    jets=jets, cuts=cut_vars_dict
-                )
+                indices_toremove_cuts = GetSampleCuts(jets=jets, cuts=cut_vars_dict)
 
                 # Combine the indicies to remove lists
                 indices_toremove = np.asarray(
                     list(
-                        set(
-                            indices_toremove.tolist()
-                            + indices_toremove_cuts.tolist()
-                        )
+                        set(indices_toremove.tolist() + indices_toremove_cuts.tolist())
                     )
                 )
 
@@ -817,9 +778,7 @@ def LoadTrksFromFile(
         filepaths = filepath
 
     else:
-        raise KeyError(
-            f"Given filepath is {type(filepath)}, not a string or a list!"
-        )
+        raise KeyError(f"Given filepath is {type(filepath)}, not a string or a list!")
 
     # Check if filepaths is empty
     if len(filepaths) == 0:
@@ -832,9 +791,7 @@ def LoadTrksFromFile(
 
     # Get class_labels variables etc. from global config
     class_ids = get_class_label_ids(class_labels)
-    class_label_vars, flatten_class_labels = get_class_label_variables(
-        class_labels
-    )
+    class_label_vars, flatten_class_labels = get_class_label_variables(class_labels)
 
     # Define the labels which are needed
     jet_vars_to_load = list(dict.fromkeys(class_label_vars))
@@ -886,9 +843,7 @@ def LoadTrksFromFile(
                         ]
 
             # Init new column for string labels
-            labels["Umami_string_labels"] = np.zeros_like(
-                labels[class_label_vars[0]]
-            )
+            labels["Umami_string_labels"] = np.zeros_like(labels[class_label_vars[0]])
             labels["Umami_labels"] = np.zeros_like(labels[class_label_vars[0]])
 
             # Change type of column to string
@@ -898,41 +853,32 @@ def LoadTrksFromFile(
             for (class_id, class_label_var, class_label) in zip(
                 class_ids, class_label_vars, flatten_class_labels
             ):
-                indices_tochange = np.where(
-                    labels[class_label_var].values == class_id
-                )[0]
+                indices_tochange = np.where(labels[class_label_var].values == class_id)[
+                    0
+                ]
 
                 # Add a string description which this class is
-                labels["Umami_string_labels"].values[
-                    indices_tochange
-                ] = class_label
+                labels["Umami_string_labels"].values[indices_tochange] = class_label
 
                 # Add the right column label to class
-                labels["Umami_labels"].values[
-                    indices_tochange
-                ] = class_labels.index(class_label)
+                labels["Umami_labels"].values[indices_tochange] = class_labels.index(
+                    class_label
+                )
 
             # Define the conditions to remove
             toremove_conditions = labels["Umami_string_labels"] == "0"
 
             # Get the indices of the jets that are not used
-            indices_toremove = np.where(
-                toremove_conditions == True  # noqa: E712
-            )[0]
+            indices_toremove = np.where(toremove_conditions == True)[0]  # noqa: E712
 
             if cut_vars_dict:
                 # Apply cuts and get a list of which jets to remove
-                indices_toremove_cuts = GetSampleCuts(
-                    jets=labels, cuts=cut_vars_dict
-                )
+                indices_toremove_cuts = GetSampleCuts(jets=labels, cuts=cut_vars_dict)
 
                 # Combine the indicies to remove lists
                 indices_toremove = np.asarray(
                     list(
-                        set(
-                            indices_toremove.tolist()
-                            + indices_toremove_cuts.tolist()
-                        )
+                        set(indices_toremove.tolist() + indices_toremove_cuts.tolist())
                     )
                 )
 
@@ -944,9 +890,7 @@ def LoadTrksFromFile(
             trks = np.delete(
                 arr=np.asarray(
                     h5py.File(file, "r")["/tracks"][
-                        infile_counter
-                        * chunk_size : (infile_counter + 1)
-                        * chunk_size
+                        infile_counter * chunk_size : (infile_counter + 1) * chunk_size
                     ]
                 ),
                 obj=indices_toremove,
@@ -1035,8 +979,7 @@ def CalcDiscValues(
     # Calculate denominator of disc_score
     for class_label in class_labels_wo_main:
         denominator += (
-            frac_dict[class_label]
-            * jets_dict[rej_class][:, index_dict[class_label]]
+            frac_dict[class_label] * jets_dict[rej_class][:, index_dict[class_label]]
         )
     denominator += add_small
 
@@ -1091,9 +1034,7 @@ def GetScore(
 
     # Calculate denominator of disc_score
     for class_label in class_labels_wo_main:
-        denominator += (
-            frac_dict[class_label] * y_pred[:, index_dict[class_label]]
-        )
+        denominator += frac_dict[class_label] * y_pred[:, index_dict[class_label]]
     denominator += add_small
 
     # Calculate final disc_score and return it
@@ -1194,14 +1135,11 @@ def GetRejection(
 
         except ZeroDivisionError:
             logger.error(
-                f"""
-                Not enough jets for rejection calculation of class {iter_main_class} for {target_eff} efficiency!\n
-                Maybe loosen the eff_min to fix it or give more jets!
-                """
+                "Not enough jets for rejection calculation of class "
+                f"{iter_main_class} for {target_eff} efficiency!\n"
+                "Maybe loosen the eff_min to fix it or give more jets!"
             )
-            raise ZeroDivisionError(
-                "Not enough jets for rejection calculation!"
-            )
+            raise ZeroDivisionError("Not enough jets for rejection calculation!")
 
     return rej_dict, cutvalue
 
@@ -1312,7 +1250,9 @@ class MyCallback(CallbackBase):
                 frac_dict=self.frac_dict,
             )
 
-            # Once we use python >=3.9 (see https://www.python.org/dev/peps/pep-0584/#specification) switch to the following: dict_epoch |= result_dict
+            # Once we use python >=3.9
+            # (see https://www.python.org/dev/peps/pep-0584/#specification)
+            #  switch to the following: dict_epoch |= result_dict
             dict_epoch = {**dict_epoch, **result_dict}
 
         # Append the dict to the list
@@ -1370,7 +1310,9 @@ class MyCallbackUmami(CallbackBase):
                 frac_dict=self.frac_dict,
             )
 
-            # Once we use python >=3.9 (see https://www.python.org/dev/peps/pep-0584/#specification) switch to the following: dict_epoch |= result_dict
+            # Once we use python >=3.9
+            # (see https://www.python.org/dev/peps/pep-0584/#specification)
+            # switch to the following: dict_epoch |= result_dict
             dict_epoch = {**dict_epoch, **result_dict}
 
         # Append the dict to the list
@@ -1490,14 +1432,13 @@ def GetTestSample(
 
     # Assert that the jet variables and exlude are not called at the same time
     if jet_variables and exclude:
-        raise ValueError(
-            "You can't set exclude and jet_variables. Choose one!"
-        )
+        raise ValueError("You can't set exclude and jet_variables. Choose one!")
 
     # Adding class_labels check between preprocess_config and given labels
-    assert (
-        preprocess_config.preparation["class_labels"] == class_labels
-    ), "class_labels from preprocessing_config and from train_config are different! They need to be the same!"
+    assert preprocess_config.preparation["class_labels"] == class_labels, (
+        "class_labels from preprocessing_config and from train_config are"
+        " different! They need to be the same!"
+    )
 
     # Get the paths of the input file as list
     # In case there are multiple files (Wildcard etc.)
@@ -1562,7 +1503,8 @@ def GetTestSample(
             if print_logger:
                 if elem["name"] in excluded_variables:
                     logger.info(
-                        f"{elem['name']} has been excluded from variable config (is in scale dict)."
+                        f"{elem['name']} has been excluded from variable"
+                        " config (is in scale dict)."
                     )
                 else:
                     logger.warning(
@@ -1576,7 +1518,8 @@ def GetTestSample(
             jets[elem["name"]] /= elem["scale"]
     if not set(variables).issubset(scale_dict_variables):
         raise KeyError(
-            f"Requested {(set(variables).difference(scale_dict_variables))} which are not in scale dict."
+            f"Requested {(set(variables).difference(scale_dict_variables))}"
+            " which are not in scale dict."
         )
 
     # Return jets and labels
@@ -1627,9 +1570,10 @@ def GetTestSampleTrks(
     """
 
     # Adding class_labels check between preprocess_config and given labels
-    assert (
-        preprocess_config.preparation["class_labels"] == class_labels
-    ), "class_labels from preprocessing_config and from train_config are different! They need to be the same!"
+    assert preprocess_config.preparation["class_labels"] == class_labels, (
+        "class_labels from preprocessing_config and from train_config are"
+        " different! They need to be the same!"
+    )
 
     # making sure the nJets aregument is an integer
     nJets = int(nJets)
@@ -1735,15 +1679,11 @@ def load_validation_data_umami(
 
     if convert_to_tensor:
         # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid"] = tf.convert_to_tensor(
-            X_valid, dtype=tf.float64
-        )
+        val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
         val_data_dict["X_valid_trk"] = tf.convert_to_tensor(
             X_valid_trk, dtype=tf.float64
         )
-        val_data_dict["Y_valid"] = tf.convert_to_tensor(
-            Y_valid, dtype=tf.int64
-        )
+        val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
 
     else:
         val_data_dict["X_valid"] = X_valid
@@ -1798,9 +1738,11 @@ def load_validation_data_umami(
 
         # Assert a correct shape
         assert (
-            val_data_dict["X_valid"].shape[1]
-            == val_data_dict["X_valid_add"].shape[1]
-        ), "validation_file and add_validation_file have different amounts of variables!"
+            val_data_dict["X_valid"].shape[1] == val_data_dict["X_valid_add"].shape[1]
+        ), (
+            "validation_file and add_validation_file have different amounts of"
+            " variables!"
+        )
 
     # Return the val data dict
     return val_data_dict
@@ -1867,12 +1809,8 @@ def load_validation_data_dl1(
 
     if convert_to_tensor:
         # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid"] = tf.convert_to_tensor(
-            X_valid, dtype=tf.float64
-        )
-        val_data_dict["Y_valid"] = tf.convert_to_tensor(
-            Y_valid, dtype=tf.int64
-        )
+        val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
+        val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
 
     else:
         val_data_dict["X_valid"] = X_valid
@@ -1918,9 +1856,11 @@ def load_validation_data_dl1(
 
         # Assert a correct shape
         assert (
-            val_data_dict["X_valid"].shape[1]
-            == val_data_dict["X_valid_add"].shape[1]
-        ), "validation_file and add_validation_file have different amounts of variables!"
+            val_data_dict["X_valid"].shape[1] == val_data_dict["X_valid_add"].shape[1]
+        ), (
+            "validation_file and add_validation_file have different amounts of"
+            " variables!"
+        )
 
     # Return the val data dict
     return val_data_dict
@@ -1975,12 +1915,8 @@ def load_validation_data_dips(
 
     if convert_to_tensor:
         # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid"] = tf.convert_to_tensor(
-            X_valid, dtype=tf.float64
-        )
-        val_data_dict["Y_valid"] = tf.convert_to_tensor(
-            Y_valid, dtype=tf.int64
-        )
+        val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
+        val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
 
     else:
         val_data_dict["X_valid"] = X_valid
@@ -2025,9 +1961,11 @@ def load_validation_data_dips(
 
         # Assert a correct shape
         assert (
-            val_data_dict["X_valid"].shape[1]
-            == val_data_dict["X_valid_add"].shape[1]
-        ), "validation_file and add_validation_file have different amounts of variables!"
+            val_data_dict["X_valid"].shape[1] == val_data_dict["X_valid_add"].shape[1]
+        ), (
+            "validation_file and add_validation_file have different amounts of"
+            " variables!"
+        )
 
     # Return the val data dict
     return val_data_dict
@@ -2140,13 +2078,7 @@ def evaluate_model_umami(
     """
 
     # Calculate accuracy andloss of UMAMI and Dips part
-    (
-        loss,
-        dips_loss,
-        umami_loss,
-        dips_accuracy,
-        umami_accuracy,
-    ) = model.evaluate(
+    (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
         [data_dict["X_valid_trk"], data_dict["X_valid"]],
         data_dict["Y_valid"],
         batch_size=5_000,
@@ -2255,23 +2187,13 @@ def evaluate_model_umami(
     }
 
     # Write results in one dict
+    result_dict.update({f"{key}_umami": rej_dict_umami[key] for key in rej_dict_umami})
+    result_dict.update({f"{key}_dips": rej_dict_dips[key] for key in rej_dict_dips})
     result_dict.update(
-        {f"{key}_umami": rej_dict_umami[key] for key in rej_dict_umami}
+        {f"{key}_umami_add": rej_dict_umami_add[key] for key in rej_dict_umami_add}
     )
     result_dict.update(
-        {f"{key}_dips": rej_dict_dips[key] for key in rej_dict_dips}
-    )
-    result_dict.update(
-        {
-            f"{key}_umami_add": rej_dict_umami_add[key]
-            for key in rej_dict_umami_add
-        }
-    )
-    result_dict.update(
-        {
-            f"{key}_dips_add": rej_dict_dips_add[key]
-            for key in rej_dict_dips_add
-        }
+        {f"{key}_dips_add": rej_dict_dips_add[key] for key in rej_dict_dips_add}
     )
     return result_dict
 
@@ -2399,9 +2321,7 @@ def evaluate_model(
 
     # Write results in one dict
     result_dict.update({f"{key}": rej_dict[key] for key in rej_dict})
-    result_dict.update(
-        {f"{key}_add": rej_dict_add[key] for key in rej_dict_add}
-    )
+    result_dict.update({f"{key}_add": rej_dict_add[key] for key in rej_dict_add})
 
     # Return finished dict
     return result_dict
@@ -2487,9 +2407,7 @@ def calc_validation_metrics(
             training_output_list = json.load(training_out_json)
 
     except FileNotFoundError:
-        logger.info(
-            "No callback json file with validation metrics found! Make new one"
-        )
+        logger.info("No callback json file with validation metrics found! Make new one")
         training_output_list = [
             {"epoch": n} for n in range(train_config.NN_structure["epochs"])
         ]
@@ -2554,9 +2472,7 @@ def calc_validation_metrics(
             )
 
         except ValueError:
-            raise ValueError(
-                f"Epoch could not be extracted from {model_string}!"
-            )
+            raise ValueError(f"Epoch could not be extracted from {model_string}!")
 
         # Load the epoch from json and add it to dict
         for train_epoch in training_output_list:

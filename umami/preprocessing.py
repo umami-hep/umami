@@ -12,28 +12,24 @@ def GetParser():
     -------
     args: parse_args
     """
-    parser = argparse.ArgumentParser(
-        description="Preprocessing command line" "options."
-    )
+    parser = argparse.ArgumentParser(description="Preprocessing command lineoptions.")
 
     parser.add_argument(
         "-c",
         "--config_file",
         type=str,
         required=True,
-        help="Enter the name of the config file to create the"
-        " hybrid sample.",
+        help="Enter the name of the config file to create the hybrid sample.",
     )
     parser.add_argument(
         "--sample",
         default=None,
-        help="Choose sample type for hybrid sample preparation"
-        " and merging.",
+        help="Choose sample type for hybrid sample preparation and merging.",
     )
     parser.add_argument(
         "--shuffle_array",
         action="store_true",
-        help="Shuffle output arrays in hybrid sample" " preparation.",
+        help="Shuffle output arrays in hybrid sample preparation.",
     )
     parser.add_argument(
         "--chunk_size",
@@ -95,7 +91,10 @@ def GetParser():
         "--flavour",
         nargs="+",
         default=None,
-        help="Sets the flavour to process for PDF sampling. List with target, combining, plotting or index of flavour.",
+        help=(
+            "Sets the flavour to process for PDF sampling. List with target,"
+            " combining, plotting or index of flavour."
+        ),
     )
     # To pass a list, let a space between the list entries:
     # e.g., --flavour target 0 1 2 plotting combining
@@ -117,7 +116,8 @@ if __name__ == "__main__":
         # If no specific sample is given
         else:
             logger.warning(
-                "No --sample was selected, using all in config file! This can take a lot of time!"
+                "No --sample was selected, using all in config file! This can"
+                " take a lot of time!"
             )
 
             # Iterate over the samples defined in the config
@@ -164,9 +164,7 @@ if __name__ == "__main__":
 
     # Check for final writing to disk in train format
     elif args.write:
-        Writer = upt.TrainSampleWriter(
-            config, compression=config.config["compression"]
-        )
+        Writer = upt.TrainSampleWriter(config, compression=config.config["compression"])
         Writer.WriteTrainSample()
 
     elif args.to_records:

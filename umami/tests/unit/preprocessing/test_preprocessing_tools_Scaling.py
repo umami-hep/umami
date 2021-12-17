@@ -3,11 +3,7 @@ import unittest
 
 import numpy as np
 
-from umami.preprocessing_tools import (
-    Configuration,
-    Scaling,
-    apply_scaling_trks,
-)
+from umami.preprocessing_tools import Configuration, Scaling, apply_scaling_trks
 
 
 class apply_scaling_trks_TestCase(unittest.TestCase):
@@ -31,9 +27,7 @@ class apply_scaling_trks_TestCase(unittest.TestCase):
                 ("IP3D_signed_d0_significance", "f4"),
             ],
         )
-        self.control_trks = np.array(
-            [[30, -0.54398847, -1], [40, -0.19741488, -1]]
-        )
+        self.control_trks = np.array([[30, -0.54398847, -1], [40, -0.19741488, -1]])
 
     def test_apply_scaling_trks(self):
         scaled_trks, _ = apply_scaling_trks(

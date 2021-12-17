@@ -33,9 +33,7 @@ def Dips_model(train_config=None, input_shape=None):
     if train_config.model_file is not None:
         # Load DIPS model from file
         logger.info(f"Loading model from: {train_config.model_file}")
-        dips = load_model(
-            train_config.model_file, {"Sum": utf.Sum}, compile=False
-        )
+        dips = load_model(train_config.model_file, {"Sum": utf.Sum}, compile=False)
 
     else:
         logger.info("No modelfile provided! Initialize a new one!")
@@ -60,13 +58,13 @@ def Dips_model(train_config=None, input_shape=None):
                 )(tdd)
 
             if dropout != 0:
-                tdd = TimeDistributed(
-                    Dropout(rate=dropout), name=f"Phi{i}_Dropout"
-                )(tdd)
+                tdd = TimeDistributed(Dropout(rate=dropout), name=f"Phi{i}_Dropout")(
+                    tdd
+                )
 
-            tdd = TimeDistributed(
-                Activation(activations.relu), name=f"Phi{i}_ReLU"
-            )(tdd)
+            tdd = TimeDistributed(Activation(activations.relu), name=f"Phi{i}_ReLU")(
+                tdd
+            )
 
         # This is where the magic happens... sum up the track features!
         F = utf.Sum(name="Sum")(tdd)
@@ -87,9 +85,7 @@ def Dips_model(train_config=None, input_shape=None):
             F = Activation(activations.relu, name=f"F{j}_ReLU")(F)
 
         # Set output and activation function
-        output = Dense(
-            len(class_labels), activation="softmax", name="Jet_class"
-        )(F)
+        output = Dense(len(class_labels), activation="softmax", name="Jet_class")(F)
         dips = Model(inputs=trk_inputs, outputs=output)
 
     # Print Dips model summary when log level lower or equal INFO level
@@ -123,9 +119,7 @@ def Dips(args, train_config, preprocess_config):
     logger.info(f"Number of Jets used for training: {nJets}")
 
     # Init dips model
-    dips, epochs = Dips_model(
-        train_config=train_config, input_shape=(nTrks, nFeatures)
-    )
+    dips, epochs = Dips_model(train_config=train_config, input_shape=(nTrks, nFeatures))
 
     if NN_structure["use_sample_weights"]:
         tensor_types = (tf.float32, tf.float32, tf.float32)
@@ -168,8 +162,7 @@ def Dips(args, train_config, preprocess_config):
 
     # Set ModelCheckpoint as callback
     dips_mChkPt = ModelCheckpoint(
-        f"{train_config.model_name}/model_files"
-        + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
@@ -221,9 +214,7 @@ def Dips(args, train_config, preprocess_config):
     )
 
     # Dump dict into json
-    logger.info(
-        f"Dumping history file to {train_config.model_name}/history.json"
-    )
+    logger.info(f"Dumping history file to {train_config.model_name}/history.json")
 
     # Make the history dict the same shape as the dict from the callbacks
     hist_dict = utt.prepare_history_dict(history.history)

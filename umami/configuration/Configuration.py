@@ -8,11 +8,16 @@ from umami.tools import yaml_loader
 
 
 class Configuration(object):
-    """This is a global configuration to allow certain settings which are hardcoded so far."""
+    """
+    This is a global configuration to allow certain settings which are
+    hardcoded so far.
+    """
 
     def __init__(self, yaml_config=None):
         super(Configuration, self).__init__()
-        self.yaml_config = f"{pathlib.Path(__file__).parent.absolute()}/../configs/global_config.yaml"
+        self.yaml_config = (
+            f"{pathlib.Path(__file__).parent.absolute()}/../configs/global_config.yaml"
+        )
         self.LoadConfigFile()
         self.logger = self.SetLoggingLevel()
         self.SetTFDebugLevel()
@@ -37,9 +42,7 @@ class Configuration(object):
                 self.logger.debug(f"Setting {item} to {self.config[item]}.")
                 setattr(self, item, self.config[item])
             else:
-                raise KeyError(
-                    f"You need to specify {item} in your" " config file!"
-                )
+                raise KeyError(f"You need to specify {item} in your config file!")
 
     def SetMPLPlottingBackend(self):
         """Setting the plotting backend of matplotlib."""
@@ -53,9 +56,7 @@ class Configuration(object):
     def SetTFDebugLevel(self):
         """Setting the Debug level of tensorflow.
         For reference see https://stackoverflow.com/questions/35869137/avoid-tensorflow-print-on-standard-error"""  # noqa
-        self.logger.debug(
-            f"Setting TFDebugLevel to {self.config['TFDebugLevel']}"
-        )
+        self.logger.debug(f"Setting TFDebugLevel to {self.config['TFDebugLevel']}")
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(self.config["TFDebugLevel"])
 
     def SetLoggingLevel(self):
@@ -73,7 +74,8 @@ class Configuration(object):
             logger.setLevel(log_levels[self.config["DebugLevel"]])
         else:
             logging.error(
-                f"The 'DebugLevel' option {self.config['DebugLevel']} set in the global config is not valid."
+                f"The 'DebugLevel' option {self.config['DebugLevel']} set in"
+                " the global config is not valid."
             )
         ch = logging.StreamHandler()
         ch.setLevel(log_levels[self.config["DebugLevel"]])
@@ -95,7 +97,9 @@ class CustomFormatter(logging.Formatter):
     red = "\x1b[31;21m"
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
-    debugformat = "%(asctime)s - %(levelname)s:%(name)s: %(message)s (%(filename)s:%(lineno)d)"
+    debugformat = (
+        "%(asctime)s - %(levelname)s:%(name)s: %(message)s (%(filename)s:%(lineno)d)"
+    )
     format = "%(levelname)s:%(name)s: %(message)s"
 
     FORMATS = {

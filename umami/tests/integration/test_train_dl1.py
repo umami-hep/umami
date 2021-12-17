@@ -75,9 +75,7 @@ def runTrainingDL1(config):
     if isSuccess is True:
         run_evaluate_model_DL1
 
-    logger.info(
-        "Test: running evaluate_model.py for DL1 with shapley option..."
-    )
+    logger.info("Test: running evaluate_model.py for DL1 with shapley option...")
     run_evaluate_model_DL1_with_shapley = run(
         [
             "evaluate_model.py",
@@ -91,9 +89,7 @@ def runTrainingDL1(config):
     try:
         run_evaluate_model_DL1_with_shapley.check_returncode()
     except CalledProcessError:
-        logger.info(
-            "Test failed: evaluate_model.py for DL1 with shapley option."
-        )
+        logger.info("Test failed: evaluate_model.py for DL1 with shapley option.")
         isSuccess = False
 
     if isSuccess is True:
@@ -113,9 +109,7 @@ class TestDL1Training(unittest.TestCase):
         logger.info(f"Creating test directory in {test_dir}")
 
         # config files, will be copied to test dir
-        config_source = os.path.join(
-            os.getcwd(), self.data["test_dl1"]["config"]
-        )
+        config_source = os.path.join(os.getcwd(), self.data["test_dl1"]["config"])
         self.config = os.path.join(test_dir, os.path.basename(config_source))
 
         preprocessing_config_source = os.path.join(
@@ -165,9 +159,7 @@ class TestDL1Training(unittest.TestCase):
         # Copy configs and var dict
         copyfile(config_source, self.config)
         copyfile(preprocessing_config_source, self.preprocessing_config)
-        copyfile(
-            preprocessing_config_paths_source, self.preprocessing_config_paths
-        )
+        copyfile(preprocessing_config_paths_source, self.preprocessing_config_paths)
         copyfile(var_dict_dl1_source, self.var_dict_dl1)
 
         # modify copy of preprocessing config file for test
@@ -233,12 +225,8 @@ class TestDL1Training(unittest.TestCase):
             "ttbar": [{"pt_btagJes": {"operator": "<=", "condition": 250000}}],
             "zpext": [{"pt_btagJes": {"operator": ">", "condition": 250000}}],
         }
-        self.config_file["Eval_parameters_validation"]["shapley"][
-            "feature_sets"
-        ] = 6
-        self.config_file["Eval_parameters_validation"]["shapley"][
-            "averaged_sets"
-        ] = 2
+        self.config_file["Eval_parameters_validation"]["shapley"]["feature_sets"] = 6
+        self.config_file["Eval_parameters_validation"]["shapley"]["averaged_sets"] = 2
 
         # save the copy of training config file for test
         with open(self.config, "w") as config:

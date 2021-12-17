@@ -11,13 +11,9 @@ class hist_w_unc_TestCase(unittest.TestCase):
         self.input = np.array([1, 2, 3, 4, 5, 1, 2, 3])
         self.hist_normed = np.array([0, 0.25, 0.25, 0.25, 0.25])
         self.hist = np.array([0, 2, 2, 2, 2])
-        self.unc_normed = np.array(
-            [0, 0.1767767, 0.1767767, 0.1767767, 0.1767767]
-        )
+        self.unc_normed = np.array([0, 0.1767767, 0.1767767, 0.1767767, 0.1767767])
         self.unc = np.array([0.0, 1.4142136, 1.4142136, 1.4142136, 1.4142136])
-        self.band_normed = np.array(
-            [0, 0.0732233, 0.0732233, 0.0732233, 0.0732233]
-        )
+        self.band_normed = np.array([0, 0.0732233, 0.0732233, 0.0732233, 0.0732233])
         self.band = np.array([0.0, 0.5857864, 0.5857864, 0.5857864, 0.5857864])
 
     def test_hist_w_unc_zero_case(self):
@@ -75,9 +71,7 @@ class hist_ratio_TestCase(unittest.TestCase):
         self.denominator = np.array([3, 6, 2, 7, 10, 12])
         self.nominator_unc = np.array([0.5, 1, 0.3, 0.2, 0.5, 0.3])
         self.denominator_unc = np.array([1, 0.3, 2, 1, 5, 3])
-        self.step = np.array(
-            [1.6666667, 1.6666667, 0.5, 1, 0.7142857, 0.6, 0.1666667]
-        )
+        self.step = np.array([1.6666667, 1.6666667, 0.5, 1, 0.7142857, 0.6, 0.1666667])
         self.step_unc = np.array(
             [
                 0.580017,

@@ -62,9 +62,7 @@ def GetRejectionPerEfficiencyDict(
         for tagger in extended_tagger_list
     }
     tagger_rej_dicts["effs"] = effs
-    tagger_disc_cut_dicts = {
-        f"disc_{tagger}": [] for tagger in extended_tagger_list
-    }
+    tagger_disc_cut_dicts = {f"disc_{tagger}": [] for tagger in extended_tagger_list}
 
     # Loop over effs for ROC plots
     for eff in effs:
@@ -93,9 +91,7 @@ def GetRejectionPerEfficiencyDict(
 
             tagger_disc_cut_dicts[f"disc_{tagger}"].append(disc_cut_dict_tmp)
             for rej_type in rej_dict_tmp:
-                tagger_rej_dicts[f"{tagger}_{rej_type}"].append(
-                    rej_dict_tmp[rej_type]
-                )
+                tagger_rej_dicts[f"{tagger}_{rej_type}"].append(rej_dict_tmp[rej_type])
 
     return {**tagger_disc_cut_dicts, **tagger_rej_dicts}
 
@@ -117,7 +113,8 @@ def GetScoresProbsDict(
     Input:
     - jets: Dataframe with the probabilites of the comparison taggers as columns
     - y_true: Internal truth labeling of the used jets.
-    - tagger_preds: Prediction output of the taggers listed. e.g. [pred_dips, pred_umami]
+    - tagger_preds: Prediction output of the taggers listed.
+                    e.g. [pred_dips, pred_umami]
     - tagger_names: Names of the freshly trained taggers. e.g. ["dips", "umami"]
     - tagger_list: List of the comparison tagger names.
     - class_labels: List of class labels which are used.
@@ -158,13 +155,12 @@ def GetScoresProbsDict(
                 try:
                     df_discs_dict[
                         f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                    ] = jets[
-                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                    ]
+                    ] = jets[f'{tagger}_{flavour_categories[flav]["prob_var_name"]}']
 
                 except KeyError:
                     logger.warning(
-                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]} is not in files! '
+                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                        " is not in files! "
                         + "Skipping..."
                     )
 
@@ -172,7 +168,8 @@ def GetScoresProbsDict(
             y_pred = tagger_preds[counter]
 
         else:
-            # Shape the probabilities of the comparison taggers like the output of the networks
+            # Shape the probabilities of the comparison taggers like the output of
+            # the networks
             for flav_index, flav in enumerate(class_labels):
 
                 # Trying to load the output probs of the tagger from file
@@ -200,9 +197,7 @@ def GetScoresProbsDict(
 
             # Check if tagger is in file
             if len(class_labels_copy) == 0:
-                logger.warning(
-                    f"Tagger {tagger} not in .h5 files! Skipping..."
-                )
+                logger.warning(f"Tagger {tagger} not in .h5 files! Skipping...")
                 continue
 
         # Adding scores of the trained network
@@ -217,9 +212,7 @@ def GetScoresProbsDict(
             )
 
         except KeyError:
-            logger.warning(
-                f"{tagger} is in files, but not in frac_dict! Skipping..."
-            )
+            logger.warning(f"{tagger} is in files, but not in frac_dict! Skipping...")
             continue
 
     return df_discs_dict
@@ -358,14 +351,10 @@ def GetSaliencyMapDict(
             for PassBool in [True, False]:
 
                 # Get the Disc_values value for a specific flavour
-                Disc_values_flavour = Disc_values[
-                    Y_test[:, class_index].astype(bool)
-                ]
+                Disc_values_flavour = Disc_values[Y_test[:, class_index].astype(bool)]
 
                 # Get the cutvalue for the specific WP
-                cutvalue = np.percentile(
-                    Disc_values_flavour, (100 - target_beff)
-                )
+                cutvalue = np.percentile(Disc_values_flavour, (100 - target_beff))
 
                 # Set PassBool masking
                 if PassBool is True:

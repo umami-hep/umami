@@ -122,9 +122,7 @@ class test_Attention(tf.test.TestCase):
                 [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
             ]
         )
-        expected_output = np.array(
-            [[True, False, False], [True, False, False]]
-        )
+        expected_output = np.array([[True, False, False], [True, False, False]])
 
         mask = self.my_attention.compute_mask(
             inputs=inputs,
@@ -273,9 +271,7 @@ class test_DeepSet(tf.test.TestCase):
                 [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
             ]
         )
-        expected_output = np.array(
-            [[True, False, False], [True, False, False]]
-        )
+        expected_output = np.array([[True, False, False], [True, False, False]])
 
         mask = self.my_deepset.compute_mask(
             inputs=inputs,

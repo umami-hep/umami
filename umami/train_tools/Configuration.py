@@ -2,10 +2,7 @@ import yaml
 
 from umami.configuration import logger
 from umami.tools import yaml_loader
-from umami.train_tools.NN_tools import (
-    get_class_label_ids,
-    get_class_label_variables,
-)
+from umami.train_tools.NN_tools import get_class_label_ids, get_class_label_variables
 
 
 class Configuration(object):
@@ -68,9 +65,7 @@ class Configuration(object):
             if item in self.config:
                 setattr(self, item, self.config[item])
             else:
-                raise KeyError(
-                    f"You need to specify {item} in your" " config file!"
-                )
+                raise KeyError(f"You need to specify {item} in your config file!")
 
         # Define a security to check if label_value is used twice
         class_ids = get_class_label_ids(self.NN_structure["class_labels"])
@@ -90,7 +85,9 @@ class Configuration(object):
 
                 if class_label_vars[b_index] == "HadronConeExclTruthLabelID":
                     raise ValueError(
-                        "You defined default bjets and extended bjets simultaneously using the simple flavour labelling scheme! Please modify class_labels."
+                        "You defined default bjets and extended bjets"
+                        " simultaneously using the simple flavour labelling"
+                        " scheme! Please modify class_labels."
                     )
 
         # Check if the extended c labeling is used
@@ -100,5 +97,7 @@ class Configuration(object):
 
                 if class_label_vars[c_index] == "HadronConeExclTruthLabelID":
                     raise ValueError(
-                        "You defined default cjets and extended cjets simultaneously using the simple flavour labelling scheme! Please modify class_labels."
+                        "You defined default cjets and extended cjets"
+                        " simultaneously using the simple flavour labelling"
+                        " scheme! Please modify class_labels."
                     )

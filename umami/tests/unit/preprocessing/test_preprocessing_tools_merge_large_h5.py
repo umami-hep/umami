@@ -92,9 +92,7 @@ class Check_ShapesTestCase(unittest.TestCase):
 
         self.test_h5_1.create_dataset("test", data=np.ones(10))
         self.test_h5_2.create_dataset("test", data=np.ones(10))
-        self.test_h5_3.create_dataset(
-            "test", data=np.array([np.ones(10), np.ones(10)])
-        )
+        self.test_h5_3.create_dataset("test", data=np.array([np.ones(10), np.ones(10)]))
 
     def test_equal_keys_case(self):
         self.assertTrue(check_shapes(self.test_h5_1, self.test_h5_2))
@@ -146,12 +144,8 @@ class Create_DatasetsTestCase(unittest.TestCase):
         """
         # Create a temporary directory
         self.test_dir = tempfile.TemporaryDirectory()
-        self.test_reference_h5_file_name = (
-            f"{self.test_dir.name}/test_h5_reference.h5"
-        )
-        self.test_reference_h5 = h5py.File(
-            self.test_reference_h5_file_name, "w"
-        )
+        self.test_reference_h5_file_name = f"{self.test_dir.name}/test_h5_reference.h5"
+        self.test_reference_h5 = h5py.File(self.test_reference_h5_file_name, "w")
         self.test_reference_h5.create_dataset("test", data=np.ones(10))
 
     def test_create_from_dict(self):

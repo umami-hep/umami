@@ -60,9 +60,7 @@ def runTrainingDips(config):
     if isSuccess is True:
         run_plot_epoch_Dips
 
-    logger.info(
-        "Test: running evaluate_model.py for DIPS Conditional Attention..."
-    )
+    logger.info("Test: running evaluate_model.py for DIPS Conditional Attention...")
     run_evaluate_model_Dips = run(
         [
             "evaluate_model.py",
@@ -75,9 +73,7 @@ def runTrainingDips(config):
     try:
         run_evaluate_model_Dips.check_returncode()
     except CalledProcessError:
-        logger.info(
-            "Test failed: evaluate_model.py for DIPS Conditional Attention."
-        )
+        logger.info("Test failed: evaluate_model.py for DIPS Conditional Attention.")
         isSuccess = False
 
     if isSuccess is True:
@@ -149,9 +145,7 @@ class TestDipsTraining(unittest.TestCase):
         # Copy configs and var dict
         copyfile(config_source, self.config)
         copyfile(preprocessing_config_source, self.preprocessing_config)
-        copyfile(
-            preprocessing_config_paths_source, self.preprocessing_config_paths
-        )
+        copyfile(preprocessing_config_paths_source, self.preprocessing_config_paths)
         copyfile(var_dict_dips_source, self.var_dict_dips)
 
         # modify copy of preprocessing config file for test
@@ -170,9 +164,7 @@ class TestDipsTraining(unittest.TestCase):
         with open(self.config, "r") as config:
             self.config_file = yaml.load(config, Loader=yaml_loader)
 
-        self.config_file["model_name"] = self.data["test_dips_cond_att"][
-            "model_name"
-        ]
+        self.config_file["model_name"] = self.data["test_dips_cond_att"]["model_name"]
         self.config_file["preprocess_config"] = f"{self.preprocessing_config}"
         self.config_file["train_file"] = f"{self.train_file}"
         self.config_file["validation_file"] = f"{self.test_file_ttbar}"

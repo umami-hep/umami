@@ -103,9 +103,7 @@ def plot_nTracks_per_Jet(
         filepath = glob(filepath)
 
         # Loop over files and get the amount of jets needed.
-        for file_counter, file in enumerate(
-            sorted(filepath, key=natural_keys)
-        ):
+        for file_counter, file in enumerate(sorted(filepath, key=natural_keys)):
             if nJets_counter < nJets:
                 tmp_trks, tmp_flavour_labels = utt.LoadTrksFromFile(
                     filepath=file,
@@ -135,7 +133,8 @@ def plot_nTracks_per_Jet(
         if len(trks) < nJets:
             n_trks = len(trks)
             logger.warning(
-                f"{nJets} were set to be used, but only {n_trks} are available for {label} files!"
+                f"{nJets} were set to be used, but only {n_trks} are available"
+                f" for {label} files!"
             )
 
         # Append trks to dict
@@ -189,8 +188,7 @@ def plot_nTracks_per_Jet(
             nTracks = np.sum(
                 np.logical_and(
                     ~np.isnan(trks["ptfrac"]),
-                    trks["truthOriginLabel"]
-                    == global_config.OriginType[track_origin],
+                    trks["truthOriginLabel"] == global_config.OriginType[track_origin],
                 ),
                 axis=1,
             )
@@ -355,9 +353,7 @@ def plot_nTracks_per_Jet(
         )
 
     if Ratio_Cut is not None:
-        axis_dict["left"]["ratio"].set_ylim(
-            bottom=Ratio_Cut[0], top=Ratio_Cut[1]
-        )
+        axis_dict["left"]["ratio"].set_ylim(bottom=Ratio_Cut[0], top=Ratio_Cut[1])
 
     # Set axis
     axis_dict["left"]["top"].legend(
@@ -380,9 +376,7 @@ def plot_nTracks_per_Jet(
         )
 
     # Save and close figure
-    plt.savefig(
-        f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}"
-    )
+    plt.savefig(f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}")
     plt.close()
     plt.clf()
 
@@ -516,9 +510,7 @@ def plot_input_vars_trks_comparison(
     except KeyError:
         noNormVars = variable_config["track_train_variables"]["noNormVars"]
         logNormVars = variable_config["track_train_variables"]["logNormVars"]
-        jointNormVars = variable_config["track_train_variables"][
-            "jointNormVars"
-        ]
+        jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
         trksVars = noNormVars + logNormVars + jointNormVars
 
     for nLeading in n_Leading:
@@ -533,9 +525,7 @@ def plot_input_vars_trks_comparison(
                 os.makedirs(filedir)
 
         else:
-            filedir = os.path.join(
-                output_directory, sorting_variable, str(nLeading)
-            )
+            filedir = os.path.join(output_directory, sorting_variable, str(nLeading))
             if not os.path.isdir(filedir):
                 os.makedirs(filedir)
 
@@ -582,18 +572,14 @@ def plot_input_vars_trks_comparison(
                     zip(datasets_labels, linestyles[: len(datasets_labels)])
                 ):
                     # Sort after given variable
-                    sorting = np.argsort(
-                        -1 * trks_dict[label][sorting_variable]
-                    )
+                    sorting = np.argsort(-1 * trks_dict[label][sorting_variable])
 
                     # Sort the variables and tracks after given variable
                     if track_origin == "All":
                         tmp = np.asarray(
                             [
                                 trks_dict[label][var][k][sorting[k]]
-                                for k in range(
-                                    len(trks_dict[label][sorting_variable])
-                                )
+                                for k in range(len(trks_dict[label][sorting_variable]))
                             ]
                         )
                     else:
@@ -603,9 +589,7 @@ def plot_input_vars_trks_comparison(
                                 trks_dict[label][[var, "truthOriginLabel"]][k][
                                     sorting[k]
                                 ]
-                                for k in range(
-                                    len(trks_dict[label][sorting_variable])
-                                )
+                                for k in range(len(trks_dict[label][sorting_variable]))
                             ]
                         )
 
@@ -614,9 +598,7 @@ def plot_input_vars_trks_comparison(
                         if track_origin == "All":
                             first_flav = tmp[flavour_label_dict[label] == 0]
                         else:
-                            first_flav = tmp[var][
-                                flavour_label_dict[label] == 0
-                            ]
+                            first_flav = tmp[var][flavour_label_dict[label] == 0]
 
                         if nBins_dict[var] is None:
                             _, Binning = np.histogram(
@@ -638,9 +620,7 @@ def plot_input_vars_trks_comparison(
 
                         # Get number of tracks
                         if track_origin == "All":
-                            Tracks = jets[:, nLeading][
-                                ~np.isnan(jets[:, nLeading])
-                            ]
+                            Tracks = jets[:, nLeading][~np.isnan(jets[:, nLeading])]
                         else:
                             mask_nan = ~np.isnan(jets[var][:, nLeading])
                             mask_origin = np.asarray(
@@ -664,9 +644,7 @@ def plot_input_vars_trks_comparison(
                             histtype="step",
                             linewidth=1.0,
                             linestyle=linestyle,
-                            color=global_config.flavour_categories[flavour][
-                                "colour"
-                            ],
+                            color=global_config.flavour_categories[flavour]["colour"],
                             stacked=False,
                             fill=False,
                             label=global_config.flavour_categories[flavour][
@@ -694,9 +672,7 @@ def plot_input_vars_trks_comparison(
                                 **global_config.hist_err_style,
                             )
 
-                        bincounts.update(
-                            {f"{flavour}{model_number}": hist_counts}
-                        )
+                        bincounts.update({f"{flavour}{model_number}": hist_counts})
                         bincounts_unc.update({f"{flavour}{model_number}": unc})
 
                         for count in hist_counts:
@@ -707,22 +683,18 @@ def plot_input_vars_trks_comparison(
                     if model_number != 0:
                         for flavour in class_labels:
                             step, step_unc = hist_ratio(
-                                nominator=bincounts[
-                                    f"{flavour}{model_number}"
-                                ],
+                                nominator=bincounts[f"{flavour}{model_number}"],
                                 denominator=bincounts[f"{flavour}0"],
-                                nominator_unc=bincounts_unc[
-                                    f"{flavour}{model_number}"
-                                ],
+                                nominator_unc=bincounts_unc[f"{flavour}{model_number}"],
                                 denominator_unc=bincounts_unc[f"{flavour}0"],
                             )
 
                             axis_dict["left"]["ratio"].step(
                                 x=Binning,
                                 y=step,
-                                color=global_config.flavour_categories[
-                                    flavour
-                                ]["colour"],
+                                color=global_config.flavour_categories[flavour][
+                                    "colour"
+                                ],
                                 linestyle=linestyles[model_number],
                             )
 
@@ -732,12 +704,8 @@ def plot_input_vars_trks_comparison(
                                 y2=step + step_unc,
                                 step="pre",
                                 facecolor="none",
-                                edgecolor=global_config.hist_err_style[
-                                    "edgecolor"
-                                ],
-                                linewidth=global_config.hist_err_style[
-                                    "linewidth"
-                                ],
+                                edgecolor=global_config.hist_err_style["edgecolor"],
+                                linewidth=global_config.hist_err_style["linewidth"],
                                 hatch=global_config.hist_err_style["hatch"],
                             )
 
@@ -776,9 +744,7 @@ def plot_input_vars_trks_comparison(
                         color=ycolor,
                     )
 
-                axis_dict["left"]["top"].tick_params(
-                    axis="y", labelcolor=ycolor
-                )
+                axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
 
                 if nLeading is None:
                     axis_dict["left"]["ratio"].set_xlabel(
@@ -794,15 +760,13 @@ def plot_input_vars_trks_comparison(
                     axis_dict["left"]["ratio"].set_xlabel(
                         f"{nLeading+1} leading tracks {var}"
                         if track_origin == "All"
-                        else f"{nLeading+1} leading tracks {var} ({track_origin})",
+                        else (f"{nLeading+1} leading tracks {var} ({track_origin})"),
                         fontsize=12,
                         horizontalalignment="right",
                         x=1.0,
                     )
 
-                plt.setp(
-                    axis_dict["left"]["top"].get_xticklabels(), visible=False
-                )
+                plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
 
                 if Log is True:
                     axis_dict["left"]["top"].set_yscale("log")
@@ -855,13 +819,12 @@ def plot_input_vars_trks_comparison(
                     )
 
                 # Save and close figure
-                plt.savefig(
-                    f"{filedir}/{var}_{nLeading}_{track_origin}.{plot_type}"
-                )
+                plt.savefig(f"{filedir}/{var}_{nLeading}_{track_origin}.{plot_type}")
                 plt.close()
                 plt.clf()
         logger.info(
-            "\n-------------------------------------------------------------------------------"
+            "\n-----------------------------------------------------------------------"
+            "--------"
         )
 
 
@@ -1004,9 +967,7 @@ def plot_input_vars_trks(
                 os.makedirs(filedir)
 
         else:
-            filedir = os.path.join(
-                output_directory, sorting_variable, str(nLeading)
-            )
+            filedir = os.path.join(output_directory, sorting_variable, str(nLeading))
             if not os.path.isdir(filedir):
                 os.makedirs(filedir)
 
@@ -1017,16 +978,12 @@ def plot_input_vars_trks(
 
         for var in nBins_dict:
             if var not in trksVars:
-                logger.info(
-                    f"{var} in config, but not in Variables yaml! Skipping..."
-                )
+                logger.info(f"{var} in config, but not in Variables yaml! Skipping...")
 
         # Loop over vars
         for var in trksVars:
             if var not in nBins_dict:
-                logger.info(
-                    f"{var} in Variables yaml but not in config! Skipping..."
-                )
+                logger.info(f"{var} in Variables yaml but not in config! Skipping...")
 
             else:
                 logger.info(f"Plotting {var}...")
@@ -1036,18 +993,14 @@ def plot_input_vars_trks(
                     datasets_labels, linestyles[: len(datasets_labels)]
                 ):
                     # Sort after given variable
-                    sorting = np.argsort(
-                        -1 * trks_dict[label][sorting_variable]
-                    )
+                    sorting = np.argsort(-1 * trks_dict[label][sorting_variable])
 
                     # Sort the variables and tracks after given variable
                     if track_origin == "All":
                         tmp = np.asarray(
                             [
                                 trks_dict[label][var][k][sorting[k]]
-                                for k in range(
-                                    len(trks_dict[label][sorting_variable])
-                                )
+                                for k in range(len(trks_dict[label][sorting_variable]))
                             ]
                         )
                     else:
@@ -1057,9 +1010,7 @@ def plot_input_vars_trks(
                                 trks_dict[label][[var, "truthOriginLabel"]][k][
                                     sorting[k]
                                 ]
-                                for k in range(
-                                    len(trks_dict[label][sorting_variable])
-                                )
+                                for k in range(len(trks_dict[label][sorting_variable]))
                             ]
                         )
 
@@ -1074,17 +1025,13 @@ def plot_input_vars_trks(
 
                         # Get Binning
                         _, Binning = np.histogram(
-                            first_flav[:, nLeading][
-                                ~np.isnan(first_flav[:, nLeading])
-                            ]
+                            first_flav[:, nLeading][~np.isnan(first_flav[:, nLeading])]
                         )
 
                     else:
                         # Get Binning
                         _, Binning = np.histogram(
-                            first_flav[:, nLeading][
-                                ~np.isnan(first_flav[:, nLeading])
-                            ],
+                            first_flav[:, nLeading][~np.isnan(first_flav[:, nLeading])],
                             bins=nBins_dict[var],
                         )
 
@@ -1107,9 +1054,7 @@ def plot_input_vars_trks(
 
                         # Get number of tracks
                         if track_origin == "All":
-                            Tracks = jets[:, nLeading][
-                                ~np.isnan(jets[:, nLeading])
-                            ]
+                            Tracks = jets[:, nLeading][~np.isnan(jets[:, nLeading])]
                         else:
                             mask_nan = ~np.isnan(jets[var][:, nLeading])
                             mask_origin = np.asarray(
@@ -1133,9 +1078,7 @@ def plot_input_vars_trks(
                             histtype="step",
                             linewidth=1.0,
                             linestyle=linestyle,
-                            color=global_config.flavour_categories[flavour][
-                                "colour"
-                            ],
+                            color=global_config.flavour_categories[flavour]["colour"],
                             stacked=False,
                             fill=False,
                             label=global_config.flavour_categories[flavour][
@@ -1174,7 +1117,7 @@ def plot_input_vars_trks(
                         plt.xlabel(
                             f"{nLeading+1} leading tracks {var}"
                             if track_origin == "All"
-                            else f"{nLeading+1} leading tracks {var} ({track_origin})"
+                            else (f"{nLeading+1} leading tracks {var} ({track_origin})")
                         )
 
                     # Add axes, titels and the legend
@@ -1206,9 +1149,7 @@ def plot_input_vars_trks(
                         ymin, ymax = plt.ylim()
                         plt.ylim(ymin=0.8 * ymin, ymax=yAxisIncrease * ymax)
 
-                    plt.legend(
-                        loc="upper right", fontsize=legFontSize, ncol=ncol
-                    )
+                    plt.legend(loc="upper right", fontsize=legFontSize, ncol=ncol)
                     plt.tight_layout()
 
                     ax = plt.gca()
@@ -1361,10 +1302,7 @@ def plot_input_vars_jets(
                 first_flav = jets_var_clean[flavour_label_clean == 0]
 
                 var_range = None
-                if (
-                    special_param_jets is not None
-                    and var in special_param_jets
-                ):
+                if special_param_jets is not None and var in special_param_jets:
                     if (
                         "lim_left" in special_param_jets[var]
                         and "lim_right" in special_param_jets[var]
@@ -1395,9 +1333,7 @@ def plot_input_vars_jets(
                     fig = plt.figure(figsize=(figsize[0], figsize[1]))
 
                 for flav_label, flavour in enumerate(class_labels):
-                    jets_flavour = jets_var_clean[
-                        flavour_label_clean == flav_label
-                    ]
+                    jets_flavour = jets_var_clean[flavour_label_clean == flav_label]
 
                     # Calculate bins
                     bins, weights, unc, band = hist_w_unc(
@@ -1411,14 +1347,10 @@ def plot_input_vars_jets(
                         weights=weights,
                         histtype="step",
                         linewidth=1.0,
-                        color=global_config.flavour_categories[flavour][
-                            "colour"
-                        ],
+                        color=global_config.flavour_categories[flavour]["colour"],
                         stacked=False,
                         fill=False,
-                        label=global_config.flavour_categories[flavour][
-                            "legend_label"
-                        ],
+                        label=global_config.flavour_categories[flavour]["legend_label"],
                     )
 
                     if flavour == class_labels[-1]:
@@ -1658,10 +1590,7 @@ def plot_input_vars_jets_comparison(
                     first_flav = jets_var_clean[flavour_label_clean == 0]
 
                     var_range = None
-                    if (
-                        special_param_jets is not None
-                        and var in special_param_jets
-                    ):
+                    if special_param_jets is not None and var in special_param_jets:
                         if (
                             "lim_left" in special_param_jets[var]
                             and "lim_right" in special_param_jets[var]
@@ -1681,9 +1610,7 @@ def plot_input_vars_jets_comparison(
                         )
 
                 for flav_label, flavour in enumerate(class_labels):
-                    jets_flavour = jets_var_clean[
-                        flavour_label_clean == flav_label
-                    ]
+                    jets_flavour = jets_var_clean[flavour_label_clean == flav_label]
 
                     # Calculate bins
                     bins, weights, unc, band = hist_w_unc(
@@ -1698,14 +1625,10 @@ def plot_input_vars_jets_comparison(
                         histtype="step",
                         linewidth=1.0,
                         linestyle=linestyle,
-                        color=global_config.flavour_categories[flavour][
-                            "colour"
-                        ],
+                        color=global_config.flavour_categories[flavour]["colour"],
                         stacked=False,
                         fill=False,
-                        label=global_config.flavour_categories[flavour][
-                            "legend_label"
-                        ]
+                        label=global_config.flavour_categories[flavour]["legend_label"]
                         + f" {label}",
                     )
 
@@ -1741,18 +1664,14 @@ def plot_input_vars_jets_comparison(
                         step, step_unc = hist_ratio(
                             nominator=bincounts[f"{flavour}{model_number}"],
                             denominator=bincounts[f"{flavour}0"],
-                            nominator_unc=bincounts_unc[
-                                f"{flavour}{model_number}"
-                            ],
+                            nominator_unc=bincounts_unc[f"{flavour}{model_number}"],
                             denominator_unc=bincounts_unc[f"{flavour}0"],
                         )
 
                         axis_dict["left"]["ratio"].step(
                             x=Binning,
                             y=step,
-                            color=global_config.flavour_categories[flavour][
-                                "colour"
-                            ],
+                            color=global_config.flavour_categories[flavour]["colour"],
                             linestyle=linestyles[model_number],
                         )
 
@@ -1762,12 +1681,8 @@ def plot_input_vars_jets_comparison(
                             y2=step + step_unc,
                             step="pre",
                             facecolor="none",
-                            edgecolor=global_config.hist_err_style[
-                                "edgecolor"
-                            ],
-                            linewidth=global_config.hist_err_style[
-                                "linewidth"
-                            ],
+                            edgecolor=global_config.hist_err_style["edgecolor"],
+                            linewidth=global_config.hist_err_style["linewidth"],
                             hatch=global_config.hist_err_style["hatch"],
                         )
 
@@ -1869,5 +1784,6 @@ def plot_input_vars_jets_comparison(
             plt.close()
             plt.clf()
     logger.info(
-        "\n-------------------------------------------------------------------------------"
+        "\n------------------------------------------------------------------"
+        "-------------"
     )

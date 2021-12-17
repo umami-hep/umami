@@ -89,9 +89,7 @@ class TestDipsTraining(unittest.TestCase):
         logger.info(f"Creating test directory in {test_dir}")
 
         # config files, will be copied to test dir
-        config_source = os.path.join(
-            os.getcwd(), self.data["test_dips"]["config"]
-        )
+        config_source = os.path.join(os.getcwd(), self.data["test_dips"]["config"])
         self.config = os.path.join(test_dir, os.path.basename(config_source))
 
         preprocessing_config_source = os.path.join(
@@ -141,9 +139,7 @@ class TestDipsTraining(unittest.TestCase):
         # Copy configs and var dict
         copyfile(config_source, self.config)
         copyfile(preprocessing_config_source, self.preprocessing_config)
-        copyfile(
-            preprocessing_config_paths_source, self.preprocessing_config_paths
-        )
+        copyfile(preprocessing_config_paths_source, self.preprocessing_config_paths)
         copyfile(var_dict_dips_source, self.var_dict_dips)
 
         # modify copy of preprocessing config file for test

@@ -32,9 +32,7 @@ def GetParser():
     -------
     args: parse_args
     """
-    parser = argparse.ArgumentParser(
-        description="Plotting command line options."
-    )
+    parser = argparse.ArgumentParser(description="Plotting command line options.")
 
     parser.add_argument(
         "-c",
@@ -169,9 +167,7 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
             with h5py.File(
                 eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
             ) as h5_file:
-                plot_config["plot_settings"]["nTest"].append(
-                    h5_file.attrs["N_test"]
-                )
+                plot_config["plot_settings"]["nTest"].append(h5_file.attrs["N_test"])
         else:
             plot_config["plot_settings"]["nTest"] = 0
 
@@ -249,9 +245,7 @@ def plot_ROC_Comparison(
             with h5py.File(
                 eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
             ) as h5_file:
-                plot_config["plot_settings"]["nTest"].append(
-                    h5_file.attrs["N_test"]
-                )
+                plot_config["plot_settings"]["nTest"].append(h5_file.attrs["N_test"])
         else:
             plot_config["plot_settings"]["nTest"] = 0
 
@@ -440,8 +434,7 @@ def plot_ROCvsVar(
 
         elif (
             "data_set_for_cut_name" in plot_config
-            and plot_config["data_set_for_cut_name"]
-            != plot_config["data_set_name"]
+            and plot_config["data_set_for_cut_name"] != plot_config["data_set_name"]
         ):
             # Need to load the specified data to compute the cut for the WP.
             if ("evaluation_file" not in plot_config) or (
@@ -465,9 +458,7 @@ def plot_ROCvsVar(
                 if "frac_values" in plot_config:
                     model_frac_values = plot_config["frac_values"]
                 else:
-                    raise ValueError(
-                        "No fractions defined for score recomputation."
-                    )
+                    raise ValueError("No fractions defined for score recomputation.")
 
                 df_cut["score"] = uet.RecomputeScore(
                     df_cut,
@@ -548,10 +539,7 @@ def plot_ROCvsVar_comparison(
         main_class = plot_config["main_class"]
 
     class_labels = None
-    if (
-        "class_labels" in plot_config
-        and plot_config["class_labels"] is not None
-    ):
+    if "class_labels" in plot_config and plot_config["class_labels"] is not None:
         class_labels = plot_config["class_labels"]
 
     # Frac dictionary
@@ -606,13 +594,11 @@ def plot_ROCvsVar_comparison(
 
         if plot_config["variable"] not in df_results:
             raise ValueError(
-                f"Variable {plot_config['variable']} not contained in result dataframe {model_config['evaluation_file']}"
+                f"Variable {plot_config['variable']} not contained in result"
+                f" dataframe {model_config['evaluation_file']}"
             )
 
-        if (
-            "class_labels" in model_config
-            and model_config["class_labels"] is not None
-        ):
+        if "class_labels" in model_config and model_config["class_labels"] is not None:
             model_class_labels = model_config["class_labels"]
         elif class_labels is not None:
             model_class_labels = class_labels
@@ -621,10 +607,7 @@ def plot_ROCvsVar_comparison(
                 f"Labels not defined for dataframe {model_config['evaluation_file']}."
             )
 
-        if (
-            "tagger_name" in model_config
-            and model_config["tagger_name"] is not None
-        ):
+        if "tagger_name" in model_config and model_config["tagger_name"] is not None:
             model_tagger = model_config["tagger_name"]
         elif default_tagger is not None:
             model_tagger = default_tagger
@@ -644,7 +627,8 @@ def plot_ROCvsVar_comparison(
                 model_frac_values = default_frac_values
             else:
                 raise ValueError(
-                    f"No fractions defined for model {model_name} in score recomputation."
+                    f"No fractions defined for model {model_name} in score"
+                    " recomputation."
                 )
 
             # Recompute the score
@@ -735,10 +719,7 @@ def plot_ROCvsVar_comparison(
                 wp=plot_config["efficiency"] / 100,
             )
         else:
-            if (
-                "cut_value" in model_config
-                and model_config["cut_value"] is not None
-            ):
+            if "cut_value" in model_config and model_config["cut_value"] is not None:
                 cutvalue = model_config["cut_value"]
 
             elif (
@@ -746,7 +727,7 @@ def plot_ROCvsVar_comparison(
                 and model_config["data_set_for_cut_name"]
                 != model_config["data_set_name"]
             ):
-                # Need to load the specified data to compute the cut for the WP.
+                # Need to load specified data to compute the cut for the WP.
                 if ("evaluation_file" not in model_config) or (
                     model_config["evaluation_file"] is None
                 ):
@@ -774,7 +755,8 @@ def plot_ROCvsVar_comparison(
                         model_frac_values = default_frac_values
                     else:
                         raise ValueError(
-                            f"No fractions defined for model {model_name} in score recomputation."
+                            f"No fractions defined for model {model_name} in"
+                            " score recomputation."
                         )
 
                     df_cut["score"] = uet.RecomputeScore(
@@ -848,9 +830,7 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
-def score_comparison(
-    plot_name, plot_config, eval_params, eval_file_dir, print_model
-):
+def score_comparison(plot_name, plot_config, eval_params, eval_file_dir, print_model):
     # Init dataframe list
     df_list = []
     tagger_list = []
@@ -893,9 +873,7 @@ def score_comparison(
     )
 
 
-def plot_pT_vs_eff(
-    plot_name, plot_config, eval_params, eval_file_dir, print_model
-):
+def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir, print_model):
     # Init label and dataframe list
     df_list = []
     model_labels = []
@@ -926,10 +904,7 @@ def plot_pT_vs_eff(
                 model_config["data_set_name"],
             )
 
-        if (
-            "SWP_label" in model_config
-            and model_config["SWP_label"] is not None
-        ):
+        if "SWP_label" in model_config and model_config["SWP_label"] is not None:
             SWP_label_list.append(model_config["SWP_label"])
 
         df_list.append(df_results)
@@ -1028,9 +1003,7 @@ def plot_saliency(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
-def SetUpPlots(
-    plotting_config, plot_directory, eval_file_dir, format, print_model
-):
+def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format, print_model):
     # Extract the eval parameters
     eval_params = plotting_config["Eval_parameters"]
 
@@ -1163,13 +1136,12 @@ def SetUpPlots(
             )
 
         else:
-            raise NameError(
-                f"Plot type {plot_config['type']} is not supported"
-            )
+            raise NameError(f"Plot type {plot_config['type']} is not supported")
 
         if print_model:
             logger.info(
-                f'saved plot as: {save_plot_to.replace(eval_params["Path_to_models_dir"], "")} \n'
+                "saved plot as:"
+                f' {save_plot_to.replace(eval_params["Path_to_models_dir"], "")} \n'
             )
 
 

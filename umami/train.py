@@ -25,9 +25,7 @@ def GetParser():
         help="Path to the training config file",
     )
 
-    parser.add_argument(
-        "-e", "--epochs", type=int, help="Number of training epochs."
-    )
+    parser.add_argument("-e", "--epochs", type=int, help="Number of training epochs.")
 
     parser.add_argument(
         "-o",
