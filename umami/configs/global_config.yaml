@@ -76,3 +76,14 @@ OriginType:
   FromC: 5
   FromTau: 6
   OtherSecondary: 7
+
+# Plot labels for different processes (different taggers/studies use different
+# samples, i.e. studies which add bb-jets use Z+jets samples instead of Z')
+# This naming convention has to be used in the preprocessing as well
+process_labels:
+  ttbar:
+    label: "$t\\bar{t}$"
+  zprime:
+    label: "$Z'$"
+  zjets:
+    label: "$Z$+jets"

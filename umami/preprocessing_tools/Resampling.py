@@ -14,9 +14,8 @@ from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
 
 from umami.configuration import global_config, logger
-from umami.preprocessing_tools import GetPreparationSamplePath
-
-from .utils import ResamplingPlots
+from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
+from umami.preprocessing_tools.utils import ResamplingPlots, generate_process_tag
 
 
 def SamplingGenerator(
@@ -2194,6 +2193,7 @@ class PDFSampling(Resampling):
             binning={self.var_x: binx, self.var_y: biny},
             Log=True,
             hist_input=True,
+            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
         )
 
         logger.info("Making plots of variables after sampling.")
@@ -2269,6 +2269,7 @@ class PDFSampling(Resampling):
             binning={self.var_x: binx, self.var_y: biny},
             Log=True,
             hist_input=True,
+            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
         )
 
     def Run(self):
@@ -2400,6 +2401,7 @@ class Weighting(ResamplingTools):
             binning={"pT": 200, "abseta": 20},
             Log=True,
             use_weights=False,
+            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
         )
         plot_name_weights = self.config.GetFileName(
             extension="",
@@ -2414,6 +2416,7 @@ class Weighting(ResamplingTools):
             binning={"pT": 200, "abseta": 20},
             Log=True,
             use_weights=True,
+            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
         )
 
     def GetIndices(self):
@@ -2663,6 +2666,7 @@ class UnderSampling(ResamplingTools):
             normalised=False,
             binning={"pT": 200, "abseta": 20},
             Log=True,
+            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
         )
 
         logger.info("Plotting distributions after undersampling.")
@@ -2685,6 +2689,7 @@ class UnderSampling(ResamplingTools):
             },
             Log=True,
             after_sampling=True,
+            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
         )
         logger.info(f"Saving plots as {plot_name_clean}(pT|abseta).pdf")
 

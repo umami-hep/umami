@@ -36,6 +36,7 @@ class Configuration(object):
             "flavour_categories",
             "hist_err_style",
             "OriginType",
+            "process_labels",
         ]
         for item in config_items:
             if item in self.config:
