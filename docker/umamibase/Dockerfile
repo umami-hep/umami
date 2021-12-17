@@ -1,4 +1,4 @@
-FROM UPDATED_IN_GITLAB_CI_JOB
+FROM ${BASE_IMAGE}
 
 ## ensure locale is set during build
 ENV LANG C.UTF-8
