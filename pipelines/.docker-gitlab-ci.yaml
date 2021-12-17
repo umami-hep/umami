@@ -4,10 +4,21 @@
 
 .image_build_template: &image_build_template
   script:
-    # The script gets overwritten in jobs tagged docker-image-build
-    - ignore
-  tags:
-    - docker-image-build
+    # Prepare Kaniko configuration file
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    # Build and push the image from the Dockerfile at the root of the project.
+    - /kaniko/executor --context $CI_PROJECT_DIR
+      --dockerfile ${DOCKER_FILE}
+      --build-arg ${BASE}
+      --destination ${IMAGE_DESTINATION}
+    # Print the full registry path of the pushed image
+    - echo "Image pushed successfully to ${IMAGE_DESTINATION}"
+
+  image:
+    # We recommend using the CERN version of the Kaniko image: gitlab-registry.cern.ch/ci-tools/docker-image-builder
+    name: gitlab-registry.cern.ch/ci-tools/docker-image-builder
+    entrypoint: [""]
+
   retry: 2
 
 
@@ -15,67 +26,67 @@ build_umamibase_cpu:
   <<: *image_build_template
   stage: image_build_umamibase
   variables:
+    BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    FROM: tensorflow/tensorflow:$TFTAG
-    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
       variables:
-        TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
+        IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
 
 build_umamibase_gpu:
   <<: *image_build_template
   stage: builds
   variables:
+    BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG-gpu'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    FROM: tensorflow/tensorflow:$TFTAG-gpu
-    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
+    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
       variables:
-        TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+        IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
 
 build_umamibase_gpu_pytorch:
   <<: *image_build_template
   stage: builds
   variables:
+    BASE: 'BASE_IMAGE=pytorch/pytorch:$TORCHTAG'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    FROM: pytorch/pytorch:$TORCHTAG
-    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-pytorch-gpu'
+    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-pytorch-gpu'
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 
 # Umami images: use base image as a foundation to speed up build process
 build_umami_cpu:
-  <<: *image_build_template
-  stage: image_build_umami
-  variables:
-    DOCKER_FILE: docker/umami/Dockerfile
-    FROM: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
-    TO: $CI_REGISTRY_IMAGE:latest
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_TAG
-      variables:
-        FROM: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
-        TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+    <<: *image_build_template
+    stage: image_build_umami
+    variables:
+      BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+      DOCKER_FILE: docker/umami/Dockerfile
+      IMAGE_DESTINATION: '${CI_REGISTRY_IMAGE}:latest'
+    rules:
+      - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      - if: $CI_COMMIT_TAG
+        variables:
+          BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
+          IMAGE_DESTINATION: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
 
 build_umami_gpu:
-  <<: *image_build_template
-  stage: image_build_umami
-  variables:
-    DOCKER_FILE: docker/umami/Dockerfile
-    FROM: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
-    TO: $CI_REGISTRY_IMAGE:latest-gpu
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_TAG
-      variables:
-        FROM: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
-        TO: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu
+    <<: *image_build_template
+    stage: image_build_umami
+    variables:
+      BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
+      DOCKER_FILE: docker/umami/Dockerfile
+      IMAGE_DESTINATION: '${CI_REGISTRY_IMAGE}:latest-gpu'
+    rules:
+      - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      - if: $CI_COMMIT_TAG
+        variables:
+          BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+          IMAGE_DESTINATION: '$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu'
 
 
 # ----------------------------------------------------------------------------
@@ -92,9 +103,9 @@ build_umamibase_cpu_MR:
   <<: *image_build_template
   stage: image_build_umamibase
   variables:
+    BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    FROM: tensorflow/tensorflow:$TFTAG
-    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
 
@@ -103,9 +114,9 @@ build_umamibase_gpu_MR:
   <<: *image_build_template
   stage: image_build_umamibase
   variables:
+    BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG-gpu'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    FROM: tensorflow/tensorflow:$TFTAG-gpu
-    TO: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-gpu-base'
+    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-gpu-base'
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
       when: manual
