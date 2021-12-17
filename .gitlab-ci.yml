@@ -23,7 +23,7 @@ stages:
 
 checking_mr:
   stage: check_mr
-  image: python:3.7-slim
+  image: python:3.8-slim
   before_script:
     - pip install --upgrade pip setuptools wheel
     - pip install python-gitlab
@@ -35,7 +35,7 @@ checking_mr:
 
 linter:
   stage: linting
-  image: python:3.7-slim
+  image: python:3.8-slim
   script:
     - mkdir coverage_files/
     - pip install flake8
@@ -59,11 +59,24 @@ yaml_linter:
 
 doc_string_check:
   stage: linting
-  image: python:3.7-slim
+  image: python:3.8-slim
   script:
     - pip install darglint
     - darglint --list-errors
     - darglint * -s numpy -z full  --log-level INFO
+  rules:
+    - if: $CI_COMMIT_BRANCH != ''
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  allow_failure: True
+
+
+pylint:
+  stage: linting
+  image: python:3.8-slim
+  before_script:
+    - pip install pylint==2.12.2
+  script:
+    - pylint ./umami
   rules:
     - if: $CI_COMMIT_BRANCH != ''
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
