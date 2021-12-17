@@ -148,6 +148,21 @@ test_train_dips:
       - test_dips_model/
       - coverage_files/
 
+test_train_dips_tfrecords:
+  <<: *test_template
+  stage: integration_test_tagger
+  needs: ["test_preprocessing_dips"]
+  dependencies:
+   - test_preprocessing_dips
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dips.py -v -s --junitxml=report.xml -k "test_tfrecords_train_dips"
+    - cp .coverage ./coverage_files/.coverage.test_train_dips_tfrecords
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_dips_model_tfrecords/
+      - coverage_files/
+
 test_train_dips_cond_att:
   <<: *test_template
   stage: integration_test_tagger
@@ -205,7 +220,7 @@ test_train_umami_tfrecords:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_umami_model/
+      - test_umami_model_tfrecords/
       - coverage_files/
 
 test_plot_input_vars:

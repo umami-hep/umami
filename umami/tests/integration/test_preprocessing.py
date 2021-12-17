@@ -147,7 +147,7 @@ def runPreprocessing(config, tagger):
         " them to tf record files..."
     )
 
-    if tagger == "umami":
+    if tagger != "dl1r":
         run_record = run(
             [
                 "preprocessing.py",

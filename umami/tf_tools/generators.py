@@ -4,6 +4,12 @@ import numpy as np
 
 
 class Model_Generator(object):
+    """Base class for the generators of the datasets for the models.
+
+    This class provides the base functionalites for the different
+    models to load the dataset.
+    """
+
     def __init__(
         self,
         train_file_path: str,
@@ -18,6 +24,37 @@ class Model_Generator(object):
         nConds: int = None,
         print_logger: bool = False,
     ):
+        """Init the parameters needed for the generators.
+
+        Parameters
+        ----------
+        train_file_path : str
+            Path to the train file that is to be used.
+        Y_Name : str
+            Name of the truth info inside the train file.
+        n_jets : int
+            Number of jets that is to be used for training.
+        batch_size : int
+            Batch size for the training.
+        sample_weights : bool
+            Decide, if you want to use sample weights. Those
+            need to be processed in the preprocessing. Otherwise
+            the values are ones.
+        chunk_size : int
+            Chunk size for loading the training jets.
+        X_Name : str
+            Name of the jet variables inside the train file.
+        X_trk_Name : str
+            Name of the track variables inside the train file.
+        excluded_var : list
+            List with excluded variables. Only available for
+            DL1 training.
+        nConds : int
+            Number of conditions used for training of CADS.
+        print_logger : bool
+            Decide, if the logger outputs are printed or not.
+        """
+
         self.train_file_path = train_file_path
         self.X_Name = X_Name
         self.X_trk_Name = X_trk_Name
@@ -115,7 +152,22 @@ class Model_Generator(object):
 
 
 class dips_generator(Model_Generator):
+    """Generator class for DIPS.
+
+    This class provides the a generator that loads the training dataset
+    for DIPS.
+    """
+
     def __call__(self):
+        """
+        Load the first chunk in memory and yield the full dataset.
+
+        Yields
+        ------
+        (batch_x_trk, batch_y) : tuple
+            Yielded chunks of the training dataset.
+        """
+
         self.load_in_memory(part=0, load_jets=False, load_tracks=True)
         n = 1
         small_step = 0
@@ -142,7 +194,22 @@ class dips_generator(Model_Generator):
 
 
 class dl1_generator(Model_Generator):
+    """Generator class for DL1*.
+
+    This class provides the a generator that loads the training dataset
+    for DL1*.
+    """
+
     def __call__(self):
+        """
+        Load the first chunk in memory and yield the full dataset.
+
+        Yields
+        ------
+        (batch_x_trk, batch_y) : tuple
+            Yielded chunks of the training dataset.
+        """
+
         self.load_in_memory(part=0, load_jets=True, load_tracks=False)
         n = 1
         small_step = 0
@@ -169,7 +236,22 @@ class dl1_generator(Model_Generator):
 
 
 class umami_generator(Model_Generator):
+    """Generator class for UMAMI.
+
+    This class provides the a generator that loads the training dataset
+    for UMAMI.
+    """
+
     def __call__(self):
+        """
+        Load the first chunk in memory and yield the full dataset.
+
+        Yields
+        ------
+        (batch_x_trk, batch_y) : tuple
+            Yielded chunks of the training dataset.
+        """
+
         self.load_in_memory(part=0, load_jets=True, load_tracks=True)
         n = 1
         small_step = 0
@@ -192,7 +274,22 @@ class umami_generator(Model_Generator):
 
 
 class dips_condition_generator(Model_Generator):
+    """Generator class for CADS.
+
+    This class provides the a generator that loads the training dataset
+    for CADS.
+    """
+
     def __call__(self):
+        """
+        Load the first chunk in memory and yield the full dataset.
+
+        Yields
+        ------
+        (batch_x_trk, batch_y) : tuple
+            Yielded chunks of the training dataset.
+        """
+
         self.load_in_memory(part=0, load_jets=True, load_tracks=True)
         n = 1
         small_step = 0
