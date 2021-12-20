@@ -16,6 +16,9 @@ There are two different kind of images:
     - these image types contain all the necessary dependencies for `umami` but not the `umami` package itself
     - these are best suited for any developemts in `umami`
     - You can browse them [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry/8906) in the gitlab container registry
+- Base images plus
+    - these image types extend the `umamibase` image installing additional packages defined in [additional_requirements.txt](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/additional_requirements.txt)
+    - these are especially useful for R&D studies requiring additional packages
 - Packaged images
     - these images use the base images and have `umami` installed on top
     - these are the best choice if you just want to run `umami` but you don't want to change anything in the code
@@ -32,6 +35,13 @@ There are two different kind of images:
     | `0-2-gpu` | GPU base image of tag `0.2` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:0-2-gpu|
     | `0-1` | CPU base image of tag `0.1` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:0-1|
     | `0-1-gpu` | GPU base image of tag `0.1` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:0-1-gpu|
+
+
+??? info "Overview BasePlus images"
+    | Image tag | Description  | gitlab registry |
+    | ---------- | ----------  | ---------- |
+    | `latest` | CPU base image from `master` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest|
+    | `latest-gpu` | GPU base image from `master` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest-gpu|
 
 
 ??? info "Overview Packaged images"
