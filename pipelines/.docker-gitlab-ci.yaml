@@ -63,6 +63,7 @@ build_umamibase_plus_cpu:
       variables:
         BASE: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
         IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
+  allow_failure: True
 
 build_umamibase_plus_gpu:
   <<: *image_build_template
@@ -79,6 +80,7 @@ build_umamibase_plus_gpu:
       variables:
         BASE: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
         IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+  allow_failure: True
 
 build_umamibase_gpu_pytorch:
   <<: *image_build_template
