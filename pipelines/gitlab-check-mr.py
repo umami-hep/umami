@@ -1,3 +1,4 @@
+import fnmatch
 import os
 
 import gitlab
@@ -76,25 +77,20 @@ if __name__ == "__main__":
     mr = project.mergerequests.get(mr_id)
 
     changed_files = [elem["new_path"] for elem in mr.changes()["changes"]]
-
+    changed_python_files = fnmatch.filter(changed_files, "*.py")
+    print(changed_python_files)
     mr_labels, changed_files_in_docs = get_labels(changed_files, mr.labels)
     # define flag if only documentation is concerned
     only_docs = changed_files_in_docs == len(changed_files)
-    # if only documentation is concerned adding a Skip-CI label
-    # if only_docs:
-    #     mr_labels.append("Skip-CI")
-    # in case other files are changed in a later commit, removing the skip-ci flag
-    # if not only_docs:
-    #     if "Skip-CI" in mr_labels:
-    #         mr_labels.remove("Skip-CI")
+    if len(changed_files) == 0:
+        only_docs = False
+
     mr.labels = mr_labels
     mr.save()
 
     # approve MR if only documentation is concerned
     if only_docs:
-        mr.notes.create(
-            {"body": "Only documentation is concerened - approving."}
-        )
+        mr.notes.create({"body": "Only documentation is concerened - approving."})
         try:
             mr.approve()
         except gitlab.exceptions.GitlabAuthenticationError:
