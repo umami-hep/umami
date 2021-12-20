@@ -26,7 +26,9 @@ checking_mr:
   image: python:3.8-slim
   before_script:
     - pip install --upgrade pip setuptools wheel
-    - pip install python-gitlab
+    - pip install python-gitlab==2.10.1
+    - pip install pylint==2.12.2
+    - pip install pyyaml
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_EVENT_TYPE != "merge_train" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
   script:
