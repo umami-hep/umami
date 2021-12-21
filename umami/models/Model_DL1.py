@@ -23,7 +23,24 @@ from umami.tools import yaml_loader
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 
-def DL1_model(train_config, input_shape):
+def DL1_model(train_config, input_shape, feature_connect_indices=None):
+    """
+    Constructs or loads the DL1 model
+
+    Parameters
+    ----------
+    train_config : dict
+        Training configuration with NN_structure sub-dict
+        giving the structure of the NN.
+    input_shape : tuple
+        Size of the input: (nFeatures,).
+
+    Returns
+    -------
+    model: keras tensorflow model.
+    NN_structure["epochs"]: number of epochs to be trained
+    """
+
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
 
@@ -60,6 +77,11 @@ def DL1_model(train_config, input_shape):
 
             # Define activation for the layer
             x = Activation(NN_structure["activations"][i])(x)
+
+        if feature_connect_indices is not None:
+            x = tf.keras.layers.concatenate(
+                [x, tf.gather(inputs, feature_connect_indices, axis=1)], 1
+            )
 
         predictions = Dense(
             units=len(class_labels),
@@ -98,9 +120,16 @@ def TrainLargeFile(args, train_config, preprocess_config):
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
     # Get excluded variables
-    _, _, excluded_var = utt.get_jet_feature_indices(
+    variables, _, excluded_var = utt.get_jet_feature_indices(
         variable_config["train_variables"], exclude
     )
+
+    # Get variables to bring back in last layer
+    feature_connect_indices = None
+    if "repeat_end" in NN_structure and NN_structure["repeat_end"] is not None:
+        repeat_end = NN_structure["repeat_end"]
+        logger.info(f"Repeating the following variables in the last layer {repeat_end}")
+        feature_connect_indices = utt.get_jet_feature_position(repeat_end, variables)
 
     # Get the shapes for training
     with h5py.File(train_config.train_file, "r") as f:
@@ -149,7 +178,11 @@ def TrainLargeFile(args, train_config, preprocess_config):
     )
 
     # Load model and epochs
-    model, epochs = DL1_model(train_config=train_config, input_shape=(nFeatures,))
+    model, epochs = DL1_model(
+        train_config=train_config,
+        input_shape=(nFeatures,),
+        feature_connect_indices=feature_connect_indices,
+    )
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
