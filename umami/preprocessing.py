@@ -141,6 +141,8 @@ if __name__ == "__main__":
         elif config.sampling["method"] == "probability_ratio":
             sampler = upt.ProbabilityRatioUnderSampling(config)
 
+        elif config.sampling["method"] == "weighting":
+            sampler = upt.Weighting(config)
         else:
             raise ValueError(
                 f'{config.sampling["method"]} as sampling method is not supported!'
@@ -149,9 +151,6 @@ if __name__ == "__main__":
         # Run the sampling with the selected method
         sampler.Run()
 
-    elif args.weighting:
-        weights = upt.Weighting(config)
-        weights.Run()
     # Calculate the scale dicts of the previous resampled files
     elif args.scaling:
         Scaling = upt.Scaling(config)

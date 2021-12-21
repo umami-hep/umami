@@ -2,9 +2,6 @@ import itertools
 import json
 import os
 import pickle
-from collections import Counter
-from json import JSONEncoder
-
 import h5py
 import numpy as np
 import pandas as pd
@@ -12,6 +9,8 @@ from scipy.interpolate import RectBivariateSpline
 from scipy.stats import binned_statistic_2d
 from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
+from collections import Counter
+from json import JSONEncoder
 
 from umami.configuration import global_config, logger
 from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
@@ -2337,10 +2336,26 @@ class PDFSampling(Resampling):
 
 
 class Weighting(ResamplingTools):
-    def GetSampleWeights(self, config):
+    def GetFlavourWeights(self, config):
         """
-        calculate ratios from bins in 2d (pt,eta) histogram between different
-        flavours and puts them as 'weight' keys onto the concat_samples dict
+        Calculate ratios (weights) from bins in 2d (pt,eta) histogram between
+        different flavours.
+
+        Parameters
+        -----------
+        config : Preprocessing config file
+
+        Returns
+        -----------
+        weights_dict : dict of callables
+            weights_dict per flavour with some additional info written into a
+            pickle file at /hybrids/flavour_weights
+
+            - 'bjets', etc. : weights
+            - 'bins_x' : pt bins
+            - 'bins_y' : eta bins
+            - 'bin_indices_flat' : flattened indices of the bins in the histogram
+            - 'label_map' : {0: 'ujets', 1: 'cjets', 2: 'bjets'}
         """
 
         # calculate the 2D bin statistics for each sample and add it to
@@ -2349,43 +2364,38 @@ class Weighting(ResamplingTools):
 
         # target distribution
         target_jets_stats = self.concat_samples[
-            config.config["weighting_target_flavour"]
+            self.options["weighting_target_flavour"]
         ]["stat"]
 
-        # calculate ratios between flavours of pt, eta distribution
+        # Write out weights_dict for later use
+        weights_dict = {}
+        # calculate weights between flavours of pt, eta distribution
         for flavour in self.class_categories:
             # jets by flavours to be ratioed
             flavour_jets_stats = self.concat_samples[flavour]["stat"]
             # make sure there is no zero divsion
-            self.concat_samples[flavour]["ratios"] = np.divide(
+            weights_dict[flavour] = np.divide(
                 target_jets_stats,
                 flavour_jets_stats,
                 out=np.zeros_like(target_jets_stats),
                 where=flavour_jets_stats != 0,
             )
+        # Some additional infos
+        weights_dict["bins_x"] = self.bins_x
+        weights_dict["bins_y"] = self.bins_y
+        weights_dict["bin_indices_flat"] = self.bin_indices_flat
+        # map inverse -> {0: 'ujets', 1: 'cjets', 2: 'bjets'}
+        weights_dict["label_map"] = {
+            v: k for k, v in self.class_labels_map.items()
+        }
+        save_name = os.path.join(
+            self.outfile_path,
+            "flavour_weights",
+        )
 
-        # loop over samples
-        for flavour in self.class_categories:
-            # init weights array
-            self.concat_samples[flavour]["weight"] = np.ones(
-                self.concat_samples[flavour]["binnumbers"].shape[0]
-            )
-            logger.info("Processing " + flavour)
-            pbar = tqdm(
-                total=len(self.concat_samples[flavour]["jets"]),
-            )
-            # loop over binnumbers assigned to jet
-            for i, binnumber in enumerate(self.concat_samples[flavour]["binnumbers"]):
-                # look where in flattened 2D bin array this binnumber is
-                ratio_index = np.where(self.bin_indices_flat == binnumber)
-                # extract weight from ratios with the ratio_index
-                weight = self.concat_samples[flavour]["ratios"][ratio_index]
-                # if its out of the defined bin bounds, default to 1
-                if not weight:
-                    weight = 1
-                self.concat_samples[flavour]["weight"][i] = weight
-                pbar.update(1)
-            pbar.close()
+        with open(save_name, "wb") as file:
+            pickle.dump(weights_dict, file)
+        logger.info("Saved flavour weights to: " + save_name)
 
     def Plotting(self):
         plot_name_raw = self.config.GetFileName(
@@ -2401,21 +2411,6 @@ class Weighting(ResamplingTools):
             binning={"pT": 200, "abseta": 20},
             Log=True,
             use_weights=False,
-            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
-        )
-        plot_name_weights = self.config.GetFileName(
-            extension="",
-            option="pt_eta_weighted_",
-            custom_path="plots/",
-        )
-        ResamplingPlots(
-            concat_samples=self.concat_samples,
-            positions_x_y=[0, 1],
-            variable_names=["pT", "abseta"],
-            plot_base_name=plot_name_weights,
-            binning={"pT": 200, "abseta": 20},
-            Log=True,
-            use_weights=True,
             second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
         )
 
@@ -2457,21 +2452,6 @@ class Weighting(ResamplingTools):
         logger.info(f"Using in total {size_total} jets.")
         return self.indices_to_keep
 
-    def AddWeightsToHybrids(self):
-        # split up weights into ttbar/zprime to match with indices structure
-        # categorized_weights: {'training_ttbar_bjets': weightsarray, ...}
-        self.categorized_weights = {}
-        for sample_name in self.indices_to_keep.keys():
-            sample_type = self.preparation_samples[sample_name]["type"]
-            sample_flavour = self.preparation_samples[sample_name]["category"]
-            sample_id = self.sample_categories[sample_type]
-            self.categorized_weights[sample_name] = self.concat_samples[sample_flavour][
-                "weight"
-            ][self.concat_samples[sample_flavour]["jets"][:, 4] == sample_id]
-            # write weights onto files
-            with h5py.File(self.sample_file_map[sample_name], "a") as file:
-                file["jets"]["weight"] = self.categorized_weights[sample_name]
-
     def Run(self):
         logger.info("Starting weights calculation")
         # loading pt and eta from files and put them into dict
@@ -2480,13 +2460,12 @@ class Weighting(ResamplingTools):
         self.ConcatenateSamples()
         # calculate ratios between 2d (pt,eta) bin distributions of different
         # flavours
-        self.GetSampleWeights(self.config)
+        self.GetFlavourWeights(self.config)
         logger.info("Making Plots")
-        # Plots pt and eta with and without weights
+        # Plots raw pt and eta
         self.Plotting()
         # write out indices.h5 to use preprocessing chain
         self.GetIndices()
-        self.AddWeightsToHybrids()
         self.WriteFile(self.indices_to_keep)
 
 

@@ -6,7 +6,6 @@ from glob import glob
 
 import h5py
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 
 from umami.configuration import global_config, logger
@@ -138,10 +137,7 @@ class PrepareSamples:
             with h5py.File(filename, "r") as data_set:
                 for batch in batches:
                     # load jets in batches
-                    jets = pd.DataFrame(data_set["jets"][batch[0] : batch[1]])
-                    # initialize weights
-                    jets["weight"] = np.ones(jets.shape[0])
-                    jets = jets.to_records(index=False)
+                    jets = data_set["jets"][batch[0] : batch[1]]
                     indices_to_remove = GetSampleCuts(jets, self.cuts)
                     jets = np.delete(jets, indices_to_remove)
                     # if tracks should be saved, also load them in batches

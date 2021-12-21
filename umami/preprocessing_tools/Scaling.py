@@ -655,8 +655,15 @@ class Scaling:
             for index_tuple in tupled_indices:
 
                 # Load jets
-                jets = pd.DataFrame(f["/jets"][index_tuple[0] : index_tuple[1]])
-                labels = pd.DataFrame(f["/labels"][index_tuple[0] : index_tuple[1]])
+                jets = pd.DataFrame(
+                    f["/jets"][index_tuple[0] : index_tuple[1]]
+                )
+                labels = pd.DataFrame(
+                    f["/labels"][index_tuple[0] : index_tuple[1]]
+                )
+                if "weight" not in jets:
+                    length = nJets if nJets < chunkSize else len(jets)
+                    jets["weight"] = np.ones(int(length))
 
                 if "weight" not in jets_variables:
                     jets_variables += ["weight"]

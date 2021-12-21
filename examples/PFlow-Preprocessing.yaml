@@ -241,10 +241,11 @@ sampling:
     intermediate_index_file: indices.h5
     # outputfiles are split into 5 -> needs to be implemented
     iterations: 5
-
-# relative to which distribution the weights should be calculated for the
-# weighting preprocessing method
-weighting_target_flavour: 'bjets'
+    # for method: weighting
+    # relative to which distribution the weights should be calculated
+    weighting_target_flavour: 'bjets'
+    # If you want to attach weights to the final files
+    bool_attach_sample_weights: False
 
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name
