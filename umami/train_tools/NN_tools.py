@@ -1377,6 +1377,24 @@ def get_jet_feature_indices(variable_header: dict, exclude: list = None):
     return variables, excluded_variables, excluded_var_indices
 
 
+def get_jet_feature_position(variable_list, column_names):
+    """
+    Return the index position of the variables listed in variable_list within
+    the column_names list.
+    WARNING: should match the column order of the training data!
+    """
+    position_list = []
+    for variable in variable_list:
+        try:
+            index_pos = column_names.index(variable)
+            position_list.append(index_pos)
+        except ValueError as no_var_err:
+            raise ValueError(
+                f"Variable {variable} to fast forward not found in set!"
+            ) from no_var_err
+    return position_list
+
+
 def GetTestSample(
     input_file: str,
     var_dict: str,

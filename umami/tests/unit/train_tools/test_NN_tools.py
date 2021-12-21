@@ -27,6 +27,7 @@ from umami.train_tools.NN_tools import (
     get_class_prob_var_names,
     get_epoch_from_string,
     get_jet_feature_indices,
+    get_jet_feature_position,
     get_parameters_from_validation_dict_name,
     get_validation_dict_name,
     get_variable_cuts,
@@ -808,6 +809,29 @@ class get_jet_feature_indices_TestCase(unittest.TestCase):
         self.assertEqual(variables, self.cutted_variables)
         self.assertEqual(excluded_variables, self.exclude)
         self.assertEqual(position[0], self.position)
+
+
+class get_jet_feature_position_TestCase(unittest.TestCase):
+    """
+    Test the jet features indices finding.
+    """
+
+    def setUp(self):
+        self.variable_config = [
+            "absEta_btagJes",
+            "pt_btagJes",
+            "JetFitter_isDefaults",
+            "JetFitter_mass",
+        ]
+
+        self.repeat_variables = ["pt_btagJes"]
+        self.position = [1]
+
+    def test_get_jet_feature_position(self):
+        feature_connect_indices = get_jet_feature_position(
+            self.repeat_variables, self.variable_config
+        )
+        self.assertEqual(feature_connect_indices, self.position)
 
 
 class GetSamples_TestCase(unittest.TestCase):
