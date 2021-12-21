@@ -8,7 +8,7 @@
       variables:
         IMAGE_TYPE: "umamibase:latest"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
+  image: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE"
   retry: 2
 
 .artifact_template: &artifact_template
@@ -213,7 +213,7 @@ test_train_umami_tfrecords:
   stage: integration_test_tagger
   needs: ["test_preprocessing_umami"]
   dependencies:
-   - test_preprocessing_umami
+    - test_preprocessing_umami
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v -s --junitxml=report.xml -k "test_tfrecords_train_umami"
     - cp .coverage ./coverage_files/.coverage.test_train_umami_tfrecords
@@ -252,7 +252,6 @@ test_plotting_umami_dips:
       - test_dips_model/
       - coverage_files/
 
-
 test_plotting_umami_dl1:
   <<: *test_template
   stage: integration_test_plotting
@@ -267,7 +266,6 @@ test_plotting_umami_dl1:
     paths:
       - test_dl1_model/
       - coverage_files/
-
 
 test_plotting_umami_umami:
   <<: *test_template

@@ -72,14 +72,14 @@ def runPreprocessing(config, tagger):
             "preprocessing.py",
             "-c",
             f"{config}",
-            "--weighting",
+            "--resampling",
         ]
     )
 
     try:
         run_weighting.check_returncode()
     except CalledProcessError:
-        logger.info("Test failed: preprocessing.py --weighting.")
+        logger.info("Test failed: preprocessing.py --resampling.")
         isSuccess = False
 
     if isSuccess is True:
@@ -254,6 +254,14 @@ class TestPreprocessing(unittest.TestCase):
             "      file_pattern: zpext/*.h5",
         )
         replaceLineInFile(self.config, "    iterations:", "    iterations: 1")
+        replaceLineInFile(
+            self.config, "  method: count", "  method: weighting"
+        )
+        replaceLineInFile(
+            self.config,
+            "    bool_attach_sample_weights: False",
+            "    bool_attach_sample_weights: True",
+        )
 
         logger.info("Downloading test data...")
         for file in self.data["test_preprocessing"]["files"]:

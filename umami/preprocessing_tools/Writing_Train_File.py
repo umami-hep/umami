@@ -1,7 +1,10 @@
 import h5py
 import numpy as np
 import yaml
+import pickle
 from numpy.lib.recfunctions import repack_fields, structured_to_unstructured
+from scipy.stats import binned_statistic_2d
+import json
 
 from umami.configuration import logger
 from umami.tools import yaml_loader
@@ -139,7 +142,16 @@ class TrainSampleWriter:
 
         # Define outfile name
         if output_file is None:
-            out_file = self.config.GetFileName(option="resampled_scaled_shuffled")
+            out_file = self.config.GetFileName(
+                option="resampled_scaled_shuffled"
+            )
+        if self.config.sampling["options"]["bool_attach_sample_weights"]:
+            file_name = (
+                self.config.config["parameters"]["sample_path"]
+                + "/flavour_weights"
+            )
+            with open(file_name, "rb") as file:
+                weights_dict = pickle.load(file)
 
         # Extract the correct variables
         variables_header_jets = self.variable_config["train_variables"]
@@ -189,7 +201,11 @@ class TrainSampleWriter:
                     # final absolute jet index of this chunk
                     jet_idx_end = jet_idx + len(jets)
 
-                    # Get weights from jets
+                    if self.config.sampling["options"][
+                        "bool_attach_sample_weights"
+                    ]:
+                        self.calculateWeights(weights_dict, jets, labels)
+
                     weights = jets["weight"]
 
                     # Reform jets to unstructured arrays
@@ -276,3 +292,62 @@ class TrainSampleWriter:
                 # increment counters
                 chunk_counter += 1
                 jet_idx = jet_idx_end
+
+    def calculateWeights(self, weights_dict, jets, labels):
+        """
+        Finds the according weight for the jet, with the weights calculated
+        from the GetFlavorWeights method. Writes it onto the jets["weight"].
+
+        Parameters
+        ---------
+        weights_dict : dict of callables
+            weights_dict per flavor and some additional info written into a
+            pickle file at /hybrids/flavour_weights
+
+            - 'bjets', etc.
+            - 'bins_x' : pt bins
+            - 'bins_y' : eta bins
+            - 'bin_indices_flat' : flattened indices of the bins in the histogram
+            - 'label_map' : {0: 'ujets', 1: 'cjets', 2: 'bjets'}
+
+        jets : arraylike
+            Containing values of jet variables
+        labels : arraylike (nJets x (nFlavor x 1))
+            Binarized truth value of flavor for jet.
+        """
+        # scale to original values for binning
+        with open(self.config.dict_file, "r") as infile:
+            jets_scale_dict = json.load(infile)
+        for elem in jets_scale_dict["jets"]:
+            if elem["name"] == "pt_btagJes":
+                jets[elem["name"]] *= elem["scale"]
+                jets[elem["name"]] += elem["shift"]
+            if elem["name"] == "absEta_btagJes":
+                jets[elem["name"]] *= elem["scale"]
+                jets[elem["name"]] += elem["shift"]
+
+        # Get binnumber of jet from 2D pt,eta grid
+        _, _, _, binnumbers = binned_statistic_2d(
+            x=jets["pt_btagJes"],
+            y=jets["absEta_btagJes"],
+            values=jets["pt_btagJes"],
+            statistic="count",
+            bins=[
+                weights_dict["bins_x"],
+                weights_dict["bins_y"],
+            ],
+        )
+
+        # transfrom labels into "bjets", "cjets"...
+        label_keys = [
+            weights_dict["label_map"][np.argmax(label)] for label in labels
+        ]
+        for i, binnumber in enumerate(binnumbers):
+            # look where in flattened 2D bin array this binnumber is
+            index = np.where(weights_dict["bin_indices_flat"] == binnumber)
+            # extract weight with flavour key and index
+            weight = weights_dict[label_keys[i]][index]
+            # if its out of the defined bin bounds, default to 1
+            if not weight:
+                weight = 1
+            jets["weight"][i] = weight
