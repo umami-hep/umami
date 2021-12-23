@@ -1241,10 +1241,10 @@ class PDFSampling(Resampling):
         """
         if replacement is False:
             logger.info("PDF sampling without replacement for given set!")
-        if type(x_values) == float or type(x_values) == int:
+        if isinstance(x_values, float) or isinstance(x_values, int):
             x_values = np.asarray([x_values])
 
-        if type(y_values) == float or type(y_values) == int:
+        if isinstance(y_values, float) or isinstance(y_values, int):
             y_values = np.asarray([y_values])
 
         # Check for sizes of x_values and y_values

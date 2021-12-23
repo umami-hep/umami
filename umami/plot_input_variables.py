@@ -94,7 +94,6 @@ def plot_trks_variables(plot_config, plot_type):
                         datasets_filepaths=filepath_list,
                         datasets_labels=labels_list,
                         class_labels=plotting_config["class_labels"],
-                        var_dict=plot_config["Eval_parameters"]["var_dict"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
                         output_directory="input_vars_trks/"
                         + plotting_config["folder_to_save"],
@@ -126,7 +125,6 @@ def plot_trks_variables(plot_config, plot_type):
                         datasets_filepaths=filepath_list,
                         datasets_labels=labels_list,
                         class_labels=plotting_config["class_labels"],
-                        var_dict=plot_config["Eval_parameters"]["var_dict"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
                         output_directory="input_vars_trks/"
                         + plotting_config["folder_to_save"],

@@ -92,8 +92,8 @@ def Deepsets_model(
 
         # Assert that attention nodes are given and that the attention_nodes are
         # in list form
-        assert (
-            attention_nodes is not None and type(attention_nodes) is list
+        assert attention_nodes is not None and isinstance(
+            attention_nodes, list
         ), "Please specify number of nodes for the attention layers in a list."
 
         # If condition attention, gtet conditional attention layers

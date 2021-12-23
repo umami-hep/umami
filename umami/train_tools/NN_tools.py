@@ -265,7 +265,7 @@ def get_class_label_variables(class_labels: list):
     for class_label in class_labels:
 
         # Check if multiple label values are defined for that flavour
-        if type(flavour_categories[class_label]["label_value"]) is list:
+        if isinstance(flavour_categories[class_label]["label_value"], list):
 
             # If x ids are defined, loop over them and add the
             # truth variable x times to the label_var_list
@@ -564,11 +564,11 @@ def LoadJetsFromFile(
     # Check if the chunk size is smaller than nJets, if yes change it
     chunk_size = chunk_size if chunk_size >= nJets else nJets
 
-    if type(filepath) is str:
+    if isinstance(filepath, str):
         # Get the paths of the files as a iterable list
         filepaths = glob(filepath)
 
-    elif type(filepath) is list:
+    elif isinstance(filepath, list):
         filepaths = filepath
 
     else:
@@ -770,11 +770,11 @@ def LoadTrksFromFile(
     # Check if the chunk size is small than nJets, if yes change it
     chunk_size = chunk_size if chunk_size >= nJets else nJets
 
-    if type(filepath) is str:
+    if isinstance(filepath, str):
         # Get the paths of the files as a iterable list
         filepaths = glob(filepath)
 
-    elif type(filepath) is list:
+    elif isinstance(filepath, list):
         filepaths = filepath
 
     else:

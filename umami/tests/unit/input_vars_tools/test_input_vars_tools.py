@@ -311,7 +311,6 @@ class JetPlotting_TestCase(unittest.TestCase):
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
             class_labels=plotting_config["class_labels"],
-            var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             output_directory=f"{self.tmp_plot_dir}",
             plot_type="png",
