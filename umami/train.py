@@ -1,3 +1,4 @@
+"""Training script to perform various tagger trainings."""
 import argparse
 
 import tensorflow as tf
@@ -34,8 +35,8 @@ def GetParser():
         help="Overwrite the configs files saved in metadata folder",
     )
 
-    args = parser.parse_args()
-    return args
+    parse_args = parser.parse_args()
+    return parse_args
 
 
 if __name__ == "__main__":
@@ -60,7 +61,7 @@ if __name__ == "__main__":
         var_dict_path=train_config.var_dict,
         model_name=train_config.model_name,
         preprocess_config_path=train_config.preprocess_config,
-        overwrite_config=True if args.overwrite_config else False,
+        overwrite_config=bool(args.overwrite_config),
     )
 
     # Check for DIPS

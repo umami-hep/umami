@@ -1,3 +1,7 @@
+"""
+Execution script for training model evaluations.
+"""
+
 from umami.configuration import global_config, logger  # isort:skip
 import argparse
 import os
@@ -6,8 +10,10 @@ import pickle
 import h5py
 import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import CustomObjectScope
+from tensorflow.keras.models import load_model  # pylint: disable=no-name-in-module
+from tensorflow.keras.utils import (
+    CustomObjectScope,  # pylint: disable=no-name-in-module
+)
 
 import umami.evaluation_tools as uet
 import umami.tf_tools as utf
@@ -135,11 +141,11 @@ def EvaluateModel(
     # Test if multiple taggers are given or not
     tagger_list = (
         [Eval_params["tagger"]]
-        if type(Eval_params["tagger"]) is str
+        if isinstance(Eval_params["tagger"], str)
         else Eval_params["tagger"]
     )
     try:
-        assert type(tagger_list) == list
+        assert isinstance(tagger_list, list)
     except AssertionError:
         raise ValueError(
             """
@@ -165,7 +171,7 @@ def EvaluateModel(
             exclude = train_config.config["exclude"]
 
         # Load the test jets
-        X_test, X_test_trk, Y_test = utt.GetTestFile(
+        X_test, X_test_trk, _ = utt.GetTestFile(
             input_file=test_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
@@ -341,10 +347,10 @@ def EvaluateModelDips(
     nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Test if multiple taggers are given or not
-    if type(Eval_params["tagger"]) is str:
+    if isinstance(Eval_params["tagger"], str):
         tagger_list = [Eval_params["tagger"]]
 
-    elif type(Eval_params["tagger"]) is list:
+    elif isinstance(Eval_params["tagger"], list):
         tagger_list = Eval_params["tagger"]
 
     else:
@@ -580,10 +586,10 @@ def EvaluateModelDL1(
     nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Test if multiple taggers are given or not
-    if type(Eval_params["tagger"]) is str:
+    if isinstance(Eval_params["tagger"], str):
         tagger_list = [Eval_params["tagger"]]
 
-    elif type(Eval_params["tagger"]) is list:
+    elif isinstance(Eval_params["tagger"], list):
         tagger_list = Eval_params["tagger"]
 
     else:
@@ -811,7 +817,7 @@ if __name__ == "__main__":
                     test_file_entry=zpext_models,
                 )
 
-    elif tagger == "dips" or tagger == "dips_cond_att":
+    elif tagger in ("dips", "dips_cond_att"):
         if train_config.ttbar_test_files is not None:
             logger.info("Start evaluating DIPS with ttbar test files...")
             for ttbar_models in train_config.ttbar_test_files:

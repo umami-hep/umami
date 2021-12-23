@@ -5,8 +5,10 @@ import os
 import h5py
 import tensorflow as tf
 from tensorflow.keras import activations
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import (
+from tensorflow.keras.callbacks import (
+    ModelCheckpoint,  # pylint: disable=no-name-in-module
+)
+from tensorflow.keras.layers import (  # pylint: disable=no-name-in-module
     Activation,
     BatchNormalization,
     Dense,

@@ -22,6 +22,21 @@ from umami.tools import applyATLASstyle, makeATLAStag, yaml_loader
 
 
 def atoi(text):
+    """
+    Converts string of digits into integer.
+
+    Parameters
+    ----------
+    text: str, float
+        Text which to be converted to int
+
+    Returns
+    -------
+    int
+        if text is a digit
+    input_type
+        else
+    """
     return int(text) if text.isdigit() else text
 
 
@@ -32,7 +47,6 @@ def natural_keys(text):
 def plot_nTracks_per_Jet(
     datasets_filepaths,
     datasets_labels,
-    var_dict,
     nJets,
     class_labels,
     plot_type="pdf",
@@ -389,7 +403,7 @@ def plot_input_vars_trks_comparison(
     binning,
     class_labels,
     sorting_variable="ptfrac",
-    n_Leading=[None],
+    n_Leading=None,
     plot_type="pdf",
     UseAtlasTag=True,
     ApplyATLASStyle=False,
@@ -440,12 +454,14 @@ def plot_input_vars_trks_comparison(
     Output:
     - Track variable in comparison to another model with ratio plot.
     """
-
+    # check to avoid dangerous default value (list)
+    if n_Leading is None:
+        n_Leading = [None]
     nBins_dict = {}
 
     # Load the given binning or set it
     for variable in binning:
-        if type(binning[variable]) is list:
+        if isinstance(binning[variable], list):
             if variable.startswith("number"):
                 nBins_dict.update(
                     {
@@ -890,7 +906,7 @@ def plot_input_vars_trks(
 
     # Load the given binning or set it
     for variable in binning:
-        if type(binning[variable]) is list:
+        if isinstance(binning[variable], list):
             if variable.startswith("number"):
                 nBins_dict.update(
                     {
@@ -1229,7 +1245,7 @@ def plot_input_vars_jets(
 
     # Load the given binning or set it
     for variable in binning:
-        if type(binning[variable]) is list:
+        if isinstance(binning[variable], list):
             nBins_dict.update(
                 {
                     variable: np.arange(
@@ -1482,7 +1498,7 @@ def plot_input_vars_jets_comparison(
 
     # Load the given binning or set it
     for variable in binning:
-        if type(binning[variable]) is list:
+        if isinstance(binning[variable], list):
             nBins_dict.update(
                 {
                     variable: np.arange(

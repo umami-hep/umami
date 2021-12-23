@@ -38,7 +38,7 @@ def GetSampleCuts(jets, cuts):
     # flatten list of cuts in case these cuts are provided as lists inside of a list
     clean_list = []
     for sublist in cuts:
-        if type(sublist) == list:
+        if isinstance(sublist, list):
             for item in sublist:
                 clean_list.append(item)
         else:
@@ -81,7 +81,7 @@ def GetSampleCuts(jets, cuts):
             cut_rejection = inverted_ops[op]((jets[cut] % modulo), cond)
         else:
             if op in list(inverted_ops.keys()):
-                if type(cond) is list:
+                if isinstance(cond, list):
                     indices = [inverted_ops[op](jets[cut], cond_i) for cond_i in cond]
                     cut_rejection = reduce(operator.and_, indices)
                 else:
@@ -109,9 +109,9 @@ def GetCategoryCuts(label_var, label_value):
     """
     cut_object = []
     if (
-        type(label_value) is int
-        or type(label_value) is float
-        or type(label_value) is list
+        isinstance(label_value, int)
+        or isinstance(label_value, float)
+        or isinstance(label_value, list)
     ):
         cut_object.append(
             {

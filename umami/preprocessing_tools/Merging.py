@@ -84,7 +84,7 @@ def create_datasets(output, source, size):
 
     # check if 'source' is a dict, otherwise assume it is a path to a hdf5 file
     close_file = False
-    if not type(source) == dict and type(source) == str:
+    if not isinstance(source, dict) and isinstance(source, str):
         source = h5py.File(source, "r")
         close_file = True
 
@@ -106,7 +106,7 @@ def add_data(source, output, range):
     """
     # check if 'source' is a dict, otherwise assume it is a path to a hdf5 file
     close_file = False
-    if not type(source) == dict and type(source) == str:
+    if not isinstance(source, dict) and isinstance(source, str):
         source = h5py.File(source, "r")
         close_file = True
     check_keys(source, output)

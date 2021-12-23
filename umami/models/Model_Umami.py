@@ -7,8 +7,10 @@ import h5py
 import tensorflow as tf
 import yaml
 from tensorflow.keras import activations
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import (
+from tensorflow.keras.callbacks import (
+    ModelCheckpoint,  # pylint: disable=no-name-in-module
+)
+from tensorflow.keras.layers import (  # pylint: disable=no-name-in-module
     Activation,
     BatchNormalization,
     Concatenate,
@@ -18,8 +20,11 @@ from tensorflow.keras.layers import (
     Masking,
     TimeDistributed,
 )
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import (  # pylint: disable=no-name-in-module
+    Model,
+    load_model,
+)
+from tensorflow.keras.optimizers import Adam  # pylint: disable=no-name-in-module
 
 import umami.tf_tools as utf
 import umami.train_tools as utt

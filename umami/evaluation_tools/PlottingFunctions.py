@@ -967,7 +967,7 @@ def plotPtDependence(
 
     # Apply y-limits for the ratio plot
     if Ratio_Cut is not None:
-        if type(Ratio_Cut) == list and len(Ratio_Cut) == 2:
+        if isinstance(Ratio_Cut, list) and len(Ratio_Cut) == 2:
             axis_dict["left"]["ratio"].set_ylim(bottom=Ratio_Cut[0], top=Ratio_Cut[1])
 
         else:
@@ -1137,13 +1137,13 @@ def plotROCRatio(
     else:
         colors_WP = "red"
 
-    if type(nTest) != list:
+    if not isinstance(nTest, list):
         nTest = [nTest] * len(labels)
 
-    if type(which_axis) != list:
+    if not isinstance(which_axis, list):
         which_axis = [which_axis] * len(labels)
 
-    if type(ratio_id) != list:
+    if not isinstance(ratio_id, list):
         ratio_id = [ratio_id] * len(labels)
 
     # Define the figure with two subplots of unequal sizes
@@ -1511,7 +1511,7 @@ def plotROCRatioComparison(
             )
             binomialErrors = False
 
-    if type(nTest) != list:
+    if not isinstance(nTest, list):
         nTest = [nTest] * len(labels)
 
     # Define the figure with two subplots of unequal sizes
@@ -2175,7 +2175,7 @@ def plot_score_comparison(
     # Get index dict
     index_dict = {f"{flavour}": i for i, flavour in enumerate(class_labels_list[0])}
 
-    if type(which_axis) != list:
+    if not isinstance(which_axis, list):
         which_axis = [which_axis] * len(df_list)
 
     # Define the figure with two subplots of unequal sizes
@@ -2715,7 +2715,7 @@ def plot_prob_comparison(
     # Get index dict
     index_dict = {f"{iter_flav}": i for i, iter_flav in enumerate(class_labels_list[0])}
 
-    if type(which_axis) != list:
+    if not isinstance(which_axis, list):
         which_axis = [which_axis] * len(df_list)
 
     # Define the figure with two subplots of unequal sizes

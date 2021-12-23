@@ -52,7 +52,7 @@ class Configuration(object):
     def GetConfiguration(self):
         for elem in self.default_config:
             if elem in self.config:
-                if type(self.config[elem]) is dict and "f_" in elem:
+                if isinstance(self.config[elem], dict) and "f_" in elem:
                     if "file" not in self.config[elem]:
                         raise KeyError(
                             "You need to specify the 'file' for"
