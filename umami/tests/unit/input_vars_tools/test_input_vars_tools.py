@@ -8,6 +8,7 @@ import yaml
 from matplotlib.testing.compare import compare_images
 
 from umami.input_vars_tools.PlottingFunctions import (
+    check_kwargs_var_plots,
     plot_input_vars_jets,
     plot_input_vars_jets_comparison,
     plot_input_vars_trks,
@@ -15,6 +16,45 @@ from umami.input_vars_tools.PlottingFunctions import (
     plot_nTracks_per_Jet,
 )
 from umami.tools import yaml_loader
+
+
+class KwargsCheck_TestCase(unittest.TestCase):
+    def setUp(self):
+        """
+        Duplicating default dict from function.
+        """
+        self.default_kwargs = {
+            "UseAtlasTag": True,
+            "ApplyATLASStyle": False,
+            "AtlasTag": "Internal Simulation",
+            "SecondTag": "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
+            "yAxisAtlasTag": 0.925,
+            "yAxisIncrease": 1,
+            "figsize": None,
+            "Log": True,
+            "ylabel": "Normalised Number of Tracks",
+            "ycolor": "black",
+            "legFontSize": 10,
+            "ncol": 2,
+            "Bin_Width_y_axis": True,
+            "plot_type": "pdf",
+        }
+
+    def test_empty_input(self):
+        kwargs = check_kwargs_var_plots({})
+        self.assertEqual(kwargs, self.default_kwargs)
+
+    def test_one_change(self):
+        kwargs = check_kwargs_var_plots({"UseAtlasTag": False})
+        # TODO: change syntax in python 3.9
+        self.default_kwargs.update({"UseAtlasTag": False})
+        self.assertEqual(kwargs, self.default_kwargs)
+
+    def test_custom_default(self):
+        kwargs = check_kwargs_var_plots({"ApplyATLASStyle": True}, legFontSize=99)
+        # TODO: change syntax in python 3.9
+        self.default_kwargs.update({"ApplyATLASStyle": True, "legFontSize": 99})
+        self.assertEqual(kwargs, self.default_kwargs)
 
 
 class JetPlotting_TestCase(unittest.TestCase):
