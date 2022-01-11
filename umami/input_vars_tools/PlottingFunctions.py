@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-"""
-This script plots the given input variables of the given files and
-also a comparison.
-"""
+"""Plots the given input variables of the given files and also a comparison."""
 
 import os
 import re
@@ -23,7 +20,7 @@ from umami.tools import applyATLASstyle, makeATLAStag, yaml_loader
 
 def atoi(text):
     """
-    Converts string of digits into integer.
+    Convert string of digits into integer.
 
     Parameters
     ----------
@@ -57,31 +54,90 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r"(\d+)", text)]
 
 
+def check_kwargs_var_plots(kwargs: dict, **custom_default):
+    """
+    Validate the kwargs for plotting functions from **kwargs in function definition.
+
+    Parameters
+    ----------
+    kwargs: dict
+        kwargs dictionary passed to the plotting functions
+        - plot_type : str
+            Plottype, like pdf or png
+        - UseAtlasTag : bool
+            Define if ATLAS Tag is used or not.
+        - ApplyATLASStyle : bool
+            Apply ATLAS Style of the plot (for approval etc.).
+        - AtlasTag : str
+            Main tag. Mainly "Internal Simulation".
+        - SecondTag : str
+            Lower tag in the ATLAS label with infos.
+        - yAxisAtlasTag : float
+            Y axis position of the ATLAS label.
+        - yAxisIncrease : float
+            Y axis increase factor to fit the ATLAS label.
+        - figsize : list
+            List of the figure size. i.e [5, 6]
+        - Log : bool
+            Set y-axis log True or False.
+        - ylabel : str
+            Y-label.
+        - ycolor : str
+        -     Y-axis-label colour.
+        legFontSize : int
+            Legend font size.
+        - ncol : int
+            Number of columns of the legend.
+    **custom_default: dict
+        overwrites the default values defined in this function
+
+    Returns
+    -------
+    kwargs: dict
+        kwargs, replaced with custom default values if needed
+    """
+    # the following kwargs all plotting functions have in common
+    default_kwargs = {
+        "UseAtlasTag": True,
+        "ApplyATLASStyle": False,
+        "AtlasTag": "Internal Simulation",
+        "SecondTag": "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
+        "yAxisAtlasTag": 0.925,
+        "yAxisIncrease": 1,
+        "figsize": None,
+        "Log": True,
+        "ylabel": "Normalised Number of Tracks",
+        "ycolor": "black",
+        "legFontSize": 10,
+        "ncol": 2,
+        "Bin_Width_y_axis": True,
+        "plot_type": "pdf",
+    }
+
+    updated_kwargs = {}
+    for key, value in default_kwargs.items():
+        if key in kwargs.keys():
+            updated_kwargs[key] = kwargs[key]
+        elif key in custom_default.keys():  # pylint: disable=C0201
+            updated_kwargs[key] = custom_default[key]
+        else:
+            updated_kwargs[key] = value
+
+    return updated_kwargs
+
+
 def plot_nTracks_per_Jet(
     datasets_filepaths: list,
     datasets_labels: list,
     nJets: int,
     class_labels: list,
-    plot_type: str = "pdf",
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = False,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag: float = 0.925,
-    yAxisIncrease: float = 1,
     output_directory: str = "input_vars_trks",
-    figsize: list = None,
-    Log: bool = True,
-    ylabel: str = "Normalised Number of Tracks",
-    ycolor: str = "black",
-    legFontSize: int = 10,
-    ncol: int = 2,
     Ratio_Cut: list = None,
-    Bin_Width_y_axis: bool = True,
     track_origin: str = "All",
+    **kwargs,
 ):
     """
-    Plotting the number of tracks per jet as a histogram.
+    Plot the number of tracks per jet as a histogram.
 
     Parameters
     ----------
@@ -93,42 +149,42 @@ def plot_nTracks_per_Jet(
         Number of jets to use.
     class_labels : list
         List of classes that are to be plotted.
-    plot_type : str
-        Plottype, like pdf or png
-    UseAtlasTag : bool
-        Define if ATLAS Tag is used or not.
-    ApplyATLASStyle : bool
-        Apply ATLAS Style of the plot (for approval etc.).
-    AtlasTag : str
-        Main tag. Mainly "Internal Simulation".
-    SecondTag : str
-        Lower tag in the ATLAS label with infos.
-    yAxisAtlasTag : float
-        Y axis position of the ATLAS label.
-    yAxisIncrease : float
-        Y axis increase factor to fit the ATLAS label.
     output_directory : str
         Name of the output directory. Only the dir name not path!
-    figsize : list
-        List of the figure size. i.e [5, 6]
-    Log : bool
-        Set y-axis log True or False.
-    ylabel : str
-        Y-label.
-    ycolor : str
-        Y-axis-label colour.
-    legFontSize : int
-        Legend font size.
-    ncol : int
-        Number of columns of the legend.
     Ratio_Cut : list
         List of y-axis cuts for the ratio block.
-    Bin_Width_y_axis : bool
-        Show bin size on y-axis
     track_origin : str
         Track set that is to be used for plotting.
+    **kwargs: dict
+        - plot_type : str
+            Plottype, like pdf or png
+        - UseAtlasTag : bool
+            Define if ATLAS Tag is used or not.
+        - ApplyATLASStyle : bool
+            Apply ATLAS Style of the plot (for approval etc.).
+        - AtlasTag : str
+            Main tag. Mainly "Internal Simulation".
+        - SecondTag : str
+            Lower tag in the ATLAS label with infos.
+        - yAxisAtlasTag : float
+            Y axis position of the ATLAS label.
+        - yAxisIncrease : float
+            Y axis increase factor to fit the ATLAS label.
+        - figsize : list
+            List of the figure size. i.e [5, 6]
+        - Log : bool
+            Set y-axis log True or False.
+        - ylabel : str
+            Y-label.
+        - ycolor : str
+        -     Y-axis-label colour.
+        legFontSize : int
+            Legend font size.
+        - ncol : int
+            Number of columns of the legend.
     """
-
+    # check the kwargs
+    kwargs = check_kwargs_var_plots(kwargs)
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
@@ -198,15 +254,15 @@ def plot_nTracks_per_Jet(
     axis_dict = {}
 
     # Apply ATLAS style if true
-    if ApplyATLASStyle:
+    if kwargs["ApplyATLASStyle"]:
         applyATLASstyle(mtp)
 
     # Set up new figure
-    if not figsize:
+    if not kwargs["figsize"]:
         fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
     else:
-        fig = plt.figure(figsize=(figsize[0], figsize[1]))
+        fig = plt.figure(figsize=(kwargs["figsize"][0], kwargs["figsize"][1]))
 
     gs = gridspec.GridSpec(8, 1, figure=fig)
     axis_dict["left"] = {}
@@ -341,26 +397,26 @@ def plot_nTracks_per_Jet(
     )
 
     # Add axes, titels and the legend
-    if Bin_Width_y_axis is True:
+    if kwargs["Bin_Width_y_axis"] is True:
         Bin_Width = abs(Binning[1] - Binning[0])
         axis_dict["left"]["top"].set_ylabel(
-            f"{ylabel} / {Bin_Width:.2f}",
+            f"{kwargs['ylabel']} / {Bin_Width:.2f}",
             fontsize=12,
             horizontalalignment="right",
             y=1.0,
-            color=ycolor,
+            color=kwargs["ycolor"],
         )
 
     else:
         axis_dict["left"]["top"].set_ylabel(
-            ylabel,
+            kwargs["ylabel"],
             fontsize=12,
             horizontalalignment="right",
             y=1.0,
-            color=ycolor,
+            color=kwargs["ycolor"],
         )
 
-    axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
+    axis_dict["left"]["top"].tick_params(axis="y", labelcolor=kwargs["ycolor"])
 
     axis_dict["left"]["ratio"].set_xlabel(
         "Number of tracks per Jet"
@@ -373,7 +429,7 @@ def plot_nTracks_per_Jet(
 
     plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
 
-    if Log is True:
+    if kwargs["Log"] is True:
         axis_dict["left"]["top"].set_yscale("log")
 
         if axis_dict["left"]["top"].get_ylim()[0] <= 0:
@@ -381,21 +437,21 @@ def plot_nTracks_per_Jet(
             left_y_limits = axis_dict["left"]["top"].get_ylim()
             axis_dict["left"]["top"].set_ylim(
                 bottom=Lowest_histcount * 0.1,
-                top=left_y_limits[1] * 10 ** (yAxisIncrease),
+                top=left_y_limits[1] * 10 ** (kwargs["yAxisIncrease"]),
             )
 
         else:
             left_y_limits = axis_dict["left"]["top"].get_ylim()
             axis_dict["left"]["top"].set_ylim(
                 bottom=left_y_limits[0] * 0.1,
-                top=left_y_limits[1] * 10 ** (yAxisIncrease),
+                top=left_y_limits[1] * 10 ** (kwargs["yAxisIncrease"]),
             )
 
     else:
         left_y_limits = axis_dict["left"]["top"].get_ylim()
         axis_dict["left"]["top"].set_ylim(
             bottom=left_y_limits[0],
-            top=left_y_limits[1] * yAxisIncrease,
+            top=left_y_limits[1] * kwargs["yAxisIncrease"],
         )
 
     if Ratio_Cut is not None:
@@ -404,25 +460,27 @@ def plot_nTracks_per_Jet(
     # Set axis
     axis_dict["left"]["top"].legend(
         loc="upper right",
-        fontsize=legFontSize,
-        ncol=ncol,
+        fontsize=kwargs["legFontSize"],
+        ncol=kwargs["ncol"],
     )
 
     # Set tight layout
     plt.tight_layout()
 
     # Set ATLAS Tag
-    if UseAtlasTag is True:
+    if kwargs["UseAtlasTag"] is True:
         makeATLAStag(
             ax=axis_dict["left"]["top"],
             fig=fig,
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
+            first_tag=kwargs["AtlasTag"],
+            second_tag=kwargs["SecondTag"],
+            ymax=kwargs["yAxisAtlasTag"],
         )
 
     # Save and close figure
-    plt.savefig(f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}")
+    plt.savefig(
+        f"{output_directory}/nTracks_per_Jet_{track_origin}.{kwargs['plot_type']}"
+    )
     plt.close()
     plt.clf()
 
@@ -436,26 +494,13 @@ def plot_input_vars_trks_comparison(
     class_labels: list,
     sorting_variable: str = "ptfrac",
     n_Leading: list = None,
-    plot_type: str = "pdf",
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = False,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag: float = 0.925,
-    yAxisIncrease: float = 1,
     output_directory: str = "input_vars_trks",
-    figsize: list = None,
-    Log: bool = True,
-    ylabel: str = "Normalised Number of Tracks",
-    ycolor: str = "black",
-    legFontSize: int = 10,
-    ncol: int = 2,
     Ratio_Cut: list = None,
-    Bin_Width_y_axis: bool = True,
     track_origin: str = "All",
+    **kwargs,
 ):
     """
-    Plotting the track variable in comparison to another model with ratio plot.
+    Plot the track variable in comparison to another model with ratio plot.
 
     Parameters
     ----------
@@ -475,46 +520,47 @@ def plot_input_vars_trks_comparison(
         Variable which is used for sorting.
     n_Leading : list
         n-th leading jet which is plotted. For all, = None.
-    plot_type : str
-        Plottype, like pdf or png.
-    UseAtlasTag : bool
-        Define if ATLAS Tag is used or not.
-    ApplyATLASStyle : bool
-        Apply ATLAS Style of the plot (for approval etc.).
-    AtlasTag : str
-        Main tag. Mainly "Internal Simulation".
-    SecondTag : str
-        Lower tag in the ATLAS label with infos.
-    yAxisAtlasTag : float
-        Y axis position of the ATLAS label.
-    yAxisIncrease : float
-        Y axis increase factor to fit the ATLAS label.
     output_directory : str
         Name of the output directory. Only the dir name not path!
-    figsize : list
-        List of the figure size. i.e [5, 6].
-    Log : bool
-        Set y-axis log True or False.
-    ylabel : str
-        Y-label.
-    ycolor : str
-        Y-axis-label colour.
-    legFontSize : int
-        Legend font size.
-    ncol : int
-        Number of columns of the legend.
     Ratio_Cut : list
         List of y-axis cuts for the ratio block.
-    Bin_Width_y_axis : bool
-        Show bin size on y-axis.
     track_origin: str
         Track set that is to be used for plotting.
+    **kwargs: dict
+        - plot_type : str
+            Plottype, like pdf or png
+        - UseAtlasTag : bool
+            Define if ATLAS Tag is used or not.
+        - ApplyATLASStyle : bool
+            Apply ATLAS Style of the plot (for approval etc.).
+        - AtlasTag : str
+            Main tag. Mainly "Internal Simulation".
+        - SecondTag : str
+            Lower tag in the ATLAS label with infos.
+        - yAxisAtlasTag : float
+            Y axis position of the ATLAS label.
+        - yAxisIncrease : float
+            Y axis increase factor to fit the ATLAS label.
+        - figsize : list
+            List of the figure size. i.e [5, 6]
+        - Log : bool
+            Set y-axis log True or False.
+        - ylabel : str
+            Y-label.
+        - ycolor : str
+        -     Y-axis-label colour.
+        legFontSize : int
+            Legend font size.
+        - ncol : int
+            Number of columns of the legend.
 
     Raises
     ------
     ValueError
         If the type of the given binning is not supported.
     """
+    # check the kwargs
+    kwargs = check_kwargs_var_plots(kwargs)
 
     # check to avoid dangerous default value (list)
     if n_Leading is None:
@@ -626,15 +672,17 @@ def plot_input_vars_trks_comparison(
                 axis_dict = {}
 
                 # Apply ATLAS style if true
-                if ApplyATLASStyle:
+                if kwargs["ApplyATLASStyle"]:
                     applyATLASstyle(mtp)
 
                 # Set up new figure
-                if figsize is None:
+                if kwargs["figsize"] is None:
                     fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
                 else:
-                    fig = plt.figure(figsize=(figsize[0], figsize[1]))
+                    fig = plt.figure(
+                        figsize=(kwargs["figsize"][0], kwargs["figsize"][1])
+                    )
 
                 gs = gridspec.GridSpec(8, 1, figure=fig)
                 axis_dict["left"] = {}
@@ -808,26 +856,28 @@ def plot_input_vars_trks_comparison(
                 )
 
                 # Add axes, titels and the legend
-                if Bin_Width_y_axis is True:
+                if kwargs["Bin_Width_y_axis"] is True:
                     Bin_Width = abs(Binning[1] - Binning[0])
                     axis_dict["left"]["top"].set_ylabel(
-                        f"{ylabel} / {Bin_Width:.2f}",
+                        f"{kwargs['ylabel']} / {Bin_Width:.2f}",
                         fontsize=12,
                         horizontalalignment="right",
                         y=1.0,
-                        color=ycolor,
+                        color=kwargs["ycolor"],
                     )
 
                 else:
                     axis_dict["left"]["top"].set_ylabel(
-                        ylabel,
+                        kwargs["ylabel"],
                         fontsize=12,
                         horizontalalignment="right",
                         y=1.0,
-                        color=ycolor,
+                        color=kwargs["ycolor"],
                     )
 
-                axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
+                axis_dict["left"]["top"].tick_params(
+                    axis="y", labelcolor=kwargs["ycolor"]
+                )
 
                 if nLeading is None:
                     axis_dict["left"]["ratio"].set_xlabel(
@@ -851,7 +901,7 @@ def plot_input_vars_trks_comparison(
 
                 plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
 
-                if Log is True:
+                if kwargs["Log"] is True:
                     axis_dict["left"]["top"].set_yscale("log")
 
                     if axis_dict["left"]["top"].get_ylim()[0] <= 0:
@@ -859,21 +909,21 @@ def plot_input_vars_trks_comparison(
                         left_y_limits = axis_dict["left"]["top"].get_ylim()
                         axis_dict["left"]["top"].set_ylim(
                             bottom=Lowest_histcount * 0.1,
-                            top=left_y_limits[1] * 10 ** (yAxisIncrease),
+                            top=left_y_limits[1] * 10 ** (kwargs["yAxisIncrease"]),
                         )
 
                     else:
                         left_y_limits = axis_dict["left"]["top"].get_ylim()
                         axis_dict["left"]["top"].set_ylim(
                             bottom=left_y_limits[0] * 0.1,
-                            top=left_y_limits[1] * 10 ** (yAxisIncrease),
+                            top=left_y_limits[1] * 10 ** (kwargs["yAxisIncrease"]),
                         )
 
                 else:
                     left_y_limits = axis_dict["left"]["top"].get_ylim()
                     axis_dict["left"]["top"].set_ylim(
                         bottom=left_y_limits[0],
-                        top=left_y_limits[1] * yAxisIncrease,
+                        top=left_y_limits[1] * kwargs["yAxisIncrease"],
                     )
 
                 if Ratio_Cut is not None:
@@ -884,25 +934,27 @@ def plot_input_vars_trks_comparison(
                 # Set axis
                 axis_dict["left"]["top"].legend(
                     loc="upper right",
-                    fontsize=legFontSize,
-                    ncol=ncol,
+                    fontsize=kwargs["legFontSize"],
+                    ncol=kwargs["ncol"],
                 )
 
                 # Set tight layout
                 plt.tight_layout()
 
                 # Set ATLAS Tag
-                if UseAtlasTag is True:
+                if kwargs["UseAtlasTag"] is True:
                     makeATLAStag(
                         ax=axis_dict["left"]["top"],
                         fig=fig,
-                        first_tag=AtlasTag,
-                        second_tag=SecondTag,
-                        ymax=yAxisAtlasTag,
+                        first_tag=kwargs["AtlasTag"],
+                        second_tag=kwargs["SecondTag"],
+                        ymax=kwargs["yAxisAtlasTag"],
                     )
 
                 # Save and close figure
-                plt.savefig(f"{filedir}/{var}_{nLeading}_{track_origin}.{plot_type}")
+                plt.savefig(
+                    f"{filedir}/{var}_{nLeading}_{track_origin}.{kwargs['plot_type']}"
+                )
                 plt.close()
                 plt.clf()
         logger.info(
@@ -920,25 +972,12 @@ def plot_input_vars_trks(
     class_labels: list,
     sorting_variable: str = "ptfrac",
     n_Leading: list = None,
-    plot_type: str = "pdf",
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = False,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag: float = 0.925,
-    yAxisIncrease: float = 10,
     output_directory: str = "input_vars_trks",
-    figsize: list = None,
-    Log: bool = True,
-    ylabel: str = "Normalised number of tracks",
-    ycolor: str = "black",
-    legFontSize: int = 10,
-    ncol: int = 2,
-    Bin_Width_y_axis: bool = True,
     track_origin: str = "All",
+    **kwargs,
 ):
     """
-    Plotting the track variable.
+    Plot the track variable.
 
     Parameters
     ----------
@@ -958,44 +997,45 @@ def plot_input_vars_trks(
         Variable which is used for sorting.
     n_Leading : list
         n-th leading jet which is plotted. For all, = None.
-    plot_type : str
-        Plottype, like pdf or png.
-    UseAtlasTag : bool
-        Define if ATLAS Tag is used or not.
-    ApplyATLASStyle : bool
-        Apply ATLAS Style of the plot (for approval etc.).
-    AtlasTag : str
-        Main tag. Mainly "Internal Simulation".
-    SecondTag : str
-        Lower tag in the ATLAS label with infos.
-    yAxisAtlasTag : float
-        Y axis position of the ATLAS label.
-    yAxisIncrease : float
-        Y axis increase factor to fit the ATLAS label.
     output_directory : str
         Name of the output directory. Only the dir name not path!
-    figsize : list
-        List of the figure size. i.e [5, 6].
-    Log : bool
-        Set y-axis log True or False.
-    ylabel : str
-        Y-label.
-    ycolor : str
-        Y-axis-label colour.
-    legFontSize : int
-        Legend font size.
-    ncol : int
-        Number of columns of the legend.
-    Bin_Width_y_axis : bool
-        Show bin size on y-axis.
     track_origin: str
         Track set that is to be used for plotting.
+    **kwargs: dict
+        - plot_type : str
+            Plottype, like pdf or png
+        - UseAtlasTag : bool
+            Define if ATLAS Tag is used or not.
+        - ApplyATLASStyle : bool
+            Apply ATLAS Style of the plot (for approval etc.).
+        - AtlasTag : str
+            Main tag. Mainly "Internal Simulation".
+        - SecondTag : str
+            Lower tag in the ATLAS label with infos.
+        - yAxisAtlasTag : float
+            Y axis position of the ATLAS label.
+        - yAxisIncrease : float
+            Y axis increase factor to fit the ATLAS label.
+        - figsize : list
+            List of the figure size. i.e [5, 6]
+        - Log : bool
+            Set y-axis log True or False.
+        - ylabel : str
+            Y-label.
+        - ycolor : str
+        -     Y-axis-label colour.
+        legFontSize : int
+            Legend font size.
+        - ncol : int
+            Number of columns of the legend.
 
     Raises
     ------
     ValueError
         If the type of the given binning is not supported.
     """
+    # check the kwargs
+    kwargs = check_kwargs_var_plots(kwargs, yAxisIncrease=10)
 
     nBins_dict = {}
 
@@ -1152,15 +1192,17 @@ def plot_input_vars_trks(
                         )
 
                     # Apply ATLAS style if true
-                    if ApplyATLASStyle:
+                    if kwargs["ApplyATLASStyle"]:
                         applyATLASstyle(mtp)
 
                     # Set up new figure
-                    if figsize is None:
+                    if kwargs["figsize"] is None:
                         fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
                     else:
-                        fig = plt.figure(figsize=(figsize[0], figsize[1]))
+                        fig = plt.figure(
+                            figsize=(kwargs["figsize"][0], kwargs["figsize"][1])
+                        )
 
                     # Iterate over flavours
                     for flav_label, flavour in enumerate(class_labels):
@@ -1237,53 +1279,58 @@ def plot_input_vars_trks(
                         )
 
                     # Add axes, titels and the legend
-                    if Bin_Width_y_axis is True:
+                    if kwargs["Bin_Width_y_axis"] is True:
                         Bin_Width = abs(Binning[1] - Binning[0])
                         plt.ylabel(
-                            f"{ylabel} / {Bin_Width:.2f}",
+                            f"{kwargs['ylabel']} / {Bin_Width:.2f}",
                             fontsize=12,
                             horizontalalignment="right",
                             y=1.0,
-                            color=ycolor,
+                            color=kwargs["ycolor"],
                         )
 
                     else:
                         plt.ylabel(
-                            ylabel,
+                            kwargs["ylabel"],
                             fontsize=12,
                             horizontalalignment="right",
                             y=1.0,
-                            color=ycolor,
+                            color=kwargs["ycolor"],
                         )
 
-                    if Log is True:
+                    if kwargs["Log"] is True:
                         plt.yscale("log")
                         ymin, ymax = plt.ylim()
-                        plt.ylim(ymin=0.01 * ymin, ymax=yAxisIncrease * ymax)
+                        plt.ylim(ymin=0.01 * ymin, ymax=kwargs["yAxisIncrease"] * ymax)
 
                     else:
                         ymin, ymax = plt.ylim()
-                        plt.ylim(ymin=0.8 * ymin, ymax=yAxisIncrease * ymax)
+                        plt.ylim(ymin=0.8 * ymin, ymax=kwargs["yAxisIncrease"] * ymax)
 
-                    plt.legend(loc="upper right", fontsize=legFontSize, ncol=ncol)
+                    plt.legend(
+                        loc="upper right",
+                        fontsize=kwargs["legFontSize"],
+                        ncol=kwargs["ncol"],
+                    )
                     plt.tight_layout()
 
                     ax = plt.gca()
-                    if UseAtlasTag is True:
+                    if kwargs["UseAtlasTag"] is True:
                         makeATLAStag(
                             ax=ax,
                             fig=fig,
-                            first_tag=AtlasTag,
-                            second_tag=SecondTag,
-                            ymax=yAxisAtlasTag,
+                            first_tag=kwargs["AtlasTag"],
+                            second_tag=kwargs["SecondTag"],
+                            ymax=kwargs["yAxisAtlasTag"],
                         )
 
                     plt.savefig(
-                        f"{filedir}/{var}_{nLeading}_{track_origin}.{plot_type}"
+                        f"{filedir}/{var}_{nLeading}_{track_origin}."
+                        f"{kwargs['plot_type']}"
                     )
                     plt.close()
                     plt.clf()
-                    logger.info(f"{filedir}/{var}.{plot_type}\n")
+                    logger.info(f"{filedir}/{var}.{kwargs['plot_type']}\n")
 
 
 def plot_input_vars_jets(
@@ -1294,24 +1341,11 @@ def plot_input_vars_jets(
     binning: dict,
     class_labels: list,
     special_param_jets: dict = None,
-    plot_type: str = "pdf",
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = False,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag: float = 0.925,
-    yAxisIncrease: float = 10,
     output_directory: str = "input_vars_jets",
-    figsize: list = None,
-    Log: bool = True,
-    ylabel: str = "Normalised number of tracks",
-    ycolor: str = "black",
-    legFontSize: int = 10,
-    ncol: int = 2,
-    Bin_Width_y_axis: bool = True,
+    **kwargs,
 ):
     """
-    Plotting the jet variable.
+    Plot the jet variable.
 
     Parameters
     ----------
@@ -1329,42 +1363,43 @@ def plot_input_vars_jets(
         class_labels: List of class_labels which are to be plotted.
     special_param_jets: dict
         Give specific x-axis-limits for variable.
-    plot_type: str
-        plot_type: Plottype, like pdf or png.
-    UseAtlasTag: bool
-        UseAtlasTag: Define if ATLAS Tag is used or not.
-    ApplyATLASStyle: bool
-        ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    AtlasTag: str
-        AtlasTag: Main tag. Mainly "Internal Simulation".
-    SecondTag: str
-        SecondTag: Lower tag in the ATLAS label with infos.
-    yAxisAtlasTag: float
-        yAxisAtlasTag: Y axis position of the ATLAS label.
-    yAxisIncrease: float
-        yAxisIncrease: Y axis increase factor to fit the ATLAS label.
     output_directory: str
         output_directory: Name of the output directory. Only the dir name not path!
-    figsize: list
-        figsize: List of the figure size. i.e [5, 6].
-    Log: bool
-        Log: Set y-axis log True or False.
-    ylabel: str
-        ylabel: Y-label.
-    ycolor: str
-        ycolor: Y-axis-label colour.
-    legFontSize: int
-        legFontSize: Legend font size.
-    ncol: int
-        ncol: Number of columns of the legend.
-    Bin_Width_y_axis: bool
-        Bin_Width_y_axis: Show bin size on y-axis.
+    **kwargs: dict
+        - plot_type : str
+            Plottype, like pdf or png
+        - UseAtlasTag : bool
+            Define if ATLAS Tag is used or not.
+        - ApplyATLASStyle : bool
+            Apply ATLAS Style of the plot (for approval etc.).
+        - AtlasTag : str
+            Main tag. Mainly "Internal Simulation".
+        - SecondTag : str
+            Lower tag in the ATLAS label with infos.
+        - yAxisAtlasTag : float
+            Y axis position of the ATLAS label.
+        - yAxisIncrease : float
+            Y axis increase factor to fit the ATLAS label.
+        - figsize : list
+            List of the figure size. i.e [5, 6]
+        - Log : bool
+            Set y-axis log True or False.
+        - ylabel : str
+            Y-label.
+        - ycolor : str
+        -     Y-axis-label colour.
+        legFontSize : int
+            Legend font size.
+        - ncol : int
+            Number of columns of the legend.
 
     Raises
     ------
     ValueError
         If the type of the given binning is not supported.
     """
+    # check the kwargs
+    kwargs = check_kwargs_var_plots(kwargs, yAxisIncrease=10)
 
     nBins_dict = {}
 
@@ -1468,15 +1503,17 @@ def plot_input_vars_jets(
                     )
 
                 # Apply ATLAS style if true
-                if ApplyATLASStyle:
+                if kwargs["ApplyATLASStyle"]:
                     applyATLASstyle(mtp)
 
                 # Set up new figure
-                if figsize is None:
+                if kwargs["figsize"] is None:
                     fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
                 else:
-                    fig = plt.figure(figsize=(figsize[0], figsize[1]))
+                    fig = plt.figure(
+                        figsize=(kwargs["figsize"][0], kwargs["figsize"][1])
+                    )
 
                 for flav_label, flavour in enumerate(class_labels):
                     jets_flavour = jets_var_clean[flavour_label_clean == flav_label]
@@ -1521,48 +1558,52 @@ def plot_input_vars_jets(
                 plt.xlabel(var)
 
                 # Add axes, titels and the legend
-                if Bin_Width_y_axis is True:
+                if kwargs["Bin_Width_y_axis"] is True:
                     Bin_Width = abs(Binning[1] - Binning[0])
                     plt.ylabel(
-                        f"{ylabel} / {Bin_Width:.2f}",
+                        f"{kwargs['ylabel']} / {Bin_Width:.2f}",
                         fontsize=12,
                         horizontalalignment="right",
                         y=1.0,
-                        color=ycolor,
+                        color=kwargs["ycolor"],
                     )
 
                 else:
                     plt.ylabel(
-                        ylabel,
+                        kwargs["ylabel"],
                         fontsize=12,
                         horizontalalignment="right",
                         y=1.0,
-                        color=ycolor,
+                        color=kwargs["ycolor"],
                     )
 
-                if Log is True:
+                if kwargs["Log"] is True:
                     plt.yscale("log")
                     ymin, ymax = plt.ylim()
-                    plt.ylim(ymin=0.01 * ymin, ymax=yAxisIncrease * ymax)
+                    plt.ylim(ymin=0.01 * ymin, ymax=kwargs["yAxisIncrease"] * ymax)
 
                 else:
                     ymin, ymax = plt.ylim()
-                    plt.ylim(ymin=0.8 * ymin, ymax=yAxisIncrease * ymax)
+                    plt.ylim(ymin=0.8 * ymin, ymax=kwargs["yAxisIncrease"] * ymax)
 
-                plt.legend(loc="upper right", fontsize=legFontSize, ncol=ncol)
+                plt.legend(
+                    loc="upper right",
+                    fontsize=kwargs["legFontSize"],
+                    ncol=kwargs["ncol"],
+                )
                 plt.tight_layout()
 
                 ax = plt.gca()
-                if UseAtlasTag is True:
+                if kwargs["UseAtlasTag"] is True:
                     makeATLAStag(
                         ax=ax,
                         fig=fig,
-                        first_tag=AtlasTag,
-                        second_tag=SecondTag,
-                        ymax=yAxisAtlasTag,
+                        first_tag=kwargs["AtlasTag"],
+                        second_tag=kwargs["SecondTag"],
+                        ymax=kwargs["yAxisAtlasTag"],
                     )
 
-                plt.savefig(f"{filedir}/{var}.{plot_type}")
+                plt.savefig(f"{filedir}/{var}.{kwargs['plot_type']}")
                 plt.close()
                 plt.clf()
 
@@ -1575,25 +1616,12 @@ def plot_input_vars_jets_comparison(
     binning: dict,
     class_labels: list,
     special_param_jets: dict = None,
-    plot_type: str = "pdf",
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = False,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag: float = 0.925,
-    yAxisIncrease: float = 10,
     output_directory: str = "input_vars_jets",
-    figsize: list = None,
-    Log: bool = True,
-    ylabel: str = "Normalised Number of Tracks",
-    ycolor: str = "black",
-    legFontSize: int = 10,
-    ncol: int = 2,
     Ratio_Cut: list = None,
-    Bin_Width_y_axis: bool = True,
+    **kwargs,
 ):
     """
-    Plotting the jet variable comparison for the given datasets.
+    Plot the jet variable comparison for the given datasets.
 
     Parameters
     ----------
@@ -1611,44 +1639,45 @@ def plot_input_vars_jets_comparison(
         List of class_labels which are to be plotted.
     special_param_jets : dict
         Dict with special x-axis cuts for the given variable.
-    plot_type : str
-        Plottype, like pdf or png.
-    UseAtlasTag : bool
-        Define if ATLAS Tag is used or not.
-    ApplyATLASStyle : bool
-        Apply ATLAS Style of the plot (for approval etc.).
-    AtlasTag : str
-        Main tag. Mainly "Internal Simulation".
-    SecondTag : str
-        Lower tag in the ATLAS label with infos.
-    yAxisAtlasTag : float
-        Y axis position of the ATLAS label.
-    yAxisIncrease : float
-        Y axis increase factor to fit the ATLAS label.
     output_directory : str
         Name of the output directory. Only the dir name not path!
-    figsize : list
-        List of the figure size. i.e [5, 6].
-    Log : bool
-        Set y-axis log True or False.
-    ylabel : str
-        Y-label.
-    ycolor : str
-        Y-axis-label colour.
-    legFontSize : int
-        Legend font size.
-    ncol : int
-        Number of columns of the legend.
     Ratio_Cut : list
         List of y-axis cuts for the ratio block.
-    Bin_Width_y_axis : bool
-        Show bin size on y-axis.
+    **kwargs: dict
+        - plot_type : str
+            Plottype, like pdf or png
+        - UseAtlasTag : bool
+            Define if ATLAS Tag is used or not.
+        - ApplyATLASStyle : bool
+            Apply ATLAS Style of the plot (for approval etc.).
+        - AtlasTag : str
+            Main tag. Mainly "Internal Simulation".
+        - SecondTag : str
+            Lower tag in the ATLAS label with infos.
+        - yAxisAtlasTag : float
+            Y axis position of the ATLAS label.
+        - yAxisIncrease : float
+            Y axis increase factor to fit the ATLAS label.
+        - figsize : list
+            List of the figure size. i.e [5, 6]
+        - Log : bool
+            Set y-axis log True or False.
+        - ylabel : str
+            Y-label.
+        - ycolor : str
+        -     Y-axis-label colour.
+        legFontSize : int
+            Legend font size.
+        - ncol : int
+            Number of columns of the legend.
 
     Raises
     ------
     ValueError
         If the type of the given binning is not supported.
     """
+    # check the kwargs
+    kwargs = check_kwargs_var_plots(kwargs, yAxisIncrease=10)
 
     nBins_dict = {}
 
@@ -1726,15 +1755,15 @@ def plot_input_vars_jets_comparison(
             axis_dict = {}
 
             # Apply ATLAS style if true
-            if ApplyATLASStyle:
+            if kwargs["ApplyATLASStyle"]:
                 applyATLASstyle(mtp)
 
             # Set up new figure
-            if figsize is None:
+            if kwargs["figsize"] is None:
                 fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
 
             else:
-                fig = plt.figure(figsize=(figsize[0], figsize[1]))
+                fig = plt.figure(figsize=(kwargs["figsize"][0], kwargs["figsize"][1]))
 
             gs = gridspec.GridSpec(8, 1, figure=fig)
             axis_dict["left"] = {}
@@ -1879,26 +1908,26 @@ def plot_input_vars_jets_comparison(
             )
 
             # Add axes, titels and the legend
-            if Bin_Width_y_axis is True:
+            if kwargs["Bin_Width_y_axis"] is True:
                 Bin_Width = abs(Binning[1] - Binning[0])
                 axis_dict["left"]["top"].set_ylabel(
-                    f"{ylabel} / {Bin_Width:.2f}",
+                    f"{kwargs['ylabel']} / {Bin_Width:.2f}",
                     fontsize=12,
                     horizontalalignment="right",
                     y=1.0,
-                    color=ycolor,
+                    color=kwargs["ycolor"],
                 )
 
             else:
                 axis_dict["left"]["top"].set_ylabel(
-                    ylabel,
+                    kwargs["ylabel"],
                     fontsize=12,
                     horizontalalignment="right",
                     y=1.0,
-                    color=ycolor,
+                    color=kwargs["ycolor"],
                 )
 
-            axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
+            axis_dict["left"]["top"].tick_params(axis="y", labelcolor=kwargs["ycolor"])
 
             axis_dict["left"]["ratio"].set_xlabel(
                 var, fontsize=12, horizontalalignment="right", x=1.0
@@ -1906,7 +1935,7 @@ def plot_input_vars_jets_comparison(
 
             plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
 
-            if Log is True:
+            if kwargs["Log"] is True:
                 axis_dict["left"]["top"].set_yscale("log")
 
                 if axis_dict["left"]["top"].get_ylim()[0] <= 0:
@@ -1914,21 +1943,21 @@ def plot_input_vars_jets_comparison(
                     left_y_limits = axis_dict["left"]["top"].get_ylim()
                     axis_dict["left"]["top"].set_ylim(
                         bottom=Lowest_histcount * 0.1,
-                        top=left_y_limits[1] * 10 ** (yAxisIncrease),
+                        top=left_y_limits[1] * 10 ** (kwargs["yAxisIncrease"]),
                     )
 
                 else:
                     left_y_limits = axis_dict["left"]["top"].get_ylim()
                     axis_dict["left"]["top"].set_ylim(
                         bottom=left_y_limits[0] * 0.1,
-                        top=left_y_limits[1] * 10 ** (yAxisIncrease),
+                        top=left_y_limits[1] * 10 ** (kwargs["yAxisIncrease"]),
                     )
 
             else:
                 left_y_limits = axis_dict["left"]["top"].get_ylim()
                 axis_dict["left"]["top"].set_ylim(
                     bottom=left_y_limits[0],
-                    top=left_y_limits[1] * yAxisIncrease,
+                    top=left_y_limits[1] * kwargs["yAxisIncrease"],
                 )
 
             if Ratio_Cut is not None:
@@ -1939,25 +1968,25 @@ def plot_input_vars_jets_comparison(
             # Set axis
             axis_dict["left"]["top"].legend(
                 loc="upper right",
-                fontsize=legFontSize,
-                ncol=ncol,
+                fontsize=kwargs["legFontSize"],
+                ncol=kwargs["ncol"],
             )
 
             # Set tight layout
             plt.tight_layout()
 
             # Set ATLAS Tag
-            if UseAtlasTag is True:
+            if kwargs["UseAtlasTag"] is True:
                 makeATLAStag(
                     ax=axis_dict["left"]["top"],
                     fig=fig,
-                    first_tag=AtlasTag,
-                    second_tag=SecondTag,
-                    ymax=yAxisAtlasTag,
+                    first_tag=kwargs["AtlasTag"],
+                    second_tag=kwargs["SecondTag"],
+                    ymax=kwargs["yAxisAtlasTag"],
                 )
 
             # Save and close figure
-            plt.savefig(f"{filedir}/{var}.{plot_type}")
+            plt.savefig(f"{filedir}/{var}.{kwargs['plot_type']}")
             plt.close()
             plt.clf()
     logger.info(

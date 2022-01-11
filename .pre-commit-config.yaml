@@ -22,3 +22,4 @@ repos:
         entry: flake8
         types: [python]
         exclude: setup.py
+        args: ["--darglint-ignore-regex", "*"]
