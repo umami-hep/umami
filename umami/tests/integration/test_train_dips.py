@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+
+"""
+This script integration tests the training of DIPS with and without
+tfrecords.
+"""
+
 import os
 import tempfile
 import unittest
@@ -10,8 +17,20 @@ from umami.configuration import logger
 from umami.tools import replaceLineInFile, yaml_loader
 
 
-def getConfiguration():
-    """Load yaml file with settings for integration test of dips training."""
+def getConfiguration() -> dict:
+    """Load yaml file with settings for integration test of dips training.
+
+    Returns
+    -------
+    conf_setup : dict
+        Loaded config from yaml.
+
+    Raises
+    ------
+    YAMLError
+        If one of the needed keys is not in yaml.
+    """
+
     path_configuration = "umami/tests/integration/fixtures/testSetup.yaml"
     with open(path_configuration, "r") as conf:
         conf_setup = yaml.load(conf, Loader=yaml_loader)
@@ -23,21 +42,38 @@ def getConfiguration():
     return conf_setup
 
 
-def runTrainingDips(config):
+def runTrainingDips(config: dict) -> bool:
     """Call train.py for DIPS.
-    Return value `True` if training succeeded, `False` if one step did not succees."""
-    isSuccess = True
+    Return value `True` if training succeeded, `False` if one step did not succees.
+
+    Parameters
+    ----------
+    config : dict
+        Dict with the needed configurations for training.
+
+    Raises
+    ------
+    AssertionError
+        If train.py fails for DIPS.
+    AssertionError
+        If plotting_epoch_performance.py fails for DIPS.
+    AssertionError
+        If evaluate_model.py fails for DIPS.
+
+    Returns
+    -------
+    isSuccess : bool
+        Training succeeded or not.
+    """
 
     logger.info("Test: running train.py for DIPS...")
-    run_train_Dips = run(["train.py", "-c", f"{config}"])
+    run_train_Dips = run(["train.py", "-c", f"{config}"], check=True)
+
     try:
         run_train_Dips.check_returncode()
-    except CalledProcessError:
-        logger.info("Test failed: train.py for DIPS.")
-        isSuccess = False
 
-    if isSuccess is True:
-        run_train_Dips
+    except CalledProcessError as Error:
+        raise AssertionError("Test failed: train.py for DIPS.") from Error
 
     logger.info("Test: running plotting_epoch_performance.py for DIPS...")
     run_plot_epoch_Dips = run(
@@ -45,16 +81,17 @@ def runTrainingDips(config):
             "plotting_epoch_performance.py",
             "-c",
             f"{config}",
-        ]
+        ],
+        check=True,
     )
+
     try:
         run_plot_epoch_Dips.check_returncode()
-    except CalledProcessError:
-        logger.info("Test failed: plotting_epoch_performance.py for DIPS.")
-        isSuccess = False
 
-    if isSuccess is True:
-        run_plot_epoch_Dips
+    except CalledProcessError as Error:
+        raise AssertionError(
+            "Test failed: plotting_epoch_performance.py for DIPS."
+        ) from Error
 
     logger.info("Test: running evaluate_model.py for DIPS...")
     run_evaluate_model_Dips = run(
@@ -64,21 +101,25 @@ def runTrainingDips(config):
             f"{config}",
             "-e",
             "1",
-        ]
+        ],
+        check=True,
     )
+
     try:
         run_evaluate_model_Dips.check_returncode()
-    except CalledProcessError:
-        logger.info("Test failed: evaluate_model.py for DIPS.")
-        isSuccess = False
 
-    if isSuccess is True:
-        run_evaluate_model_Dips
+    except CalledProcessError as Error:
+        raise AssertionError("Test failed: evaluate_model.py for DIPS.") from Error
 
-    return isSuccess
+    return True
 
 
 class TestDipsTraining(unittest.TestCase):
+    """Test class for DIPS.
+
+    This class sets up the needed configs for testing the training of DIPS.
+    """
+
     def setUp(self):
         """Download test files for running the dips training."""
         # Get test configuration
@@ -242,9 +283,9 @@ class TestDipsTraining(unittest.TestCase):
                 file,
             )
             logger.info(f"Retrieving file from path {path}")
-            run(["wget", path, "--directory-prefix", test_dir])
+            run(["wget", path, "--directory-prefix", test_dir], check=True)
 
-    def test_train_dips(self):
+    def test_no_tfrecords_train_dips(self):
         """Integration test of train.py for DIPS script."""
         self.assertTrue(runTrainingDips(self.config))
 

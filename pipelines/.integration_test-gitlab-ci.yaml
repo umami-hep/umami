@@ -133,6 +133,7 @@ test_preprocessing_umami_pdf:
       - plots/
       - preprocessing_umami_pdf/
       - coverage_files/
+
 test_train_dips:
   <<: *test_template
   stage: integration_test_tagger
@@ -140,7 +141,7 @@ test_train_dips:
   dependencies:
     - test_preprocessing_dips
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dips.py -v -s --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dips.py -v -s --junitxml=report.xml -k "test_no_tfrecords_train_dips"
     - cp .coverage ./coverage_files/.coverage.test_train_dips
   artifacts:
     <<: *artifact_template
@@ -200,7 +201,7 @@ test_train_umami:
   dependencies:
     - test_preprocessing_umami
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v -s --junitxml=report.xml -k "test_train_umami"
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v -s --junitxml=report.xml -k "test_no_tfrecords_train_umami"
     - cp .coverage ./coverage_files/.coverage.test_train_umami
   artifacts:
     <<: *artifact_template
