@@ -1708,13 +1708,6 @@ def load_validation_data_umami(
         val_data_dict["X_valid_trk"] = X_valid_trk
         val_data_dict["Y_valid"] = Y_valid
 
-    # Set placeholder Nones for the add_files
-    (
-        X_valid_add,
-        X_valid_trk_add,
-        Y_valid_add,
-    ) = (None, None, None)
-
     # Check if add_files are defined and load them
     if train_config.add_validation_file is not None:
         # Get cut vars dict for add_validation file
@@ -1761,6 +1754,11 @@ def load_validation_data_umami(
             "validation_file and add_validation_file have different amounts of"
             " variables!"
         )
+
+    else:
+        val_data_dict["X_valid_add"] = None
+        val_data_dict["X_valid_trk_add"] = None
+        val_data_dict["Y_valid_add"] = None
 
     # Return the val data dict
     return val_data_dict
@@ -1834,12 +1832,6 @@ def load_validation_data_dl1(
         val_data_dict["X_valid"] = X_valid
         val_data_dict["Y_valid"] = Y_valid
 
-    # Set placeholder Nones for the add_files
-    (
-        X_valid_add,
-        Y_valid_add,
-    ) = (None, None)
-
     # Check if add_files are defined and load them
     if train_config.add_validation_file is not None:
 
@@ -1879,6 +1871,10 @@ def load_validation_data_dl1(
             "validation_file and add_validation_file have different amounts of"
             " variables!"
         )
+
+    else:
+        val_data_dict["X_valid_add"] = None
+        val_data_dict["Y_valid_add"] = None
 
     # Return the val data dict
     return val_data_dict
@@ -1940,12 +1936,6 @@ def load_validation_data_dips(
         val_data_dict["X_valid"] = X_valid
         val_data_dict["Y_valid"] = Y_valid
 
-    # Set placeholder Nones for the add_files
-    (
-        X_valid_add,
-        Y_valid_add,
-    ) = (None, None)
-
     # Check if add_files are defined and load them
     if train_config.add_validation_file is not None:
 
@@ -1984,6 +1974,10 @@ def load_validation_data_dips(
             "validation_file and add_validation_file have different amounts of"
             " variables!"
         )
+
+    else:
+        val_data_dict["X_valid_add"] = None
+        val_data_dict["Y_valid_add"] = None
 
     # Return the val data dict
     return val_data_dict
