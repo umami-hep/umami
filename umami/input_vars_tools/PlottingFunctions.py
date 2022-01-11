@@ -41,60 +41,92 @@ def atoi(text):
 
 
 def natural_keys(text):
+    """
+    Sorting strings by natural keys.
+
+    Parameters
+    ----------
+    text : str
+        String with int inside.
+
+    Returns
+    -------
+    sorted_list : list
+        List with the sorted strings inside.
+    """
     return [atoi(c) for c in re.split(r"(\d+)", text)]
 
 
 def plot_nTracks_per_Jet(
-    datasets_filepaths,
-    datasets_labels,
-    nJets,
-    class_labels,
-    plot_type="pdf",
-    UseAtlasTag=True,
-    ApplyATLASStyle=False,
-    AtlasTag="Internal Simulation",
-    SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag=0.925,
-    yAxisIncrease=1,
-    output_directory="input_vars_trks",
-    figsize=None,
-    Log=True,
-    ylabel="Normalised Number of Tracks",
-    ycolor="black",
-    legFontSize=10,
-    ncol=2,
-    Ratio_Cut=None,
-    Bin_Width_y_axis=True,
-    track_origin="All",
+    datasets_filepaths: list,
+    datasets_labels: list,
+    nJets: int,
+    class_labels: list,
+    plot_type: str = "pdf",
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = False,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
+    yAxisAtlasTag: float = 0.925,
+    yAxisIncrease: float = 1,
+    output_directory: str = "input_vars_trks",
+    figsize: list = None,
+    Log: bool = True,
+    ylabel: str = "Normalised Number of Tracks",
+    ycolor: str = "black",
+    legFontSize: int = 10,
+    ncol: int = 2,
+    Ratio_Cut: list = None,
+    Bin_Width_y_axis: bool = True,
+    track_origin: str = "All",
 ):
     """
     Plotting the number of tracks per jet as a histogram.
 
-    Input:
-    - datasets_filepaths: List of filepaths to the files.
-    - datasets_labels: Label of the dataset for the legend.
-    - var_dict: Variable dict where all variables of the files are saved.
-    - nJets: Number of jets to use for plotting.
-    - class_labels: List of class_labels which are to be plotted.
-    - plot_type: Plottype, like pdf or png
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - output_directory: Name of the output directory. Only the dir name not path!
-    - figsize: List of the figure size. i.e [5, 6]
-    - Log: Set y-axis log True or False.
-    - ylabel: Y-label.
-    - ycolor: Y-axis-label colour.
-    - legFontSize: Legend font size
-    - ncol: Number of columns of the legend.
-    - Ratio_Cut: List of y-axis cuts for the ratio block.
-    - Bin_Width_y_axis: Show bin size on y-axis
-
-    Output:
-    - Number of tracks per jet plot
+    Parameters
+    ----------
+    datasets_filepaths : list
+        List of filepaths to the files.
+    datasets_labels : list
+        Label of the dataset for the legend.
+    nJets : int
+        Number of jets to use.
+    class_labels : list
+        List of classes that are to be plotted.
+    plot_type : str
+        Plottype, like pdf or png
+    UseAtlasTag : bool
+        Define if ATLAS Tag is used or not.
+    ApplyATLASStyle : bool
+        Apply ATLAS Style of the plot (for approval etc.).
+    AtlasTag : str
+        Main tag. Mainly "Internal Simulation".
+    SecondTag : str
+        Lower tag in the ATLAS label with infos.
+    yAxisAtlasTag : float
+        Y axis position of the ATLAS label.
+    yAxisIncrease : float
+        Y axis increase factor to fit the ATLAS label.
+    output_directory : str
+        Name of the output directory. Only the dir name not path!
+    figsize : list
+        List of the figure size. i.e [5, 6]
+    Log : bool
+        Set y-axis log True or False.
+    ylabel : str
+        Y-label.
+    ycolor : str
+        Y-axis-label colour.
+    legFontSize : int
+        Legend font size.
+    ncol : int
+        Number of columns of the legend.
+    Ratio_Cut : list
+        List of y-axis cuts for the ratio block.
+    Bin_Width_y_axis : bool
+        Show bin size on y-axis
+    track_origin : str
+        Track set that is to be used for plotting.
     """
 
     # Init Linestyles
@@ -396,64 +428,94 @@ def plot_nTracks_per_Jet(
 
 
 def plot_input_vars_trks_comparison(
-    datasets_filepaths,
-    datasets_labels,
-    var_dict,
-    nJets,
-    binning,
-    class_labels,
-    sorting_variable="ptfrac",
-    n_Leading=None,
-    plot_type="pdf",
-    UseAtlasTag=True,
-    ApplyATLASStyle=False,
-    AtlasTag="Internal Simulation",
-    SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag=0.925,
-    yAxisIncrease=1,
-    output_directory="input_vars_trks",
-    figsize=None,
-    Log=True,
-    ylabel="Normalised Number of Tracks",
-    ycolor="black",
-    legFontSize=10,
-    ncol=2,
-    Ratio_Cut=None,
-    Bin_Width_y_axis=True,
-    track_origin="All",
+    datasets_filepaths: list,
+    datasets_labels: list,
+    var_dict: dict,
+    nJets: int,
+    binning: dict,
+    class_labels: list,
+    sorting_variable: str = "ptfrac",
+    n_Leading: list = None,
+    plot_type: str = "pdf",
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = False,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
+    yAxisAtlasTag: float = 0.925,
+    yAxisIncrease: float = 1,
+    output_directory: str = "input_vars_trks",
+    figsize: list = None,
+    Log: bool = True,
+    ylabel: str = "Normalised Number of Tracks",
+    ycolor: str = "black",
+    legFontSize: int = 10,
+    ncol: int = 2,
+    Ratio_Cut: list = None,
+    Bin_Width_y_axis: bool = True,
+    track_origin: str = "All",
 ):
     """
     Plotting the track variable in comparison to another model with ratio plot.
 
-    Input:
-    - datasets_filepaths: List of filepaths to the files.
-    - datasets_labels: Label of the dataset for the legend.
-    - var_dict: Variable dict where all variables of the files are saved.
-    - nJets: Number of jets to use for plotting.
-    - binning: Decide which binning is used.
-    - class_labels: List of class_labels which are to be plotted.
-    - sorting_variable: Variable which is used for sorting.
-    - n_Leading: n-th leading jet which is plotted. For all, = None.
-    - plot_type: Plottype, like pdf or png
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - output_directory: Name of the output directory. Only the dir name not path!
-    - figsize: List of the figure size. i.e [5, 6]
-    - Log: Set y-axis log True or False.
-    - ylabel: Y-label.
-    - ycolor: Y-axis-label colour.
-    - legFontSize: Legend font size
-    - ncol: Number of columns of the legend.
-    - Ratio_Cut: List of y-axis cuts for the ratio block.
-    - Bin_Width_y_axis: Show bin size on y-axis
+    Parameters
+    ----------
+    datasets_filepaths : list
+        List of filepaths to the files.
+    datasets_labels : list
+        Label of the dataset for the legend.
+    var_dict : dict
+        Variable dict where all variables of the files are saved.
+    nJets : int
+        Number of jets to use for plotting.
+    binning : dict
+        Decide which binning is used.
+    class_labels : list
+        List of class_labels which are to be plotted.
+    sorting_variable : str
+        Variable which is used for sorting.
+    n_Leading : list
+        n-th leading jet which is plotted. For all, = None.
+    plot_type : str
+        Plottype, like pdf or png.
+    UseAtlasTag : bool
+        Define if ATLAS Tag is used or not.
+    ApplyATLASStyle : bool
+        Apply ATLAS Style of the plot (for approval etc.).
+    AtlasTag : str
+        Main tag. Mainly "Internal Simulation".
+    SecondTag : str
+        Lower tag in the ATLAS label with infos.
+    yAxisAtlasTag : float
+        Y axis position of the ATLAS label.
+    yAxisIncrease : float
+        Y axis increase factor to fit the ATLAS label.
+    output_directory : str
+        Name of the output directory. Only the dir name not path!
+    figsize : list
+        List of the figure size. i.e [5, 6].
+    Log : bool
+        Set y-axis log True or False.
+    ylabel : str
+        Y-label.
+    ycolor : str
+        Y-axis-label colour.
+    legFontSize : int
+        Legend font size.
+    ncol : int
+        Number of columns of the legend.
+    Ratio_Cut : list
+        List of y-axis cuts for the ratio block.
+    Bin_Width_y_axis : bool
+        Show bin size on y-axis.
+    track_origin: str
+        Track set that is to be used for plotting.
 
-    Output:
-    - Track variable in comparison to another model with ratio plot.
+    Raises
+    ------
+    ValueError
+        If the type of the given binning is not supported.
     """
+
     # check to avoid dangerous default value (list)
     if n_Leading is None:
         n_Leading = [None]
@@ -484,11 +546,16 @@ def plot_input_vars_trks_comparison(
                     }
                 )
 
-        elif type(binning[variable]) is None:
+        # If int, set to the given numbers
+        elif isinstance(binning[variable], int):
+            nBins_dict.update({variable: binning[variable]})
+
+        # If None, give default value
+        elif binning[variable] is None:
             nBins_dict.update({variable: int(100)})
 
         else:
-            nBins_dict.update({variable: binning[variable]})
+            raise ValueError(f"Type {type(binning[variable])} is not supported!")
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
@@ -845,61 +912,89 @@ def plot_input_vars_trks_comparison(
 
 
 def plot_input_vars_trks(
-    datasets_filepaths,
-    datasets_labels,
-    var_dict,
-    nJets,
-    binning,
-    class_labels,
-    sorting_variable="ptfrac",
-    n_Leading=None,
-    plot_type="pdf",
-    UseAtlasTag=True,
-    ApplyATLASStyle=False,
-    AtlasTag="Internal Simulation",
-    SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag=0.925,
-    yAxisIncrease=10,
-    output_directory="input_vars_trks",
-    figsize=None,
-    Log=True,
-    ylabel="Normalised number of tracks",
-    ycolor="black",
-    legFontSize=10,
-    ncol=2,
-    Bin_Width_y_axis=True,
-    track_origin="All",
+    datasets_filepaths: list,
+    datasets_labels: list,
+    var_dict: dict,
+    nJets: int,
+    binning: dict,
+    class_labels: list,
+    sorting_variable: str = "ptfrac",
+    n_Leading: list = None,
+    plot_type: str = "pdf",
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = False,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
+    yAxisAtlasTag: float = 0.925,
+    yAxisIncrease: float = 10,
+    output_directory: str = "input_vars_trks",
+    figsize: list = None,
+    Log: bool = True,
+    ylabel: str = "Normalised number of tracks",
+    ycolor: str = "black",
+    legFontSize: int = 10,
+    ncol: int = 2,
+    Bin_Width_y_axis: bool = True,
+    track_origin: str = "All",
 ):
     """
     Plotting the track variable.
 
-    Input:
-    - datasets_filepaths: List of filepaths to the files.
-    - datasets_labels: Label of the dataset for the legend.
-    - var_dict: Variable dict where all variables of the files are saved.
-    - nJets: Number of jets to use for plotting.
-    - binning: Decide which binning is used.
-    - class_labels: List of class_labels which are to be plotted.
-    - sorting_variable: Variable which is used for sorting.
-    - n_Leading: n-th leading jet which is plotted. For all, = None.
-    - plot_type: Plottype, like pdf or png
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - output_directory: Name of the output directory. Only the dir name not path!
-    - figsize: List of the figure size. i.e [5, 6]
-    - Log: Set y-axis log True or False.
-    - ylabel: Y-label.
-    - ycolor: Y-axis-label colour.
-    - legFontSize: Legend font size
-    - ncol: Number of columns of the legend.
-    - Bin_Width_y_axis: Show bin size on y-axis
+    Parameters
+    ----------
+    datasets_filepaths : list
+        List of filepaths to the files.
+    datasets_labels : list
+        Label of the dataset for the legend.
+    var_dict : dict
+        Variable dict where all variables of the files are saved.
+    nJets : int
+        Number of jets to use for plotting.
+    binning : dict
+        Decide which binning is used.
+    class_labels : list
+        List of class_labels which are to be plotted.
+    sorting_variable : str
+        Variable which is used for sorting.
+    n_Leading : list
+        n-th leading jet which is plotted. For all, = None.
+    plot_type : str
+        Plottype, like pdf or png.
+    UseAtlasTag : bool
+        Define if ATLAS Tag is used or not.
+    ApplyATLASStyle : bool
+        Apply ATLAS Style of the plot (for approval etc.).
+    AtlasTag : str
+        Main tag. Mainly "Internal Simulation".
+    SecondTag : str
+        Lower tag in the ATLAS label with infos.
+    yAxisAtlasTag : float
+        Y axis position of the ATLAS label.
+    yAxisIncrease : float
+        Y axis increase factor to fit the ATLAS label.
+    output_directory : str
+        Name of the output directory. Only the dir name not path!
+    figsize : list
+        List of the figure size. i.e [5, 6].
+    Log : bool
+        Set y-axis log True or False.
+    ylabel : str
+        Y-label.
+    ycolor : str
+        Y-axis-label colour.
+    legFontSize : int
+        Legend font size.
+    ncol : int
+        Number of columns of the legend.
+    Bin_Width_y_axis : bool
+        Show bin size on y-axis.
+    track_origin: str
+        Track set that is to be used for plotting.
 
-    Output:
-    - Track variable for the n-th leading jets
+    Raises
+    ------
+    ValueError
+        If the type of the given binning is not supported.
     """
 
     nBins_dict = {}
@@ -929,11 +1024,16 @@ def plot_input_vars_trks(
                     }
                 )
 
-        elif type(binning[variable]) is None:
+        # If int, set to the given numbers
+        elif isinstance(binning[variable], int):
+            nBins_dict.update({variable: binning[variable]})
+
+        # If None, give default value
+        elif binning[variable] is None:
             nBins_dict.update({variable: int(100)})
 
         else:
-            nBins_dict.update({variable: binning[variable]})
+            raise ValueError(f"Type {type(binning[variable])} is not supported!")
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
@@ -1187,58 +1287,83 @@ def plot_input_vars_trks(
 
 
 def plot_input_vars_jets(
-    datasets_filepaths,
-    datasets_labels,
-    var_dict,
-    nJets,
-    binning,
-    class_labels,
-    special_param_jets=None,
-    plot_type="pdf",
-    UseAtlasTag=True,
-    ApplyATLASStyle=False,
-    AtlasTag="Internal Simulation",
-    SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag=0.925,
-    yAxisIncrease=10,
-    output_directory="input_vars_jets",
-    figsize=None,
-    Log=True,
-    ylabel="Normalised number of tracks",
-    ycolor="black",
-    legFontSize=10,
-    ncol=2,
-    Bin_Width_y_axis=True,
+    datasets_filepaths: list,
+    datasets_labels: list,
+    var_dict: dict,
+    nJets: int,
+    binning: dict,
+    class_labels: list,
+    special_param_jets: dict = None,
+    plot_type: str = "pdf",
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = False,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
+    yAxisAtlasTag: float = 0.925,
+    yAxisIncrease: float = 10,
+    output_directory: str = "input_vars_jets",
+    figsize: list = None,
+    Log: bool = True,
+    ylabel: str = "Normalised number of tracks",
+    ycolor: str = "black",
+    legFontSize: int = 10,
+    ncol: int = 2,
+    Bin_Width_y_axis: bool = True,
 ):
     """
     Plotting the jet variable.
 
-    Input:
-    - datasets_filepaths: List of filepaths to the files.
-    - datasets_labels: Label of the dataset for the legend.
-    - var_dict: Variable dict where all variables of the files are saved.
-    - nJets: Number of jets to use for plotting.
-    - binning: Decide which binning is used.
-    - class_labels: List of class_labels which are to be plotted.
-    - special_param_jets: Give specific x-axis-limits for variable.
-    - plot_type: Plottype, like pdf or png
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - output_directory: Name of the output directory. Only the dir name not path!
-    - figsize: List of the figure size. i.e [5, 6]
-    - Log: Set y-axis log True or False.
-    - ylabel: Y-label.
-    - ycolor: Y-axis-label colour.
-    - legFontSize: Legend font size
-    - ncol: Number of columns of the legend.
-    - Bin_Width_y_axis: Show bin size on y-axis
+    Parameters
+    ----------
+    datasets_filepaths: list
+        datasets_filepaths: List of filepaths to the files.
+    datasets_labels: list
+        datasets_labels: Label of the dataset for the legend.
+    var_dict: dict
+        var_dict: Variable dict where all variables of the files are saved.
+    nJets: int
+        nJets: Number of jets to use for plotting.
+    binning: dict
+        binning: Decide which binning is used.
+    class_labels: list
+        class_labels: List of class_labels which are to be plotted.
+    special_param_jets: dict
+        Give specific x-axis-limits for variable.
+    plot_type: str
+        plot_type: Plottype, like pdf or png.
+    UseAtlasTag: bool
+        UseAtlasTag: Define if ATLAS Tag is used or not.
+    ApplyATLASStyle: bool
+        ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
+    AtlasTag: str
+        AtlasTag: Main tag. Mainly "Internal Simulation".
+    SecondTag: str
+        SecondTag: Lower tag in the ATLAS label with infos.
+    yAxisAtlasTag: float
+        yAxisAtlasTag: Y axis position of the ATLAS label.
+    yAxisIncrease: float
+        yAxisIncrease: Y axis increase factor to fit the ATLAS label.
+    output_directory: str
+        output_directory: Name of the output directory. Only the dir name not path!
+    figsize: list
+        figsize: List of the figure size. i.e [5, 6].
+    Log: bool
+        Log: Set y-axis log True or False.
+    ylabel: str
+        ylabel: Y-label.
+    ycolor: str
+        ycolor: Y-axis-label colour.
+    legFontSize: int
+        legFontSize: Legend font size.
+    ncol: int
+        ncol: Number of columns of the legend.
+    Bin_Width_y_axis: bool
+        Bin_Width_y_axis: Show bin size on y-axis.
 
-    Output:
-    - Jet variable plot
+    Raises
+    ------
+    ValueError
+        If the type of the given binning is not supported.
     """
 
     nBins_dict = {}
@@ -1256,11 +1381,16 @@ def plot_input_vars_jets(
                 }
             )
 
-        elif type(binning[variable]) is None:
+        # If int, set to the given numbers
+        elif isinstance(binning[variable], int):
+            nBins_dict.update({variable: binning[variable]})
+
+        # If None, give default value
+        elif binning[variable] is None:
             nBins_dict.update({variable: int(100)})
 
         else:
-            nBins_dict.update({variable: binning[variable]})
+            raise ValueError(f"Type {type(binning[variable])} is not supported!")
 
     with open(var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
@@ -1438,60 +1568,86 @@ def plot_input_vars_jets(
 
 
 def plot_input_vars_jets_comparison(
-    datasets_filepaths,
-    datasets_labels,
-    var_dict,
-    nJets,
-    binning,
-    class_labels,
-    special_param_jets=None,
-    plot_type="pdf",
-    UseAtlasTag=True,
-    ApplyATLASStyle=False,
-    AtlasTag="Internal Simulation",
-    SecondTag="$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-    yAxisAtlasTag=0.925,
-    yAxisIncrease=10,
-    output_directory="input_vars_jets",
-    figsize=None,
-    Log=True,
-    ylabel="Normalised Number of Tracks",
-    ycolor="black",
-    legFontSize=10,
-    ncol=2,
-    Ratio_Cut=None,
-    Bin_Width_y_axis=True,
+    datasets_filepaths: list,
+    datasets_labels: list,
+    var_dict: dict,
+    nJets: int,
+    binning: dict,
+    class_labels: list,
+    special_param_jets: dict = None,
+    plot_type: str = "pdf",
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = False,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
+    yAxisAtlasTag: float = 0.925,
+    yAxisIncrease: float = 10,
+    output_directory: str = "input_vars_jets",
+    figsize: list = None,
+    Log: bool = True,
+    ylabel: str = "Normalised Number of Tracks",
+    ycolor: str = "black",
+    legFontSize: int = 10,
+    ncol: int = 2,
+    Ratio_Cut: list = None,
+    Bin_Width_y_axis: bool = True,
 ):
     """
     Plotting the jet variable comparison for the given datasets.
 
-    Input:
-    - datasets_filepaths: List of filepaths to the files.
-    - datasets_labels: Label of the dataset for the legend.
-    - var_dict: Variable dict where all variables of the files are saved.
-    - nJets: Number of jets to use for plotting.
-    - binning: Decide which binning is used.
-    - class_labels: List of class_labels which are to be plotted.
-    - special_param_jets: Give specific x-axis-limits for variable.
-    - plot_type: Plottype, like pdf or png
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - output_directory: Name of the output directory. Only the dir name not path!
-    - figsize: List of the figure size. i.e [5, 6]
-    - Log: Set y-axis log True or False.
-    - ylabel: Y-label.
-    - ycolor: Y-axis-label colour.
-    - legFontSize: Legend font size
-    - ncol: Number of columns of the legend.
-    - Ratio_Cut: List of y-axis cuts for the ratio block.
-    - Bin_Width_y_axis: Show bin size on y-axis
+    Parameters
+    ----------
+    datasets_filepaths : list
+        List of filepaths to the files.
+    datasets_labels : list
+        Label of the dataset for the legend.
+    var_dict : dict
+        Variable dict where all variables of the files are saved.
+    nJets : int
+        Number of jets to use for plotting.
+    binning : dict
+        Decide which binning is used.
+    class_labels : list
+        List of class_labels which are to be plotted.
+    special_param_jets : dict
+        Dict with special x-axis cuts for the given variable.
+    plot_type : str
+        Plottype, like pdf or png.
+    UseAtlasTag : bool
+        Define if ATLAS Tag is used or not.
+    ApplyATLASStyle : bool
+        Apply ATLAS Style of the plot (for approval etc.).
+    AtlasTag : str
+        Main tag. Mainly "Internal Simulation".
+    SecondTag : str
+        Lower tag in the ATLAS label with infos.
+    yAxisAtlasTag : float
+        Y axis position of the ATLAS label.
+    yAxisIncrease : float
+        Y axis increase factor to fit the ATLAS label.
+    output_directory : str
+        Name of the output directory. Only the dir name not path!
+    figsize : list
+        List of the figure size. i.e [5, 6].
+    Log : bool
+        Set y-axis log True or False.
+    ylabel : str
+        Y-label.
+    ycolor : str
+        Y-axis-label colour.
+    legFontSize : int
+        Legend font size.
+    ncol : int
+        Number of columns of the legend.
+    Ratio_Cut : list
+        List of y-axis cuts for the ratio block.
+    Bin_Width_y_axis : bool
+        Show bin size on y-axis.
 
-    Output:
-    - Jet variable comparison plot for the given datasets
+    Raises
+    ------
+    ValueError
+        If the type of the given binning is not supported.
     """
 
     nBins_dict = {}
@@ -1509,11 +1665,16 @@ def plot_input_vars_jets_comparison(
                 }
             )
 
-        elif type(binning[variable]) is None:
+        # If int, set to the given numbers
+        elif isinstance(binning[variable], int):
+            nBins_dict.update({variable: binning[variable]})
+
+        # If None, give default value
+        elif binning[variable] is None:
             nBins_dict.update({variable: int(100)})
 
         else:
-            nBins_dict.update({variable: binning[variable]})
+            raise ValueError(f"Type {type(binning[variable])} is not supported!")
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]

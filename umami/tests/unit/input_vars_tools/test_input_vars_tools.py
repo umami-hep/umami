@@ -54,6 +54,29 @@ class JetPlotting_TestCase(unittest.TestCase):
         run(["wget", self.r21_url, "--directory-prefix", self.tmp_plot_dir])
         run(["wget", self.r22_url, "--directory-prefix", self.tmp_plot_dir])
 
+    def test_plot_input_vars_jets_wrong_type(self):
+        plotting_config = self.plot_config["jets_input_vars"]
+        filepath_list = [self.r21_test_file]
+        labels_list = ["R21 Test"]
+
+        # Change type in plotting_config to string to produce error
+        plotting_config["binning"]["IP2D_bu"] = "test"
+
+        with self.assertRaises(ValueError):
+            plot_input_vars_jets(
+                datasets_filepaths=filepath_list,
+                datasets_labels=labels_list,
+                class_labels=plotting_config["class_labels"],
+                var_dict=self.plot_config["Eval_parameters"]["var_dict"],
+                nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
+                binning=plotting_config["binning"],
+                output_directory=f"{self.tmp_plot_dir}"
+                + plotting_config["folder_to_save"],
+                plot_type="png",
+                special_param_jets=plotting_config["special_param_jets"],
+                **plotting_config["plot_settings"],
+            )
+
     def test_plot_input_vars_jets(self):
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file]
@@ -90,6 +113,28 @@ class JetPlotting_TestCase(unittest.TestCase):
             ),
         )
 
+    def test_plot_input_vars_jets_comparison_wrong_type(self):
+        plotting_config = self.plot_config["jets_input_vars"]
+        filepath_list = [self.r21_test_file]
+        labels_list = ["R21 Test"]
+
+        # Change type in plotting_config to string to produce error
+        plotting_config["binning"]["IP2D_bu"] = "test"
+
+        with self.assertRaises(ValueError):
+            plot_input_vars_jets_comparison(
+                datasets_filepaths=filepath_list,
+                datasets_labels=labels_list,
+                class_labels=plotting_config["class_labels"],
+                var_dict=self.plot_config["Eval_parameters"]["var_dict"],
+                nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
+                binning=plotting_config["binning"],
+                output_directory=os.path.join(self.tmp_plot_dir, "comp/"),
+                plot_type="png",
+                special_param_jets=plotting_config["special_param_jets"],
+                **plotting_config["plot_settings"],
+            )
+
     def test_plot_input_vars_jets_comparison(self):
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
@@ -125,6 +170,29 @@ class JetPlotting_TestCase(unittest.TestCase):
                 tol=1,
             ),
         )
+
+    def test_plot_input_vars_trks_wrong_type(self):
+        plotting_config = self.plot_config["Tracks_Test"]
+        filepath_list = [self.r21_test_file]
+        labels_list = ["R21 Test"]
+
+        # Change type in plotting_config to string to produce error
+        plotting_config["binning"]["dr"] = "test"
+
+        del plotting_config["plot_settings"]["Ratio_Cut"]
+
+        with self.assertRaises(ValueError):
+            plot_input_vars_trks(
+                datasets_filepaths=filepath_list,
+                datasets_labels=labels_list,
+                class_labels=plotting_config["class_labels"],
+                var_dict=self.plot_config["Eval_parameters"]["var_dict"],
+                nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
+                binning=plotting_config["binning"],
+                output_directory=f"{self.tmp_plot_dir}",
+                plot_type="png",
+                **plotting_config["plot_settings"],
+            )
 
     def test_plot_input_vars_trks(self):
         plotting_config = self.plot_config["Tracks_Test"]
@@ -214,6 +282,27 @@ class JetPlotting_TestCase(unittest.TestCase):
                 tol=1,
             ),
         )
+
+    def test_plot_input_vars_trks_comparison_wrong_type(self):
+        plotting_config = self.plot_config["Tracks_Test"]
+        filepath_list = [self.r21_test_file]
+        labels_list = ["R21 Test"]
+
+        # Change type in plotting_config to string to produce error
+        plotting_config["binning"]["dr"] = "test"
+
+        with self.assertRaises(ValueError):
+            plot_input_vars_trks_comparison(
+                datasets_filepaths=filepath_list,
+                datasets_labels=labels_list,
+                class_labels=plotting_config["class_labels"],
+                var_dict=self.plot_config["Eval_parameters"]["var_dict"],
+                nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
+                binning=plotting_config["binning"],
+                output_directory=os.path.join(self.tmp_plot_dir, "comp/"),
+                plot_type="png",
+                **plotting_config["plot_settings"],
+            )
 
     def test_plot_input_vars_trks_comparison(self):
         plotting_config = self.plot_config["Tracks_Test"]
