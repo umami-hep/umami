@@ -65,7 +65,7 @@ doc_string_check:
   script:
     - pip install darglint
     - darglint --list-errors
-    - darglint * -s numpy -z full  --log-level INFO
+    - find . -name "*.py" ! -name *PlottingFunctions.py | xargs -n 1 -P 8 darglint -s numpy -z full  --log-level INFO
   rules:
     - if: $CI_COMMIT_BRANCH != ''
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
