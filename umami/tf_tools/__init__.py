@@ -1,4 +1,5 @@
 # flake8: noqa
+# pylint: skip-file
 from umami.tf_tools.generators import (
     dips_condition_generator,
     dips_generator,

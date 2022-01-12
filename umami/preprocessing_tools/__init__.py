@@ -1,4 +1,5 @@
 # flake8: noqa
+# pylint: skip-file
 from umami.preprocessing_tools.Configuration import Configuration
 from umami.preprocessing_tools.Convert_to_Record import h5toTFRecordConverter
 from umami.preprocessing_tools.Cuts import GetCategoryCuts, GetSampleCuts
