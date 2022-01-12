@@ -169,11 +169,6 @@ preparation:
       path: *ntuple_path
       file_pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
 
-  class_labels: [ujets, cjets, bjets]
-
-  convert:
-    chunk_size: 5000
-
   samples:
     training_ttbar_bjets:
       type: ttbar
@@ -287,15 +282,6 @@ preparation:
 ```
 In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.   
 
-Another important part are the `class_labels` which are defined here. You can define here which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list here to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
-
-If you want to save the samples as TFRecord files you can specify under `convert` the `chunk_size`, i.e. the number of samples to be loaded and saved per file.
-
-??? info "TF records"
-
-    TF records are the Tensorflow's own file format to store datasets. Especially when working with large datasets this format can be useful. In TF records the data is saved as a sequence of binary strings. This has the advatage that reading the data is significatly faster than from a .h5 file. In addition the data can be saved in multiple files instead of one big file containing all data. This way the reading procedure can be parallised which speeds up the whole training.
-    Besides of this, since TF records are the Tensorflow's own file format, it is optimised for the usage with Tensorflow. For example, the dataset is not stored completely in memory but automatically loaded in batches as soon as needed.
-
 The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. Also you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
 
@@ -308,16 +294,29 @@ In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Sin
 
 ```yaml
 sampling:
+  # Classes which are used in the resampling. Order is important.
+  # The order needs to be the same as in the training config!
+  class_labels: [ujets, cjets, bjets]
+
+  # Decide, which resampling method is used.
   method: count
+
   # The options depend on the sampling method
   options:
     sampling_variables:
       - pt_btagJes:
           # bins take either a list containing the np.linspace arguments
           # or a list of them
+          # For PDF sampling: must be the np.linspace arguments.
+          #   - list of list, one list for each category (in samples)
+          #   - define the region of each category.
           bins: [[0, 600000, 351], [650000, 6000000, 84]]
+
       - absEta_btagJes:
+          # For PDF sampling: same structure as in pt_btagJes.
           bins: [0, 2.5, 10]
+
+    # Decide, which of the in preparation defined samples are used in the resampling.
     samples:
       ttbar:
         - training_ttbar_bjets
@@ -327,24 +326,37 @@ sampling:
         - training_zprime_bjets
         - training_zprime_cjets
         - training_zprime_ujets
-    # this optional option allows to specify the jets which should be used per sample
+
     custom_njets_initial:
-      # these are empiric values ensuring a smooth hybrid sample
+      # these are empiric values ensuring a smooth hybrid sample.
+      # These values are retrieved for a hybrid ttbar + zprime sample for the count method!
       training_ttbar_bjets: 5.5e6
       training_ttbar_cjets: 11.5e6
       training_ttbar_ujets: 13.5e6
+
+    # Fractions of ttbar/zprime jets in final training set. This needs to add up to one.
     fractions:
       ttbar: 0.7
       zprime: 0.3
+
     # number of training jets
+    # For PDF sampling: this is the number of target jets to be taken (through all categories).
+    #                   If set to -1: max out to target numbers (limited by fractions ratio)
     njets: 25e6
+
+    # Bool, if track information (for DIPS etc.) are saved.
     save_tracks: True
+
+    # Name of the track collection to use.
     tracks_name: "tracks"
+
     # this stores the indices per sample into an intermediate file
-    intermediate_index_file: indices.h5
+    intermediate_index_file: *intermediate_index_file
+
     # for method: weighting
     # relative to which distribution the weights should be calculated
     weighting_target_flavour: 'bjets'
+
     # If you want to attach weights to the final files
     bool_attach_sample_weights: False
 ```
@@ -353,14 +365,20 @@ In `sampling`, we can define the method which is used in the preprocessing for r
 
 | Method | Explanation      |
 | ------ | ---------------- |
-| `count`                   | Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used |
-| `pdf`  | NOTE: If your sample's statistics are small and/or your lowest distribution is other than the b-jet distribution, you can force the b-jet distribution shape on the other jet flavour distributions. This will ensure ensure all the distributions have the b-shape and the same fractions. Additionally, when building the target distribution for "probability_ratio", `pT_max` (set in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml)) will be used to compute the probability ratios or PDFs. Not setting `pT_max` will allow you to keep more jets (bigger fractions) but with more noise (uncertainty) loosing the guarantee that all the distributions will have the same b-jet distribution shape. WARNING: The `pdf` method does not work well with taus as of now.|
+| `count` | Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used |
+| `pdf` | NOTE: If your sample's statistics are small and/or your lowest distribution is other than the b-jet distribution, you can force the b-jet distribution shape on the other jet flavour distributions. This will ensure ensure all the distributions have the b-shape and the same fractions. Additionally, when building the target distribution for "probability_ratio", `pT_max` (set in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml)) will be used to compute the probability ratios or PDFs. Not setting `pT_max` will allow you to keep more jets (bigger fractions) but with more noise (uncertainty) loosing the guarantee that all the distributions will have the same b-jet distribution shape. WARNING: The `pdf` method does not work well with taus as of now.|
 |`weighting`| Alternatively you can calculate weights between the flavor of bins in the 2d(pt,eta) histogram and write out all jets. These weights can be forwarded to the training to weigh the loss function of the training. If you want to use them don't forget to set `bool_attach_sample_weights` to `True` |
+
+Another important part are the `class_labels` which are defined here. You can define here which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list here to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
 
 The `options` are some options for the different resampling methods. You need to define the sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins. 
 Another thing you need to define are the `samples` which are to be resampled. You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`.
 `fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The `save_tracks` and the `tracks_name` options define the using of tracks. `save_tracks` is bool while `tracks_name` is a string. The latter is the name of the tracks how they are called in the .h5 files coming from the dumper. After the preparation stage, they will have the name `tracks`. The rest of the variables are pretty self-explanatory.
 If you want to use the PDF sampling, have a look at the example config [PFlow-Preprocessing-taus.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-taus.yaml).
+
+For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml).
+
+For the weighting method, the last two options are important (otherwise they are not used). The `weighting_target_flavour` defines, to which distribution the weights are relatively calculated. If you want to attach these weights in the final training config, you need to set the `bool_attach_sample_weights` to `True`. For all other resampling methods, this should be `False`.
 
 
 ### General settings 
@@ -371,9 +389,11 @@ If you want to use the PDF sampling, have a look at the example config [PFlow-Pr
 | `plot_name` | defines the names of the control plots which are produced in the preprocessing |
 | `var_file` | path to the variable dict |
 | `dict_file` | path to the scale dict |
+| `compression` | Decide, which compression is used for the final training sample. Due to slow loading times, this should be `null`. Possible options are for example `gzip`. |
+| `precision` | The precision of the final output file. The values are saved with the given precision to save space. |
+| `convert_to_tfrecord` | Options for the conversion to tfrecords. |
 
 ```yaml
-
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name
 plot_name: PFlow_ext-hybrid
@@ -384,11 +404,27 @@ var_file: *var_file
 # Dictfile for the scaling and shifting (json)
 dict_file: *dict_file
 
+# compression for final output files (null/gzip)
+compression: null
+
+# save final output files with specified precision
+precision: float16
+
+# Options for the conversion to tfrecords
+convert_to_tfrecord:
+  chunk_size: 5000
 
 ```
 In the last part, the path to the variable dict `var_file` and the scale dict `dict_file` is defined. Those values are set in the `parameters` file. For example, the training variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
 
 Also the `outfile_name` is defined (which is also included in `parameters`). The `plot_name` here defines the names of the control plots which are produced in the preprocessing.
+
+If you want to save the samples as TFRecord files you can specify under `convert_to_tfrecord` the `chunk_size`, i.e. the number of samples to be loaded and saved per file.
+
+??? info "TF records"
+
+    TF records are the Tensorflow's own file format to store datasets. Especially when working with large datasets this format can be useful. In TF records the data is saved as a sequence of binary strings. This has the advatage that reading the data is significatly faster than from a .h5 file. In addition the data can be saved in multiple files instead of one big file containing all data. This way the reading procedure can be parallised which speeds up the whole training.
+    Besides of this, since TF records are the Tensorflow's own file format, it is optimised for the usage with Tensorflow. For example, the dataset is not stored completely in memory but automatically loaded in batches as soon as needed.
 
 ### Running the sample preparation
 

@@ -267,6 +267,8 @@ class TestDipsTraining(unittest.TestCase):
         self.config_tfrecords_file["model_name"] = (
             self.data["test_dips"]["model_name"] + "_tfrecords"
         )
+        self.config_file["add_validation_file"] = None
+        self.config_file.update({"zpext_test_files": None})
 
         with open(self.tfrecords_config, "w") as tfrecords_config:
             yaml.dump(

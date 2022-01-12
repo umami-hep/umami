@@ -248,6 +248,11 @@ class TestPreprocessing(unittest.TestCase):
             f".dict_file: &dict_file {self.scale_dict}",
         )
         replaceLineInFile(
+            self.config_paths,
+            ".intermediate_index_file:",
+            ".intermediate_index_file: &intermediate_index_file indices.h5",
+        )
+        replaceLineInFile(
             self.config,
             "      file_pattern: user.alfroch.410470",
             "      file_pattern: ttbar/*.h5",
@@ -257,7 +262,6 @@ class TestPreprocessing(unittest.TestCase):
             "      file_pattern: user.alfroch.427081",
             "      file_pattern: zpext/*.h5",
         )
-        replaceLineInFile(self.config, "    iterations:", "    iterations: 1")
         replaceLineInFile(self.config, "  method: count", "  method: pdf")
         replaceLineInFile(
             self.config,

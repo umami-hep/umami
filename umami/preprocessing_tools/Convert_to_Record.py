@@ -13,14 +13,20 @@ class h5toTFRecordConverter:
         self.config = config
         self.path_h5 = self.config.GetFileName(option="resampled_scaled_shuffled")
         try:
-            self.chunk_size = config.preparation["convert"]["chunk_size"]
+            self.chunk_size = config.convert_to_tfrecord["chunk_size"]
             logger.info(f"Save {self.chunk_size} entries in one file")
-        except KeyError:
-            logger.warning(
-                "Chunk size for conversion into tf records not set in config"
-                "file. Set to 5000"
-            )
-            self.chunk_size = 5_000
+
+        except AttributeError or KeyError:
+            try:
+                self.chunk_size = config.preparation["convert"]["chunk_size"]
+                logger.info(f"Save {self.chunk_size} entries in one file")
+
+            except KeyError:
+                logger.warning(
+                    "Chunk size for conversion into tf records not set in config"
+                    "file. Set to 5000"
+                )
+                self.chunk_size = 5_000
 
     def load_h5File_Train(self):
         """

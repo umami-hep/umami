@@ -136,16 +136,19 @@ def PlotDiscCutPerEpoch(
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    plt.plot(
-        df_results["epoch"],
-        df_results["disc_cut"],
-        label=r"$t\bar{t}$ validation sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["disc_cut_add"],
-        label=r"$Z'$ validation sample",
-    )
+    if "disc_cut" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["disc_cut"],
+            label=r"$t\bar{t}$ validation sample",
+        )
+
+    if "disc_cut_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["disc_cut_add"],
+            label=r"$Z'$ validation sample",
+        )
 
     if UseAtlasTag is True:
         SecondTag = (
@@ -213,26 +216,30 @@ def PlotDiscCutPerEpochUmami(
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    plt.plot(
-        df_results["epoch"],
-        df_results["disc_cut_dips"],
-        label=r"$DIPS - t\bar{t}$ validation sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["disc_cut_dips_add"],
-        label=r"DIPS - $Z'$ validation sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["disc_cut_umami"],
-        label=r"$Umami - t\bar{t}$ validation sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["disc_cut_umami_add"],
-        label=r"Umami - $Z'$ validation sample",
-    )
+    if "disc_cut_dips" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["disc_cut_dips"],
+            label=r"$DIPS - t\bar{t}$ validation sample",
+        )
+    if "disc_cut_dips_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["disc_cut_dips_add"],
+            label=r"DIPS - $Z'$ validation sample",
+        )
+    if "disc_cut_umami" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["disc_cut_umami"],
+            label=r"$Umami - t\bar{t}$ validation sample",
+        )
+    if "disc_cut_umami_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["disc_cut_umami_add"],
+            label=r"Umami - $Z'$ validation sample",
+        )
 
     if UseAtlasTag is True:
         SecondTag = SecondTag + f"\nWP={int(target_beff * 100):02d}%"
@@ -698,21 +705,24 @@ def PlotLosses(
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    plt.plot(
-        df_results["epoch"],
-        train_history_dict["loss"],
-        label="training loss - hybrid sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["val_loss"],
-        label=r"validation loss - $t\bar{t}$ sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["val_loss_add"],
-        label=r"validation loss - ext. $Z'$ sample",
-    )
+    if "loss" in train_history_dict:
+        plt.plot(
+            df_results["epoch"],
+            train_history_dict["loss"],
+            label="training loss - hybrid sample",
+        )
+    if "val_loss" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["val_loss"],
+            label=r"validation loss - $t\bar{t}$ sample",
+        )
+    if "val_loss_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["val_loss_add"],
+            label=r"validation loss - ext. $Z'$ sample",
+        )
 
     if UseAtlasTag is True:
         makeATLAStag(
@@ -780,21 +790,24 @@ def PlotAccuracies(
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    plt.plot(
-        df_results["epoch"],
-        train_history_dict["accuracy"],
-        label="training accuracy - hybrid sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["val_acc"],
-        label=r"validation accuracy - $t\bar{t}$ sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["val_acc_add"],
-        label=r"validation accuracy - ext. $Z'$ sample",
-    )
+    if "accuracy" in train_history_dict:
+        plt.plot(
+            df_results["epoch"],
+            train_history_dict["accuracy"],
+            label="training accuracy - hybrid sample",
+        )
+    if "val_acc" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["val_acc"],
+            label=r"validation accuracy - $t\bar{t}$ sample",
+        )
+    if "val_acc_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["val_acc_add"],
+            label=r"validation accuracy - ext. $Z'$ sample",
+        )
 
     if UseAtlasTag is True:
         makeATLAStag(
@@ -864,36 +877,42 @@ def PlotLossesUmami(
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    plt.plot(
-        df_results["epoch"],
-        train_history_dict["umami_loss"],
-        label="training loss UMAMI - hybrid sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["umami_val_loss"],
-        label=r"val loss UMAMI - $t\bar{t}$ sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        train_history_dict["dips_loss"],
-        label="training loss DIPS - hybrid sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["dips_val_loss"],
-        label=r"val loss DIPS - $t\bar{t}$ sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["umami_val_loss_add"],
-        label=r"val loss UMAMI - ext. $Z'$ sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["dips_val_loss_add"],
-        label=r"val loss DIPS - ext. $Z'$ sample",
-    )
+    if "umami_loss" in train_history_dict:
+        plt.plot(
+            df_results["epoch"],
+            train_history_dict["umami_loss"],
+            label="training loss UMAMI - hybrid sample",
+        )
+    if "umami_val_loss" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["umami_val_loss"],
+            label=r"val loss UMAMI - $t\bar{t}$ sample",
+        )
+    if "dips_loss" in train_history_dict:
+        plt.plot(
+            df_results["epoch"],
+            train_history_dict["dips_loss"],
+            label="training loss DIPS - hybrid sample",
+        )
+    if "dips_val_loss" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["dips_val_loss"],
+            label=r"val loss DIPS - $t\bar{t}$ sample",
+        )
+    if "umami_val_loss_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["umami_val_loss_add"],
+            label=r"val loss UMAMI - ext. $Z'$ sample",
+        )
+    if "dips_val_loss_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["dips_val_loss_add"],
+            label=r"val loss DIPS - ext. $Z'$ sample",
+        )
 
     plt.legend(loc="upper right")
     old_ymin, old_ymax = plt.ylim()
@@ -963,36 +982,42 @@ def PlotAccuraciesUmami(
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    plt.plot(
-        df_results["epoch"],
-        train_history_dict["umami_accuracy"],
-        label="training acc UMAMI - hybrid sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["umami_val_acc"],
-        label=r"val acc UMAMI - $t\bar{t}$ sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        train_history_dict["dips_accuracy"],
-        label="training acc DIPS - hybrid sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["dips_val_acc"],
-        label=r"val acc DIPS - $t\bar{t}$ sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["umami_val_acc_add"],
-        label=r"val acc UMAMI - ext. $Z'$ sample",
-    )
-    plt.plot(
-        df_results["epoch"],
-        df_results["dips_val_acc_add"],
-        label=r"val acc DIPS - ext. $Z'$ sample",
-    )
+    if "umami_accuracy" in train_history_dict:
+        plt.plot(
+            df_results["epoch"],
+            train_history_dict["umami_accuracy"],
+            label="training acc UMAMI - hybrid sample",
+        )
+    if "umami_val_acc" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["umami_val_acc"],
+            label=r"val acc UMAMI - $t\bar{t}$ sample",
+        )
+    if "dips_accuracy" in train_history_dict:
+        plt.plot(
+            df_results["epoch"],
+            train_history_dict["dips_accuracy"],
+            label="training acc DIPS - hybrid sample",
+        )
+    if "dips_val_acc" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["dips_val_acc"],
+            label=r"val acc DIPS - $t\bar{t}$ sample",
+        )
+    if "umami_val_acc_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["umami_val_acc_add"],
+            label=r"val acc UMAMI - ext. $Z'$ sample",
+        )
+    if "dips_val_acc_add" in df_results:
+        plt.plot(
+            df_results["epoch"],
+            df_results["dips_val_acc_add"],
+            label=r"val acc DIPS - ext. $Z'$ sample",
+        )
 
     plt.legend(loc="upper right")
     old_ymin, old_ymax = plt.ylim()
@@ -1138,7 +1163,7 @@ def RunPerformanceCheck(
                     **Val_settings,
                 )
 
-                if tagger_comp_vars is not None:
+                if train_config.add_validation_file is not None:
                     PlotRejPerEpochComparison(
                         df_results=tagger_rej_dict,
                         tagger_label=subtagger,
@@ -1169,7 +1194,7 @@ def RunPerformanceCheck(
                 **Val_settings,
             )
 
-            if tagger_comp_vars is not None:
+            if train_config.add_validation_file is not None:
                 PlotRejPerEpoch(
                     df_results=tagger_rej_dict,
                     tagger_label=subtagger,
@@ -1234,7 +1259,7 @@ def RunPerformanceCheck(
                 **Val_settings,
             )
 
-            if tagger_comp_vars is not None:
+            if train_config.add_validation_file is not None:
                 PlotRejPerEpochComparison(
                     df_results=tagger_rej_dict,
                     frac_dict=frac_dict,
@@ -1264,7 +1289,7 @@ def RunPerformanceCheck(
             **Val_settings,
         )
 
-        if tagger_comp_vars is not None:
+        if train_config.add_validation_file is not None:
             PlotRejPerEpoch(
                 df_results=tagger_rej_dict,
                 frac_dict=frac_dict,

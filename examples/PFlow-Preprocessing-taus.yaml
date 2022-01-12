@@ -1,5 +1,6 @@
 parameters: !include Preprocessing-parameters.yaml
 
+# Defining anchor with outlier cuts that are used over and over again
 .outlier_cuts: &outlier_cuts
   - JetFitterSecondaryVertex_mass:
       operator: <
@@ -63,6 +64,10 @@ parameters: !include Preprocessing-parameters.yaml
     - *outlier_cuts
 
 preparation:
+  # Number of jets loaded per batch from the files for preparation.
+  batchsize: 50000
+
+  # Path to the .h5 ntuples from the h5 dumper.
   ntuples:
     ttbar:
       path: *ntuple_path
@@ -71,8 +76,6 @@ preparation:
     zprime:
       path: *ntuple_path
       file_pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
-
-  class_labels: [ujets, cjets, bjets, taujets]
 
   samples:
     training_ttbar_bjets:
@@ -186,7 +189,13 @@ preparation:
         file: MC16d-inclusive_testing_zprime_PFlow.h5
 
 sampling:
+  # Classes which are used in the resampling. Order is important.
+  # The order needs to be the same as in the training config!
+  class_labels: [ujets, cjets, bjets, taujets]
+
+  # Decide, which resampling method is used.
   method: pdf
+
   # The options depend on the sampling method
   options:
     sampling_variables:
@@ -197,8 +206,11 @@ sampling:
           #   - list of of list, one list for each category (in samples)
           #   - define the region of each category.
           bins: [[0, 25e4, 100], [25e4, 6e6, 100]]
+
       - absEta_btagJes:
           bins: [[0, 2.5, 10], [0, 2.5, 10]]
+
+    # Decide, which of the in preparation defined samples are used in the resampling.
     samples:
       ttbar:
         - training_ttbar_bjets
@@ -210,12 +222,14 @@ sampling:
         - training_zprime_cjets
         - training_zprime_ujets
         - training_zprime_taujets
-    # this optional option allows to specify the jets which should be used per sample
+
     custom_njets_initial:
       # these are empiric values ensuring a smooth hybrid sample
       training_ttbar_bjets: 5.5e6
       training_ttbar_cjets: 11.5e6
       training_ttbar_ujets: 13.5e6
+
+    # Fractions of ttbar/zprime jets in final training set. This needs to add up to one.
     fractions:
       ttbar: 0.7
       zprime: 0.3
@@ -232,12 +246,22 @@ sampling:
     # For PDF sampling: this is the number of target jets to be taken (through all categories).
     #                   If set to -1: max out to target numbers (limited by fractions ratio)
     njets: -1
+
+    # Bool, if track information (for DIPS etc.) are saved.
     save_tracks: False
-    tracks_name:
+
+    # Name of the track collection to use. Can be null if no track info is saved.
+    tracks_name: null
+
     # this stores the indices per sample into an intermediate file
-    intermediate_index_file: indices.h5
-    # outputfiles are split into 5 -> needs to be implemented
-    iterations: 5
+    intermediate_index_file: *intermediate_index_file
+
+    # for method: weighting
+    # relative to which distribution the weights should be calculated
+    weighting_target_flavour: 'bjets'
+
+    # If you want to attach weights to the final files
+    bool_attach_sample_weights: False
 
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name
@@ -254,3 +278,7 @@ compression: null
 
 # save final output files with specified precision
 precision: float16
+
+# Options for the conversion to tfrecords
+convert_to_tfrecord:
+  chunk_size: 5000
