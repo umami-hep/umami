@@ -4,6 +4,9 @@ outfile_name: Null
 plot_name: Null
 dict_file: Null
 var_file: Null
+compression: Null
+precision: Null
+convert_to_tfrecord: Null
 preparation:
   ntuples: Null
   samples: Null

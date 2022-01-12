@@ -11,8 +11,6 @@ preparation:
       path: *ntuple_path
       file_pattern: "*.h5"
 
-  class_labels: [bjets, cjets, ujets]
-
   samples:
     ttbar:
       type: ttbar
@@ -89,6 +87,7 @@ preparation:
 
 
 sampling:
+  class_labels: [bjets, cjets, ujets]
   method: count
   # The options depend on the sampling method
   options:
@@ -127,6 +126,15 @@ var_file: "fixtures/dummy_var_file.yaml"
 # Dictfile for the scaling and shifting (json)
 dict_file: "test.json"
 
+# compression for final output files (null/gzip)
+compression: null
+
+# save final output files with specified precision
+precision: float16
+
+# Options for the conversion to tfrecords
+convert_to_tfrecord:
+  chunk_size: 5000
 
 # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=

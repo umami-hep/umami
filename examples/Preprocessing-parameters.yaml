@@ -15,3 +15,6 @@ file_path: &file_path <path_palce_holder>/preprocessed/
 
 # Dictfile for the scaling and shifting (json)
 .dict_file: &dict_file <path_palce_holder>/scale_dicts/PFlow-scale_dict-22M.json
+
+# Intermediate file for the indicies used in h5 format
+.intermediate_index_file: &intermediate_index_file <path_place_holder>/preprocessed/indicies.h5

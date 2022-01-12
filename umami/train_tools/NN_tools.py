@@ -1453,10 +1453,23 @@ def GetTestSample(
         raise ValueError("You can't set exclude and jet_variables. Choose one!")
 
     # Adding class_labels check between preprocess_config and given labels
-    assert preprocess_config.preparation["class_labels"] == class_labels, (
-        "class_labels from preprocessing_config and from train_config are"
-        " different! They need to be the same!"
-    )
+    # Try/Except here for backward compatibility
+    try:
+        assert preprocess_config.sampling["class_labels"] == class_labels, (
+            "class_labels from preprocessing_config and from train_config are"
+            " different! They need to be the same!"
+        )
+
+    except AttributeError or KeyError:
+        logger.warning(
+            "Deprecation Warning: class_labels are given in preparation"
+            " and not in sampling block! Consider moving this to"
+            " the sampling block in your config!"
+        )
+        assert preprocess_config.preparation["class_labels"] == class_labels, (
+            "class_labels from preprocessing_config and from train_config are"
+            " different! They need to be the same!"
+        )
 
     # Get the paths of the input file as list
     # In case there are multiple files (Wildcard etc.)
@@ -1588,10 +1601,23 @@ def GetTestSampleTrks(
     """
 
     # Adding class_labels check between preprocess_config and given labels
-    assert preprocess_config.preparation["class_labels"] == class_labels, (
-        "class_labels from preprocessing_config and from train_config are"
-        " different! They need to be the same!"
-    )
+    # Try/Except here for backward compatibility
+    try:
+        assert preprocess_config.sampling["class_labels"] == class_labels, (
+            "class_labels from preprocessing_config and from train_config are"
+            " different! They need to be the same!"
+        )
+
+    except AttributeError or KeyError:
+        logger.warning(
+            "Deprecation Warning: class_labels are given in preparation"
+            " and not in sampling block! Consider moving this to"
+            " the sampling block in your config!"
+        )
+        assert preprocess_config.preparation["class_labels"] == class_labels, (
+            "class_labels from preprocessing_config and from train_config are"
+            " different! They need to be the same!"
+        )
 
     # making sure the nJets aregument is an integer
     nJets = int(nJets)
@@ -2093,7 +2119,7 @@ def evaluate_model_umami(
     (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
         [data_dict["X_valid_trk"], data_dict["X_valid"]],
         data_dict["Y_valid"],
-        batch_size=5_000,
+        batch_size=15_000,
         use_multiprocessing=True,
         workers=8,
         verbose=0,
@@ -2102,7 +2128,7 @@ def evaluate_model_umami(
     # Evaluate with the model for predictions
     y_pred_dips, y_pred_umami = model.predict(
         [data_dict["X_valid_trk"], data_dict["X_valid"]],
-        batch_size=5_000,
+        batch_size=15_000,
         use_multiprocessing=True,
         workers=8,
         verbose=0,
@@ -2126,18 +2152,23 @@ def evaluate_model_umami(
         target_eff=target_beff,
     )
 
+    # Write metrics to results dict
+    result_dict = {
+        "val_loss": loss,
+        "dips_val_loss": dips_loss,
+        "umami_val_loss": umami_loss,
+        "dips_val_acc": dips_accuracy,
+        "umami_val_acc": umami_accuracy,
+        "disc_cut_dips": disc_cut_dips,
+        "disc_cut_umami": disc_cut_umami,
+    }
+
+    # Write rejections to the results dict
+    # TODO Change this in python 3.9
+    result_dict.update({f"{key}_umami": rej_dict_umami[key] for key in rej_dict_umami})
+    result_dict.update({f"{key}_dips": rej_dict_dips[key] for key in rej_dict_dips})
+
     # Evaluate Models on add_files if given
-    (
-        loss_add,
-        dips_loss_add,
-        umami_loss_add,
-        dips_accuracy_add,
-        umami_accuracy_add,
-        rej_dict_umami_add,
-        rej_dict_dips_add,
-        disc_cut_umami_add,
-        disc_cut_dips_add,
-    ) = (None, None, None, None, None, None, None, None, None)
     if data_dict["X_valid_add"] is not None:
         (
             loss_add,
@@ -2148,7 +2179,7 @@ def evaluate_model_umami(
         ) = model.evaluate(
             [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]],
             data_dict["Y_valid_add"],
-            batch_size=5_000,
+            batch_size=15_000,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -2157,7 +2188,7 @@ def evaluate_model_umami(
         # Evaluate with the model for predictions
         y_pred_dips_add, y_pred_umami_add = model.predict(
             [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]],
-            batch_size=5_000,
+            batch_size=15_000,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -2181,37 +2212,33 @@ def evaluate_model_umami(
             target_eff=target_beff,
         )
 
-    result_dict = {
-        "val_loss": loss,
-        "dips_val_loss": dips_loss,
-        "umami_val_loss": umami_loss,
-        "dips_val_acc": dips_accuracy,
-        "umami_val_acc": umami_accuracy,
-        "val_loss_add": loss_add,
-        "dips_val_loss_add": dips_loss_add,
-        "umami_val_loss_add": umami_loss_add,
-        "dips_val_acc_add": dips_accuracy_add,
-        "umami_val_acc_add": umami_accuracy_add,
-        "disc_cut_dips": disc_cut_dips,
-        "disc_cut_umami": disc_cut_umami,
-        "disc_cut_dips_add": disc_cut_dips_add,
-        "disc_cut_umami_add": disc_cut_umami_add,
-    }
+        # Add metrics to results dict
+        result_dict.update(
+            {
+                "val_loss_add": loss_add,
+                "dips_val_loss_add": dips_loss_add,
+                "umami_val_loss_add": umami_loss_add,
+                "dips_val_acc_add": dips_accuracy_add,
+                "umami_val_acc_add": umami_accuracy_add,
+                "disc_cut_dips_add": disc_cut_dips_add,
+                "disc_cut_umami_add": disc_cut_umami_add,
+            }
+        )
 
-    # Write results in one dict
-    result_dict.update({f"{key}_umami": rej_dict_umami[key] for key in rej_dict_umami})
-    result_dict.update({f"{key}_dips": rej_dict_dips[key] for key in rej_dict_dips})
-    result_dict.update(
-        {f"{key}_umami_add": rej_dict_umami_add[key] for key in rej_dict_umami_add}
-    )
-    result_dict.update(
-        {f"{key}_dips_add": rej_dict_dips_add[key] for key in rej_dict_dips_add}
-    )
+        # Write rejections to the results dict
+        # TODO Change this in python 3.9
+        result_dict.update(
+            {f"{key}_umami_add": rej_dict_umami_add[key] for key in rej_dict_umami_add}
+        )
+        result_dict.update(
+            {f"{key}_dips_add": rej_dict_dips_add[key] for key in rej_dict_dips_add}
+        )
+
     return result_dict
 
 
 def evaluate_model(
-    model,
+    model: object,
     data_dict: dict,
     class_labels: list,
     main_class: str,
@@ -2279,12 +2306,16 @@ def evaluate_model(
         target_eff=target_beff,
     )
 
-    (
-        loss_add,
-        accuracy_add,
-        rej_dict_add,
-        disc_cut_add,
-    ) = (None, None, None, None)
+    # Adding the results to result_dict
+    result_dict = {
+        "val_loss": loss,
+        "val_acc": accuracy,
+        "disc_cut": disc_cut,
+    }
+
+    # Write rejection in results dict
+    # TODO Change this in python 3.9
+    result_dict.update({f"{key}": rej_dict[key] for key in rej_dict})
 
     if data_dict["X_valid_add"] is not None:
         if "X_valid_trk_add" in data_dict and "X_valid_add" in data_dict:
@@ -2322,18 +2353,19 @@ def evaluate_model(
             target_eff=target_beff,
         )
 
-    result_dict = {
-        "val_loss": loss,
-        "val_acc": accuracy,
-        "val_loss_add": loss_add,
-        "val_acc_add": accuracy_add,
-        "disc_cut": disc_cut,
-        "disc_cut_add": disc_cut_add,
-    }
+        # Adding metrics to results dict
+        # TODO Change this in python 3.9
+        result_dict.update(
+            {
+                "val_loss_add": loss_add,
+                "val_acc_add": accuracy_add,
+                "disc_cut_add": disc_cut_add,
+            }
+        )
 
-    # Write results in one dict
-    result_dict.update({f"{key}": rej_dict[key] for key in rej_dict})
-    result_dict.update({f"{key}_add": rej_dict_add[key] for key in rej_dict_add})
+        # Write the rejection values to the results dict
+        # TODO Change this in python 3.9
+        result_dict.update({f"{key}_add": rej_dict_add[key] for key in rej_dict_add})
 
     # Return finished dict
     return result_dict

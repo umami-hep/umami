@@ -2,6 +2,9 @@ import itertools
 import json
 import os
 import pickle
+from collections import Counter
+from json import JSONEncoder
+
 import h5py
 import numpy as np
 import pandas as pd
@@ -9,8 +12,6 @@ from scipy.interpolate import RectBivariateSpline
 from scipy.stats import binned_statistic_2d
 from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
-from collections import Counter
-from json import JSONEncoder
 
 from umami.configuration import global_config, logger
 from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
@@ -307,10 +308,6 @@ class Resampling(object):
         self._GetBinning()
         self.rnd_seed = 42
         self.jets_key = "jets"
-        self.class_labels_map = {
-            label: label_id
-            for label_id, label in enumerate(config.preparation["class_labels"])
-        }
         self.save_tracks = (
             self.options["save_tracks"]
             if "save_tracks" in self.options.keys()
@@ -318,6 +315,25 @@ class Resampling(object):
         )
         self.outfile_name = self.config.GetFileName(option="resampled")
         self.outfile_path = self.config.config["parameters"]["sample_path"]
+
+        # Get class labels from sampling/preparation.
+        # Try/Except here for backward compatibility
+        try:
+            self.class_labels_map = {
+                label: label_id
+                for label_id, label in enumerate(config.sampling["class_labels"])
+            }
+
+        except KeyError:
+            self.class_labels_map = {
+                label: label_id
+                for label_id, label in enumerate(config.preparation["class_labels"])
+            }
+            logger.warning(
+                "Deprecation Warning: class_labels are given in preparation"
+                " and not in sampling block! Consider moving this to"
+                " the sampling block in your config!"
+            )
 
     def _GetBinning(self):
         """
@@ -2385,9 +2401,7 @@ class Weighting(ResamplingTools):
         weights_dict["bins_y"] = self.bins_y
         weights_dict["bin_indices_flat"] = self.bin_indices_flat
         # map inverse -> {0: 'ujets', 1: 'cjets', 2: 'bjets'}
-        weights_dict["label_map"] = {
-            v: k for k, v in self.class_labels_map.items()
-        }
+        weights_dict["label_map"] = {v: k for k, v in self.class_labels_map.items()}
         save_name = os.path.join(
             self.outfile_path,
             "flavour_weights",
