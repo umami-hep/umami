@@ -72,7 +72,7 @@ def pylint_mr_message(changed_python_files: list):
         # in the CI
         results = Run(["--disable=import-error", changed_file], do_exit=False)
         pylint_score = results.linter.stats.global_note
-        pylint_text += f"- {changed_file} ({pylint_score:.2f}/10)\n"
+        pylint_text += f"- `{changed_file}` ({pylint_score:.2f}/10)\n"
     return pylint_text
 
 
