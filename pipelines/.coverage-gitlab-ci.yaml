@@ -2,6 +2,18 @@
 # everything related to code coverage reports
 # ----------------------------------------------------------------------------
 
+.coverage_dependencies: &coverage_dependencies
+  - test_plot_input_vars
+  - test_plotting_umami_dips
+  - test_plotting_umami_dl1
+  - test_plotting_umami_umami
+  - unittest_evaluation_tools
+  - unittest_helper_tools
+  - unittest_input_vars_tools
+  - unittest_preprocessing
+  - unittest_tf_tools
+  - unittest_train_tools
+
 test_coverage:
   stage: coverage_test_stage
   image: python:3.8-slim
@@ -24,16 +36,9 @@ test_coverage:
     reports:
       cobertura: coverage_files/coverage.xml
   retry: 2
-  needs:
-    - test_plot_input_vars
-    - test_plotting_umami_dips
-    - test_plotting_umami_dl1
-    - test_plotting_umami_umami
-  dependencies:
-    - test_plot_input_vars
-    - test_plotting_umami_dips
-    - test_plotting_umami_dl1
-    - test_plotting_umami_umami
+  needs: *coverage_dependencies
+  dependencies: *coverage_dependencies
+
 
 coverage_html_report:
   stage: builds
@@ -55,6 +60,7 @@ coverage_html_report:
         EOS_PATH: "/eos/user/u/umamibot/www/coverage_reports/${CI_MERGE_REQUEST_IID}/"
         CI_OUTPUT_DIR: "coverage_files/htmlcov/"
         METHOD: rsync
+  retry: 2
 
 test_coverage_post_report:
   stage: publish
