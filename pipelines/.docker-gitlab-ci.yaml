@@ -57,6 +57,8 @@ build_umamibase_plus_cpu:
     IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase-plus:latest'
   needs:
     - build_umamibase_cpu
+  dependencies:
+    - build_umamibase_cpu
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
@@ -93,32 +95,32 @@ build_umamibase_gpu_pytorch:
 
 # Umami images: use base image as a foundation to speed up build process
 build_umami_cpu:
-    <<: *image_build_template
-    stage: image_build_umami
-    variables:
-      BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
-      DOCKER_FILE: docker/umami/Dockerfile
-      IMAGE_DESTINATION: '${CI_REGISTRY_IMAGE}:latest'
-    rules:
-      - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      - if: $CI_COMMIT_TAG
-        variables:
-          BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
-          IMAGE_DESTINATION: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  <<: *image_build_template
+  stage: image_build_umami
+  variables:
+    BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+    DOCKER_FILE: docker/umami/Dockerfile
+    IMAGE_DESTINATION: '${CI_REGISTRY_IMAGE}:latest'
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+      variables:
+        BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
+        IMAGE_DESTINATION: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
 
 build_umami_gpu:
-    <<: *image_build_template
-    stage: image_build_umami
-    variables:
-      BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
-      DOCKER_FILE: docker/umami/Dockerfile
-      IMAGE_DESTINATION: '${CI_REGISTRY_IMAGE}:latest-gpu'
-    rules:
-      - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      - if: $CI_COMMIT_TAG
-        variables:
-          BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
-          IMAGE_DESTINATION: '$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu'
+  <<: *image_build_template
+  stage: image_build_umami
+  variables:
+    BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
+    DOCKER_FILE: docker/umami/Dockerfile
+    IMAGE_DESTINATION: '${CI_REGISTRY_IMAGE}:latest-gpu'
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+      variables:
+        BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+        IMAGE_DESTINATION: '$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu'
 
 
 # ----------------------------------------------------------------------------

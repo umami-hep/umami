@@ -24,6 +24,16 @@ test_coverage:
     reports:
       cobertura: coverage_files/coverage.xml
   retry: 2
+  needs:
+    - test_plot_input_vars
+    - test_plotting_umami_dips
+    - test_plotting_umami_dl1
+    - test_plotting_umami_umami
+  dependencies:
+    - test_plot_input_vars
+    - test_plotting_umami_dips
+    - test_plotting_umami_dl1
+    - test_plotting_umami_umami
 
 coverage_html_report:
   stage: builds
@@ -31,6 +41,8 @@ coverage_html_report:
   script:
     - deploy-eos
   needs:
+    - test_coverage
+  dependencies:
     - test_coverage
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
@@ -47,7 +59,9 @@ coverage_html_report:
 test_coverage_post_report:
   stage: publish
   image: python:3.8-slim
-  needs: ["test_coverage"]
+  needs: ["coverage_html_report"]
+  dependencies:
+    - coverage_html_report
   before_script:
     - pip install --upgrade pip setuptools wheel
     - pip install python-gitlab

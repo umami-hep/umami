@@ -1,11 +1,18 @@
-import logging
+#!/usr/bin/env python
+
+"""
+This script integration tests the plotting of the training
+results of the different models.
+"""
+
 import os
 import unittest
+from shutil import copyfile
 from subprocess import CalledProcessError, run
 
 import yaml
 
-from umami.configuration import global_config  # noqa: F401
+from umami.configuration import logger  # noqa: F401
 from umami.tools import replaceLineInFile, yaml_loader
 
 
@@ -23,11 +30,29 @@ def getConfiguration():
 
 
 def runPlotting(config, tagger):
-    """Call plotting_umami.py.
-    Return value `True` if training succeeded, `False` if one step did not succees."""
-    isSuccess = True
+    """
+    Call plotting_umami.py and try to plot the results of the previous tests.
+    Return value `True` if training succeeded, `False` if one step did not succeed.
 
-    logging.info(f"Test: running plotting_umami.py for {tagger}...")
+    Parameters
+    ----------
+    config : dict
+        Dict with the needed configurations for the plotting.
+    tagger : str
+        Name of the tagger which is to be plotted.
+
+    Raises
+    ------
+    AssertionError
+        If the plotting step fails.
+
+    Returns
+    -------
+    isSuccess : bool
+        Preprocessing succeeded or not.
+    """
+
+    logger.info(f"Test: running plotting_umami.py for {tagger}...")
     run_plotting_umami = run(
         [
             "plotting_umami.py",
@@ -38,45 +63,49 @@ def runPlotting(config, tagger):
             "-f",
             "pdf",
             "-p",
-        ]
+        ],
+        check=True,
     )
+
     try:
         run_plotting_umami.check_returncode()
-    except CalledProcessError:
-        logging.info(f"Test failed: plotting_umami.py for {tagger}.")
-        isSuccess = False
 
-    if isSuccess is True:
-        run_plotting_umami
+    except CalledProcessError as Error:
+        raise AssertionError(f"Test failed: plotting_umami.py for {tagger}.") from Error
 
-    return isSuccess
+    return True
 
 
 class TestPlottingUmami(unittest.TestCase):
+    """Integration test class for the plotting of the training results.
+
+    This class creates a test folder and downloads all important files.
+    """
+
     def setUp(self):
         """Download test files for running the dips training."""
         # Get test configuration
         self.data = getConfiguration()
         self.model_name_dips = self.data["test_dips"]["model_name"]
         self.model_name_umami = self.data["test_umami"]["model_name"]
-        self.model_name_dl1 = self.data["test_dl1"]["model_name"]
+        self.model_name_dl1r = self.data["test_dl1r"]["model_name"]
 
         test_dir_dips = os.path.join(self.data["test_dips"]["testdir"])
         test_dir_umami = os.path.join(self.data["test_umami"]["testdir"])
-        test_dir_dl1 = os.path.join(self.data["test_dl1"]["testdir"])
+        test_dir_dl1r = os.path.join(self.data["test_dl1r"]["testdir"])
 
         # clean up, hopefully this causes no "uh oh...""
         if test_dir_dips.startswith("/tmp"):
-            run(["rm", "-rf", test_dir_dips])
-        run(["mkdir", "-p", test_dir_dips])
+            run(["rm", "-rf", test_dir_dips], check=True)
+        run(["mkdir", "-p", test_dir_dips], check=True)
 
         if test_dir_umami.startswith("/tmp"):
-            run(["rm", "-rf", test_dir_umami])
-        run(["mkdir", "-p", test_dir_umami])
+            run(["rm", "-rf", test_dir_umami], check=True)
+        run(["mkdir", "-p", test_dir_umami], check=True)
 
-        if test_dir_dl1.startswith("/tmp"):
-            run(["rm", "-rf", test_dir_dl1])
-        run(["mkdir", "-p", test_dir_dl1])
+        if test_dir_dl1r.startswith("/tmp"):
+            run(["rm", "-rf", test_dir_dl1r], check=True)
+        run(["mkdir", "-p", test_dir_dl1r], check=True)
 
         # config files, will be copied to test dir
         self.config_source_dips = os.path.join(
@@ -87,7 +116,7 @@ class TestPlottingUmami(unittest.TestCase):
             os.getcwd(), "examples/plotting_umami_config_Umami.yaml"
         )
 
-        self.config_source_dl1 = os.path.join(
+        self.config_source_dl1r = os.path.join(
             os.getcwd(), "examples/plotting_umami_config_DL1r.yaml"
         )
 
@@ -101,15 +130,18 @@ class TestPlottingUmami(unittest.TestCase):
             self.model_name_umami,
             "plotting_umami_config_Umami.yaml",
         )
-        self.config_dl1 = os.path.join(
+        self.config_dl1r = os.path.join(
             os.getcwd(),
-            self.model_name_dl1,
+            self.model_name_dl1r,
             "plotting_umami_config_DL1r.yaml",
         )
 
     def test_plotting_umami_dips(self):
+        """
+        Testing the plotting of the DIPS trainings.
+        """
         # Copy the plotting yaml file
-        run(["cp", self.config_source_dips, self.config_dips])
+        copyfile(self.config_source_dips, self.config_dips)
 
         # modify copy of preprocessing config file for test
         replaceLineInFile(
@@ -131,8 +163,11 @@ class TestPlottingUmami(unittest.TestCase):
         self.assertTrue(runPlotting(self.config_dips, "dips"))
 
     def test_plotting_umami_umami(self):
+        """
+        Testing the plotting of the Umami trainings.
+        """
         # Copy the plotting yaml file
-        run(["cp", self.config_source_umami, self.config_umami])
+        copyfile(self.config_source_umami, self.config_umami)
 
         replaceLineInFile(
             self.config_umami,
@@ -152,25 +187,28 @@ class TestPlottingUmami(unittest.TestCase):
 
         self.assertTrue(runPlotting(self.config_umami, "umami"))
 
-    def test_plotting_umami_dl1(self):
+    def test_plotting_umami_dl1r(self):
+        """
+        Testing the plotting of the DL1r trainings.
+        """
         # Copy the plotting yaml file
-        run(["cp", self.config_source_dl1, self.config_dl1])
+        copyfile(self.config_source_dl1r, self.config_dl1r)
 
         # modify copy of preprocessing config file for test
         replaceLineInFile(
-            self.config_dl1,
+            self.config_dl1r,
             "Path_to_models_dir:",
             "  Path_to_models_dir: ./",
         )
         replaceLineInFile(
-            self.config_dl1,
+            self.config_dl1r,
             "model_name:",
-            f"  model_name: {self.model_name_dl1}",
+            f"  model_name: {self.model_name_dl1r}",
         )
         replaceLineInFile(
-            self.config_dl1,
+            self.config_dl1r,
             "epoch:",
             "  epoch: 1",
         )
 
-        self.assertTrue(runPlotting(self.config_dl1, "dl1"))
+        self.assertTrue(runPlotting(self.config_dl1r, "dl1r"))
