@@ -22,8 +22,8 @@ nav:
     - LWTNN Conversion: LWTNN-conversion.md
     - Evaluate Taggers in Samples: WO_trained_model.md
     - Plotting:
-        - "Input variables": plotting/plotting_inputs.md
-        - "Tagger performance": plotting/plotting_umami.md
+          - "Input variables": plotting/plotting_inputs.md
+          - "Tagger performance": plotting/plotting_umami.md
     - Feature Importance: Feature_Importance.md
 
 plugins:
@@ -41,5 +41,3 @@ markdown_extensions:
 
 extra_javascript:
     - 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML'
-
-

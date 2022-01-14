@@ -3,6 +3,7 @@ __pycache__
 *.egg-info
 *.ipynb_checkpoints
 *.h5
+*.tfrecords
 *.csv
 *.pdf
 *.png
@@ -24,3 +25,6 @@ env/*
 python_install/
 # ignoring insitute dependent parameter files
 Preprocessing-parameters-*.yaml
+# ignoring preprocessing integration test folders
+preprocessing_*/
+test_train_*/
