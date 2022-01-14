@@ -9,10 +9,6 @@ test_preprocessing:
     var_dict_umami: 'umami/configs/Umami_Variables.yaml'
     testdir: '/tmp/umami/preprocessing'
     files:
-        - MC16d_hybrid-bjets_even_1_PFlow-merged.h5
-        - MC16d_hybrid-cjets_even_1_PFlow-merged.h5
-        - MC16d_hybrid-ext_even_0_PFlow-merged.h5
-        - MC16d_hybrid-ujets_even_1_PFlow-merged.h5
         - ttbar_basefile.h5
         - zpext_basefile.h5
 
@@ -38,13 +34,13 @@ test_dips_cond_att:
         - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
         - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
 
-test_dl1:
-    data_subfolder: 'dl1'
-    model_name: 'test_dl1_model'
+test_dl1r:
+    data_subfolder: 'dl1r'
+    model_name: 'test_dl1r_model'
     config: 'examples/DL1r-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_DL1r.yaml'
-    testdir: '/tmp/umami/dl1'
+    testdir: '/tmp/umami/dl1r'
     files:
         - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
         - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5

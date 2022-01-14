@@ -17,12 +17,29 @@
   reports:
     junit: report.xml
 
-test_preprocessing_dips:
+.dependencies_preprocessing_template: &dependencies_preprocessing_template
+  needs:
+    - unittest_evaluation_tools
+    - unittest_helper_tools
+    - unittest_input_vars_tools
+    - unittest_preprocessing
+    - unittest_tf_tools
+    - unittest_train_tools
+  dependencies:
+    - unittest_evaluation_tools
+    - unittest_helper_tools
+    - unittest_input_vars_tools
+    - unittest_preprocessing
+    - unittest_tf_tools
+    - unittest_train_tools
+
+test_preprocessing_dips_count:
   <<: *test_template
+  <<: *dependencies_preprocessing_template
   stage: integration_test_preprocessing
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips" -v -s --junitxml=report.xml
-    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips_count" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips_count
   artifacts:
     <<: *artifact_template
     paths:
@@ -30,12 +47,13 @@ test_preprocessing_dips:
       - preprocessing_dips/
       - coverage_files/
 
-test_preprocessing_dl1r:
+test_preprocessing_dl1r_count:
   <<: *test_template
+  <<: *dependencies_preprocessing_template
   stage: integration_test_preprocessing
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r" -v -s --junitxml=report.xml
-    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dl1r
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r_count" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dl1r_count
   artifacts:
     <<: *artifact_template
     paths:
@@ -43,12 +61,13 @@ test_preprocessing_dl1r:
       - preprocessing_dl1r/
       - coverage_files/
 
-test_preprocessing_umami:
+test_preprocessing_umami_count:
   <<: *test_template
+  <<: *dependencies_preprocessing_template
   stage: integration_test_preprocessing
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami" -v -s --junitxml=report.xml
-    - cp .coverage ./coverage_files/.coverage.test_preprocessing_umami
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami_count" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_umami_count
   artifacts:
     <<: *artifact_template
     paths:
@@ -58,9 +77,10 @@ test_preprocessing_umami:
 
 test_preprocessing_dips_pdf:
   <<: *test_template
+  <<: *dependencies_preprocessing_template
   stage: integration_test_preprocessing
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_pdf_sampling.py -k "test_preprocessing_dips_pdf" -v -s --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips_pdf" -v -s --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips_pdf
   artifacts:
     <<: *artifact_template
@@ -69,50 +89,12 @@ test_preprocessing_dips_pdf:
       - preprocessing_dips_pdf/
       - coverage_files/
 
-test_preprocessing_dl1r_weighting:
-  <<: *test_template
-  stage: integration_test_preprocessing
-  script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_weighting.py -k "test_preprocessing_dl1r_weighting" -v -s --junitxml=report.xml
-    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dl1r_weighting
-  artifacts:
-    <<: *artifact_template
-    paths:
-      - plots/
-      - preprocessing_dl1r_weighting/
-      - coverage_files/
-
-test_preprocessing_umami_weighting:
-  <<: *test_template
-  stage: integration_test_preprocessing
-  script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_weighting.py -k "test_preprocessing_umami_weighting" -v -s --junitxml=report.xml
-    - cp .coverage ./coverage_files/.coverage.test_preprocessing_umami_weighting
-  artifacts:
-    <<: *artifact_template
-    paths:
-      - plots/
-      - preprocessing_umami_weighting/
-      - coverage_files/
-
-test_preprocessing_dips_weighting:
-  <<: *test_template
-  stage: integration_test_preprocessing
-  script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_weighting.py -k "test_preprocessing_dips_weighting" -v -s --junitxml=report.xml
-    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips_weighting
-  artifacts:
-    <<: *artifact_template
-    paths:
-      - plots/
-      - preprocessing_dips_weighting/
-      - coverage_files/
-
 test_preprocessing_dl1r_pdf:
   <<: *test_template
+  <<: *dependencies_preprocessing_template
   stage: integration_test_preprocessing
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_pdf_sampling.py -k "test_preprocessing_dl1r_pdf" -v -s --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r_pdf" -v -s --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_preprocessing_dl1r_pdf
   artifacts:
     <<: *artifact_template
@@ -123,9 +105,10 @@ test_preprocessing_dl1r_pdf:
 
 test_preprocessing_umami_pdf:
   <<: *test_template
+  <<: *dependencies_preprocessing_template
   stage: integration_test_preprocessing
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_pdf_sampling.py -k "test_preprocessing_umami_pdf" -v -s --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami_pdf" -v -s --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_preprocessing_umami_pdf
   artifacts:
     <<: *artifact_template
@@ -134,14 +117,58 @@ test_preprocessing_umami_pdf:
       - preprocessing_umami_pdf/
       - coverage_files/
 
+test_preprocessing_dips_weighting:
+  <<: *test_template
+  <<: *dependencies_preprocessing_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips_weighting" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips_weighting
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - plots/
+      - preprocessing_dips_weighting/
+      - coverage_files/
+
+test_preprocessing_dl1r_weighting:
+  <<: *test_template
+  <<: *dependencies_preprocessing_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dl1r_weighting" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dl1r_weighting
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - plots/
+      - preprocessing_dl1r_weighting/
+      - coverage_files/
+
+test_preprocessing_umami_weighting:
+  <<: *test_template
+  <<: *dependencies_preprocessing_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami_weighting" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_umami_weighting
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - plots/
+      - preprocessing_umami_weighting/
+      - coverage_files/
+
 test_train_dips:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_dips"]
+  needs: ["test_preprocessing_dips_count", "test_preprocessing_dips_pdf", "test_preprocessing_dips_weighting"]
   dependencies:
-    - test_preprocessing_dips
+    - test_preprocessing_dips_count
+    - test_preprocessing_dips_pdf
+    - test_preprocessing_dips_weighting
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dips.py -v -s --junitxml=report.xml -k "test_no_tfrecords_train_dips"
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_dips_no_attention"
     - cp .coverage ./coverage_files/.coverage.test_train_dips
   artifacts:
     <<: *artifact_template
@@ -149,15 +176,17 @@ test_train_dips:
       - test_dips_model/
       - coverage_files/
 
-test_train_dips_tfrecords:
+test_train_tfrecords_dips:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_dips"]
+  needs: ["test_preprocessing_dips_count", "test_preprocessing_dips_pdf", "test_preprocessing_dips_weighting"]
   dependencies:
-   - test_preprocessing_dips
+    - test_preprocessing_dips_count
+    - test_preprocessing_dips_pdf
+    - test_preprocessing_dips_weighting
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dips.py -v -s --junitxml=report.xml -k "test_tfrecords_train_dips"
-    - cp .coverage ./coverage_files/.coverage.test_train_dips_tfrecords
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_tfrecords_dips"
+    - cp .coverage ./coverage_files/.coverage.test_train_tfrecords_dips
   artifacts:
     <<: *artifact_template
     paths:
@@ -167,11 +196,13 @@ test_train_dips_tfrecords:
 test_train_dips_cond_att:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_umami"]
+  needs: ["test_preprocessing_umami_count", "test_preprocessing_umami_pdf", "test_preprocessing_umami_weighting"]
   dependencies:
-    - test_preprocessing_umami
+    - test_preprocessing_umami_count
+    - test_preprocessing_umami_pdf
+    - test_preprocessing_umami_weighting
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dips_cond_att.py -v -s --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_dips_cond_att"
     - cp .coverage ./coverage_files/.coverage.test_train_dips_cond_att
   artifacts:
     <<: *artifact_template
@@ -182,26 +213,30 @@ test_train_dips_cond_att:
 test_train_dl1r:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_dl1r"]
+  needs: ["test_preprocessing_dl1r_count", "test_preprocessing_dl1r_pdf", "test_preprocessing_dl1r_weighting"]
   dependencies:
-    - test_preprocessing_dl1r
+    - test_preprocessing_dl1r_count
+    - test_preprocessing_dl1r_pdf
+    - test_preprocessing_dl1r_weighting
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_dl1.py -v -s --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_dl1r"
     - cp .coverage ./coverage_files/.coverage.test_train_dl1r
   artifacts:
     <<: *artifact_template
     paths:
-      - test_dl1_model/
+      - test_dl1r_model/
       - coverage_files/
 
 test_train_umami:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_umami"]
+  needs: ["test_preprocessing_umami_count", "test_preprocessing_umami_pdf", "test_preprocessing_umami_weighting"]
   dependencies:
-    - test_preprocessing_umami
+    - test_preprocessing_umami_count
+    - test_preprocessing_umami_pdf
+    - test_preprocessing_umami_weighting
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v -s --junitxml=report.xml -k "test_no_tfrecords_train_umami"
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_umami"
     - cp .coverage ./coverage_files/.coverage.test_train_umami
   artifacts:
     <<: *artifact_template
@@ -209,15 +244,17 @@ test_train_umami:
       - test_umami_model/
       - coverage_files/
 
-test_train_umami_tfrecords:
+test_train_tfrecords_umami:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_umami"]
+  needs: ["test_preprocessing_umami_count", "test_preprocessing_umami_pdf", "test_preprocessing_umami_weighting"]
   dependencies:
-    - test_preprocessing_umami
+    - test_preprocessing_umami_count
+    - test_preprocessing_umami_pdf
+    - test_preprocessing_umami_weighting
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train_umami.py -v -s --junitxml=report.xml -k "test_tfrecords_train_umami"
-    - cp .coverage ./coverage_files/.coverage.test_train_umami_tfrecords
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_tfrecords_umami"
+    - cp .coverage ./coverage_files/.coverage.test_train_tfrecords_umami
   artifacts:
     <<: *artifact_template
     paths:
@@ -227,7 +264,14 @@ test_train_umami_tfrecords:
 test_plot_input_vars:
   <<: *test_template
   stage: integration_test_plotting
-  needs: ["test_train_dips", "test_train_dl1r", "test_train_umami"]
+  needs: ["test_train_dips", "test_train_tfrecords_dips", "test_train_dips_cond_att", "test_train_dl1r", "test_train_umami", "test_train_tfrecords_umami"]
+  dependencies:
+    - test_train_dips
+    - test_train_tfrecords_dips
+    - test_train_dips_cond_att
+    - test_train_dl1r
+    - test_train_umami
+    - test_train_tfrecords_umami
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_input_vars_plot.py -v -s --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_input_vars_plot
@@ -241,9 +285,10 @@ test_plot_input_vars:
 test_plotting_umami_dips:
   <<: *test_template
   stage: integration_test_plotting
-  needs: ["test_train_dips"]
+  needs: ["test_train_dips", "test_train_tfrecords_dips"]
   dependencies:
     - test_train_dips
+    - test_train_tfrecords_dips
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -s -k "test_plotting_umami_dips" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_dips
@@ -260,20 +305,21 @@ test_plotting_umami_dl1:
   dependencies:
     - test_train_dl1r
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -s -k "test_plotting_umami_dl1" --junitxml=report.xml
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -s -k "test_plotting_umami_dl1r" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_dl1r
   artifacts:
     <<: *artifact_template
     paths:
-      - test_dl1_model/
+      - test_dl1r_model/
       - coverage_files/
 
 test_plotting_umami_umami:
   <<: *test_template
   stage: integration_test_plotting
-  needs: ["test_train_umami"]
+  needs: ["test_train_umami", "test_train_tfrecords_umami"]
   dependencies:
     - test_train_umami
+    - test_train_tfrecords_umami
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -s -k "test_plotting_umami_umami" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_umami

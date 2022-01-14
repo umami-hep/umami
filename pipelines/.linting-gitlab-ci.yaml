@@ -1,0 +1,60 @@
+.linter_template: &linter_template
+  stage: linting
+  image: python:3.8-slim
+  script:
+    - mkdir coverage_files/
+    - pip install flake8
+    - flake8 ./umami
+  artifacts:
+    when: always
+    paths:
+      - coverage_files/
+
+.yaml_linter_template: &yaml_linter_template
+  stage: linting
+  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/training-images/yamllint:latest
+  script:
+    - 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .'
+
+.doc_string_check_template: &doc_string_check_template
+  stage: linting
+  image: python:3.8-slim
+  script:
+    - pip install darglint
+    - darglint --list-errors
+    - find . -name "*.py" ! -name *PlottingFunctions.py | xargs -n 1 -P 8 darglint -s numpy -z full  --log-level INFO
+  allow_failure: True
+
+.pylint_template: &pylint_template
+  stage: linting
+  # using the latest umamibase image here - in case this breaks we can use
+  # a freshly CI built one - would require to move backwards in CI chain then
+  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest
+  before_script:
+    - pip install pylint==2.12.2
+  script:
+    - pylint ./umami
+  allow_failure: True
+
+.linting_rules_template: &linting_rules_template
+  rules:
+    - if: $CI_COMMIT_BRANCH != ''
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+
+linter:
+  <<: *linter_template
+  <<: *linting_rules_template
+
+yaml_linter:
+  <<: *yaml_linter_template
+  <<: *linting_rules_template
+
+doc_string_check:
+  <<: *doc_string_check_template
+  <<: *linting_rules_template
+
+pylint:
+  <<: *pylint_template
+  <<: *linting_rules_template
+
