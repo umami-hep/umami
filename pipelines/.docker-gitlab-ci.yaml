@@ -142,6 +142,17 @@ build_umamibase_cpu_MR:
     IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+      changes:
+        - requirements.txt
+        - docker/umamibase/Dockerfile
+        - .gitlab-ci.yml
+      variables:
+        IMAGE_TYPE: temporary_images:${CI_MERGE_REQUEST_IID}-base
+  after_script:
+    - echo "IMAGE_TYPE=$IMAGE_TYPE" >> build.env
+  artifacts:
+    reports:
+      dotenv: build.env
 
 # possibility to trigger also the GPU image in a MR - but only manually
 build_umamibase_gpu_MR:

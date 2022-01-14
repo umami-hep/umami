@@ -6,6 +6,7 @@ variables:
   MKDOCS_VERSION: '1.2.1'
   MATERIAL_VERSION: '7.1.10'
   I18NSTATIC_VERSION: '0.17'
+  IMAGE_TYPE: umamibase:latest
 
 stages:
   - check_mr
