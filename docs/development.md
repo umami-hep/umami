@@ -53,7 +53,7 @@ If you want to commit changes it is recommended to install the [pre-commit hooks
 pre-commit install
 ```
 
-This will run `isort`, `black` and `flake8` on staged python files when commiting.
+This will run `isort`, `black`, `flake8` and `yamllint` on staged python files when commiting.
 
 ## General good coding practices
 

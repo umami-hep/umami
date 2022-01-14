@@ -23,3 +23,10 @@ repos:
         types: [python]
         exclude: setup.py
         args: ["--darglint-ignore-regex", "*"]
+      - id: yamllint
+        name: yamllint
+        stages: [commit]
+        language: system
+        entry: yamllint
+        types: [yaml]
+        args: ["-d", "{extends: relaxed, rules: {line-length: disable}}"]

@@ -57,4 +57,3 @@ doc_string_check:
 pylint:
   <<: *pylint_template
   <<: *linting_rules_template
-

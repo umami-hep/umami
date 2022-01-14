@@ -129,33 +129,33 @@ Eval_parameters_validation:
     variable_cuts:
         validation_file:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+              operator: "<="
+              condition: 250000
 
         add_validation_file:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+              operator: ">"
+              condition: 250000
 
         ttbar_r21:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+              operator: "<="
+              condition: 250000
 
         ttbar_r22:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+              operator: "<="
+              condition: 250000
 
         zpext_r21:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+              operator: ">"
+              condition: 250000
 
         zpext_r22:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+              operator: ">"
+              condition: 250000
 
     # A list to add available variables to the evaluation files
     add_variables_eval: ["actualInteractionsPerCrossing"]

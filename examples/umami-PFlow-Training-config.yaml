@@ -130,23 +130,23 @@ Eval_parameters_validation:
     variable_cuts:
         validation_file:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+              operator: "<="
+              condition: 250000
 
         add_validation_file:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+              operator: ">"
+              condition: 250000
 
         ttbar:
             - pt_btagJes:
-                operator: "<="
-                condition: 250000
+              operator: "<="
+              condition: 250000
 
         zpext:
             - pt_btagJes:
-                operator: ">"
-                condition: 250000
+              operator: ">"
+              condition: 250000
 
     # Working point used in the evaluation
     WP: 0.77
