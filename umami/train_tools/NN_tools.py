@@ -27,6 +27,31 @@ from umami.preprocessing_tools import (
 from umami.tools import replaceLineInFile, yaml_loader
 
 
+def get_unique_identifiers(keys: list, prefix: str) -> list:
+    """Helper function which takes a list of strings, searches them for a given prefix
+    of the form "prefix_<identifier>" and returns the remaining part of the matching
+    strings
+
+    Parameters
+    ----------
+    keys : list
+        List of strings which are searched for the given prefix
+    prefix : str
+        Prefix to search for in the provided strings
+
+    Returns
+    -------
+    identifiers : list
+        Sorted list of the unique identifiers that could be found.
+    """
+
+    identifiers = list(
+        {key.replace(prefix + "_", "") for key in keys if key.startswith(prefix)}
+    )
+
+    return sorted(identifiers)
+
+
 def atoi(text):
     """
     Return string as int, if the given string is a int.

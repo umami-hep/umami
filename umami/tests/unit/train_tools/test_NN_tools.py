@@ -29,12 +29,32 @@ from umami.train_tools.NN_tools import (
     get_jet_feature_indices,
     get_jet_feature_position,
     get_parameters_from_validation_dict_name,
+    get_unique_identifiers,
     get_validation_dict_name,
     get_variable_cuts,
     load_validation_data_dips,
     load_validation_data_umami,
     setup_output_directory,
 )
+
+
+class get_unique_identifiers_TestCase(unittest.TestCase):
+    def test_hardcoded_dict(self):
+        self.testdict = {
+            "X_valid_ttbar": np.random.normal(10),
+            "Y_valid_ttbar": np.random.normal(10),
+            "X_valid_trks_ttbar": np.random.normal(10),
+            "X_valid_zprime": np.random.normal(10),
+            "Y_valid_zprime": np.random.normal(10),
+            "X_valid_trks_zprime": np.random.normal(10),
+        }
+        self.assertEqual(
+            get_unique_identifiers(
+                self.testdict.keys(),
+                prefix="Y_valid",
+            ),
+            sorted(["ttbar", "zprime"]),
+        )
 
 
 class GetModelPath_TestCase(unittest.TestCase):
