@@ -16,6 +16,7 @@ from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import CustomObjectScope
 
+import umami.metrics as umt
 import umami.tf_tools as utf
 from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import (
@@ -930,218 +931,6 @@ def LoadTrksFromFile(
 
     # Return Trks and labels
     return all_trks[:nJets], all_labels[:nJets]
-
-
-def CalcDiscValues(
-    jets_dict: dict,
-    index_dict: dict,
-    main_class: str,
-    frac_dict: dict,
-    rej_class: str = None,
-):
-    """
-    Load tracks from file. Only jets from classes in class_labels are returned.
-
-    Parameters
-    ----------
-    jets_dict : dict
-        Dict with the jets inside.
-    index_dict : dict
-        Dict with the indicies of the classes.
-    main_class : str
-        String of the main class. "bjets" for b-tagging.
-    frac_dict : dict
-        Dict with the fractions used to calculate the disc score.
-    rej_class : str
-        String with the rejection class.
-
-    Returns
-    -------
-    disc_score : numpy.ndarray
-        Array with the discriminant score values for the jets.
-    """
-
-    # Set the rejection class for rejection calculation
-    if rej_class is None:
-        rej_class = main_class
-
-    # Init denominator of disc_score and add_small
-    denominator = 0
-    add_small = 1e-10
-
-    # Get class_labels list without main class
-    class_labels_wo_main = list(jets_dict.keys())
-    class_labels_wo_main.remove(main_class)
-
-    # Calculate counter of disc_score
-    counter = jets_dict[rej_class][:, index_dict[main_class]] + add_small
-
-    # Calculate denominator of disc_score
-    for class_label in class_labels_wo_main:
-        denominator += (
-            frac_dict[class_label] * jets_dict[rej_class][:, index_dict[class_label]]
-        )
-    denominator += add_small
-
-    # Calculate final disc_score and return it
-    return np.log(counter / denominator)
-
-
-def GetScore(
-    y_pred,
-    class_labels: list,
-    main_class: str,
-    frac_dict: dict,
-):
-    """
-    Calculates the output scores for the provided jets.
-
-    Parameters
-    ----------
-    y_pred : numpy.ndarray
-        The prediction output of the NN.
-    class_labels : list
-        A list of the class_labels which are used.
-    main_class : str
-        The main discriminant class. For b-tagging obviously "bjets".
-    frac_dict : dict
-        A dict with the respective fractions for each class provided
-        except main_class.
-
-    Returns
-    -------
-    disc_score : numpy.ndarray
-        Discriminant Score for the jets provided.
-    """
-
-    # Init index dict
-    index_dict = {}
-
-    # Get Index of main class
-    for class_label in class_labels:
-        index_dict[f"{class_label}"] = class_labels.index(class_label)
-
-    # Init denominator of disc_score and add_small
-    denominator = 0
-    add_small = 1e-10
-
-    # Get class_labels list without main class
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
-
-    # Calculate counter of disc_score
-    counter = y_pred[:, index_dict[main_class]] + add_small
-
-    # Calculate denominator of disc_score
-    for class_label in class_labels_wo_main:
-        denominator += frac_dict[class_label] * y_pred[:, index_dict[class_label]]
-    denominator += add_small
-
-    # Calculate final disc_score and return it
-    return np.log(counter / denominator)
-
-
-def GetRejection(
-    y_pred,
-    y_true,
-    class_labels: list,
-    main_class: str,
-    frac_dict: dict = {"cjets": 0.018, "ujets": 0.982},
-    target_eff: float = 0.77,
-):
-    """
-    Calculates the rejections for a specific WP for all provided
-    classes except the discriminant class (main_class).
-
-    Parameters
-    ----------
-    y_pred : numpy.ndarray
-        The prediction output of the NN.
-    y_true : numpy.ndarray
-        The true class of the jets.
-    class_labels : list
-        A list of the class_labels which are used.
-    main_class : str
-        The main discriminant class. For b-tagging obviously "bjets".
-    frac_dict : dict
-        A dict with the respective fractions for each class provided
-        except main_class.
-    target_eff : float
-        WP which is used for discriminant calculation.
-
-    Returns
-    -------
-    Rejection_Dict : dict
-        Dict of the rejections. The keys of the dict
-        are the provided class_labels without main_class
-    cut_value : float
-        Cut value that is calculated for the given working point.
-
-    Raises
-    ------
-    ZeroDivisionError
-        If no jets which passes the cut value are given. E.g. if
-        no light jet is passing the WP cut, the rejection would
-        be infinite.
-    """
-
-    # Init new dict for jets and indices
-    jets_dict = {}
-    index_dict = {}
-    rej_dict = {}
-
-    # Get max value of y_true
-    y_true = np.argmax(y_true, axis=1) if len(y_true.shape) == 2 else y_true
-
-    # Iterate over the different class_labels and select their respective jets
-    for class_counter, class_label in enumerate(class_labels):
-        jets_dict.update({f"{class_label}": y_pred[y_true == class_counter]})
-        index_dict.update({f"{class_label}": class_counter})
-
-    # Calculate disc score
-    disc_scores = CalcDiscValues(
-        jets_dict=jets_dict,
-        index_dict=index_dict,
-        main_class=main_class,
-        frac_dict=frac_dict,
-        rej_class=None,
-    )
-
-    # Calculate cutvalue on the discriminant depending of the WP
-    cutvalue = np.percentile(disc_scores, 100.0 * (1.0 - target_eff))
-
-    # Get all non-main flavours
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
-
-    # Calculate efficiencies
-    for iter_main_class in class_labels_wo_main:
-        try:
-            rej_dict[f"{iter_main_class}_rej"] = 1 / (
-                len(
-                    jets_dict[iter_main_class][
-                        CalcDiscValues(
-                            jets_dict=jets_dict,
-                            index_dict=index_dict,
-                            main_class=main_class,
-                            frac_dict=frac_dict,
-                            rej_class=iter_main_class,
-                        )
-                        > cutvalue
-                    ]
-                )
-                / (len(jets_dict[iter_main_class]) + 1e-10)
-            )
-
-        except ZeroDivisionError:
-            logger.error(
-                "Not enough jets for rejection calculation of class "
-                f"{iter_main_class} for {target_eff} efficiency!\n"
-                "Maybe loosen the eff_min to fix it or give more jets!"
-            )
-            raise ZeroDivisionError("Not enough jets for rejection calculation!")
-
-    return rej_dict, cutvalue
 
 
 class CallbackBase(Callback):
@@ -2135,7 +1924,7 @@ def evaluate_model_umami(
     )
 
     # Get rejections for DIPS and UMAMI
-    rej_dict_dips, disc_cut_dips = GetRejection(
+    rej_dict_dips, disc_cut_dips = umt.GetRejection(
         y_pred=y_pred_dips,
         y_true=data_dict["Y_valid"],
         class_labels=class_labels,
@@ -2143,7 +1932,7 @@ def evaluate_model_umami(
         frac_dict=frac_dict["dips"],
         target_eff=target_beff,
     )
-    rej_dict_umami, disc_cut_umami = GetRejection(
+    rej_dict_umami, disc_cut_umami = umt.GetRejection(
         y_pred=y_pred_umami,
         y_true=data_dict["Y_valid"],
         class_labels=class_labels,
@@ -2195,7 +1984,7 @@ def evaluate_model_umami(
         )
 
         # Get rejections for DIPS and UMAMI
-        rej_dict_dips_add, disc_cut_dips_add = GetRejection(
+        rej_dict_dips_add, disc_cut_dips_add = umt.GetRejection(
             y_pred=y_pred_dips_add,
             y_true=data_dict["Y_valid_add"],
             class_labels=class_labels,
@@ -2203,7 +1992,7 @@ def evaluate_model_umami(
             frac_dict=frac_dict["dips"],
             target_eff=target_beff,
         )
-        rej_dict_umami_add, disc_cut_umami_add = GetRejection(
+        rej_dict_umami_add, disc_cut_umami_add = umt.GetRejection(
             y_pred=y_pred_umami_add,
             y_true=data_dict["Y_valid_add"],
             class_labels=class_labels,
@@ -2297,7 +2086,7 @@ def evaluate_model(
         verbose=0,
     )
 
-    rej_dict, disc_cut = GetRejection(
+    rej_dict, disc_cut = umt.GetRejection(
         y_pred=y_pred_dips,
         y_true=data_dict["Y_valid"],
         class_labels=class_labels,
@@ -2344,7 +2133,7 @@ def evaluate_model(
             verbose=0,
         )
 
-        rej_dict_add, disc_cut_add = GetRejection(
+        rej_dict_add, disc_cut_add = umt.GetRejection(
             y_pred=y_pred_add,
             y_true=data_dict["Y_valid_add"],
             class_labels=class_labels,

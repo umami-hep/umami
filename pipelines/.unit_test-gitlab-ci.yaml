@@ -64,3 +64,9 @@ unittest_train_tools:
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/unit/train_tools/ -v -s --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_train_tools
+
+unittest_metrics:
+  <<: *unittest_template
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/unit/metrics/ -v -s --junitxml=report.xml
+    - cp .coverage coverage_files/.coverage.unittest_metrics
