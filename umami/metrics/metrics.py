@@ -407,8 +407,7 @@ def GetRejection(
                 f" {y_true.shape} \n, class_labels shape: {len(class_labels)}"
             )
 
-        else:
-            y_true = np.argmax(y_true, axis=1)
+        y_true = np.argmax(y_true, axis=1)
 
     elif len(y_true.shape) != 1:
         raise ValueError(f"Provided y_true has an unsupported shape {y_true.shape}")
