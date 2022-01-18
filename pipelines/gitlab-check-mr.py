@@ -70,6 +70,8 @@ def pylint_mr_message(changed_python_files: list):
     for changed_file in changed_python_files:
         # avoiding here import errors since we don't use umami base image
         # in the CI
+        if "__init__.py" in changed_file:
+            continue
         results = Run(["--disable=import-error", changed_file], do_exit=False)
         pylint_score = results.linter.stats.global_note
         pylint_text += f"- `{changed_file}` ({pylint_score:.2f}/10)\n"

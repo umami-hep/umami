@@ -13,6 +13,7 @@
   - unittest_preprocessing
   - unittest_tf_tools
   - unittest_train_tools
+  - unittest_metrics
 
 test_coverage:
   stage: coverage_test_stage

@@ -1,12 +1,17 @@
+#!/usr/bin/env python
+
+"""
+Script with all the higher level evaluation functions.
+"""
+
 from umami.configuration import global_config, logger  # isort:skip
 import copy
 
 import numpy as np
-import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Lambda
 from tensorflow.keras.models import Model
 
-import umami.train_tools as utt
+import umami.metrics as umt
 
 
 def GetRejectionPerEfficiencyDict(
@@ -104,7 +109,7 @@ def GetRejectionPerEfficiencyDict(
                     skipped_taggers.append(tagger)
                     continue
 
-            rej_dict_tmp, disc_cut_dict_tmp = utt.GetRejection(
+            rej_dict_tmp, disc_cut_dict_tmp = umt.GetRejection(
                 y_pred=y_pred,
                 y_true=y_true,
                 class_labels=class_labels,
@@ -116,7 +121,7 @@ def GetRejectionPerEfficiencyDict(
             )
 
             tagger_disc_cut_dicts[f"disc_{tagger}"].append(disc_cut_dict_tmp)
-            for rej_type in rej_dict_tmp:
+            for rej_type, _ in rej_dict_tmp.items():
                 tagger_rej_dicts[f"{tagger}_{rej_type}"].append(rej_dict_tmp[rej_type])
 
     # Remove double entries and print warning
@@ -248,7 +253,7 @@ def GetScoresProbsDict(
 
         # Adding scores of the trained network
         try:
-            df_discs_dict[f"disc_{tagger}"] = utt.GetScore(
+            df_discs_dict[f"disc_{tagger}"] = umt.GetScore(
                 y_pred=y_pred,
                 class_labels=class_labels_copy,
                 main_class=main_class,
@@ -262,117 +267,6 @@ def GetScoresProbsDict(
             continue
 
     return df_discs_dict
-
-
-def getDiscriminant(
-    x,
-    class_labels: list,
-    main_class: str,
-    frac_dict: dict,
-):
-    """
-    Returns the score of the input (like GetScore) but calculated with the
-    Keras Backend due to conflicts of numpy functions inside a layer in a
-    keras model.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        Jets with the probabilities in columns.
-    class_labels : list
-        List of class labels which are used.
-    main_class : str
-        The main discriminant class. For b-tagging obviously "bjets"
-    frac_dict : dict
-        Dict with the fraction values of the freshly trained tagger.
-
-    Returns
-    -------
-    Scores : tensorflow.Tensor
-        Scores of the given jets as tensorflow tensor.
-    """
-
-    # Init index dict
-    index_dict = {}
-
-    # Get Index of main class
-    for class_label in class_labels:
-        index_dict[f"{class_label}"] = class_labels.index(class_label)
-
-    # Init denominator of disc_score and add_small
-    denominator = 0
-    add_small = 1e-10
-
-    # Get class_labels list without main class
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
-
-    # Calculate counter of disc_score
-    counter = x[:, index_dict[main_class]] + add_small
-
-    # Calculate denominator of disc_score
-    for class_label in class_labels_wo_main:
-        denominator += frac_dict[class_label] * x[:, index_dict[class_label]]
-    denominator += add_small
-
-    return K.log(counter / denominator)
-
-
-def discriminant_output_shape(input_shape: tuple) -> tuple:
-    """
-    Ensure the correct output shape of the discriminant.
-
-    Parameters
-    ----------
-    input_shape : tuple
-        Input shape that is used.
-
-    Returns
-    -------
-    shape : tuple
-        The shape of the first dimension of the input as tuple.
-    """
-    shape = list(input_shape)
-    assert len(shape) == 2  # only valid for 2D tensors
-    return (shape[0],)
-
-
-def get_gradients(
-    model: object,
-    X,
-    nJets: int,
-):
-    """
-    Calculating the gradients with respect to the input variables.
-    Note that only Keras backend functions can be used here because
-    the gradients are tensorflow tensors and are not compatible with
-    numpy.
-
-    Parameters
-    ----------
-    model : object
-        Loaded keras model.
-    X : numpy.ndarray
-        Track inputs of the jets.
-    nJets : int
-        Number of jets to be used.
-
-    Returns
-    -------
-    gradients : tensorflow.Tensor
-        Gradients of the network for the given inputs.
-    """
-
-    gradients = K.gradients(model.output, model.inputs)
-
-    input_tensors = model.inputs + [K.learning_phase()]
-    compute_gradients = K.function(inputs=input_tensors, outputs=gradients)
-
-    # Pass in the cts and categorical inputs, as well as the learning phase
-    # (0 for test mode)
-    gradients = compute_gradients([X[:nJets], 0])
-
-    return gradients[0]
 
 
 def GetSaliencyMapDict(
@@ -420,12 +314,13 @@ def GetSaliencyMapDict(
 
     # Define the last node for the discriminant output
     disc = Lambda(
-        getDiscriminant,
-        output_shape=discriminant_output_shape,
+        umt.GetScore,
+        output_shape=umt.discriminant_output_shape,
         arguments={
             "class_labels": class_labels,
             "main_class": main_class,
             "frac_dict": frac_dict,
+            "use_keras_backend": True,
         },
     )(cutted_model)
 
@@ -439,7 +334,7 @@ def GetSaliencyMapDict(
     nTrks = np.sum(boolMask, axis=-1)
 
     # Get score for the dips prediction
-    Disc_values = utt.GetScore(
+    Disc_values = umt.GetScore(
         y_pred=model_pred,
         class_labels=class_labels,
         main_class=main_class,
@@ -450,7 +345,7 @@ def GetSaliencyMapDict(
     map_dict = {}
 
     # Get spartial class id
-    class_indices = [i for i in range(len(class_labels))]
+    class_indices = list(range(len(class_labels)))
 
     # Iterate over different beff, jet flavours and passed options
     for target_beff in [60, 70, 77, 85]:
@@ -475,7 +370,7 @@ def GetSaliencyMapDict(
                     mask = mask & (Disc_values < cutvalue)
 
                 # Get gradient map
-                gradient_map = get_gradients(model, X_test[mask], nJets)
+                gradient_map = umt.get_gradients(model, X_test[mask], nJets)
 
                 # Turn gradient map for plotting
                 gradient_map = np.swapaxes(gradient_map, 1, 2)
@@ -540,7 +435,7 @@ def RecomputeScore(
     shaped_proba = np.transpose(shaped_proba)
 
     # Returns the score
-    return utt.GetScore(
+    return umt.GetScore(
         shaped_proba,
         class_labels=model_class_labels,
         main_class=main_class,

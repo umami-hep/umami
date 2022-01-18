@@ -5,9 +5,6 @@ from umami.evaluation_tools.eval_tools import (
     GetSaliencyMapDict,
     GetScoresProbsDict,
     RecomputeScore,
-    discriminant_output_shape,
-    get_gradients,
-    getDiscriminant,
 )
 from umami.evaluation_tools.PlottingFunctions import (
     FlatEfficiencyPerBin,
