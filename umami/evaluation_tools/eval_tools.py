@@ -122,7 +122,11 @@ def GetRejectionPerEfficiencyDict(
 
             tagger_disc_cut_dicts[f"disc_{tagger}"].append(disc_cut_dict_tmp)
             for rej_type, _ in rej_dict_tmp.items():
-                tagger_rej_dicts[f"{tagger}_{rej_type}"].append(rej_dict_tmp[rej_type])
+                tagger_rej_dicts[f"{tagger}_{rej_type}"].append(
+                    rej_dict_tmp[  # pylint: disable=unnecessary-dict-index-lookup
+                        rej_type
+                    ]
+                )
 
     # Remove double entries and print warning
     skipped_taggers = list(dict.fromkeys(skipped_taggers))

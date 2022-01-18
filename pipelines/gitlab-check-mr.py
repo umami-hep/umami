@@ -1,3 +1,4 @@
+"""Checks a gitlab MR and posts pylint report and labels to it."""
 import fnmatch
 import os
 
