@@ -18,3 +18,5 @@ Docker images are available on CERN GitLab container registry and on Docker Hub:
 - [CERN GitLab container registry](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry)
 - [Docker Hub](https://hub.docker.com/r/btagging/umami)
 
+
+An API reference can be found [here](sphinx-docs).

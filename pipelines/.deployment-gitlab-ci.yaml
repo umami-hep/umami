@@ -11,10 +11,78 @@ pages:
     - pip install mkdocs==${MKDOCS_VERSION} mkdocs-material==${MATERIAL_VERSION} mkdocs-static-i18n==${I18NSTATIC_VERSION}
     - mkdocs build -d public
     - if [[ -f _redirects ]]; then cp _redirects public; fi;
+    - mv sphinx-docs public/sphinx-docs
   artifacts:
     paths:
       - public
     expire_in: 1 hour
+  dependencies:
+    - sphinx-docs
+  needs:
+    - sphinx-docs
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
       when: always
+
+
+mr_pages:
+  image: python:3.8-alpine
+  stage: builds
+  script:
+    - apk add --no-cache git subversion
+    - pip install --upgrade pip setuptools wheel
+    - pip install mkdocs==${MKDOCS_VERSION} mkdocs-material==${MATERIAL_VERSION} mkdocs-static-i18n==${I18NSTATIC_VERSION}
+    - mkdocs build -d public
+    - if [[ -f _redirects ]]; then cp _redirects public; fi;
+    - mv sphinx-docs public/sphinx-docs
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 hour
+  dependencies:
+    - sphinx-docs
+  needs:
+    - sphinx-docs
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+      when: always
+
+mr_docs_deploy:
+  stage: builds
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer
+  script:
+    - deploy-eos
+  needs:
+    - mr_pages
+  dependencies:
+    - mr_pages
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+      variables:
+        EOS_PATH: "/eos/user/u/umamibot/www/ci/mr-docs/${CI_MERGE_REQUEST_IID}/"
+        CI_OUTPUT_DIR: "public/"
+        METHOD: rsync
+  retry: 2
+
+sphinx-docs:
+  # temporary to run it in the first step for MR
+  stage: linting
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
+  script:
+    - pip install ipython
+    - pip install Sphinx
+    - pip install sphinx_rtd_theme
+    - source run_setup.sh
+    - cd docs/sphinx
+    - mkdir source
+    - mkdir _build _static _templates
+    - sphinx-apidoc -f -o . ../../umami
+    - make html
+    - cp -r _build/html/ ../../sphinx-docs
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+  artifacts:
+    paths:
+      - sphinx-docs
+    expire_in: 1 day
