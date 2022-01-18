@@ -62,7 +62,8 @@ build_umamibase_plus_cpu:
     DOCKER_FILE: docker/umamibase-plus/Dockerfile
     IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase-plus:latest'
   needs:
-    - build_umamibase_cpu
+    - job: build_umamibase_cpu
+      optional: true
   dependencies:
     - build_umamibase_cpu
   rules:
@@ -86,7 +87,8 @@ build_umamibase_plus_gpu:
     DOCKER_FILE: docker/umamibase-plus/Dockerfile
     IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase-plus:latest-gpu'
   needs:
-    - build_umamibase_gpu
+    - job: build_umamibase_gpu
+      optional: true
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
