@@ -65,13 +65,13 @@ def GetParser():
         help="Print the model names of the plots to the terminal.",
     )
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def plot_probability_comparison(
     plot_name, plot_config, eval_params, eval_file_dir, print_model
 ):
+    """Plots probability comparison."""
     # Init dataframe list
     df_list = []
     model_labels = []
@@ -115,6 +115,21 @@ def plot_probability_comparison(
 
 
 def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
+    """Plot ROC curves.
+
+    Parameters
+    ----------
+    plot_name : str
+        Name of the plot
+    plot_config : object
+        Plot configuration
+    eval_params : dict
+        evaluation parameters
+    eval_file_dir : str
+        directory of evaluation file
+    print_model : bool
+        Prints out model summary
+    """
     df_results_list = []
     tagger_list = []
     rej_class_list = []
@@ -193,6 +208,7 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
 def plot_ROC_Comparison(
     plot_name, plot_config, eval_params, eval_file_dir, print_model
 ):
+    """Plot ROC comparisons."""
     df_results_list = []
     tagger_list = []
     rej_class_list = []
@@ -755,8 +771,7 @@ def plot_ROCvsVar_comparison(
                         model_frac_values = default_frac_values
                     else:
                         raise ValueError(
-                            f"No fractions defined for model {model_name} in"
-                            " score recomputation."
+                            "No fractions defined for model in score recomputation."
                         )
 
                     df_cut["score"] = uet.RecomputeScore(
@@ -806,6 +821,7 @@ def plot_ROCvsVar_comparison(
 
 
 def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
+    """Plot confusion matrix."""
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
@@ -831,6 +847,7 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
 
 
 def score_comparison(plot_name, plot_config, eval_params, eval_file_dir, print_model):
+    """Plot score comparison."""
     # Init dataframe list
     df_list = []
     tagger_list = []
@@ -874,6 +891,7 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir, print_m
 
 
 def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir, print_model):
+    """ "Plot pT vs efficiency."""
     # Init label and dataframe list
     df_list = []
     model_labels = []
@@ -922,6 +940,7 @@ def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir, print_mod
 
 
 def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
+    """Plot score."""
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
@@ -950,6 +969,7 @@ def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
 
 
 def plot_prob(plot_name, plot_config, eval_params, eval_file_dir):
+    """Plot probability."""
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
@@ -978,6 +998,7 @@ def plot_prob(plot_name, plot_config, eval_params, eval_file_dir):
 
 
 def plot_saliency(plot_name, plot_config, eval_params, eval_file_dir):
+    """Plot saliency maps."""
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
@@ -1003,7 +1024,10 @@ def plot_saliency(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
-def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format, print_model):
+def SetUpPlots(
+    plotting_config, plot_directory, eval_file_dir, file_format, print_model
+):
+    """Setting up plot settings."""
     # Extract the eval parameters
     eval_params = plotting_config["Eval_parameters"]
 
@@ -1031,13 +1055,13 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format, print_mod
         if epoch_to_name is True:
             save_plot_to = os.path.join(
                 plot_directory,
-                f"{plot_name}_{int(eval_params['epoch'])}.{format}",
+                f"{plot_name}_{int(eval_params['epoch'])}.{file_format}",
             )
 
         else:
             save_plot_to = os.path.join(
                 plot_directory,
-                f"{plot_name}.{format}",
+                f"{plot_name}.{file_format}",
             )
 
         # Check for plot type and use the needed function
@@ -1146,6 +1170,13 @@ def SetUpPlots(plotting_config, plot_directory, eval_file_dir, format, print_mod
 
 
 def main(args):
+    """Execute plotting.
+
+    Parameters
+    ----------
+    args : parser.args
+        Arguments from command line parser
+    """
     # Open and load the config files used in the eval process
     with open(args.config_file) as yaml_config:
         plotting_config = yaml.load(yaml_config, Loader=FullLoader)
@@ -1177,5 +1208,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    args = GetParser()
-    main(args)
+    parser_args = GetParser()
+    main(parser_args)

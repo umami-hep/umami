@@ -1,3 +1,4 @@
+"""Helper functions for training tools."""
 from umami.configuration import global_config, logger  # isort:skip
 import copy
 import json
@@ -165,8 +166,7 @@ def get_variable_cuts(
     ):
         return Eval_parameters["variable_cuts"][file]
 
-    else:
-        return None
+    return None
 
 
 def prepare_history_dict(hist_dict: dict) -> list:
@@ -270,12 +270,11 @@ def get_class_label_variables(class_labels: list):
 
             # If x ids are defined, loop over them and add the
             # truth variable x times to the label_var_list
-            for i in range(len(flavour_categories[class_label]["label_value"])):
-                # Append the truth variable to the label_var_list
-                label_var_list.append(flavour_categories[class_label]["label_var"])
-
-                # Add the class_label to the flatten class list
-                flatten_class_labels.append(class_label)
+            n_repeat = len(flavour_categories[class_label]["label_value"])
+            # Append the truth variable to the label_var_list
+            label_var_list += [flavour_categories[class_label]["label_var"]] * n_repeat
+            # Add the class_label to the flatten class list
+            flatten_class_labels += [class_label] * n_repeat
 
         else:
             # Add the label variable and class label to list
@@ -671,7 +670,9 @@ def LoadJetsFromFile(
             toremove_conditions = jets["Umami_string_labels"] == "0"
 
             # Get the indices of the jets that are not used
-            indices_toremove = np.where(toremove_conditions == True)[0]  # noqa: E712
+            indices_toremove = np.where(
+                toremove_conditions == True  # pylint: disable=C0121 # noqa: E712
+            )[0]
 
             if cut_vars_dict:
                 # Apply cuts and get a list of which jets to remove
@@ -870,7 +871,9 @@ def LoadTrksFromFile(
             toremove_conditions = labels["Umami_string_labels"] == "0"
 
             # Get the indices of the jets that are not used
-            indices_toremove = np.where(toremove_conditions == True)[0]  # noqa: E712
+            indices_toremove = np.where(
+                toremove_conditions == True  # pylint: disable=C0121 # noqa: E712
+            )[0]
 
             if cut_vars_dict:
                 # Apply cuts and get a list of which jets to remove
@@ -947,10 +950,7 @@ class CallbackBase(Callback):
         val_data_dict: dict = None,
         model_name: str = "test",
         target_beff: float = 0.77,
-        frac_dict: dict = {
-            "cjets": 0.018,
-            "ujets": 0.982,
-        },
+        frac_dict: dict = None,
         dict_file_name: str = "DictFile.json",
     ):
         """Init the parameters needed for the callback
@@ -978,13 +978,21 @@ class CallbackBase(Callback):
             Name of the file where the dict with the results of the callback
             are saved.
         """
+        super().__init__()
 
         # Add parameters to as attributes
         self.class_labels = class_labels
         self.main_class = main_class
         self.val_data_dict = val_data_dict
         self.target_beff = target_beff
-        self.frac_dict = frac_dict
+        self.frac_dict = (
+            {
+                "cjets": 0.018,
+                "ujets": 0.982,
+            }
+            if frac_dict is None
+            else frac_dict
+        )
         self.model_name = model_name
         self.dict_file_name = dict_file_name
 
@@ -1249,7 +1257,7 @@ def GetTestSample(
             " different! They need to be the same!"
         )
 
-    except AttributeError or KeyError:
+    except (AttributeError, KeyError):
         logger.warning(
             "Deprecation Warning: class_labels are given in preparation"
             " and not in sampling block! Consider moving this to"
@@ -1333,9 +1341,8 @@ def GetTestSample(
             continue
         if "isDefaults" in elem["name"]:
             continue
-        else:
-            jets[elem["name"]] -= elem["shift"]
-            jets[elem["name"]] /= elem["scale"]
+        jets[elem["name"]] -= elem["shift"]
+        jets[elem["name"]] /= elem["scale"]
     if not set(variables).issubset(scale_dict_variables):
         raise KeyError(
             f"Requested {(set(variables).difference(scale_dict_variables))}"
@@ -1397,7 +1404,7 @@ def GetTestSampleTrks(
             " different! They need to be the same!"
         )
 
-    except AttributeError or KeyError:
+    except (AttributeError, KeyError):
         logger.warning(
             "Deprecation Warning: class_labels are given in preparation"
             " and not in sampling block! Consider moving this to"
@@ -1456,7 +1463,7 @@ def load_validation_data_umami(
     train_config: object,
     preprocess_config: object,
     nJets: int,
-    jets_var_list: list = [],
+    jets_var_list: list = None,
     convert_to_tensor: bool = False,
 ) -> dict:
     """
@@ -1481,7 +1488,8 @@ def load_validation_data_umami(
     val_data_dict : dict
         Dict with the validation data.
     """
-
+    if jets_var_list is None:
+        jets_var_list = []
     # Define NN_Structure and the Eval params
     NN_structure = train_config.NN_structure
     Eval_parameters = train_config.Eval_parameters_validation
@@ -1954,8 +1962,8 @@ def evaluate_model_umami(
 
     # Write rejections to the results dict
     # TODO Change this in python 3.9
-    result_dict.update({f"{key}_umami": rej_dict_umami[key] for key in rej_dict_umami})
-    result_dict.update({f"{key}_dips": rej_dict_dips[key] for key in rej_dict_dips})
+    result_dict.update({f"{key}_umami": elem for key, elem in rej_dict_umami.items()})
+    result_dict.update({f"{key}_dips": elem for key, elem in rej_dict_dips.items()})
 
     # Evaluate Models on add_files if given
     if data_dict["X_valid_add"] is not None:
@@ -2017,10 +2025,10 @@ def evaluate_model_umami(
         # Write rejections to the results dict
         # TODO Change this in python 3.9
         result_dict.update(
-            {f"{key}_umami_add": rej_dict_umami_add[key] for key in rej_dict_umami_add}
+            {f"{key}_umami_add": elem for key, elem in rej_dict_umami_add.items()}
         )
         result_dict.update(
-            {f"{key}_dips_add": rej_dict_dips_add[key] for key in rej_dict_dips_add}
+            {f"{key}_dips_add": elem for key, elem in rej_dict_dips_add.items()}
         )
 
     return result_dict
@@ -2032,7 +2040,7 @@ def evaluate_model(
     class_labels: list,
     main_class: str,
     target_beff: float = 0.77,
-    frac_dict: dict = {"cjets": 0.018, "ujets": 0.982},
+    frac_dict: dict = None,
 ) -> dict:
     """
     Evaluate the DIPS/DL1 model on the data provided.
@@ -2058,7 +2066,8 @@ def evaluate_model(
     result_dict : dict
         Dict with validation metrics/rejections.
     """
-
+    if frac_dict is None:
+        frac_dict = {"cjets": 0.018, "ujets": 0.982}
     # Check which input data need to be used
     if "X_valid_trk" in data_dict and "X_valid" in data_dict:
         x = [data_dict["X_valid_trk"], data_dict["X_valid"]]
@@ -2104,7 +2113,7 @@ def evaluate_model(
 
     # Write rejection in results dict
     # TODO Change this in python 3.9
-    result_dict.update({f"{key}": rej_dict[key] for key in rej_dict})
+    result_dict.update({f"{key}": elem for key, elem in rej_dict.items()})
 
     if data_dict["X_valid_add"] is not None:
         if "X_valid_trk_add" in data_dict and "X_valid_add" in data_dict:
@@ -2154,7 +2163,7 @@ def evaluate_model(
 
         # Write the rejection values to the results dict
         # TODO Change this in python 3.9
-        result_dict.update({f"{key}_add": rej_dict_add[key] for key in rej_dict_add})
+        result_dict.update({f"{key}_add": elem for key, elem in rej_dict_add.items()})
 
     # Return finished dict
     return result_dict

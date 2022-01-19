@@ -1,3 +1,4 @@
+"""Helper function for histogram handling."""
 import numpy as np
 
 

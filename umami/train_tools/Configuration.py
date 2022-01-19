@@ -1,3 +1,4 @@
+"""Configuration module for NN trainings."""
 import yaml
 
 from umami.configuration import logger
@@ -5,21 +6,35 @@ from umami.tools import yaml_loader
 from umami.train_tools.NN_tools import get_class_label_ids, get_class_label_variables
 
 
-class Configuration(object):
+class Configuration:
     """docstring for Configuration."""
 
     def __init__(self, yaml_config=None):
-        super(Configuration, self).__init__()
+        super().__init__()
         self.yaml_config = yaml_config
         self.LoadConfigFile()
         self.GetConfiguration()
 
     def LoadConfigFile(self):
+        """ "Load config file from disk."""
         logger.info(f"Using train config file {self.yaml_config}")
         with open(self.yaml_config, "r") as conf:
             self.config = yaml.load(conf, Loader=yaml_loader)
 
     def GetConfiguration(self):
+        """Assigne configuration from file to class variables.
+
+        Raises
+        ------
+        KeyError
+            if required config is not present in passed config file
+        KeyError
+            deprecation error for Plotting_settings
+        ValueError
+            if label_value is used twice in the used classes
+        ValueError
+            if label definitions are mixed
+        """
         config_train_items = [
             "model_name",
             "preprocess_config",
@@ -69,7 +84,7 @@ class Configuration(object):
 
         # Define a security to check if label_value is used twice
         class_ids = get_class_label_ids(self.NN_structure["class_labels"])
-        class_label_vars, flatten_class_labels = get_class_label_variables(
+        class_label_vars, _ = get_class_label_variables(
             self.NN_structure["class_labels"]
         )
         if len(class_ids) != len(set(class_ids)):

@@ -1,3 +1,4 @@
+"""Keras model of the DL1 tagger."""
 from umami.configuration import logger  # isort:skip
 import json
 import os
@@ -104,6 +105,18 @@ def DL1_model(train_config, input_shape, feature_connect_indices=None):
 
 
 def TrainLargeFile(args, train_config, preprocess_config):
+    """Training handling of DL1 tagger.
+
+    Parameters
+    ----------
+    args : parser args
+        Arguments from command line parser
+    train_config : object
+        training configuration
+    preprocess_config : object
+        preprocessing configuration
+
+    """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
     Val_params = train_config.Eval_parameters_validation

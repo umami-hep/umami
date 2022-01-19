@@ -1,5 +1,9 @@
 ## Development
 
+If you wan to get started with umami you can pick an issue and work on it, well suited
+are the issues labeled with `good-first-issue` which can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/issues?scope=all&state=opened&label_name[]=good-first-issue). Please tell us if you are working on an issue and create already in the beginning a merge request marked as `Draft`. This helps us to see who is working at what.
+
+
 ### Test suite
 
 Umami's development uses unit tests to ensure it is working. The unit tests are located in [`umami/tests`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tree/master/umami/tests).

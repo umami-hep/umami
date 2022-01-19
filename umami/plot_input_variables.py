@@ -51,11 +51,19 @@ def GetParser():
         action="store_true",
         help="Plot jet variables.",
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def plot_trks_variables(plot_config, plot_type):
+    """Plot track variables.
+
+    Parameters
+    ----------
+    plot_config : object
+        plot configuration
+    plot_type : str
+        Plottype, like pdf or png
+    """
     # Iterate over the different plots which are to be plotted
     for plot_name, plotting_config in plot_config.items():
         if plot_name == "Eval_parameters":
@@ -73,7 +81,7 @@ def plot_trks_variables(plot_config, plot_type):
         if "track_origins" in plotting_config:
             trk_origins = plotting_config["track_origins"]
 
-        for model_name, model_config in plotting_config["Datasets_to_plot"].items():
+        for model_name, _ in plotting_config["Datasets_to_plot"].items():
             if (
                 not plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
                 is None
@@ -150,6 +158,15 @@ def plot_trks_variables(plot_config, plot_type):
 
 
 def plot_jets_variables(plot_config, plot_type):
+    """Plot jet variables.
+
+    Parameters
+    ----------
+    plot_config : object
+        plot configuration
+    plot_type : str
+        Plottype, like pdf or png
+    """
     # Iterate over the different plots which are to be plotted
     for plot_name, plotting_config in plot_config.items():
         if plot_name == "Eval_parameters":
@@ -162,7 +179,7 @@ def plot_jets_variables(plot_config, plot_type):
         filepath_list = []
         labels_list = []
 
-        for model_name, model_config in plotting_config["Datasets_to_plot"].items():
+        for model_name, _ in plotting_config["Datasets_to_plot"].items():
             if (
                 not plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
                 is None
@@ -214,13 +231,13 @@ if __name__ == "__main__":
     if args.tracks:
         # Open and load the config files used in the eval process
         with open(args.config_file) as yaml_config:
-            plot_config = yaml.load(yaml_config, Loader=yaml_loader)
+            plots_config = yaml.load(yaml_config, Loader=yaml_loader)
 
-        plot_trks_variables(plot_config, args.format)
+        plot_trks_variables(plots_config, args.format)
 
     if args.jets:
         # Open and load the config files used in the eval process
         with open(args.config_file) as yaml_config:
-            plot_config = yaml.load(yaml_config, Loader=yaml_loader)
+            plots_config = yaml.load(yaml_config, Loader=yaml_loader)
 
-        plot_jets_variables(plot_config, args.format)
+        plot_jets_variables(plots_config, args.format)

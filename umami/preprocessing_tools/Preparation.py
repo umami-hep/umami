@@ -44,8 +44,8 @@ class PrepareSamples:
         samples = self.config.preparation["samples"]
         try:
             sample = samples[args.sample]
-        except KeyError:
-            raise KeyError(f'sample "{args.sample}" not in config file!')
+        except KeyError as Error:
+            raise KeyError(f'sample "{args.sample}" not in config file!') from Error
 
         self.sample_type = sample.get("type")
         self.sample_category = sample.get("category")
@@ -55,11 +55,11 @@ class PrepareSamples:
         else:
             try:
                 category_setup = global_config.flavour_categories[self.sample_category]
-            except KeyError:
+            except KeyError as Error:
                 raise KeyError(
                     f"Requested sample category {self.sample_category} not"
                     " defined in global config."
-                )
+                ) from Error
 
             # retrieving the cuts for the category selection
             category_cuts = GetCategoryCuts(
@@ -175,7 +175,7 @@ class PrepareSamples:
                     rng.shuffle(tracks)
 
             if self.create_file:
-                self.create_file = False
+                self.create_file = False  # pylint: disable=W0201:
                 # write to file by creating dataset
                 pbar.write("Creating output file: " + self.output_file)
                 with h5py.File(self.output_file, "w") as out_file:

@@ -1,3 +1,4 @@
+"""Execution script to run preprocessing steps."""
 import argparse
 
 import umami.preprocessing_tools as upt
@@ -98,8 +99,7 @@ def GetParser():
     )
     # To pass a list, let a space between the list entries:
     # e.g., --flavour target 0 1 2 plotting combining
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

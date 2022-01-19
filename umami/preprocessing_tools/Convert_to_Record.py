@@ -1,3 +1,4 @@
+"""Module converting h5 to tf records."""
 from umami.configuration import logger  # isort:skip
 
 import json
@@ -9,6 +10,8 @@ import tqdm
 
 
 class h5toTFRecordConverter:
+    """h5 converter to tf records."""
+
     def __init__(self, config):
         self.config = config
         self.path_h5 = self.config.GetFileName(option="resampled_scaled_shuffled")
@@ -16,7 +19,7 @@ class h5toTFRecordConverter:
             self.chunk_size = config.convert_to_tfrecord["chunk_size"]
             logger.info(f"Save {self.chunk_size} entries in one file")
 
-        except AttributeError or KeyError:
+        except (AttributeError, KeyError):
             try:
                 self.chunk_size = config.preparation["convert"]["chunk_size"]
                 logger.info(f"Save {self.chunk_size} entries in one file")

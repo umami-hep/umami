@@ -1,3 +1,5 @@
+"""Collection of plotting function for ftag performance plots."""
+# pylint: disable=consider-using-f-string
 from umami.configuration import global_config, logger  # isort:skip
 
 import matplotlib as mtp
@@ -16,10 +18,38 @@ from umami.tools import applyATLASstyle
 
 
 def eff_err(x, N):
+    """Calculate statistical efficiency uncertainty.
+
+    Parameters
+    ----------
+    x : numpy.array
+        efficiency values
+    N : int
+        number of used statistics to calculate efficiency
+
+    Returns
+    -------
+    numpy.array
+        efficiency uncertainties
+    """
     return np.sqrt(x * (1 - x) / N)
 
 
 def rej_err(x, N):
+    """Calculate the rejection uncertainties.
+
+    Parameters
+    ----------
+    x : numpy.array
+        rejection values
+    N : int
+        number of used statistics to calculate rejection
+
+    Returns
+    -------
+    numpy.array
+        rejection uncertainties
+    """
     return np.sqrt((1 / x) * (1 - (1 / x)) / N)
 
 
@@ -77,7 +107,6 @@ def plotEfficiencyVariable(
     minor_ticks_frequency=None,
     xlabel=None,
     Log=False,
-    colors=None,
     ymin: float = None,
     ymax: float = None,
     dpi: int = 400,
@@ -148,7 +177,7 @@ def plotEfficiencyVariable(
             index, counts = np.unique(
                 df_in_bin_tagged["labels"].values, return_counts=True
             )
-            count_dict = {ind: count for ind, count in zip(index, counts)}
+            count_dict = dict(zip(index, counts))
 
         else:
             count_dict = {}
@@ -211,12 +240,12 @@ def plotEfficiencyVariable(
         trimmed_label_val = []
         selected_indices = [int((len(x_label) - 1) / 4) * i for i in range(5)]
         if len(x_label) > 5:
-            for i in range(len(x_label)):
+            for i, x_label_i in enumerate(x_label):
                 if i in selected_indices:
                     trimmed_label.append(
-                        np.format_float_scientific(x_label[i], precision=3)
+                        np.format_float_scientific(x_label_i, precision=3)
                     )
-                    trimmed_label_val.append(x_label[i])
+                    trimmed_label_val.append(x_label_i)
         else:
             trimmed_label = x_label
             trimmed_label_val = x_label
@@ -402,7 +431,7 @@ def plotEfficiencyVariableComparison(
                 index, counts = np.unique(
                     df_in_bin_tagged["labels"].values, return_counts=True
                 )
-                count_dict = {ind: count for ind, count in zip(index, counts)}
+                count_dict = dict(zip(index, counts))
 
             else:
                 count_dict = {}
@@ -470,12 +499,12 @@ def plotEfficiencyVariableComparison(
         trimmed_label_val = []
         selected_indices = [int((len(x_label) - 1) / 4) * i for i in range(5)]
         if len(x_label) > 5:
-            for i in range(len(x_label)):
+            for i, x_label_i in enumerate(x_label):
                 if i in selected_indices:
                     trimmed_label.append(
-                        np.format_float_scientific(x_label[i], precision=3)
+                        np.format_float_scientific(x_label_i, precision=3)
                     )
-                    trimmed_label_val.append(x_label[i])
+                    trimmed_label_val.append(x_label_i)
         else:
             trimmed_label = x_label
             trimmed_label_val = x_label
@@ -574,10 +603,10 @@ def plotPtDependence(
     WP: float = 0.77,
     Disc_Cut_Value: float = None,
     SWP_Comparison: bool = False,
-    SWP_label_list: list = [],
+    SWP_label_list: list = None,
     Passed: bool = True,
     Fixed_WP_Bin: bool = False,
-    bin_edges=[0, 20, 50, 90, 150, 300, 1000],
+    bin_edges: list = None,
     WP_Line: bool = False,
     figsize: list = None,
     Grid: bool = False,
@@ -588,7 +617,7 @@ def plotPtDependence(
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",  # noqa: E501
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",  # noqa: E501 # pylint: disable=line-too-long
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.1,
     frameon: bool = False,
@@ -652,7 +681,10 @@ def plotPtDependence(
              If False, the background is white
     - dpi: Sets a DPI value for the plot that is produced (mainly for png).
     """
-
+    if SWP_label_list is None:
+        SWP_label_list = []
+    if bin_edges is None:
+        bin_edges = [0, 20, 50, 90, 150, 300, 1000]
     # Apply ATLAS style
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -1022,8 +1054,8 @@ def plotPtDependence(
         # TODO: is here a better way than .format?
 
     else:
-        SecondTag = (
-            SecondTag + "\nInclusive " + r"$\epsilon_b$ = {}%".format(int(WP * 100))
+        SecondTag = f"{SecondTag}\nInclusive " + r"$\epsilon_b$ = {}%".format(
+            int(WP * 100)
         )
         # TODO: is here a better way than .format?
 
@@ -1058,7 +1090,7 @@ def plotROCRatio(
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",  # noqa: E501
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",  # noqa: E501 # pylint: disable=line-too-long
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.3,
     styles: list = None,
@@ -1197,7 +1229,7 @@ def plotROCRatio(
     f0_ratio = {}
 
     # Loop over the models with the different settings for each model
-    for i, (
+    for _, (
         df_results,
         tagger,
         rej_class,
@@ -1412,8 +1444,8 @@ def plotROCRatioComparison(
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample",
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.3,
-    linestyles: list = [],
-    colors: list = [],
+    linestyles: list = None,
+    colors: list = None,
     xmin: float = None,
     ymax: float = None,
     ymin: float = None,
@@ -1431,7 +1463,6 @@ def plotROCRatioComparison(
     same_height_WP: bool = True,
     ratio_id: list = 0,
     ycolor: str = "black",
-    ycolor_right: str = "black",
     set_logy: bool = True,
     dpi: int = 400,
 ):
@@ -1452,6 +1483,11 @@ def plotROCRatioComparison(
             using the formula given by
             http://home.fnal.gov/~paterno/images/effic.pdf.
     """
+    if linestyles is None:
+        linestyles = []
+    if colors is None:
+        colors = []
+
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -1835,6 +1871,7 @@ def plotSaliency(
     FlipAxis: bool = False,
     dpi: int = 400,
 ):
+    """Plot saliency map."""
     # Transform to percent
     target_beff = 100 * target_beff
 
@@ -1980,6 +2017,7 @@ def plot_score(
     WorkingPoints_Legend: bool = False,
     dpi: int = 400,
 ):
+    """Plot score."""
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -2051,7 +2089,7 @@ def plot_score(
     plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
 
     # Define handles and labels
-    handles, labels = plt.gca().get_legend_handles_labels()
+    handles, _ = plt.gca().get_legend_handles_labels()
 
     # Set WP vertical lines if given in config
     if WorkingPoints is not None:
@@ -2155,16 +2193,15 @@ def plot_score_comparison(
     ncol: int = 2,
     Ratio_Cut=None,
     which_axis="left",
-    x_label=r"$D_b$",
     xmin: float = None,
     xmax: float = None,
     ymin: float = None,
     ymax: float = None,
     ycolor: str = "black",
-    ycolor_right: str = "black",
     title: str = None,
     dpi: int = 400,
 ):
+    """Plot score comparison."""
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -2378,9 +2415,10 @@ def plot_score_comparison(
 
             # Calculate x value of WP line
             x_value = np.percentile(
-                df_results.query(f"labels=={index_dict[main_class]}")[
-                    f"disc_{tagger_name_WP}"
-                ],
+                # TODO: fix this
+                df_results.query(  # pylint: disable=undefined-loop-variable
+                    f"labels=={index_dict[main_class]}"
+                )[f"disc_{tagger_name_WP}"],
                 (1 - WP) * 100,
             )
 
@@ -2550,6 +2588,7 @@ def plot_prob(
     yAxisAtlasTag: float = 0.9,
     dpi: int = 400,
 ):
+    """Plot probability score distributions."""
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -2623,8 +2662,7 @@ def plot_prob(
         plt.yscale("log")
         ymin, ymax = plt.ylim()
 
-        if ymin <= 1e-8:
-            ymin = 1e-8
+        ymin = max(ymin, 1e-08)
 
         # Increase ymax so atlas tag don't cut plot
         plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
@@ -2683,8 +2721,6 @@ def plot_prob_comparison(
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     yAxisIncrease: float = 1.3,
     yAxisAtlasTag: float = 0.9,
-    WorkingPoints: list = None,
-    tagger_for_WP: str = None,
     nBins: int = 50,
     figsize: list = None,
     labelpad: int = None,
@@ -2694,17 +2730,16 @@ def plot_prob_comparison(
     ncol: int = 2,
     Ratio_Cut=None,
     which_axis="left",
-    x_label: str = None,
     xmin: float = None,
     xmax: float = None,
     ymin: float = None,
     ymax: float = None,
     ycolor: str = "black",
-    ycolor_right: str = "black",
     title: str = None,
     set_logy: bool = False,
     dpi: int = 400,
 ):
+    """Plot probability distribution comparison."""
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)

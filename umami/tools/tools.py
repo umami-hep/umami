@@ -1,3 +1,4 @@
+"""Collection of tools used in different places in the project."""
 import re
 
 import yaml
@@ -24,6 +25,19 @@ yaml_loader.add_implicit_resolver(
 
 
 def replaceLineInFile(file, key, newLine, only_first=False):
+    """Replace line in file
+
+    Parameters
+    ----------
+    file : str
+        file name
+    key : str
+        key which triggers the replacement of line
+    newLine : str
+        content of line replacement
+    only_first : bool, optional
+        if True only first line in which key found is replaced, by default False
+    """
     filedata = ""
 
     if only_first is True:

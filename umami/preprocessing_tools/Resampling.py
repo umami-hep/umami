@@ -1,3 +1,5 @@
+"""Resampling module handling data preprocessing."""
+# pylint: disable=attribute-defined-outside-init,no-self-use
 import itertools
 import json
 import os
@@ -135,17 +137,14 @@ def read_dataframe_repetition(file_df, loading_indices, duplicate, use_tracks):
         if use_tracks:
             tracks = np.concatenate(track_ls)
             return jets, tracks
-        else:
-            return jets
-    else:
-        # No duplicate indices, fancy indexing of H5 working.
-        if use_tracks:
-            return (
-                file_df["jets"][loading_indices],
-                file_df["tracks"][loading_indices],
-            )
-        else:
-            return file_df["jets"][loading_indices]
+        return jets
+    # No duplicate indices, fancy indexing of H5 working.
+    if use_tracks:
+        return (
+            file_df["jets"][loading_indices],
+            file_df["tracks"][loading_indices],
+        )
+    return file_df["jets"][loading_indices]
 
 
 class JsonNumpyEncoder(JSONEncoder):
@@ -153,15 +152,15 @@ class JsonNumpyEncoder(JSONEncoder):
     This functions converts the numpy type to a json compatible format.
     """
 
-    def default(self, obj):
+    def default(self, obj):  # pylint: disable=arguments-renamed
+        # TODO: change this when using python 3.10
         if isinstance(obj, np.integer):
             return int(obj)
-        elif isinstance(obj, np.floating):
+        if isinstance(obj, np.floating):
             return float(obj)
-        elif isinstance(obj, np.ndarray):
+        if isinstance(obj, np.ndarray):
             return obj.tolist()
-        else:
-            return super(JsonNumpyEncoder, self).default(obj)
+        return super().default(obj)
 
 
 def CorrectFractions(
@@ -211,7 +210,7 @@ def CorrectFractions(
         )
         if relative_fraction == 1:
             continue
-        elif relative_fraction < 1:
+        if relative_fraction < 1:
             # need to correct now the fractions of the class with the smaller fraction
             # calculate how much jets need to be subtracted
             x = df["N_jets"][i] - (
@@ -287,7 +286,7 @@ def CalculateBinning(bins: list):
     return np.linspace(*bins)
 
 
-class Resampling(object):
+class Resampling:
     """
     Base class for all resampling methods in umami.
     """
@@ -348,10 +347,10 @@ class Resampling(object):
         sampling_variables = self.options.get("sampling_variables")
         if len(sampling_variables) != 2:
             raise ValueError("Resampling is so far only supporting 2 variables.")
-        vars = [list(elem.keys())[0] for elem in sampling_variables]
-        self.var_x = vars[0]
-        self.var_y = vars[1]
-        logger.info(f"Using {vars[0]} and {vars[1]} for resampling.")
+        variables = [list(elem.keys())[0] for elem in sampling_variables]
+        self.var_x = variables[0]
+        self.var_y = variables[1]
+        logger.info(f"Using {variables[0]} and {variables[1]} for resampling.")
         self.bins_x = CalculateBinning(sampling_variables[0][self.var_x]["bins"])
         self.bins_y = CalculateBinning(sampling_variables[1][self.var_y]["bins"])
         self.nbins = np.array([len(self.bins_x), len(self.bins_y)])
@@ -399,6 +398,7 @@ class Resampling(object):
         chunk_size: int = 10000,
         seed: int = 42,
     ):
+        """Generator for resampling"""
         with h5py.File(file, "r") as f:
             start_ind = 0
             end_ind = int(start_ind + chunk_size)
@@ -485,8 +485,7 @@ class Resampling(object):
                 except StopIteration:
                     if i <= len(indices) - 1:
                         continue
-                    else:
-                        break
+                    break
             pbar.update(jets.size)
 
             # Init a index list
@@ -553,6 +552,8 @@ class Resampling(object):
 
 
 class ResamplingTools(Resampling):
+    """Helper class for resampling."""
+
     def InitialiseSamples(self):
         """
         Initialising input files.
@@ -567,12 +568,12 @@ class ResamplingTools(Resampling):
         self.samples = {}
         try:
             samples = self.options["samples"]
-        except KeyError:
+        except KeyError as Error:
             raise KeyError(
                 "You chose the 'count' or 'probability_ratio' option "
                 "for the sampling but didn't provide the samples to use. "
                 "Please specify them in the configuration file!"
-            )
+            ) from Error
 
         # list of sample classes, bjets, cjets, etc
         valid_class_categories = self.GetValidClassCategories(samples)
@@ -682,7 +683,7 @@ class ResamplingTools(Resampling):
 
         concat_samples = {elem: {"jets": None} for elem in self.class_categories}
 
-        for sample_category in self.samples:
+        for sample_category in self.samples:  # pylint: disable=C0206
             for sample in self.samples[sample_category]:
                 if concat_samples[sample["category"]]["jets"] is None:
                     concat_samples[sample["category"]]["jets"] = sample["sample_vector"]
@@ -698,6 +699,7 @@ class ResamplingTools(Resampling):
         return concat_samples
 
     def GetPtEtaBinStatistics(self):
+        """Retrieve pt and eta bin statistics."""
         # calculate the 2D bin statistics for each sample and add it to
         # concat_samples dict with keys 'binnumbers','bin_indices_flat', 'stat'
         for class_category in self.class_categories:
@@ -710,7 +712,7 @@ class ResamplingTools(Resampling):
             self.bin_indices_flat = ind
 
 
-class PDFSampling(Resampling):
+class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
     """
     An importance sampling approach using ratios between distributions to sample
     and a target as importance weights.
@@ -721,7 +723,7 @@ class PDFSampling(Resampling):
         Initialise class. Set flavour to 'target' or an int corresponding to the index
         of the flavour to process (in the list of samples from config samples).
         """
-        super(PDFSampling, self).__init__(config)
+        super().__init__(config)
         self.inter_func_dict = {}
         self._ratio_dict = {}
         self._bin_edges_dict = {}
@@ -732,7 +734,7 @@ class PDFSampling(Resampling):
         ranges_info = []
         extreme_ranges = []
         for samp_var in sampling_var:
-            for var_ind, var in enumerate(list(samp_var.keys())):
+            for _, var in enumerate(list(samp_var.keys())):
                 while len(bin_info) < len(samp_var[var]["bins"]):
                     bin_info.append([])
                     ranges_info.append([])
@@ -782,13 +784,16 @@ class PDFSampling(Resampling):
 
     @property
     def Ratio(self):
+        """Get ratio."""
         return self._ratio_dict
 
     @property
     def Inter_Func_Dict(self):
+        """Get interpolation function."""
         return self.inter_func_dict
 
     def Load_Samples_Generator(self, sample_category, sample_id, chunk_size):
+        """Generator to load samples"""
         sample, preparation_sample = self.sample_file_map[sample_category][sample_id]
         in_file = GetPreparationSamplePath(preparation_sample)
         samples = {}
@@ -834,6 +839,7 @@ class PDFSampling(Resampling):
                 ] != Njets_initial, Njets_initial, index_tuple[0]
 
     def Load_Index_Generator(self, in_file, chunk_size):
+        """Load index generator."""
         with h5py.File(in_file, "r") as f:
             Nindices = len(f["jets"])
             start_ind = 0
@@ -853,6 +859,7 @@ class PDFSampling(Resampling):
                 yield indices, index_tuple[1] != Nindices
 
     def Load_Samples(self, sample_category, sample_id):
+        """Load samples."""
         sample, preparation_sample = self.sample_file_map[sample_category][sample_id]
         in_file = GetPreparationSamplePath(preparation_sample)
         samples = {}
@@ -895,12 +902,13 @@ class PDFSampling(Resampling):
         iterator=True,
         chunk_size=1e4,
         bins=None,
-        range=None,
+        hist_range=None,
     ):
+        """Convert file to histogram"""
         if bins is None:
             bins = self.limit["bins"][category_ind]
-        if range is None:
-            range = self.limit["ranges"][category_ind]
+        if hist_range is None:
+            hist_range = self.limit["ranges"][category_ind]
         available_numbers = 0
         if iterator:
             generator = self.Load_Samples_Generator(
@@ -924,14 +932,14 @@ class PDFSampling(Resampling):
                         target_dist["sample_vector"][:, 0],
                         target_dist["sample_vector"][:, 1],
                         bins=bins,
-                        range=range,
+                        range=hist_range,
                     )
                 else:
                     new_hist, _, _ = np.histogram2d(
                         target_dist["sample_vector"][:, 0],
                         target_dist["sample_vector"][:, 1],
                         bins=bins,
-                        range=range,
+                        range=hist_range,
                     )
                     h_target += new_hist
                 njets_added = len(target_dist["sample_vector"])
@@ -946,7 +954,7 @@ class PDFSampling(Resampling):
                 target_dist["sample_vector"][:, 0],
                 target_dist["sample_vector"][:, 1],
                 bins=bins,
-                range=range,
+                range=hist_range,
             )
 
         _, preparation_sample = self.sample_file_map[sample_category][sample_id]
@@ -976,12 +984,12 @@ class PDFSampling(Resampling):
 
         try:
             samples = self.options["samples"]
-        except KeyError:
+        except KeyError as Error:
             raise KeyError(
                 "You chose the 'pdf' option for the sampling but didn't"
                 "provide the samples to use. Please specify them in the"
                 "configuration file!"
-            )
+            ) from Error
         # saving a list of sample categories with associated IDs
         self.sample_categories = {
             elem: i for i, elem in enumerate(list(samples.keys()))
@@ -1053,7 +1061,7 @@ class PDFSampling(Resampling):
         target_hist=None,
         original_hist=None,
         target_bins=None,
-        bins=[100, 9],
+        bins=None,
         limits=None,
     ):
         """
@@ -1081,7 +1089,8 @@ class PDFSampling(Resampling):
         (entry in a dict).
         It is a property of the class.
         """
-
+        if bins is None:
+            bins = [100, 9]
         # Calculate the corresponding histograms
         if target_hist is not None:
             if target_bins is not None:
@@ -1257,10 +1266,10 @@ class PDFSampling(Resampling):
         """
         if replacement is False:
             logger.info("PDF sampling without replacement for given set!")
-        if isinstance(x_values, float) or isinstance(x_values, int):
+        if isinstance(x_values, (float, int)):
             x_values = np.asarray([x_values])
 
-        if isinstance(y_values, float) or isinstance(y_values, int):
+        if isinstance(y_values, (float, int)):
             y_values = np.asarray([y_values])
 
         # Check for sizes of x_values and y_values
@@ -1272,40 +1281,38 @@ class PDFSampling(Resampling):
 
         # Normalise the datapoints for sampling
         r_resamp = r_resamp / np.sum(r_resamp)
-        """
-        # When debugging, this snippet plots the
-        # weights and interpolated values vs pT.
+        if logger.level <= 10:
+            # When debugging, this snippet plots the
+            # weights and interpolated values vs pT.
 
-        import matplotlib as mtp
-        import matplotlib.pyplot as plt
+            import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
 
-        n, _ = np.histogram(x_values, bins=self._x_bin_edges)
-        sy, _ = np.histogram(x_values, bins=self._x_bin_edges, weights=r_resamp)
-        mean = np.divide(
-            sy,
-            n,
-            out=np.zeros(
-                sy.shape,
-                dtype=float,
-            ),
-            where=(n != 0),
-        )
-        fig = plt.figure()
-        plt.plot(self.x_bins, mean, label=f"effective weights {store_key}")
-        plt.legend(loc="best", ncol=1, fontsize=7)
-        plt.xlabel('pT (MeV)')
-        plt.ylabel('Weights')
-        plt.tight_layout()
-        plt.savefig(f"{store_key}_weights.pdf")
+            n, _ = np.histogram(x_values, bins=self._x_bin_edges)
+            sy, _ = np.histogram(x_values, bins=self._x_bin_edges, weights=r_resamp)
+            mean = np.divide(
+                sy,
+                n,
+                out=np.zeros(
+                    sy.shape,
+                    dtype=float,
+                ),
+                where=(n != 0),
+            )
+            plt.figure()
+            plt.plot(self.x_bins, mean, label=f"effective weights {store_key}")
+            plt.legend(loc="best", ncol=1, fontsize=7)
+            plt.xlabel("pT (MeV)")
+            plt.ylabel("Weights")
+            plt.tight_layout()
+            plt.savefig(f"{store_key}_weights.pdf")
 
-        fig = plt.figure()
-        plt.plot(self.x_bins, n, label=f"Distribution {store_key}")
-        plt.legend(loc="best", ncol=1, fontsize=7)
-        plt.xlabel('pT (MeV)')
-        plt.ylabel('Weights')
-        plt.tight_layout()
-        plt.savefig(f"{store_key}_distribution.pdf")
-        """
+            plt.figure()
+            plt.plot(self.x_bins, n, label=f"Distribution {store_key}")
+            plt.legend(loc="best", ncol=1, fontsize=7)
+            plt.xlabel("pT (MeV)")
+            plt.ylabel("Weights")
+            plt.tight_layout()
+            plt.savefig(f"{store_key}_distribution.pdf")
 
         # Resample the datapoints based on their PDF Ratio value
         sampled_indices = self.Resample_chunk(r_resamp, size, replacement)
@@ -1313,6 +1320,7 @@ class PDFSampling(Resampling):
         return sampled_indices
 
     def Return_unnormalised_PDF_weights(self, x_values, y_values, store_key):
+        """Get unnormalised PDF weight."""
         # Get the inter_func
         load_name = os.path.join(
             self.outfile_path,
@@ -1328,7 +1336,8 @@ class PDFSampling(Resampling):
         r_resamp[indices] = 0
         return r_resamp
 
-    def Resample_chunk(self, r_resamp, size, replacement=True):
+    def Resample_chunk(self, r_resamp, size, replacement=True):  # pylint: disable=R0201
+        """Resampling of chunk."""
         sampled_indices = np.random.default_rng().choice(
             len(r_resamp), p=r_resamp, size=size, replace=replacement
         )
@@ -1365,27 +1374,25 @@ class PDFSampling(Resampling):
         # First pass over data to get sum of weights
         # Assuming chunk size is large enough to avoid the loop
         # (all chunk have the same weight).
-        """
-        load_chunk = True
-        generator = self.Load_Samples_Generator(
-            sample_category=sample_category,
-            sample_id=sample_id,
-            chunk_size=chunk_size,
-        )
-        sum_of_weights = 0
-        while load_chunk:
-            try:
-                _, target_dist, load_more, _, _ = next(generator)
-            except StopIteration:
-                break
-            load_chunk = load_more
-            weights = self.Return_unnormalised_PDF_weights(
-                target_dist["sample_vector"][:, 0],
-                target_dist["sample_vector"][:, 1],
-                store_key=store_key,
-            )
-            sum_of_weights += np.sum(weights)
-        """
+        # load_chunk = True
+        # generator = self.Load_Samples_Generator(
+        #     sample_category=sample_category,
+        #     sample_id=sample_id,
+        #     chunk_size=chunk_size,
+        # )
+        # sum_of_weights = 0
+        # while load_chunk:
+        #     try:
+        #         _, target_dist, load_more, _, _ = next(generator)
+        #     except StopIteration:
+        #         break
+        #     load_chunk = load_more
+        #     weights = self.Return_unnormalised_PDF_weights(
+        #         target_dist["sample_vector"][:, 0],
+        #         target_dist["sample_vector"][:, 1],
+        #         store_key=store_key,
+        #     )
+        #     sum_of_weights += np.sum(weights)
 
         # second pass over data, normalising weights and sampling
         load_chunk = True
@@ -1445,7 +1452,6 @@ class PDFSampling(Resampling):
     def Save_partial_iterator(
         self,
         sample_category,
-        category_id,
         sample_id,
         selected_indices,
         chunk_size: int = 1e6,
@@ -1456,7 +1462,7 @@ class PDFSampling(Resampling):
         The file is read in one go.
         """
 
-        sample, preparation_sample = self.sample_file_map[sample_category][sample_id]
+        _, preparation_sample = self.sample_file_map[sample_category][sample_id]
         in_file = GetPreparationSamplePath(preparation_sample)
 
         sample_lengths = len(selected_indices)
@@ -1557,16 +1563,14 @@ class PDFSampling(Resampling):
             chunk_counter += 1
         pbar.close()
 
-    def Save_complete_iterator(
-        self, sample_category, category_id, sample_id, chunk_size: int = 1e5
-    ):
+    def Save_complete_iterator(self, sample_category, sample_id, chunk_size: int = 1e5):
         """
         Save the selected data to an output file with an iterative approach
         (generator) for both writing and reading, in chunk of size chunk_size.
         """
 
         sample_name = self.options["samples"][sample_category][sample_id]
-        sample, preparation_sample = self.sample_file_map[sample_category][sample_id]
+        _, preparation_sample = self.sample_file_map[sample_category][sample_id]
         in_file = GetPreparationSamplePath(preparation_sample)
 
         # Load number to sample
@@ -1914,13 +1918,11 @@ class PDFSampling(Resampling):
 
         if iterator:
             return None
-        else:
-            return reading_dict["target_dist"]
+        return reading_dict["target_dist"]
 
     def Sample_Flavour(
         self,
         sample_category: str,
-        category_id: int,
         sample_id: int,
         iterator: bool = True,
         flavour_distribution=None,
@@ -1932,7 +1934,6 @@ class PDFSampling(Resampling):
         Parameters
         ----------
         sample_category: str, the name of the category study.
-        category_id: int, the location of the category in the list.
         sample_id: int, the location of the sample flavour in the category dict.
         iterator: bool, whether to use the iterator approach or load the whole sample
                         in memory.
@@ -1974,28 +1975,26 @@ class PDFSampling(Resampling):
             )
             return None
 
-        else:
-            logger.info("Using in-memory approach.")
-            selected_ind = self.inMemoryResample(
-                flavour_distribution["sample_vector"][:, 0],
-                flavour_distribution["sample_vector"][:, 1],
-                size=number_to_sample,
-                store_key=sample_category + "_" + flavour_distribution["category"],
+        logger.info("Using in-memory approach.")
+        selected_ind = self.inMemoryResample(
+            flavour_distribution["sample_vector"][:, 0],
+            flavour_distribution["sample_vector"][:, 1],
+            size=number_to_sample,
+            store_key=sample_category + "_" + flavour_distribution["category"],
+        )
+        with h5py.File(save_name, "w") as f:
+            selected_indices = np.sort(selected_ind).astype(int)
+            f.create_dataset(
+                "jets",
+                data=selected_indices,
+                compression="gzip",
             )
-            with h5py.File(save_name, "w") as f:
-                selected_indices = np.sort(selected_ind).astype(int)
-                f.create_dataset(
-                    "jets",
-                    data=selected_indices,
-                    compression="gzip",
-                )
 
-            return selected_indices
+        return selected_indices
 
     def Save_Flavour(
         self,
         sample_category: str,
-        category_id: int,
         sample_id: int,
         selected_indices: dict = None,
         chunk_size: int = 1e5,
@@ -2030,7 +2029,6 @@ class PDFSampling(Resampling):
             logger.info("Using complete iterating approach for saving.")
             self.Save_complete_iterator(
                 sample_category,
-                category_id,
                 sample_id,
                 chunk_size,
             )
@@ -2041,7 +2039,6 @@ class PDFSampling(Resampling):
             )
             self.Save_partial_iterator(
                 sample_category,
-                category_id,
                 sample_id,
                 selected_indices,
                 chunk_size,
@@ -2066,10 +2063,10 @@ class PDFSampling(Resampling):
         logger.info(f"Storing to {output_name}")
 
         create_file = True
-        for sample_id, sample in enumerate(
+        for sample_id, _ in enumerate(
             self.options["samples"][list(self.sample_categories.keys())[0]]
         ):
-            for cat_ind, sample_category in enumerate(self.options["samples"]):
+            for _, sample_category in enumerate(self.options["samples"]):
                 load_name = os.path.join(
                     self.outfile_path,
                     "PDF_sampling",
@@ -2148,11 +2145,13 @@ class PDFSampling(Resampling):
                         chunk_number += 1
                     pbar.close()
 
-    def Make_plots(self, binning=[200, 20], chunk_size=1e4, iterator=True):
+    def Make_plots(self, binning=None, chunk_size=1e4, iterator=True):
         """
         Produce plots of the variables used in resampling
         (before and after preprocessing).
         """
+        if binning is None:
+            binning = [200, 20]
 
         ranges = self.limit["extreme_ranges"]
 
@@ -2171,7 +2170,7 @@ class PDFSampling(Resampling):
                         iterator=iterator,
                         chunk_size=chunk_size,
                         bins=binning,
-                        range=ranges,
+                        hist_range=ranges,
                     )
                     binx, biny = reading_dict["xbins"], reading_dict["ybins"]
                 else:
@@ -2182,7 +2181,7 @@ class PDFSampling(Resampling):
                         iterator=iterator,
                         chunk_size=chunk_size,
                         bins=(binx, biny),
-                        range=ranges,
+                        hist_range=ranges,
                     )
                 flavour_name = reading_dict["category"]
                 if cat_ind == 0:
@@ -2288,6 +2287,7 @@ class PDFSampling(Resampling):
         )
 
     def Run(self):
+        """Run function for PDF sampling class."""
         self.Initialise_Flavour_Samples()
         logger.info("Starting PDFsampling.")
         # Whether to use iterator approach or in-memory (one file at a time).
@@ -2304,7 +2304,7 @@ class PDFSampling(Resampling):
             # Before starting, get the number to sample
             self.Generate_Number_Sample(sample_id)
             for cat_ind, sample_category in enumerate(self.options["samples"]):
-                if not (sample_id in self.do_flavours):
+                if sample_id not in self.do_flavours:
                     logger.warning(
                         f"Skipping {sample_category} - {sample} (not in list"
                         " to execute)."
@@ -2322,7 +2322,6 @@ class PDFSampling(Resampling):
                 # Second step: use the flavour pdf to select indices (target included)
                 selected_indices = self.Sample_Flavour(
                     sample_category=sample_category,
-                    category_id=cat_ind,
                     sample_id=sample_id,
                     flavour_distribution=flavour_dist,
                     iterator=iterator,
@@ -2331,7 +2330,6 @@ class PDFSampling(Resampling):
                 # Third step: use the selected indices to save the thus sampled file
                 self.Save_Flavour(
                     sample_category=sample_category,
-                    category_id=cat_ind,
                     sample_id=sample_id,
                     selected_indices=selected_indices,
                     iterator=iterator,
@@ -2352,7 +2350,9 @@ class PDFSampling(Resampling):
 
 
 class Weighting(ResamplingTools):
-    def GetFlavourWeights(self, config):
+    """Weighting class."""
+
+    def GetFlavourWeights(self):
         """
         Calculate ratios (weights) from bins in 2d (pt,eta) histogram between
         different flavours.
@@ -2409,9 +2409,10 @@ class Weighting(ResamplingTools):
 
         with open(save_name, "wb") as file:
             pickle.dump(weights_dict, file)
-        logger.info("Saved flavour weights to: " + save_name)
+        logger.info(f"Saved flavour weights to: {save_name}")
 
     def Plotting(self):
+        """Plot weighting results."""
         plot_name_raw = self.config.GetFileName(
             extension="",
             option="pt_eta_raw_",
@@ -2429,6 +2430,15 @@ class Weighting(ResamplingTools):
         )
 
     def GetIndices(self):
+        """
+        Applies the UnderSampling to the given arrays.
+
+        Returns
+        -------
+        Returns the indices for the jets to be used separately for each
+        category and sample.
+
+        """
         # To include it into the preprocessing chain write out indices.h5 and
         # fill indices_to_keep with all jets for weighting method
         indices_to_keep = {elem: [] for elem in self.class_categories}
@@ -2439,7 +2449,7 @@ class Weighting(ResamplingTools):
         # Write out indices.h5 with keys as samplenames, e.g.
         # "training_ttbar_bjets"
         size_total = 0
-        self.indices_to_keep = {}
+        self.indices_to_keep = {}  # pylint: disable=attribute-defined-outside-init
         with h5py.File(self.options["intermediate_index_file"], "w") as f:
             for class_category in self.class_categories:
                 sample_categories = self.concat_samples[class_category]["jets"][
@@ -2467,6 +2477,7 @@ class Weighting(ResamplingTools):
         return self.indices_to_keep
 
     def Run(self):
+        """Run function for Weighting class."""
         logger.info("Starting weights calculation")
         # loading pt and eta from files and put them into dict
         self.InitialiseSamples()
@@ -2474,7 +2485,7 @@ class Weighting(ResamplingTools):
         self.ConcatenateSamples()
         # calculate ratios between 2d (pt,eta) bin distributions of different
         # flavours
-        self.GetFlavourWeights(self.config)
+        self.GetFlavourWeights()
         logger.info("Making Plots")
         # Plots raw pt and eta
         self.Plotting()
@@ -2484,12 +2495,16 @@ class Weighting(ResamplingTools):
 
 
 class UnderSampling(ResamplingTools):
+    """Undersampling class."""
+
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.indices_to_keep = None
+        self.x_y_after_sampling = None
+
     def GetIndices(self):
         """
         Applies the UnderSampling to the given arrays.
-
-        Parameters
-        ----------
 
         Returns
         -------
@@ -2638,6 +2653,7 @@ class UnderSampling(ResamplingTools):
         return self.indices_to_keep
 
     def Run(self):
+        """Run function executing full chain."""
         logger.info("Starting undersampling.")
         self.InitialiseSamples()
         self.GetIndices()
@@ -2726,7 +2742,7 @@ class UnderSampling(ResamplingTools):
     # )
 
 
-class UnderSamplingProp(object):
+class UnderSamplingProp:
     """
     Alternative to the UnderSampling approach, this implements a
     proportional sampler to prepare the training dataset. It makes sure
@@ -2738,7 +2754,7 @@ class UnderSamplingProp(object):
     """
 
     def __init__(self, bjets, cjets, ujets, taujets=None):
-        super(UnderSamplingProp, self).__init__()
+        super().__init__()
         self.bjets = bjets
         self.cjets = cjets
         self.ujets = ujets
@@ -2820,7 +2836,8 @@ class UnderSamplingProp(object):
         )
 
     def GetBins(self, df):
-        statistic, xedges, yedges, binnumber = binned_statistic_2d(
+        """Retrieving bins."""
+        statistic, binnumber = binned_statistic_2d(
             x=df[self.pT_var_name],
             y=df[self.eta_var_name],
             values=df[self.pT_var_name],
@@ -2856,6 +2873,11 @@ class ProbabilityRatioUnderSampling(UnderSampling):
     Does not work well with taus as of now.
     """
 
+    def __init__(self, config) -> None:
+        super().__init__(config)
+        self.x_y_after_sampling = None
+        self.indices_to_keep = None
+
     def GetIndices(self):
         """
         Applies the undersampling to the given arrays.
@@ -2871,12 +2893,12 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         """
         try:
             target_distribution = self.options["target_distribution"]
-        except KeyError:
+        except KeyError as Error:
             raise ValueError(
                 "Resampling method probabilty_ratio requires a target"
                 " distribution class in the options block of the configuration"
                 " file (i.e. bjets, cjets, ujets)."
-            )
+            ) from Error
 
         self.ConcatenateSamples()
 
@@ -2903,7 +2925,7 @@ class ProbabilityRatioUnderSampling(UnderSampling):
                         self.concat_samples[flav]["stat"][index]
                         * sampling_probabilities[flav][index]
                     )
-                    for flav in sampling_probabilities
+                    for flav in sampling_probabilities  # pylint: disable=C0206:
                 ]
             )
             for class_category in self.class_categories:
@@ -2978,7 +3000,9 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         logger.info(f"Using in total {size_total} jets.")
         return self.indices_to_keep
 
-    def GetSamplingProbability(self, target_stat, original_stat):
+    def GetSamplingProbability(  # pylint: disable=no-self-use
+        self, target_stat, original_stat
+    ):
         """
         Computes probability ratios against the target distribution.
         The probability ratios are scaled by the max ratio to ensure the
@@ -3013,12 +3037,7 @@ class ProbabilityRatioUnderSampling(UnderSampling):
     def GetSamplingProbabilities(
         self,
         target_distribution: str = "bjets",
-        stats: dict = {
-            "bjets": np.ndarray,
-            "cjets": np.ndarray,
-            "ujets": np.ndarray,
-            "taujets": np.ndarray,
-        },
+        stats: dict = None,
     ):
         """
         Computes probability ratios against the target distribution for each flavour.
@@ -3040,7 +3059,13 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         A dictionary of the sampling probabilities for each flavour.
 
         """
-
+        if stats is None:
+            stats = {
+                "bjets": np.ndarray,
+                "cjets": np.ndarray,
+                "ujets": np.ndarray,
+                "taujets": np.ndarray,
+            }
         if target_distribution is None:
             raise ValueError(
                 "Target distribution class does not exist in your sample classes."
