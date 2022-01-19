@@ -2,10 +2,7 @@
 # pylint: skip-file
 from umami.train_tools.Configuration import Configuration
 from umami.train_tools.NN_tools import (
-    CalcDiscValues,
     GetModelPath,
-    GetRejection,
-    GetScore,
     GetTestFile,
     GetTestSample,
     GetTestSampleTrks,

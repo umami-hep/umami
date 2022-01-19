@@ -13,18 +13,23 @@ from ruamel.yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
 
 class CompositingComposer(ruamel.yaml.composer.Composer):
+    """Composer class extension of ruamel."""
+
     compositors = {k: {} for k in (ScalarNode, MappingNode, SequenceNode)}
 
     @classmethod
     def add_compositor(cls, tag, compositor, *, nodeTypes=(ScalarNode,)):
+        """adding compositor"""
         for nodeType in nodeTypes:
             cls.compositors[nodeType][tag] = compositor
 
     @classmethod
     def get_compositor(cls, tag, nodeType):
+        """compositor getter."""
         return cls.compositors[nodeType].get(tag, None)
 
     def __compose_dispatch(self, anchor, nodeType, callback):
+        """Compose dispatch."""
         event = self.parser.peek_event()
         compositor = self.get_compositor(event.tag, nodeType) or callback
         if isinstance(compositor, types.MethodType):
@@ -32,28 +37,35 @@ class CompositingComposer(ruamel.yaml.composer.Composer):
         return compositor(self, anchor)
 
     def compose_scalar_node(self, anchor):
+        """Compose scalar node."""
         return self.__compose_dispatch(anchor, ScalarNode, super().compose_scalar_node)
 
     def compose_sequence_node(self, anchor):
+        """Compose sequence node."""
         return self.__compose_dispatch(
             anchor, SequenceNode, super().compose_sequence_node
         )
 
     def compose_mapping_node(self, anchor):
+        """Compose mapping node."""
         return self.__compose_dispatch(
             anchor, MappingNode, super().compose_mapping_node
         )
 
 
 class ExcludingConstructor(ruamel.yaml.constructor.Constructor):
+    """Constructor class extension of ruamel."""
+
     filters = {k: [] for k in (MappingNode, SequenceNode)}
 
     @classmethod
     def add_filter(cls, filter_yaml, *, nodeTypes=(MappingNode,)):
+        """Adding filer."""
         for nodeType in nodeTypes:
             cls.filters[nodeType].append(filter_yaml)
 
     def construct_mapping(self, node):  # pylint: disable=arguments-differ
+        """Construct mapping."""
         node.value = [
             (key_node, value_node)
             for key_node, value_node in node.value
@@ -62,6 +74,7 @@ class ExcludingConstructor(ruamel.yaml.constructor.Constructor):
         return super().construct_mapping(node)
 
     def construct_sequence(self, node):  # pylint: disable=arguments-differ
+        """Construct sequence."""
         node.value = [
             value_node
             for value_node in node.value
@@ -71,6 +84,8 @@ class ExcludingConstructor(ruamel.yaml.constructor.Constructor):
 
 
 class YAML(ruamel.yaml.YAML):
+    """Yaml interpreter adding !include option which support anchors."""
+
     def __init__(self, *args, **kwargs):
         if "typ" not in kwargs:
             kwargs["typ"] = "safe"
@@ -115,12 +130,14 @@ class YAML(ruamel.yaml.YAML):
                 pass
 
     def fork(self):
+        """Fork function."""
         yml = type(self)(typ=self.typ, pure=self.pure)
         yml.composer.anchors = self.composer.anchors
         return yml
 
 
 def include_compositor(self, anchor):  # pylint: disable=unused-argument
+    """Compositor inclusion function"""
     event = self.parser.get_event()
     yml = self.loader.fork()
     path = os.path.join(os.path.dirname(self.loader.reader.name), event.value)
@@ -129,6 +146,7 @@ def include_compositor(self, anchor):  # pylint: disable=unused-argument
 
 
 def exclude_filter(key_node, value_node=None):
+    """Filder exclusion."""
     value_node = value_node or key_node  # copy ref if None
     return key_node.tag == "!exclude" or value_node.tag == "!exclude"
 

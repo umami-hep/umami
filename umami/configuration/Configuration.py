@@ -1,20 +1,22 @@
+"""Configuration for logger of umami and tensorflow as well as reading global config."""
 import logging
 import os
 import pathlib
 
+import matplotlib
 import yaml
 
 from umami.tools import yaml_loader
 
 
-class Configuration(object):
+class Configuration:
     """
     This is a global configuration to allow certain settings which are
     hardcoded so far.
     """
 
-    def __init__(self, yaml_config=None):
-        super(Configuration, self).__init__()
+    def __init__(self):
+        super().__init__()
         self.yaml_config = (
             f"{pathlib.Path(__file__).parent.absolute()}/../configs/global_config.yaml"
         )
@@ -25,10 +27,18 @@ class Configuration(object):
         self.GetConfiguration()
 
     def LoadConfigFile(self):
+        """Load config file from disk."""
         with open(self.yaml_config, "r") as conf:
             self.config = yaml.load(conf, Loader=yaml_loader)
 
     def GetConfiguration(self):
+        """Assigne configuration from file to class variables.
+
+        Raises
+        ------
+        KeyError
+            if required config is not present in passed config file
+        """
         config_items = [
             "pTvariable",
             "etavariable",
@@ -50,18 +60,17 @@ class Configuration(object):
         self.logger.debug(
             f"Setting Matplotlib's backend to {self.config['MPLPlottingBackend']}"
         )
-        import matplotlib
 
         matplotlib.use(self.config["MPLPlottingBackend"])
 
     def SetTFDebugLevel(self):
         """Setting the Debug level of tensorflow.
-        For reference see https://stackoverflow.com/questions/35869137/avoid-tensorflow-print-on-standard-error"""  # noqa
+        For reference see https://stackoverflow.com/questions/35869137/avoid-tensorflow-print-on-standard-error"""  # noqa # pylint: disable=C0301
         self.logger.debug(f"Setting TFDebugLevel to {self.config['TFDebugLevel']}")
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(self.config["TFDebugLevel"])
 
     def SetLoggingLevel(self):
-        # set DebugLevel for logging
+        """Set DebugLevel for logging."""
         log_levels = {
             "CRITICAL": logging.CRITICAL,
             "ERROR": logging.ERROR,
@@ -70,9 +79,9 @@ class Configuration(object):
             "DEBUG": logging.DEBUG,
             "NOTSET": logging.NOTSET,
         }
-        logger = logging.getLogger("umami")
-        if self.config["DebugLevel"] in log_levels.keys():
-            logger.setLevel(log_levels[self.config["DebugLevel"]])
+        umami_logger = logging.getLogger("umami")
+        if self.config["DebugLevel"] in log_levels.keys():  # pylint: disable=C0201
+            umami_logger.setLevel(log_levels[self.config["DebugLevel"]])
         else:
             logging.error(
                 f"The 'DebugLevel' option {self.config['DebugLevel']} set in"
@@ -82,15 +91,15 @@ class Configuration(object):
         ch.setLevel(log_levels[self.config["DebugLevel"]])
         ch.setFormatter(CustomFormatter())
 
-        logger.addHandler(ch)
-        logger.propagate = False
-        return logger
+        umami_logger.addHandler(ch)
+        umami_logger.propagate = False
+        return umami_logger
 
 
 class CustomFormatter(logging.Formatter):
     """Logging Formatter to add colors and count warning / errors
     using implementation from
-    https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output"""  # noqa
+    https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output"""  # noqa # pylint: disable=C0301
 
     grey = "\x1b[38;21m"
     yellow = "\x1b[33;21m"
@@ -101,12 +110,12 @@ class CustomFormatter(logging.Formatter):
     debugformat = (
         "%(asctime)s - %(levelname)s:%(name)s: %(message)s (%(filename)s:%(lineno)d)"
     )
-    format = "%(levelname)s:%(name)s: %(message)s"
+    date_format = "%(levelname)s:%(name)s: %(message)s"
 
     FORMATS = {
         logging.DEBUG: grey + debugformat + reset,
-        logging.INFO: green + format + reset,
-        logging.WARNING: yellow + format + reset,
+        logging.INFO: green + date_format + reset,
+        logging.WARNING: yellow + date_format + reset,
         logging.ERROR: red + debugformat + reset,
         logging.CRITICAL: bold_red + debugformat + reset,
     }

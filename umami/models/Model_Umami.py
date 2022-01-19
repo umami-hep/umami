@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Keras model of the UMAMI tagger."""
 from umami.configuration import logger  # isort:skip
 import json
 import os
@@ -32,6 +33,24 @@ from umami.tools import yaml_loader
 
 
 def Umami_model(train_config=None, input_shape=None, njet_features=None):
+    """Keras model definition of UMAMI tagger.
+
+    Parameters
+    ----------
+    train_config : object, optional
+        training config, by default None
+    input_shape : tuple, optional
+        dataset input shape, by default None
+    njet_features: int, optional
+        number of jet features, by default None
+
+    Returns
+    -------
+    keras model
+        UMAMI keras model
+    int
+        number of epochs
+    """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
 
@@ -150,6 +169,25 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
 
 
 def Umami(args, train_config, preprocess_config):
+    """Training handling of UMAMI tagger.
+
+    Parameters
+    ----------
+    args : parser args
+        Arguments from command line parser
+    train_config : object
+        training configuration
+    preprocess_config : object
+        preprocessing configuration
+
+    Raises
+    ------
+    ValueError
+        if inputs are neither in .h5 or directory with tfrecords files given
+    KeyError
+        if no metadata file in directory
+    """
+
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
     Val_params = train_config.Eval_parameters_validation

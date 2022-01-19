@@ -22,6 +22,7 @@ setup(
         "umami.tools.PyATLASstyle",
         "umami.evaluation_tools",
         "umami.input_vars_tools",
+        "umami.metrics",
         "umami.models",
     ],
     # install_requires=[
