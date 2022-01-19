@@ -1,9 +1,10 @@
+"""Data generator module to handle reading of training datasets."""
 from umami.configuration import logger  # isort:skip
 import h5py
 import numpy as np
 
 
-class Model_Generator(object):
+class Model_Generator:  # pylint: disable=too-few-public-methods
     """Base class for the generators of the datasets for the models.
 
     This class provides the base functionalites for the different
@@ -82,6 +83,10 @@ class Model_Generator(object):
                 )
         self.length = int(self.n_jets / self.batch_size)
         self.step_size = self.batch_size * int(self.chunk_size / self.batch_size)
+        self.x_in_mem = None
+        self.weight_in_mem = None
+        self.x_trk_in_mem = None
+        self.y_in_mem = None
 
     def load_in_memory(self, load_jets: bool, load_tracks: bool, part: int = 0):
         """
@@ -114,7 +119,7 @@ class Model_Generator(object):
                 "X_Name needs to be given when jet features are to be loaded!"
             )
 
-        elif load_tracks is True and self.X_trk_Name is None:
+        if load_tracks is True and self.X_trk_Name is None:
             raise ValueError(
                 "X_trk_Name needs to be given when track features are to be loaded!"
             )

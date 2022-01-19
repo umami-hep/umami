@@ -1,3 +1,4 @@
+"""Configuration module for preprocessing."""
 import os
 import warnings
 
@@ -7,11 +8,11 @@ from umami.configuration import logger
 from umami.tools import YAML, yaml_loader
 
 
-class Configuration(object):
+class Configuration:
     """docstring for Configuration."""
 
     def __init__(self, yaml_config=None):
-        super(Configuration, self).__init__()
+        super().__init__()
         self.yaml_config = yaml_config
         self.yaml_default_config = "configs/preprocessing_default_config.yaml"
         self.LoadConfigFiles()
@@ -19,10 +20,12 @@ class Configuration(object):
 
     @property
     def ConfigPath(self):
+        """Return config path."""
         return self.yaml_config
 
     @property
     def ParameterConfigPath(self):
+        """Return parameter config path."""
         with open(self.yaml_config, "r") as conf:
             first_line = conf.readline()
         first_line = first_line.split("!include ")
@@ -39,6 +42,7 @@ class Configuration(object):
         return preprocess_parameters_path
 
     def LoadConfigFiles(self):
+        """Load config file from disk."""
         self.yaml_default_config = os.path.join(
             os.path.dirname(__file__), self.yaml_default_config
         )
@@ -50,6 +54,13 @@ class Configuration(object):
             self.config = umami_yaml.load(conf)
 
     def GetConfiguration(self):
+        """Assigne configuration from file to class variables.
+
+        Raises
+        ------
+        KeyError
+            if required config option is not present in passed config file
+        """
         for elem in self.default_config:
             if elem in self.config:
                 if isinstance(self.config[elem], dict) and "f_" in elem:
@@ -88,6 +99,7 @@ class Configuration(object):
     def GetFileName(
         self, iteration=None, option=None, extension=".h5", custom_path=None
     ):
+        """Get the file name for different preprocessing steps."""
         if option is None and iteration is None:
             return self.outfile_name
         out_file = self.outfile_name

@@ -1,3 +1,5 @@
+"""Scaling module to perform variable scaling and shifting."""
+# pylint: disable=no-self-use
 import json
 import os
 
@@ -230,9 +232,9 @@ class Scaling:
         combined_dict_list = []
 
         # Loop over the list with the dicts from the variables
-        for counter in range(len(first_scale_dict)):
+        for counter, dict_i in enumerate(first_scale_dict):
             # Ensure the same variables are merged
-            if first_scale_dict[counter]["name"] == second_scale_dict[counter]["name"]:
+            if dict_i["name"] == second_scale_dict[counter]["name"]:
                 # Combine the means
                 combined_average, combined_std = self.join_mean_scale(
                     first_scale_dict=first_scale_dict,
@@ -245,10 +247,10 @@ class Scaling:
                 # Combine the mean/shift in a dict and append it
                 combined_dict_list.append(
                     self.dict_in(
-                        varname=first_scale_dict[counter]["name"],
+                        varname=dict_i["name"],
                         average=combined_average,
                         std=combined_std,
-                        default=first_scale_dict[counter]["default"],
+                        default=dict_i["default"],
                     )
                 )
 
@@ -474,8 +476,7 @@ class Scaling:
                 end_ind = int(start_ind + chunkSize)
 
                 # Check if end index is bigger than Njets
-                if end_ind > nJets:
-                    end_ind = nJets
+                end_ind = min(end_ind, nJets)
 
                 # Append to list
                 tupled_indices.append((start_ind, end_ind))
@@ -509,7 +510,7 @@ class Scaling:
                         continue
 
                     # Set Default values for isDefaults variables
-                    elif "isDefaults" in var:
+                    if "isDefaults" in var:
                         logger.debug(
                             f"Default scaling/shifting values (0, 1) are used for {var}"
                         )
@@ -568,8 +569,7 @@ class Scaling:
                 end_ind = int(start_ind + chunkSize)
 
                 # Check if end index is bigger than Njets
-                if end_ind > nJets:
-                    end_ind = nJets
+                end_ind = min(end_ind, nJets)
 
                 # Append to list
                 tupled_indices.append((start_ind, end_ind))
@@ -597,7 +597,7 @@ class Scaling:
                 eps = 1e-8
 
                 # Take the log of the desired variables
-                for i, v in enumerate(logNormVars):
+                for i, _ in enumerate(logNormVars):
                     X_trk_train[:, :, i][mask] = np.log(
                         X_trk_train[:, :, i][mask] + eps
                     )
@@ -646,8 +646,7 @@ class Scaling:
             tupled_indices = []
             while start_ind < nJets:
                 end_ind = int(start_ind + chunkSize)
-                if end_ind > nJets:
-                    end_ind = nJets
+                end_ind = min(end_ind, nJets)
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
                 end_ind = int(start_ind + chunkSize)
@@ -655,12 +654,8 @@ class Scaling:
             for index_tuple in tupled_indices:
 
                 # Load jets
-                jets = pd.DataFrame(
-                    f["/jets"][index_tuple[0] : index_tuple[1]]
-                )
-                labels = pd.DataFrame(
-                    f["/labels"][index_tuple[0] : index_tuple[1]]
-                )
+                jets = pd.DataFrame(f["/jets"][index_tuple[0] : index_tuple[1]])
+                labels = pd.DataFrame(f["/labels"][index_tuple[0] : index_tuple[1]])
                 if "weight" not in jets:
                     length = nJets if nJets < chunkSize else len(jets)
                     jets["weight"] = np.ones(int(length))
@@ -682,9 +677,8 @@ class Scaling:
                     if "isDefaults" in elem["name"] or "weight" in elem["name"]:
                         continue
 
-                    else:
-                        jets[elem["name"]] -= elem["shift"]
-                        jets[elem["name"]] /= elem["scale"]
+                    jets[elem["name"]] -= elem["shift"]
+                    jets[elem["name"]] /= elem["scale"]
 
                 if self.bool_use_tracks is False:
                     yield jets, labels, flavour

@@ -1,3 +1,4 @@
+"""Keras model of the DIPS tagger with conditional attention."""
 from umami.configuration import logger  # isort:skip
 import json
 
@@ -11,6 +12,22 @@ import umami.train_tools as utt
 
 
 def Dips_model(train_config=None, input_shape=None):
+    """Keras model definition of DIPS with conditional attention.
+
+    Parameters
+    ----------
+    train_config : object, optional
+        training config, by default None
+    input_shape : tuple, optional
+        dataset input shape, by default None
+
+    Returns
+    -------
+    keras model
+        Dips with cond. attention keras model
+    int
+        number of epochs
+    """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
 
@@ -51,6 +68,18 @@ def Dips_model(train_config=None, input_shape=None):
 
 
 def DipsCondAtt(args, train_config, preprocess_config):
+    """Training handling of DIPS tagger with conditonal attention.
+
+    Parameters
+    ----------
+    args : parser args
+        Arguments from command line parser
+    train_config : object
+        training configuration
+    preprocess_config : object
+        preprocessing configuration
+
+    """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
     Val_params = train_config.Eval_parameters_validation

@@ -1,3 +1,4 @@
+"""Collection of utility functions for preprocessing tools."""
 import os
 
 import matplotlib as mtp
@@ -31,13 +32,10 @@ def GetBinaryLabels(df, column="label"):
 
 def ResamplingPlots(
     concat_samples: dict,
-    positions_x_y: list = [0, 1],
-    variable_names: list = ["pT", "abseta"],
+    positions_x_y: list = None,
+    variable_names: list = None,
     plot_base_name: str = "plots/resampling-plot",
-    binning: dict = {
-        "pT": np.linspace(10000, 2000000, 200),
-        "abseta": np.linspace(0, 2.5, 26),
-    },
+    binning: dict = None,
     Log: bool = True,
     after_sampling: bool = False,
     normalised: bool = False,
@@ -83,6 +81,18 @@ def ResamplingPlots(
     -------
     Save plots of pt and eta to plot_base_name
     """
+    if positions_x_y is None:
+        positions_x_y = [0, 1]
+    if variable_names is None:
+        variable_names = ["pT", "abseta"]
+    if binning is None:
+        binning = (
+            {
+                "pT": np.linspace(10000, 2000000, 200),
+                "abseta": np.linspace(0, 2.5, 26),
+            },
+        )
+
     applyATLASstyle(mtp)
 
     for varname, varpos in zip(variable_names, positions_x_y):
@@ -105,7 +115,9 @@ def ResamplingPlots(
 
             if hist_input:
                 # Working directly on the x-D array
-                direction_sum = tuple([i for i in positions_x_y if i != varpos])
+                direction_sum = tuple(  # pylint: disable=R1728
+                    [i for i in positions_x_y if i != varpos]
+                )
                 counts = np.sum(concat_samples[flav], axis=direction_sum)
                 Bins = binning[varname] / scale_val
 
@@ -193,10 +205,7 @@ def MakePlots(
     cjets,
     taujets=None,
     plot_name="plots/InfoPlot.pdf",
-    binning={
-        global_config.pTvariable: np.linspace(10000, 2000000, 200),
-        global_config.etavariable: np.linspace(0, 2.5, 26),
-    },
+    binning=None,
 ):
     """Plots pt and eta distribution.
     Parameters
@@ -209,14 +218,18 @@ def MakePlots(
     -------
     TODO
     """
-
-    vars = [global_config.pTvariable, global_config.etavariable]
+    if binning is None:
+        binning = {
+            global_config.pTvariable: np.linspace(10000, 2000000, 200),
+            global_config.etavariable: np.linspace(0, 2.5, 26),
+        }
+    variables = [global_config.pTvariable, global_config.etavariable]
 
     bool_plot_taujets = taujets is not None
     fig = plt.figure()
     heights = [3, 1]
     spec = fig.add_gridspec(ncols=2, nrows=2, height_ratios=heights)
-    for i, var in enumerate(vars):
+    for i, var in enumerate(variables):
         # plt.subplot(2, 2, i + 1)
         ax = fig.add_subplot(spec[0, i])
 
@@ -322,7 +335,7 @@ def Plot_vars(bjets, cjets, ujets, plot_name="InfoPlot"):
         plt.title(var)
         plt.legend()
     plt.tight_layout()
-    plotname = "plots/%s_all_vars.pdf" % plot_name
+    plotname = f"plots/{plot_name}_all_vars.pdf"
     logger.info(f"Save plot as {plotname}")
     plt.savefig(plotname, transparent=True)
 
@@ -361,13 +374,13 @@ def generate_process_tag(preparation_ntuples_keys):
                 combined_sample = True
                 processes += f" + {label}"
             logger.info(f"Found the process '{process}' with the label '{label}'")
-        except KeyError:
+        except KeyError as Error:
             raise KeyError(
                 f"Plot label for the process {process} was not"
                 "found. Make sure your entries in the 'ntuples'"
                 "section are valid entries that have a matching entry"
                 "in the global config."
-            )
+            ) from Error
     # Combine the string that contains the latex code for the processes
     # and the "sqrt(s)..." and "PFlow Jets" part
     if combined_sample is True:

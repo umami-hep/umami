@@ -33,8 +33,7 @@
   before_script:
     - pip install pylint==2.12.2
   script:
-    - pylint ./umami
-  allow_failure: True
+    - pylint -j2 ./umami
 
 .linting_rules_template: &linting_rules_template
   rules:

@@ -1,3 +1,4 @@
+"""Plotting functions for NN training."""
 import copy
 import os
 
@@ -9,13 +10,10 @@ import pandas as pd
 from matplotlib.ticker import MaxNLocator
 
 from umami.configuration import global_config, logger
+from umami.metrics import GetRejection
 from umami.preprocessing_tools import GetBinaryLabels
 from umami.tools import applyATLASstyle, makeATLAStag
-from umami.train_tools import (
-    GetRejection,
-    get_class_label_ids,
-    get_class_label_variables,
-)
+from umami.train_tools import get_class_label_ids, get_class_label_variables
 
 
 def CompTaggerRejectionDict(
@@ -107,7 +105,7 @@ def PlotDiscCutPerEpoch(
     yAxisIncrease: float = 1.3,
     ncol: int = 1,
     plot_datatype: str = "pdf",
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ):
     """
     Plot the discriminant cut value for a specific working point
@@ -188,7 +186,7 @@ def PlotDiscCutPerEpochUmami(
     yAxisIncrease: float = 1.35,
     ncol: int = 1,
     plot_datatype: str = "pdf",
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ):
     """
     Plot the discriminant cut value for a specific working point
@@ -282,11 +280,11 @@ def PlotRejPerEpochComparison(
     yAxisAtlasTag: float = 0.95,
     yAxisIncrease: float = 1.1,
     ncol: int = 1,
-    figsize: list = [8, 6],
+    figsize: list = None,
     legend_loc: str = "upper right",
     plot_datatype: str = "pdf",
     legFontSize: int = 10,
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ):
     """
     Plotting the Rejections per Epoch for the trained tagger and
@@ -322,6 +320,8 @@ def PlotRejPerEpochComparison(
       This is only available for two rejections at once due to limiting of
       axes.
     """
+    if figsize is None:
+        figsize = [8, 6]
 
     # Apply ATLAS style
     if ApplyATLASStyle is True:
@@ -376,7 +376,7 @@ def PlotRejPerEpochComparison(
             logger.info("No comparison tagger defined. Not plotting those!")
 
         else:
-            for comp_counter, comp_tagger in enumerate(comp_tagger_rej_dict):
+            for _, comp_tagger in enumerate(comp_tagger_rej_dict):
                 try:
                     tmp_line = axes[counter].axhline(
                         comp_tagger_rej_dict[comp_tagger][f"{iter_class}_rej"],
@@ -403,7 +403,7 @@ def PlotRejPerEpochComparison(
             logger.info("No local taggers defined. Not plotting those!")
 
         else:
-            for tt_counter, tt in enumerate(trained_taggers):
+            for _, tt in enumerate(trained_taggers):
                 try:
                     # Get the needed rejection info from json
                     tt_rej_dict = pd.read_json(trained_taggers[tt]["path"])
@@ -511,11 +511,11 @@ def PlotRejPerEpoch(
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.1,
     ncol: int = 1,
-    figsize: list = [8, 6],
+    figsize: list = None,
     legend_loc: str = "upper right",
     plot_datatype: str = "pdf",
     legFontSize: int = 10,
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ):
     """
     Plotting the Rejections per Epoch for the trained tagger and
@@ -550,7 +550,8 @@ def PlotRejPerEpoch(
     - Plot of the rejections of the taggers per epoch in seperate plots.
       One per rejection.
     """
-
+    if figsize is None:
+        figsize = [8, 6]
     # Apply ATLAS style
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
@@ -562,7 +563,7 @@ def PlotRejPerEpoch(
     # Get flavour categories from global config
     flav_cat = global_config.flavour_categories
 
-    for counter, iter_class in enumerate(class_labels_wo_main):
+    for _, iter_class in enumerate(class_labels_wo_main):
         # Set global plot configs
         fig = plt.figure(figsize=figsize)
         axes = fig.add_subplot()
@@ -588,7 +589,7 @@ def PlotRejPerEpoch(
             logger.info("No comparison tagger defined. Not plotting those!")
 
         else:
-            for comp_counter, comp_tagger in enumerate(comp_tagger_rej_dict):
+            for _, comp_tagger in enumerate(comp_tagger_rej_dict):
                 try:
                     axes.axhline(
                         comp_tagger_rej_dict[comp_tagger][f"{iter_class}_rej"],
@@ -612,7 +613,7 @@ def PlotRejPerEpoch(
             logger.info("No local taggers defined. Not plotting those!")
 
         else:
-            for tt_counter, tt in enumerate(trained_taggers):
+            for _, tt in enumerate(trained_taggers):
                 try:
                     # Get the needed rejection info from json
                     tt_rej_dict = pd.read_json(trained_taggers[tt]["path"])
@@ -679,7 +680,7 @@ def PlotLosses(
     plot_datatype="pdf",
     ymin=None,
     ymax=None,
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ):
     """
     Plot the training loss and the validation losses per epoch.
@@ -764,7 +765,7 @@ def PlotAccuracies(
     plot_datatype="pdf",
     ymin=None,
     ymax=None,
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ):
     """
     Plot the training and validation accuracies per epoch.
@@ -849,7 +850,7 @@ def PlotLossesUmami(
     plot_datatype="pdf",
     ymin=None,
     ymax=None,
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ):
     """
     Plot the training loss and the validation losses per epoch for
@@ -954,7 +955,7 @@ def PlotAccuraciesUmami(
     plot_datatype="pdf",
     ymin=None,
     ymax=None,
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ):
     """
     Plot the training and validation accuracies per epoch for

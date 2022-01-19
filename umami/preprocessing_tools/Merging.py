@@ -96,13 +96,13 @@ def create_datasets(output, source, size):
         source.close()
 
 
-def add_data(source, output, range):
+def add_data(source, output, data_range):
     """Add content of "source" to "output" hdf5 file.
 
     Keyword arguments:
     source -- input hdf5 file path / input hdf5 file / dictionary
     output -- output hdf5 file
-    range -- where to save data in output arrays
+    data_range -- where to save data in output arrays
     """
     # check if 'source' is a dict, otherwise assume it is a path to a hdf5 file
     close_file = False
@@ -112,6 +112,6 @@ def add_data(source, output, range):
     check_keys(source, output)
     check_shapes(source, output)
     for key in source:
-        output[key][range[0] : range[1]] = source[key]
+        output[key][data_range[0] : data_range[1]] = source[key]
     if close_file:
         source.close()

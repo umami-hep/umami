@@ -48,7 +48,7 @@ class DenseNet(Layer):
         assert len(nodes), "No layers in DenseNet"
         super().__init__(**kwargs)
 
-    def call(self, inputs):
+    def call(self, inputs):  # pylint: disable=arguments-differ
         out = self.layers[0](inputs)
         for layer in self.layers[1:]:
             out = layer(out)
@@ -62,7 +62,7 @@ class DenseNet(Layer):
             "activation": self.activation,
             "batch_norm": self.batch_norm,
         }
-        base_config = super(DenseNet, self).get_config()
+        base_config = super().get_config()
 
         # Return a dict with the configurations
         return dict(list(base_config.items()) + list(config.items()))
@@ -105,10 +105,10 @@ class DeepSet(Layer):
         self.layers.append(Dense(units=nodes[-1], activation=activation))
 
         # Check that nodes are in layers
-        assert len(self.layers), "No layers in DeepSet"
+        assert self.layers, "No layers in DeepSet"
         super().__init__(**kwargs)
 
-    def call(self, inputs, mask=None):
+    def call(self, inputs, mask=None):  # pylint: disable=arguments-differ
         # Assert that the tensor shape is at least rank 3
         assert len(inputs.shape) == 3, (
             "DeepSets layer requires tensor of rank 3. Shape of tensor"
@@ -137,9 +137,8 @@ class DeepSet(Layer):
         if not self.mask_zero:
             return None
 
-        else:
-            # Return correct masking
-            return K.equal(K.sum(inputs ** 2, axis=-1), 0)
+        # Return correct masking
+        return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
         # Get configuration of the network
@@ -149,20 +148,22 @@ class DeepSet(Layer):
             "batch_norm": self.batch_norm,
             "mask_zero": self.mask_zero,
         }
-        base_config = super(DeepSet, self).get_config()
+        base_config = super().get_config()
 
         # Return a dict with the configurations
         return dict(list(base_config.items()) + list(config.items()))
 
 
 class MaskedSoftmax(Layer):
+    """Softmax layer with masking."""
+
     def __init__(self, axis=-1, **kwargs):
         # Get attributes
         self.axis = axis
         self.supports_masking = True
         super().__init__(**kwargs)
 
-    def call(self, inputs, mask=None):
+    def call(self, inputs, mask=None):  # pylint: disable=arguments-differ
         # Check for masking
         if mask is None:
 
@@ -181,7 +182,7 @@ class MaskedSoftmax(Layer):
 
     def get_config(self):
         config = {"axis": self.axis}
-        base_config = super(MaskedSoftmax, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
@@ -207,10 +208,10 @@ class Attention(Layer):
         for node in nodes:
             self.layers.append(Dense(units=node, activation=activation))
         self.layers.append(Dense(units=1, activation="sigmoid"))
-        assert len(self.layers), "No layers in DeepSet"
+        assert self.layers, "No layers in DeepSet"
         super().__init__(**kwargs)
 
-    def call(self, inputs, mask=None):
+    def call(self, inputs, mask=None):  # pylint: disable=arguments-differ
         assert len(inputs.shape) == 3, (
             "Attention layer requires tensor of rank 3. Shape of tensor"
             f" received {inputs.shape}"
@@ -232,15 +233,13 @@ class Attention(Layer):
             attention_out = MaskedSoftmax(axis=1)(attention)
             # attention_out = Softmax(axis=1)(attention)
             return attention_out
-        else:
-            return attention
+        return attention
 
     def compute_mask(self, inputs, mask=None):
         if not self.mask_zero:
             return None
 
-        else:
-            return K.equal(K.sum(inputs ** 2, axis=-1), 0)
+        return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
         config = {
@@ -249,7 +248,7 @@ class Attention(Layer):
             "mask_zero": self.mask_zero,
             "apply_softmax": self.apply_softmax,
         }
-        base_config = super(Attention, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
 
@@ -261,7 +260,7 @@ class AttentionPooling(Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def call(self, inputs):
+    def call(self, inputs):  # pylint: disable=arguments-differ
 
         # Get attention and feature tensor
         attention, features = inputs[:2]
@@ -309,7 +308,7 @@ class ConditionalAttention(Layer):
         self.layers = self.attention.layers
         super().__init__(**kwargs)
 
-    def call(self, inputs):
+    def call(self, inputs):  # pylint: disable=arguments-differ
 
         # Retrieve repeated vector and condition vector
         repeat, condition = inputs[:2]
@@ -344,9 +343,8 @@ class ConditionalAttention(Layer):
         if not self.mask_zero:
             return None
 
-        else:
-            # Return mask if used
-            return K.equal(K.sum(inputs ** 2, axis=-1), 0)
+        # Return mask if used
+        return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
         # Get the configs of the layer as dict
@@ -356,13 +354,15 @@ class ConditionalAttention(Layer):
             "mask_zero": self.mask_zero,
             "apply_softmax": self.apply_softmax,
         }
-        base_config = super(ConditionalAttention, self).get_config()
+        base_config = super().get_config()
 
         # Return dict of the configs
         return dict(list(base_config.items()) + list(config.items()))
 
 
 class ConditionalDeepSet(Layer):
+    """Keras layer for conditional deep set."""
+
     def __init__(
         self,
         nodes,
@@ -385,7 +385,7 @@ class ConditionalDeepSet(Layer):
         self.layers = self.deepsets.layers
         super().__init__(**kwargs)
 
-    def call(self, inputs):
+    def call(self, inputs):  # pylint: disable=arguments-differ
 
         # Get repeated vector and conditions vector
         repeat, condition = inputs[:2]
@@ -421,9 +421,8 @@ class ConditionalDeepSet(Layer):
         if not self.mask_zero:
             return None
 
-        else:
-            # Return masking
-            return K.equal(K.sum(inputs ** 2, axis=-1), 0)
+        # Return masking
+        return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
         # Get the configs of the layer as dict
@@ -433,17 +432,19 @@ class ConditionalDeepSet(Layer):
             "batch_norm": self.batch_norm,
             "mask_zero": self.mask_zero,
         }
-        base_config = super(ConditionalDeepSet, self).get_config()
+        base_config = super().get_config()
 
         # Return dict of the configs
         return dict(list(base_config.items()) + list(config.items()))
 
 
 class MaskedAverage1DPooling(Layer):
+    """Keras layer for masked 1D average pooling."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def call(self, inputs, mask=None):
+    def call(self, inputs, mask=None):  # pylint: disable=arguments-differ
         # Check for masking
         if mask is not None:
 
@@ -492,7 +493,7 @@ class Sum(Layer):
     def build(self, input_shape):
         pass
 
-    def call(self, x, mask=None):
+    def call(self, x, mask=None):  # pylint: disable=arguments-differ
         if mask is not None:
             x = x * K.cast(mask, K.dtype(x))[:, :, None]
         return K.sum(x, axis=1)
@@ -500,5 +501,5 @@ class Sum(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[2]
 
-    def compute_mask(self, inputs, mask):
+    def compute_mask(self, inputs, mask):  # pylint: disable=signature-differs
         return None

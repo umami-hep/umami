@@ -1,3 +1,4 @@
+"""Integration tests for variable plotting."""
 import logging
 import os
 import unittest
@@ -6,7 +7,7 @@ from subprocess import CalledProcessError, run
 
 import yaml
 
-from umami.configuration import global_config  # noqa: F401
+from umami.configuration import global_config  # noqa: F401 # pylint: disable=W0611
 from umami.tools import yaml_loader
 
 
@@ -36,16 +37,14 @@ def runPlotInputVars(config):
             "-c",
             f"{config}",
             "--tracks",
-        ]
+        ],
+        check=True,
     )
     try:
         run_plot_input_vars_trks.check_returncode()
     except CalledProcessError:
         logging.info("Test failed: plot_input_variables.py.")
         isSuccess = False
-
-    if isSuccess is True:
-        run_plot_input_vars_trks
 
     logging.info("Test: running plot_input_vars.py jets...")
     run_plot_input_vars_jets = run(
@@ -55,7 +54,8 @@ def runPlotInputVars(config):
             "-c",
             f"{config}",
             "--jets",
-        ]
+        ],
+        check=True,
     )
     try:
         run_plot_input_vars_jets.check_returncode()
@@ -63,13 +63,12 @@ def runPlotInputVars(config):
         logging.info("Test failed: plot_input_variables.py.")
         isSuccess = False
 
-    if isSuccess is True:
-        run_plot_input_vars_jets
-
     return isSuccess
 
 
 class TestInput_Vars_Plotting(unittest.TestCase):
+    """Integration tests for variable plotting."""
+
     def setUp(self):
         """Download test files for input var plots."""
         # Get test configuration
@@ -79,9 +78,10 @@ class TestInput_Vars_Plotting(unittest.TestCase):
         logging.info(f"Creating test directory in {test_dir}")
 
         # clean up, hopefully this causes no "uh oh...""
+        # TODO: switch to shutil copy in python
         if test_dir.startswith("/tmp"):
-            run(["rm", "-rf", test_dir])
-        run(["mkdir", "-p", test_dir])
+            run(["rm", "-rf", test_dir], check=True)
+        run(["mkdir", "-p", test_dir], check=True)
 
         # input files, will be downloaded to test dir
         logging.info("Retrieving files from preprocessing...")
@@ -152,7 +152,7 @@ class TestInput_Vars_Plotting(unittest.TestCase):
                 file,
             )
             logging.info(f"Retrieving file from path {path}")
-            run(["wget", path, "--directory-prefix", test_dir])
+            run(["wget", path, "--directory-prefix", test_dir], check=True)
 
     def test_plot_input_vars(self):
         """Integration test of plot_input_vars.py script."""
