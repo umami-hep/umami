@@ -1,16 +1,20 @@
+"""Module handling training file writing to disk."""
+import json
+import pickle
+
 import h5py
 import numpy as np
 import yaml
-import pickle
 from numpy.lib.recfunctions import repack_fields, structured_to_unstructured
 from scipy.stats import binned_statistic_2d
-import json
 
 from umami.configuration import logger
 from umami.tools import yaml_loader
 
 
 class TrainSampleWriter:
+    """Class to write training files to disk."""
+
     def __init__(self, config, compression=None) -> None:
         """
         Init the needed configs and variables
@@ -54,8 +58,7 @@ class TrainSampleWriter:
             tupled_indices = []
             while start_ind < nJets:
                 end_ind = int(start_ind + chunkSize)
-                if end_ind > nJets:
-                    end_ind = nJets
+                end_ind = min(end_ind, nJets)
 
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
@@ -142,13 +145,10 @@ class TrainSampleWriter:
 
         # Define outfile name
         if output_file is None:
-            out_file = self.config.GetFileName(
-                option="resampled_scaled_shuffled"
-            )
+            out_file = self.config.GetFileName(option="resampled_scaled_shuffled")
         if self.config.sampling["options"]["bool_attach_sample_weights"]:
             file_name = (
-                self.config.config["parameters"]["sample_path"]
-                + "/flavour_weights"
+                self.config.config["parameters"]["sample_path"] + "/flavour_weights"
             )
             with open(file_name, "rb") as file:
                 weights_dict = pickle.load(file)
@@ -201,9 +201,7 @@ class TrainSampleWriter:
                     # final absolute jet index of this chunk
                     jet_idx_end = jet_idx + len(jets)
 
-                    if self.config.sampling["options"][
-                        "bool_attach_sample_weights"
-                    ]:
+                    if self.config.sampling["options"]["bool_attach_sample_weights"]:
                         self.calculateWeights(weights_dict, jets, labels)
 
                     weights = jets["weight"]
@@ -339,9 +337,7 @@ class TrainSampleWriter:
         )
 
         # transfrom labels into "bjets", "cjets"...
-        label_keys = [
-            weights_dict["label_map"][np.argmax(label)] for label in labels
-        ]
+        label_keys = [weights_dict["label_map"][np.argmax(label)] for label in labels]
         for i, binnumber in enumerate(binnumbers):
             # look where in flattened 2D bin array this binnumber is
             index = np.where(weights_dict["bin_indices_flat"] == binnumber)

@@ -1,9 +1,12 @@
+"""Reader for tf records datasets."""
 import json
 
 import tensorflow as tf
 
 
 class TFRecordReader:
+    """Reader for tf records datasets."""
+
     def __init__(self, path, batch_size, nfiles):
         """
         Reads the tf records dataset.
@@ -74,7 +77,7 @@ class TFRecordReader:
             "shape_Xtrks": [metadata["nTrks"], metadata["nFeatures"]],
             "shape_Y": [metadata["nDim"]],
         }
-        parse_ex = tf.io.parse_example(
+        parse_ex = tf.io.parse_example(  # pylint: disable=no-value-for-parameter
             record_bytes,
             {
                 "X_jets": tf.io.FixedLenFeature(

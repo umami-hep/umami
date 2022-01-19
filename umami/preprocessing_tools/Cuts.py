@@ -1,3 +1,4 @@
+"""Module to define sample cuts."""
 import operator
 import re
 from functools import reduce
@@ -6,8 +7,8 @@ import numpy as np
 
 
 def GetSampleCuts(jets, cuts):
-    """Given an array of jets and a list of cuts, the function provides a list of indices
-       which are removed by applying the cuts.
+    """Given an array of jets and a list of cuts, the function provides a list of
+       indices which are removed by applying the cuts.
        Users can define the cuts either via the variable name and logical operators:
        ==, !=, >, >=, <, <= or using the dedicated modulo operator.
 
@@ -65,22 +66,22 @@ def GetSampleCuts(jets, cuts):
                 found = re.search(r"mod_(\d+?)_([=!><]+)", op)
                 modulo = int(found.group(1))
                 op = found.group(2)
-            except AttributeError:
+            except AttributeError as Error:
                 raise RuntimeError(
                     "Incorrect use of modulo cut for sample:                  "
                     "   specify in config as mod_N_op                     with"
                     " N as an integer and                     op the operator"
                     " used for testing the condition."
-                )
-            except KeyError:
+                ) from Error
+            except KeyError as Error:
                 raise RuntimeError(
                     "Incorrect use of modulo cut for sample:                 "
                     "    only supported operators 'op' in mod_N_op are:      "
                     f"               {list(inverted_ops.keys())}."
-                )
+                ) from Error
             cut_rejection = inverted_ops[op]((jets[cut] % modulo), cond)
         else:
-            if op in list(inverted_ops.keys()):
+            if op in list(inverted_ops.keys()):  # pylint: disable=C0201:
                 if isinstance(cond, list):
                     indices = [inverted_ops[op](jets[cut], cond_i) for cond_i in cond]
                     cut_rejection = reduce(operator.and_, indices)
@@ -108,11 +109,7 @@ def GetCategoryCuts(label_var, label_value):
     preprocessing.
     """
     cut_object = []
-    if (
-        isinstance(label_value, int)
-        or isinstance(label_value, float)
-        or isinstance(label_value, list)
-    ):
+    if isinstance(label_value, (float, int, list)):
         cut_object.append(
             {
                 label_var: {

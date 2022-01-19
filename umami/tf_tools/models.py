@@ -19,11 +19,11 @@ from .layers import (
 
 def Deepsets_model(
     repeat_input_shape,
-    num_conditions,
-    num_set_features,
-    sets_nodes,
-    classif_nodes,
-    classif_output,
+    num_conditions: int,
+    num_set_features: int,
+    sets_nodes: list,
+    classif_nodes: list,
+    classif_output: int,
     pooling: str = "Max",
     attention_nodes: list = None,
     condition_sets: bool = True,
@@ -35,6 +35,64 @@ def Deepsets_model(
     activation: str = "relu",
     attention_softmax: bool = True,
 ):
+    """Keras implementation for deep sets
+
+    Parameters
+    ----------
+    repeat_input_shape : tuple
+        Input shape of the set data. For CADS, this
+        would be the shape of the input to the deep
+        sets part.
+    num_conditions : int
+        Number of conditions used for training.
+    num_set_features : int
+        Number of neurons of the last layer of the deep
+        set.
+    sets_nodes : list
+        List with the number of neurons for the deep
+        sets hidden layers.
+    classif_nodes : list
+        List with the number of neurons for the classification
+        network (the F network after the deep sets part).
+    classif_output : int
+        Number of output neurons of the classification network
+        (Number of classes used).
+    pooling : str, optional
+        poolig operation, by default "Max"
+    attention_nodes : list, optional
+        List of hidden layer neurons for the attention block,
+        by default None.
+    condition_sets : bool, optional
+        Decide, if the conditional information is folded into
+        the input of the deep sets block, by default True.
+    condition_attention : bool, optional
+        Decide, if the conditional information is folded into
+        the input of the attention block, by default True
+    condition_classifier : bool, optional.
+        Decide, if the conditional information is folded into
+        the input of the classification block, by default True
+    shortcut_inputs : bool, optional
+        Decide, if the deep sets inputs are short cutted (Adding
+        it again after the deep sets block to the output of the
+        deep sets block), by default True.
+    sets_batch_norm : bool, optional
+        Decide, if batch normalisation is used in the deep sets
+        block, by default False.
+    classif_batch_norm : bool, optional
+        Decide, if batch normalisation is used in the classification
+        block, by default False.
+    activation : str, optional
+        Decide, which activation function is used, by default "relu".
+    attention_softmax : bool, optional
+        Decide, if the output of the attention block is calculated
+        using a sigmoid activation (False) or a Softmax activation
+        (True), by default True.
+
+    Returns
+    -------
+    keras model
+        Model for deep sets training
+    """
 
     # Get the sets input
     repeat_inputs = Input(shape=repeat_input_shape)

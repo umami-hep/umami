@@ -1,3 +1,4 @@
+"""Integrates shapeley package to rank feature importance in NN training."""
 import os
 
 import matplotlib.pyplot as plt

@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-from umami.configuration import global_config  # isort:skip  # noqa
+"""Execution script for epoch performance plotting."""
+from umami.configuration import (  # isort:skip # noqa # pylint: disable=unused-import
+    global_config,
+)
 import argparse
 
 import tensorflow as tf
@@ -59,11 +62,26 @@ def GetParser():
         You can either use 'dips', 'dips_cond_att', 'dl1' or 'umami'.""",
     )
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def main(args, train_config, preprocess_config):
+    """Executes plotting of epoch performance plots
+
+    Parameters
+    ----------
+    args : parser.parse_args
+        command line argument parser options
+    train_config : object
+        configuration file used for training
+    preprocess_config : object
+        configuration file used for preprocessing
+
+    Raises
+    ------
+    ValueError
+        If the given tagger is not supported.
+    """ """"""
     # Check for nJets args
     if args.nJets is None:
         nJets = int(train_config.Eval_parameters_validation["n_jets"])
@@ -130,12 +148,12 @@ def main(args, train_config, preprocess_config):
 
 
 if __name__ == "__main__":
-    args = GetParser()
+    parser_args = GetParser()
 
     gpus = tf.config.experimental.list_physical_devices("GPU")
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
 
-    train_config = utt.Configuration(args.config_file)
-    preprocess_config = Configuration(train_config.preprocess_config)
-    main(args, train_config, preprocess_config)
+    training_config = utt.Configuration(parser_args.config_file)
+    preprocessing_config = Configuration(training_config.preprocess_config)
+    main(parser_args, training_config, preprocessing_config)
