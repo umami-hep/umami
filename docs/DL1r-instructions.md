@@ -48,23 +48,34 @@ validation_file: <path>/<to>/<validation>/<samples>/ttbar_r21_validation_file.h5
 # zprime val
 add_validation_file:  <path>/<to>/<validation>/<samples>/zpext_r21_validation_file.h5
 
-ttbar_test_files:
+test_files:
     ttbar_r21:
-        Path: <path>/<to>/<preprocessed>/<samples>/ttbar_r21_test_file.h5
-        data_set_name: "ttbar_r21"
+        path: <path>/<to>/<preprocessed>/<samples>/ttbar_r21_test_file.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
 
     ttbar_r22:
-        Path: <path>/<to>/<preprocessed>/<samples>/ttbar_r22_test_file.h5
-        data_set_name: "ttbar_r22"
+        path: <path>/<to>/<preprocessed>/<samples>/ttbar_r22_test_file.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
 
-zpext_test_files:
     zpext_r21:
-        Path: <path>/<to>/<preprocessed>/<samples>/zpext_r21_test_file.h5
-        data_set_name: "zpext_r21"
+        path: <path>/<to>/<preprocessed>/<samples>/zpext_r21_test_file.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
 
     zpext_r22:
-        Path: <path>/<to>/<preprocessed>/<samples>/zpext_r22_test_file.h5
-        data_set_name: "zpext_r22"
+        path: <path>/<to>/<preprocessed>/<samples>/zpext_r22_test_file.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
 
 # Path to Variable dict used in preprocessing
 var_dict: <path>/<to>/<variables>/DL1r_Variables.yaml
@@ -106,6 +117,9 @@ NN_structure:
     # Activations of the layers. Starting with first dense layer.
     activations: ["relu", "relu", "relu", "relu", "relu", "relu", "relu", "relu"]
 
+    # Variables to repeat in the last layer (example)
+    repeat_end: ["pt_btagJes", "absEta_btagJes"]
+
     # Options for the Learning Rate reducer
     LRR: True
 
@@ -116,7 +130,7 @@ NN_structure:
 # Plotting settings for training metrics plots
 Validation_metrics_settings:
     # Define which taggers should also be plotted
-    taggers_from_file: ["RNNIP", "DL1r"]
+    taggers_from_file: ["rnnip", "DL1r"]
 
     # Label for the freshly trained tagger
     tagger_label: "DL1r"
@@ -160,26 +174,6 @@ Eval_parameters_validation:
 
     # Cuts which are applied to the different datasets used for evaluation
     variable_cuts:
-        ttbar_r21:
-            - pt_btagJes:
-                operator: "<="
-                condition: 250000
-
-        ttbar_r22:
-            - pt_btagJes:
-                operator: "<="
-                condition: 250000
-
-        zpext_r21:
-            - pt_btagJes:
-                operator: ">"
-                condition: 250000
-
-        zpext_r22:
-            - pt_btagJes:
-                operator: ">"
-                condition: 250000
-
         validation_file:
             - pt_btagJes:
                 operator: "<="
@@ -190,11 +184,39 @@ Eval_parameters_validation:
                 operator: ">"
                 condition: 250000
 
+    # A list to add available variables to the evaluation files
+    add_variables_eval: ["actualInteractionsPerCrossing"]
+
     # Working point used in the evaluation
     WP: 0.77
 
     # Minimal efficiency considered in ROC computation
     eff_min: 0.49
+
+
+    # some properties for the feature importance explanation with SHAPley
+    shapley:
+        # Over how many full sets of features it should calculate over.
+        # Corresponds to the dots in the beeswarm plot.
+        # 200 takes like 10-15 min for DL1r on a 32 core-cpu
+        feature_sets: 200
+
+        # defines which of the model outputs (flavor) you want to explain
+        # [tau,b,c,u] := [3, 2, 1, 0]
+        model_output: 2
+
+        # You can also choose if you want to plot the magnitude of feature
+        # importance for all output nodes (flavors) in another plot. This
+        # will give you a bar plot of the mean SHAP value magnitudes.
+        bool_all_flavor_plot: False
+
+        # as this takes much longer you can average the feature_sets to a
+        # smaller set, 50 is a good choice for DL1r
+        averaged_sets: 50
+
+        # [11,11] works well for dl1r
+        plot_size: [11, 11]
+
 ```
 
 It contains the information about the neural network architecture and the training as well as about the files for training, validation and testing. Also evaluation parameters are given for the training evaluation which is performed by the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script.
@@ -209,8 +231,7 @@ The different options are briefly explained here:
 | `train_file` | String | Necessary | Path to the training sample. This is given by the `preprocessing` step of Umami |
 | `validation_file` | String | Necessary | Path to the validation sample (ttbar). This is given by the `preprocessing` step of Umami |
 | `add_validation_file` | String | Necessary | Path to the validation sample (zpext). This is given by the `preprocessing` step of Umami |
-| `ttbar_test_files` | Dict | Optional | Here you can define different ttbar test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is irrelevant while the `Path` and `data_set_name` are important. The `data_set_name` needs to be unique. Its the identifier/name of the dataset in the evaluation file which is used for plotting. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
-| `zpext_test_files` | Dict | Optional | Here you can define different zpext test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is irrelevant while the `Path` and `data_set_name` are important. The `data_set_name` needs to be unique. Its the identifier/name of the dataset in the evaluation file which is used for plotting. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
+| `test_files` | Dict | Optional | Here you can define different test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is relevant and is the unique identifier in the results file which is produced by the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). `Path` gives the path to the file. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
 | `var_dict` | String | Necessary | Path to the variable dict used in the `preprocess_config` to produce the train sample. |
 | `exclude` | List | Necessary | List of variables that are excluded from training. Only compatible with DL1r training. To include all, just give an empty list. |
 | `NN_structure` | None | Necessary | A dict where all important information for the training are defined. |

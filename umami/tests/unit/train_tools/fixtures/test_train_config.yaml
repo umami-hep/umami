@@ -15,15 +15,12 @@ validation_file: dummy.h5
 # zprime val
 add_validation_file: dummy.h5
 
-ttbar_test_files:
+test_files:
     ttbar_r21:
-        Path: dummy.h5
-        data_set_name: "ttbar_unit_test"
+        path: dummy.h5
 
-zpext_test_files:
     zpext_r21:
-        Path: dummy.h5
-        data_set_name: "zpext_unit_test"
+        path: dummy.h5
 
 # Path to Variable dict used in preprocessing
 var_dict: ./umami/configs/Umami_Variables.yaml

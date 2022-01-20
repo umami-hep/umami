@@ -46,13 +46,11 @@ class Configuration:
             "NN_structure",
             "Eval_parameters_validation",
             "Validation_metrics_settings",
-            "ttbar_test_files",
-            "zpext_test_files",
+            "test_files",
         ]
         config_evaluation_items = [
             "model_name",
-            "ttbar_test_files",
-            "zpext_test_files",
+            "test_files",
             "evaluate_trained_model",
             "NN_structure",
             "Eval_parameters_validation",

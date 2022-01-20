@@ -141,27 +141,21 @@ def prepareConfig(
     config_file["add_validation_file"] = f"{test_file_zprime}"
 
     # Erase all not used test files
-    del config_file["ttbar_test_files"]
-    del config_file["zpext_test_files"]
+    del config_file["test_files"]
 
     # Add only wanted test files
     config_file.update(
         {
-            "ttbar_test_files": {
+            "test_files": {
                 "ttbar_r21": {
-                    "Path": f"{test_file_ttbar}",
-                    "data_set_name": "ttbar",
-                }
-            }
-        }
-    )
-    config_file.update(
-        {
-            "zpext_test_files": {
+                    "path": f"{test_file_ttbar}",
+                    "variable_cuts": [
+                        {"pt_btagJes": {"operator": "<=", "condition": 250000}}
+                    ],
+                },
                 "zpext_r21": {
-                    "Path": f"{test_file_zprime}",
-                    "data_set_name": "zpext",
-                }
+                    "path": f"{test_file_zprime}",
+                },
             }
         }
     )
@@ -174,8 +168,6 @@ def prepareConfig(
     config_file["Eval_parameters_validation"]["variable_cuts"] = {
         "validation_file": [{"pt_btagJes": {"operator": "<=", "condition": 250000}}],
         "add_validation_file": [{"pt_btagJes": {"operator": ">", "condition": 250000}}],
-        "ttbar": [{"pt_btagJes": {"operator": "<=", "condition": 250000}}],
-        "zpext": [{"pt_btagJes": {"operator": ">", "condition": 250000}}],
     }
 
     if useTFRecords is True:
@@ -185,7 +177,6 @@ def prepareConfig(
         )
         config_file["model_name"] = data["test_dips"]["model_name"] + "_tfrecords"
         config_file["add_validation_file"] = None
-        config_file.update({"zpext_test_files": None})
 
         config = config[:].replace(".yaml", "") + "_tfrecords.yaml"
 

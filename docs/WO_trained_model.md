@@ -12,23 +12,34 @@ model_name: Eval_results
 # Set the option to evaluate a freshly trained model to False
 evaluate_trained_model: False
 
-ttbar_test_files:
+test_files:
     ttbar_r21:
-        Path: <path>/<to>/<preprocessed>/<samples>/ttbar_r21_test_file.h5
-        data_set_name: "ttbar_r21"
+        path: <path>/<to>/<preprocessed>/<samples>/ttbar_r21_test_file.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
 
     ttbar_r22:
-        Path: <path>/<to>/<preprocessed>/<samples>/ttbar_r22_test_file.h5
-        data_set_name: "ttbar_r22"
+        path: <path>/<to>/<preprocessed>/<samples>/ttbar_r22_test_file.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
 
-zpext_test_files:
     zpext_r21:
-        Path: <path>/<to>/<preprocessed>/<samples>/zpext_r21_test_file.h5
-        data_set_name: "zpext_r21"
+        path: <path>/<to>/<preprocessed>/<samples>/zpext_r21_test_file.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
 
     zpext_r22:
-        Path: <path>/<to>/<preprocessed>/<samples>/zpext_r22_test_file.h5
-        data_set_name: "zpext_r22"
+        path: <path>/<to>/<preprocessed>/<samples>/zpext_r22_test_file.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
 
 # Values for the neural network
 NN_structure:
@@ -62,28 +73,6 @@ Eval_parameters_validation:
     # Charm fraction value used for evaluation of the trained model
     frac_values: {"cjets": 0.018, "ujets": 0.982}
 
-    # Cuts which are applied to the different datasets used for evaluation
-    variable_cuts:
-        ttbar_r21:
-            - pt_btagJes:
-                  operator: "<="
-                  condition: 250000
-
-        ttbar_r22:
-            - pt_btagJes:
-                  operator: "<="
-                  condition: 250000
-
-        zpext_r21:
-            - pt_btagJes:
-                  operator: ">"
-                  condition: 250000
-
-        zpext_r22:
-            - pt_btagJes:
-                  operator: ">"
-                  condition: 250000
-
     # Working point used in the evaluation
     WP: 0.77
 ```
@@ -92,8 +81,7 @@ Eval_parameters_validation:
 |---------|-----------|--------------------|-------------|
 | `model_name` | String | Necessary | Name of the model which is to be trained. Also the foldername where everything of the model will be saved. |
 | `evaluate_trained_model` | Bool | Necessary | Needs to be `False` here. Otherwise the script tries to load the freshly trained model
-| `ttbar_test_files` | Dict | Optional | Here you can define different ttbar test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is irrelevant while the `Path` and `data_set_name` are important. The `data_set_name` needs to be unique. Its the identifier/name of the dataset in the evaluation file which is used for plotting. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
-| `zpext_test_files` | Dict | Optional | Here you can define different zpext test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is irrelevant while the `Path` and `data_set_name` are important. The `data_set_name` needs to be unique. Its the identifier/name of the dataset in the evaluation file which is used for plotting. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
+| `test_files` | Dict | Optional | Here you can define different test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is relevant and is the unique identifier in the results file which is produced by the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). `Path` gives the path to the file. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
 | `NN_structure` | None | Necessary | A dict where all important information for the training are defined. |
 | `class_labels` | List | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
 | `main_class` | String | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. |
@@ -102,7 +90,6 @@ Eval_parameters_validation:
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `frac_values` | Dict | Necessary | Dict with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
-| `variable_cuts` | Dict | Necessary | Dict of cuts which are applied when loading the different test files. Only jet variables can be cut on. |
 | `WP` | Float | Necessary | Working point that is used for evaluation. |
 
 To run the evaluation, you can now execute the following command in the `umami/umami` folder where the `evaluate_model.py` is:
