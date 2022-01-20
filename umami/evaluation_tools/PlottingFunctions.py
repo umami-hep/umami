@@ -6,6 +6,7 @@ import matplotlib as mtp
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib import gridspec
 from mlxtend.evaluate import confusion_matrix
 from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
@@ -593,9 +594,9 @@ def plotEfficiencyVariableComparison(
 
 
 def plotPtDependence(
-    df_list,
-    tagger_list,
-    model_labels,
+    df_list: list,
+    tagger_list: list,
+    model_labels: list,
     plot_name: str,
     class_labels: list,
     main_class: str,
@@ -632,54 +633,109 @@ def plotPtDependence(
     linewidth: float = 1.6,
     dpi: int = 400,
 ):
-    """
-    For a given list of models, plot the b-eff, l and c-rej as a function
-    of jet pt for customizable WP and fc values.
+    """For a given list of models, plot the b-eff,
+    l and c-rej as a function of jet pt for customizable
+    WP and fc values.
 
-    Following options are needed to be given:
-    - df_list: List of the dataframes from the model. See plotting_umami.py
-    - tagger_list: List of strings with the tagger names (MUST BE THE NAMES IN FILE)
-    - model_labels: Labels for the legend of the plot
-    - plot_name: Path, Name and format of the resulting plot file
-    - class_labels: A list of the class_labels which are used
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - flavour: Flavour which is to be plotted.
+    Parameters
+    ----------
+    df_list : list
+        List of dicts with the results of evaluate_model.py inside for
+        the different models which are to be plotted.
+    tagger_list : list
+        List of the models/taggers that are to be plotted.
+    model_labels : list
+        List of the labels which are to be used in the plot.
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    class_labels : list
+        A list of the class_labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    flavour : str
+        Class that is to be plotted. For all non-signal classes, this
+        will be the rejection and for the signal class, this will be
+        the efficiency.
+    WP : float, optional
+        Working point which is to be used, by default 0.77.
+    Disc_Cut_Value : float, optional
+        Set a discriminant cut value for all taggers/models.
+        SWP_Comparsion needs to be False for this, by default None.
+    SWP_Comparison : bool, optional
+        Use the same cut value on the discriminant for all
+        models with the same SWP_label. Not works with Fixed_WP_Bin
+        True, by default False.
+    SWP_label_list : list, optional
+        List of labels for each model. Models with same SWP label get
+        the same Disc_cut_value, by default None.
+    Passed : bool, optional
+        Select if the selected jets need to pass the discriminant WP cut,
+        by default True.
+    Fixed_WP_Bin : bool, optional
+        Calculate the WP cut on the discriminant per bin, by default False.
+    bin_edges : list, optional
+        As the name says, the edges of the bins used. Will be set
+        automatically, if None. By default None.
+    WP_Line : bool, optional
+        Print a WP line in the upper plot, by default False.
+    figsize : list, optional
+        Size of the resulting figure as a list with two elements. First
+        is the width, second the height. By default None.
+    Grid : bool, optional
+        Use a grid in the plots, by default False
+    binomialErrors : bool, optional
+        Use binomial errors, by default True
+    xlabel : str, optional
+        Label for x-axis, by default r"$ in GeV"
+    Log : bool, optional
+        Set yscale to Log, by default False
+    colors : list, optional
+        Custom color list for the different models, by default None
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
+    yAxisAtlasTag : float, optional
+        Relative y axis position of the ATLAS Tag, by default 0.9
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag in, by default 1.1
+    frameon : bool, optional
+        Set the frame around legend off/on, by default False
+    labelFontSize : int, optional
+        Fontsize of the labels of the axes, by default 10
+    legFontSize : int, optional
+        Fontsize of the legend, by default 10
+    Ratio_Cut : list, optional
+        List of the lower and upper y-limit for the ratio plot, by default None
+    ncol : int, optional
+        Number of columns in the legend, by default 1
+    ymin : float, optional
+        y axis minimum, by default None
+    ymax : float, optional
+        y axis maximum, by default None
+    alpha : float, optional
+        Value for visibility of the plot lines, by default 0.8
+    trans : bool, optional
+        Sets the transparity of the background. If true, the background is erased.
+        If False, the background is white, by default True
+    linewidth : float, optional
+        Define the linewidth of the plotted lines, by default 1.6
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
 
-    Following options are preset and can be changed:
-    - WP: Which Working point is used
-    - Disc_Cut_Value: Set a disc cut value for all models if SWP is off.
-    - SWP_Comparison: Use the same cut value on the discriminant for all
-                      models with the same SWP_label. Not works with Fixed_WP_Bin True.
-    - SWP_label_list: List of labels for each model. Models with same SWP label get
-                      the same Disc_cut_value
-    - Passed: Select if the selected jets need to pass the discriminant WP cut
-    - Fixed_WP_Bin: Calculate the WP cut on the discriminant per bin
-    - bin_edges: As the name says, the edges of the bins used
-    - WP_Line: Print a WP line in the upper plot
-    - figsize: Size of the resulting figure
-    - Grid: Use a grid in the plots
-    - binomialErrors: Use binomial errors
-    - xlabel: Label for x axis
-    - Log: Set yscale to Log
-    - colors: Custom color list for the different models
-    - ApplyAtlasStyle: Apply ATLAS style for matplotlib
-    - UseAtlasTag: Use the ATLAS Tag in the plots
-    - AtlasTag: First row of the ATLAS Tag
-    - SecondTag: Second Row of the ATLAS Tag. No need to add WP or fc.
-                 It added automatically
-    - yAxisAtlasTag: Relative y axis position of the ATLAS Tag in
-    - yAxisIncrease: Increasing the y axis to fit the ATLAS Tag in
-    - frameon: Set the frame around legend off/on
-    - labelFontSize: Fontsize of the labels of the axes.
-    - legFontSize: Fontsize of the legend.
-    - Ratio_Cut: List of the lower and upper y-limit for the ratio plot.
-    - ncol: Number of columns in the legend
-    - ymin: y axis minimum
-    - ymax: y axis maximum
-    - alpha: Value for visibility of the plot lines
-    - trans: Sets the transparity of the background. If true, the background erased.
-             If False, the background is white
-    - dpi: Sets a DPI value for the plot that is produced (mainly for png).
+    Raises
+    ------
+    ValueError
+        If the given Ratio_Cut is either not a list or has more then two
+        entries.
     """
     if SWP_label_list is None:
         SWP_label_list = []
@@ -1090,7 +1146,7 @@ def plotROCRatio(
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018",  # noqa: E501 # pylint: disable=line-too-long
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",  # noqa: E501 # pylint: disable=line-too-long
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.3,
     styles: list = None,
@@ -1113,29 +1169,111 @@ def plotROCRatio(
     which_axis: list = "left",
     WorkingPoints: list = None,
     same_height_WP: bool = True,
-    ratio_id: int = 0,
+    ratio_id: list = 0,
     ycolor: str = "black",
     ycolor_right: str = "black",
     set_logy: bool = True,
     dpi: int = 400,
 ):
-    """
-    Plot the ROC curves with binomial errors with the ratio plot in a subpanel
-    underneath. This function all accepts the same inputs as plotROC, and the
-    additional ones are listed below.
+    """Plotting the rejection curve for a given background class
+    for the given models/taggers against the main_class efficiency.
+    A ratio plot (first given model is the reference) is plotted in
+    a subpanel underneath.
 
-    Addtional Inputs:
-    - rrange: The range on the y-axis for the ratio panel
-    - rlabel: The label for the y-axis for the ratio panel
-    - binomialErrors: whether to include binomial errors for the rejection
-                      curves
-    - nTest: A list of the same length as class_rejections, with the number of events
-             used to calculate the background efficiencies.
-             We need this To calculate the binomial errors on the background
-             rejection,
-             using the formula given by
-             http://home.fnal.gov/~paterno/images/effic.pdf.
+    Parameters
+    ----------
+    df_results_list : list
+        List of dicts with the results of evaluate_model.py inside for
+        the different models which are to be plotted.
+    tagger_list : list
+        List of the models/taggers that are to be plotted.
+    rej_class_list : list
+        List of the class rejection which is to be plotted for each model.
+    labels : list
+        List of labels for the given models.
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    df_eff_key : str, optional
+        Dict key under which the efficiencies of the main class are
+        saved, by default "effs"
+    title : str, optional
+        Title of the plot, by default ""
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default,
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag, by default 1.3
+    styles : list, optional
+        List of linestyles to use for the given models, by default None
+    colors : list, optional
+        List of linecolors to use for the given models, by default None
+    xmin : float, optional
+        Minimum value of the x-axis, by default None
+    ymax : float, optional
+        Maximum value of the y-axis, by default None
+    ymin : float, optional
+        Minimum value of the y-axis, by default None
+    ymax_right : float, optional
+        Maximum value of the right y-axis, by default None
+    ymin_right : float, optional
+        Minimum value of the right y-axis, by default None
+    legFontSize : int, optional
+        Fontsize of the legend, by default 10
+    loc_legend : str, optional
+        Position of the legend in the plot, by default "best"
+    rrange : list, optional
+        The range on the y-axis for the ratio panel, by default None
+    rlabel : str, optional
+        The label for the y-axis for the ratio panel, by default "Ratio"
+    binomialErrors : bool, optional
+        Binominal errors on the lines, by default True
+    nTest : list, optional
+        A list of the same length as class_rejections, with the number of
+        events used to calculate the background efficiencies.
+        We need this To calculate the binomial errors on the background
+        rejection, using the formula given by
+        http://home.fnal.gov/~paterno/images/effic.pdf, by default 0
+    alabel : dict, optional
+        Dict with the axis labels, by default None
+    figsize : list, optional
+        Size of the resulting figure as a list with two elements. First
+        is the width, second the height. By default None.
+    legcols : int, optional
+        Number of columns to use in the legend, by default 1
+    labelpad : int, optional
+        Spacing in points from the axes bounding box including
+        ticks and tick labels, by default None
+    which_axis : list, optional
+        List which y-axis to use for the given models, by default "left"
+    WorkingPoints : list, optional
+        List of working points which are to be plotted as
+        vertical lines in the plot, by default None
+    same_height_WP : bool, optional
+        Decide, if all working points lines have the same height or
+        not, by default True
+    ratio_id : list, optional
+        List to which given model the ratio is calulcated, by default 0
+    ycolor : str, optional
+        Color of the left y-axis, by default "black"
+    ycolor_right : str, optional
+        Color of the right y-axis, by default "black"
+    set_logy : bool, optional
+        y-axis in log format, by default True
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
     """
+
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -1441,7 +1579,7 @@ def plotROCRatioComparison(
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.3,
     linestyles: list = None,
@@ -1466,22 +1604,105 @@ def plotROCRatioComparison(
     set_logy: bool = True,
     dpi: int = 400,
 ):
-    """
-    Plot the ROC curves with binomial errors with the two ratio plot in a subpanel
-    underneath. This function is steered by the plotting_umami.py. Documentation is
-    provided in the docs folder.
+    """ "Plotting the rejection curve for a given background class
+    for the given models/taggers against the main_class efficiency.
+    Two rejections to the main class can be shown at the same time
+    with two ratio plots as subpanels below the main plot.
 
-    Addtional Inputs:
-    - Ratio_Cut: The range on the y-axis for the ratio panel
-    - rlabel: The label for the y-axis for the ratio panel
-    - binomialErrors: whether to include binomial errors for the rejection
-                      curves
-    - nTest: A list of the same length as beffs, with the number of events used
-            to calculate the background efficiencies.
-            We need this To calculate the binomial errors on the background
-            rejection,
-            using the formula given by
-            http://home.fnal.gov/~paterno/images/effic.pdf.
+    Parameters
+    ----------
+    df_results_list : list
+        List of dicts with the results of evaluate_model.py inside for
+        the different models which are to be plotted.
+    tagger_list : list
+        List of the models/taggers that are to be plotted.
+    rej_class_list : list
+        List of the class rejection which is to be plotted for each model.
+    labels : list
+        List of labels for the given models.
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    df_eff_key : str, optional
+        Dict key under which the efficiencies of the main class are
+        saved, by default "effs"
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    title : str, optional
+        Title of the plot, by default ""
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default,
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
+    yAxisAtlasTag : float, optional
+        y position of the ATLAS Tag, by default 0.9
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag, by default 1.3
+    linestyles : list, optional
+        List of linestyles to use for the given models, by default None
+    colors : list, optional
+        List of linecolors to use for the given models, by default None
+    xmin : float, optional
+        Minimum value of the x-axis, by default None
+    ymax : float, optional
+        Maximum value of the y-axis, by default None
+    ymin : float, optional
+        Minimum value of the y-axis, by default None
+    labelFontSize : int, optional
+        Fontsize of the axis labels, by default 10
+    legFontSize : int, optional
+        Fontsize of the legend, by default 10
+    loc_legend : str, optional
+        Position of the legend in the plot, by default "best"
+    Ratio_Cut : list, optional
+        List of the lower and upper y-limit for the ratio plot,
+        by default None
+    binomialErrors : bool, optional
+        Use binomial errors, by default True
+    nTest : list, optional
+        A list of the same length as class_rejections, with the number of
+        events used to calculate the background efficiencies.
+        We need this To calculate the binomial errors on the background
+        rejection, using the formula given by
+        http://home.fnal.gov/~paterno/images/effic.pdf, by default 0
+    alabel : dict, optional
+        Dict with the axis labels, by default None
+    figsize : list, optional
+        Size of the resulting figure as a list with two elements. First
+        is the width, second the height. By default None.
+    legcols : int, optional
+        Number of columns to use in the legend, by default 1
+    labelpad : int, optional
+        Spacing in points from the axes bounding box including
+        ticks and tick labels, by default None
+    WorkingPoints : list, optional
+        List of working points which are to be plotted as
+        vertical lines in the plot, by default None
+    same_height_WP : bool, optional
+        Decide, if all working points lines have the same height or
+        not, by default True
+    ratio_id : list, optional
+        List to which given model the ratio is calulcated, by default 0
+    ycolor : str, optional
+        Color of the left y-axis, by default "black"
+    ycolor_right : str, optional
+        Color of the right y-axis, by default "black"
+    set_logy : bool, optional
+        y-axis in log format, by default True
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
+
+    Raises
+    ------
+    ValueError
+        If more than two different rejections are given.
     """
     if linestyles is None:
         linestyles = []
@@ -1855,9 +2076,9 @@ def plotROCRatioComparison(
 
 
 def plotSaliency(
-    maps_dict,
-    plot_name,
-    title,
+    maps_dict: dict,
+    plot_name: str,
+    title: str,
     target_beff: float = 0.77,
     jet_flavour: str = "bjets",
     PassBool: bool = True,
@@ -1871,7 +2092,45 @@ def plotSaliency(
     FlipAxis: bool = False,
     dpi: int = 400,
 ):
-    """Plot saliency map."""
+    """Plot the saliency map given in maps_dict.
+
+    Parameters
+    ----------
+    maps_dict : dict
+        Dict with the saliency values inside
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    title : str
+        Title of the plot
+    target_beff : float, optional
+        Working point to use, by default 0.77
+    jet_flavour : str, optional
+        Class which is to be plotted, by default "bjets"
+    PassBool : bool, optional
+        Decide, if the jets need to pass (True) or fail (False)
+        the working point cut, by default True
+    nFixedTrks : int, optional
+        Decide, how many tracks the jets need to have, by default 8
+    fontsize : int, optional
+        Fontsize to use in the title, legend, etc, by default 14
+    xlabel : str, optional
+        x-label, by default "Tracks sorted by {d0}$"
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag, by default
+        "$sqrt{s}$ = 13 TeV, $t bar{t}$ PFlow Jets"
+    yAxisAtlasTag : float, optional
+        y position of the ATLAS Tag, by default 0.925
+    FlipAxis : bool, optional
+        Decide, if the x- and y-axis are switched, by default False
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
+    """
+
     # Transform to percent
     target_beff = 100 * target_beff
 
@@ -2000,7 +2259,7 @@ def plotSaliency(
 
 
 def plot_score(
-    df_results,
+    df_results: pd.DataFrame,
     plot_name: str,
     tagger_name: str,
     class_labels: list,
@@ -2017,7 +2276,49 @@ def plot_score(
     WorkingPoints_Legend: bool = False,
     dpi: int = 400,
 ):
-    """Plot score."""
+    """Plot the discriminant score for a given model
+
+    Parameters
+    ----------
+    df_results : pd.DataFrame
+        Pandas DataFrame with the discriminant scores of the jets inside.
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    tagger_name : str
+        Name of the tagger/model that is to be plotted.
+    class_labels : list
+        A list of the class_labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample"
+    WorkingPoints : list, optional
+        List of working points which are to be plotted as
+        vertical lines in the plot, by default None
+    nBins : int, optional
+        Number of bins to use, by default 50
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag, by default 1.3
+    yAxisAtlasTag : float, optional
+        y position of the ATLAS tag, by default 0.9
+    xlabel : str, optional
+        x-label, by default None
+    WorkingPoints_Legend : bool, optional
+        Show the working points in the legend, by default False
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
+    """
+
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -2201,7 +2502,81 @@ def plot_score_comparison(
     title: str = None,
     dpi: int = 400,
 ):
-    """Plot score comparison."""
+    """Plot multiple discriminant scores from different models for the same
+    jets in one plot with a ratio plot in the subpanel.
+
+    Parameters
+    ----------
+    df_list : list
+        List with the pandas DataFrames inside.
+    model_labels : list
+        List of labels for the given models
+    tagger_list : list
+        List of tagger names of the used taggers
+    class_labels : list
+        A list of the class_labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample"
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag, by default 1.3
+    yAxisAtlasTag : float, optional
+        y position of the ATLAS tag, by default 0.9
+    WorkingPoints : list, optional
+        List of working points which are to be plotted as
+        vertical lines in the plot, by default None
+    tagger_for_WP : str, optional
+        Tagger which is used for working point calculation, by default None
+    nBins : int, optional
+        Number of bins to use, by default 50
+    figsize : list, optional
+        Size of the resulting figure as a list with two elements. First
+        is the width, second the height. By default None.
+    labelpad : int, optional
+        Spacing in points from the axes bounding box including
+        ticks and tick labels, by default None
+    labelFontSize : int, optional
+        Fontsize of the axis labels, by default 10
+    legFontSize : int, optional
+        Fontsize of the legend, by default 10
+    loc_legend : str, optional
+        Position of the legend in the plot, by default "best"
+    ncol : int, optional
+        Number of columns in the legend, by default 2
+    Ratio_Cut : list, optional
+        List of the lower and upper y-limit for the ratio plot,
+        by default None
+    which_axis : list, optional
+        List which y-axis to use for the given models, by default "left"
+    xmin : float, optional
+        Minimum value of the x-axis, by default None
+    xmax : float, optional
+        Maximum value of the x-axis, by default None
+    ymin : float, optional
+        Minimum value of the y-axis, by default None
+    ymax : float, optional
+        Maximum value of the y-axis, by default None
+    ycolor : str, optional
+        y-axis color, by default "black"
+    title : str, optional
+        Title over the plot, by default None
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
+    """
+
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -2415,10 +2790,9 @@ def plot_score_comparison(
 
             # Calculate x value of WP line
             x_value = np.percentile(
-                # TODO: fix this
-                df_results.query(  # pylint: disable=undefined-loop-variable
-                    f"labels=={index_dict[main_class]}"
-                )[f"disc_{tagger_name_WP}"],
+                df_list[0].query(f"labels=={index_dict[main_class]}")[
+                    f"disc_{tagger_name_WP}"
+                ],
                 (1 - WP) * 100,
             )
 
@@ -2568,7 +2942,7 @@ def plotFractionScan(
 
 
 def plot_prob(
-    df_results,
+    df_results: pd.DataFrame,
     plot_name: str,
     tagger_name: str,
     class_labels: list,
@@ -2588,7 +2962,55 @@ def plot_prob(
     yAxisAtlasTag: float = 0.9,
     dpi: int = 400,
 ):
-    """Plot probability score distributions."""
+    """Plot the probability output for the given flavour for one model.
+
+    Parameters
+    ----------
+    df_results : pd.DataFrame
+        Pandas DataFrame with the probability values of the jets inside.
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    tagger_name : str
+        Name of the tagger/model that is to be plotted.
+    class_labels : list
+        A list of the class_labels which are used.
+    flavour : str
+        Probability of this flavour is plotted.
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample"
+    nBins : int, optional
+        Number of bins to use, by default 50
+    Log : bool, optional
+        Plot a logarithmic y-axis, by default False
+    figsize : list, optional
+        Size of the resulting figure as a list with two elements. First
+        is the width, second the height. By default None.
+    labelFontSize : int, optional
+        Fontsize of the axis labels, by default 10
+    loc_legend : str, optional
+        Position of the legend in the plot, by default "best"
+    ncol : int, optional
+        Number of columns in the legend, by default 2
+    x_label : str, optional
+        x-label, by default None
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag, by default 1.3
+    yAxisAtlasTag : float, optional
+        y position of the ATLAS tag, by default 0.9
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
+    """
+
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -2739,7 +3161,78 @@ def plot_prob_comparison(
     set_logy: bool = False,
     dpi: int = 400,
 ):
-    """Plot probability distribution comparison."""
+    """Plot the probability output for the given flavour for
+    multiple models with a ratio plot in a subpanel.
+
+    Parameters
+    ----------
+    df_list : list
+        List of pandas DataFrames with the probability values inside
+    model_labels : list
+        List of labels for the given models
+    tagger_list : list
+        List of tagger names
+    class_labels_list : list
+        List with the class_labels used in the different taggers
+    flavour : str
+        Probability of this flavour is plotted.
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample""
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag, by default 1.3
+    yAxisAtlasTag : float, optional
+        y position of the ATLAS tag, by default 0.9
+    nBins : int, optional
+        Number of bins to use, by default 50
+    figsize : list, optional
+        Size of the resulting figure as a list with two elements. First
+        is the width, second the height. By default None.
+    labelpad : int, optional
+        Spacing in points from the axes bounding box including
+        ticks and tick labels, by default None
+    labelFontSize : int, optional
+        Fontsize of the axis labels, by default 10
+    legFontSize : int, optional
+        Fontsize of the legend, by default 10
+    loc_legend : str, optional
+        Position of the legend in the plot, by default "best"
+    ncol : int, optional
+        Number of columns in the legend, by default 2
+    Ratio_Cut : list, optional
+        List of the lower and upper y-limit for the ratio plot,
+        by default None
+    which_axis : list, optional
+        List which y-axis to use for the given models, by default "left"
+    xmin : float, optional
+        Minimum value of the x-axis, by default None
+    xmax : float, optional
+        Maximum value of the x-axis, by default None
+    ymin : float, optional
+        Minimum value of the y-axis, by default None
+    ymax : float, optional
+        Maximum value of the y-axis, by default None
+    ycolor : str, optional
+        y-axis color, by default "black"
+    title : str, optional
+        Title over the plot, by default None
+    set_logy : bool, optional
+        y-axis in log format, by default True
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
+    """
+
     # Apply the ATLAS Style with the bars on the axes
     if ApplyAtlasStyle is True:
         applyATLASstyle(mtp)
@@ -2968,7 +3461,6 @@ def plot_prob_comparison(
     if plot_name is not None:
         plt.savefig(plot_name, transparent=True, dpi=dpi)
     plt.close()
-    # plt.show()
 
 
 def plot_confusion(
@@ -2982,22 +3474,29 @@ def plot_confusion(
     transparent_bkg: bool = True,
     dpi: int = 400,
 ):
-    """
-    Plotting the confusion matrix for a given tagger.
+    """Plotting the confusion matrix for a given tagger.
 
-    Input:
-    - df_results: Loaded pandas dataframe from the evaluation file.
-    - tagger_name: Name of the tagger in the evaluation file.
-    - class_labels: List of class labels used.
-    - plot_name: Full path + name of the plot with the extension.
-    - colorbar: Decide, if colourbar is shown or not.
-    - show_absolute: Show the absolute.
-    - show_normed: Show the output normed.
-    - transparent_bkg: Decide, if the background is transparent or not.
-    - dpi: DPI value for the output plot.
-
-    Output:
-    - Confusion Matrix
+    Parameters
+    ----------
+    df_results : dict
+        Loaded pandas dataframe from the evaluation file
+    tagger_name : str
+        Name of the tagger in the evaluation file
+    class_labels : list
+        List of class labels used
+    plot_name : str
+        Full path + name of the plot with the extension
+    colorbar : bool, optional
+        Decide, if colourbar is shown or not, by default True
+    show_absolute : bool, optional
+        Show the absolute, by default False
+    show_normed : bool, optional
+        Show the output normed, by default True
+    transparent_bkg : bool, optional
+        Decide, if the background is transparent or not, by default True
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
     """
 
     # Get a list of the tagger prob variables
