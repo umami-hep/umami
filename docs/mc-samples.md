@@ -3,7 +3,7 @@ MC Samples
 
 The FTAG1 derivations and the most recent ntuples for PFlow with the new RNNIP, SMT and the latest DL1* recommendations inside are shown in the following table. DIPS Default, DIPS Loose, DL1d Default, DL1d Loose and UMAMI are added as DL2 in the h5 ntuples.
 
-A detailed list with the available derivations can be fund in the [FTAG algorithm documentation](https://ftag.docs.cern.ch/algorithms/overview/#training-samples).
+A detailed list with the available derivations can be fund in the [FTAG algorithm documentation](https://ftag.docs.cern.ch/software/samples/).
 
 
 
