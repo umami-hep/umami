@@ -7,7 +7,7 @@ Eval_parameters:
 
 scores_DL1r: # Each item on this level defines one plot. The name of this key is later used for the name of the output file.
   type: "scores"
-  data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
+  data_set_name: "ttbar_r21" # data set to use. This is the dict entry name of the file you want to plot in the train config
   tagger_name: "DL1" # Name of the tagger: Example: dips_pb -> Name of tagger: dips
   class_labels: ["ujets", "cjets", "bjets"] # Classes which are used
   main_class: "bjets" # Main class
@@ -19,7 +19,7 @@ scores_DL1r: # Each item on this level defines one plot. The name of this key is
 
 confusion_matrix_DL1r:
   type: "confusion_matrix"
-  data_set_name: "ttbar"
+  data_set_name: "ttbar_r21"
   tagger_name: "DL1"
   class_labels: ["ujets", "cjets", "bjets"]
   plot_settings:
@@ -30,7 +30,7 @@ DL1r_light_flavour:
   main_class: "bjets"
   models_to_plot:
     DL1r: # The name here has no impact on anything.
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "DL1r"
       tagger_name: "DL1"
       rejection_class: "cjets"
@@ -50,8 +50,8 @@ eff_vs_pt:
   tagger_name: "DL1"
   recompute: True
   evaluation_file:
-  data_set_name: "ttbar"
-  data_set_for_cut_name: "ttbar"
+  data_set_name: "ttbar_r21"
+  data_set_for_cut_name: "ttbar_r21"
   class_labels: ["ujets", "cjets", "bjets"]
   flat_eff: True
   efficiency: 70
@@ -83,14 +83,14 @@ eff_vs_pt_comp:
   recompute: False
   models_to_plot:
     model1:
-      data_set_name: "ttbar"
-      data_set_for_cut_name: "ttbar"
+      data_set_name: "ttbar_r21"
+      data_set_for_cut_name: "ttbar_r21"
       class_labels: ["ujets", "cjets", "bjets"]
       label: "first"
     model2:
       evaluation_file:
-      data_set_name: "ttbar"
-      data_set_for_cut_name: "ttbar"
+      data_set_name: "ttbar_r21"
+      data_set_for_cut_name: "ttbar_r21"
       recompute: True
       tagger_name: "DL1"
       class_labels: ["ujets", "cjets", "bjets"]

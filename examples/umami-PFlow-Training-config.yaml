@@ -16,15 +16,34 @@ validation_file: <path_palce_holder>/MC16d_hybrid_odd_1_PFlow-no_pTcuts-file_0.h
 # zprime val
 add_validation_file: <path_palce_holder>/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
 
-ttbar_test_files:
+test_files:
     ttbar_r21:
-        Path: <path_palce_holder>/MC16d_hybrid_odd_1_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "ttbar"
+        path: <path_palce_holder>/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
 
-zpext_test_files:
+    ttbar_r22:
+        path: <path_palce_holder>/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
+
     zpext_r21:
-        Path: <path_palce_holder>/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
-        data_set_name: "zpext"
+        path: <path_palce_holder>/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
+
+    zpext_r22:
+        path: <path_palce_holder>/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        variable_cuts:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
 
 # Path to Variable dict used in preprocessing
 var_dict: <path_palce_holder>/umami/umami-git/umami/configs/Umami_Variables.yaml
@@ -130,23 +149,13 @@ Eval_parameters_validation:
     variable_cuts:
         validation_file:
             - pt_btagJes:
-              operator: "<="
-              condition: 250000
+                operator: "<="
+                condition: 250000
 
         add_validation_file:
             - pt_btagJes:
-              operator: ">"
-              condition: 250000
-
-        ttbar:
-            - pt_btagJes:
-              operator: "<="
-              condition: 250000
-
-        zpext:
-            - pt_btagJes:
-              operator: ">"
-              condition: 250000
+                operator: ">"
+                condition: 250000
 
     # Working point used in the evaluation
     WP: 0.77
