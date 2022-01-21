@@ -9,11 +9,11 @@ import numpy as np
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
 
+from umami.classification_tools import get_class_label_ids, get_class_label_variables
 from umami.configuration import global_config, logger
 from umami.metrics import GetRejection
 from umami.preprocessing_tools import GetBinaryLabels
 from umami.tools import applyATLASstyle, makeATLAStag
-from umami.train_tools import get_class_label_ids, get_class_label_variables
 
 
 def CompTaggerRejectionDict(

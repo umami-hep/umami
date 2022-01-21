@@ -61,3 +61,39 @@ def replaceLineInFile(file, key, newLine, only_first=False):
 
         with open(file, "w") as f:
             f.write(filedata)
+
+
+def atoi(text):
+    """
+    Return string as int, if the given string is a int.
+
+    Parameters
+    ----------
+    text : str
+        String with int inside.
+
+    Returns
+    -------
+    Int_string : int/str
+        Returning the string if it is not a digit, otherwise
+        return string as int.
+    """
+
+    return int(text) if text.isdigit() else text
+
+
+def natural_keys(text):
+    """
+    Sorting strings by natural keys.
+
+    Parameters
+    ----------
+    text : str
+        String with int inside.
+
+    Returns
+    -------
+    sorted_list : list
+        List with the sorted strings inside.
+    """
+    return [atoi(c) for c in re.split(r"(\d+)", text)]

@@ -3,7 +3,6 @@
 """Plots the given input variables of the given files and also a comparison."""
 
 import os
-import re
 from glob import glob
 
 import matplotlib as mtp
@@ -12,46 +11,10 @@ import numpy as np
 import yaml
 from matplotlib import gridspec
 
-import umami.train_tools as utt
+import umami.data_tools as udt
 from umami.configuration import global_config, logger
 from umami.helper_tools import hist_ratio, hist_w_unc
-from umami.tools import applyATLASstyle, makeATLAStag, yaml_loader
-
-
-def atoi(text):
-    """
-    Convert string of digits into integer.
-
-    Parameters
-    ----------
-    text: str, float
-        Text which to be converted to int
-
-    Returns
-    -------
-    int
-        if text is a digit
-    input_type
-        else
-    """
-    return int(text) if text.isdigit() else text
-
-
-def natural_keys(text):
-    """
-    Sorting strings by natural keys.
-
-    Parameters
-    ----------
-    text : str
-        String with int inside.
-
-    Returns
-    -------
-    sorted_list : list
-        List with the sorted strings inside.
-    """
-    return [atoi(c) for c in re.split(r"(\d+)", text)]
+from umami.tools import applyATLASstyle, makeATLAStag, natural_keys, yaml_loader
 
 
 def check_kwargs_var_plots(kwargs: dict, **custom_default):
@@ -207,7 +170,7 @@ def plot_nTracks_per_Jet(
         # Loop over files and get the amount of jets needed.
         for file_counter, file in enumerate(sorted(filepath, key=natural_keys)):
             if nJets_counter < nJets:
-                tmp_trks, tmp_flavour_labels = utt.LoadTrksFromFile(
+                tmp_trks, tmp_flavour_labels = udt.LoadTrksFromFile(
                     filepath=file,
                     class_labels=class_labels,
                     nJets=nJets,
@@ -618,7 +581,7 @@ def plot_input_vars_trks_comparison(
     ):
 
         # Get the tracks and the labels from the file/files
-        trks, flavour_labels = utt.LoadTrksFromFile(
+        trks, flavour_labels = udt.LoadTrksFromFile(
             filepath=filepath,
             class_labels=class_labels,
             nJets=nJets,
@@ -1090,7 +1053,7 @@ def plot_input_vars_trks(
     ):
 
         # Get the tracks and the labels from the file/files
-        trks, flavour_labels = utt.LoadTrksFromFile(
+        trks, flavour_labels = udt.LoadTrksFromFile(
             filepath=filepath,
             class_labels=class_labels,
             nJets=nJets,
@@ -1442,7 +1405,7 @@ def plot_input_vars_jets(
     ):
 
         # Get the tracks and the labels from the file/files
-        jets, flavour_labels = utt.LoadJetsFromFile(
+        jets, flavour_labels = udt.LoadJetsFromFile(
             filepath=filepath,
             class_labels=class_labels,
             nJets=nJets,
@@ -1720,7 +1683,7 @@ def plot_input_vars_jets_comparison(
     ):
 
         # Get the tracks and the labels from the file/files
-        jets, flavour_labels = utt.LoadJetsFromFile(
+        jets, flavour_labels = udt.LoadJetsFromFile(
             filepath=filepath,
             class_labels=class_labels,
             nJets=nJets,

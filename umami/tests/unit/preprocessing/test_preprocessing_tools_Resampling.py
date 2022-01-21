@@ -107,7 +107,7 @@ class UnderSamplingTestCase(unittest.TestCase):
         Create a default dataset for testing.
         """
         self.config_file = os.path.join(
-            os.path.dirname(__file__), "test_preprocess_config.yaml"
+            os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
         self.config = Configuration(self.config_file)
         self.sampling_config = self.config.sampling
@@ -234,7 +234,7 @@ class PDFResamplingTestCase(unittest.TestCase):
         Create a default dataset for testing.
         """
         self.config_file = os.path.join(
-            os.path.dirname(__file__), "test_preprocess_config.yaml"
+            os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
         self.config = Configuration(self.config_file)
         sampling_config = self.config.sampling
@@ -348,7 +348,7 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
         Create a default dataset for testing.
         """
         self.config_file = os.path.join(
-            os.path.dirname(__file__), "test_preprocess_config.yaml"
+            os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
         self.config = Configuration(self.config_file)
         sampling_config = self.config.sampling
