@@ -17,26 +17,35 @@ from umami.train_tools import get_class_label_ids, get_class_label_variables
 
 
 def CompTaggerRejectionDict(
-    file,
+    file: str,
     tagger_comp_var: list,
     recommended_frac_dict: dict,
     WP: float,
     class_labels: list,
     main_class: str,
 ):
-    """
-    Load the comparison tagger probability variables from the validation
+    """Load the comparison tagger probability variables from the validation
     file and calculate the rejections.
 
-    Input:
-    - file: Filepath to validation file.
-    - tagger_comp_var: List of the comparison tagger probability variable names.
-    - recommended_frac_dict: Dict with the fractions.
-    - class_labels: List with the used class_labels.
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
+    Parameters
+    ----------
+    file : str
+        Filename of the validation file.
+    tagger_comp_var : list
+        List of the comparison tagger probability variable names.
+    recommended_frac_dict : dict
+        Dict with the fractions.
+    WP : float
+        Working point at which the rejections should be evaluated.
+    class_labels : list
+        List with the used class_labels.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
 
-    Output:
-    - Dict with the rejections for against the main class for all given flavours.
+    Returns
+    -------
+    dict
+        Dict with the rejections for against the main class for all given flavours.
     """
 
     # Get class_labels variables
@@ -107,27 +116,40 @@ def PlotDiscCutPerEpoch(
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the discriminant cut value for a specific working point
+    """Plot the discriminant cut value for a specific working point
     over all epochs.
 
-    Input:
-    - df_results: Dict with the epochs and disc cuts.
-    - plot_name: Path where the plots is saved + plot name.
-    - frac_class: Define which fraction is shown in ATLAS Tag.
-    - target_beff: Working Point to use.
-    - frac: Fraction value for ATLAS Tag.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - ncol: Number of columns in the legend.
-    - plot_datatype: Datatype of the plot.
-
-    Output:
-    - Discriminant Cut per epoch plotted.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and disc cuts.
+    plot_name : str
+        Path where the plots is saved + plot name.
+    frac_class : str
+        Define which fraction is shown in ATLAS Tag.
+    trained_taggers : list, optional
+        List of trained taggers, by default None
+    target_beff : float, optional
+        Working Point to use, by default 0.77
+    frac : float, optional
+        Fraction value for ATLAS Tag, by default 0.018
+    UseAtlasTag : bool, optional
+        Define if ATLAS Tag is used or not, by default True
+    ApplyATLASStyle : bool, optional
+        Apply ATLAS Style of the plot (for approval etc.), by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.3
+    ncol : int, optional
+        Number of columns in the legend, by default 1
+    plot_datatype : str, optional
+        Datatype of the plot, by default "pdf"
     """
 
     # Apply ATLAS style
@@ -188,26 +210,36 @@ def PlotDiscCutPerEpochUmami(
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the discriminant cut value for a specific working point
-    over all epochs.
+    """Plot the discriminant cut value for a specific working point over all epochs.
+    DIPS and UMAMI are both shown.
 
-    Input:
-    - df_results: Dict with the epochs and disc cuts.
-    - plot_name: Path where the plots is saved + plot name.
-    - frac_class: Define which fraction is shown in ATLAS Tag.
-    - target_beff: Working Point to use.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - ncol: Number of columns in the legend.
-    - plot_datatype: Datatype of the plot.
-
-    Output:
-    - Discriminant Cut per epoch plotted. DIPS and UMAMI both shown.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and disc cuts.
+    plot_name : str
+        Path where the plots is saved + plot name.
+    frac_class : str
+        Define which fraction is shown in ATLAS Tag
+    target_beff : float, optional
+        Working Point to use, by default 0.77
+    UseAtlasTag : bool, optional
+        Define if ATLAS Tag is used or not, by default True
+    ApplyATLASStyle : bool, optional
+        Apply ATLAS Style of the plot (for approval etc.), by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.35
+    ncol : int, optional
+        Number of columns in the legend, by default 1
+    plot_datatype : str, optional
+        Datatype of the plot, by default "pdf"
     """
 
     # Apply ATLAS style
@@ -286,40 +318,62 @@ def PlotRejPerEpochComparison(
     legFontSize: int = 10,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plotting the Rejections per Epoch for the trained tagger and
-    the provided comparison taggers.
+    """Plotting the Rejections per Epoch for the trained tagger and the provided
+    comparison taggers.
 
-    Input:
-    - df_results: Dict with the rejections of the trained tagger.
-    - tagger_label: Name of trained tagger.
-    - frac_dict: Dict with the fractions of the trained tagger.
-    - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
-    - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
-    - plot_name: Path where the plots is saved.
-    - class_labels: A list of the class_labels which are used
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - label_extension: Extension of the legend label giving the process type.
-    - rej_string: String that is added after the class for the key.
-    - trained_taggers: List of dicts with needed info about local available taggers.
-    - target_beff: Target Working point.
-    - UseAtlasTag: Bool to decide if you want the ATLAS tag.
-    - ApplyATLASStyle: Decide, if the ATLAS Plotting style is used.
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - ncol: Number of columns in the legend.
-    - figsize: Size of the figure.
-    - legend_loc: Position of the legend.
-    - plot_datatype: Datatype of the plot.
-    - legFontSize: Fontsize of the legend.
+    This is only available for two rejections at once due to limiting of axes.
 
-    Output:
-    - Plot of the rejections of the taggers per epoch in a comparison plot.
-      This is only available for two rejections at once due to limiting of
-      axes.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the rejections of the trained tagger.
+    tagger_label : str
+        Name of trained tagger.
+    frac_dict : dict
+        Dict with the fractions of the trained tagger.
+    comp_tagger_rej_dict : dict
+        Dict with the rejections of the comp taggers.
+    comp_tagger_frac_dict : dict
+        Dict with the fractions of the comp taggers.
+    plot_name : str
+        Path where the plots is saved.
+    class_labels : list
+        A list of the class_labels which are used
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    label_extension : str
+        Extension of the legend label giving the process type.
+    rej_string : str
+        String that is added after the class for the key.
+    trained_taggers : list, optional
+        List of dicts with needed info about local available taggers, by default None
+    target_beff : float, optional
+        Target Working point., by default 0.77
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.95
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.1
+    ncol : int, optional
+        Number of columns in the legend., by default 1
+    figsize : list, optional
+        Size of the figure., by default None
+    legend_loc : str, optional
+        Position of the legend., by default "upper right"
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    legFontSize : int, optional
+        Fontsize of the legend., by default 10
     """
+
     if figsize is None:
         figsize = [8, 6]
 
@@ -517,39 +571,60 @@ def PlotRejPerEpoch(
     legFontSize: int = 10,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plotting the Rejections per Epoch for the trained tagger and
-    the provided comparison taggers.
+    """Plotting the Rejections per Epoch for the trained tagger and the provided
+    comparison taggers in separate plots. One per rejection.
 
-    Input:
-    - df_results: Dict with the rejections of the trained tagger.
-    - tagger_label: Name of trained tagger.
-    - frac_dict: Dict with the fractions of the trained tagger.
-    - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
-    - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
-    - plot_name: Path where the plots is saved.
-    - class_labels: A list of the class_labels which are used
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - label_extension: Extension of the legend label giving the process type.
-    - rej_string: String that is added after the class for the key.
-    - trained_taggers: List of dicts with needed info about local available taggers.
-    - target_beff: Target Working point.
-    - UseAtlasTag: Bool to decide if you want the ATLAS tag.
-    - ApplyATLASStyle: Decide, if the ATLAS Plotting style is used.
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - ncol: Number of columns in the legend.
-    - figsize: Size of the figure.
-    - legend_loc: Position of the legend.
-    - plot_datatype: Datatype of the plot.
-    - legFontSize: Fontsize of the legend.
-
-    Output:
-    - Plot of the rejections of the taggers per epoch in seperate plots.
-      One per rejection.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the rejections of the trained tagger.
+    tagger_label : str
+        Name of trained tagger.
+    frac_dict : dict
+        Dict with the fractions of the trained tagger.
+    comp_tagger_rej_dict : dict
+        Dict with the rejections of the comp taggers.
+    comp_tagger_frac_dict : dict
+        Dict with the fractions of the comp taggers.
+    plot_name : str
+        Path where the plots is saved.
+    class_labels : list
+        A list of the class_labels which are used
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    label_extension : str
+        Extension of the legend label giving the process type.
+    rej_string : str
+        String that is added after the class for the key.
+    trained_taggers : list, optional
+        List of dicts with needed info about local available taggers, by default None
+    target_beff : float, optional
+        Target Working point., by default 0.77
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.1
+    ncol : int, optional
+        Number of columns in the legend., by default 1
+    figsize : list, optional
+        Size of the figure., by default None
+    legend_loc : str, optional
+        Position of the legend., by default "upper right"
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    legFontSize : int, optional
+        Fontsize of the legend., by default 10
     """
+
     if figsize is None:
         figsize = [8, 6]
     # Apply ATLAS style
@@ -668,38 +743,49 @@ def PlotRejPerEpoch(
 
 
 def PlotLosses(
-    df_results,
-    plot_name,
-    train_history_dict,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease=1.2,
-    yAxisAtlasTag=0.9,
-    plot_datatype="pdf",
-    ymin=None,
-    ymax=None,
+    df_results: dict,
+    plot_name: str,
+    train_history_dict: dict,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease: float = 1.2,
+    yAxisAtlasTag: float = 0.9,
+    plot_datatype: str = "pdf",
+    ymin: float = None,
+    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the training loss and the validation losses per epoch.
+    """Plot the training loss and the validation losses per epoch.
 
-    Input:
-    - df_results: Dict with the epochs and losses.
-    - plot_name: Path where the plots is saved + plot name.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - plot_datatype: Datatype of the plot.
-    - ymin: Manually set ymin. Overwrites yAxisIncrease.
-    - ymax: Manually set ymax. Overwrites yAxisIncrease.
-
-    Output:
-    - Plot with the training and validation losses per epoch.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and losses.
+    plot_name : str
+        Path where the plots is saved.
+    train_history_dict : dict
+        Dict that stores the results of the training.
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.2
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    ymin : float, optional
+        Manually set ymin. Overwrites yAxisIncrease, by default None
+    ymax : float, optional
+        Manually set ymax. Overwrites yAxisIncrease, by default None
     """
 
     # Apply ATLAS style
@@ -753,38 +839,49 @@ def PlotLosses(
 
 
 def PlotAccuracies(
-    df_results,
-    plot_name,
-    train_history_dict,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease=1.2,
-    yAxisAtlasTag=0.9,
-    plot_datatype="pdf",
-    ymin=None,
-    ymax=None,
+    df_results: dict,
+    plot_name: str,
+    train_history_dict: dict,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease: float = 1.2,
+    yAxisAtlasTag: float = 0.9,
+    plot_datatype: str = "pdf",
+    ymin: float = None,
+    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the training and validation accuracies per epoch.
+    """Plot the training and validation accuracies per epoch.
 
-    Input:
-    - df_results: Dict with the epochs and accuracies.
-    - plot_name: Path where the plots is saved + plot name.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - plot_datatype: Datatype of the plot.
-    - ymin: Manually set ymin. Overwrites yAxisIncrease.
-    - ymax: Manually set ymax. Overwrites yAxisIncrease.
-
-    Output:
-    - Plot with the training and validation accuracies per epoch.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and accuracies.
+    plot_name : str
+        Path where the plots is saved.
+    train_history_dict : dict
+        Dict that stores the results of the training.
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.2
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    ymin : float, optional
+        Manually set ymin. Overwrites yAxisIncrease, by default None
+    ymax : float, optional
+        Manually set ymax. Overwrites yAxisIncrease, by default None
     """
 
     # Apply ATLAS style
@@ -838,40 +935,50 @@ def PlotAccuracies(
 
 
 def PlotLossesUmami(
-    df_results,
-    plot_name,
-    train_history_dict,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease=1.4,
-    yAxisAtlasTag=0.9,
-    plot_datatype="pdf",
-    ymin=None,
-    ymax=None,
+    df_results: dict,
+    plot_name: str,
+    train_history_dict: dict,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease: float = 1.4,
+    yAxisAtlasTag: float = 0.9,
+    plot_datatype: str = "pdf",
+    ymin: float = None,
+    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the training loss and the validation losses per epoch for
-    UMAMI model (with DIPS and UMAMI losses).
+    """Plot the training loss and the validation losses per epoch for UMAMI model
+    (with DIPS and UMAMI losses).
 
-    Input:
-    - df_results: Dict with the epochs and losses.
-    - plot_name: Path where the plots is saved + plot name.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - plot_datatype: Datatype of the plot.
-    - ymin: Manually set ymin. Overwrites yAxisIncrease.
-    - ymax: Manually set ymax. Overwrites yAxisIncrease.
-
-    Output:
-    - Plot with the training and validation losses per epoch for
-      UMAMI model (with DIPS and UMAMI losses).
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and losses.
+    plot_name : str
+        Path where the plots is saved.
+    train_history_dict : dict
+        Dict that stores the results of the training.
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.4
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    ymin : float, optional
+        Manually set ymin. Overwrites yAxisIncrease, by default None
+    ymax : float, optional
+        Manually set ymax. Overwrites yAxisIncrease, by default None
     """
 
     # Apply ATLAS style
@@ -943,40 +1050,50 @@ def PlotLossesUmami(
 
 
 def PlotAccuraciesUmami(
-    df_results,
-    plot_name,
-    train_history_dict,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease=1.4,
-    yAxisAtlasTag=0.9,
-    plot_datatype="pdf",
-    ymin=None,
-    ymax=None,
+    df_results: dict,
+    plot_name: str,
+    train_history_dict: dict,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease: float = 1.4,
+    yAxisAtlasTag: float = 0.9,
+    plot_datatype: str = "pdf",
+    ymin: float = None,
+    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the training and validation accuracies per epoch for
-    UMAMI model (with DIPS and UMAMI accuracies).
+    """Plot the training and validation accuracies per epoch for UMAMI model
+    (with DIPS and UMAMI accuracies).
 
-    Input:
-    - df_results: Dict with the epochs and accuracies.
-    - plot_name: Path where the plots is saved + plot name.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - plot_datatype: Datatype of the plot.
-    - ymin: Manually set ymin. Overwrites yAxisIncrease.
-    - ymax: Manually set ymax. Overwrites yAxisIncrease.
-
-    Output:
-    - Plot with the training and validation accuracies per epoch for
-      UMAMI model (with DIPS and UMAMI accuracies).
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and accuracies.
+    plot_name : str
+        Path where the plots is saved.
+    train_history_dict : dict
+        Dict that stores the results of the training.
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.4
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    ymin : float, optional
+        Manually set ymin. Overwrites yAxisIncrease, by default None
+    ymax : float, optional
+        Manually set ymax. Overwrites yAxisIncrease, by default None
     """
 
     # Apply ATLAS style
@@ -1048,26 +1165,31 @@ def PlotAccuraciesUmami(
 
 
 def RunPerformanceCheck(
-    train_config,
+    train_config: object,
     tagger: str,
     tagger_comp_vars: dict = None,
     dict_file_name: str = None,
-    train_history_dict: str = None,
+    train_history_dict_file_name: str = None,
     WP: float = None,
 ):
-    """
-    Loading the validation metrics from the trained model and calculate
+    """Loading the validation metrics from the trained model and calculate
     the metrics for the comparison taggers and plot them.
 
-    Input:
-    - train_config: Loaded train_config object.
-    - tagger: String name of the tagger used.
-    - tagger_comp_vars: Dict of the tagger probability variables as lists.
-    - dict_file_name: Path to the json file with the per epoch metrics of the
-                      trained tagger.
-
-    Output:
-    - Validation metrics plots
+    Parameters
+    ----------
+    train_config : object
+        Loaded train_config object.
+    tagger : str
+        String name of the tagger used.
+    tagger_comp_vars : dict, optional
+        Dict of the tagger probability variables as lists, by default None
+    dict_file_name : str, optional
+        Path to the json file with the per epoch metrics of the trained tagger,
+        by default None
+    train_history_dict_file_name : str, optional
+        Path to the history file from the training, by default None
+    WP : float, optional
+        Working point to evaluate, by default None
     """
 
     logger.info(f"Running performance check for {tagger}.")
@@ -1087,8 +1209,8 @@ def RunPerformanceCheck(
     tagger_rej_dict = pd.read_json(dict_file_name)
 
     # Check if history file exists
-    if os.path.isfile(train_history_dict):
-        train_history_dict = pd.read_json(train_history_dict)
+    if os.path.isfile(train_history_dict_file_name):
+        train_history_dict = pd.read_json(train_history_dict_file_name)
 
     elif "accuracy" in tagger_rej_dict:
         logger.warning(

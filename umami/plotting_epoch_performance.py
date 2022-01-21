@@ -134,7 +134,7 @@ def main(args, train_config, preprocess_config):
             if "taggers_from_file" in train_config.Validation_metrics_settings
             else None,
             dict_file_name=output_file_name,
-            train_history_dict=f"{train_config.model_name}/history.json",
+            train_history_dict_file_name=f"{train_config.model_name}/history.json",
             WP=beff,
         )
 
