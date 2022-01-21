@@ -8,8 +8,9 @@ import argparse
 import tensorflow as tf
 
 import umami.train_tools as utt
+from umami.classification_tools import get_class_prob_var_names
 from umami.preprocessing_tools import Configuration
-from umami.train_tools import RunPerformanceCheck, get_class_prob_var_names
+from umami.train_tools import RunPerformanceCheck
 
 
 def GetParser():

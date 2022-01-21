@@ -167,7 +167,9 @@ if __name__ == "__main__":
         Writer.WriteTrainSample()
 
     elif args.to_records:
-        Converter = upt.h5toTFRecordConverter(config)
+        import umami.tf_tools as utft
+
+        Converter = utft.h5toTFRecordConverter(config)
         Converter.write_tfrecord()
 
     # Give error when nothing is used

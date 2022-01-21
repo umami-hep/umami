@@ -6,19 +6,24 @@ import unittest
 import h5py
 import numpy as np
 
-from umami.preprocessing_tools import Configuration, Convert_to_Record
+from umami.preprocessing_tools import Configuration
+from umami.tf_tools import Convert_to_Record
 
 
 class ConvertTest(unittest.TestCase):
     """
-    Unit test the functions inside the Scaling class.
+    Unit test the functions inside the Convert_to_Record class.
     """
 
     def setUp(self):
         self.config_file = os.path.join(
-            os.path.dirname(__file__), "test_preprocess_config.yaml"
+            os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
+        )
+        self.faulty_config_file = os.path.join(
+            os.path.dirname(__file__), "fixtures", "test_preprocess_faulty_config.yaml"
         )
         self.config = Configuration(self.config_file)
+        self.faulty_config = Configuration(self.faulty_config_file)
         # create dummy data
         x_train = np.ones(shape=(3, 41))
         x_trks_train = np.ones(shape=(3, 40, 5))
@@ -49,3 +54,8 @@ class ConvertTest(unittest.TestCase):
         with open(metadata_file, "r") as metadata:
             parameters_saved = json.load(metadata)
         self.assertEqual(parameters, parameters_saved)
+
+    def test_faulty_setup(self):
+        cv = Convert_to_Record.h5toTFRecordConverter(self.faulty_config)
+        default_chunk_size = 5_000
+        self.assertEqual(cv.chunk_size, default_chunk_size)

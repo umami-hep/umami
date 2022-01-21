@@ -14,6 +14,8 @@
   - unittest_tf_tools
   - unittest_train_tools
   - unittest_metrics
+  - unittest_classification_tools
+  - unittest_data_tools
 
 test_coverage:
   stage: coverage_test_stage
