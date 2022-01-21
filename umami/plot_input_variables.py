@@ -103,8 +103,9 @@ def plot_trks_variables(plot_config, plot_type):
                         datasets_labels=labels_list,
                         class_labels=plotting_config["class_labels"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
-                        output_directory="input_vars_trks/"
-                        + plotting_config["folder_to_save"],
+                        output_directory=plotting_config["folder_to_save"]
+                        if plotting_config["folder_to_save"]
+                        else "input_vars_trks/",
                         plot_type=plot_type,
                         **plotting_config["plot_settings"],
                         track_origin=trk_origin,
@@ -118,8 +119,9 @@ def plot_trks_variables(plot_config, plot_type):
                         var_dict=plot_config["Eval_parameters"]["var_dict"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
                         binning=plotting_config["binning"],
-                        output_directory="input_vars_trks/"
-                        + plotting_config["folder_to_save"],
+                        output_directory=plotting_config["folder_to_save"]
+                        if plotting_config["folder_to_save"]
+                        else "input_vars_trks/",
                         plot_type=plot_type,
                         **plotting_config["plot_settings"],
                         track_origin=trk_origin,
@@ -134,8 +136,9 @@ def plot_trks_variables(plot_config, plot_type):
                         datasets_labels=labels_list,
                         class_labels=plotting_config["class_labels"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
-                        output_directory="input_vars_trks/"
-                        + plotting_config["folder_to_save"],
+                        output_directory=plotting_config["folder_to_save"]
+                        if plotting_config["folder_to_save"]
+                        else "input_vars_trks/",
                         plot_type=plot_type,
                         **plotting_config["plot_settings"],
                         track_origin=trk_origin,
@@ -149,8 +152,9 @@ def plot_trks_variables(plot_config, plot_type):
                         var_dict=plot_config["Eval_parameters"]["var_dict"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
                         binning=plotting_config["binning"],
-                        output_directory="input_vars_trks/"
-                        + plotting_config["folder_to_save"],
+                        output_directory=plotting_config["folder_to_save"]
+                        if plotting_config["folder_to_save"]
+                        else "input_vars_trks/",
                         plot_type=plot_type,
                         **plotting_config["plot_settings"],
                         track_origin=trk_origin,
@@ -199,7 +203,9 @@ def plot_jets_variables(plot_config, plot_type):
                 var_dict=plot_config["Eval_parameters"]["var_dict"],
                 nJets=int(plot_config["Eval_parameters"]["nJets"]),
                 binning=plotting_config["binning"],
-                output_directory="input_vars_jets/" + plotting_config["folder_to_save"],
+                output_directory=plotting_config["folder_to_save"]
+                if plotting_config["folder_to_save"]
+                else "input_vars_jets/",
                 plot_type=plot_type,
                 special_param_jets=plotting_config["special_param_jets"],
                 **plotting_config["plot_settings"],
@@ -213,7 +219,9 @@ def plot_jets_variables(plot_config, plot_type):
                 var_dict=plot_config["Eval_parameters"]["var_dict"],
                 nJets=int(plot_config["Eval_parameters"]["nJets"]),
                 binning=plotting_config["binning"],
-                output_directory="input_vars_jets/" + plotting_config["folder_to_save"],
+                output_directory=plotting_config["folder_to_save"]
+                if plotting_config["folder_to_save"]
+                else "input_vars_jets/",
                 plot_type=plot_type,
                 special_param_jets=plotting_config["special_param_jets"],
                 **plotting_config["plot_settings"],

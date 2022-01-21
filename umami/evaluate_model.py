@@ -13,6 +13,8 @@ from tensorflow.keras.utils import (
     CustomObjectScope,  # pylint: disable=no-name-in-module
 )
 
+import umami.classification_tools as uct
+import umami.data_tools as udt
 import umami.evaluation_tools as uet
 import umami.tf_tools as utf
 import umami.train_tools as utt
@@ -198,7 +200,7 @@ def EvaluateModel(
     ]
 
     # Adding all needed truth info variables
-    label_var_list, _ = utt.get_class_label_variables(
+    label_var_list, _ = uct.get_class_label_variables(
         class_labels=class_labels,
     )
     variables += list(set(label_var_list))
@@ -206,12 +208,12 @@ def EvaluateModel(
     # Add the predictions labels for the defined taggers to
     # variables list
     for tagger in tagger_list:
-        variables += utt.get_class_prob_var_names(
+        variables += uct.get_class_prob_var_names(
             tagger_name=f"{tagger}", class_labels=class_labels
         )
 
     # Load the jets and truth labels (internal) with selected variables
-    jets, truth_internal_labels = utt.LoadJetsFromFile(
+    jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
         nJets=nJets,
@@ -422,7 +424,7 @@ def EvaluateModelDips(
     ]
 
     # Adding all needed truth info variables
-    label_var_list, _ = utt.get_class_label_variables(
+    label_var_list, _ = uct.get_class_label_variables(
         class_labels=class_labels,
     )
     variables += list(set(label_var_list))
@@ -430,12 +432,12 @@ def EvaluateModelDips(
     # Add the predictions labels for the defined taggers to
     # variables list
     for tagger_i in tagger_list:
-        variables += utt.get_class_prob_var_names(
+        variables += uct.get_class_prob_var_names(
             tagger_name=f"{tagger_i}", class_labels=class_labels
         )
 
     # Load the jets and truth labels (internal) with selected variables
-    jets, truth_internal_labels = utt.LoadJetsFromFile(
+    jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
         nJets=nJets,
@@ -634,7 +636,7 @@ def EvaluateModelDL1(
     ]
 
     # Adding all needed truth info variables
-    label_var_list, _ = utt.get_class_label_variables(
+    label_var_list, _ = uct.get_class_label_variables(
         class_labels=class_labels,
     )
     variables += list(set(label_var_list))
@@ -642,7 +644,7 @@ def EvaluateModelDL1(
     # Add the predictions labels for the defined taggers to
     # variables list
     for tagger_i in tagger_list:
-        variables += utt.get_class_prob_var_names(
+        variables += uct.get_class_prob_var_names(
             tagger_name=f"{tagger_i}", class_labels=class_labels
         )
 
@@ -662,7 +664,7 @@ def EvaluateModelDL1(
         variables.extend(add_variables_available)
 
     # Load the jets and truth labels (internal) with selected variables
-    jets, truth_internal_labels = utt.LoadJetsFromFile(
+    jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
         nJets=nJets,
