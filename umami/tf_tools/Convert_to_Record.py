@@ -17,11 +17,15 @@ class h5toTFRecordConverter:
         self.path_h5 = self.config.GetFileName(option="resampled_scaled_shuffled")
         try:
             self.chunk_size = config.convert_to_tfrecord["chunk_size"]
+            if not isinstance(self.chunk_size, int):
+                raise KeyError
             logger.info(f"Save {self.chunk_size} entries in one file")
 
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError) as chunk_size_no_int:
             try:
                 self.chunk_size = config.preparation["convert"]["chunk_size"]
+                if not isinstance(self.chunk_size, int):
+                    raise KeyError from chunk_size_no_int
                 logger.info(f"Save {self.chunk_size} entries in one file")
 
             except KeyError:

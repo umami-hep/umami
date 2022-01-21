@@ -25,7 +25,7 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
 
         # Load test preprocessing config file from current directory
         self.config_file = os.path.join(
-            os.path.dirname(__file__), "test_preprocess_config.yaml"
+            os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
         self.config = upt.Configuration(self.config_file)
 

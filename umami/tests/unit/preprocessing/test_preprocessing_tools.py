@@ -7,13 +7,7 @@ import numpy as np
 import pandas as pd
 
 from umami.configuration import global_config
-from umami.preprocessing_tools import (
-    Configuration,
-    GetBinaryLabels,
-    GetCategoryCuts,
-    GetSampleCuts,
-    PrepareSamples,
-)
+from umami.preprocessing_tools import Configuration, GetBinaryLabels, PrepareSamples
 
 
 class ConfigurationTestCase(unittest.TestCase):
@@ -26,7 +20,7 @@ class ConfigurationTestCase(unittest.TestCase):
         Set a example config file.
         """
         self.config_file = os.path.join(
-            os.path.dirname(__file__), "test_preprocess_config.yaml"
+            os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
 
     def test_missing_key_error(self):
@@ -58,71 +52,6 @@ class ConfigurationTestCase(unittest.TestCase):
         config = Configuration(self.config_file)
         out_file = config.GetFileName()
         self.assertEqual(config.outfile_name, out_file)
-
-
-class PreprocessingTestSampleCuts(unittest.TestCase):
-    """
-    Test the implementation of the Preprocessing sample cut application.
-    """
-
-    def setUp(self):
-        self.extended_cuts = [
-            {"eventNumber": {"operator": "mod_2_==", "condition": 0}},
-            {"pt_btagJes": {"operator": "<=", "condition": 250000.0}},
-            {
-                "HadronConeExclExtendedTruthLabelID": {
-                    "operator": "==",
-                    "condition": [5, 54],
-                }
-            },
-        ]
-        self.cuts = [
-            {"eventNumber": {"operator": "mod_2_==", "condition": 0}},
-            {"pt_btagJes": {"operator": "<=", "condition": 250000.0}},
-            {"HadronConeExclTruthLabelID": {"operator": "==", "condition": 5}},
-        ]
-        self.jets = pd.DataFrame(
-            {
-                "GhostBHadronsFinalPt": [
-                    2e3,
-                    2.6e4,
-                    np.nan,
-                    2.6e4,
-                    2e3,
-                    2.6e4,
-                ],
-                "pt_btagJes": [
-                    2e3,
-                    2.6e4,
-                    np.nan,
-                    2.6e4,
-                    2e3,
-                    2.6e4,
-                ],
-                "HadronConeExclTruthLabelID": [5, 5, 4, 4, 0, 15],
-                "HadronConeExclExtendedTruthLabelID": [5, 54, 4, 44, 0, 15],
-                "eventNumber": [1, 2, 3, 4, 5, 6],
-            }
-        )
-        self.pass_ttbar = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
-
-    def test_cuts_passing_ttbar(self):
-        indices_to_remove = GetSampleCuts(
-            self.jets.to_records(index=False),
-            self.cuts,
-        )
-        cut_result = np.ones(len(self.jets))
-        np.put(cut_result, indices_to_remove, 0)
-        self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
-
-    def test_cuts_passing_ttbar_extended_labelling(self):
-        indices_to_remove = GetSampleCuts(
-            self.jets.to_records(index=False),
-            self.extended_cuts,
-        )
-        cut_result = np.ones(len(self.jets))
-        np.put(cut_result, indices_to_remove, 0)
-        self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
 
 
 class GetBinaryLabelsTestCase(unittest.TestCase):
@@ -159,7 +88,9 @@ class PrepareSamplesTestCase(unittest.TestCase):
     class c_args:
         def __init__(self) -> None:
             self.sample = "ttbar"
-            self.config_file = "test_preprocess_config.yaml"
+            self.config_file = os.path.join(
+                os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
+            )
             self.shuffle_array = True
 
     def setUp(self):
@@ -250,41 +181,3 @@ class PrepareSamplesTestCase(unittest.TestCase):
         ps.output_file = self.output_file.name
         ps.Run()
         assert os.path.exists(self.output_file.name) == 1
-
-
-class GetCategoryCutsTestCase(unittest.TestCase):
-    """
-    Test the implementation of the GetCategoryCuts function.
-    """
-
-    def setUp(self) -> None:
-        self.label_var = "HadronConeExclTruthLabelID"
-        self.label_value = 5
-
-    def test_WrongTypeProvided(self):
-        self.label_value = "5"
-        with self.assertRaises(ValueError):
-            GetCategoryCuts(self.label_var, self.label_value)
-
-    def test_IntegerCase(self):
-        cuts = GetCategoryCuts(self.label_var, self.label_value)
-        expected_cuts = [
-            {self.label_var: {"operator": "==", "condition": self.label_value}}
-        ]
-        self.assertEqual(cuts, expected_cuts)
-
-    def test_FloatCase(self):
-        self.label_value = 5.0
-        cuts = GetCategoryCuts(self.label_var, self.label_value)
-        expected_cuts = [
-            {self.label_var: {"operator": "==", "condition": self.label_value}}
-        ]
-        self.assertEqual(cuts, expected_cuts)
-
-    def test_ListCase(self):
-        self.label_value = [5, 55]
-        cuts = GetCategoryCuts(self.label_var, self.label_value)
-        expected_cuts = [
-            {self.label_var: {"operator": "==", "condition": self.label_value}}
-        ]
-        self.assertEqual(cuts, expected_cuts)

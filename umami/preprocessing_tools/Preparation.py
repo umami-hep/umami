@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 
 from umami.configuration import global_config, logger
-from umami.preprocessing_tools import GetCategoryCuts, GetSampleCuts
+from umami.data_tools import GetCategoryCuts, GetSampleCuts
 
 
 def GetPreparationSamplePath(sample):

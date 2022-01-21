@@ -1,9 +1,9 @@
 """Configuration module for NN trainings."""
 import yaml
 
+from umami.classification_tools import get_class_label_ids, get_class_label_variables
 from umami.configuration import logger
 from umami.tools import yaml_loader
-from umami.train_tools.NN_tools import get_class_label_ids, get_class_label_variables
 
 
 class Configuration:
