@@ -1104,17 +1104,12 @@ def plotPtDependence(
     # Redefine Second Tag with inclusive or fixed tag
     if Fixed_WP_Bin is True:
         SecondTag = (
-            SecondTag
-            + "\nConstant "
-            + r"$\epsilon_b$ = {}% per bin".format(int(WP * 100))
+            f"{SecondTag}\nConstant"
+            fr"$\epsilon_b$ = {int(WP * 100)}% per bin"
         )
-        # TODO: is here a better way than .format?
 
     else:
-        SecondTag = f"{SecondTag}\nInclusive " + r"$\epsilon_b$ = {}%".format(
-            int(WP * 100)
-        )
-        # TODO: is here a better way than .format?
+        SecondTag = f"{SecondTag}\nInclusive " + fr"$\epsilon_b$ = {int(WP * 100)}%"
 
     # Set the ATLAS Tag
     if UseAtlasTag is True:
