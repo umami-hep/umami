@@ -10,15 +10,34 @@ A detailed list with the available derivations can be fund in the [FTAG algorith
 
 ## Release 22
 
-### Release 22 Samples with Muons and high Statistics
+### Release 22 Samples with Lepton, Hadron and Soft Muon Info (p4931)
+
+All information for the GNN are added. Both track selections (Default, Loose) are added by the names tracks and tracks_loose.
 
 | Sample        | h5 ntuples       | DAOD_PHYSVAL derivations| AOD              | TDD hash |
 | ------------- | ---------------- | ----------------------- | ---------------- | -------- |
-| MC20d - ttbar | user.alfroch.410470.btagTraining.e6337_s3681_r13144_p4856.EMPFlowAll.2021-11-29-T131449-R27984_output.h5 | mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_s3681_r13144_p4856 | mc20_13TeV:mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_s3681_r13144 | 95fba671 |
-| MC20d - Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3681_r13144_p4856.EMPFlowAll.2021-12-08-T175903-R25911_output.h5 | mc20_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3681_r13144_p4856 | mc20_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.recon.AOD.e7954_s3681_r13144 | 95fba671 |
-| MC20a - Z' | user.alfroch.427080.btagTraining.e5362_s3681_r13167_p4856.EMPFlowAll.2021-12-08-T175903-R25911_output.h5 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.deriv.DAOD_PHYSVAL.e5362_s3681_r13167_p4856 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.recon.AOD.e5362_s3681_r13167 | 95fba671 |
-| MC20d - Z' | user.alfroch.427080.btagTraining.e5362_s3681_r13144_p4856.EMPFlowAll.2021-12-08-T175903-R25911_output.h5 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.deriv.DAOD_PHYSVAL.e5362_s3681_r13144_p4856 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.recon.AOD.e5362_s3681_r13144 | 95fba671 |
-| MC20d - Z' (Herwig 7) |  |  | mc20_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.recon.AOD.e7954_s3681_r13144 |  |
+| MC20a - ttbar | user.alfroch.410470.btagTraining.e6337_s3681_r13167_p4931.EMPFlowAll.2022-01-20-T175255_output.h5 | mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_s3681_r13167_p4931 | mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_s3681_r13167 | 6268adab |
+| MC20d - ttbar | user.alfroch.410470.btagTraining.e6337_s3681_r13144_p4931.EMPFlowAll.2022-01-20-T175255_output.h5 | mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_s3681_r13144_r13146_p4931 | mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_s3681_r13144 | 6268adab |
+| MC20d - Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3681_r13144_p4931.EMPFlowAll.2022-01-20-T175255_output.h5 | mc20_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3681_r13144_p4931 | mc20_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.recon.AOD.e7954_s3681_r13144 | 6268adab |
+| MC20a - Z' | user.alfroch.427080.btagTraining.e5362_s3681_r13167_p4931.EMPFlowAll.2022-01-20-T175255_output.h5 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.deriv.DAOD_PHYSVAL.e5362_s3681_r13167_p4931 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.recon.AOD.e5362_s3681_r13167 | 6268adab |
+| MC20d - Z' | user.alfroch.427080.btagTraining.e5362_s3681_r13144_p4931.EMPFlowAll.2022-01-20-T175255_output.h5 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.deriv.DAOD_PHYSVAL.e5362_s3681_r13144_p4931 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.recon.AOD.e5362_s3681_r13144 | 6268adab |
+| MC20d - Z' (Herwig 7) | user.alfroch.500567.btagTraining.e7954_s3681_r13144_p4931.EMPFlowAll.2022-01-20-T175255_output.h5 | mc20_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.deriv.DAOD_PHYSVAL.e7954_s3681_r13144_p4931 | mc20_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.recon.AOD.e7954_s3681_r13144 | 6268adab |
+
+
+
+??? info "Release 22 Samples with Muons and high Statistics (p4856)"
+
+
+
+    The round 2 release 22 samples with RNNIP, DL1* and DIPS. Muon information are added (softMuon). Information for GNN training is added. The default and loose track selections are added. Default tracks are called `tracks` and loose tracks are called `tracks_loose`.
+
+    | Sample        | h5 ntuples       | DAOD_PHYSVAL derivations| AOD              | TDD hash |
+    | ------------- | ---------------- | ----------------------- | ---------------- | -------- |
+    | MC20d - ttbar | user.alfroch.410470.btagTraining.e6337_s3681_r13144_p4856.EMPFlowAll.2021-11-29-T131449-R27984_output.h5 | mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_PHYSVAL.e6337_s3681_r13144_p4856 | mc20_13TeV:mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.recon.AOD.e6337_s3681_r13144 | 95fba671 |
+    | MC20d - Z' Extended (With QSP, Yes shower weights) | user.alfroch.800030.btagTraining.e7954_s3681_r13144_p4856.EMPFlowAll.2021-12-08-T175903-R25911_output.h5 | mc20_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.deriv.DAOD_PHYSVAL.e7954_s3681_r13144_p4856 | mc20_13TeV.800030.Py8EG_A14NNPDF23LO_flatpT_Zprime_Extended.recon.AOD.e7954_s3681_r13144 | 95fba671 |
+    | MC20a - Z' | user.alfroch.427080.btagTraining.e5362_s3681_r13167_p4856.EMPFlowAll.2021-12-08-T175903-R25911_output.h5 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.deriv.DAOD_PHYSVAL.e5362_s3681_r13167_p4856 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.recon.AOD.e5362_s3681_r13167 | 95fba671 |
+    | MC20d - Z' | user.alfroch.427080.btagTraining.e5362_s3681_r13144_p4856.EMPFlowAll.2021-12-08-T175903-R25911_output.h5 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.deriv.DAOD_PHYSVAL.e5362_s3681_r13144_p4856 | mc20_13TeV.427080.Pythia8EvtGen_A14NNPDF23LO_flatpT_Zprime.recon.AOD.e5362_s3681_r13144 | 95fba671 |
+    | MC20d - Z' (Herwig 7) |  |  | mc20_13TeV.500567.MGH7EG_NNPDF23ME_Zprime.recon.AOD.e7954_s3681_r13144 |  |
 
 
 ???+ warning "Wrong scores stored for VR track jet taggers"
