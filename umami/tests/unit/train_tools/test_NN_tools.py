@@ -6,7 +6,6 @@ from subprocess import run
 
 import numpy as np
 
-from umami.configuration import global_config
 from umami.tools import replaceLineInFile
 from umami.train_tools.Configuration import Configuration
 from umami.train_tools.NN_tools import (
@@ -23,7 +22,6 @@ from umami.train_tools.NN_tools import (
     get_parameters_from_validation_dict_name,
     get_unique_identifiers,
     get_validation_dict_name,
-    get_variable_cuts,
     load_validation_data_dips,
     load_validation_data_umami,
     setup_output_directory,
@@ -59,42 +57,6 @@ class GetModelPath_TestCase(unittest.TestCase):
         test_model_path = GetModelPath(model_name=self.model_name, epoch=self.epoch)
 
         self.assertEqual(self.control_model_path, test_model_path)
-
-
-class get_variable_cuts_TestCase(unittest.TestCase):
-    def setUp(self):
-        self.Eval_parameters = {
-            "variable_cuts": {
-                "validation_file": {
-                    "pt_btagJes": {
-                        "operator": "<=",
-                        "condition": 250000,
-                    }
-                }
-            }
-        }
-
-        self.file = "validation_file"
-        self.control_dict = {
-            "pt_btagJes": {
-                "operator": "<=",
-                "condition": 250000,
-            }
-        }
-
-    def test_get_variable_cuts(self):
-        # Get dict
-        cut_dict = get_variable_cuts(self.Eval_parameters, self.file)
-
-        # Check dict
-        self.assertEqual(cut_dict, self.control_dict)
-
-    def testtest_get_variable_cuts_None(self):
-        # Get dict
-        cut_dict = get_variable_cuts(self.Eval_parameters, "error")
-
-        # Check dict
-        self.assertEqual(cut_dict, None)
 
 
 class get_epoch_from_string_TestCase(unittest.TestCase):
@@ -311,12 +273,9 @@ class MyCallback_TestCase(unittest.TestCase):
         self.nFeatures = 15
         self.nClasses = len(self.class_labels)
         self.target_beff = 0.77
-        self.val_data_dict = {
-            "X_valid": np.random.random((10000, self.nTrks, self.nFeatures)),
-            "Y_valid": np.random.random((10000, self.nClasses)),
-            "X_valid_add": np.random.random((10000, self.nTrks, self.nFeatures)),
-            "Y_valid_add": np.random.random((10000, self.nClasses)),
-        }
+        # TODO: we could add a properly initialized val_data_dict here, but seems like
+        # the test further down doesn't use it anyway
+        self.val_data_dict = {}
         self.frac_dict = {
             "cjets": 0.018,
             "ujets": 0.982,
@@ -352,16 +311,7 @@ class MyCallbackUmami_TestCase(unittest.TestCase):
         self.nFeatures_Trks = 15
         self.nClasses = len(self.class_labels)
         self.target_beff = 0.77
-        self.val_data_dict = {
-            "X_valid": np.random.random((10000, self.nFeatures_Jets)),
-            "X_valid_add": np.random.random((10000, self.nFeatures_Jets)),
-            "X_valid_trk": np.random.random((10000, self.nTrks, self.nFeatures_Trks)),
-            "X_valid_trk_add": np.random.random(
-                (10000, self.nTrks, self.nFeatures_Trks)
-            ),
-            "Y_valid": np.random.random((10000, self.nClasses)),
-            "Y_valid_add": np.random.random((10000, self.nClasses)),
-        }
+        self.val_data_dict = {}
         self.frac_dict = {
             "cjets": 0.018,
             "ujets": 0.982,
@@ -441,14 +391,30 @@ class GetSamples_TestCase(unittest.TestCase):
     def setUp(self):
         self.Eval_parameters_validation = {}
         self.NN_structure = {"class_labels": ["bjets", "cjets", "ujets"]}
-        self.preparation = {"class_labels": ["bjets", "cjets", "ujets"]}
+        self.sampling = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.test_dir = tempfile.TemporaryDirectory()
-        self.validation_file = (
-            f"{self.test_dir.name}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
-        )
-        self.add_validation_file = (
-            f"{self.test_dir.name}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
-        )
+        self.validation_files = {
+            "ttbar_r21_val": {
+                "path": (
+                    f"{self.test_dir.name}/"
+                    "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
+                ),
+                "label": "$t\\bar{t}$ Release 21",
+                "variable_cuts": [
+                    {"pt_btagJes": {"operator": "<=", "condition": 250000}}
+                ],
+            },
+            "zprime_r21_val": {
+                "path": (
+                    f"{self.test_dir.name}/"
+                    "MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
+                ),
+                "label": "$Z'$ Release 21",
+                "variable_cuts": [
+                    {"pt_btagJes": {"operator": ">", "condition": 250000}}
+                ],
+            },
+        }
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.class_labels_extended = [
             "singlebjets",
@@ -491,7 +457,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_GetTestSampleTrks(self):
         X_trk, Y_trk = GetTestSampleTrks(
-            input_file=self.validation_file,
+            input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
@@ -509,7 +475,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             X_trk, Y_trk = GetTestSampleTrks(
-                input_file=self.validation_file,
+                input_file=self.validation_files["ttbar_r21_val"]["path"],
                 var_dict=self.var_dict,
                 preprocess_config=self,
                 class_labels=self.class_labels_given,
@@ -517,10 +483,10 @@ class GetSamples_TestCase(unittest.TestCase):
             )
 
     def test_GetTestSampleTrks_Extended_Labeling(self):
-        self.preparation = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
+        self.sampling = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
 
         X_trk, Y_trk = GetTestSampleTrks(
-            input_file=self.validation_file,
+            input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels_extended,
@@ -535,7 +501,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_GetTestSample(self):
         X, Y = GetTestSample(
-            input_file=self.validation_file,
+            input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
@@ -555,7 +521,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             X, Y = GetTestSample(
-                input_file=self.validation_file,
+                input_file=self.validation_files["ttbar_r21_val"]["path"],
                 var_dict=self.var_dict,
                 preprocess_config=self,
                 class_labels=self.class_labels_given,
@@ -564,10 +530,10 @@ class GetSamples_TestCase(unittest.TestCase):
             )
 
     def test_GetTestSample_Extended_Labeling(self):
-        self.preparation = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
+        self.sampling = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
 
         X, Y = GetTestSample(
-            input_file=self.validation_file,
+            input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels_extended,
@@ -584,7 +550,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_GetTestFile(self):
         (X_valid, X_valid_trk, Y_valid,) = GetTestFile(
-            input_file=self.validation_file,
+            input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
@@ -599,97 +565,61 @@ class GetSamples_TestCase(unittest.TestCase):
         self.assertEqual(Y_valid.shape, (len(Y_valid), 3))
 
     def test_load_validation_data_umami(self):
-        self.Eval_parameters_validation = {
-            "variable_cuts": {
-                "validation_file": [
-                    {
-                        f"{global_config.pTvariable}": {
-                            "operator": "<=",
-                            "condition": 50_000,
-                        }
-                    }
-                ],
-                "add_validation_file": [
-                    {
-                        f"{global_config.pTvariable}": {
-                            "operator": ">",
-                            "condition": 50_000,
-                        }
-                    }
-                ],
-            }
-        }
+
         val_data_dict = load_validation_data_umami(self, self, self.nJets)
 
         self.assertEqual(
             list(val_data_dict.keys()),
             [
-                "X_valid",
-                "X_valid_trk",
-                "Y_valid",
-                "X_valid_add",
-                "X_valid_trk_add",
-                "Y_valid_add",
+                "X_valid_ttbar_r21_val",
+                "X_valid_trk_ttbar_r21_val",
+                "Y_valid_ttbar_r21_val",
+                "X_valid_zprime_r21_val",
+                "X_valid_trk_zprime_r21_val",
+                "Y_valid_zprime_r21_val",
             ],
         )
 
     def test_load_validation_data_dips(self):
-        self.Eval_parameters_validation = {
-            "variable_cuts": {
-                "validation_file": [
-                    {
-                        f"{global_config.pTvariable}": {
-                            "operator": "<=",
-                            "condition": 50_000,
-                        }
-                    }
-                ],
-                "add_validation_file": [
-                    {
-                        f"{global_config.pTvariable}": {
-                            "operator": ">",
-                            "condition": 50_000,
-                        }
-                    }
-                ],
-            }
-        }
+
         val_data_dict = load_validation_data_dips(self, self, self.nJets)
 
         self.assertEqual(
             list(val_data_dict.keys()),
             [
-                "X_valid",
-                "Y_valid",
-                "X_valid_add",
-                "Y_valid_add",
+                "X_valid_ttbar_r21_val",
+                "Y_valid_ttbar_r21_val",
+                "X_valid_zprime_r21_val",
+                "Y_valid_zprime_r21_val",
             ],
         )
 
     def test_load_validation_data_umami_no_var_cuts(self):
+
         val_data_dict = load_validation_data_umami(self, self, self.nJets)
 
         self.assertEqual(
             list(val_data_dict.keys()),
             [
-                "X_valid",
-                "X_valid_trk",
-                "Y_valid",
-                "X_valid_add",
-                "X_valid_trk_add",
-                "Y_valid_add",
+                "X_valid_ttbar_r21_val",
+                "X_valid_trk_ttbar_r21_val",
+                "Y_valid_ttbar_r21_val",
+                "X_valid_zprime_r21_val",
+                "X_valid_trk_zprime_r21_val",
+                "Y_valid_zprime_r21_val",
             ],
         )
 
     def test_load_validation_data_dips_no_var_cuts(self):
+
         val_data_dict = load_validation_data_dips(self, self, self.nJets)
 
         self.assertEqual(
             list(val_data_dict.keys()),
             [
-                "X_valid",
-                "Y_valid",
-                "X_valid_add",
-                "Y_valid_add",
+                "X_valid_ttbar_r21_val",
+                "Y_valid_ttbar_r21_val",
+                "X_valid_zprime_r21_val",
+                "Y_valid_zprime_r21_val",
             ],
         )

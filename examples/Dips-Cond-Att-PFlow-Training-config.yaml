@@ -10,11 +10,22 @@ model_file:
 train_file: <path_palce_holder>/PFlow-hybrid-preprocessed_shuffled.h5
 
 # Add validation files
-# ttbar val
-validation_file: <path_palce_holder>/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+validation_files:
+    ttbar_r21_val:
+        path: <path_palce_holder>/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+        label: "$t\\bar{t}$ Release 21"
+        variable_cuts:
+            - pt_btagJes:
+                operator: "<="
+                condition: 250000
 
-# zprime val
-add_validation_file: <path_palce_holder>/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+    zprime_r21_val:
+        path: <path_palce_holder>/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+        label: "$Z'$ Release 21"
+        variable_cuts:
+            - pt_btagJes:
+                operator: ">"
+                condition: 250000
 
 test_files:
     ttbar_r21:

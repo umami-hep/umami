@@ -179,11 +179,13 @@ def DipsCondAtt(args, train_config, preprocess_config):
                 convert_to_tensor=True,
             )
 
+            # TODO: Add a representative validation dataset for training (shown in
+            # stdout)
             # Create the validation data tuple for the fit function
-            validation_data = (
-                val_data_dict["X_valid"],
-                val_data_dict["Y_valid"],
-            )
+            # validation_data = (
+            #     val_data_dict["X_valid"],
+            #     val_data_dict["Y_valid"],
+            # )
 
         else:
             val_data_dict = utt.load_validation_data_umami(
@@ -194,14 +196,16 @@ def DipsCondAtt(args, train_config, preprocess_config):
                 jets_var_list=["absEta_btagJes", "pt_btagJes"],
             )
 
+            # TODO: Add a representative validation dataset for training (shown in
+            # stdout)
             # Create the validation data tuple for the fit function
-            validation_data = (
-                [
-                    val_data_dict["X_valid_trk"],
-                    val_data_dict["X_valid"],
-                ],
-                val_data_dict["Y_valid"],
-            )
+            # validation_data = (
+            #     [
+            #         val_data_dict["X_valid_trk"],
+            #         val_data_dict["X_valid"],
+            #     ],
+            #     val_data_dict["Y_valid"],
+            # )
 
     # Set my_callback as callback. Writes history information
     # to json file.
@@ -223,7 +227,8 @@ def DipsCondAtt(args, train_config, preprocess_config):
     history = dips.fit(
         train_dataset,
         epochs=nEpochs,
-        validation_data=validation_data,
+        # TODO: Add a representative validation dataset for training (shown in stdout)
+        # validation_data=validation_data,
         callbacks=[dips_mChkPt, reduce_lr, my_callback],
         steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,

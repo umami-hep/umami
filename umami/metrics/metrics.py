@@ -293,6 +293,8 @@ def GetRejection(
     main_class: str,
     frac_dict: dict,
     target_eff: float,
+    unique_identifier: str = None,
+    subtagger: str = None,
 ):
     """
     Calculates the rejections for a specific WP for all provided jets
@@ -317,6 +319,12 @@ def GetRejection(
         except main_class.
     target_eff : float
         WP which is used for discriminant calculation.
+    unique_identifier: str
+        Unique identifier of the used dataset (e.g. ttbar_r21)
+    subtagger: str
+        String which describes the subtagger you calculate the rejection for in case
+        you have several involved. This will add the provided string to the key in
+        the dict, e.g. ujets_rej_<subtagger>_<file_id>
 
     Returns
     -------
@@ -441,7 +449,14 @@ def GetRejection(
     # Calculate efficiencies
     for iter_main_class in class_labels_wo_main:
         try:
-            rej_dict[f"{iter_main_class}_rej"] = 1 / (
+            if unique_identifier is None:
+                dict_key = f"{iter_main_class}_rej"
+            elif subtagger is None:
+                dict_key = f"{iter_main_class}_rej_{unique_identifier}"
+            else:
+                dict_key = f"{iter_main_class}_rej_{subtagger}_{unique_identifier}"
+
+            rej_dict[dict_key] = 1 / (
                 len(
                     jets_dict[iter_main_class][
                         CalcDiscValues(
