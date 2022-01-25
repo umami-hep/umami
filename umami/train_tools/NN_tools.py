@@ -125,36 +125,6 @@ def GetModelPath(model_name: str, epoch: int) -> str:
     return model_path
 
 
-def get_variable_cuts(
-    Eval_parameters: dict,
-    file: str,
-) -> dict:
-    """
-    Get the variable cuts from the Eval parameters if there, else return None
-
-    Parameters
-    ----------
-    Eval_parameters : dict
-        Loaded Eval_parameters from the train_config as dict
-    file : str
-        Filetype or naming of the cuts you want to load (e.g validation_file)
-
-    Returns
-    -------
-    cut_vars_dict : dict
-        Dict with the variables and their cuts.
-    """
-
-    if (
-        ("variable_cuts" in Eval_parameters)
-        and (Eval_parameters["variable_cuts"] is not None)
-        and (file in Eval_parameters["variable_cuts"])
-    ):
-        return Eval_parameters["variable_cuts"][file]
-
-    return None
-
-
 def prepare_history_dict(hist_dict: dict) -> list:
     """
     Make the history dict from keras the same shape as the one from the callbacks.
@@ -473,7 +443,7 @@ class MyCallback(CallbackBase):
 
         # Define a dict with the epoch and the training metrics
         dict_epoch = {
-            "epoch": epoch,
+            "epoch": epoch + 1,
             "learning_rate": logs["lr"].item(),
             "loss": logs["loss"],
             "accuracy": logs["accuracy"],
@@ -530,13 +500,13 @@ class MyCallbackUmami(CallbackBase):
 
         # Define a dict with the epoch and the training metrics
         dict_epoch = {
-            "epoch": epoch,
+            "epoch": epoch + 1,
             "learning_rate": logs["lr"].item(),
             "loss": logs["loss"],
-            "dips_loss": logs["dips_loss"],
-            "umami_loss": logs["umami_loss"],
-            "dips_accuracy": logs["dips_accuracy"],
-            "umami_accuracy": logs["umami_accuracy"],
+            "loss_dips": logs["dips_loss"],
+            "loss_umami": logs["umami_loss"],
+            "accuracy_dips": logs["dips_accuracy"],
+            "accuracy_umami": logs["umami_accuracy"],
         }
 
         # If val data is given, calculate validaton metrics and rejections
@@ -935,96 +905,52 @@ def load_validation_data_umami(
         jets_var_list = []
     # Define NN_Structure and the Eval params
     NN_structure = train_config.NN_structure
-    Eval_parameters = train_config.Eval_parameters_validation
-
-    # Get the cut vars dict if defined
-    cut_vars_dict = get_variable_cuts(
-        Eval_parameters=Eval_parameters,
-        file="validation_file",
-    )
-
-    # Check for excluded variables
-    exclude = None
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
 
     # Init a new dict for the loaded val data
     val_data_dict = {}
-    (X_valid, X_valid_trk, Y_valid,) = GetTestFile(
-        input_file=train_config.validation_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config,
-        class_labels=NN_structure["class_labels"],
-        nJets=nJets,
-        exclude=exclude,
-        jet_variables=jets_var_list,
-        cut_vars_dict=cut_vars_dict,
-    )
+    val_files = train_config.validation_files
 
-    if convert_to_tensor:
-        # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
-        val_data_dict["X_valid_trk"] = tf.convert_to_tensor(
-            X_valid_trk, dtype=tf.float64
-        )
-        val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
-
-    else:
-        val_data_dict["X_valid"] = X_valid
-        val_data_dict["X_valid_trk"] = X_valid_trk
-        val_data_dict["Y_valid"] = Y_valid
-
-    # Check if add_files are defined and load them
-    if train_config.add_validation_file is not None:
-        # Get cut vars dict for add_validation file
-        cut_vars_dict_add = get_variable_cuts(
-            Eval_parameters=Eval_parameters,
-            file="add_validation_file",
+    for val_file_identifier, val_file_config in val_files.items():
+        logger.info(f"Loading validation file {val_file_identifier}")
+        # Get the cut vars dict if defined
+        cut_vars_dict = (
+            val_file_config["variable_cuts"]
+            if "variable_cuts" in val_file_config
+            else None
         )
 
-        (X_valid_add, X_valid_trk_add, Y_valid_add,) = GetTestFile(
-            input_file=train_config.add_validation_file,
+        # Check for excluded variables
+        exclude = None
+        if "exclude" in train_config.config:
+            exclude = train_config.config["exclude"]
+
+        (X_valid, X_valid_trk, Y_valid,) = GetTestFile(
+            input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
             nJets=nJets,
             exclude=exclude,
             jet_variables=jets_var_list,
-            cut_vars_dict=cut_vars_dict_add,
+            cut_vars_dict=cut_vars_dict,
         )
-
-        if len(jets_var_list) != 0:
-            X_valid_add = X_valid_add[jets_var_list]
 
         if convert_to_tensor:
             # Transform to tf.tensors and add to val_dict
-            val_data_dict["X_valid_add"] = tf.convert_to_tensor(
-                X_valid_add, dtype=tf.float64
+            val_data_dict[f"X_valid_{val_file_identifier}"] = tf.convert_to_tensor(
+                X_valid, dtype=tf.float64
             )
-            val_data_dict["X_valid_trk_add"] = tf.convert_to_tensor(
-                X_valid_trk_add, dtype=tf.float64
+            val_data_dict[f"X_valid_trk_{val_file_identifier}"] = tf.convert_to_tensor(
+                X_valid_trk, dtype=tf.float64
             )
-            val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
-                Y_valid_add, dtype=tf.int64
+            val_data_dict[f"Y_valid_{val_file_identifier}"] = tf.convert_to_tensor(
+                Y_valid, dtype=tf.int64
             )
 
         else:
-            val_data_dict["X_valid_add"] = X_valid_add
-            val_data_dict["X_valid_trk_add"] = X_valid_trk_add
-            val_data_dict["Y_valid_add"] = Y_valid_add
-
-        # Assert a correct shape
-        assert (
-            val_data_dict["X_valid"].shape[1] == val_data_dict["X_valid_add"].shape[1]
-        ), (
-            "validation_file and add_validation_file have different amounts of"
-            " variables!"
-        )
-
-    else:
-        val_data_dict["X_valid_add"] = None
-        val_data_dict["X_valid_trk_add"] = None
-        val_data_dict["Y_valid_add"] = None
+            val_data_dict[f"X_valid_{val_file_identifier}"] = X_valid
+            val_data_dict[f"X_valid_trk_{val_file_identifier}"] = X_valid_trk
+            val_data_dict[f"Y_valid_{val_file_identifier}"] = Y_valid
 
     # Return the val data dict
     return val_data_dict
@@ -1059,13 +985,8 @@ def load_validation_data_dl1(
 
     # Define NN_Structure and the Eval params
     NN_structure = train_config.NN_structure
-    Eval_parameters = train_config.Eval_parameters_validation
-
-    # Get cut vars dict for add_validation file
-    cut_vars_dict = get_variable_cuts(
-        Eval_parameters=Eval_parameters,
-        file="validation_file",
-    )
+    val_data_dict = {}
+    val_files = train_config.validation_files
 
     # Ensure the nJets is an int
     nJets = int(nJets)
@@ -1075,72 +996,38 @@ def load_validation_data_dl1(
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
 
-    # Init a new dict for the loaded val data
-    val_data_dict = {}
+    # loop over validation files and load X_valid, Y_valid for each file
+    for val_file_identifier, val_file_config in val_files.items():
+        logger.info(f"Loading validation file {val_file_identifier}")
 
-    # Load the validation data
-    (X_valid, Y_valid,) = GetTestSample(
-        input_file=train_config.validation_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config,
-        class_labels=NN_structure["class_labels"],
-        nJets=nJets,
-        exclude=exclude,
-        cut_vars_dict=cut_vars_dict,
-    )
-
-    if convert_to_tensor:
-        # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
-        val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
-
-    else:
-        val_data_dict["X_valid"] = X_valid
-        val_data_dict["Y_valid"] = Y_valid
-
-    # Check if add_files are defined and load them
-    if train_config.add_validation_file is not None:
-
-        # Get cut vars dict for add_validation file
-        cut_vars_dict_add = get_variable_cuts(
-            Eval_parameters=Eval_parameters,
-            file="add_validation_file",
+        cut_vars_dict = (
+            val_file_config["variable_cuts"]
+            if "variable_cuts" in val_file_config
+            else None
         )
 
-        (X_valid_add, Y_valid_add,) = GetTestSample(
-            input_file=train_config.add_validation_file,
+        (X_valid, Y_valid,) = GetTestSample(
+            input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
             nJets=nJets,
             exclude=exclude,
-            cut_vars_dict=cut_vars_dict_add,
+            cut_vars_dict=cut_vars_dict,
         )
 
         if convert_to_tensor:
             # Transform to tf.tensors and add to val_dict
-            val_data_dict["X_valid_add"] = tf.convert_to_tensor(
-                X_valid_add, dtype=tf.float64
+            val_data_dict[f"X_valid_{val_file_identifier}"] = tf.convert_to_tensor(
+                X_valid, dtype=tf.float64
             )
-            val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
-                Y_valid_add, dtype=tf.int64
+            val_data_dict[f"Y_valid_{val_file_identifier}"] = tf.convert_to_tensor(
+                Y_valid, dtype=tf.int64
             )
 
         else:
-            val_data_dict["X_valid_add"] = X_valid_add
-            val_data_dict["Y_valid_add"] = Y_valid_add
-
-        # Assert a correct shape
-        assert (
-            val_data_dict["X_valid"].shape[1] == val_data_dict["X_valid_add"].shape[1]
-        ), (
-            "validation_file and add_validation_file have different amounts of"
-            " variables!"
-        )
-
-    else:
-        val_data_dict["X_valid_add"] = None
-        val_data_dict["Y_valid_add"] = None
+            val_data_dict[f"X_valid_{val_file_identifier}"] = X_valid
+            val_data_dict[f"Y_valid_{val_file_identifier}"] = Y_valid
 
     # Return the val data dict
     return val_data_dict
@@ -1175,75 +1062,40 @@ def load_validation_data_dips(
 
     # Define NN_Structure and the Eval params
     NN_structure = train_config.NN_structure
-    Eval_parameters = train_config.Eval_parameters_validation
-
-    # Get cut vars dict for add_validation file
-    cut_vars_dict = get_variable_cuts(
-        Eval_parameters=Eval_parameters,
-        file="validation_file",
-    )
-
     val_data_dict = {}
-    (X_valid, Y_valid,) = GetTestSampleTrks(
-        input_file=train_config.validation_file,
-        var_dict=train_config.var_dict,
-        preprocess_config=preprocess_config,
-        class_labels=NN_structure["class_labels"],
-        nJets=nJets,
-        cut_vars_dict=cut_vars_dict,
-    )
+    val_files = train_config.validation_files
 
-    if convert_to_tensor:
-        # Transform to tf.tensors and add to val_dict
-        val_data_dict["X_valid"] = tf.convert_to_tensor(X_valid, dtype=tf.float64)
-        val_data_dict["Y_valid"] = tf.convert_to_tensor(Y_valid, dtype=tf.int64)
+    # loop over validation files and load X_valid, Y_valid for each file
+    for val_file_identifier, val_file_config in val_files.items():
+        logger.info(f"Loading validation file {val_file_identifier}")
 
-    else:
-        val_data_dict["X_valid"] = X_valid
-        val_data_dict["Y_valid"] = Y_valid
-
-    # Check if add_files are defined and load them
-    if train_config.add_validation_file is not None:
-
-        # Get cut vars dict for add_validation file
-        cut_vars_dict_add = get_variable_cuts(
-            Eval_parameters=Eval_parameters,
-            file="add_validation_file",
+        cut_vars_dict = (
+            val_file_config["variable_cuts"]
+            if "variable_cuts" in val_file_config
+            else None
         )
 
-        (X_valid_add, Y_valid_add,) = GetTestSampleTrks(
-            input_file=train_config.add_validation_file,
+        (X_valid, Y_valid,) = GetTestSampleTrks(
+            input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
             nJets=nJets,
-            cut_vars_dict=cut_vars_dict_add,
+            cut_vars_dict=cut_vars_dict,
         )
 
         if convert_to_tensor:
             # Transform to tf.tensors and add to val_dict
-            val_data_dict["X_valid_add"] = tf.convert_to_tensor(
-                X_valid_add, dtype=tf.float64
+            val_data_dict[f"X_valid_{val_file_identifier}"] = tf.convert_to_tensor(
+                X_valid, dtype=tf.float64
             )
-            val_data_dict["Y_valid_add"] = tf.convert_to_tensor(
-                Y_valid_add, dtype=tf.int64
+            val_data_dict[f"Y_valid_{val_file_identifier}"] = tf.convert_to_tensor(
+                Y_valid, dtype=tf.int64
             )
 
         else:
-            val_data_dict["X_valid_add"] = X_valid_add
-            val_data_dict["Y_valid_add"] = Y_valid_add
-
-        # Assert a correct shape
-        assert (
-            val_data_dict["X_valid"].shape[1] == val_data_dict["X_valid_add"].shape[1]
-        ), (
-            "validation_file and add_validation_file have different amounts of"
-            " variables!"
-        )
-
-    else:
-        val_data_dict["X_valid_add"] = None
-        val_data_dict["Y_valid_add"] = None
+            val_data_dict[f"X_valid_{val_file_identifier}"] = X_valid
+            val_data_dict[f"Y_valid_{val_file_identifier}"] = Y_valid
 
     # Return the val data dict
     return val_data_dict
@@ -1355,70 +1207,25 @@ def evaluate_model_umami(
         Dict with validation metrics/rejections.
     """
 
-    # Calculate accuracy andloss of UMAMI and Dips part
-    (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
-        [data_dict["X_valid_trk"], data_dict["X_valid"]],
-        data_dict["Y_valid"],
-        batch_size=15_000,
-        use_multiprocessing=True,
-        workers=8,
-        verbose=0,
+    validation_file_identifiers = get_unique_identifiers(
+        keys=list(data_dict.keys()), prefix="Y_valid"
     )
 
-    # Evaluate with the model for predictions
-    y_pred_dips, y_pred_umami = model.predict(
-        [data_dict["X_valid_trk"], data_dict["X_valid"]],
-        batch_size=15_000,
-        use_multiprocessing=True,
-        workers=8,
-        verbose=0,
-    )
+    if len(validation_file_identifiers) == 0:
+        logger.warning("Didn't find any validation file identifiers.")
 
-    # Get rejections for DIPS and UMAMI
-    rej_dict_dips, disc_cut_dips = umt.GetRejection(
-        y_pred=y_pred_dips,
-        y_true=data_dict["Y_valid"],
-        class_labels=class_labels,
-        main_class=main_class,
-        frac_dict=frac_dict["dips"],
-        target_eff=target_beff,
-    )
-    rej_dict_umami, disc_cut_umami = umt.GetRejection(
-        y_pred=y_pred_umami,
-        y_true=data_dict["Y_valid"],
-        class_labels=class_labels,
-        main_class=main_class,
-        frac_dict=frac_dict["umami"],
-        target_eff=target_beff,
-    )
+    result_dict = {}
 
-    # Write metrics to results dict
-    result_dict = {
-        "val_loss": loss,
-        "dips_val_loss": dips_loss,
-        "umami_val_loss": umami_loss,
-        "dips_val_acc": dips_accuracy,
-        "umami_val_acc": umami_accuracy,
-        "disc_cut_dips": disc_cut_dips,
-        "disc_cut_umami": disc_cut_umami,
-    }
-
-    # Write rejections to the results dict
-    # TODO Change this in python 3.9
-    result_dict.update({f"{key}_umami": elem for key, elem in rej_dict_umami.items()})
-    result_dict.update({f"{key}_dips": elem for key, elem in rej_dict_dips.items()})
-
-    # Evaluate Models on add_files if given
-    if data_dict["X_valid_add"] is not None:
-        (
-            loss_add,
-            dips_loss_add,
-            umami_loss_add,
-            dips_accuracy_add,
-            umami_accuracy_add,
-        ) = model.evaluate(
-            [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]],
-            data_dict["Y_valid_add"],
+    # loop over validation files and load X_valid, X_valid_trk, Y_valid for each file
+    for val_file_identifier in validation_file_identifiers:
+        # Check which input data need to be used
+        # Calculate accuracy andloss of UMAMI and Dips part
+        (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
+            [
+                data_dict[f"X_valid_trk_{val_file_identifier}"],
+                data_dict[f"X_valid_{val_file_identifier}"],
+            ],
+            data_dict[f"Y_valid_{val_file_identifier}"],
             batch_size=15_000,
             use_multiprocessing=True,
             workers=8,
@@ -1426,8 +1233,11 @@ def evaluate_model_umami(
         )
 
         # Evaluate with the model for predictions
-        y_pred_dips_add, y_pred_umami_add = model.predict(
-            [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]],
+        y_pred_dips, y_pred_umami = model.predict(
+            [
+                data_dict[f"X_valid_trk_{val_file_identifier}"],
+                data_dict[f"X_valid_{val_file_identifier}"],
+            ],
             batch_size=15_000,
             use_multiprocessing=True,
             workers=8,
@@ -1435,44 +1245,44 @@ def evaluate_model_umami(
         )
 
         # Get rejections for DIPS and UMAMI
-        rej_dict_dips_add, disc_cut_dips_add = umt.GetRejection(
-            y_pred=y_pred_dips_add,
-            y_true=data_dict["Y_valid_add"],
+        rej_dict_dips, disc_cut_dips = umt.GetRejection(
+            y_pred=y_pred_dips,
+            y_true=data_dict[f"Y_valid_{val_file_identifier}"],
             class_labels=class_labels,
             main_class=main_class,
             frac_dict=frac_dict["dips"],
             target_eff=target_beff,
+            unique_identifier=val_file_identifier,
+            subtagger="dips",
         )
-        rej_dict_umami_add, disc_cut_umami_add = umt.GetRejection(
-            y_pred=y_pred_umami_add,
-            y_true=data_dict["Y_valid_add"],
+        rej_dict_umami, disc_cut_umami = umt.GetRejection(
+            y_pred=y_pred_umami,
+            y_true=data_dict[f"Y_valid_{val_file_identifier}"],
             class_labels=class_labels,
             main_class=main_class,
             frac_dict=frac_dict["umami"],
             target_eff=target_beff,
+            unique_identifier=val_file_identifier,
+            subtagger="umami",
         )
 
-        # Add metrics to results dict
+        # Write metrics to results dict
         result_dict.update(
             {
-                "val_loss_add": loss_add,
-                "dips_val_loss_add": dips_loss_add,
-                "umami_val_loss_add": umami_loss_add,
-                "dips_val_acc_add": dips_accuracy_add,
-                "umami_val_acc_add": umami_accuracy_add,
-                "disc_cut_dips_add": disc_cut_dips_add,
-                "disc_cut_umami_add": disc_cut_umami_add,
+                f"val_loss_{val_file_identifier}": loss,
+                f"val_loss_dips_{val_file_identifier}": dips_loss,
+                f"val_loss_umami_{val_file_identifier}": umami_loss,
+                f"val_acc_dips_{val_file_identifier}": dips_accuracy,
+                f"val_acc_umami_{val_file_identifier}": umami_accuracy,
+                f"disc_cut_dips_{val_file_identifier}": disc_cut_dips,
+                f"disc_cut_umami_{val_file_identifier}": disc_cut_umami,
             }
         )
 
         # Write rejections to the results dict
         # TODO Change this in python 3.9
-        result_dict.update(
-            {f"{key}_umami_add": elem for key, elem in rej_dict_umami_add.items()}
-        )
-        result_dict.update(
-            {f"{key}_dips_add": elem for key, elem in rej_dict_dips_add.items()}
-        )
+        result_dict.update(rej_dict_umami)
+        result_dict.update(rej_dict_dips)
 
     return result_dict
 
@@ -1509,104 +1319,77 @@ def evaluate_model(
     result_dict : dict
         Dict with validation metrics/rejections.
     """
-    if frac_dict is None:
-        frac_dict = {"cjets": 0.018, "ujets": 0.982}
-    # Check which input data need to be used
-    if "X_valid_trk" in data_dict and "X_valid" in data_dict:
-        x = [data_dict["X_valid_trk"], data_dict["X_valid"]]
 
-    elif "X_valid_trk" in data_dict and "X_valid" not in data_dict:
-        x = data_dict["X_valid_trk"]
-
-    else:
-        x = data_dict["X_valid"]
-
-    loss, accuracy = model.evaluate(
-        x=x,
-        y=data_dict["Y_valid"],
-        batch_size=15_000,
-        use_multiprocessing=True,
-        workers=8,
-        verbose=0,
+    validation_file_identifiers = get_unique_identifiers(
+        keys=list(data_dict.keys()), prefix="Y_valid"
     )
 
-    y_pred_dips = model.predict(
-        x=x,
-        batch_size=15_000,
-        use_multiprocessing=True,
-        workers=8,
-        verbose=0,
-    )
+    if len(validation_file_identifiers) == 0:
+        logger.warning("Didn't find any validation file identifiers.")
 
-    rej_dict, disc_cut = umt.GetRejection(
-        y_pred=y_pred_dips,
-        y_true=data_dict["Y_valid"],
-        class_labels=class_labels,
-        main_class=main_class,
-        frac_dict=frac_dict,
-        target_eff=target_beff,
-    )
+    result_dict = {}
+    # loop over validation files and load X_valid, Y_valid for each file
+    for val_file_identifier in validation_file_identifiers:
+        # Check which input data need to be used
+        if (
+            f"X_valid_trk_{val_file_identifier}" in data_dict
+            and f"X_valid_{val_file_identifier}" in data_dict
+        ):
+            x = [
+                data_dict[f"X_valid_trk_{val_file_identifier}"],
+                data_dict[f"X_valid_{val_file_identifier}"],
+            ]
 
-    # Adding the results to result_dict
-    result_dict = {
-        "val_loss": loss,
-        "val_acc": accuracy,
-        "disc_cut": disc_cut,
-    }
-
-    # Write rejection in results dict
-    # TODO Change this in python 3.9
-    result_dict.update({f"{key}": elem for key, elem in rej_dict.items()})
-
-    if data_dict["X_valid_add"] is not None:
-        if "X_valid_trk_add" in data_dict and "X_valid_add" in data_dict:
-            x_add = [data_dict["X_valid_trk_add"], data_dict["X_valid_add"]]
-
-        elif "X_valid_trk_add" in data_dict and "X_valid_add" not in data_dict:
-            x_add = data_dict["X_valid_trk_add"]
+        elif (
+            f"X_valid_trk_{val_file_identifier}" in data_dict
+            and f"X_valid_{val_file_identifier}" not in data_dict
+        ):
+            x = data_dict[f"X_valid_trk_{val_file_identifier}"]
 
         else:
-            x_add = data_dict["X_valid_add"]
+            x = data_dict[f"X_valid_{val_file_identifier}"]
 
-        loss_add, accuracy_add = model.evaluate(
-            x=x_add,
-            y=data_dict["Y_valid_add"],
+        loss, accuracy = model.evaluate(
+            x=x,
+            y=data_dict[f"Y_valid_{val_file_identifier}"],
             batch_size=15_000,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
         )
 
-        y_pred_add = model.predict(
-            x=x_add,
+        y_pred_dips = model.predict(
+            x=x,
             batch_size=15_000,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
         )
 
-        rej_dict_add, disc_cut_add = umt.GetRejection(
-            y_pred=y_pred_add,
-            y_true=data_dict["Y_valid_add"],
+        rej_dict, disc_cut = umt.GetRejection(
+            y_pred=y_pred_dips,
+            y_true=data_dict[f"Y_valid_{val_file_identifier}"],
+            unique_identifier=val_file_identifier,
             class_labels=class_labels,
             main_class=main_class,
             frac_dict=frac_dict,
             target_eff=target_beff,
         )
 
-        # Adding metrics to results dict
-        # TODO Change this in python 3.9
+        # Adding the results to result_dict
         result_dict.update(
             {
-                "val_loss_add": loss_add,
-                "val_acc_add": accuracy_add,
-                "disc_cut_add": disc_cut_add,
+                f"val_loss_{val_file_identifier}": loss,
+                f"val_acc_{val_file_identifier}": accuracy,
+                f"disc_cut_{val_file_identifier}": disc_cut,
             }
         )
 
         # Write the rejection values to the results dict
         # TODO Change this in python 3.9
-        result_dict.update({f"{key}_add": elem for key, elem in rej_dict_add.items()})
+        result_dict.update(
+            {f"{key}": rej_dict[key] for key in rej_dict}  # pylint: disable=C0206
+        )
 
     # Return finished dict
     return result_dict

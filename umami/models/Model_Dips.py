@@ -299,10 +299,9 @@ def Dips(args, train_config, preprocess_config):
     history = dips.fit(
         train_dataset,
         epochs=nEpochs,
-        validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
+        # TODO: Add a representative validation dataset for training (shown in stdout)
+        # validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=[dips_mChkPt, reduce_lr, my_callback],
-        # callbacks=[reduce_lr, my_callback],
-        # callbacks=[my_callback],
         steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,

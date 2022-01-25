@@ -17,7 +17,6 @@ from umami.train_tools.NN_tools import (
     get_jet_feature_position,
     get_parameters_from_validation_dict_name,
     get_validation_dict_name,
-    get_variable_cuts,
     load_validation_data_dips,
     load_validation_data_dl1,
     load_validation_data_umami,

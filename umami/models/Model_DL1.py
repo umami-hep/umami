@@ -248,7 +248,8 @@ def TrainLargeFile(args, train_config, preprocess_config):
     history = model.fit(
         x=train_dataset,
         epochs=nEpochs,
-        validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
+        # TODO: Add a representative validation dataset for training (shown in stdout)
+        # validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=[dl1_mChkPt, reduce_lr, my_callback],
         steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,

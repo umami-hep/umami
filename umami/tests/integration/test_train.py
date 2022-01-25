@@ -137,8 +137,6 @@ def prepareConfig(
     config_file["model_name"] = data[f"test_{tagger}"]["model_name"]
     config_file["preprocess_config"] = f"{preprocessing_config}"
     config_file["train_file"] = f"{train_file}"
-    config_file["validation_file"] = f"{test_file_ttbar}"
-    config_file["add_validation_file"] = f"{test_file_zprime}"
 
     # Erase all not used test files
     del config_file["test_files"]
@@ -165,10 +163,31 @@ def prepareConfig(
     config_file["NN_structure"]["nJets_train"] = 100
     config_file["Eval_parameters_validation"]["n_jets"] = 4000
     config_file["Eval_parameters_validation"]["eff_min"] = 0.60
-    config_file["Eval_parameters_validation"]["variable_cuts"] = {
-        "validation_file": [{"pt_btagJes": {"operator": "<=", "condition": 250000}}],
-        "add_validation_file": [{"pt_btagJes": {"operator": ">", "condition": 250000}}],
-    }
+    # Add some validation files for testing
+    config_file.update(
+        {
+            "validation_files": {
+                "ttbar_r21_val": {
+                    "path": (
+                        f"{test_dir}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
+                    ),
+                    "label": "$t\\bar{t}$ Release 21",
+                    "variable_cuts": [
+                        {"pt_btagJes": {"operator": "<=", "condition": 250000}}
+                    ],
+                },
+                "zprime_r21_val": {
+                    "path": (
+                        f"{test_dir}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
+                    ),
+                    "label": "$Z'$ Release 21",
+                    "variable_cuts": [
+                        {"pt_btagJes": {"operator": ">", "condition": 250000}}
+                    ],
+                },
+            }
+        }
+    )
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
@@ -176,7 +195,6 @@ def prepareConfig(
             "PFlow-hybrid_70-test-resampled_scaled_shuffled",
         )
         config_file["model_name"] = data["test_dips"]["model_name"] + "_tfrecords"
-        config_file["add_validation_file"] = None
 
         config = config[:].replace(".yaml", "") + "_tfrecords.yaml"
 
