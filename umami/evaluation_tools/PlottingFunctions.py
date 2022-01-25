@@ -32,6 +32,11 @@ def eff_err(x, N):
     -------
     numpy.array
         efficiency uncertainties
+
+    Notes
+    -----
+    This method uses binomial errors as described in section 2.2 of
+    https://inspirehep.net/files/57287ac8e45a976ab423f3dd456af694
     """
     return np.sqrt(x * (1 - x) / N)
 
@@ -50,6 +55,10 @@ def rej_err(x, N):
     -------
     numpy.array
         rejection uncertainties
+
+    Notes
+    -----
+    special case of `eff_err()`
     """
     return np.sqrt((1 / x) * (1 - (1 / x)) / N)
 
