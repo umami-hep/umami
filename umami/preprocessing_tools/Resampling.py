@@ -16,6 +16,7 @@ from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
 
 from umami.configuration import global_config, logger
+from umami.data_tools import compare_h5_files_variables
 from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
 from umami.preprocessing_tools.utils import ResamplingPlots, generate_process_tag
 
@@ -394,11 +395,41 @@ class Resampling:
         indices: list,
         label: int,
         label_classes: list,
+        variables: dict,
         use_tracks: bool = False,
-        chunk_size: int = 10000,
+        chunk_size: int = 10_000,
         seed: int = 42,
     ):
-        """Generator for resampling"""
+        """Generator for resampling
+
+        Parameters
+        ----------
+        file : str
+            path to h5 file
+        indices : list
+            list of indices which need to be loaded
+        label : int
+            flavour label
+        label_classes : list
+            list with all label classes used, info is necessary for the binarisation
+        variables : dict
+            variables per dataset which should be used
+        use_tracks : bool, optional
+            writing out tracks, by default False
+        chunk_size : int, optional
+            size of loaded chunks, by default 10_000
+        seed : int, optional
+            random seed, by default 42
+
+        Yields
+        -------
+        numpy.ndarray
+            jets
+        numpy.ndarray
+            tracks if `use_tracks` is True
+        numpy.ndarray
+            binarised labels
+        """
         with h5py.File(file, "r") as f:
             start_ind = 0
             end_ind = int(start_ind + chunk_size)
@@ -421,23 +452,28 @@ class Resampling:
                 )
 
                 if use_tracks:
-                    yield f["jets"][loading_indices], f["tracks"][
-                        loading_indices
-                    ], labels
+                    yield f["jets"].fields(variables["jets"])[loading_indices], f[
+                        "tracks"
+                    ].fields(variables["tracks"])[loading_indices], labels
                 else:
-                    yield f["jets"][loading_indices], labels
+                    yield f["jets"].fields(variables["jets"])[loading_indices], labels
 
     def WriteFile(self, indices: dict, chunk_size: int = 10_000):
-        """
-        Takes the indices as input calculated in the GetIndices function and
+        """Takes the indices as input calculated in the GetIndices function and
         reads them in and writes them to disk.
+        Writes the selected jets from the samples to disk
 
         Parameters
         ----------
-        indices: dict of indices as returned by the GetIndices function
-        Returns
-        -------
-        Writes the selected jets from the samples to disk
+        indices : dict
+            dict of indices as returned by the GetIndices function
+        chunk_size : int, optional
+            size of loaded chunks, by default 10_000
+
+        Raises
+        ------
+        TypeError
+            in case concatenated samples have different shape
         """
         # reading chunks of each sample in here
         # adding already here a column with labels
@@ -446,15 +482,33 @@ class Resampling:
         n_chunks = round(max_sample / chunk_size + 0.5)
         chunk_sizes = np.asarray(sample_lengths) / n_chunks
 
+        # check if all specified samples have the same variables
+        sample_paths = list(self.sample_file_map.values())
+        common_vars = {}
+        for dataset in ["jets", "tracks"] if self.save_tracks else ["jets"]:
+            common_vars_i, diff_vars = compare_h5_files_variables(
+                *sample_paths, key=dataset
+            )
+            common_vars[dataset] = common_vars_i
+            logger.debug(f"Common vars in {dataset}: {common_vars_i}")
+            logger.debug(f"Diff vars in {dataset}: {diff_vars}")
+            if diff_vars:
+                logger.warning(
+                    f"The {dataset} in your specified samples don't have the same "
+                    f" variables. The following variables are different: {diff_vars}"
+                )
+                logger.warning("These variables are ignored in all further steps.")
+
         generators = [
             self.ResamplingGenerator(
-                self.sample_file_map[sample],
-                indices[sample],
+                file=self.sample_file_map[sample],
+                indices=indices[sample],
                 chunk_size=chunk_sizes[i],
                 label=self.class_labels_map[
                     self.preparation_samples[sample]["category"]
                 ],
                 label_classes=list(range(len(self.class_labels_map))),
+                variables=common_vars,
                 use_tracks=self.save_tracks,
                 seed=self.rnd_seed + i,
             )
@@ -465,16 +519,27 @@ class Resampling:
         logger.info(f"Writing to file {self.outfile_name}")
         pbar = tqdm(total=np.sum(sample_lengths))
         while chunk_counter < n_chunks + 1:
-            for i, sample in enumerate(indices):
+            for i, _ in enumerate(indices):
                 try:
                     if self.save_tracks:
                         if i == 0:
                             jets, tracks, labels = next(generators[i])
                         else:
-                            jets_i, tracks_i, labels_i = next(generators[i])
-                            labels = np.concatenate([labels, labels_i])
-                            jets = np.concatenate([jets, jets_i])
-                            tracks = np.concatenate([tracks, tracks_i])
+                            try:
+                                jets_i, tracks_i, labels_i = next(generators[i])
+                                labels = np.concatenate([labels, labels_i])
+                                jets = np.concatenate([jets, jets_i])
+                                tracks = np.concatenate([tracks, tracks_i])
+                            except TypeError as invalid_type:
+                                if str(invalid_type) == "invalid type promotion":
+                                    raise TypeError(
+                                        "It seems that the samples you are "
+                                        "using are not compatible with each other. "
+                                        "Check that they contain all the same "
+                                        "variables."
+                                    ) from invalid_type
+                                raise TypeError(str(invalid_type)) from invalid_type
+
                     else:
                         if i == 0:
                             jets, labels = next(generators[i])
@@ -603,8 +668,12 @@ class ResamplingTools(Resampling):
                         nJets_initial = int(
                             self.options["custom_njets_initial"][sample]
                         )
-                    jets_x = np.asarray(f["jets"][self.var_x])[:nJets_initial]
-                    jets_y = np.asarray(f["jets"][self.var_y])[:nJets_initial]
+                        logger.debug(
+                            f"Using custom_njets_initial for {sample} of "
+                            f"{nJets_initial} from config"
+                        )
+                    jets_x = np.asarray(f["jets"].fields(self.var_x)[:nJets_initial])
+                    jets_y = np.asarray(f["jets"].fields(self.var_y)[:nJets_initial])
                 logger.info(
                     f"Loaded {len(jets_x)}"
                     f" {preparation_sample.get('category')} jets from"
