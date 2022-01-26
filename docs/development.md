@@ -277,7 +277,7 @@ The first entry is, for example, the login node of your cluster. The second is t
 second entry also has two names for the entry, one has a `tf2~` in front. This is *important* for the following part, so please add this here.   
 After adapting the config file, you need to tell VSCode where to find it. This can be set in the `settings.json` of VSCode. You can find/open it in
 VSCode when pressing `Ctrl + Shift + P` and start typing `settings`. You will find the option `Preferences: Open Settings (JSON)`. When selecting this,
-the config json file of VSCode is opened. There you need to add the following line with the path of your ssh config file added.
+the config json file of VSCode is opened. There you need to add the following line with the path of your ssh config file added (if the config is in the default path `~/.ssh/config`, you don't need to add this).
 
 ```json
 "remote.SSH.configFile": "<path>/<to>/<ssh_config>",
@@ -294,7 +294,7 @@ for Linux/Mac but looks a bit different for Windows. After creating this files, 
 in the VSCode settings with:
 
 ```json
-"remote.SSH.configFile": "<path>/<to>/<executable>",
+"remote.SSH.path": "<path>/<to>/<executable>",
 ```
 
 Now restart VSCode and open the Remote Explorer tab. At the top switch to `SSH Targets` and right-click on the `tf2~` connection and click on 
