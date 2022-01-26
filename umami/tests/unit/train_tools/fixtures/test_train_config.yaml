@@ -36,6 +36,7 @@ NN_structure:
     lr: 0.01
     batch_size: 100
     epoch: 5
+    tagger: "dips"
     # DIPS structure
     DIPS_ppm_units: [100, 100, 128]
     DIPS_dense_units: [100, 100, 100, 30]

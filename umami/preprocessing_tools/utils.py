@@ -5,10 +5,47 @@ import matplotlib as mtp
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import yaml
 from sklearn.preprocessing import LabelBinarizer
 
 from umami.configuration import global_config, logger
-from umami.tools import applyATLASstyle, makeATLAStag
+from umami.tools import applyATLASstyle, makeATLAStag, yaml_loader
+
+
+def GetVariableDict(yaml_file):
+    """
+    Reads yaml_file containig the variables and exports
+    them to a dict.
+
+    Parameters
+    ----------
+    yaml_file: Input yaml file containing trainig variables
+
+    Returns
+    -------
+    out_dict : Dictionary containing training variables
+    """
+    with open(yaml_file, "r") as conf:
+        in_dict = yaml.load(conf, Loader=yaml_loader)
+        out_dict = in_dict.copy()
+
+    if "track_train_variables" in out_dict.keys():
+        if (
+            "noNormVars" in out_dict["track_train_variables"]
+            or "logNormVars" in out_dict["track_train_variables"]
+            or "jointNormVas" in out_dict["track_train_variables"]
+        ):
+            del out_dict["track_train_variables"]
+            out_dict["track_train_variables"] = {}
+            out_dict["track_train_variables"]["tracks"] = in_dict[
+                "track_train_variables"
+            ]
+            logger.warning(
+                "'track_train_varibles' should be a nested dictionary. Default tracks"
+                "name 'tracks' being used"
+            )
+
+    return out_dict
 
 
 def GetBinaryLabels(df, column="label"):

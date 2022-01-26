@@ -4,57 +4,57 @@ test_preprocessing:
     data_subfolder: 'preprocessing'
     config: 'examples/PFlow-Preprocessing.yaml'
     config_paths: 'examples/Preprocessing-parameters.yaml'
-    var_dict_dl1r: 'umami/configs/DL1r_Variables.yaml'
-    var_dict_dips: 'umami/configs/Dips_Variables.yaml'
-    var_dict_umami: 'umami/configs/Umami_Variables.yaml'
+    var_dict_dl1r: 'umami/configs/DL1r_Variables_R22.yaml'
+    var_dict_dips: 'umami/configs/Dips_Variables_R22.yaml'
+    var_dict_umami: 'umami/configs/Umami_Variables_R22.yaml'
     testdir: '/tmp/umami/preprocessing'
     files:
-        - ttbar_basefile.h5
-        - zpext_basefile.h5
+        - ci_ttbar_basefile.h5
+        - ci_zpext_basefile.h5
 
 test_dips:
-    data_subfolder: 'dips'
+    data_subfolder: 'preprocessing'
     model_name: 'test_dips_model'
     config: 'examples/Dips-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
     testdir: '/tmp/umami/dips'
     files:
-        - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
-        - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+        - ci_ttbar_testing.h5
+        - ci_zpext_testing.h5
 
 test_dips_cond_att:
-    data_subfolder: 'dips_cond_att'
+    data_subfolder: 'preprocessing'
     model_name: 'test_dips_cond_att_model'
     config: 'examples/Dips-Cond-Att-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
     testdir: '/tmp/umami/dips_cond_att'
     files:
-        - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
-        - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+        - ci_ttbar_testing.h5
+        - ci_zpext_testing.h5
 
 test_dl1r:
-    data_subfolder: 'dl1r'
+    data_subfolder: 'preprocessing'
     model_name: 'test_dl1r_model'
     config: 'examples/DL1r-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_DL1r.yaml'
     testdir: '/tmp/umami/dl1r'
     files:
-        - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
-        - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+        - ci_ttbar_testing.h5
+        - ci_zpext_testing.h5
 
 test_umami:
-    data_subfolder: 'umami'
+    data_subfolder: 'preprocessing'
     model_name: 'test_umami_model'
     config: 'examples/umami-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_Umami.yaml'
     testdir: '/tmp/umami/umami'
     files:
-        - MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
-        - MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+        - ci_ttbar_testing.h5
+        - ci_zpext_testing.h5
 
 test_input_vars_plot:
     data_subfolder: 'plot_input_vars'

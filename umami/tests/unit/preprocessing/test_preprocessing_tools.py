@@ -7,7 +7,12 @@ import numpy as np
 import pandas as pd
 
 from umami.configuration import global_config
-from umami.preprocessing_tools import Configuration, GetBinaryLabels, PrepareSamples
+from umami.preprocessing_tools import (
+    Configuration,
+    GetBinaryLabels,
+    GetVariableDict,
+    PrepareSamples,
+)
 
 
 class ConfigurationTestCase(unittest.TestCase):
@@ -52,6 +57,47 @@ class ConfigurationTestCase(unittest.TestCase):
         config = Configuration(self.config_file)
         out_file = config.GetFileName()
         self.assertEqual(config.outfile_name, out_file)
+
+
+class GetVariableDictTestCase(unittest.TestCase):
+    """
+    Test the implementation of GetVariableDict function.
+    """
+
+    def setUp(self):
+        self.var_file = os.path.join(
+            os.path.dirname(__file__), "fixtures/dummy_var_file_short.yaml"
+        )
+        self.label = "HadronConeExclTruthLabelID"
+        self.train_variables = {
+            "JetKinematics": ["absEta_btagJes", "pt_btagJes"],
+            "JetFitter": ["JetFitter_isDefaults"],
+        }
+        self.tracks = {
+            "noNormVars": ["IP3D_signed_d0_significance"],
+            "logNormVars": ["ptfrac", "dr"],
+            "jointNormVars": ["numberOfPixelHits", "numberOfSCTHits", "btagIp_d0"],
+        }
+        self.def_vars = 0
+        self.test_dict = GetVariableDict(self.var_file)
+
+    def test_nested_structure(self):
+        self.assertIn("tracks", self.test_dict["track_train_variables"])
+
+    def test_label_reading(self):
+        self.assertEqual(self.test_dict["label"], self.label)
+
+    def test_train_variables(self):
+        self.assertEqual(self.test_dict["train_variables"], self.train_variables)
+
+    def test_trk_train_variables(self):
+        self.assertEqual(self.test_dict["track_train_variables"]["tracks"], self.tracks)
+
+    def test_defaults_vars(self):
+        self.assertEqual(
+            self.test_dict["custom_defaults_vars"]["JetFitter_energyFraction"],
+            self.def_vars,
+        )
 
 
 class GetBinaryLabelsTestCase(unittest.TestCase):
@@ -115,6 +161,7 @@ class PrepareSamplesTestCase(unittest.TestCase):
         with h5py.File(self.tf, "w") as out_file:
             out_file.create_dataset("jets", data=jets.to_records())
             out_file.create_dataset("tracks", data=tracks)
+            out_file.create_dataset("fs_tracks", data=tracks)
         self.output_file = tempfile.NamedTemporaryFile()
 
     def test_NoSampleProvided(self):
@@ -160,8 +207,9 @@ class PrepareSamplesTestCase(unittest.TestCase):
         ps.save_tracks = True
         expected_jets = np.array([])
         expected_tracks = np.array([])
-        for jets, track in ps.jets_generator(files_in_batches):
-            self.assertEqual(len(track), len(expected_tracks))
+        for jets, tracks in ps.jets_generator(files_in_batches):
+            for tracks_name in ps.tracks_names:
+                self.assertEqual(len(tracks[tracks_name]), len(expected_tracks))
             self.assertEqual(len(jets), len(expected_jets))
 
     def test_jets_generator_lightcut(self):
@@ -172,7 +220,8 @@ class PrepareSamplesTestCase(unittest.TestCase):
         ps.cuts = [{"eventNumber": {"operator": "==", "condition": 0}}]
         expected_jets_len = expected_tracks_len = 1
         for jets, tracks in ps.jets_generator(files_in_batches):
-            self.assertEqual(len(tracks), expected_tracks_len)
+            for tracks_name in ps.tracks_names:
+                self.assertEqual(len(tracks[tracks_name]), expected_tracks_len)
             self.assertEqual(len(jets), expected_jets_len)
 
     def test_Run(self):

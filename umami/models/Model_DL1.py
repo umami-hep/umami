@@ -5,7 +5,6 @@ import os
 
 import h5py
 import tensorflow as tf
-import yaml
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.layers import (
     Activation,
@@ -19,7 +18,7 @@ from tensorflow.keras.optimizers import Adam
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
-from umami.tools import yaml_loader
+from umami.preprocessing_tools import GetVariableDict
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
@@ -129,8 +128,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
         exclude = None
 
     # Load variable config
-    with open(train_config.var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(train_config.var_dict)
 
     # Get excluded variables
     variables, _, excluded_var = utt.get_jet_feature_indices(
