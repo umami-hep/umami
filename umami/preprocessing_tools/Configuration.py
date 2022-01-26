@@ -17,6 +17,7 @@ class Configuration:
         self.yaml_default_config = "configs/preprocessing_default_config.yaml"
         self.LoadConfigFiles()
         self.GetConfiguration()
+        self.CheckTracksNames()
 
     @property
     def ConfigPath(self):
@@ -128,3 +129,22 @@ class Configuration:
 
         out_file = out_file[:idx] + inserttxt + extension
         return out_file
+
+    def CheckTracksNames(self):
+        """Checks if the option tracks_name is given."""
+        if (
+            "tracks_names" not in self.sampling["options"]
+            or self.sampling["options"]["tracks_names"] is None
+        ):
+            self.sampling["options"]["tracks_names"] = [
+                "tracks",
+            ]
+            if self.sampling["options"]["save_tracks"]:
+                logger.info(
+                    "'tracks_names' option not given or None, using default value"
+                    "'tracks'"
+                )
+        elif not isinstance(self.sampling["options"]["tracks_names"], list):
+            self.sampling["options"]["tracks_names"] = [
+                self.sampling["options"]["tracks_names"]
+            ]

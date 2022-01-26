@@ -420,6 +420,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def setUp(self):
         self.Eval_parameters_validation = {}
+        self.tracks_name = "tracks"
         self.NN_structure = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.preparation = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.test_dir = tempfile.TemporaryDirectory()
@@ -475,6 +476,7 @@ class GetSamples_TestCase(unittest.TestCase):
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
+            tracks_name=self.tracks_name,
             nJets=self.nJets,
         )
         self.assertEqual(len(X_trk), len(Y_trk))
@@ -493,6 +495,7 @@ class GetSamples_TestCase(unittest.TestCase):
                 var_dict=self.var_dict,
                 preprocess_config=self,
                 class_labels=self.class_labels_given,
+                tracks_name=self.tracks_name,
                 nJets=self.nJets,
             )
 
@@ -504,6 +507,7 @@ class GetSamples_TestCase(unittest.TestCase):
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels_extended,
+            tracks_name=self.tracks_name,
             nJets=self.nJets,
         )
         self.assertEqual(len(X_trk), len(Y_trk))
@@ -568,6 +572,7 @@ class GetSamples_TestCase(unittest.TestCase):
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
+            tracks_name=self.tracks_name,
             nJets=self.nJets,
             exclude=self.exclude,
         )

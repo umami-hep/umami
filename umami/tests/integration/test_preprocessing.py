@@ -353,6 +353,11 @@ class TestPreprocessing(unittest.TestCase):
             "      file_pattern: user.alfroch.427081",
             "      file_pattern: zpext/*.h5",
         )
+        replaceLineInFile(
+            self.config,
+            "    tracks_names:",
+            "    tracks_names: ['tracks','tracks_loose']",
+        )
 
         # copy config file and change name to pdf for pdf preprocessing config
         self.pdf_config = self.config[:].replace(".yaml", "") + "_pdf.yaml"
@@ -415,16 +420,16 @@ class TestPreprocessing(unittest.TestCase):
         run(
             [
                 "mv",
-                os.path.join(test_dir, "ttbar_basefile.h5"),
-                os.path.join(test_dir, "ttbar", "ttbar_basefile.h5"),
+                os.path.join(test_dir, "ci_ttbar_basefile.h5"),
+                os.path.join(test_dir, "ttbar", "ci_ttbar_basefile.h5"),
             ],
             check=True,
         )
         run(
             [
                 "mv",
-                os.path.join(test_dir, "zpext_basefile.h5"),
-                os.path.join(test_dir, "zpext", "zpext_basefile.h5"),
+                os.path.join(test_dir, "ci_zpext_basefile.h5"),
+                os.path.join(test_dir, "zpext", "ci_zpext_basefile.h5"),
             ],
             check=True,
         )

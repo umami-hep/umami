@@ -31,6 +31,9 @@ var_dict: <path_palce_holder>/umami/umami-git/umami/configs/Umami_Variables.yaml
 
 exclude: null
 
+# Tracks dataset name
+tracks_name: "tracks"
+
 # number of files to be loaded in parallel when using TF Records as input files
 nfiles: 5
 

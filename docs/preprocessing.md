@@ -347,8 +347,8 @@ sampling:
     # Bool, if track information (for DIPS etc.) are saved.
     save_tracks: True
 
-    # Name of the track collection to use.
-    tracks_name: "tracks"
+    # Name(s) of the track collection(s) to use.
+    tracks_names: "tracks"
 
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
@@ -373,7 +373,7 @@ Another important part are the `class_labels` which are defined here. You can de
 
 The `options` are some options for the different resampling methods. You need to define the sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins.
 Another thing you need to define are the `samples` which are to be resampled. You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`.
-`fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The `save_tracks` and the `tracks_name` options define the using of tracks. `save_tracks` is bool while `tracks_name` is a string. The latter is the name of the tracks how they are called in the .h5 files coming from the dumper. After the preparation stage, they will have the name `tracks`. The rest of the variables are pretty self-explanatory.
+`fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The `save_tracks` and the `tracks_names` options define the using of tracks. `save_tracks` is bool while `tracks_names` is a string or a list of strings. The latter is the name of the tracks how they are called in the .h5 files coming from the dumper, multiple tracks datasets can be preprocessed simultaneously when a list is given. After the preparation stage, they will have the name `tracks`. The rest of the variables are pretty self-explanatory.
 If you want to use the PDF sampling, have a look at the example config [PFlow-Preprocessing-taus.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-taus.yaml).
 
 For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml).
@@ -387,7 +387,7 @@ For the resampling, the indicies of the jets to use are saved in an intermediate
 | `fractions`  | `all`  |  Fractions of used samples in the final training sample.  |
 | `njets`  |   |  Number of target jets to be taken (through all categories). If set to -1: max out to target numbers (limited by fractions ratio) |
 | `save_tracks`  | `all`  |  Flag if storing tracks.  |
-| `tracks_name`  | `all`  |  Name of the tracks how they are called in the .h5 files coming from the dumper.  |
+| `tracks_names`  | `all`  |  Name of the tracks how they are called in the .h5 files coming from the dumper.  |
 | `intermediate_index_file`  | `all`  |  Stores the indices per sample into an intermediate file.  |
 | `weighting_target_flavour`  | `weighting`  |  Defines to which distribution the weights are relatively calculated   |
 | `bool_attach_sample_weights`  | `weighting`  | If you want to attach these weights in the final training config. For all other resampling methods, this should be `False`.  |
@@ -465,7 +465,7 @@ The steps defined in the following segment are only performed on the training sa
 preprocessing.py --config <path to config file> --resampling
 ```
 
-If you want to also use the tracks of the jets, you need to set the option `save_tracks` in the preprocessing config to `True`. If the tracks have a different name than `"tracks"` in the .h5 files coming from the dumper, you can also set change `tracks_name` to your needs. Track information are not needed for the DL1r but for DIPS and Umami.
+If you want to also use the tracks of the jets, you need to set the option `save_tracks` in the preprocessing config to `True`. If the tracks have a different name than `"tracks"` in the .h5 files coming from the dumper, you can also set change `tracks_names` to your needs. Track information are not needed for the DL1r but for DIPS and Umami.
 
 2\. Retrieving scaling and shifting factors:
 

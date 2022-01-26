@@ -4,12 +4,11 @@ import pickle
 
 import h5py
 import numpy as np
-import yaml
 from numpy.lib.recfunctions import repack_fields, structured_to_unstructured
 from scipy.stats import binned_statistic_2d
 
 from umami.configuration import logger
-from umami.tools import yaml_loader
+from umami.preprocessing_tools import GetVariableDict
 
 
 class TrainSampleWriter:
@@ -26,12 +25,11 @@ class TrainSampleWriter:
         """
         self.config = config
         self.bool_use_tracks = config.sampling["options"]["save_tracks"]
+        self.tracks_names = self.config.sampling["options"]["tracks_names"]
         self.compression = compression
         self.precision = config.config["precision"]
         self.rnd_seed = 42
-
-        with open(config.var_file, "r") as conf:
-            self.variable_config = yaml.load(conf, Loader=yaml_loader)
+        self.variable_config = GetVariableDict(config.var_file)
 
     def load_generator(
         self, input_file: str, index: int, nJets: int, chunkSize: int = 100_000
@@ -88,23 +86,32 @@ class TrainSampleWriter:
                     yield jets, labels, flavour
 
                 elif self.bool_use_tracks is True:
-                    # Load tracks
-                    trks = np.asarray(
-                        h5py.File(input_file, "r")["/tracks"][indices_selected],
-                        dtype=self.precision,
-                    )
-                    trks = trks[rng_index]
-                    if "track_labels" in f.keys():
-                        track_labels = np.asarray(
-                            h5py.File(input_file, "r")["/track_labels"][
-                                indices_selected
-                            ]
-                        )
-                        track_labels = track_labels[rng_index]
-                    else:
-                        track_labels = None
+                    tracks, track_labels = [], []
 
-                    yield jets, trks, labels, track_labels, flavour
+                    # Loop over track selections
+                    for tracks_name in self.tracks_names:
+
+                        # Load tracks
+                        trks = np.asarray(
+                            h5py.File(input_file, "r")[f"/{tracks_name}"][
+                                indices_selected
+                            ],
+                            dtype=self.precision,
+                        )
+                        trks = trks[rng_index]
+                        if f"{tracks_name}_labels" in f.keys():
+                            trk_labels = np.asarray(
+                                h5py.File(input_file, "r")[f"/{tracks_name}_labels"][
+                                    indices_selected
+                                ]
+                            )
+                            trk_labels = trk_labels[rng_index]
+                        else:
+                            trk_labels = None
+                        tracks.append(trks)
+                        track_labels.append(trk_labels)
+
+                    yield jets, tracks, labels, track_labels, flavour
 
     def better_shuffling(self, thearray, nJets, slice_size=int(1e4)):
         """
@@ -240,27 +247,28 @@ class TrainSampleWriter:
                         )
 
                         if self.bool_use_tracks is True:
-                            h5file.create_dataset(
-                                "X_trk_train",
-                                compression=self.compression,
-                                dtype=self.precision,
-                                shape=(
-                                    n_jets,
-                                    tracks.shape[1],
-                                    tracks.shape[2],
-                                ),
-                            )
-                            if track_labels is not None:
+                            for i, tracks_name in enumerate(self.tracks_names):
                                 h5file.create_dataset(
-                                    "Y_trk_train",
+                                    f"X_{tracks_name}_train",
                                     compression=self.compression,
-                                    dtype=np.int8,
+                                    dtype=self.precision,
                                     shape=(
                                         n_jets,
-                                        track_labels.shape[1],
-                                        track_labels.shape[2],
+                                        tracks[i].shape[1],
+                                        tracks[i].shape[2],
                                     ),
                                 )
+                                if track_labels[i] is not None:
+                                    h5file.create_dataset(
+                                        f"Y_{tracks_name}_train",
+                                        compression=self.compression,
+                                        dtype=np.int8,
+                                        shape=(
+                                            n_jets,
+                                            track_labels[i].shape[1],
+                                            track_labels[i].shape[2],
+                                        ),
+                                    )
 
                     # Jet inputs
                     h5file["X_train"][jet_idx:jet_idx_end] = jets
@@ -277,12 +285,18 @@ class TrainSampleWriter:
                     # Appending tracks if used
                     if self.bool_use_tracks is True:
 
-                        # Track inputs
-                        h5file["X_trk_train"][jet_idx:jet_idx_end] = tracks
+                        # Loop over tracks selections
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            # Track inputs
+                            h5file[f"X_{tracks_name}_train"][
+                                jet_idx:jet_idx_end
+                            ] = tracks[i]
 
-                        if track_labels is not None:
-                            # Track labels
-                            h5file["Y_trk_train"][jet_idx:jet_idx_end] = track_labels
+                            if track_labels[i] is not None:
+                                # Track labels
+                                h5file[f"Y_{tracks_name}_train"][
+                                    jet_idx:jet_idx_end
+                                ] = track_labels[i]
 
                 except StopIteration:
                     break

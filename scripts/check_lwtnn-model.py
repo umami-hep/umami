@@ -42,7 +42,7 @@ def GetParser():
         "--var_dict",
         required=True,
         type=str,
-        help="""Dictionary (json) with training variables.""",
+        help="""Dictionary (yaml) with training variables.""",
     )
     parser.add_argument(
         "-o",
@@ -100,6 +100,7 @@ class config:
     def __init__(self, preprocess_config):
         self.dict_file = preprocess_config
         self.preparation = {"class_labels": ["ujets", "cjets", "bjets"]}
+        self.tracks_name = "tracks"
 
 
 def __run():
@@ -117,13 +118,13 @@ def __run():
                 "only one of them needs to be used"
             )
         training_config = utt.Configuration(args.config)
-        preprocess_config = upt.Configuration(
-            training_config.preprocess_config
-        )
+        preprocess_config = upt.Configuration(training_config.preprocess_config)
         class_labels = training_config.NN_structure["class_labels"]
+        tracks_name = training_config.tracks_name
     elif args.scale_dict is not None:
         preprocess_config = config(args.scale_dict)
         class_labels = preprocess_config.preparation["class_labels"]
+        tracks_name = preprocess_config.tracks_name
     else:
         raise ValueError(
             "Missing option, either --config or --scale_dict "
@@ -139,13 +140,12 @@ def __run():
             args.var_dict,
             preprocess_config,
             class_labels,
+            tracks_name=tracks_name,
             nJets=int(10e6),
             exclude=None,
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")
-        pred_dips, pred_umami = load_model_umami(
-            args.model, X_test_trk, X_test_jet
-        )
+        pred_dips, pred_umami = load_model_umami(args.model, X_test_trk, X_test_jet)
         pred_model = pred_dips if "dips" in args.tagger.lower() else pred_umami
 
     elif "dips" in args.tagger.lower():
@@ -154,6 +154,7 @@ def __run():
             args.var_dict,
             preprocess_config,
             class_labels,
+            tracks_name=tracks_name,
             nJets=int(10e6),
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")
@@ -206,9 +207,7 @@ def __run():
     ).flatten()
     for sampleDiff in sampleDiffs:
         df_select = df.query(f"diff>{sampleDiff} and ntrks<{args.ntracks_max}")
-        diff = round(
-            len(df_select) / len(df[df["ntrks"] < args.ntracks_max]) * 100, 2
-        )
+        diff = round(len(df_select) / len(df[df["ntrks"] < args.ntracks_max]) * 100, 2)
         print(f"Differences off {sampleDiff:.1e} {diff}%")
         if diff == 0:
             break

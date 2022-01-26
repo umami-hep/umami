@@ -6,7 +6,6 @@ import os
 
 import h5py
 import tensorflow as tf
-import yaml
 from tensorflow.keras import activations
 from tensorflow.keras.callbacks import (
     ModelCheckpoint,  # pylint: disable=no-name-in-module
@@ -29,7 +28,7 @@ from tensorflow.keras.optimizers import Adam  # pylint: disable=no-name-in-modul
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
-from umami.tools import yaml_loader
+from umami.preprocessing_tools import GetVariableDict
 
 
 def Umami_model(train_config=None, input_shape=None, njet_features=None):
@@ -192,6 +191,9 @@ def Umami(args, train_config, preprocess_config):
     NN_structure = train_config.NN_structure
     Val_params = train_config.Eval_parameters_validation
 
+    # Set the tracks collection name
+    tracks_key = train_config.tracks_key
+
     val_data_dict = None
     if Val_params["n_jets"] > 0:
         val_data_dict = utt.load_validation_data_umami(
@@ -209,8 +211,7 @@ def Umami(args, train_config, preprocess_config):
         exclude = None
 
     # Load variable config
-    with open(train_config.var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(train_config.var_dict)
 
     # Get excluded variables
     _, _, excluded_var = utt.get_jet_feature_indices(
@@ -219,7 +220,7 @@ def Umami(args, train_config, preprocess_config):
 
     if ".h5" in train_config.train_file:
         with h5py.File(train_config.train_file, "r") as f:
-            nJets, nTrks, nFeatures = f["X_trk_train"].shape
+            nJets, nTrks, nFeatures = f[tracks_key].shape
             nJets, nDim = f["Y_train"].shape
             nJets, njet_features = f["X_train"].shape
     elif os.path.isdir(train_config.train_file):
@@ -305,7 +306,7 @@ def Umami(args, train_config, preprocess_config):
                 utf.umami_generator(
                     train_file_path=train_config.train_file,
                     X_Name="X_train",
-                    X_trk_Name="X_trk_train",
+                    X_trk_Name=tracks_key,
                     Y_Name="Y_train",
                     n_jets=nJets,
                     batch_size=NN_structure["batch_size"],

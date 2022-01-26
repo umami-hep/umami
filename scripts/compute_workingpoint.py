@@ -1,7 +1,9 @@
 """Script to determine efficiency working point cut values from tagger scores in input samples."""
 from umami.configuration import logger, global_config  # isort:skip
 from argparse import ArgumentParser
+
 import numpy as np
+
 import umami.train_tools as utt
 
 

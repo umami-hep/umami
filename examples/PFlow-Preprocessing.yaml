@@ -242,8 +242,8 @@ sampling:
     # Bool, if track information (for DIPS etc.) are saved.
     save_tracks: True
 
-    # Name of the track collection to use.
-    tracks_name: "tracks"
+    # Name(s) of the track collection(s) to use.
+    tracks_names: ["tracks"]
 
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
