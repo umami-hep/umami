@@ -2268,11 +2268,25 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         chunk_number += 1
                     pbar.close()
 
-    def Make_plots(self, binning=None, chunk_size=1e4, iterator=True):
-        """
-        Produce plots of the variables used in resampling
+    def Make_plots(
+        self,
+        binning: list = None,
+        chunk_size: int = 1e4,
+        iterator: bool = True,
+    ):
+        """Produce plots of the variables used in resampling
         (before and after preprocessing).
+
+        Parameters
+        ----------
+        binning : list, optional
+            List of the binnings to use, by default None
+        chunk_size : int, optional
+            Loading chunk size, by default 1e4
+        iterator : bool, optional
+            Use iterator, by default True
         """
+
         if binning is None:
             binning = [200, 20]
 
@@ -2314,14 +2328,20 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         histo_before_dict[flavour_name], reading_dict["hist"]
                     )
         logger.info("Plotting.")
+
+        # Check if the directory for the plots exists
+        plot_dir_path = os.path.join(
+            self.config.config["parameters"]["sample_path"],
+            "plots/",
+        )
+        os.makedirs(plot_dir_path, exist_ok=True)
+
         plot_name_clean = self.config.GetFileName(
             extension="",
-            option="pt_eta-before_sampling",
-            custom_path=os.path.join(
-                os.path.abspath("."),
-                "plots/",
-            ),
+            option="pt_eta-before_sampling_",
+            custom_path=plot_dir_path,
         )
+
         ResamplingPlots(
             concat_samples=histo_before_dict,
             positions_x_y=[0, 1],
@@ -2392,12 +2412,10 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         logger.info("Plotting.")
         plot_name_clean = self.config.GetFileName(
             extension="",
-            option="pt_eta-after_sampling",
-            custom_path=os.path.join(
-                os.path.abspath("."),
-                "plots/",
-            ),
+            option="pt_eta-after_sampling_",
+            custom_path=plot_dir_path,
         )
+
         ResamplingPlots(
             concat_samples=histo_after_dict,
             positions_x_y=[0, 1],
@@ -2536,10 +2554,18 @@ class Weighting(ResamplingTools):
 
     def Plotting(self):
         """Plot weighting results."""
+
+        # Check if the directory for the plots exists
+        plot_dir_path = os.path.join(
+            self.config.config["parameters"]["sample_path"],
+            "plots/",
+        )
+        os.makedirs(plot_dir_path, exist_ok=True)
+
         plot_name_raw = self.config.GetFileName(
             extension="",
             option="pt_eta_raw_",
-            custom_path="plots/",
+            custom_path=plot_dir_path,
         )
         ResamplingPlots(
             concat_samples=self.concat_samples,
@@ -2782,13 +2808,18 @@ class UnderSampling(ResamplingTools):
         self.GetIndices()
 
         logger.info("Plotting distributions before undersampling.")
+
+        # Check if the directory for the plots exists
+        plot_dir_path = os.path.join(
+            self.config.config["parameters"]["sample_path"],
+            "plots/",
+        )
+        os.makedirs(plot_dir_path, exist_ok=True)
+
         plot_name_clean = self.config.GetFileName(
             extension="",
-            option="pt_eta-wider_bin",
-            custom_path=os.path.join(
-                os.path.abspath("."),
-                "plots/",
-            ),
+            option="pt_eta-wider_bin_",
+            custom_path=plot_dir_path,
         )
         ResamplingPlots(
             concat_samples=self.concat_samples,
@@ -2804,11 +2835,8 @@ class UnderSampling(ResamplingTools):
         logger.info("Plotting distributions after undersampling.")
         plot_name_clean = self.config.GetFileName(
             extension="",
-            option="downsampled-pt_eta-wider_bins",
-            custom_path=os.path.join(
-                os.path.abspath("."),
-                "plots/",
-            ),
+            option="downsampled-pt_eta-wider_bins_",
+            custom_path=plot_dir_path,
         )
         ResamplingPlots(
             concat_samples=self.x_y_after_sampling,
