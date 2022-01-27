@@ -1432,7 +1432,7 @@ def RunPerformanceCheck(
                 plot_name=f"{plot_dir}/rej-plot_val_{val_file_identifier}",
                 class_labels=class_labels,
                 main_class=main_class,
-                label_extension=val_file_config["path"],
+                label_extension=val_file_config["label"],
                 rej_string=f"rej_{val_file_identifier}",
                 target_beff=WP,
                 **Val_settings,
