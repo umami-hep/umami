@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from umami.helper_tools import hist_ratio, hist_w_unc, step_divide
+from umami.helper_tools import hist_ratio, hist_w_unc, save_divide
 
 
 class hist_w_unc_TestCase(unittest.TestCase):
@@ -51,17 +51,25 @@ class hist_w_unc_TestCase(unittest.TestCase):
         np.testing.assert_almost_equal(band, self.band)
 
 
-class step_divide_TestCase(unittest.TestCase):
+class save_divide_TestCase(unittest.TestCase):
     def test_zero_case(self):
-        steps = step_divide(np.zeros(2), np.zeros(2))
+        steps = save_divide(np.zeros(2), np.zeros(2))
         np.testing.assert_equal(steps, np.ones(2))
 
     def test_ones_case(self):
-        steps = step_divide(np.ones(2), np.ones(2))
+        steps = save_divide(np.ones(2), np.ones(2))
         np.testing.assert_equal(steps, np.ones(2))
 
     def test_half_case(self):
-        steps = step_divide(np.ones(2), 2 * np.ones(2))
+        steps = save_divide(np.ones(2), 2 * np.ones(2))
+        np.testing.assert_equal(steps, 0.5 * np.ones(2))
+
+    def test_denominator_float(self):
+        steps = save_divide(np.ones(2), 2)
+        np.testing.assert_equal(steps, 0.5 * np.ones(2))
+
+    def test_nominator_float(self):
+        steps = save_divide(1, np.ones(2) * 2)
         np.testing.assert_equal(steps, 0.5 * np.ones(2))
 
 
