@@ -1,6 +1,6 @@
 label: HadronConeExclTruthLabelID
 
-track_labels:
+tracks_labels:
   - truthOriginLabel
   - truthVertexIndex
 
@@ -10,7 +10,7 @@ train_variables:
     - pt_btagJes
     - energy
 
-track_train_variables:
+.tracks_variables: &tracks_variables
   noNormVars: []
   logNormVars: []
   jointNormVars:
@@ -38,5 +38,11 @@ track_train_variables:
     #- AMVFWeightPV
     #- ambiRank
     #- chiSquaredOverNumberDoF
+
+
+track_train_variables:
+  tracks:
+    <<: *tracks_variables
+
 
 custom_defaults_vars:

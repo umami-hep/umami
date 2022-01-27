@@ -6,10 +6,10 @@ import os
 import h5py
 import numpy as np
 import pandas as pd
-import yaml
 
 from umami.configuration import logger
-from umami.tools import yaml_loader
+
+from .utils import GetVariableDict
 
 
 def Gen_default_dict(scale_dict):
@@ -36,6 +36,7 @@ def apply_scaling_trks(
     trks,
     variable_config: dict,
     scale_dict: dict,
+    tracks_name: str,
 ):
     """
     Apply the scaling/shifting to the tracks
@@ -57,9 +58,15 @@ def apply_scaling_trks(
     trk_mask = ~np.isnan(trks[trks.dtype.names[0]])
 
     # Get the track variables
-    tracks_noNormVars = variable_config["track_train_variables"]["noNormVars"]
-    tracks_logNormVars = variable_config["track_train_variables"]["logNormVars"]
-    tracks_jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
+    tracks_noNormVars = variable_config["track_train_variables"][tracks_name][
+        "noNormVars"
+    ]
+    tracks_logNormVars = variable_config["track_train_variables"][tracks_name][
+        "logNormVars"
+    ]
+    tracks_jointNormVars = variable_config["track_train_variables"][tracks_name][
+        "jointNormVars"
+    ]
     tracks_variables = tracks_noNormVars + tracks_logNormVars + tracks_jointNormVars
 
     # Iterate over variables and scale/shift it
@@ -118,11 +125,10 @@ class Scaling:
         self.config = config
         self.scale_dict_path = config.dict_file
         self.bool_use_tracks = config.sampling["options"]["save_tracks"]
+        self.tracks_names = self.config.sampling["options"]["tracks_names"]
         self.compression = compression
         self.mask_value = 0
-
-        with open(config.var_file, "r") as conf:
-            self.variable_config = yaml.load(conf, Loader=yaml_loader)
+        self.variable_config = GetVariableDict(config.var_file)
 
     def join_mean_scale(
         self,
@@ -405,37 +411,47 @@ class Scaling:
         # Check if tracks are used or not
         if self.bool_use_tracks is True:
 
-            # Load generator
-            trks_scaling_generator = self.get_scaling_tracks_generator(
-                input_file=input_file,
-                nJets=file_length,
-                chunkSize=chunkSize,
-            )
-
-            # Loop over chunks
-            for chunk_counter in range(n_chunks):
-                logger.info(
-                    f"Calculating track scales for chunk {chunk_counter+1} of"
-                    f" {n_chunks}"
+            # Loop over all tracks selections
+            for tracks_name in self.tracks_names:
+                scale_dict_trk_selection = {}
+                # Load generator
+                trks_scaling_generator = self.get_scaling_tracks_generator(
+                    input_file=input_file,
+                    nJets=file_length,
+                    tracks_name=tracks_name,
+                    chunkSize=chunkSize,
                 )
-                # Check if this is the first time loading from the generator
-                if chunk_counter == 0:
-                    # Get the first chunk of scales from the generator
-                    scale_dict_trk, nTrks_loaded = next(trks_scaling_generator)
-                else:
-                    # Get the next chunk of scales from the generator
-                    tmp_dict_trk, tmp_nTrks_loaded = next(trks_scaling_generator)
 
-                    # Combine the scale dicts coming from the generator
-                    scale_dict_trk = self.join_scale_dicts_trks(
-                        first_scale_dict=scale_dict_trk,
-                        second_scale_dict=tmp_dict_trk,
-                        first_nTrks=nTrks_loaded,
-                        second_nTrks=tmp_nTrks_loaded,
+                # Loop over chunks
+                for chunk_counter in range(n_chunks):
+                    logger.info(
+                        f"Calculating track scales for chunk {chunk_counter+1} of"
+                        f" {n_chunks}"
                     )
+                    # Check if this is the first time loading from the generator
+                    if chunk_counter == 0:
+                        # Get the first chunk of scales from the generator
+                        scale_dict_trk_selection, nTrks_loaded = next(
+                            trks_scaling_generator
+                        )
+                    else:
+                        # Get the next chunk of scales from the generator
+                        tmp_dict_trk, tmp_nTrks_loaded = next(trks_scaling_generator)
 
+                        # Combine the scale dicts coming from the generator
+                        scale_dict_trk_selection = self.join_scale_dicts_trks(
+                            first_scale_dict=scale_dict_trk_selection,
+                            second_scale_dict=tmp_dict_trk,
+                            first_nTrks=nTrks_loaded,
+                            second_nTrks=tmp_nTrks_loaded,
+                        )
+                # Add scale dict for given tracks selection to the more general one
+                scale_dict_trk.update({tracks_name: scale_dict_trk_selection})
+
+        # TODO: change in python3.9
         # save scale/shift dictionary to json file
-        scale_dict = {"jets": scale_dict, "tracks": scale_dict_trk}
+        scale_dict = {"jets": scale_dict}
+        scale_dict.update(scale_dict_trk)
         os.makedirs(os.path.dirname(self.scale_dict_path), exist_ok=True)
         with open(self.scale_dict_path, "w") as outfile:
             json.dump(scale_dict, outfile, indent=4)
@@ -536,6 +552,7 @@ class Scaling:
         self,
         input_file: str,
         nJets: int,
+        tracks_name: str,
         chunkSize: int = int(10000),
     ):
         """
@@ -552,8 +569,12 @@ class Scaling:
         """
 
         # Load the variables which are scaled/shifted
-        logNormVars = self.variable_config["track_train_variables"]["logNormVars"]
-        jointNormVars = self.variable_config["track_train_variables"]["jointNormVars"]
+        logNormVars = self.variable_config["track_train_variables"][tracks_name][
+            "logNormVars"
+        ]
+        jointNormVars = self.variable_config["track_train_variables"][tracks_name][
+            "jointNormVars"
+        ]
         trkVars = logNormVars + jointNormVars
 
         # Open h5 file
@@ -582,7 +603,7 @@ class Scaling:
 
                 # Load tracks
                 trks = np.asarray(
-                    infile_all["/tracks"][index_tuple[0] : index_tuple[1]]
+                    infile_all[f"/{tracks_name}"][index_tuple[0] : index_tuple[1]]
                 )
 
                 # Stack the arrays by their variable
@@ -684,23 +705,29 @@ class Scaling:
                     yield jets, labels, flavour
 
                 elif self.bool_use_tracks is True:
+                    tracks, tracks_labels = [], []
+                    # Loop on each track selection
+                    for tracks_name in self.tracks_names:
+                        trk_scale_dict = tracks_scale_dict[tracks_name]
+                        # Load tracks
+                        trks = np.asarray(
+                            h5py.File(input_file, "r")[f"/{tracks_name}"][
+                                index_tuple[0] : index_tuple[1]
+                            ]
+                        )
 
-                    # Load tracks
-                    trks = np.asarray(
-                        h5py.File(input_file, "r")["/tracks"][
-                            index_tuple[0] : index_tuple[1]
-                        ]
-                    )
-
-                    # Apply scaling to the tracks
-                    trks, trk_labels = apply_scaling_trks(
-                        trks=trks,
-                        variable_config=self.variable_config,
-                        scale_dict=tracks_scale_dict,
-                    )
+                        # Apply scaling to the tracks
+                        trks, trk_labels = apply_scaling_trks(
+                            trks=trks,
+                            variable_config=self.variable_config,
+                            scale_dict=trk_scale_dict,
+                            tracks_name=tracks_name,
+                        )
+                        tracks.append(trks)
+                        tracks_labels.append(trk_labels)
 
                     # Yield jets, labels and tracks
-                    yield jets, trks, labels, trk_labels, flavour
+                    yield jets, tracks, labels, tracks_labels, flavour
 
             # TODO: Add plotting
 
@@ -741,9 +768,12 @@ class Scaling:
 
         # Check if tracks are used
         if self.bool_use_tracks:
+            tracks_scale_dict = {}
             # Get the scale dict for tracks
             with open(self.scale_dict_path, "r") as infile:
-                tracks_scale_dict = json.load(infile)["tracks"]
+                full_scale_dict = json.load(infile)
+                for tracks_name in self.tracks_names:
+                    tracks_scale_dict[tracks_name] = full_scale_dict[f"{tracks_name}"]
 
         else:
             tracks_scale_dict = None
@@ -804,27 +834,28 @@ class Scaling:
                         )
 
                         if self.bool_use_tracks is True:
-                            h5file.create_dataset(
-                                "tracks",
-                                data=tracks,
-                                compression=self.compression,
-                                maxshape=(
-                                    None,
-                                    tracks.shape[1],
-                                    tracks.shape[2],
-                                ),
-                            )
-                            if track_labels is not None:
+                            for i, tracks_name in enumerate(self.tracks_names):
                                 h5file.create_dataset(
-                                    "track_labels",
-                                    data=track_labels,
+                                    tracks_name,
+                                    data=tracks[i],
                                     compression=self.compression,
                                     maxshape=(
                                         None,
-                                        track_labels.shape[1],
-                                        track_labels.shape[2],
+                                        tracks[i].shape[1],
+                                        tracks[i].shape[2],
                                     ),
                                 )
+                                if track_labels[i] is not None:
+                                    h5file.create_dataset(
+                                        f"{tracks_name}_labels",
+                                        data=track_labels[i],
+                                        compression=self.compression,
+                                        maxshape=(
+                                            None,
+                                            track_labels[i].shape[1],
+                                            track_labels[i].shape[2],
+                                        ),
+                                    )
 
                     else:
                         # appending to existing dataset
@@ -849,23 +880,24 @@ class Scaling:
                         h5file["flavour"][-flavour.shape[0] :] = flavour
 
                         if self.bool_use_tracks is True:
-                            h5file["tracks"].resize(
-                                (h5file["tracks"].shape[0] + tracks.shape[0]),
-                                axis=0,
-                            )
-                            h5file["tracks"][-tracks.shape[0] :] = tracks
-
-                            if track_labels is not None:
-                                h5file["track_labels"].resize(
-                                    (
-                                        h5file["track_labels"].shape[0]
-                                        + track_labels.shape[0]
-                                    ),
+                            for i, tracks_name in enumerate(self.tracks_names):
+                                h5file[tracks_name].resize(
+                                    (h5file[tracks_name].shape[0] + tracks[i].shape[0]),
                                     axis=0,
                                 )
-                                h5file["track_labels"][
-                                    -track_labels.shape[0] :
-                                ] = track_labels
+                                h5file[tracks_name][-tracks[i].shape[0] :] = tracks[i]
+
+                                if track_labels[i] is not None:
+                                    h5file[f"{tracks_name}_labels"].resize(
+                                        (
+                                            h5file[f"{tracks_name}_labels"].shape[0]
+                                            + track_labels[i].shape[0]
+                                        ),
+                                        axis=0,
+                                    )
+                                    h5file[f"{tracks_name}_labels"][
+                                        -track_labels[i].shape[0] :
+                                    ] = track_labels[i]
 
                 except StopIteration:
                     break

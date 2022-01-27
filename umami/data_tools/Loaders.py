@@ -227,6 +227,7 @@ def LoadTrksFromFile(
     filepath: str,
     class_labels: list,
     nJets: int,
+    tracks_name: str = "tracks",
     cut_vars_dict: dict = None,
     print_logger: bool = True,
     chunk_size: int = 1e6,
@@ -242,6 +243,8 @@ def LoadTrksFromFile(
         List of class labels which are used.
     nJets : int
         Number of jets to load.
+    tracks_name : str
+        Name of the tracks collection to load
     cut_vars_dict : dict
         Variable cuts that are applied when loading the jets.
     print_logger : bool
@@ -393,7 +396,7 @@ def LoadTrksFromFile(
             # Load tracks and delete unused classes
             trks = np.delete(
                 arr=np.asarray(
-                    h5py.File(file, "r")["/tracks"][
+                    h5py.File(file, "r")[f"/{tracks_name}"][
                         infile_counter * chunk_size : (infile_counter + 1) * chunk_size
                     ]
                 ),

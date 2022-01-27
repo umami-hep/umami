@@ -390,25 +390,20 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def setUp(self):
         self.Eval_parameters_validation = {}
+        self.tracks_name = "tracks"
         self.NN_structure = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.sampling = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.test_dir = tempfile.TemporaryDirectory()
         self.validation_files = {
             "ttbar_r21_val": {
-                "path": (
-                    f"{self.test_dir.name}/"
-                    "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
-                ),
+                "path": f"{self.test_dir.name}/ci_ttbar_testing.h5",
                 "label": "$t\\bar{t}$ Release 21",
                 "variable_cuts": [
                     {"pt_btagJes": {"operator": "<=", "condition": 250000}}
                 ],
             },
             "zprime_r21_val": {
-                "path": (
-                    f"{self.test_dir.name}/"
-                    "MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
-                ),
+                "path": f"{self.test_dir.name}/ci_zpext_testing.h5",
                 "label": "$Z'$ Release 21",
                 "variable_cuts": [
                     {"pt_btagJes": {"operator": ">", "condition": 250000}}
@@ -425,8 +420,8 @@ class GetSamples_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid"
-                "_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/preprocessing/"
+                "ci_ttbar_testing.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]
@@ -434,8 +429,8 @@ class GetSamples_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/MC16d_hybrid-"
-                "ext_odd_0_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/preprocessing/"
+                "ci_zpext_testing.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]
@@ -461,6 +456,7 @@ class GetSamples_TestCase(unittest.TestCase):
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
+            tracks_name=self.tracks_name,
             nJets=self.nJets,
         )
         self.assertEqual(len(X_trk), len(Y_trk))
@@ -474,11 +470,12 @@ class GetSamples_TestCase(unittest.TestCase):
         self.class_labels_given = ["ujets", "cjets", "bjets"]
 
         with self.assertRaises(AssertionError):
-            X_trk, Y_trk = GetTestSampleTrks(
+            _, _ = GetTestSampleTrks(
                 input_file=self.validation_files["ttbar_r21_val"]["path"],
                 var_dict=self.var_dict,
                 preprocess_config=self,
                 class_labels=self.class_labels_given,
+                tracks_name=self.tracks_name,
                 nJets=self.nJets,
             )
 
@@ -490,6 +487,7 @@ class GetSamples_TestCase(unittest.TestCase):
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels_extended,
+            tracks_name=self.tracks_name,
             nJets=self.nJets,
         )
         self.assertEqual(len(X_trk), len(Y_trk))
@@ -520,7 +518,7 @@ class GetSamples_TestCase(unittest.TestCase):
         self.class_labels_given = ["ujets", "cjets", "bjets"]
 
         with self.assertRaises(AssertionError):
-            X, Y = GetTestSample(
+            _, _ = GetTestSample(
                 input_file=self.validation_files["ttbar_r21_val"]["path"],
                 var_dict=self.var_dict,
                 preprocess_config=self,
@@ -554,6 +552,7 @@ class GetSamples_TestCase(unittest.TestCase):
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
+            tracks_name=self.tracks_name,
             nJets=self.nJets,
             exclude=self.exclude,
         )

@@ -27,5 +27,4 @@ python_install/
 Preprocessing-parameters-*.yaml
 # ignoring preprocessing integration test folders
 preprocessing_*/
-test_train_*/
 test_*_model*/

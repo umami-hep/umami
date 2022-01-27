@@ -8,13 +8,13 @@ from glob import glob
 import matplotlib as mtp
 import matplotlib.pyplot as plt
 import numpy as np
-import yaml
 from matplotlib import gridspec
 
 import umami.data_tools as udt
 from umami.configuration import global_config, logger
 from umami.helper_tools import hist_ratio, hist_w_unc
-from umami.tools import applyATLASstyle, makeATLAStag, natural_keys, yaml_loader
+from umami.preprocessing_tools import GetVariableDict
+from umami.tools import applyATLASstyle, makeATLAStag, natural_keys
 
 
 def check_kwargs_var_plots(kwargs: dict, **custom_default):
@@ -460,6 +460,7 @@ def plot_input_vars_trks_comparison(
     output_directory: str = "input_vars_trks",
     Ratio_Cut: list = None,
     track_origin: str = "All",
+    tracks_name: str = "tracks",
     **kwargs,
 ):
     """
@@ -489,6 +490,8 @@ def plot_input_vars_trks_comparison(
         List of y-axis cuts for the ratio block.
     track_origin: str
         Track set that is to be used for plotting.
+    tracks_name : str
+        Track collection to use, default is 'tracks'.
     **kwargs: dict
         - plot_type : str
             Plottype, like pdf or png
@@ -593,16 +596,19 @@ def plot_input_vars_trks_comparison(
         flavour_label_dict.update({label: flavour_labels})
 
     # Load var dict
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(var_dict)
 
     # Loading track variables
     try:
         trksVars = variable_config["tracks"]
     except KeyError:
-        noNormVars = variable_config["track_train_variables"]["noNormVars"]
-        logNormVars = variable_config["track_train_variables"]["logNormVars"]
-        jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
+        noNormVars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
+        logNormVars = variable_config["track_train_variables"][tracks_name][
+            "logNormVars"
+        ]
+        jointNormVars = variable_config["track_train_variables"][tracks_name][
+            "jointNormVars"
+        ]
         trksVars = noNormVars + logNormVars + jointNormVars
 
     for nLeading in n_Leading:
@@ -937,6 +943,7 @@ def plot_input_vars_trks(
     n_Leading: list = None,
     output_directory: str = "input_vars_trks",
     track_origin: str = "All",
+    tracks_name: str = "tracks",
     **kwargs,
 ):
     """
@@ -964,6 +971,8 @@ def plot_input_vars_trks(
         Name of the output directory. Only the dir name not path!
     track_origin: str
         Track set that is to be used for plotting.
+    tracks_name : str
+        Track collection to use, default is 'tracks'.
     **kwargs: dict
         - plot_type : str
             Plottype, like pdf or png
@@ -1065,13 +1074,14 @@ def plot_input_vars_trks(
         flavour_label_dict.update({label: flavour_labels})
 
     # Load var dict
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(var_dict)
 
     # Loading track variables
-    noNormVars = variable_config["track_train_variables"]["noNormVars"]
-    logNormVars = variable_config["track_train_variables"]["logNormVars"]
-    jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
+    noNormVars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
+    logNormVars = variable_config["track_train_variables"][tracks_name]["logNormVars"]
+    jointNormVars = variable_config["track_train_variables"][tracks_name][
+        "jointNormVars"
+    ]
     trksVars = noNormVars + logNormVars + jointNormVars
 
     for nLeading in n_Leading:
@@ -1390,8 +1400,7 @@ def plot_input_vars_jets(
         else:
             raise ValueError(f"Type {type(binning[variable])} is not supported!")
 
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(var_dict)
 
     # Init trks and flavour label dicts
     jets_dict = {}
@@ -1694,8 +1703,7 @@ def plot_input_vars_jets_comparison(
         jets_dict.update({label: jets})
         flavour_label_dict.update({label: flavour_labels})
 
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(var_dict)
 
     # Loading jet variables
     jetsVars = [

@@ -6,7 +6,7 @@ Training ntuples are produced using the [training-dataset-dumper](https://gitlab
 ### Preprocessing
 The motivation for preprocessing the training samples results from the fact that the input datasets are highly imbalanced in their flavour composition. While there are large quantities of light jets, the fraction of b-jets is small and the fraction of other flavours is even smaller.
 A widely adopted technique for dealing with highly unbalanced datasets is called resampling. It consists of removing samples from the majority class (under-sampling) and / or adding more examples from the minority class (over-sampling).
-In under-sampling, the simplest technique involves removing random records from the majority class, which can cause loss of information. 
+In under-sampling, the simplest technique involves removing random records from the majority class, which can cause loss of information.
 Another approach can be to tell the network how important samples from each class are. For e.g. a majority class you can reduce the impact of samples from this class to the training. You can do this by assigning a weight to each sample and use it to weight the loss function used in the training.
 
 ### Hybrid samples
@@ -54,7 +54,7 @@ For the `HadronConeExclTruthLabelID` labelling, the categories `4` and `44` as w
 
 
 ## Ntuple preparation
-The jets used for the training and validation of the taggers are taken from ttbar and Z' events. Different flavours can be used and combined to prepare different datasets for training/evaluation. The standard classes used are `bjets`, `cjets` and `ujets` (light jets).   
+The jets used for the training and validation of the taggers are taken from ttbar and Z' events. Different flavours can be used and combined to prepare different datasets for training/evaluation. The standard classes used are `bjets`, `cjets` and `ujets` (light jets).
 After the ntuple production (training-dataset-dumper) the samples have to be further processed using the Umami [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py) script. The preprocessing script is configured using a dedicated configuration file.
 See [`examples/PFlow-Preprocessing.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml) for an example of a preprocessing config file.
 
@@ -280,7 +280,7 @@ preparation:
         path: *sample_path
         file: MC16d-inclusive_testing_zprime_PFlow.h5
 ```
-In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.   
+In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.
 
 The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. Also you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
@@ -347,8 +347,8 @@ sampling:
     # Bool, if track information (for DIPS etc.) are saved.
     save_tracks: True
 
-    # Name of the track collection to use.
-    tracks_name: "tracks"
+    # Name(s) of the track collection(s) to use.
+    tracks_names: "tracks"
 
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
@@ -371,17 +371,29 @@ In `sampling`, we can define the method which is used in the preprocessing for r
 
 Another important part are the `class_labels` which are defined here. You can define here which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list here to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
 
-The `options` are some options for the different resampling methods. You need to define the sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins. 
+The `options` are some options for the different resampling methods. You need to define the sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins.
 Another thing you need to define are the `samples` which are to be resampled. You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`.
-`fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The `save_tracks` and the `tracks_name` options define the using of tracks. `save_tracks` is bool while `tracks_name` is a string. The latter is the name of the tracks how they are called in the .h5 files coming from the dumper. After the preparation stage, they will have the name `tracks`. The rest of the variables are pretty self-explanatory.
+`fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The `save_tracks` and the `tracks_names` options define the using of tracks. `save_tracks` is bool while `tracks_names` is a string or a list of strings. The latter is the name of the tracks how they are called in the .h5 files coming from the dumper, multiple tracks datasets can be preprocessed simultaneously when a list is given. After the preparation stage, they will have the name `tracks`. The rest of the variables are pretty self-explanatory.
 If you want to use the PDF sampling, have a look at the example config [PFlow-Preprocessing-taus.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-taus.yaml).
 
 For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml).
 
-For the weighting method, the last two options are important (otherwise they are not used). The `weighting_target_flavour` defines, to which distribution the weights are relatively calculated. If you want to attach these weights in the final training config, you need to set the `bool_attach_sample_weights` to `True`. For all other resampling methods, this should be `False`.
+
+| Setting | used in method | Explanation      |
+| ------ | ------ | ------ |
+| `sampling_variables`  |  `all` |  Needs exactly 2 variables. Sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins. They are defined as a list of dics of the form `[{var_name1:{ bins: <bins>}}, {var_name2:{ bins: <bins>}}]`  |
+| `samples`  | `all`  |  Samples which are to be resampled. The samples defined in here are the ones we prepared in the step above. |
+| `custom_njets_initial`  | `count`  |  Used jets per sample to ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples.  |
+| `fractions`  | `all`  |  Fractions of used samples in the final training sample.  |
+| `njets`  |   |  Number of target jets to be taken (through all categories). If set to -1: max out to target numbers (limited by fractions ratio) |
+| `save_tracks`  | `all`  |  Flag if storing tracks.  |
+| `tracks_names`  | `all`  |  Name of the tracks how they are called in the .h5 files coming from the dumper.  |
+| `intermediate_index_file`  | `all`  |  Stores the indices per sample into an intermediate file.  |
+| `weighting_target_flavour`  | `weighting`  |  Defines to which distribution the weights are relatively calculated   |
+| `bool_attach_sample_weights`  | `weighting`  | If you want to attach these weights in the final training config. For all other resampling methods, this should be `False`.  |
 
 
-### General settings 
+### General settings
 
 | Setting | Explanation      |
 | ------ | ---------------- |
@@ -453,7 +465,7 @@ The steps defined in the following segment are only performed on the training sa
 preprocessing.py --config <path to config file> --resampling
 ```
 
-If you want to also use the tracks of the jets, you need to set the option `save_tracks` in the preprocessing config to `True`. If the tracks have a different name than `"tracks"` in the .h5 files coming from the dumper, you can also set change `tracks_name` to your needs. Track information are not needed for the DL1r but for DIPS and Umami.
+If you want to also use the tracks of the jets, you need to set the option `save_tracks` in the preprocessing config to `True`. If the tracks have a different name than `"tracks"` in the .h5 files coming from the dumper, you can also set change `tracks_names` to your needs. Track information are not needed for the DL1r but for DIPS and Umami.
 
 2\. Retrieving scaling and shifting factors:
 
@@ -487,4 +499,4 @@ There are several training and validation/test samples to produce. See the follo
 ## Ntuple Preparation for bb-jets
 
 TODO: Rewrite this!
-The double b-jets will be taken from Znunu and Zmumu samples. The framework still requires some updates in order to process those during the hybrid sample creation stage. 
+The double b-jets will be taken from Znunu and Zmumu samples. The framework still requires some updates in order to process those during the hybrid sample creation stage.

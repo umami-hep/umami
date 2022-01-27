@@ -61,6 +61,9 @@ var_dict: <path_palce_holder>/umami/umami/configs/Dips_Variables.yaml
 
 exclude: null
 
+# Tracks dataset name
+tracks_name: "tracks"
+
 # Values for the neural network
 NN_structure:
     # Decide, which tagger is used

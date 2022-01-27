@@ -83,10 +83,11 @@ def DipsCondAtt(args, train_config, preprocess_config):
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
     Val_params = train_config.Eval_parameters_validation
+    tracks_key = train_config.tracks_key
 
     # Get the shapes for training
     with h5py.File(train_config.train_file, "r") as f:
-        nJets, nTrks, nFeatures = f["X_trk_train"].shape
+        nJets, nTrks, nFeatures = f[tracks_key].shape
         nJets, nDim = f["Y_train"].shape
 
         if NN_structure["nJets_train"] is not None:
@@ -131,7 +132,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
             utf.dips_condition_generator(
                 train_file_path=train_config.train_file,
                 X_Name="X_train",
-                X_trk_Name="X_trk_train",
+                X_trk_Name=tracks_key,
                 Y_Name="Y_train",
                 n_jets=nJets,
                 batch_size=NN_structure["batch_size"],

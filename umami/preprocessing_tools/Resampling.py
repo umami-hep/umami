@@ -16,6 +16,7 @@ from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
 
 from umami.configuration import global_config, logger
+from umami.data_tools import compare_h5_files_variables
 from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
 from umami.preprocessing_tools.utils import ResamplingPlots, generate_process_tag
 
@@ -26,6 +27,7 @@ def SamplingGenerator(
     label: int,
     label_classes: list,
     use_tracks: bool = False,
+    tracks_names: list = None,
     chunk_size: int = 10000,
     seed=42,
     duplicate: bool = False,
@@ -47,6 +49,7 @@ def SamplingGenerator(
     label: int, the label of the jets being read
     label_classes: list or numpy array, the combined labelling scheme
     use_tracks: bool, whether to store tracks
+    tracks_names: list, list of tracks collection names to use
     chunk_size: int, the size of each chunk
                 (last chunk might at most be twice this size)
     seed: int, random seed to use
@@ -62,6 +65,7 @@ def SamplingGenerator(
     jets, (tracks), labels arrays.
 
     """
+    tracks_names = tracks_names or ["tracks"]
     with h5py.File(file, "r") as f:
         start_ind = 0
         end_ind = int(start_ind + chunk_size)
@@ -92,28 +96,38 @@ def SamplingGenerator(
                         list_loading_indices.append([])
                     for i in range(number_occ):
                         list_loading_indices[i].append(index)
-                jet_ls, track_ls = [], []
+                jet_ls = []
+                track_ls = {elem: [] for elem in tracks_names}
                 for i, sublist_loading_indices in enumerate(list_loading_indices):
                     jet_ls.append(f["jets"][sublist_loading_indices])
                     if use_tracks:
-                        track_ls.append(f["tracks"][sublist_loading_indices])
+                        for tracks_name in tracks_names:
+                            track_ls[tracks_name].append(
+                                f[tracks_name][sublist_loading_indices]
+                            )
                 jets = np.concatenate(jet_ls)
                 if use_tracks:
-                    tracks = np.concatenate(track_ls)
+                    tracks = [
+                        np.concatenate(track_ls[tracks_name])
+                        for tracks_name in tracks_names
+                    ]
                     yield jets, tracks, labels
                 else:
                     yield jets, labels
             else:
                 # No duplicate indices, fancy indexing of H5 working.
                 if use_tracks:
-                    yield f["jets"][loading_indices], f["tracks"][
-                        loading_indices
-                    ], labels
+                    tracks = [
+                        f[tracks_name][loading_indices] for tracks_name in tracks_names
+                    ]
+                    yield f["jets"][loading_indices], tracks, labels
                 else:
                     yield f["jets"][loading_indices], labels
 
 
-def read_dataframe_repetition(file_df, loading_indices, duplicate, use_tracks):
+def read_dataframe_repetition(
+    file_df, loading_indices, duplicate, use_tracks, tracks_names="tracks"
+):
     """
     Implements a fancier reading of H5 dataframe (allowing repeated indices).
     Designed to read a h5 file with jets (and tracks if use_track is true).
@@ -128,21 +142,30 @@ def read_dataframe_repetition(file_df, loading_indices, duplicate, use_tracks):
                 list_loading_indices.append([])
             for i in range(number_occ):
                 list_loading_indices[i].append(index)
-        jet_ls, track_ls = [], []
+        jet_ls = []
+        track_ls = {elem: [] for elem in tracks_names}
         for i, sublist_loading_indices in enumerate(list_loading_indices):
             jet_ls.append(file_df["jets"][sublist_loading_indices])
             if use_tracks:
-                track_ls.append(file_df["tracks"][sublist_loading_indices])
+                for tracks_name in tracks_names:
+                    track_ls[tracks_name].append(
+                        file_df[tracks_name][sublist_loading_indices]
+                    )
+
         jets = np.concatenate(jet_ls)
         if use_tracks:
-            tracks = np.concatenate(track_ls)
+            tracks = [
+                np.concatenate(track_ls[tracks_name]) for tracks_name in tracks_names
+            ]
             return jets, tracks
         return jets
+
     # No duplicate indices, fancy indexing of H5 working.
     if use_tracks:
+        tracks = [file_df[tracks_name][loading_indices] for tracks_name in tracks_names]
         return (
             file_df["jets"][loading_indices],
-            file_df["tracks"][loading_indices],
+            tracks,
         )
     return file_df["jets"][loading_indices]
 
@@ -312,6 +335,8 @@ class Resampling:
             if "save_tracks" in self.options.keys()
             else False
         )
+        self.tracks_names = self.config.sampling["options"]["tracks_names"]
+
         self.outfile_name = self.config.GetFileName(option="resampled")
         self.outfile_path = self.config.config["parameters"]["sample_path"]
 
@@ -394,11 +419,45 @@ class Resampling:
         indices: list,
         label: int,
         label_classes: list,
+        variables: dict,
         use_tracks: bool = False,
+        tracks_names: list = None,
         chunk_size: int = 10000,
         seed: int = 42,
     ):
-        """Generator for resampling"""
+        """Generator for resampling
+
+        Parameters
+        ----------
+        file : str
+            path to h5 file
+        indices : list
+            list of indices which need to be loaded
+        label : int
+            flavour label
+        label_classes : list
+            list with all label classes used, info is necessary for the binarisation
+        variables : dict
+            variables per dataset which should be used
+        use_tracks : bool, optional
+            writing out tracks, by default False
+        tracks_names : list, optional
+            list containing the tracks collection names to write
+        chunk_size : int, optional
+            size of loaded chunks, by default 10_000
+        seed : int, optional
+            random seed, by default 42
+
+        Yields
+        -------
+        numpy.ndarray
+            jets
+        numpy.ndarray
+            tracks if `use_tracks` is True
+        numpy.ndarray
+            binarised labels
+        """
+        tracks_names = tracks_names or ["tracks"]
         with h5py.File(file, "r") as f:
             start_ind = 0
             end_ind = int(start_ind + chunk_size)
@@ -421,23 +480,32 @@ class Resampling:
                 )
 
                 if use_tracks:
-                    yield f["jets"][loading_indices], f["tracks"][
+                    tracks = [
+                        f[tracks_name].fields(variables[tracks_name])[loading_indices]
+                        for tracks_name in tracks_names
+                    ]
+                    yield f["jets"].fields(variables["jets"])[
                         loading_indices
-                    ], labels
+                    ], tracks, labels
                 else:
-                    yield f["jets"][loading_indices], labels
+                    yield f["jets"].fields(variables["jets"])[loading_indices], labels
 
     def WriteFile(self, indices: dict, chunk_size: int = 10_000):
-        """
-        Takes the indices as input calculated in the GetIndices function and
+        """Takes the indices as input calculated in the GetIndices function and
         reads them in and writes them to disk.
+        Writes the selected jets from the samples to disk
 
         Parameters
         ----------
-        indices: dict of indices as returned by the GetIndices function
-        Returns
-        -------
-        Writes the selected jets from the samples to disk
+        indices : dict
+            dict of indices as returned by the GetIndices function
+        chunk_size : int, optional
+            size of loaded chunks, by default 10_000
+
+        Raises
+        ------
+        TypeError
+            in case concatenated samples have different shape
         """
         # reading chunks of each sample in here
         # adding already here a column with labels
@@ -446,16 +514,35 @@ class Resampling:
         n_chunks = round(max_sample / chunk_size + 0.5)
         chunk_sizes = np.asarray(sample_lengths) / n_chunks
 
+        # check if all specified samples have the same variables
+        sample_paths = list(self.sample_file_map.values())
+        common_vars = {}
+        for dataset in ["jets"] + self.tracks_names if self.save_tracks else ["jets"]:
+            common_vars_i, diff_vars = compare_h5_files_variables(
+                *sample_paths, key=dataset
+            )
+            common_vars[dataset] = common_vars_i
+            logger.debug(f"Common vars in {dataset}: {common_vars_i}")
+            logger.debug(f"Diff vars in {dataset}: {diff_vars}")
+            if diff_vars:
+                logger.warning(
+                    f"The {dataset} in your specified samples don't have the same "
+                    f" variables. The following variables are different: {diff_vars}"
+                )
+                logger.warning("These variables are ignored in all further steps.")
+
         generators = [
             self.ResamplingGenerator(
-                self.sample_file_map[sample],
-                indices[sample],
+                file=self.sample_file_map[sample],
+                indices=indices[sample],
                 chunk_size=chunk_sizes[i],
                 label=self.class_labels_map[
                     self.preparation_samples[sample]["category"]
                 ],
                 label_classes=list(range(len(self.class_labels_map))),
+                variables=common_vars,
                 use_tracks=self.save_tracks,
+                tracks_names=self.tracks_names,
                 seed=self.rnd_seed + i,
             )
             for i, sample in enumerate(indices)
@@ -465,16 +552,27 @@ class Resampling:
         logger.info(f"Writing to file {self.outfile_name}")
         pbar = tqdm(total=np.sum(sample_lengths))
         while chunk_counter < n_chunks + 1:
-            for i, sample in enumerate(indices):
+            for i, _ in enumerate(indices):
                 try:
                     if self.save_tracks:
                         if i == 0:
                             jets, tracks, labels = next(generators[i])
                         else:
-                            jets_i, tracks_i, labels_i = next(generators[i])
-                            labels = np.concatenate([labels, labels_i])
-                            jets = np.concatenate([jets, jets_i])
-                            tracks = np.concatenate([tracks, tracks_i])
+                            try:
+                                jets_i, tracks_i, labels_i = next(generators[i])
+                                labels = np.concatenate([labels, labels_i])
+                                jets = np.concatenate([jets, jets_i])
+                                tracks = np.concatenate([tracks, tracks_i], axis=1)
+                            except TypeError as invalid_type:
+                                if str(invalid_type) == "invalid type promotion":
+                                    raise TypeError(
+                                        "It seems that the samples you are "
+                                        "using are not compatible with each other. "
+                                        "Check that they contain all the same "
+                                        "variables."
+                                    ) from invalid_type
+                                raise TypeError(str(invalid_type)) from invalid_type
+
                     else:
                         if i == 0:
                             jets, labels = next(generators[i])
@@ -499,7 +597,7 @@ class Resampling:
             jets = jets[rng_index]
             labels = labels[rng_index]
             if self.save_tracks:
-                tracks = tracks[rng_index]
+                tracks = [trk[rng_index] for trk in tracks]
 
             if create_file:
                 create_file = False
@@ -521,13 +619,14 @@ class Resampling:
                         maxshape=(None, labels.shape[1]),
                     )
                     if self.save_tracks:
-                        out_file.create_dataset(
-                            "tracks",
-                            data=tracks,
-                            compression="gzip",
-                            chunks=True,
-                            maxshape=(None, tracks.shape[1]),
-                        )
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            out_file.create_dataset(
+                                tracks_name,
+                                data=tracks[i],
+                                compression="gzip",
+                                chunks=True,
+                                maxshape=(None, tracks[i].shape[1]),
+                            )
             else:
                 # appending to existing dataset
                 with h5py.File(self.outfile_name, "a") as out_file:
@@ -542,11 +641,12 @@ class Resampling:
                     )
                     out_file["labels"][-labels.shape[0] :] = labels
                     if self.save_tracks:
-                        out_file["tracks"].resize(
-                            (out_file["tracks"].shape[0] + tracks.shape[0]),
-                            axis=0,
-                        )
-                        out_file["tracks"][-tracks.shape[0] :] = tracks
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            out_file[tracks_name].resize(
+                                (out_file[tracks_name].shape[0] + tracks[i].shape[0]),
+                                axis=0,
+                            )
+                            out_file[tracks_name][-tracks[i].shape[0] :] = tracks[i]
             chunk_counter += 1
         pbar.close()
 
@@ -603,8 +703,12 @@ class ResamplingTools(Resampling):
                         nJets_initial = int(
                             self.options["custom_njets_initial"][sample]
                         )
-                    jets_x = np.asarray(f["jets"][self.var_x])[:nJets_initial]
-                    jets_y = np.asarray(f["jets"][self.var_y])[:nJets_initial]
+                        logger.debug(
+                            f"Using custom_njets_initial for {sample} of "
+                            f"{nJets_initial} from config"
+                        )
+                    jets_x = np.asarray(f["jets"].fields(self.var_x)[:nJets_initial])
+                    jets_y = np.asarray(f["jets"].fields(self.var_y)[:nJets_initial])
                 logger.info(
                     f"Loaded {len(jets_x)}"
                     f" {preparation_sample.get('category')} jets from"
@@ -1477,6 +1581,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
             label=self.class_labels_map[preparation_sample["category"]],
             label_classes=list(range(len(self.class_labels_map))),
             use_tracks=self.save_tracks,
+            tracks_names=self.tracks_names,
             seed=42,
             duplicate=True,
         )
@@ -1513,7 +1618,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
             jets = jets[rng_index]
             labels = labels[rng_index]
             if self.save_tracks:
-                tracks = tracks[rng_index]
+                tracks = [trk[rng_index] for trk in tracks]
 
             if create_file:
                 create_file = False
@@ -1534,13 +1639,14 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         maxshape=(None, labels.shape[1]),
                     )
                     if self.save_tracks:
-                        out_file.create_dataset(
-                            "tracks",
-                            data=tracks,
-                            compression="gzip",
-                            chunks=True,
-                            maxshape=(None, tracks.shape[1]),
-                        )
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            out_file.create_dataset(
+                                tracks_name,
+                                data=tracks[i],
+                                compression="gzip",
+                                chunks=True,
+                                maxshape=(None, tracks[i].shape[1]),
+                            )
             else:
                 # appending to existing dataset
                 with h5py.File(save_name, "a") as out_file:
@@ -1555,11 +1661,12 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                     )
                     out_file["labels"][-labels.shape[0] :] = labels
                     if self.save_tracks:
-                        out_file["tracks"].resize(
-                            (out_file["tracks"].shape[0] + tracks.shape[0]),
-                            axis=0,
-                        )
-                        out_file["tracks"][-tracks.shape[0] :] = tracks
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            out_file[tracks_name].resize(
+                                (out_file[tracks_name].shape[0] + tracks[i].shape[0]),
+                                axis=0,
+                            )
+                            out_file[tracks_name][-tracks[i].shape[0] :] = tracks[i]
             chunk_counter += 1
         pbar.close()
 
@@ -1621,6 +1728,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         loading_indices=indices,
                         duplicate=duplicate,
                         use_tracks=use_tracks,
+                        tracks_names=self.tracks_names,
                     )
                 else:
                     jets = read_dataframe_repetition(
@@ -1642,7 +1750,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
             jets = jets[rng_index]
             labels = labels[rng_index]
             if self.save_tracks:
-                tracks = tracks[rng_index]
+                tracks = [trk[rng_index] for trk in tracks]
 
             if create_file:
                 create_file = False
@@ -1663,13 +1771,14 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         maxshape=(None, labels.shape[1]),
                     )
                     if self.save_tracks:
-                        out_file.create_dataset(
-                            "tracks",
-                            data=tracks,
-                            compression="gzip",
-                            chunks=True,
-                            maxshape=(None, tracks.shape[1]),
-                        )
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            out_file.create_dataset(
+                                tracks_name,
+                                data=tracks[i],
+                                compression="gzip",
+                                chunks=True,
+                                maxshape=(None, tracks[i].shape[1]),
+                            )
             else:
                 # appending to existing dataset
                 with h5py.File(save_name, "a") as out_file:
@@ -1684,11 +1793,12 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                     )
                     out_file["labels"][-labels.shape[0] :] = labels
                     if self.save_tracks:
-                        out_file["tracks"].resize(
-                            (out_file["tracks"].shape[0] + tracks.shape[0]),
-                            axis=0,
-                        )
-                        out_file["tracks"][-tracks.shape[0] :] = tracks
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            out_file[tracks_name].resize(
+                                (out_file[tracks_name].shape[0] + tracks[i].shape[0]),
+                                axis=0,
+                            )
+                            out_file[tracks_name][-tracks[i].shape[0] :] = tracks[i]
         pbar.close()
 
     def Generate_Target_PDF(self, iterator=True):
@@ -2091,7 +2201,10 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         jets = f["jets"][start_ind:end_ind]
                         labels = f["labels"][start_ind:end_ind]
                         if self.save_tracks:
-                            tracks = f["tracks"][start_ind:end_ind]
+                            tracks = [
+                                f[tracks_name][start_ind:end_ind]
+                                for tracks_name in self.tracks_names
+                            ]
                         start_ind = end_ind
 
                         pbar.update(jets.size)
@@ -2117,13 +2230,17 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                                     maxshape=(None, labels.shape[1]),
                                 )
                                 if self.save_tracks:
-                                    out_file.create_dataset(
-                                        "tracks",
-                                        data=tracks,
-                                        compression="gzip",
-                                        chunks=True,
-                                        maxshape=(None, tracks.shape[1]),
-                                    )
+                                    for i, tracks_name in enumerate(self.tracks_names):
+                                        out_file.create_dataset(
+                                            tracks_name,
+                                            data=tracks[i],
+                                            compression="gzip",
+                                            chunks=True,
+                                            maxshape=(
+                                                None,
+                                                tracks[i].shape[1],
+                                            ),
+                                        )
                         else:
                             with h5py.File(output_name, "a") as out_file:
                                 out_file["jets"].resize(
@@ -2137,19 +2254,39 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                                 )
                                 out_file["labels"][-labels.shape[0] :] = labels
                                 if self.save_tracks:
-                                    out_file["tracks"].resize(
-                                        (out_file["tracks"].shape[0] + tracks.shape[0]),
-                                        axis=0,
-                                    )
-                                    out_file["tracks"][-tracks.shape[0] :] = tracks
+                                    for i, tracks_name in enumerate(self.tracks_names):
+                                        out_file[tracks_name].resize(
+                                            (
+                                                out_file[tracks_name].shape[0]
+                                                + tracks[i].shape[0]
+                                            ),
+                                            axis=0,
+                                        )
+                                        out_file[tracks_name][
+                                            -tracks[i].shape[0] :
+                                        ] = tracks[i]
                         chunk_number += 1
                     pbar.close()
 
-    def Make_plots(self, binning=None, chunk_size=1e4, iterator=True):
-        """
-        Produce plots of the variables used in resampling
+    def Make_plots(
+        self,
+        binning: list = None,
+        chunk_size: int = 1e4,
+        iterator: bool = True,
+    ):
+        """Produce plots of the variables used in resampling
         (before and after preprocessing).
+
+        Parameters
+        ----------
+        binning : list, optional
+            List of the binnings to use, by default None
+        chunk_size : int, optional
+            Loading chunk size, by default 1e4
+        iterator : bool, optional
+            Use iterator, by default True
         """
+
         if binning is None:
             binning = [200, 20]
 
@@ -2191,14 +2328,20 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         histo_before_dict[flavour_name], reading_dict["hist"]
                     )
         logger.info("Plotting.")
+
+        # Check if the directory for the plots exists
+        plot_dir_path = os.path.join(
+            self.config.config["parameters"]["sample_path"],
+            "plots/",
+        )
+        os.makedirs(plot_dir_path, exist_ok=True)
+
         plot_name_clean = self.config.GetFileName(
             extension="",
-            option="pt_eta-before_sampling",
-            custom_path=os.path.join(
-                os.path.abspath("."),
-                "plots/",
-            ),
+            option="pt_eta-before_sampling_",
+            custom_path=plot_dir_path,
         )
+
         ResamplingPlots(
             concat_samples=histo_before_dict,
             positions_x_y=[0, 1],
@@ -2269,12 +2412,10 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         logger.info("Plotting.")
         plot_name_clean = self.config.GetFileName(
             extension="",
-            option="pt_eta-after_sampling",
-            custom_path=os.path.join(
-                os.path.abspath("."),
-                "plots/",
-            ),
+            option="pt_eta-after_sampling_",
+            custom_path=plot_dir_path,
         )
+
         ResamplingPlots(
             concat_samples=histo_after_dict,
             positions_x_y=[0, 1],
@@ -2413,10 +2554,18 @@ class Weighting(ResamplingTools):
 
     def Plotting(self):
         """Plot weighting results."""
+
+        # Check if the directory for the plots exists
+        plot_dir_path = os.path.join(
+            self.config.config["parameters"]["sample_path"],
+            "plots/",
+        )
+        os.makedirs(plot_dir_path, exist_ok=True)
+
         plot_name_raw = self.config.GetFileName(
             extension="",
             option="pt_eta_raw_",
-            custom_path="plots/",
+            custom_path=plot_dir_path,
         )
         ResamplingPlots(
             concat_samples=self.concat_samples,
@@ -2659,13 +2808,18 @@ class UnderSampling(ResamplingTools):
         self.GetIndices()
 
         logger.info("Plotting distributions before undersampling.")
+
+        # Check if the directory for the plots exists
+        plot_dir_path = os.path.join(
+            self.config.config["parameters"]["sample_path"],
+            "plots/",
+        )
+        os.makedirs(plot_dir_path, exist_ok=True)
+
         plot_name_clean = self.config.GetFileName(
             extension="",
-            option="pt_eta-wider_bin",
-            custom_path=os.path.join(
-                os.path.abspath("."),
-                "plots/",
-            ),
+            option="pt_eta-wider_bin_",
+            custom_path=plot_dir_path,
         )
         ResamplingPlots(
             concat_samples=self.concat_samples,
@@ -2681,11 +2835,8 @@ class UnderSampling(ResamplingTools):
         logger.info("Plotting distributions after undersampling.")
         plot_name_clean = self.config.GetFileName(
             extension="",
-            option="downsampled-pt_eta-wider_bins",
-            custom_path=os.path.join(
-                os.path.abspath("."),
-                "plots/",
-            ),
+            option="downsampled-pt_eta-wider_bins_",
+            custom_path=plot_dir_path,
         )
         ResamplingPlots(
             concat_samples=self.x_y_after_sampling,

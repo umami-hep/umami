@@ -17,8 +17,8 @@ class Load_Files_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/"
-                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/preprocessing/"
+                "ci_ttbar_testing.h5",
                 "--directory-prefix",
                 self.tmp_test_dir,
             ]
@@ -28,7 +28,7 @@ class Load_Files_TestCase(unittest.TestCase):
         jets, labels = LoadJetsFromFile(
             filepath=os.path.join(
                 self.tmp_test_dir,
-                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
             nJets=self.nJets,
@@ -50,7 +50,7 @@ class Load_Files_TestCase(unittest.TestCase):
             jets, labels = LoadJetsFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
-                    "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                    "ci_ttbar_testing.h5",
                 ),
                 class_labels=self.class_labels,
                 nJets=self.nJets,
@@ -70,7 +70,7 @@ class Load_Files_TestCase(unittest.TestCase):
             jets, labels = LoadJetsFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
-                    "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                    "ci_ttbar_testing.h5",
                 ),
                 class_labels=self.class_labels,
                 nJets=self.nJets,
@@ -87,7 +87,7 @@ class Load_Files_TestCase(unittest.TestCase):
         jets, labels = LoadJetsFromFile(
             filepath=os.path.join(
                 self.tmp_test_dir,
-                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
             nJets=self.nJets,
@@ -99,7 +99,7 @@ class Load_Files_TestCase(unittest.TestCase):
         jets, labels = LoadJetsFromFile(
             filepath=os.path.join(
                 self.tmp_test_dir,
-                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
             nJets=self.nJets,
@@ -139,7 +139,7 @@ class Load_Files_TestCase(unittest.TestCase):
         trks, labels = LoadTrksFromFile(
             filepath=os.path.join(
                 self.tmp_test_dir,
-                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
             nJets=self.nJets,
@@ -161,7 +161,7 @@ class Load_Files_TestCase(unittest.TestCase):
             trks, labels = LoadTrksFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
-                    "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                    "ci_ttbar_testing.h5",
                 ),
                 class_labels=self.class_labels,
                 nJets=self.nJets,
@@ -181,7 +181,7 @@ class Load_Files_TestCase(unittest.TestCase):
             trks, labels = LoadTrksFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
-                    "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                    "ci_ttbar_testing.h5",
                 ),
                 class_labels=self.class_labels,
                 nJets=self.nJets,
@@ -198,7 +198,7 @@ class Load_Files_TestCase(unittest.TestCase):
         trks, labels = LoadTrksFromFile(
             filepath=os.path.join(
                 self.tmp_test_dir,
-                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
             nJets=self.nJets,

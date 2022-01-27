@@ -3,10 +3,8 @@
 import argparse
 import json
 
-import yaml
-
 from umami.configuration import logger
-from umami.tools import yaml_loader
+from umami.preprocessing_tools import GetVariableDict
 
 
 def GetParser():
@@ -52,16 +50,24 @@ def GetParser():
         default="tracks_ip3d_sd0sort",
         help="Track selection name.",
     )
+    parser.add_argument(
+        "--tracks_name",
+        type=str,
+        default="tracks",
+        help="Tracks dataset name in .h5 training/testing files.",
+    )
 
     return parser.parse_args()
 
 
-def GetTrackVariables(scale_dict, variable_config):
-    noNormVars = variable_config["track_train_variables"]["noNormVars"]
-    logNormVars = variable_config["track_train_variables"]["logNormVars"]
-    jointNormVars = variable_config["track_train_variables"]["jointNormVars"]
+def GetTrackVariables(scale_dict, variable_config, tracks_name):
+    noNormVars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
+    logNormVars = variable_config["track_train_variables"][tracks_name]["logNormVars"]
+    jointNormVars = variable_config["track_train_variables"][tracks_name][
+        "jointNormVars"
+    ]
 
-    track_dict = scale_dict["tracks"]
+    track_dict = scale_dict[tracks_name]
     track_variables = []
     for elem in noNormVars:
         v_dict = {}
@@ -76,6 +82,8 @@ def GetTrackVariables(scale_dict, variable_config):
             v_dict["name"] = "log_ptfrac"
         elif elem == "dr":
             v_dict["name"] = "log_dr_nansafe"
+        elif elem == "z0RelativeToBeamspotUncertainty":
+            v_dict["name"] = "log_z0RelativeToBeamspotUncertainty"
         else:
             raise ValueError(f"{elem} not known in logNormVars. Please check.")
         v_dict["offset"] = -1.0 * track_dict[elem]["shift"]
@@ -122,15 +130,16 @@ def GetJetVariables(scale_dict, variable_config):
 def __run():
     """main part of script generating json file"""
     args = GetParser()
-    with open(args.var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(args.var_dict)
 
     if "dips" in args.tagger.lower():
         logger.info("Starting processing DIPS variables.")
         with open(args.scale_dict, "r") as f:
             scale_dict = json.load(f)
 
-        track_variables = GetTrackVariables(scale_dict, variable_config)
+        track_variables = GetTrackVariables(
+            scale_dict, variable_config, args.tracks_name
+        )
 
         logger.info("Found %i variables" % len(track_variables))
         inputs = {}
@@ -174,9 +183,7 @@ def __run():
             logger.info("Detected tau output in tagger.")
             labels_tau = ["pu", "pc", "pb", "ptau"]
             logger.info(f"Using labels {labels_tau}")
-            lwtnn_var_dict["outputs"] = [
-                {"labels": labels_tau, "name": args.tagger}
-            ]
+            lwtnn_var_dict["outputs"] = [{"labels": labels_tau, "name": args.tagger}]
         else:
             lwtnn_var_dict["outputs"] = [
                 {"labels": ["pu", "pc", "pb"], "name": args.tagger}

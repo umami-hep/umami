@@ -43,6 +43,7 @@ class Configuration:
             "validation_files",
             "var_dict",
             "NN_structure",
+            "tracks_name",
             "Eval_parameters_validation",
             "Validation_metrics_settings",
             "test_files",
@@ -52,6 +53,7 @@ class Configuration:
             "test_files",
             "evaluate_trained_model",
             "NN_structure",
+            "tracks_name",
             "Eval_parameters_validation",
             "Validation_metrics_settings",
         ]
@@ -87,7 +89,18 @@ class Configuration:
 
         for item in iterate_list:
             if item in self.config:
-                setattr(self, item, self.config[item])
+                if item == "tracks_name":
+                    setattr(self, item, self.config[item])
+                    setattr(self, "tracks_key", f"X_{self.config[item]}_train")
+                else:
+                    setattr(self, item, self.config[item])
+            elif item == "tracks_name":
+                if "dl1" not in self.NN_structure["tagger"]:
+                    setattr(self, item, "tracks")
+                    setattr(self, "tracks_key", "X_trk_train")
+                    logger.warning(
+                        'Using old version of tracks keys nomenclautre ("X_trk_train")'
+                    )
             else:
                 raise KeyError(f"You need to specify {item} in your config file!")
 
