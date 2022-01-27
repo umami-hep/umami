@@ -58,7 +58,7 @@ Splitting the model into architecture `arch_file` and weight file `hdf5_file` ca
 This script will return two files which are in this case `architecture-lwtnn_model.json` and `weights-lwtnn_model.h5`
 
 ### Final JSON File
-Finally, the three produced files can be merged via [kerasfunc2json.py](https://github.com/lwtnn/lwtnn/blob/master/converters/kerasfunc2json.py) 
+Finally, the three produced files can be merged via [kerasfunc2json.py](https://github.com/lwtnn/lwtnn/blob/master/converters/kerasfunc2json.py)
 
 ```
 python kerasfunc2json.py architecture-lwtnn_model.json weights-lwtnn_model.h5 lwtnn_vars.json > FINAL-model.json
@@ -270,7 +270,7 @@ ADDPATH=MyDipsTraining-diff
 TAGGER=MyDipsTraining
 # Path to the prepared ntuple
 HDFFILE=ftag-output.h5
-# Then only one of the two following options needs to be give: 
+# Then only one of the two following options needs to be give:
 # - 1 Path to the config file used for the training
 CONFIG=examples/Dips-PFlow-Training-config.yaml
 # - 2 Path to the scale dictionary
@@ -281,7 +281,7 @@ SCALEDICT=MyDipsTraining_scale_dict.json
 python scripts/check_lwtnn-model.py -i ${HDFFILE} -v ${VARIABLESDICT} -t ${TAGGER} -m ${MODEL} -c ${CONFIG} -o ${ADDPATH}
 # or
 python scripts/check_lwtnn-model.py -i ${HDFFILE} -v ${VARIABLESDICT} -t ${TAGGER} -m ${MODEL} -s ${SCALEDICT} -o ${ADDPATH}
-``` 
+```
 
 The output should look like, for example, to something like this:
 ```
