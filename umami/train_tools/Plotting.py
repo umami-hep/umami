@@ -202,6 +202,8 @@ def PlotDiscCutPerEpoch(
         Number of columns in the legend, by default 1
     plot_datatype : str, optional
         Datatype of the plot, by default "pdf"
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
@@ -293,6 +295,8 @@ def PlotDiscCutPerEpochUmami(
         Number of columns in the legend, by default 1
     plot_datatype : str, optional
         Datatype of the plot, by default "pdf"
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
@@ -420,6 +424,8 @@ def PlotRejPerEpochComparison(
         Datatype of the plot., by default "pdf"
     legFontSize : int, optional
         Fontsize of the legend., by default 10
+    **kwargs
+        Arbitrary keyword arguments.
     """
     if figsize is None:
         figsize = [8, 6]
@@ -675,6 +681,8 @@ def PlotRejPerEpoch(
         Datatype of the plot., by default "pdf"
     legFontSize : int, optional
         Fontsize of the legend., by default 10
+    **kwargs
+        Arbitrary keyword arguments.
     """
     if figsize is None:
         figsize = [8, 6]
@@ -844,6 +852,8 @@ def PlotLosses(
         Manually set ymin. Overwrites yAxisIncrease, by default None
     ymax : float, optional
         Manually set ymax. Overwrites yAxisIncrease, by default None
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
@@ -944,6 +954,8 @@ def PlotAccuracies(
         Manually set ymin. Overwrites yAxisIncrease, by default None
     ymax : float, optional
         Manually set ymax. Overwrites yAxisIncrease, by default None
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
@@ -1044,6 +1056,8 @@ def PlotLossesUmami(
         Manually set ymin. Overwrites yAxisIncrease, by default None
     ymax : float, optional
         Manually set ymax. Overwrites yAxisIncrease, by default None
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
@@ -1159,6 +1173,8 @@ def PlotAccuraciesUmami(
         Manually set ymin. Overwrites yAxisIncrease, by default None
     ymax : float, optional
         Manually set ymax. Overwrites yAxisIncrease, by default None
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
@@ -1311,7 +1327,6 @@ def RunPerformanceCheck(
                         main_class=main_class,
                     )
                 )
-        # logger.warning(comp_tagger_rej_dict)
 
     else:
         # Define the dicts as None if compare tagger is False

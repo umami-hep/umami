@@ -1284,6 +1284,7 @@ def evaluate_model_umami(
         )
 
         # Write metrics to results dict
+        # TODO Change this in python 3.9
         result_dict.update(
             {
                 f"val_loss_{val_file_identifier}": loss,

@@ -144,7 +144,7 @@ def prepareConfig(
                 "ttbar_r21": {
                     "path": f"{test_file_ttbar}",
                     "variable_cuts": [
-                        {"pt_btagJes": {"operator": "<=", "condition": 250000}}
+                        {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
                     ],
                 },
                 "zpext_r21": {
@@ -157,7 +157,7 @@ def prepareConfig(
     config_file["NN_structure"]["batch_size"] = 50
     config_file["NN_structure"]["epochs"] = 2
     config_file["NN_structure"]["nJets_train"] = 100
-    config_file["Eval_parameters_validation"]["n_jets"] = 4000
+    config_file["Eval_parameters_validation"]["n_jets"] = 4_000
     config_file["Eval_parameters_validation"]["eff_min"] = 0.60
     # Add some validation files for testing
     config_file.update(
@@ -167,14 +167,14 @@ def prepareConfig(
                     "path": f"{test_dir}/ci_ttbar_testing.h5",
                     "label": "$t\\bar{t}$ Release 21",
                     "variable_cuts": [
-                        {"pt_btagJes": {"operator": "<=", "condition": 250000}}
+                        {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
                     ],
                 },
                 "zprime_r21_val": {
                     "path": f"{test_dir}/ci_zpext_testing.h5",
                     "label": "$Z'$ Release 21",
                     "variable_cuts": [
-                        {"pt_btagJes": {"operator": ">", "condition": 250000}}
+                        {"pt_btagJes": {"operator": ">", "condition": 250_000}}
                     ],
                 },
             }
