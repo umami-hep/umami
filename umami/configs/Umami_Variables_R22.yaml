@@ -21,12 +21,10 @@ train_variables:
     - JetFitterSecondaryVertex_energyFraction
     - JetFitterSecondaryVertex_displacement3d
     - JetFitterSecondaryVertex_displacement2d
-    - JetFitterSecondaryVertex_maximumTrackRelativeEta
-    - JetFitterSecondaryVertex_minimumTrackRelativeEta
-    - JetFitterSecondaryVertex_averageTrackRelativeEta
-    - maximumTrackRelativeEta
-    - minimumTrackRelativeEta
-    - averageTrackRelativeEta
+    - JetFitterSecondaryVertex_maximumAllJetTrackRelativeEta  # Modified name in R22. Was: maximumTrackRelativeEta
+    - JetFitterSecondaryVertex_minimumAllJetTrackRelativeEta  # Modified name in R22. Was: minimumTrackRelativeEta
+    - JetFitterSecondaryVertex_averageAllJetTrackRelativeEta  # Modified name in R22. Was: averageTrackRelativeEta
+
   SV1:
     - SV1_isDefaults
     - SV1_NGTinSvx
@@ -66,7 +64,6 @@ custom_defaults_vars:
   JetFitterSecondaryVertex_nTracks: 0
   JetFitterSecondaryVertex_energyFraction: 0
 
-# Standard tracks training variables
 .tracks_variables: &tracks_variables
   noNormVars:
     - IP3D_signed_d0_significance
@@ -86,6 +83,7 @@ custom_defaults_vars:
     - numberOfSCTHits
     - btagIp_d0
     - btagIp_z0SinTheta
+
 
 track_train_variables:
   tracks:

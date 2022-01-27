@@ -9,7 +9,6 @@ from shutil import copyfile
 
 import numpy as np
 import tensorflow as tf
-import yaml
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import CustomObjectScope
@@ -21,9 +20,10 @@ from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import (
     Gen_default_dict,
     GetBinaryLabels,
+    GetVariableDict,
     apply_scaling_trks,
 )
-from umami.tools import natural_keys, replaceLineInFile, yaml_loader
+from umami.tools import natural_keys, replaceLineInFile
 
 
 def get_unique_identifiers(keys: list, prefix: str) -> list:
@@ -695,8 +695,7 @@ def GetTestSample(
         )
 
     # Load variables
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(var_dict)
 
     # Load scale dict
     with open(preprocess_config.dict_file, "r") as infile:
@@ -771,6 +770,7 @@ def GetTestSampleTrks(
     var_dict: str,
     preprocess_config: object,
     class_labels: list,
+    tracks_name: str,
     nJets: int = int(3e5),
     cut_vars_dict: dict = None,
     print_logger: bool = False,
@@ -789,6 +789,8 @@ def GetTestSampleTrks(
         Loaded preprocessing config that was used.
     class_labels : list
         List of classes used for training of the model.
+    tracks_name : str
+        Name of tracks collection to use.
     nJets : int
         Number of jets that should be loaded.
     cut_vars_dict : dict
@@ -844,17 +846,17 @@ def GetTestSampleTrks(
         )
 
     # Load variables
-    with open(var_dict, "r") as conf:
-        variable_config = yaml.load(conf, Loader=yaml_loader)
+    variable_config = GetVariableDict(var_dict)
 
     # Load scale dict for the tracks
     with open(preprocess_config.dict_file, "r") as infile:
-        scale_dict = json.load(infile)["tracks"]
+        scale_dict = json.load(infile)[f"{tracks_name}"]
 
     trks, labels = LoadTrksFromFile(
         filepath=filepaths,
         class_labels=class_labels,
         nJets=nJets,
+        tracks_name=tracks_name,
         cut_vars_dict=cut_vars_dict,
         print_logger=print_logger,
     )
@@ -867,6 +869,7 @@ def GetTestSampleTrks(
         trks=trks,
         variable_config=variable_config,
         scale_dict=scale_dict,
+        tracks_name=tracks_name,
     )
 
     return trks, binary_labels
@@ -910,6 +913,10 @@ def load_validation_data_umami(
     val_data_dict = {}
     val_files = train_config.validation_files
 
+    # Set the tracks collection name
+    tracks_name = train_config.tracks_name
+    logger.debug(f"Using tracks_name value '{tracks_name}' for validation")
+
     for val_file_identifier, val_file_config in val_files.items():
         logger.info(f"Loading validation file {val_file_identifier}")
         # Get the cut vars dict if defined
@@ -929,6 +936,7 @@ def load_validation_data_umami(
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
+            tracks_name=tracks_name,
             nJets=nJets,
             exclude=exclude,
             jet_variables=jets_var_list,
@@ -1065,6 +1073,10 @@ def load_validation_data_dips(
     val_data_dict = {}
     val_files = train_config.validation_files
 
+    # Set the tracks collection name
+    tracks_name = train_config.tracks_name
+    logger.debug(f"Using tracks_name value '{tracks_name}' for validation")
+
     # loop over validation files and load X_valid, Y_valid for each file
     for val_file_identifier, val_file_config in val_files.items():
         logger.info(f"Loading validation file {val_file_identifier}")
@@ -1080,6 +1092,7 @@ def load_validation_data_dips(
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
+            tracks_name=tracks_name,
             nJets=nJets,
             cut_vars_dict=cut_vars_dict,
         )
@@ -1106,6 +1119,7 @@ def GetTestFile(
     var_dict: str,
     preprocess_config: object,
     class_labels: list,
+    tracks_name: str,
     nJets: int,
     exclude: list = None,
     cut_vars_dict: dict = None,
@@ -1126,6 +1140,8 @@ def GetTestFile(
         Loaded preprocessing config that was used.
     class_labels : list
         List of classes used for training of the model.
+    tracks_name : str
+        Name of the tracks collection to use.
     nJets : int
         Number of jets that should be loaded.
     exclude : list
@@ -1152,6 +1168,7 @@ def GetTestFile(
         var_dict=var_dict,
         preprocess_config=preprocess_config,
         class_labels=class_labels,
+        tracks_name=tracks_name,
         nJets=int(nJets),
         cut_vars_dict=cut_vars_dict,
         print_logger=False,

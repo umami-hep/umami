@@ -10,9 +10,11 @@ class apply_scaling_trks_TestCase(unittest.TestCase):
     def setUp(self):
         self.var_config = {
             "track_train_variables": {
-                "noNormVars": ["IP3D_signed_d0_significance"],
-                "logNormVars": ["ptfrac"],
-                "jointNormVars": ["numberOfPixelHits"],
+                "tracks": {
+                    "noNormVars": ["IP3D_signed_d0_significance"],
+                    "logNormVars": ["ptfrac"],
+                    "jointNormVars": ["numberOfPixelHits"],
+                }
             }
         }
         self.scale_dict = {
@@ -34,6 +36,7 @@ class apply_scaling_trks_TestCase(unittest.TestCase):
             trks=self.trks,
             variable_config=self.var_config,
             scale_dict=self.scale_dict,
+            tracks_name="tracks",
         )
 
         np.testing.assert_array_almost_equal(scaled_trks, self.control_trks)

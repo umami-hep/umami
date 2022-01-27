@@ -20,7 +20,6 @@ class h5toTFRecordConverter:
             if not isinstance(self.chunk_size, int):
                 raise KeyError
             logger.info(f"Save {self.chunk_size} entries in one file")
-
         except (AttributeError, KeyError) as chunk_size_no_int:
             try:
                 self.chunk_size = config.preparation["convert"]["chunk_size"]
@@ -34,6 +33,9 @@ class h5toTFRecordConverter:
                     "file. Set to 5000"
                 )
                 self.chunk_size = 5_000
+        # TODO: adding possibility to use more than first element of 'tracks_names'
+        # only first element of the tracks_names list get converted only
+        self.tracks_name = config.sampling["options"]["tracks_names"][0]
 
     def load_h5File_Train(self):
         """
@@ -66,7 +68,7 @@ class h5toTFRecordConverter:
                 start = i * self.chunk_size
                 end = (i + 1) * self.chunk_size
                 X_jets = hFile["X_train"][start:end]
-                X_trks = hFile["X_trk_train"][start:end]
+                X_trks = hFile[f"X_{self.tracks_name}_train"][start:end]
                 Y = hFile["Y_train"][start:end]
                 Weights = hFile["weight"][start:end]
                 yield X_jets, X_trks, Y, Weights
@@ -83,8 +85,8 @@ class h5toTFRecordConverter:
         with h5py.File(self.path_h5) as h5file:
             nJets = len(h5file["X_train"])
             njet_feature = len(h5file["X_train"][0])
-            nTrks = len(h5file["X_trk_train"][0])
-            nFeatures = len(h5file["X_trk_train"][0][0])
+            nTrks = len(h5file[f"X_{self.tracks_name}_train"][0])
+            nFeatures = len(h5file[f"X_{self.tracks_name}_train"][0][0])
             nDim = len(h5file["Y_train"][0])
             data = {
                 "nJets": nJets,

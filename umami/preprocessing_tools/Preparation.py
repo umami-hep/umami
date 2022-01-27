@@ -70,16 +70,7 @@ class PrepareSamples:
 
         # Check if tracks are used
         self.save_tracks = self.config.sampling["options"]["save_tracks"]
-
-        # Check for tracks name. If not there, use default
-        if (
-            "tracks_name" in self.config.sampling["options"]
-            and self.config.sampling["options"]["tracks_name"] is not None
-        ):
-            self.tracks_name = self.config.sampling["options"]["tracks_name"]
-
-        else:
-            self.tracks_name = "tracks"
+        self.tracks_names = self.config.sampling["options"]["tracks_names"]
 
         output_path = sample.get("f_output")["path"]
         self.output_file = os.path.join(output_path, sample.get("f_output")["file"])
@@ -141,9 +132,13 @@ class PrepareSamples:
                     indices_to_remove = GetSampleCuts(jets, self.cuts)
                     jets = np.delete(jets, indices_to_remove)
                     # if tracks should be saved, also load them in batches
+                    # TODO: update when changing to python 3.9
                     if self.save_tracks:
-                        tracks = data_set[self.tracks_name][batch[0] : batch[1]]
-                        tracks = np.delete(tracks, indices_to_remove, axis=0)
+                        tracks = {}
+                        for tracks_name in self.tracks_names:
+                            trk = data_set[tracks_name][batch[0] : batch[1]]
+                            trk = np.delete(trk, indices_to_remove, axis=0)
+                            tracks.update({tracks_name: trk})
                     else:
                         tracks = None
                     yield (jets, tracks)
@@ -168,11 +163,19 @@ class PrepareSamples:
 
             if self.shuffle_array:
                 pbar.write("Shuffling array")
+
+                # Init a index list
+                rng_index = np.arange(len(jets))
+
+                # Shuffle the index list
                 rng = np.random.default_rng(seed=self.rnd_seed)
-                rng.shuffle(jets)
+                rng.shuffle(rng_index)
+
+                # Shuffle jets (and tracks)
+                jets = jets[rng_index]
                 if self.save_tracks:
-                    rng = np.random.default_rng(seed=self.rnd_seed)
-                    rng.shuffle(tracks)
+                    for tracks_name in self.tracks_names:
+                        tracks[tracks_name] = tracks[tracks_name][rng_index]
 
             if self.create_file:
                 self.create_file = False  # pylint: disable=W0201:
@@ -187,13 +190,14 @@ class PrepareSamples:
                         maxshape=(None,),
                     )
                     if self.save_tracks:
-                        out_file.create_dataset(
-                            "tracks",
-                            data=tracks,
-                            compression="gzip",
-                            chunks=True,
-                            maxshape=(None, tracks.shape[1]),
-                        )
+                        for tracks_name in self.tracks_names:
+                            out_file.create_dataset(
+                                tracks_name,
+                                data=tracks[tracks_name],
+                                compression="gzip",
+                                chunks=True,
+                                maxshape=(None, tracks[tracks_name].shape[1]),
+                            )
             else:
                 # appending to existing dataset
                 pbar.write("Writing to output file: " + self.output_file)
@@ -204,11 +208,17 @@ class PrepareSamples:
                     )
                     out_file["jets"][-jets.shape[0] :] = jets
                     if self.save_tracks:
-                        out_file["tracks"].resize(
-                            (out_file["tracks"].shape[0] + tracks.shape[0]),
-                            axis=0,
-                        )
-                        out_file["tracks"][-tracks.shape[0] :] = tracks
+                        for tracks_name in self.tracks_names:
+                            out_file[tracks_name].resize(
+                                (
+                                    out_file[tracks_name].shape[0]
+                                    + tracks[tracks_name].shape[0]
+                                ),
+                                axis=0,
+                            )
+                            out_file[tracks_name][
+                                -tracks[tracks_name].shape[0] :
+                            ] = tracks[tracks_name]
 
             if self.n_jets_to_get <= 0:
                 break

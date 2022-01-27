@@ -99,12 +99,8 @@ def prepareConfig(
         f"./preprocessing_{preprocess_files}/preprocessing/",
         "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
     )
-    test_file_ttbar = os.path.join(
-        test_dir, "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
-    )
-    test_file_zprime = os.path.join(
-        test_dir, "MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
-    )
+    test_file_ttbar = os.path.join(test_dir, "ci_ttbar_testing.h5")
+    test_file_zprime = os.path.join(test_dir, "ci_zpext_testing.h5")
     scale_dict = os.path.join(
         f"./preprocessing_{preprocess_files}/preprocessing/", "PFlow-scale_dict.json"
     )
@@ -168,18 +164,14 @@ def prepareConfig(
         {
             "validation_files": {
                 "ttbar_r21_val": {
-                    "path": (
-                        f"{test_dir}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
-                    ),
+                    "path": f"{test_dir}/ci_ttbar_testing.h5",
                     "label": "$t\\bar{t}$ Release 21",
                     "variable_cuts": [
                         {"pt_btagJes": {"operator": "<=", "condition": 250000}}
                     ],
                 },
                 "zprime_r21_val": {
-                    "path": (
-                        f"{test_dir}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
-                    ),
+                    "path": f"{test_dir}/ci_zpext_testing.h5",
                     "label": "$Z'$ Release 21",
                     "variable_cuts": [
                         {"pt_btagJes": {"operator": ">", "condition": 250000}}

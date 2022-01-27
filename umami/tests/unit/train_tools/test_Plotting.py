@@ -308,10 +308,7 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
         self.test_dir = tempfile.TemporaryDirectory()
         self.validation_files = {
             "ttbar_r21_val": {
-                "path": (
-                    f"{self.test_dir.name}/"
-                    "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
-                ),
+                "path": f"{self.test_dir.name}/ci_ttbar_testing.h5",
                 "label": "dummylabel",
             }
         }
@@ -325,8 +322,8 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/"
-                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/preprocessing/"
+                "ci_ttbar_testing.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]

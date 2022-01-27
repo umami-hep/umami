@@ -115,6 +115,7 @@ def EvaluateModel(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
+    tracks_name = train_config.tracks_name
     var_cuts = (
         test_file_options["variable_cuts"]
         if "variable_cuts" in test_file_options
@@ -183,6 +184,7 @@ def EvaluateModel(
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=class_labels,
+            tracks_name=tracks_name,
             nJets=nJets,
             exclude=exclude,
             cut_vars_dict=var_cuts,
@@ -345,6 +347,7 @@ def EvaluateModelDips(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
+    tracks_name = train_config.tracks_name
     var_cuts = (
         test_file_options["variable_cuts"]
         if "variable_cuts" in test_file_options
@@ -388,6 +391,7 @@ def EvaluateModelDips(
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=class_labels,
+            tracks_name=tracks_name,
             nJets=nJets,
             cut_vars_dict=var_cuts,
             jet_variables=[
@@ -407,6 +411,7 @@ def EvaluateModelDips(
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=class_labels,
+            tracks_name=tracks_name,
             nJets=nJets,
             cut_vars_dict=var_cuts,
         )

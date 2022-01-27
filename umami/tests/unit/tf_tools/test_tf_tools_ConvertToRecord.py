@@ -23,6 +23,7 @@ class ConvertTest(unittest.TestCase):
             os.path.dirname(__file__), "fixtures", "test_preprocess_faulty_config.yaml"
         )
         self.config = Configuration(self.config_file)
+        tracks_name = self.config.sampling["options"]["tracks_names"][0]
         self.faulty_config = Configuration(self.faulty_config_file)
         # create dummy data
         x_train = np.ones(shape=(3, 41))
@@ -32,7 +33,7 @@ class ConvertTest(unittest.TestCase):
         self.tfh5 = tempfile.NamedTemporaryFile(suffix="-resampled_scaled_shuffled.h5")
         with h5py.File(self.tfh5, "w") as out_file:
             out_file.create_dataset("X_train", data=x_train)
-            out_file.create_dataset("X_trk_train", data=x_trks_train)
+            out_file.create_dataset(f"X_{tracks_name}_train", data=x_trks_train)
             out_file.create_dataset("Y_train", data=y_train)
         self.config.outfile_name = self.tfh5.name.replace(
             "-resampled_scaled_shuffled.h5", ".h5"

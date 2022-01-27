@@ -37,10 +37,17 @@ def replaceLineInFile(file, key, newLine, only_first=False):
         content of line replacement
     only_first : bool, optional
         if True only first line in which key found is replaced, by default False
+
+    Raises
+    ------
+    AttributeError
+        If no matching line could be found.
+    AttributeError
+        If no matching line could be found.
     """
     filedata = ""
 
-    if only_first is True:
+    if only_first:
         replacedLine = False
         with open(file, "r") as f:
             for line in f:
@@ -49,15 +56,23 @@ def replaceLineInFile(file, key, newLine, only_first=False):
                     replacedLine = True
                 filedata += line
 
+            if replacedLine is False:
+                raise AttributeError(f'No line could be found matching "{key}"')
+
         with open(file, "w") as f:
             f.write(filedata)
 
     else:
+        replacedLine = False
         with open(file, "r") as f:
             for line in f:
                 if key in line:
                     line = newLine + "\n"
+                    replacedLine = True
                 filedata += line
+
+            if replacedLine is False:
+                raise AttributeError(f'No line could be found matching "{key}"')
 
         with open(file, "w") as f:
             f.write(filedata)

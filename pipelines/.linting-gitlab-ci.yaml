@@ -56,3 +56,13 @@ doc_string_check:
 pylint:
   <<: *pylint_template
   <<: *linting_rules_template
+
+update_todos:
+  stage: publish
+  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest
+  script:
+    - python pipelines/gitlab-update-todo.py
+  only:
+    - master@atlas-flavor-tagging-tools/algorithms/umami
+  dependencies:
+    - linter
