@@ -8,7 +8,7 @@ Eval_parameters:
 # Dips, ttbar
 scores_Umami_ttbar:
   type: "scores"
-  data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
+  data_set_name: "ttbar_r21" # data set to use. This is the dict entry name of the file you want to plot in the train config
   tagger_name: "umami" # Name of the tagger: Example: dips_pb -> Name of tagger: dips
   class_labels: ["ujets", "cjets", "bjets"] # Classes which are used
   main_class: "bjets" # Main class
@@ -27,12 +27,12 @@ scores_Umami_ttbar_comparison:
   main_class: "bjets"
   models_to_plot:
     umami_r21:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       tagger_name: "umami"
       class_labels: ["ujets", "cjets", "bjets"]
       label: "$t\\bar{t}$"
     umami_r22: # The name here has no impact on anything.
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       tagger_name: "umami"
       class_labels: ["ujets", "cjets", "bjets"]
       label: "$t\\bar{t} 2$"
@@ -49,7 +49,7 @@ scores_Umami_ttbar_comparison:
 
 confusion_matrix_Umami_ttbar:
   type: "confusion_matrix"
-  data_set_name: "ttbar"
+  data_set_name: "ttbar_r21"
   tagger_name: "umami"
   class_labels: ["ujets", "cjets", "bjets"]
   plot_settings:
@@ -61,7 +61,7 @@ beff_scan_tagger_umami:
   main_class: "bjets"
   models_to_plot:
     umami_r21: # The name here has no impact on anything.
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "UMAMI"
       tagger_name: "umami"
       rejection_class: "cjets"
@@ -78,7 +78,7 @@ beff_scan_tagger_umami:
 
 Umami_prob_pb:
   type: "probability"
-  data_set_name: "ttbar"
+  data_set_name: "ttbar_r21"
   tagger_name: "umami"
   class_labels: ["ujets", "cjets", "bjets"]
   prob_class: "bjets"
@@ -96,12 +96,12 @@ Umami_prob_comparison_pb:
   prob_class: "bjets"
   models_to_plot:
     umami_r22:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "UMAMI"
       tagger_name: "umami"
       class_labels: ["ujets", "cjets", "bjets"]
     umami_r21:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "Umami DIPS"
       tagger_name: "dips"
       class_labels: ["ujets", "cjets", "bjets"]
@@ -120,22 +120,22 @@ beff_scan_tagger_compare_umami:
   type: "ROC_Comparison"
   models_to_plot:
     dips_ttbar_urej:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "Umami DIPS"
       tagger_name: "dips"
       rejection_class: "ujets"
     umami_ttbar_urej:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "Umami"
       tagger_name: "umami"
       rejection_class: "ujets"
     dips_ttbar_crej:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "Umami DIPS"
       tagger_name: "dips"
       rejection_class: "cjets"
     umami_ttbar_crej:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "Umami"
       tagger_name: "umami"
       rejection_class: "cjets"

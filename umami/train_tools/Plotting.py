@@ -16,27 +16,82 @@ from umami.preprocessing_tools import GetBinaryLabels
 from umami.tools import applyATLASstyle, makeATLAStag
 
 
+def plot_validation_files(
+    metric_identifier: str,
+    df_results: dict,
+    label_prefix: str = "",
+    label_suffix: str = "",
+    val_files: dict = None,
+):
+    """Helper function which loops over the validation files and plots the chosen
+    metric for each epoch. Meant to be called in other plotting functions.
+
+    The fuction loops over the validation files and plots a line with the label
+    f"{label_prefix}{validation_file_label}{label_suffix}" for each file.
+
+    Parameters
+    ----------
+    metric_identifier : str
+        Identifier for the metric you want to plot, e.g. "val_loss" or "disc_cut".
+    df_results : dict
+        Dict which contains the results of the training.
+    label_prefix : str, optional
+        This string is put at the beginning of the plot label for each line.
+        For accuracy for example choose "validation accuracy - ", by default ""
+    label_suffix : str, optional
+        This string is put at the end of the plot label for each line, by default ""
+    val_files: dict, optional
+        Dict that contains the configuration of all the validation files listed in the
+        train config. If None, nothing happens and a warning is printed to the logs,
+        by default None
+    """
+
+    if val_files is None:
+        logger.warning(
+            f"No validation files provided --> not plotting {metric_identifier}."
+        )
+    else:
+        for val_file_identifier, val_file_config in val_files.items():
+            plt.plot(
+                df_results["epoch"],
+                df_results[f"{metric_identifier}_{val_file_identifier}"],
+                label=f"{label_prefix}{val_file_config['label']}{label_suffix}",
+            )
+
+
 def CompTaggerRejectionDict(
-    file,
+    file: str,
+    unique_identifier: str,
     tagger_comp_var: list,
     recommended_frac_dict: dict,
     WP: float,
     class_labels: list,
     main_class: str,
 ):
-    """
-    Load the comparison tagger probability variables from the validation
+    """Load the comparison tagger probability variables from the validation
     file and calculate the rejections.
 
-    Input:
-    - file: Filepath to validation file.
-    - tagger_comp_var: List of the comparison tagger probability variable names.
-    - recommended_frac_dict: Dict with the fractions.
-    - class_labels: List with the used class_labels.
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
+    Parameters
+    ----------
+    file : str
+        Filename of the validation file.
+    unique_identifier: str
+        Unique identifier of the used dataset (e.g. ttbar_r21)
+    tagger_comp_var : list
+        List of the comparison tagger probability variable names.
+    recommended_frac_dict : dict
+        Dict with the fractions.
+    WP : float
+        Working point at which the rejections should be evaluated.
+    class_labels : list
+        List with the used class_labels.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
 
-    Output:
-    - Dict with the rejections for against the main class for all given flavours.
+    Returns
+    -------
+    dict
+        Dict with the rejections for against the main class for all given flavours.
     """
 
     # Get class_labels variables
@@ -81,6 +136,7 @@ def CompTaggerRejectionDict(
     recomm_rej_dict, _ = GetRejection(
         y_pred=df[tagger_comp_var].values,
         y_true=y_true,
+        unique_identifier=unique_identifier,
         class_labels=class_labels,
         main_class=main_class,
         frac_dict=recommended_frac_dict,
@@ -94,6 +150,7 @@ def PlotDiscCutPerEpoch(
     df_results: dict,
     plot_name: str,
     frac_class: str,
+    val_files: dict = None,
     trained_taggers: list = None,
     target_beff: float = 0.77,
     frac: float = 0.018,
@@ -107,46 +164,61 @@ def PlotDiscCutPerEpoch(
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the discriminant cut value for a specific working point
+    """Plot the discriminant cut value for a specific working point
     over all epochs.
 
-    Input:
-    - df_results: Dict with the epochs and disc cuts.
-    - plot_name: Path where the plots is saved + plot name.
-    - frac_class: Define which fraction is shown in ATLAS Tag.
-    - target_beff: Working Point to use.
-    - frac: Fraction value for ATLAS Tag.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - ncol: Number of columns in the legend.
-    - plot_datatype: Datatype of the plot.
-
-    Output:
-    - Discriminant Cut per epoch plotted.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and disc cuts.
+    plot_name : str
+        Path where the plots is saved + plot name.
+    frac_class : str
+        Define which fraction is shown in ATLAS Tag.
+    val_files: dict, optional
+        Dict that contains the configuration of all the validation files listed in the
+        train config. If None, nothing happens and a warning is printed to the logs,
+        by default None
+    trained_taggers : list, optional
+        List of trained taggers, by default None
+    target_beff : float, optional
+        Working Point to use, by default 0.77
+    frac : float, optional
+        Fraction value for ATLAS Tag, by default 0.018
+    UseAtlasTag : bool, optional
+        Define if ATLAS Tag is used or not, by default True
+    ApplyATLASStyle : bool, optional
+        Apply ATLAS Style of the plot (for approval etc.), by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.3
+    ncol : int, optional
+        Number of columns in the legend, by default 1
+    plot_datatype : str, optional
+        Datatype of the plot, by default "pdf"
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    if "disc_cut" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["disc_cut"],
-            label=r"$t\bar{t}$ validation sample",
-        )
-
-    if "disc_cut_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["disc_cut_add"],
-            label=r"$Z'$ validation sample",
-        )
+    # loop over the validation files using the unique identifiers and plot the disc cut
+    # value for each file
+    plot_validation_files(
+        metric_identifier="disc_cut",
+        df_results=df_results,
+        label_prefix="",
+        label_suffix=" validation sample",
+        val_files=val_files,
+    )
 
     if UseAtlasTag is True:
         SecondTag = (
@@ -177,6 +249,7 @@ def PlotDiscCutPerEpochUmami(
     df_results: dict,
     plot_name: str,
     frac_class: str,
+    val_files: dict = None,
     target_beff: float = 0.77,
     UseAtlasTag: bool = True,
     ApplyATLASStyle: bool = True,
@@ -188,56 +261,64 @@ def PlotDiscCutPerEpochUmami(
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the discriminant cut value for a specific working point
-    over all epochs.
+    """Plot the discriminant cut value for a specific working point over all epochs.
+    DIPS and Umami are both shown.
 
-    Input:
-    - df_results: Dict with the epochs and disc cuts.
-    - plot_name: Path where the plots is saved + plot name.
-    - frac_class: Define which fraction is shown in ATLAS Tag.
-    - target_beff: Working Point to use.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - ncol: Number of columns in the legend.
-    - plot_datatype: Datatype of the plot.
-
-    Output:
-    - Discriminant Cut per epoch plotted. DIPS and UMAMI both shown.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and disc cuts.
+    plot_name : str
+        Path where the plots is saved + plot name.
+    frac_class : str
+        Define which fraction is shown in ATLAS Tag
+    val_files: dict, optional
+        Dict that contains the configuration of all the validation files listed in the
+        train config. If None, nothing happens and a warning is printed to the logs,
+        by default None
+    target_beff : float, optional
+        Working Point to use, by default 0.77
+    UseAtlasTag : bool, optional
+        Define if ATLAS Tag is used or not, by default True
+    ApplyATLASStyle : bool, optional
+        Apply ATLAS Style of the plot (for approval etc.), by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.35
+    ncol : int, optional
+        Number of columns in the legend, by default 1
+    plot_datatype : str, optional
+        Datatype of the plot, by default "pdf"
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    if "disc_cut_dips" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["disc_cut_dips"],
-            label=r"$DIPS - t\bar{t}$ validation sample",
-        )
-    if "disc_cut_dips_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["disc_cut_dips_add"],
-            label=r"DIPS - $Z'$ validation sample",
-        )
-    if "disc_cut_umami" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["disc_cut_umami"],
-            label=r"$Umami - t\bar{t}$ validation sample",
-        )
-    if "disc_cut_umami_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["disc_cut_umami_add"],
-            label=r"Umami - $Z'$ validation sample",
-        )
+    # loop over the validation files using the unique identifiers and plot the disc cut
+    # value for each file
+    plot_validation_files(
+        metric_identifier="disc_cut_umami",
+        df_results=df_results,
+        label_prefix="Umami - ",
+        label_suffix=" validation sample",
+        val_files=val_files,
+    )
+    plot_validation_files(
+        metric_identifier="disc_cut_dips",
+        df_results=df_results,
+        label_prefix="DIPS - ",
+        label_suffix=" validation sample",
+        val_files=val_files,
+    )
 
     if UseAtlasTag is True:
         SecondTag = SecondTag + f"\nWP={int(target_beff * 100):02d}%"
@@ -266,6 +347,7 @@ def PlotRejPerEpochComparison(
     frac_dict: dict,
     comp_tagger_rej_dict: dict,
     comp_tagger_frac_dict: dict,
+    unique_identifier: str,
     plot_name: str,
     class_labels: list,
     main_class: str,
@@ -286,39 +368,64 @@ def PlotRejPerEpochComparison(
     legFontSize: int = 10,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plotting the Rejections per Epoch for the trained tagger and
-    the provided comparison taggers.
+    """Plotting the Rejections per Epoch for the trained tagger and the provided
+    comparison taggers.
 
-    Input:
-    - df_results: Dict with the rejections of the trained tagger.
-    - tagger_label: Name of trained tagger.
-    - frac_dict: Dict with the fractions of the trained tagger.
-    - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
-    - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
-    - plot_name: Path where the plots is saved.
-    - class_labels: A list of the class_labels which are used
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - label_extension: Extension of the legend label giving the process type.
-    - rej_string: String that is added after the class for the key.
-    - trained_taggers: List of dicts with needed info about local available taggers.
-    - target_beff: Target Working point.
-    - UseAtlasTag: Bool to decide if you want the ATLAS tag.
-    - ApplyATLASStyle: Decide, if the ATLAS Plotting style is used.
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - ncol: Number of columns in the legend.
-    - figsize: Size of the figure.
-    - legend_loc: Position of the legend.
-    - plot_datatype: Datatype of the plot.
-    - legFontSize: Fontsize of the legend.
+    This is only available for two rejections at once due to limiting of axes.
 
-    Output:
-    - Plot of the rejections of the taggers per epoch in a comparison plot.
-      This is only available for two rejections at once due to limiting of
-      axes.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the rejections of the trained tagger.
+    tagger_label : str
+        Name of trained tagger.
+    frac_dict : dict
+        Dict with the fractions of the trained tagger.
+    comp_tagger_rej_dict : dict
+        Dict with the rejections of the comp taggers.
+    comp_tagger_frac_dict : dict
+        Dict with the fractions of the comp taggers.
+    unique_identifier : str
+        Unique identifier of the used dataset (e.g. ttbar_r21).
+    plot_name : str
+        Path where the plots is saved.
+    class_labels : list
+        A list of the class_labels which are used
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    label_extension : str
+        Extension of the legend label giving the process type.
+    rej_string : str
+        String that is added after the class for the key.
+    trained_taggers : list, optional
+        List of dicts with needed info about local available taggers, by default None
+    target_beff : float, optional
+        Target Working point., by default 0.77
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.95
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.1
+    ncol : int, optional
+        Number of columns in the legend., by default 1
+    figsize : list, optional
+        Size of the figure., by default None
+    legend_loc : str, optional
+        Position of the legend., by default "upper right"
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    legFontSize : int, optional
+        Fontsize of the legend., by default 10
+    **kwargs
+        Arbitrary keyword arguments.
     """
     if figsize is None:
         figsize = [8, 6]
@@ -379,7 +486,9 @@ def PlotRejPerEpochComparison(
             for _, comp_tagger in enumerate(comp_tagger_rej_dict):
                 try:
                     tmp_line = axes[counter].axhline(
-                        comp_tagger_rej_dict[comp_tagger][f"{iter_class}_rej"],
+                        comp_tagger_rej_dict[comp_tagger][
+                            f"{iter_class}_rej_{unique_identifier}"
+                        ],
                         0,
                         df_results["epoch"].max(),
                         color=f"C{counter_models}",
@@ -395,8 +504,8 @@ def PlotRejPerEpochComparison(
 
                 except KeyError:
                     logger.info(
-                        f"{iter_class} rejection for {comp_tagger} not in"
-                        " dict! Skipping ..."
+                        f"{iter_class} rejection for {comp_tagger} and file "
+                        f"{unique_identifier} not in dict! Skipping ..."
                     )
 
         if trained_taggers is None:
@@ -497,6 +606,7 @@ def PlotRejPerEpoch(
     frac_dict: dict,
     comp_tagger_rej_dict: dict,
     comp_tagger_frac_dict: dict,
+    unique_identifier: str,
     plot_name: str,
     class_labels: list,
     main_class: str,
@@ -517,38 +627,62 @@ def PlotRejPerEpoch(
     legFontSize: int = 10,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plotting the Rejections per Epoch for the trained tagger and
-    the provided comparison taggers.
+    """Plotting the Rejections per Epoch for the trained tagger and the provided
+    comparison taggers in separate plots. One per rejection.
 
-    Input:
-    - df_results: Dict with the rejections of the trained tagger.
-    - tagger_label: Name of trained tagger.
-    - frac_dict: Dict with the fractions of the trained tagger.
-    - comp_tagger_rej_dict: Dict with the rejections of the comp taggers.
-    - comp_tagger_frac_dict: Dict with the fractions of the comp taggers.
-    - plot_name: Path where the plots is saved.
-    - class_labels: A list of the class_labels which are used
-    - main_class: The main discriminant class. For b-tagging obviously "bjets"
-    - label_extension: Extension of the legend label giving the process type.
-    - rej_string: String that is added after the class for the key.
-    - trained_taggers: List of dicts with needed info about local available taggers.
-    - target_beff: Target Working point.
-    - UseAtlasTag: Bool to decide if you want the ATLAS tag.
-    - ApplyATLASStyle: Decide, if the ATLAS Plotting style is used.
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - ncol: Number of columns in the legend.
-    - figsize: Size of the figure.
-    - legend_loc: Position of the legend.
-    - plot_datatype: Datatype of the plot.
-    - legFontSize: Fontsize of the legend.
-
-    Output:
-    - Plot of the rejections of the taggers per epoch in seperate plots.
-      One per rejection.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the rejections of the trained tagger.
+    tagger_label : str
+        Name of trained tagger.
+    frac_dict : dict
+        Dict with the fractions of the trained tagger.
+    comp_tagger_rej_dict : dict
+        Dict with the rejections of the comp taggers.
+    comp_tagger_frac_dict : dict
+        Dict with the fractions of the comp taggers.
+    unique_identifier: str
+        Unique identifier of the used dataset (e.g. ttbar_r21).
+    plot_name : str
+        Path where the plots is saved.
+    class_labels : list
+        A list of the class_labels which are used
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    label_extension : str
+        Extension of the legend label giving the process type.
+    rej_string : str
+        String that is added after the class for the key.
+    trained_taggers : list, optional
+        List of dicts with needed info about local available taggers, by default None
+    target_beff : float, optional
+        Target Working point., by default 0.77
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.1
+    ncol : int, optional
+        Number of columns in the legend., by default 1
+    figsize : list, optional
+        Size of the figure., by default None
+    legend_loc : str, optional
+        Position of the legend., by default "upper right"
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    legFontSize : int, optional
+        Fontsize of the legend., by default 10
+    **kwargs
+        Arbitrary keyword arguments.
     """
     if figsize is None:
         figsize = [8, 6]
@@ -592,7 +726,9 @@ def PlotRejPerEpoch(
             for _, comp_tagger in enumerate(comp_tagger_rej_dict):
                 try:
                     axes.axhline(
-                        comp_tagger_rej_dict[comp_tagger][f"{iter_class}_rej"],
+                        comp_tagger_rej_dict[comp_tagger][
+                            f"{iter_class}_rej_{unique_identifier}"
+                        ],
                         0,
                         df_results["epoch"].max(),
                         color=f"C{counter_models}",
@@ -668,62 +804,79 @@ def PlotRejPerEpoch(
 
 
 def PlotLosses(
-    df_results,
-    plot_name,
-    train_history_dict,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease=1.2,
-    yAxisAtlasTag=0.9,
-    plot_datatype="pdf",
-    ymin=None,
-    ymax=None,
+    df_results: dict,
+    plot_name: str,
+    train_history_dict: dict,
+    val_files: dict = None,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease: float = 1.2,
+    yAxisAtlasTag: float = 0.9,
+    plot_datatype: str = "pdf",
+    ymin: float = None,
+    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the training loss and the validation losses per epoch.
+    """Plot the training loss and the validation losses per epoch.
 
-    Input:
-    - df_results: Dict with the epochs and losses.
-    - plot_name: Path where the plots is saved + plot name.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - plot_datatype: Datatype of the plot.
-    - ymin: Manually set ymin. Overwrites yAxisIncrease.
-    - ymax: Manually set ymax. Overwrites yAxisIncrease.
-
-    Output:
-    - Plot with the training and validation losses per epoch.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and losses.
+    plot_name : str
+        Path where the plots is saved.
+    train_history_dict : dict
+        Dict that stores the results of the training.
+    val_files: dict, optional
+        Dict that contains the configuration of all the validation files listed in the
+        train config. If None, nothing happens and a warning is printed to the logs,
+        by default None
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.2
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    ymin : float, optional
+        Manually set ymin. Overwrites yAxisIncrease, by default None
+    ymax : float, optional
+        Manually set ymax. Overwrites yAxisIncrease, by default None
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
+    # plots training loss
     if "loss" in train_history_dict:
         plt.plot(
             df_results["epoch"],
             train_history_dict["loss"],
             label="training loss - hybrid sample",
         )
-    if "val_loss" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["val_loss"],
-            label=r"validation loss - $t\bar{t}$ sample",
-        )
-    if "val_loss_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["val_loss_add"],
-            label=r"validation loss - ext. $Z'$ sample",
-        )
+
+    # loop over the validation files using the unique identifiers and plot the loss
+    # for each file
+    plot_validation_files(
+        metric_identifier="val_loss",
+        df_results=df_results,
+        label_prefix="validation loss - ",
+        label_suffix=" sample",
+        val_files=val_files,
+    )
 
     if UseAtlasTag is True:
         makeATLAStag(
@@ -753,38 +906,56 @@ def PlotLosses(
 
 
 def PlotAccuracies(
-    df_results,
-    plot_name,
-    train_history_dict,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease=1.2,
-    yAxisAtlasTag=0.9,
-    plot_datatype="pdf",
-    ymin=None,
-    ymax=None,
+    df_results: dict,
+    plot_name: str,
+    train_history_dict: dict,
+    val_files: dict = None,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease: float = 1.2,
+    yAxisAtlasTag: float = 0.9,
+    plot_datatype: str = "pdf",
+    ymin: float = None,
+    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the training and validation accuracies per epoch.
+    """Plot the training and validation accuracies per epoch.
 
-    Input:
-    - df_results: Dict with the epochs and accuracies.
-    - plot_name: Path where the plots is saved + plot name.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - plot_datatype: Datatype of the plot.
-    - ymin: Manually set ymin. Overwrites yAxisIncrease.
-    - ymax: Manually set ymax. Overwrites yAxisIncrease.
-
-    Output:
-    - Plot with the training and validation accuracies per epoch.
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and accuracies.
+    plot_name : str
+        Path where the plots is saved.
+    train_history_dict : dict
+        Dict that stores the results of the training.
+    val_files: dict, optional
+        Dict that contains the configuration of all the validation files listed in the
+        train config. If None, nothing happens and a warning is printed to the logs,
+        by default None
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.2
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    ymin : float, optional
+        Manually set ymin. Overwrites yAxisIncrease, by default None
+    ymax : float, optional
+        Manually set ymax. Overwrites yAxisIncrease, by default None
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
@@ -797,18 +968,16 @@ def PlotAccuracies(
             train_history_dict["accuracy"],
             label="training accuracy - hybrid sample",
         )
-    if "val_acc" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["val_acc"],
-            label=r"validation accuracy - $t\bar{t}$ sample",
-        )
-    if "val_acc_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["val_acc_add"],
-            label=r"validation accuracy - ext. $Z'$ sample",
-        )
+
+    # loop over the validation files using the unique identifiers and plot the accuracy
+    # for each file
+    plot_validation_files(
+        metric_identifier="val_acc",
+        df_results=df_results,
+        label_prefix="validation accuracy - ",
+        label_suffix=" sample",
+        val_files=val_files,
+    )
 
     if UseAtlasTag is True:
         makeATLAStag(
@@ -838,82 +1007,94 @@ def PlotAccuracies(
 
 
 def PlotLossesUmami(
-    df_results,
-    plot_name,
-    train_history_dict,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease=1.4,
-    yAxisAtlasTag=0.9,
-    plot_datatype="pdf",
-    ymin=None,
-    ymax=None,
+    df_results: dict,
+    plot_name: str,
+    train_history_dict: dict,
+    val_files: dict = None,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease: float = 1.4,
+    yAxisAtlasTag: float = 0.9,
+    plot_datatype: str = "pdf",
+    ymin: float = None,
+    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the training loss and the validation losses per epoch for
-    UMAMI model (with DIPS and UMAMI losses).
+    """Plot the training loss and the validation losses per epoch for Umami model
+    (with DIPS and Umami losses).
 
-    Input:
-    - df_results: Dict with the epochs and losses.
-    - plot_name: Path where the plots is saved + plot name.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - plot_datatype: Datatype of the plot.
-    - ymin: Manually set ymin. Overwrites yAxisIncrease.
-    - ymax: Manually set ymax. Overwrites yAxisIncrease.
-
-    Output:
-    - Plot with the training and validation losses per epoch for
-      UMAMI model (with DIPS and UMAMI losses).
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and losses.
+    plot_name : str
+        Path where the plots is saved.
+    train_history_dict : dict
+        Dict that stores the results of the training.
+    val_files: dict, optional
+        Dict that contains the configuration of all the validation files listed in the
+        train config. If None, nothing happens and a warning is printed to the logs,
+        by default None
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.4
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    ymin : float, optional
+        Manually set ymin. Overwrites yAxisIncrease, by default None
+    ymax : float, optional
+        Manually set ymax. Overwrites yAxisIncrease, by default None
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    if "umami_loss" in train_history_dict:
+    # Plot umami and dips training loss
+    if "loss_umami" in train_history_dict:
         plt.plot(
             df_results["epoch"],
-            train_history_dict["umami_loss"],
-            label="training loss UMAMI - hybrid sample",
+            train_history_dict["loss_umami"],
+            label="training loss Umami - hybrid sample",
         )
-    if "umami_val_loss" in df_results:
+
+    if "loss_dips" in train_history_dict:
         plt.plot(
             df_results["epoch"],
-            df_results["umami_val_loss"],
-            label=r"val loss UMAMI - $t\bar{t}$ sample",
-        )
-    if "dips_loss" in train_history_dict:
-        plt.plot(
-            df_results["epoch"],
-            train_history_dict["dips_loss"],
+            train_history_dict["loss_dips"],
             label="training loss DIPS - hybrid sample",
         )
-    if "dips_val_loss" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["dips_val_loss"],
-            label=r"val loss DIPS - $t\bar{t}$ sample",
-        )
-    if "umami_val_loss_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["umami_val_loss_add"],
-            label=r"val loss UMAMI - ext. $Z'$ sample",
-        )
-    if "dips_val_loss_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["dips_val_loss_add"],
-            label=r"val loss DIPS - ext. $Z'$ sample",
-        )
+
+    # loop over the validation files using the unique identifiers and plot the loss
+    # for each file
+    plot_validation_files(
+        metric_identifier="val_loss_umami",
+        df_results=df_results,
+        label_prefix="validation loss Umami - ",
+        label_suffix=" sample",
+        val_files=val_files,
+    )
+    plot_validation_files(
+        metric_identifier="val_loss_dips",
+        df_results=df_results,
+        label_prefix="validation loss DIPS - ",
+        label_suffix=" sample",
+        val_files=val_files,
+    )
 
     plt.legend(loc="upper right")
     old_ymin, old_ymax = plt.ylim()
@@ -943,82 +1124,94 @@ def PlotLossesUmami(
 
 
 def PlotAccuraciesUmami(
-    df_results,
-    plot_name,
-    train_history_dict,
-    UseAtlasTag=True,
-    ApplyATLASStyle=True,
-    AtlasTag="Internal Simulation",
-    SecondTag="\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease=1.4,
-    yAxisAtlasTag=0.9,
-    plot_datatype="pdf",
-    ymin=None,
-    ymax=None,
+    df_results: dict,
+    plot_name: str,
+    train_history_dict: dict,
+    val_files: dict = None,
+    UseAtlasTag: bool = True,
+    ApplyATLASStyle: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    yAxisIncrease: float = 1.4,
+    yAxisAtlasTag: float = 0.9,
+    plot_datatype: str = "pdf",
+    ymin: float = None,
+    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
-    """
-    Plot the training and validation accuracies per epoch for
-    UMAMI model (with DIPS and UMAMI accuracies).
+    """Plot the training and validation accuracies per epoch for Umami model
+    (with DIPS and Umami accuracies).
 
-    Input:
-    - df_results: Dict with the epochs and accuracies.
-    - plot_name: Path where the plots is saved + plot name.
-    - UseAtlasTag: Define if ATLAS Tag is used or not.
-    - ApplyATLASStyle: Apply ATLAS Style of the plot (for approval etc.).
-    - AtlasTag: Main tag. Mainly "Internal Simulation".
-    - SecondTag: Lower tag in the ATLAS label with infos.
-    - yAxisAtlasTag: Y axis position of the ATLAS label.
-    - yAxisIncrease: Y axis increase factor to fit the ATLAS label.
-    - plot_datatype: Datatype of the plot.
-    - ymin: Manually set ymin. Overwrites yAxisIncrease.
-    - ymax: Manually set ymax. Overwrites yAxisIncrease.
-
-    Output:
-    - Plot with the training and validation accuracies per epoch for
-      UMAMI model (with DIPS and UMAMI accuracies).
+    Parameters
+    ----------
+    df_results : dict
+        Dict with the epochs and accuracies.
+    plot_name : str
+        Path where the plots is saved.
+    train_history_dict : dict
+        Dict that stores the results of the training.
+    val_files: dict, optional
+        Dict that contains the configuration of all the validation files listed in the
+        train config. If None, nothing happens and a warning is printed to the logs,
+        by default None
+    UseAtlasTag : bool, optional
+        Bool to decide if you want the ATLAS tag, by default True
+    ApplyATLASStyle : bool, optional
+        Decide, if the ATLAS Plotting style is used, by default True
+    AtlasTag : str, optional
+        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
+    SecondTag : str, optional
+        Lower tag in the ATLAS label with infos,
+        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+    yAxisIncrease : float, optional
+        Y axis increase factor to fit the ATLAS label, by default 1.4
+    yAxisAtlasTag : float, optional
+        Y axis position of the ATLAS label, by default 0.9
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    ymin : float, optional
+        Manually set ymin. Overwrites yAxisIncrease, by default None
+    ymax : float, optional
+        Manually set ymax. Overwrites yAxisIncrease, by default None
+    **kwargs
+        Arbitrary keyword arguments.
     """
 
     # Apply ATLAS style
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    if "umami_accuracy" in train_history_dict:
+    # Plot umami and dips training loss
+    if "accuracy_umami" in train_history_dict:
         plt.plot(
             df_results["epoch"],
-            train_history_dict["umami_accuracy"],
-            label="training acc UMAMI - hybrid sample",
+            train_history_dict["accuracy_umami"],
+            label="training accuracy Umami - hybrid sample",
         )
-    if "umami_val_acc" in df_results:
+
+    if "accuracy_dips" in train_history_dict:
         plt.plot(
             df_results["epoch"],
-            df_results["umami_val_acc"],
-            label=r"val acc UMAMI - $t\bar{t}$ sample",
+            train_history_dict["accuracy_dips"],
+            label="training accuracy DIPS - hybrid sample",
         )
-    if "dips_accuracy" in train_history_dict:
-        plt.plot(
-            df_results["epoch"],
-            train_history_dict["dips_accuracy"],
-            label="training acc DIPS - hybrid sample",
-        )
-    if "dips_val_acc" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["dips_val_acc"],
-            label=r"val acc DIPS - $t\bar{t}$ sample",
-        )
-    if "umami_val_acc_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["umami_val_acc_add"],
-            label=r"val acc UMAMI - ext. $Z'$ sample",
-        )
-    if "dips_val_acc_add" in df_results:
-        plt.plot(
-            df_results["epoch"],
-            df_results["dips_val_acc_add"],
-            label=r"val acc DIPS - ext. $Z'$ sample",
-        )
+
+    # loop over the validation files using the unique identifiers and plot the loss
+    # for each file
+    plot_validation_files(
+        metric_identifier="val_acc_umami",
+        df_results=df_results,
+        label_prefix="validation accuracy Umami - ",
+        label_suffix=" sample",
+        val_files=val_files,
+    )
+    plot_validation_files(
+        metric_identifier="val_acc_dips",
+        df_results=df_results,
+        label_prefix="validation accuracy DIPS - ",
+        label_suffix=" sample",
+        val_files=val_files,
+    )
 
     plt.legend(loc="upper right")
     old_ymin, old_ymax = plt.ylim()
@@ -1048,26 +1241,31 @@ def PlotAccuraciesUmami(
 
 
 def RunPerformanceCheck(
-    train_config,
+    train_config: object,
     tagger: str,
     tagger_comp_vars: dict = None,
     dict_file_name: str = None,
-    train_history_dict: str = None,
+    train_history_dict_file_name: str = None,
     WP: float = None,
 ):
-    """
-    Loading the validation metrics from the trained model and calculate
+    """Loading the validation metrics from the trained model and calculate
     the metrics for the comparison taggers and plot them.
 
-    Input:
-    - train_config: Loaded train_config object.
-    - tagger: String name of the tagger used.
-    - tagger_comp_vars: Dict of the tagger probability variables as lists.
-    - dict_file_name: Path to the json file with the per epoch metrics of the
-                      trained tagger.
-
-    Output:
-    - Validation metrics plots
+    Parameters
+    ----------
+    train_config : object
+        Loaded train_config object.
+    tagger : str
+        String name of the tagger used.
+    tagger_comp_vars : dict, optional
+        Dict of the tagger probability variables as lists, by default None
+    dict_file_name : str, optional
+        Path to the json file with the per epoch metrics of the trained tagger,
+        by default None
+    train_history_dict_file_name : str, optional
+        Path to the history file from the training, by default None
+    WP : float, optional
+        Working point to evaluate, by default None
     """
 
     logger.info(f"Running performance check for {tagger}.")
@@ -1079,6 +1277,9 @@ def RunPerformanceCheck(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     recommended_frac_dict = Eval_parameters["frac_values_comp"]
+    # Load the unique identifiers of the validation files and the corresponding plot
+    # labels. These are used several times in this function
+    val_files = train_config.validation_files
 
     if WP is None:
         WP = Val_settings["WP"]
@@ -1087,8 +1288,8 @@ def RunPerformanceCheck(
     tagger_rej_dict = pd.read_json(dict_file_name)
 
     # Check if history file exists
-    if os.path.isfile(train_history_dict):
-        train_history_dict = pd.read_json(train_history_dict)
+    if os.path.isfile(train_history_dict_file_name):
+        train_history_dict = pd.read_json(train_history_dict_file_name)
 
     elif "accuracy" in tagger_rej_dict:
         logger.warning(
@@ -1104,36 +1305,32 @@ def RunPerformanceCheck(
     if tagger_comp_vars is not None:
         # Dict
         comp_tagger_rej_dict = {}
-        comp_tagger_rej_dict_add = {}
 
         # Loop over taggers that are used for comparsion
+        # After the double loop, the resulting dict looks something e.g. for the comp
+        # taggers rnnip and dl1r like this:
+        # {"rnnip": <dict_with_rej_values_rnnip>, "dl1r": <dict_with_rej_values_dl1r>}
         for comp_tagger in tagger_comp_vars:
-            comp_tagger_rej_dict[comp_tagger] = CompTaggerRejectionDict(
-                file=train_config.validation_file,
-                tagger_comp_var=tagger_comp_vars[comp_tagger],
-                recommended_frac_dict=recommended_frac_dict[comp_tagger],
-                WP=WP,
-                class_labels=class_labels,
-                main_class=main_class,
-            )
-
-            if train_config.add_validation_file is not None:
-                comp_tagger_rej_dict_add[comp_tagger] = CompTaggerRejectionDict(
-                    file=train_config.add_validation_file,
-                    tagger_comp_var=tagger_comp_vars[comp_tagger],
-                    recommended_frac_dict=recommended_frac_dict[comp_tagger],
-                    WP=WP,
-                    class_labels=class_labels,
-                    main_class=main_class,
+            # loop over the different kinds of validation files specified in the
+            # training config. Calculate the rejection values for each of the validation
+            # files and add the values to the rejection dict
+            comp_tagger_rej_dict[f"{comp_tagger}"] = {}
+            for val_file_identifier, val_file_config in val_files.items():
+                comp_tagger_rej_dict[f"{comp_tagger}"].update(
+                    CompTaggerRejectionDict(
+                        file=val_file_config["path"],
+                        unique_identifier=val_file_identifier,
+                        tagger_comp_var=tagger_comp_vars[comp_tagger],
+                        recommended_frac_dict=recommended_frac_dict[comp_tagger],
+                        WP=WP,
+                        class_labels=class_labels,
+                        main_class=main_class,
+                    )
                 )
-
-            else:
-                comp_tagger_rej_dict_add[comp_tagger] = None
 
     else:
         # Define the dicts as None if compare tagger is False
         comp_tagger_rej_dict = None
-        comp_tagger_rej_dict_add = None
 
     # Define dir where the plots are saved
     plot_dir = f"{train_config.model_name}/plots"
@@ -1148,68 +1345,43 @@ def RunPerformanceCheck(
     if tagger == "umami":
         for subtagger in ["umami", "dips"]:
             if n_rej == 2:
-                # Plot comparsion for the comparison taggers
-                PlotRejPerEpochComparison(
-                    df_results=tagger_rej_dict,
-                    tagger_label=subtagger,
-                    frac_dict=frac_dict,
-                    comp_tagger_rej_dict=comp_tagger_rej_dict,
-                    comp_tagger_frac_dict=recommended_frac_dict,
-                    plot_name=f"{plot_dir}/rej-plot_val_{subtagger}",
-                    class_labels=class_labels,
-                    main_class=main_class,
-                    label_extension=r"$t\bar{t}$",
-                    rej_string=f"rej_{subtagger}",
-                    target_beff=WP,
-                    **Val_settings,
-                )
-
-                if train_config.add_validation_file is not None:
+                for val_file_identifier, val_file_config in val_files.items():
+                    # Plot comparsion for the comparison taggers
                     PlotRejPerEpochComparison(
                         df_results=tagger_rej_dict,
                         tagger_label=subtagger,
                         frac_dict=frac_dict,
-                        comp_tagger_rej_dict=comp_tagger_rej_dict_add,
+                        comp_tagger_rej_dict=comp_tagger_rej_dict,
+                        unique_identifier=val_file_identifier,
                         comp_tagger_frac_dict=recommended_frac_dict,
-                        plot_name=f"{plot_dir}/rej-plot_val_{subtagger}_add",
+                        plot_name=(
+                            f"{plot_dir}/rej-plot_val_{subtagger}_{val_file_identifier}"
+                        ),
                         class_labels=class_labels,
                         main_class=main_class,
-                        label_extension=r"ext. $Z'$",
-                        rej_string=f"rej_{subtagger}_add",
+                        label_extension=val_file_config["label"],
+                        rej_string=f"rej_{subtagger}_{val_file_identifier}",
                         target_beff=WP,
                         **Val_settings,
                     )
 
-            PlotRejPerEpoch(
-                df_results=tagger_rej_dict,
-                tagger_label=subtagger,
-                frac_dict=frac_dict,
-                comp_tagger_rej_dict=comp_tagger_rej_dict,
-                comp_tagger_frac_dict=recommended_frac_dict,
-                plot_name=f"{plot_dir}/rej-plot_val_{subtagger}",
-                class_labels=class_labels,
-                main_class=main_class,
-                label_extension=r"$t\bar{t}$",
-                rej_string=f"rej_{subtagger}",
-                target_beff=WP,
-                **Val_settings,
-            )
-
-            if train_config.add_validation_file is not None:
-                PlotRejPerEpoch(
-                    df_results=tagger_rej_dict,
-                    tagger_label=subtagger,
-                    frac_dict=frac_dict,
-                    comp_tagger_rej_dict=comp_tagger_rej_dict_add,
-                    comp_tagger_frac_dict=recommended_frac_dict,
-                    plot_name=f"{plot_dir}/rej-plot_val_{subtagger}_add",
-                    class_labels=class_labels,
-                    main_class=main_class,
-                    label_extension=r"ext. $Z'$",
-                    rej_string=f"rej_{subtagger}_add",
-                    target_beff=WP,
-                    **Val_settings,
-                )
+                    PlotRejPerEpoch(
+                        df_results=tagger_rej_dict,
+                        tagger_label=subtagger,
+                        frac_dict=frac_dict,
+                        unique_identifier=val_file_identifier,
+                        comp_tagger_rej_dict=comp_tagger_rej_dict,
+                        comp_tagger_frac_dict=recommended_frac_dict,
+                        plot_name=(
+                            f"{plot_dir}/rej-plot_val_{subtagger}_{val_file_identifier}"
+                        ),
+                        class_labels=class_labels,
+                        main_class=main_class,
+                        label_extension=val_file_config["label"],
+                        rej_string=f"rej_{subtagger}_{val_file_identifier}",
+                        target_beff=WP,
+                        **Val_settings,
+                    )
 
         plot_name = f"{plot_dir}/disc-cut-plot"
         PlotDiscCutPerEpochUmami(
@@ -1227,6 +1399,7 @@ def RunPerformanceCheck(
                 tagger_rej_dict,
                 plot_name,
                 train_history_dict=train_history_dict,
+                val_files=val_files,
                 **Val_settings,
             )
             plot_name = f"{plot_dir}/accuracy-plot"
@@ -1234,6 +1407,7 @@ def RunPerformanceCheck(
                 tagger_rej_dict,
                 plot_name,
                 train_history_dict=train_history_dict,
+                val_files=val_files,
                 **Val_settings,
             )
 
@@ -1246,61 +1420,35 @@ def RunPerformanceCheck(
 
         if n_rej == 2:
             # Plot comparsion for the comparison taggers
-            PlotRejPerEpochComparison(
+            # Loop over validation files
+            for val_file_identifier, val_file_config in val_files.items():
+                PlotRejPerEpochComparison(
+                    df_results=tagger_rej_dict,
+                    frac_dict=frac_dict,
+                    comp_tagger_rej_dict=comp_tagger_rej_dict,
+                    comp_tagger_frac_dict=recommended_frac_dict,
+                    unique_identifier=val_file_identifier,
+                    plot_name=f"{plot_dir}/rej-plot_val_{val_file_identifier}",
+                    class_labels=class_labels,
+                    main_class=main_class,
+                    label_extension=val_file_config["label"],
+                    rej_string=f"rej_{val_file_identifier}",
+                    target_beff=WP,
+                    **Val_settings,
+                )
+        for val_file_identifier, val_file_config in val_files.items():
+            # Plot rejections in one plot per rejection
+            PlotRejPerEpoch(
                 df_results=tagger_rej_dict,
                 frac_dict=frac_dict,
                 comp_tagger_rej_dict=comp_tagger_rej_dict,
                 comp_tagger_frac_dict=recommended_frac_dict,
-                plot_name=f"{plot_dir}/rej-plot_val",
+                unique_identifier=val_file_identifier,
+                plot_name=f"{plot_dir}/rej-plot_val_{val_file_identifier}",
                 class_labels=class_labels,
                 main_class=main_class,
-                label_extension=r"$t\bar{t}$",
-                rej_string="rej",
-                target_beff=WP,
-                **Val_settings,
-            )
-
-            if train_config.add_validation_file is not None:
-                PlotRejPerEpochComparison(
-                    df_results=tagger_rej_dict,
-                    frac_dict=frac_dict,
-                    comp_tagger_rej_dict=comp_tagger_rej_dict_add,
-                    comp_tagger_frac_dict=recommended_frac_dict,
-                    plot_name=f"{plot_dir}/rej-plot_val_add",
-                    class_labels=class_labels,
-                    main_class=main_class,
-                    label_extension=r"ext. $Z'$",
-                    rej_string="rej_add",
-                    target_beff=WP,
-                    **Val_settings,
-                )
-
-        # Plot rejections in one plot per rejection
-        PlotRejPerEpoch(
-            df_results=tagger_rej_dict,
-            frac_dict=frac_dict,
-            comp_tagger_rej_dict=comp_tagger_rej_dict,
-            comp_tagger_frac_dict=recommended_frac_dict,
-            plot_name=f"{plot_dir}/rej-plot_val",
-            class_labels=class_labels,
-            main_class=main_class,
-            label_extension=r"$t\bar{t}$",
-            rej_string="rej",
-            target_beff=WP,
-            **Val_settings,
-        )
-
-        if train_config.add_validation_file is not None:
-            PlotRejPerEpoch(
-                df_results=tagger_rej_dict,
-                frac_dict=frac_dict,
-                comp_tagger_rej_dict=comp_tagger_rej_dict_add,
-                comp_tagger_frac_dict=recommended_frac_dict,
-                plot_name=f"{plot_dir}/rej-plot_val_add",
-                class_labels=class_labels,
-                main_class=main_class,
-                label_extension=r"ext. $Z'$",
-                rej_string="rej_add",
+                label_extension=val_file_config["label"],
+                rej_string=f"rej_{val_file_identifier}",
                 target_beff=WP,
                 **Val_settings,
             )
@@ -1309,6 +1457,7 @@ def RunPerformanceCheck(
         PlotDiscCutPerEpoch(
             df_results=tagger_rej_dict,
             plot_name=plot_name,
+            val_files=val_files,
             target_beff=WP,
             frac_class="cjets",
             frac=frac_dict["cjets"],
@@ -1322,6 +1471,7 @@ def RunPerformanceCheck(
                 tagger_rej_dict,
                 plot_name,
                 train_history_dict=train_history_dict,
+                val_files=val_files,
                 **Val_settings,
             )
             plot_name = f"{plot_dir}/accuracy-plot"
@@ -1329,5 +1479,6 @@ def RunPerformanceCheck(
                 tagger_rej_dict,
                 plot_name,
                 train_history_dict=train_history_dict,
+                val_files=val_files,
                 **Val_settings,
             )

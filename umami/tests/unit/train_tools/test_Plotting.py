@@ -33,34 +33,69 @@ class GetRejection_TestCase(unittest.TestCase):
         self.tmp_plot_dir = f"{self.tmp_dir.name}/"
         self.Control_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
         list_of_keys = [
-            "cjets_rej",
-            "ujets_rej",
             "epoch",
             "loss",
-            "val_loss",
-            "val_loss_add",
             "accuracy",
-            "val_acc",
-            "val_acc_add",
-            "umami_loss",
-            "umami_val_loss",
-            "umami_val_loss_add",
-            "umami_accuracy",
-            "umami_val_acc",
-            "umami_val_acc_add",
-            "dips_loss",
-            "dips_val_loss",
-            "dips_val_loss_add",
-            "dips_accuracy",
-            "dips_val_acc",
-            "dips_val_acc_add",
-            "disc_cut",
-            "disc_cut_add",
-            "disc_cut_dips",
-            "disc_cut_umami",
-            "disc_cut_dips_add",
-            "disc_cut_umami_add",
+            "cjets_rej",
+            "ujets_rej",
+            "val_loss_ttbar_r21_val",
+            "val_acc_ttbar_r21_val",
+            "disc_cut_ttbar_r21_val",
+            "ujets_rej_ttbar_r21_val",
+            "cjets_rej_ttbar_r21_val",
+            "val_loss_zprime_r21_val",
+            "val_acc_zprime_r21_val",
+            "disc_cut_zprime_r21_val",
+            "ujets_rej_zprime_r21_val",
+            "cjets_rej_zprime_r21_val",
+            # umami related stuff
+            "loss_umami",
+            "loss_dips",
+            "accuracy_umami",
+            "accuracy_dips",
+            "val_loss_umami_ttbar_r21_val",
+            "val_acc_umami_ttbar_r21_val",
+            "disc_cut_umami_ttbar_r21_val",
+            "ujets_rej_umami_ttbar_r21_val",
+            "cjets_rej_umami_ttbar_r21_val",
+            "val_loss_umami_zprime_r21_val",
+            "val_acc_umami_zprime_r21_val",
+            "disc_cut_umami_zprime_r21_val",
+            "ujets_rej_umami_zprime_r21_val",
+            "cjets_rej_umami_zprime_r22_val",
+            "val_loss_dips_ttbar_r21_val",
+            "val_acc_dips_ttbar_r21_val",
+            "disc_cut_dips_ttbar_r21_val",
+            "ujets_rej_dips_ttbar_r21_val",
+            "cjets_rej_dips_ttbar_r21_val",
+            "val_loss_dips_zprime_r21_val",
+            "val_acc_dips_zprime_r21_val",
+            "disc_cut_dips_zprime_r21_val",
+            "ujets_rej_dips_zprime_r21_val",
+            "cjets_rej_dips_zprime_r21_val",
         ]
+
+        self.val_files = {
+            "ttbar_r21_val": {
+                "path": "dummy",
+                "label": "$t\\bar{t}$ Release 21",
+                "variable_cuts": [
+                    {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
+                ],
+            },
+            "zprime_r21_val": {
+                "path": "dummy",
+                "label": "$Z'$ Release 21",
+                "variable_cuts": [
+                    {"pt_btagJes": {"operator": ">", "condition": 250_000}}
+                ],
+            },
+        }
+        self.validation_unique_identifiers = self.val_files.keys()
+
+        # TODO: Change the plotted data for each key? Atm we plot only straight lines
+        # on top of each other, which maybe makes the test less robust?
+
         self.df_results = dict(
             zip(
                 list_of_keys,
@@ -73,17 +108,19 @@ class GetRejection_TestCase(unittest.TestCase):
                 "epoch",
                 "loss",
                 "accuracy",
-                "umami_loss",
-                "umami_accuracy",
-                "dips_accuracy",
-                "dips_loss",
+                "loss_umami",
+                "loss_dips",
+                "accuracy_umami",
+                "accuracy_dips",
             ]
         }
         self.comp_tagger_frac_dict = {"RNNIP": {"cjets": 0.018, "ujets": 0.982}}
         self.frac_dict = {"cjets": 0.018, "ujets": 0.982}
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.main_class = "bjets"
-        self.comp_tagger_rej_dict = {"RNNIP": {"cjets_rej": 2, "ujets_rej": 1}}
+        self.comp_tagger_rej_dict = {
+            "RNNIP": {"cjets_rej_ttbar_r21_val": 2, "ujets_rej_ttbar_r21_val": 1}
+        }
         self.label_extension = r"$t\bar{t}$"
         self.frac_class = "cjets"
 
@@ -94,6 +131,7 @@ class GetRejection_TestCase(unittest.TestCase):
             frac_dict=self.frac_dict,
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
             comp_tagger_frac_dict=self.comp_tagger_frac_dict,
+            unique_identifier="ttbar_r21_val",
             plot_name=self.tmp_plot_dir + "PlotRejPerEpochComparison",
             class_labels=self.class_labels,
             main_class=self.main_class,
@@ -120,6 +158,7 @@ class GetRejection_TestCase(unittest.TestCase):
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
             comp_tagger_frac_dict=self.comp_tagger_frac_dict,
             plot_name=self.tmp_plot_dir + "PlotRejPerEpoch",
+            unique_identifier="ttbar_r21_val",
             class_labels=self.class_labels,
             main_class=self.main_class,
             label_extension=self.label_extension,
@@ -151,6 +190,7 @@ class GetRejection_TestCase(unittest.TestCase):
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotLosses",
             train_history_dict=self.train_history_dict,
+            val_files=self.val_files,
             plot_datatype="png",
         )
 
@@ -168,6 +208,7 @@ class GetRejection_TestCase(unittest.TestCase):
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotAccuracies",
             train_history_dict=self.train_history_dict,
+            val_files=self.val_files,
             plot_datatype="png",
         )
 
@@ -185,6 +226,7 @@ class GetRejection_TestCase(unittest.TestCase):
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpoch",
             frac_class="cjets",
+            val_files=self.val_files,
             plot_datatype="png",
         )
 
@@ -202,6 +244,7 @@ class GetRejection_TestCase(unittest.TestCase):
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpochUmami",
             frac_class="cjets",
+            val_files=self.val_files,
             plot_datatype="png",
         )
 
@@ -219,6 +262,7 @@ class GetRejection_TestCase(unittest.TestCase):
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotLossesUmami",
             train_history_dict=self.train_history_dict,
+            val_files=self.val_files,
             plot_datatype="png",
         )
 
@@ -236,6 +280,7 @@ class GetRejection_TestCase(unittest.TestCase):
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotAccuraciesUmami",
             train_history_dict=self.train_history_dict,
+            val_files=self.val_files,
             plot_datatype="png",
         )
 
@@ -255,12 +300,13 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
         plt.rcdefaults()
         plt.close("all")
         self.test_dir = tempfile.TemporaryDirectory()
-        self.validation_file = (
-            f"{self.test_dir.name}/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5"
-        )
-        self.add_validation_file = (
-            f"{self.test_dir.name}/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5"
-        )
+        self.validation_files = {
+            "ttbar_r21_val": {
+                "path": f"{self.test_dir.name}/ci_ttbar_testing.h5",
+                "label": "dummylabel",
+            }
+        }
+        self.validation_unique_identifiers = list(self.validation_files.keys())
         self.tagger_comp_var_rnnip = ["rnnip_pb", "rnnip_pc", "rnnip_pu"]
         self.tagger_comp_var_dl1r = ["DL1r_pb", "DL1r_pc", "DL1r_pu"]
         self.recommended_frac_dict = {"cjets": 0.018, "ujets": 0.982}
@@ -270,8 +316,8 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/umami/"
-                "MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5",
+                "https://umami-ci-provider.web.cern.ch/preprocessing/"
+                "ci_ttbar_testing.h5",
                 "--directory-prefix",
                 self.test_dir.name,
             ]
@@ -279,7 +325,8 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
 
     def test_CompTaggerRejectionDict_umami(self):
         comp_rej_dict = CompTaggerRejectionDict(
-            file=self.validation_file,
+            file=self.validation_files[self.validation_unique_identifiers[0]]["path"],
+            unique_identifier=self.validation_unique_identifiers[0],
             tagger_comp_var=self.tagger_comp_var_rnnip,
             recommended_frac_dict=self.recommended_frac_dict,
             WP=self.WP,
@@ -287,13 +334,19 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
             main_class=self.main_class,
         )
 
-        self.assertTrue("cjets_rej" in comp_rej_dict and "ujets_rej" in comp_rej_dict)
+        self.assertTrue(
+            f"cjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+            and f"ujets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+        )
 
-        self.assertFalse("bjets_rej" in comp_rej_dict)
+        self.assertFalse(
+            f"bjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+        )
 
     def test_CompTaggerRejectionDict_dips_dl1(self):
         comp_rej_dict = CompTaggerRejectionDict(
-            file=self.validation_file,
+            file=self.validation_files[self.validation_unique_identifiers[0]]["path"],
+            unique_identifier=self.validation_unique_identifiers[0],
             tagger_comp_var=self.tagger_comp_var_dl1r,
             recommended_frac_dict=self.recommended_frac_dict,
             WP=self.WP,
@@ -301,6 +354,11 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
             main_class=self.main_class,
         )
 
-        self.assertTrue("cjets_rej" in comp_rej_dict and "ujets_rej" in comp_rej_dict)
+        self.assertTrue(
+            f"cjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+            and f"ujets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+        )
 
-        self.assertFalse("bjets_rej" in comp_rej_dict)
+        self.assertFalse(
+            f"bjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+        )

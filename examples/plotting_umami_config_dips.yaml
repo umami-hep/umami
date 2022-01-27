@@ -8,7 +8,7 @@ Eval_parameters:
 # Dips, ttbar
 scores_Dips_ttbar:
   type: "scores"
-  data_set_name: "ttbar" # data set to use. This chooses either the test_file ('ttbar') or the add_test_file ('zpext')
+  data_set_name: "ttbar_r21" # data set to use. This is the dict entry name of the file you want to plot in the train config
   tagger_name: "dips" # Name of the tagger: Example: dips_pb -> Name of tagger: dips
   class_labels: ["ujets", "cjets", "bjets"] # Classes which are used
   main_class: "bjets" # Main class
@@ -27,12 +27,12 @@ scores_Dips_ttbar_comparison:
   main_class: "bjets"
   models_to_plot:
     dips_r21:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       tagger_name: "dips"
       class_labels: ["ujets", "cjets", "bjets"]
       label: "$t\\bar{t}$"
     dips_r22: # The name here has no impact on anything.
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       tagger_name: "dips"
       class_labels: ["ujets", "cjets", "bjets"]
       label: "$t\\bar{t} 2$"
@@ -51,7 +51,7 @@ Dips_pT_vs_beff:
   type: "pT_vs_eff"
   models_to_plot:
     dips:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "DIPS"
       tagger_name: "dips"
   plot_settings:
@@ -77,7 +77,7 @@ Dips_light_flavour_ttbar:
   main_class: "bjets"
   models_to_plot:
     dips_r21: # The name here has no impact on anything.
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "DIPS"
       tagger_name: "dips"
       rejection_class: "cjets"
@@ -96,12 +96,12 @@ Dips_Comparison_flavour_ttbar:
   type: "ROC_Comparison"
   models_to_plot:
     dips_r21_u:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "DIPS"
       tagger_name: "dips"
       rejection_class: "ujets"
     dips_r21_c:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "DIPS"
       tagger_name: "dips"
       rejection_class: "cjets"
@@ -118,7 +118,7 @@ Dips_Comparison_flavour_ttbar:
 
 confusion_matrix_Dips_ttbar:
   type: "confusion_matrix"
-  data_set_name: "ttbar"
+  data_set_name: "ttbar_r21"
   tagger_name: "dips"
   class_labels: ["ujets", "cjets", "bjets"]
   plot_settings:
@@ -126,7 +126,7 @@ confusion_matrix_Dips_ttbar:
 
 Dips_saliency_b_WP77_passed_ttbar:
   type: "saliency"
-  data_set_name: "ttbar"
+  data_set_name: "ttbar_r21"
   plot_settings:
     title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who passed WP = 77% \n with exactly 8 tracks"
     target_beff: 0.77
@@ -141,7 +141,7 @@ Dips_saliency_b_WP77_passed_ttbar:
 # Dips, ttbar
 Dips_prob_pb:
   type: "probability"
-  data_set_name: "ttbar"
+  data_set_name: "ttbar_r21"
   tagger_name: "dips"
   class_labels: ["ujets", "cjets", "bjets"]
   prob_class: "bjets"
@@ -159,12 +159,12 @@ Dips_prob_comparison_pb:
   prob_class: "bjets"
   models_to_plot:
     dips_r22:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "RNNIP"
       tagger_name: "dips"
       class_labels: ["ujets", "cjets", "bjets"]
     dips_r21:
-      data_set_name: "ttbar"
+      data_set_name: "ttbar_r21"
       label: "DIPS 2"
       tagger_name: "dips"
       class_labels: ["ujets", "cjets", "bjets"]

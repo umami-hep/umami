@@ -40,26 +40,35 @@ class Configuration:
             "preprocess_config",
             "model_file",
             "train_file",
-            "validation_file",
-            "add_validation_file",
+            "validation_files",
             "var_dict",
             "NN_structure",
             "tracks_name",
             "Eval_parameters_validation",
             "Validation_metrics_settings",
-            "ttbar_test_files",
-            "zpext_test_files",
+            "test_files",
         ]
         config_evaluation_items = [
             "model_name",
-            "ttbar_test_files",
-            "zpext_test_files",
+            "test_files",
             "evaluate_trained_model",
             "NN_structure",
             "tracks_name",
             "Eval_parameters_validation",
             "Validation_metrics_settings",
         ]
+
+        if (
+            "validation_file" in self.config.keys()
+            or "add_validation_file" in self.config.keys()
+        ):
+            raise KeyError(
+                "You have specified the entries 'validation_file' and/or "
+                "'add_validation_file' in your training config. This structure is no "
+                "longer supported. Please move both filepaths in the common "
+                "'validation_files' section of the train config."
+            )
+
         if "evaluate_trained_model" in self.config.keys():
             if self.config["evaluate_trained_model"] is True:
                 iterate_list = config_train_items

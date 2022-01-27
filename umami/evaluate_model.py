@@ -110,16 +110,22 @@ def EvaluateModel(
     """
 
     # Get train parameters
+    test_set_config = train_config.test_files[data_set_name]
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
     tracks_name = train_config.tracks_name
     var_cuts = (
-        Eval_params["variable_cuts"][f"{data_set_name}"]
-        if "variable_cuts" in Eval_params and Eval_params["variable_cuts"] is not None
-        else None
+        test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
+
+    # Print a warning that no variable cuts are used for the file
+    if var_cuts is None:
+        logger.warning(
+            f"No variable cuts are given for {data_set_name}."
+            " Please check if you defined them!"
+        )
 
     # Init the placeholder lists for tagger_names
     tagger_names = []
@@ -334,16 +340,22 @@ def EvaluateModelDips(
         raise ValueError("You need to give an epoch which is to be evaluated!")
 
     # Get train parameters
+    test_set_config = train_config.test_files[data_set_name]
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
     tracks_name = train_config.tracks_name
     var_cuts = (
-        Eval_params["variable_cuts"][f"{data_set_name}"]
-        if "variable_cuts" in Eval_params and Eval_params["variable_cuts"] is not None
-        else None
+        test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
+
+    # Print a warning that no variable cuts are used for the file
+    if var_cuts is None:
+        logger.warning(
+            f"No variable cuts are given for {data_set_name}."
+            " Please check if you defined them!"
+        )
 
     # Set number of nJets for testing
     nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
@@ -572,15 +584,21 @@ def EvaluateModelDL1(
     """
 
     # Get train parameters
+    test_set_config = train_config.test_files[data_set_name]
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
     var_cuts = (
-        Eval_params["variable_cuts"][f"{data_set_name}"]
-        if "variable_cuts" in Eval_params and Eval_params["variable_cuts"] is not None
-        else None
+        test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
+
+    # Print a warning that no variable cuts are used for the file
+    if var_cuts is None:
+        logger.warning(
+            f"No variable cuts are given for {data_set_name}."
+            " Please check if you defined them!"
+        )
 
     # Check if epochs are set or not
     if args.epoch is None:
@@ -791,100 +809,55 @@ if __name__ == "__main__":
             )
             tagger_name = None
 
+    # TODO Change this in python 3.10
     if tagger_name == "dl1":
-        if training_config.ttbar_test_files is not None:
-            logger.info("Start evaluating DL1 with ttbar test files...")
-            for ttbar_models in training_config.ttbar_test_files:
-                EvaluateModelDL1(
-                    args=parser_args,
-                    train_config=training_config,
-                    preprocess_config=preprocessing_config,
-                    test_file=training_config.ttbar_test_files[ttbar_models]["Path"],
-                    data_set_name=training_config.ttbar_test_files[ttbar_models][
-                        "data_set_name"
-                    ],
-                    test_file_entry=ttbar_models,
-                )
-
-        if training_config.zpext_test_files is not None:
-            logger.info("Start evaluating DL1 with Z' test files...")
-            for zpext_models in training_config.zpext_test_files:
-                EvaluateModelDL1(
-                    args=parser_args,
-                    train_config=training_config,
-                    preprocess_config=preprocessing_config,
-                    test_file=training_config.zpext_test_files[zpext_models]["Path"],
-                    data_set_name=training_config.zpext_test_files[zpext_models][
-                        "data_set_name"
-                    ],
-                    test_file_entry=zpext_models,
-                )
+        logger.info("Start evaluating DL1 with test files...")
+        for (
+            test_file_identifier,
+            test_file_config,
+        ) in training_config.test_files.items():
+            EvaluateModelDL1(
+                args=parser_args,
+                train_config=training_config,
+                preprocess_config=preprocessing_config,
+                test_file=test_file_config["path"],
+                data_set_name=test_file_identifier,
+                test_file_entry=test_file_identifier,
+            )
 
     elif tagger_name in ("dips", "dips_cond_att"):
-        if training_config.ttbar_test_files is not None:
-            logger.info("Start evaluating DIPS with ttbar test files...")
-            for ttbar_models in training_config.ttbar_test_files:
-                EvaluateModelDips(
-                    args=parser_args,
-                    train_config=training_config,
-                    preprocess_config=preprocessing_config,
-                    test_file=training_config.ttbar_test_files[ttbar_models]["Path"],
-                    data_set_name=training_config.ttbar_test_files[ttbar_models][
-                        "data_set_name"
-                    ],
-                    tagger=tagger_name,
-                )
-
-        if training_config.zpext_test_files is not None:
-            logger.info("Start evaluating DIPS with Z' test files...")
-            for zpext_models in training_config.zpext_test_files:
-                EvaluateModelDips(
-                    args=parser_args,
-                    train_config=training_config,
-                    preprocess_config=preprocessing_config,
-                    test_file=training_config.zpext_test_files[zpext_models]["Path"],
-                    data_set_name=training_config.zpext_test_files[zpext_models][
-                        "data_set_name"
-                    ],
-                    tagger=tagger_name,
-                )
+        logger.info("Start evaluating DIPS with test files...")
+        for (
+            test_file_identifier,
+            test_file_config,
+        ) in training_config.test_files.items():
+            EvaluateModelDips(
+                args=parser_args,
+                train_config=training_config,
+                preprocess_config=preprocessing_config,
+                test_file=test_file_config["path"],
+                data_set_name=test_file_identifier,
+                tagger=tagger_name,
+            )
 
     elif tagger_name == "umami" or tagger_name is None:
-        if training_config.ttbar_test_files is not None:
-            if tagger_name is None:
-                logger.info("Start evaluating taggers in ttbar test files...")
+        if tagger_name is None:
+            logger.info("Start evaluating in-file taggers with test files...")
 
-            else:
-                logger.info("Start evaluating UMAMI with ttbar test files...")
+        else:
+            logger.info("Start evaluating UMAMI with test files...")
 
-            for ttbar_models in training_config.ttbar_test_files:
-                EvaluateModel(
-                    args=parser_args,
-                    train_config=training_config,
-                    preprocess_config=preprocessing_config,
-                    test_file=training_config.ttbar_test_files[ttbar_models]["Path"],
-                    data_set_name=training_config.ttbar_test_files[ttbar_models][
-                        "data_set_name"
-                    ],
-                )
-
-        if training_config.zpext_test_files is not None:
-            if tagger_name is None:
-                logger.info("Start evaluating taggers in Z' test files...")
-
-            else:
-                logger.info("Start evaluating UMAMI with Z' test files...")
-
-            for zpext_models in training_config.zpext_test_files:
-                EvaluateModel(
-                    args=parser_args,
-                    train_config=training_config,
-                    preprocess_config=preprocessing_config,
-                    test_file=training_config.zpext_test_files[zpext_models]["Path"],
-                    data_set_name=training_config.zpext_test_files[zpext_models][
-                        "data_set_name"
-                    ],
-                )
+        for (
+            test_file_identifier,
+            test_file_config,
+        ) in training_config.test_files.items():
+            EvaluateModel(
+                args=parser_args,
+                train_config=training_config,
+                preprocess_config=preprocessing_config,
+                test_file=test_file_config["path"],
+                data_set_name=test_file_identifier,
+            )
 
     else:
         raise ValueError(

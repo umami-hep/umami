@@ -95,6 +95,9 @@ def LoadJetsFromFile(
         # Make a copy of the variables list to loop over it
         variables_list = deepcopy(variables)
 
+        # Add the class label variables to the variables list
+        variables_list += class_label_vars
+
         # Check if all variables from variable_list are available
         for var in variables:
             if var not in avai_var_list:
@@ -107,15 +110,12 @@ def LoadJetsFromFile(
         # Load variables for cuts if given
         if cut_vars_dict:
 
-            # Add the class label variables to the variables list
-            variables_list += class_label_vars
-
             # Iterate over the cuts and get the needed variables
             for variable in cut_vars_dict:
                 variables_list += list(variable.keys())
 
-            # Ensure each variable is only once in the list
-            variables_list = list(set(variables_list))
+        # Ensure each variable is only once in the list
+        variables_list = list(set(variables_list))
 
     # Init a counter for the number of loaded jets
     nJets_counter = 0

@@ -746,7 +746,6 @@ def plotPtDependence(
         If the given Ratio_Cut is either not a list or has more then two
         entries.
     """
-
     if SWP_label_list is None:
         SWP_label_list = []
     if bin_edges is None:
@@ -1112,10 +1111,7 @@ def plotPtDependence(
 
     # Redefine Second Tag with inclusive or fixed tag
     if Fixed_WP_Bin is True:
-        SecondTag = (
-            f"{SecondTag}\nConstant"
-            fr"$\epsilon_b$ = {int(WP * 100)}% per bin"
-        )
+        SecondTag = f"{SecondTag}\nConstant" fr"$\epsilon_b$ = {int(WP * 100)}% per bin"
 
     else:
         SecondTag = f"{SecondTag}\nInclusive " + fr"$\epsilon_b$ = {int(WP * 100)}%"
@@ -1709,7 +1705,6 @@ def plotROCRatioComparison(
     ValueError
         If more than two different rejections are given.
     """
-
     if linestyles is None:
         linestyles = []
     if colors is None:

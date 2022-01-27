@@ -133,31 +133,23 @@ def prepareConfig(
     config_file["model_name"] = data[f"test_{tagger}"]["model_name"]
     config_file["preprocess_config"] = f"{preprocessing_config}"
     config_file["train_file"] = f"{train_file}"
-    config_file["validation_file"] = f"{test_file_ttbar}"
-    config_file["add_validation_file"] = f"{test_file_zprime}"
 
     # Erase all not used test files
-    del config_file["ttbar_test_files"]
-    del config_file["zpext_test_files"]
+    del config_file["test_files"]
 
     # Add only wanted test files
     config_file.update(
         {
-            "ttbar_test_files": {
+            "test_files": {
                 "ttbar_r21": {
-                    "Path": f"{test_file_ttbar}",
-                    "data_set_name": "ttbar",
-                }
-            }
-        }
-    )
-    config_file.update(
-        {
-            "zpext_test_files": {
+                    "path": f"{test_file_ttbar}",
+                    "variable_cuts": [
+                        {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
+                    ],
+                },
                 "zpext_r21": {
-                    "Path": f"{test_file_zprime}",
-                    "data_set_name": "zpext",
-                }
+                    "path": f"{test_file_zprime}",
+                },
             }
         }
     )
@@ -165,14 +157,29 @@ def prepareConfig(
     config_file["NN_structure"]["batch_size"] = 50
     config_file["NN_structure"]["epochs"] = 2
     config_file["NN_structure"]["nJets_train"] = 100
-    config_file["Eval_parameters_validation"]["n_jets"] = 4000
+    config_file["Eval_parameters_validation"]["n_jets"] = 4_000
     config_file["Eval_parameters_validation"]["eff_min"] = 0.60
-    config_file["Eval_parameters_validation"]["variable_cuts"] = {
-        "validation_file": [{"pt_btagJes": {"operator": "<=", "condition": 250000}}],
-        "add_validation_file": [{"pt_btagJes": {"operator": ">", "condition": 250000}}],
-        "ttbar": [{"pt_btagJes": {"operator": "<=", "condition": 250000}}],
-        "zpext": [{"pt_btagJes": {"operator": ">", "condition": 250000}}],
-    }
+    # Add some validation files for testing
+    config_file.update(
+        {
+            "validation_files": {
+                "ttbar_r21_val": {
+                    "path": f"{test_dir}/ci_ttbar_testing.h5",
+                    "label": "$t\\bar{t}$ Release 21",
+                    "variable_cuts": [
+                        {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
+                    ],
+                },
+                "zprime_r21_val": {
+                    "path": f"{test_dir}/ci_zpext_testing.h5",
+                    "label": "$Z'$ Release 21",
+                    "variable_cuts": [
+                        {"pt_btagJes": {"operator": ">", "condition": 250_000}}
+                    ],
+                },
+            }
+        }
+    )
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
@@ -180,8 +187,6 @@ def prepareConfig(
             "PFlow-hybrid_70-test-resampled_scaled_shuffled",
         )
         config_file["model_name"] = data["test_dips"]["model_name"] + "_tfrecords"
-        config_file["add_validation_file"] = None
-        config_file.update({"zpext_test_files": None})
 
         config = config[:].replace(".yaml", "") + "_tfrecords.yaml"
 
