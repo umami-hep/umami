@@ -110,16 +110,14 @@ def EvaluateModel(
     """
 
     # Get train parameters
-    test_file_options = train_config.test_files[data_set_name]
+    test_set_config = train_config.test_files[data_set_name]
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
     tracks_name = train_config.tracks_name
     var_cuts = (
-        test_file_options["variable_cuts"]
-        if "variable_cuts" in test_file_options
-        else None
+        test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
 
     # Print a warning that no variable cuts are used for the file
@@ -342,16 +340,14 @@ def EvaluateModelDips(
         raise ValueError("You need to give an epoch which is to be evaluated!")
 
     # Get train parameters
-    test_file_options = train_config.test_files[data_set_name]
+    test_set_config = train_config.test_files[data_set_name]
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
     tracks_name = train_config.tracks_name
     var_cuts = (
-        test_file_options["variable_cuts"]
-        if "variable_cuts" in test_file_options
-        else None
+        test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
 
     # Print a warning that no variable cuts are used for the file
@@ -588,15 +584,13 @@ def EvaluateModelDL1(
     """
 
     # Get train parameters
-    test_file_options = train_config.test_files[data_set_name]
+    test_set_config = train_config.test_files[data_set_name]
     Eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
     var_cuts = (
-        test_file_options["variable_cuts"]
-        if "variable_cuts" in test_file_options
-        else None
+        test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
 
     # Print a warning that no variable cuts are used for the file
@@ -818,25 +812,31 @@ if __name__ == "__main__":
     # TODO Change this in python 3.10
     if tagger_name == "dl1":
         logger.info("Start evaluating DL1 with test files...")
-        for test_file_i in training_config.test_files:
+        for (
+            test_file_identifier,
+            test_file_config,
+        ) in training_config.test_files.items():
             EvaluateModelDL1(
                 args=parser_args,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
-                test_file=training_config.test_files[test_file_i]["path"],
-                data_set_name=test_file_i,
-                test_file_entry=test_file_i,
+                test_file=test_file_config["path"],
+                data_set_name=test_file_identifier,
+                test_file_entry=test_file_identifier,
             )
 
     elif tagger_name in ("dips", "dips_cond_att"):
         logger.info("Start evaluating DIPS with test files...")
-        for test_file_i in training_config.test_files:
+        for (
+            test_file_identifier,
+            test_file_config,
+        ) in training_config.test_files.items():
             EvaluateModelDips(
                 args=parser_args,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
-                test_file=training_config.test_files[test_file_i]["path"],
-                data_set_name=test_file_i,
+                test_file=test_file_config["path"],
+                data_set_name=test_file_identifier,
                 tagger=tagger_name,
             )
 
@@ -847,13 +847,16 @@ if __name__ == "__main__":
         else:
             logger.info("Start evaluating UMAMI with test files...")
 
-        for test_file_i in training_config.test_files:
+        for (
+            test_file_identifier,
+            test_file_config,
+        ) in training_config.test_files.items():
             EvaluateModel(
                 args=parser_args,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
-                test_file=training_config.test_files[test_file_i]["path"],
-                data_set_name=test_file_i,
+                test_file=test_file_config["path"],
+                data_set_name=test_file_identifier,
             )
 
     else:

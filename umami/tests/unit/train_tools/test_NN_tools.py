@@ -273,8 +273,6 @@ class MyCallback_TestCase(unittest.TestCase):
         self.nFeatures = 15
         self.nClasses = len(self.class_labels)
         self.target_beff = 0.77
-        # TODO: we could add a properly initialized val_data_dict here, but seems like
-        # the test further down doesn't use it anyway
         self.val_data_dict = {}
         self.frac_dict = {
             "cjets": 0.018,
@@ -399,15 +397,13 @@ class GetSamples_TestCase(unittest.TestCase):
                 "path": f"{self.test_dir.name}/ci_ttbar_testing.h5",
                 "label": "$t\\bar{t}$ Release 21",
                 "variable_cuts": [
-                    {"pt_btagJes": {"operator": "<=", "condition": 250000}}
+                    {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
                 ],
             },
             "zprime_r21_val": {
                 "path": f"{self.test_dir.name}/ci_zpext_testing.h5",
                 "label": "$Z'$ Release 21",
-                "variable_cuts": [
-                    {"pt_btagJes": {"operator": ">", "condition": 250000}}
-                ],
+                "variable_cuts": None,
             },
         }
         self.class_labels = ["bjets", "cjets", "ujets"]

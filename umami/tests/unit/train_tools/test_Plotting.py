@@ -32,9 +32,6 @@ class GetRejection_TestCase(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_plot_dir = f"{self.tmp_dir.name}/"
         self.Control_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
-        # for updating the control plots uncomment the following line and run one
-        # time with this configuration
-        # self.tmp_plot_dir = self.Control_plots_dir
         list_of_keys = [
             "epoch",
             "loss",
@@ -83,25 +80,22 @@ class GetRejection_TestCase(unittest.TestCase):
                 "path": "dummy",
                 "label": "$t\\bar{t}$ Release 21",
                 "variable_cuts": [
-                    {"pt_btagJes": {"operator": "<=", "condition": 250000}}
+                    {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
                 ],
             },
             "zprime_r21_val": {
                 "path": "dummy",
                 "label": "$Z'$ Release 21",
                 "variable_cuts": [
-                    {"pt_btagJes": {"operator": ">", "condition": 250000}}
+                    {"pt_btagJes": {"operator": ">", "condition": 250_000}}
                 ],
             },
         }
         self.validation_unique_identifiers = self.val_files.keys()
 
-        # TODO:
-        # create a pseudo results dataframe where the results of each key specified
-        # above just increases linearly. In order to be able to see all of them when
-        # plotted together, the slope changes for each key (e.g. we want to plot
-        # different validation accuracies together --> if they have the same values we
-        # only see the most recently plotted line)
+        # TODO: Change the plotted data for each key? Atm we plot only straight lines
+        # on top of each other, which maybe makes the test less robust?
+
         self.df_results = dict(
             zip(
                 list_of_keys,

@@ -4,34 +4,35 @@ model_name: Eval_results
 # Set the option to evaluate a freshly trained model to False
 evaluate_trained_model: False
 
+# Defining templates for the variable cuts
+.variable_cuts_ttbar: &variable_cuts_ttbar
+    variable_cuts:
+        - pt_btagJes:
+            operator: "<="
+            condition: 2.5e5
+
+.variable_cuts_zpext: &variable_cuts_zpext
+    variable_cuts:
+        - pt_btagJes:
+            operator: ">"
+            condition: 2.5e5
+
 test_files:
     ttbar_r21:
         path: <path>/<to>/<preprocessed>/<samples>/ttbar_r21_test_file.h5
-        variable_cuts:
-            - pt_btagJes:
-                operator: "<="
-                condition: 250000
+        <<: *variable_cuts_ttbar
 
     ttbar_r22:
         path: <path>/<to>/<preprocessed>/<samples>/ttbar_r22_test_file.h5
-        variable_cuts:
-            - pt_btagJes:
-                operator: "<="
-                condition: 250000
+        <<: *variable_cuts_ttbar
 
     zpext_r21:
         path: <path>/<to>/<preprocessed>/<samples>/zpext_r21_test_file.h5
-        variable_cuts:
-            - pt_btagJes:
-                operator: ">"
-                condition: 250000
+        <<: *variable_cuts_zpext
 
     zpext_r22:
         path: <path>/<to>/<preprocessed>/<samples>/zpext_r22_test_file.h5
-        variable_cuts:
-            - pt_btagJes:
-                operator: ">"
-                condition: 250000
+        <<: *variable_cuts_zpext
 
 # Values for the neural network
 NN_structure:

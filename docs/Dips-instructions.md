@@ -34,52 +34,48 @@ model_file:
 # Add training file
 train_file: <path>/<to>/<train>/<samples>/train_file.h5
 
+# Defining templates for the variable cuts
+.variable_cuts_ttbar: &variable_cuts_ttbar
+    variable_cuts:
+        - pt_btagJes:
+            operator: "<="
+            condition: 2.5e5
+
+.variable_cuts_zpext: &variable_cuts_zpext
+    variable_cuts:
+        - pt_btagJes:
+            operator: ">"
+            condition: 2.5e5
+
+
 # Add validation files
 validation_files:
     ttbar_r21_val:
         path: <path_palce_holder>/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
         label: "$t\\bar{t}$ Release 21"
-        variable_cuts:
-            - pt_btagJes:
-                operator: "<="
-                condition: 250000
+        <<: *variable_cuts_ttbar
 
     zprime_r21_val:
         path: <path_palce_holder>/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
         label: "$Z'$ Release 21"
-        variable_cuts:
-            - pt_btagJes:
-                operator: ">"
-                condition: 250000
+        <<: *variable_cuts_zpext
 
 test_files:
     ttbar_r21:
         path: <path>/<to>/<preprocessed>/<samples>/ttbar_r21_test_file.h5
-        variable_cuts:
-            - pt_btagJes:
-                operator: "<="
-                condition: 250000
+        <<: *variable_cuts_ttbar
 
     ttbar_r22:
         path: <path>/<to>/<preprocessed>/<samples>/ttbar_r22_test_file.h5
-        variable_cuts:
-            - pt_btagJes:
-                operator: "<="
-                condition: 250000
+        <<: *variable_cuts_ttbar
 
     zpext_r21:
         path: <path>/<to>/<preprocessed>/<samples>/zpext_r21_test_file.h5
-        variable_cuts:
-            - pt_btagJes:
-                operator: ">"
-                condition: 250000
+        <<: *variable_cuts_zpext
 
     zpext_r22:
         path: <path>/<to>/<preprocessed>/<samples>/zpext_r22_test_file.h5
-        variable_cuts:
-            - pt_btagJes:
-                operator: ">"
-                condition: 250000
+        <<: *variable_cuts_zpext
 
 # Path to Variable dict used in preprocessing
 var_dict: <path>/<to>/<variables>/Dips_Variables.yaml
@@ -187,6 +183,8 @@ The different options are briefly explained here:
 | `train_file` | String | Necessary | Path to the training sample. This is given by the `preprocessing` step of Umami |
 | `validation_files` | Dict | Optional | Here you can define different validation samples that are used in the training and the `plotting_epoch_performance.py` script. Those validation samples need to be defined in a dict structure shown in the example. The name of the dict entry is relevant and is the unique identifier for this sample (DO NOT USE IT MULTIPLE TIMES). `path` gives the path to the file. |
 | `test_files` | Dict | Optional | Here you can define different test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is relevant and is the unique identifier in the results file which is produced by the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). `Path` gives the path to the file. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
+| `path` | String | Necessary | Path to the validation/test file which is to be used. Using wildcards is possible. |
+| `variable_cuts` | Dict | Optional | Dict of cuts which are applied when loading the different test files. Only jet variables can be cut on. These are in this example defined as templates for the different samples types. |
 | `var_dict` | String | Necessary | Path to the variable dict used in the `preprocess_config` to produce the train sample. |
 | `exclude` | List | Necessary | List of variables that are excluded from training. Only compatible with DL1r training. To include all, just give an empty list. |
 |`tracks_name`| String| Necessary* | Name of the tracks data-set to use for training and evaluation, default is "tracks".  <br />* ***This option is necessary when using tracks, but, when working with old preprpocessed files (before January 2022)  this option has to be removed form the config file to ensure compatibility*** |
@@ -224,7 +222,6 @@ The different options are briefly explained here:
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `frac_values` | Dict | Necessary | Dict with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
-| `variable_cuts` | Dict | Necessary | Dict of cuts which are applied when loading the different test files. Only jet variables can be cut on. |
 | `WP` | Float | Necessary | Working point which is used in the validation and evaluation. |
 | `Calculate_Saliency` | Bool | Optional | Decide, if the saliency maps are calculated or not. This takes a lot of time and resources! |
 
