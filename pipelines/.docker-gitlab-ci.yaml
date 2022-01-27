@@ -24,6 +24,7 @@
   changes:
         - requirements.txt
         - docker/umamibase/Dockerfile
+        - pipelines/.docker-gitlab-ci.yaml
         - .gitlab-ci.yml
 
 build_umamibase_cpu:

@@ -274,7 +274,7 @@ Host working_node tf2~working_node
 ```
 
 The first entry is, for example, the login node of your cluster. The second is the working node. The login node is jumped (used as a bridge). The
-second entry also has two names for the entry, one has a `tf2~` in front. This is *important* for the following part, so please add this here.   
+second entry also has two names for the entry, one has a `tf2~` in front. This is *important* for the following part, so please add this here.
 After adapting the config file, you need to tell VSCode where to find it. This can be set in the `settings.json` of VSCode. You can find/open it in
 VSCode when pressing `Ctrl + Shift + P` and start typing `settings`. You will find the option `Preferences: Open Settings (JSON)`. When selecting this,
 the config json file of VSCode is opened. There you need to add the following line with the path of your ssh config file added (if the config is in the default path `~/.ssh/config`, you don't need to add this).
@@ -297,10 +297,10 @@ in the VSCode settings with:
 "remote.SSH.path": "<path>/<to>/<executable>",
 ```
 
-Now restart VSCode and open the Remote Explorer tab. At the top switch to `SSH Targets` and right-click on the `tf2~` connection and click on 
+Now restart VSCode and open the Remote Explorer tab. At the top switch to `SSH Targets` and right-click on the `tf2~` connection and click on
 `Connect to Host in Current Window`. VSCode will now install a VSCode server on your ssh target to run on and will ask you to install your
 extensions on the ssh target. This will improve the performance of VSCode. It will also ask you which path to open. After that, you can open
-a python file and the Python extension will start and should show you at the bottom of VSCode the current Python Interpreter which is used. 
+a python file and the Python extension will start and should show you at the bottom of VSCode the current Python Interpreter which is used.
 If you now click on the errors and warnings right to it, the console will open where you can switch between Problems, Output, Debug Console, Terminal
 and Ports. In terminal should be a fresh terminal with the singularity image running. If not, check out output and switch on the right from Tasks to
 Remote - SSH to see the output of the ssh connection.
@@ -364,7 +364,7 @@ if NOT %1==-V (
         ) else (
             ssh.exe %*
         )
-    ) 
+    )
 ) else (
     ssh.exe -V
 )
