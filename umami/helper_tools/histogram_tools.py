@@ -42,7 +42,7 @@ def hist_w_unc(a, bins, normed: bool = True):
     return bin_edges, hist, unc, band
 
 
-def step_divide(nominator, denominator, default=1.0):
+def save_divide(nominator, denominator, default=1.0):
     """
     Division using numpy divide function returning default value in cases where
     denoinator is 0.
@@ -60,11 +60,19 @@ def step_divide(nominator, denominator, default=1.0):
     -------
     ratio: array_like
     """
+    if isinstance(nominator, (int, float)) and isinstance(denominator, (int, float)):
+        output_shape = 1
+    else:
+        try:
+            output_shape = denominator.shape
+        except AttributeError:
+            output_shape = nominator.shape
+
     ratio = np.divide(
         nominator,
         denominator,
         out=np.ones(
-            nominator.shape,
+            output_shape,
             dtype=float,
         )
         * default,
@@ -111,14 +119,14 @@ def hist_ratio(nominator, denominator, nominator_unc, denominator_unc):
         raise (
             AssertionError("Denominator and denominator_unc don't have the same legth")
         )
-    step_ratio = step_divide(nominator, denominator)
+    step_ratio = save_divide(nominator, denominator)
     # Add an extra bin in the beginning to have the same binning as the input
     # Otherwise, the ratio will not be exactly above each other (due to step)
     step_ratio = np.append(np.array([step_ratio[0]]), step_ratio)
 
     # Calculate rel uncertainties
-    nominator_rel_unc = step_divide(nominator_unc, nominator, default=0)
-    denominator_rel_unc = step_divide(denominator_unc, denominator, default=0)
+    nominator_rel_unc = save_divide(nominator_unc, nominator, default=0)
+    denominator_rel_unc = save_divide(denominator_unc, denominator, default=0)
 
     # Calculate rel uncertainty
     step_rel_unc = np.sqrt(nominator_rel_unc ** 2 + denominator_rel_unc ** 2)
