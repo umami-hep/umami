@@ -340,8 +340,11 @@ sampling:
       zprime: 0.3
 
     # number of training jets
-    # For PDF sampling: this is the number of target jets to be taken (through all categories).
-    #                   If set to -1: max out to target numbers (limited by fractions ratio)
+    # For PDF sampling: the number of target jets per class!
+    #                   So if you set njets=1_000_000 and you have 3 output classes
+    #                   you will end up with 3_000_000 jets
+    # For other sampling methods: total number of jets after resampling
+    # If set to -1: max out to target numbers (limited by fractions ratio)
     njets: 25e6
 
     # Bool, if track information (for DIPS etc.) are saved.
@@ -385,7 +388,7 @@ For the resampling, the indicies of the jets to use are saved in an intermediate
 | `samples`  | `all`  |  Samples which are to be resampled. The samples defined in here are the ones we prepared in the step above. |
 | `custom_njets_initial`  | `count`  |  Used jets per sample to ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples.  |
 | `fractions`  | `all`  |  Fractions of used samples in the final training sample.  |
-| `njets`  |   |  Number of target jets to be taken (through all categories). If set to -1: max out to target numbers (limited by fractions ratio) |
+| `njets`  |   |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class, while for other methods it is the total number of jets after resampling. If set to -1: max out to target numbers (limited by fractions ratio) |
 | `save_tracks`  | `all`  |  Flag if storing tracks.  |
 | `tracks_names`  | `all`  |  Name of the tracks how they are called in the .h5 files coming from the dumper.  |
 | `intermediate_index_file`  | `all`  |  Stores the indices per sample into an intermediate file.  |
