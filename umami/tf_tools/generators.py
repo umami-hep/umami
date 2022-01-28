@@ -278,7 +278,7 @@ class umami_generator(Model_Generator):
             yield {"input_1": batch_x_trk, "input_2": batch_x}, batch_y
 
 
-class dips_condition_generator(Model_Generator):
+class cads_generator(Model_Generator):
     """Generator class for CADS.
 
     This class provides the a generator that loads the training dataset

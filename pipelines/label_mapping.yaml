@@ -3,7 +3,7 @@ CI/CD:
 - pipelines/
 DIPS:
 - umami/models/Model_Dips.py
-- umami/models/Model_Dips_cond_att.py
+- umami/models/Model_CADS.py
 DL1:
 - umami/models/Model_DL1.py
 Documentation:

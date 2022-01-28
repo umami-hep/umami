@@ -48,11 +48,14 @@ def DL1_model(train_config, input_shape, feature_connect_indices=None):
     batch_norm = NN_structure["Batch_Normalisation"]
     dropout = NN_structure["dropout"]
     class_labels = NN_structure["class_labels"]
+    load_optimiser = (
+        NN_structure["load_optimiser"] if "load_optimiser" in NN_structure else True
+    )
 
     # Load model from file if defined
     if train_config.model_file is not None:
         logger.info(f"Loading model from: {train_config.model_file}")
-        model = load_model(train_config.model_file, compile=False)
+        model = load_model(train_config.model_file, compile=load_optimiser)
 
     else:
         # Define input
@@ -90,16 +93,18 @@ def DL1_model(train_config, input_shape, feature_connect_indices=None):
         )(x)
         model = Model(inputs=inputs, outputs=predictions)
 
+        # Compile model with given optimiser
+        model_optimiser = Adam(learning_rate=NN_structure["lr"])
+        model.compile(
+            loss="categorical_crossentropy",
+            optimizer=model_optimiser,
+            metrics=["accuracy"],
+        )
+
     # Print DL1 model summary when log level lower or equal INFO level
     if logger.level <= 20:
         model.summary()
 
-    model_optimizer = Adam(learning_rate=NN_structure["lr"])
-    model.compile(
-        loss="categorical_crossentropy",
-        optimizer=model_optimizer,
-        metrics=["accuracy"],
-    )
     return model, NN_structure["epochs"]
 
 

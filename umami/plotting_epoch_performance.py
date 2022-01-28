@@ -60,7 +60,7 @@ def GetParser():
         "--tagger",
         type=str,
         help="""Model type which is used.
-        You can either use 'dips', 'dips_cond_att', 'dl1' or 'umami'.""",
+        You can either use 'dips', 'cads', 'dl1' or 'umami'.""",
     )
 
     return parser.parse_args()
@@ -98,7 +98,7 @@ def main(args, train_config, preprocess_config):
         tagger = train_config.NN_structure["tagger"]
 
     # Check if the tagger given is supported
-    if tagger in ["umami", "dl1", "dips", "dips_cond_att"]:
+    if tagger.casefold() in ["umami", "dl1", "dips", "cads"]:
 
         # If dict is given, the re-calculation is skipped
         if args.dict:
@@ -143,7 +143,7 @@ def main(args, train_config, preprocess_config):
         raise ValueError(
             """
             You need to define a model type!\n
-            You can either use 'dips', 'dips_cond_att', 'dl1' or 'umami'.
+            You can either use 'dips', 'cads', 'dl1' or 'umami'.
             """
         )
 

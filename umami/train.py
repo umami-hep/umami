@@ -66,29 +66,29 @@ if __name__ == "__main__":
 
     # Check for DIPS
     # TODO: Switch to case syntax with python 3.10
-    if tagger_name == "dips":
+    if tagger_name.casefold() == "dips":
         utm.Dips(
             args=args,
             train_config=train_config,
             preprocess_config=preprocess_config,
         )
 
-    elif tagger_name == "dl1":
+    elif tagger_name.casefold() == "dl1":
         utm.TrainLargeFile(
             args=args,
             train_config=train_config,
             preprocess_config=preprocess_config,
         )
 
-    elif tagger_name == "umami":
+    elif tagger_name.casefold() == "umami":
         utm.Umami(
             args=args,
             train_config=train_config,
             preprocess_config=preprocess_config,
         )
 
-    elif tagger_name == "dips_cond_att":
-        utm.DipsCondAtt(
+    elif tagger_name.casefold() == "cads":
+        utm.Cads(
             args=args,
             train_config=train_config,
             preprocess_config=preprocess_config,
@@ -98,6 +98,6 @@ if __name__ == "__main__":
         raise ValueError(
             f"""
             Tagger {tagger_name} is not supported! Possible taggers are
-            dips, dl1, umami and dips_cond_att!
+            dips, dl1, umami and cads!
             """
         )

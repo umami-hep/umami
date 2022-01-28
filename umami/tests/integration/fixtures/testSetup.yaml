@@ -23,13 +23,13 @@ test_dips:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
 
-test_dips_cond_att:
+test_cads:
     data_subfolder: 'preprocessing'
-    model_name: 'test_dips_cond_att_model'
-    config: 'examples/Dips-Cond-Att-PFlow-Training-config.yaml'
+    model_name: 'test_cads_model'
+    config: 'examples/CADS-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
-    testdir: '/tmp/umami/dips_cond_att'
+    testdir: '/tmp/umami/cads'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5

@@ -1448,7 +1448,7 @@ def calc_validation_metrics(
     Raises
     ------
     ValueError
-        If "tagger" is not dips, dl1, umami or dips_cond_att.
+        If "tagger" is not dips, dl1, umami or cads.
     """
 
     # Get evaluation parameters and NN structure from train config
@@ -1501,8 +1501,9 @@ def calc_validation_metrics(
     # Init a results list
     results = []
 
+    # TODO Change in Python 3.10
     # Check tagger and load the correct val data
-    if tagger == "umami":
+    if tagger.casefold() == "umami":
         data_dict = load_validation_data_umami(
             train_config=train_config,
             preprocess_config=preprocess_config,
@@ -1510,7 +1511,7 @@ def calc_validation_metrics(
             convert_to_tensor=False,
         )
 
-    elif tagger == "dl1":
+    elif tagger.casefold() == "dl1":
         data_dict = load_validation_data_dl1(
             train_config=train_config,
             preprocess_config=preprocess_config,
@@ -1518,7 +1519,7 @@ def calc_validation_metrics(
             convert_to_tensor=False,
         )
 
-    elif tagger == "dips":
+    elif tagger.casefold() == "dips":
         data_dict = load_validation_data_dips(
             train_config=train_config,
             preprocess_config=preprocess_config,
@@ -1526,7 +1527,7 @@ def calc_validation_metrics(
             convert_to_tensor=False,
         )
 
-    elif tagger == "dips_cond_att":
+    elif tagger.casefold() == "cads":
         data_dict = load_validation_data_umami(
             train_config=train_config,
             preprocess_config=preprocess_config,
@@ -1570,7 +1571,7 @@ def calc_validation_metrics(
         # Ensure the epoch is in the dict
         result_dict["epoch"] = epoch
 
-        if tagger == "umami":
+        if tagger.casefold() == "umami":
             # Load UMAMI model
             umami = load_model(model_file, {"Sum": utf.Sum})
 
@@ -1587,7 +1588,7 @@ def calc_validation_metrics(
             # Delete model
             del umami
 
-        elif tagger == "dl1":
+        elif tagger.casefold() == "dl1":
             # Load DL1 model
             dl1 = load_model(model_file)
 
@@ -1604,7 +1605,7 @@ def calc_validation_metrics(
             # Delete model
             del dl1
 
-        elif tagger == "dips":
+        elif tagger.casefold() == "dips":
             # Load DIPS model
             with CustomObjectScope({"Sum": utf.Sum}):
                 dips = load_model(model_file)
@@ -1622,7 +1623,7 @@ def calc_validation_metrics(
             # Delete model
             del dips
 
-        elif tagger == "dips_cond_att":
+        elif tagger.casefold() == "cads":
             # Load DIPS Conditional Attention model
             with CustomObjectScope(
                 {
@@ -1635,11 +1636,11 @@ def calc_validation_metrics(
                     "ConditionalDeepSet": utf.ConditionalDeepSet,
                 }
             ):
-                dips_cond_add = load_model(model_file)
+                cads = load_model(model_file)
 
             # Validate dips
             val_result_dict = evaluate_model(
-                model=dips_cond_add,
+                model=cads,
                 data_dict=data_dict,
                 class_labels=NN_structure["class_labels"],
                 main_class=NN_structure["main_class"],
@@ -1648,7 +1649,7 @@ def calc_validation_metrics(
             )
 
             # Delete model
-            del dips_cond_add
+            del cads
 
         else:
             raise ValueError(f"Tagger {tagger} is not supported!")
