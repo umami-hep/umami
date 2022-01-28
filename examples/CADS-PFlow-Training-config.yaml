@@ -1,5 +1,5 @@
 # Set modelname and path to Pflow preprocessing config file
-model_name: dips_conditional_attention_r21
+model_name: CADS_r21
 preprocess_config: <path_palce_holder>/umami/examples/PFlow-Preprocessing.yaml
 
 # Add here a pretrained model to start with.
@@ -62,7 +62,7 @@ tracks_name: "tracks"
 # Values for the neural network
 NN_structure:
     # Decide, which tagger is used
-    tagger: "dips_cond_att"
+    tagger: "cads"
 
     # NN Training parameters
     lr: 0.001

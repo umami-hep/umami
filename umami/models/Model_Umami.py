@@ -57,14 +57,19 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
     batch_norm = NN_structure["Batch_Normalisation"]
     dropout = NN_structure["dropout"]
     class_labels = NN_structure["class_labels"]
+    load_optimiser = (
+        NN_structure["load_optimiser"] if "load_optimiser" in NN_structure else True
+    )
 
     if train_config.model_file is not None:
         # Load DIPS model from file
         logger.info(f"Loading model from: {train_config.model_file}")
-        umami = load_model(train_config.model_file, {"Sum": utf.Sum}, compile=False)
+        umami = load_model(
+            train_config.model_file, {"Sum": utf.Sum}, compile=load_optimiser
+        )
 
     else:
-        logger.info("No modelfile provided! Initialize a new one!")
+        logger.info("No modelfile provided! Initialise a new one!")
 
         # Set the track input
         trk_inputs = Input(shape=input_shape)
@@ -151,18 +156,18 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
             inputs=[trk_inputs, jet_inputs], outputs=[dips_output, jet_output]
         )
 
+        # Set optimier and loss
+        model_optimiser = Adam(learning_rate=NN_structure["lr"])
+        umami.compile(
+            loss="categorical_crossentropy",
+            loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
+            optimizer=model_optimiser,
+            metrics=["accuracy"],
+        )
+
     # Print Umami model summary when log level lower or equal INFO level
     if logger.level <= 20:
         umami.summary()
-
-    # Set optimier and loss
-    model_optimizer = Adam(learning_rate=NN_structure["lr"])
-    umami.compile(
-        loss="categorical_crossentropy",
-        loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
-        optimizer=model_optimizer,
-        metrics=["accuracy"],
-    )
 
     return umami, NN_structure["epochs"]
 

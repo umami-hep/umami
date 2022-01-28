@@ -21,7 +21,7 @@ def getConfiguration():
     path_configuration = "umami/tests/integration/fixtures/testSetup.yaml"
     with open(path_configuration, "r") as conf:
         conf_setup = yaml.load(conf, Loader=yaml_loader)
-    for key in ["data_url", "test_dips_cond_att"]:
+    for key in ["data_url", "test_cads"]:
         if key not in conf_setup.keys():
             raise yaml.YAMLError(
                 f"Missing key in yaml file ({path_configuration}): {key}"
@@ -306,11 +306,11 @@ class TestTraining(unittest.TestCase):
 
         self.assertTrue(runTraining(config=config, tagger="DIPS"))
 
-    def test_train_dips_cond_att(self):
+    def test_train_cads(self):
         """Integration test of train.py for DIPS Conditional Attention script."""
 
         config = prepareConfig(
-            tagger="dips_cond_att",
+            tagger="cads",
             test_dir=self.test_dir,
             preprocess_files_from="umami",
         )

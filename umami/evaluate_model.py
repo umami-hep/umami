@@ -324,7 +324,7 @@ def EvaluateModelDips(
         dicts. The key will be this dataset name.
     tagger : str
         Name of the tagger that is to be evaluated. Can either be dips or
-        dips_cond_att depending which architecture is used.
+        CADS depending which architecture is used.
 
     Raises
     ------
@@ -379,8 +379,8 @@ def EvaluateModelDips(
     model_file = utt.GetModelPath(model_name=train_config.model_name, epoch=args.epoch)
     logger.info(f"Evaluating {model_file}")
 
-    # Check which test files need to be loaded depending on the DIPS version
-    if tagger == "dips_cond_att":
+    # Check which test files need to be loaded depending on the CADS version
+    if tagger.casefold() == "CADS".casefold():
         # Load the test jets
         X_test, X_test_trk, Y_test = utt.GetTestFile(
             input_file=test_file,
@@ -825,7 +825,7 @@ if __name__ == "__main__":
                 test_file_entry=test_file_identifier,
             )
 
-    elif tagger_name in ("dips", "dips_cond_att"):
+    elif tagger_name.casefold() in ("dips", "cads"):
         logger.info("Start evaluating DIPS with test files...")
         for (
             test_file_identifier,

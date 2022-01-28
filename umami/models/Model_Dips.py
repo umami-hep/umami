@@ -49,11 +49,16 @@ def Dips_model(train_config=None, input_shape=None):
     batch_norm = NN_structure["Batch_Normalisation"]
     dropout = NN_structure["dropout"]
     class_labels = NN_structure["class_labels"]
+    load_optimiser = (
+        NN_structure["load_optimiser"] if "load_optimiser" in NN_structure else True
+    )
 
     if train_config.model_file is not None:
         # Load DIPS model from file
         logger.info(f"Loading model from: {train_config.model_file}")
-        dips = load_model(train_config.model_file, {"Sum": utf.Sum}, compile=False)
+        dips = load_model(
+            train_config.model_file, {"Sum": utf.Sum}, compile=load_optimiser
+        )
 
     else:
         logger.info("No modelfile provided! Initialize a new one!")
@@ -108,17 +113,19 @@ def Dips_model(train_config=None, input_shape=None):
         output = Dense(len(class_labels), activation="softmax", name="Jet_class")(F)
         dips = Model(inputs=trk_inputs, outputs=output)
 
+    if not load_optimiser or train_config.model_file is None:
+        # Set optimier and loss
+        model_optimiser = Adam(learning_rate=NN_structure["lr"])
+        dips.compile(
+            loss="categorical_crossentropy",
+            optimizer=model_optimiser,
+            metrics=["accuracy"],
+        )
+
     # Print Dips model summary when log level lower or equal INFO level
     if logger.level <= 20:
         dips.summary()
 
-    # Set optimier and loss
-    model_optimizer = Adam(learning_rate=NN_structure["lr"])
-    dips.compile(
-        loss="categorical_crossentropy",
-        optimizer=model_optimizer,
-        metrics=["accuracy"],
-    )
     return dips, NN_structure["epochs"]
 
 

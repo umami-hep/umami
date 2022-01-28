@@ -232,6 +232,7 @@ The different options are briefly explained here:
 | `exclude` | List | Necessary | List of variables that are excluded from training. Only compatible with DL1r training. To include all, just give an empty list. |
 | `NN_structure` | None | Necessary | A dict where all important information for the training are defined. |
 | `tagger` | String | Necessary | Name of the tagger that is used/to be trained. |
+| `load_optimiser` | Bool | Optional | When loading a model (via `model_file`), you can load the optimiser state for continuing a training (`True`) or initialize a new optimiser to use the model as a start point for a fresh training (`False`). Default is `True`.
 | `lr` | Float | Necessary | Learning rate which is used for training. |
 | `batch_size` | Int | Necessary | Batch size which is used for training. |
 | `epochs` | Int | Necessary | Number of epochs of the training. |

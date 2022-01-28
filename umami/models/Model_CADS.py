@@ -1,74 +1,96 @@
-"""Keras model of the DIPS tagger with conditional attention."""
+"""Keras model of the CADS tagger."""
 from umami.configuration import logger  # isort:skip
 import json
 
 import h5py
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
 
 
-def Dips_model(train_config=None, input_shape=None):
-    """Keras model definition of DIPS with conditional attention.
+def Cads_model(train_config, input_shape):
+    """Keras model definition of CADS.
 
     Parameters
     ----------
-    train_config : object, optional
-        training config, by default None
-    input_shape : tuple, optional
-        dataset input shape, by default None
+    train_config : object
+        training config
+    input_shape : tuple
+        dataset input shape
 
     Returns
     -------
     keras model
-        Dips with cond. attention keras model
+        CADS keras model
     int
-        number of epochs
+        Number of epochs
     """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
-
-    # Set NN options
-    batch_norm = NN_structure["Batch_Normalisation"]
-
-    dips = utf.Deepsets_model(
-        repeat_input_shape=input_shape,
-        num_conditions=NN_structure["N_Conditions"],
-        num_set_features=NN_structure["ppm_sizes"][-1],
-        sets_nodes=NN_structure["ppm_sizes"][:-1],
-        classif_nodes=NN_structure["dense_sizes"],
-        classif_output=len(NN_structure["class_labels"]),
-        pooling="attention",
-        attention_nodes=NN_structure["attention_sizes"],
-        condition_sets=NN_structure["ppm_condition"],
-        condition_attention=NN_structure["attention_condition"],
-        condition_classifier=NN_structure["dense_condition"],
-        shortcut_inputs=False,
-        sets_batch_norm=batch_norm,
-        classif_batch_norm=batch_norm,
-        activation="relu",
-        attention_softmax=False,
+    load_optimiser = (
+        NN_structure["load_optimiser"] if "load_optimiser" in NN_structure else True
     )
 
-    # Print Dips model summary when log level lower or equal INFO level
+    if train_config.model_file is not None:
+        # Load CADS model from file
+        logger.info(f"Loading model from: {train_config.model_file}")
+        cads = load_model(
+            train_config.model_file,
+            {
+                "Sum": utf.Sum,
+                "Attention": utf.Attention,
+                "DeepSet": utf.DeepSet,
+                "AttentionPooling": utf.AttentionPooling,
+                "DenseNet": utf.DenseNet,
+                "ConditionalAttention": utf.ConditionalAttention,
+                "ConditionalDeepSet": utf.ConditionalDeepSet,
+            },
+            compile=load_optimiser,
+        )
+
+    else:
+        # Init a new cads/dips attention model
+        cads = utf.Deepsets_model(
+            repeat_input_shape=input_shape,
+            num_conditions=NN_structure["N_Conditions"],
+            num_set_features=NN_structure["ppm_sizes"][-1],
+            sets_nodes=NN_structure["ppm_sizes"][:-1],
+            classif_nodes=NN_structure["dense_sizes"],
+            classif_output=len(NN_structure["class_labels"]),
+            pooling="attention",
+            attention_nodes=NN_structure["attention_sizes"],
+            condition_sets=NN_structure["ppm_condition"],
+            condition_attention=NN_structure["attention_condition"],
+            condition_classifier=NN_structure["dense_condition"],
+            shortcut_inputs=False,
+            sets_batch_norm=NN_structure["Batch_Normalisation"],
+            classif_batch_norm=NN_structure["Batch_Normalisation"],
+            activation="relu",
+            attention_softmax=False,
+        )
+
+    if not load_optimiser or train_config.model_file is None:
+        # Set optimiser and loss
+        model_optimiser = Adam(learning_rate=NN_structure["lr"])
+        cads.compile(
+            loss="categorical_crossentropy",
+            optimizer=model_optimiser,
+            metrics=["accuracy"],
+        )
+
+    # Print CADS model summary when log level lower or equal INFO level
     if logger.level <= 20:
-        dips.summary()
+        cads.summary()
 
-    # Set optimiser and loss
-    model_optimizer = Adam(learning_rate=NN_structure["lr"])
-    dips.compile(
-        loss="categorical_crossentropy",
-        optimizer=model_optimizer,
-        metrics=["accuracy"],
-    )
-    return dips, NN_structure["epochs"]
+    return cads, NN_structure["epochs"]
 
 
-def DipsCondAtt(args, train_config, preprocess_config):
-    """Training handling of DIPS tagger with conditonal attention.
+def Cads(args, train_config, preprocess_config):
+    """Training handling of CADS.
 
     Parameters
     ----------
@@ -96,8 +118,8 @@ def DipsCondAtt(args, train_config, preprocess_config):
     # Print how much jets are used
     logger.info(f"Number of Jets used for training: {nJets}")
 
-    # Init dips model
-    dips, epochs = Dips_model(train_config=train_config, input_shape=(nTrks, nFeatures))
+    # Init CADS model
+    cads, epochs = Cads_model(train_config=train_config, input_shape=(nTrks, nFeatures))
 
     if NN_structure["use_sample_weights"]:
         tensor_types = (
@@ -129,7 +151,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
     # Get training set from generator
     train_dataset = (
         tf.data.Dataset.from_generator(
-            utf.dips_condition_generator(
+            utf.cads_generator(
                 train_file_path=train_config.train_file,
                 X_Name="X_train",
                 X_trk_Name=tracks_key,
@@ -156,7 +178,7 @@ def DipsCondAtt(args, train_config, preprocess_config):
         nEpochs = args.epochs
 
     # Set ModelCheckpoint as callback
-    dips_mChkPt = ModelCheckpoint(
+    cads_mChkPt = ModelCheckpoint(
         f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
@@ -225,12 +247,12 @@ def DipsCondAtt(args, train_config, preprocess_config):
     )
 
     logger.info("Start training")
-    history = dips.fit(
+    history = cads.fit(
         train_dataset,
         epochs=nEpochs,
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=validation_data,
-        callbacks=[dips_mChkPt, reduce_lr, my_callback],
+        callbacks=[cads_mChkPt, reduce_lr, my_callback],
         steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
