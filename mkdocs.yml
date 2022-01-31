@@ -16,9 +16,7 @@ nav:
     - Development: development.md
     - MC samples: mc-samples.md
     - Preprocessing: preprocessing.md
-    - Running DL1r: DL1r-instructions.md
-    - Running Dips: Dips-instructions.md
-    - Running Umami: Umami-instructions.md
+    - Training: train-instructions.md
     - Running GNN: GNN-instructions.md
     - LWTNN Conversion: LWTNN-conversion.md
     - Evaluate Taggers in Samples: WO_trained_model.md
