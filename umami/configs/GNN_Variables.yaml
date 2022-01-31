@@ -35,6 +35,7 @@ train_variables:
     - numberOfSCTSharedHits
     - numberOfPixelHoles
     - numberOfSCTHoles
+    #- leptonID
     #- AMVFWeightPV
     #- ambiRank
     #- chiSquaredOverNumberDoF
@@ -42,6 +43,9 @@ train_variables:
 
 track_train_variables:
   tracks:
+    <<: *tracks_variables
+
+  tracks_loose:
     <<: *tracks_variables
 
 

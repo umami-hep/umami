@@ -90,7 +90,7 @@ class PrepareSamples:
             logger.warning("no batch size given. Batch size set to 1,000,000")
             self.batch_size = 1_000_000
         else:
-            self.batch_size = self.config.preparation["batchsize"]
+            self.batch_size = int(self.config.preparation["batchsize"])
 
     def GetBatchesPerFile(self, filename: str):
         """

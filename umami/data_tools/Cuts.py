@@ -47,6 +47,9 @@ def GetSampleCuts(jets, cuts):
     cuts = clean_list
 
     for cut_entry in cuts:
+        if cut_entry is None:
+            continue
+
         # expect a dictionary with only one entry
         cut = list(cut_entry.keys())
         if len(cut) != 1:
