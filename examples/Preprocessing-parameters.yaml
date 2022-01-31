@@ -7,7 +7,7 @@ sample_path: &sample_path <path_palce_holder>/hybrids/
 # Path where the merged and ready-to-train samples are saved
 file_path: &file_path <path_palce_holder>/preprocessed/
 
-# Name of the output file from the preprocessing
+# Name of the output file from the preprocessing (has to be a .h5 file, no folder)
 .outfile_name: &outfile_name <path_palce_holder>/PFlow-hybrid.h5
 
 # List of variables for training (yaml)

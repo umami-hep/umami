@@ -32,7 +32,7 @@ test_preprocessing_dips_count:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_dips/
+      - test_preprocessing_dips/
       - coverage_files/
 
 test_preprocessing_dl1r_count:
@@ -45,7 +45,7 @@ test_preprocessing_dl1r_count:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_dl1r/
+      - test_preprocessing_dl1r/
       - coverage_files/
 
 test_preprocessing_umami_count:
@@ -58,7 +58,7 @@ test_preprocessing_umami_count:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_umami/
+      - test_preprocessing_umami/
       - coverage_files/
 
 test_preprocessing_dips_pdf:
@@ -71,7 +71,7 @@ test_preprocessing_dips_pdf:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_dips_pdf/
+      - test_preprocessing_dips_pdf/
       - coverage_files/
 
 test_preprocessing_dl1r_pdf:
@@ -84,7 +84,7 @@ test_preprocessing_dl1r_pdf:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_dl1r_pdf/
+      - test_preprocessing_dl1r_pdf/
       - coverage_files/
 
 test_preprocessing_umami_pdf:
@@ -97,7 +97,7 @@ test_preprocessing_umami_pdf:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_umami_pdf/
+      - test_preprocessing_umami_pdf/
       - coverage_files/
 
 test_preprocessing_dips_weighting:
@@ -110,7 +110,7 @@ test_preprocessing_dips_weighting:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_dips_weighting/
+      - test_preprocessing_dips_weighting/
       - coverage_files/
 
 test_preprocessing_dl1r_weighting:
@@ -123,7 +123,7 @@ test_preprocessing_dl1r_weighting:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_dl1r_weighting/
+      - test_preprocessing_dl1r_weighting/
       - coverage_files/
 
 test_preprocessing_umami_weighting:
@@ -136,7 +136,7 @@ test_preprocessing_umami_weighting:
     <<: *artifact_template
     paths:
       - plots/
-      - preprocessing_umami_weighting/
+      - test_preprocessing_umami_weighting/
       - coverage_files/
 
 test_train_dips:
