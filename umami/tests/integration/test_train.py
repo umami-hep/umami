@@ -72,11 +72,11 @@ def prepareConfig(
     config = os.path.join(test_dir, os.path.basename(config_source))
 
     preprocessing_config_source = os.path.join(
-        f"./preprocessing_{preprocess_files}/preprocessing/",
+        f"./test_preprocessing_{preprocess_files}/preprocessing/",
         os.path.basename(data["test_preprocessing"]["config"]),
     )
     preprocessing_config_paths_source = os.path.join(
-        f"./preprocessing_{preprocess_files}/preprocessing/",
+        f"./test_preprocessing_{preprocess_files}/preprocessing/",
         os.path.basename(data["test_preprocessing"]["config_paths"]),
     )
     preprocessing_config = os.path.join(
@@ -87,7 +87,7 @@ def prepareConfig(
     )
 
     var_dict_source = os.path.join(
-        f"./preprocessing_{preprocess_files}/preprocessing/",
+        f"./test_preprocessing_{preprocess_files}/preprocessing/",
         os.path.basename(data["test_preprocessing"][f"var_dict_{preprocess_files}"]),
     )
     var_dict = os.path.join(test_dir, os.path.basename(var_dict_source))
@@ -96,13 +96,14 @@ def prepareConfig(
     logger.info("Retrieving files from preprocessing...")
 
     train_file = os.path.join(
-        f"./preprocessing_{preprocess_files}/preprocessing/",
+        f"./test_preprocessing_{preprocess_files}/preprocessing/",
         "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
     )
     test_file_ttbar = os.path.join(test_dir, "ci_ttbar_testing.h5")
     test_file_zprime = os.path.join(test_dir, "ci_zpext_testing.h5")
     scale_dict = os.path.join(
-        f"./preprocessing_{preprocess_files}/preprocessing/", "PFlow-scale_dict.json"
+        f"./test_preprocessing_{preprocess_files}/preprocessing/",
+        "PFlow-scale_dict.json",
     )
 
     # prepare config files by modifying local copies of config files
@@ -183,7 +184,7 @@ def prepareConfig(
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
-            f"./preprocessing_{preprocess_files}/preprocessing/",
+            f"./test_preprocessing_{preprocess_files}/preprocessing/",
             "PFlow-hybrid_70-test-resampled_scaled_shuffled",
         )
         config_file["model_name"] = data["test_dips"]["model_name"] + "_tfrecords"

@@ -10,7 +10,7 @@ from setuptools import setup
 
 setup(
     name="umami",
-    version="0.0.0",  # Also change in module
+    version="0.5",  # Also change in module
     packages=[
         "umami",
         "umami.configuration",
@@ -25,16 +25,6 @@ setup(
         "umami.metrics",
         "umami.models",
     ],
-    # install_requires=[
-    #     "h5py",
-    #     "numpy",
-    #     "matplotlib",
-    #     "seaborn",
-    #     "tables",
-    #     "pandas",
-    #     "tensorflow",
-    #     "keras"
-    # ],
     include_package_data=True,
     test_suite="umami.tests",
     scripts=[

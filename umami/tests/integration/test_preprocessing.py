@@ -188,7 +188,7 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
                 "Test failed: preprocessing.py --to_records."
             ) from Error
 
-    tagger_path = f"./preprocessing_{tagger}/"
+    tagger_path = f"./test_preprocessing_{tagger}/"
     if not os.path.isdir(tagger_path):
         run(["mkdir", tagger_path], check=True)
 

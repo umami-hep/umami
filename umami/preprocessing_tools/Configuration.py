@@ -104,7 +104,13 @@ class Configuration:
         if option is None and iteration is None:
             return self.outfile_name
         out_file = self.outfile_name
-        idx = out_file.index(".h5")
+        try:
+            idx = out_file.index(".h5")
+        except ValueError as error:
+            raise ValueError(
+                "Your specified `outfile_name` has to be a .h5 file. "
+                f"You defined in the preprocessing config {out_file}"
+            ) from error
 
         if iteration is None:
             if option is None:
