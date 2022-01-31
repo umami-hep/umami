@@ -340,6 +340,9 @@ class Resampling:
         self.outfile_name = self.config.GetFileName(option="resampled")
         self.outfile_path = self.config.config["parameters"]["sample_path"]
 
+        if os.path.dirname(self.outfile_name):
+            os.makedirs(os.path.dirname(self.outfile_name), exist_ok=True)
+
         # Get class labels from sampling/preparation.
         # Try/Except here for backward compatibility
         try:
@@ -601,7 +604,6 @@ class Resampling:
 
             if create_file:
                 create_file = False
-                os.makedirs(os.path.dirname(self.outfile_name), exist_ok=True)
                 # write to file by creating dataset
                 with h5py.File(self.outfile_name, "w") as out_file:
                     out_file.create_dataset(
