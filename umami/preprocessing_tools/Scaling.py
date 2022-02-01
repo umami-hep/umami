@@ -91,8 +91,8 @@ def apply_scaling_trks(
         var_arr_list.append(np.nan_to_num(x))
 
         # track vertex and origin labels
-        if "track_labels" in variable_config:
-            trkLabels = variable_config["track_labels"]
+        if f"{tracks_name}_labels" in variable_config:
+            trkLabels = variable_config[f"{tracks_name}_labels"]
             trk_labels = np.stack(
                 [np.nan_to_num(trks[v]) for v in trkLabels],
                 axis=-1,

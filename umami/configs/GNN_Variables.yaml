@@ -4,6 +4,10 @@ tracks_labels:
   - truthOriginLabel
   - truthVertexIndex
 
+tracks_loose_labels:
+  - truthOriginLabel
+  - truthVertexIndex
+
 train_variables:
   JetKinematics:
     - eta_btagJes
