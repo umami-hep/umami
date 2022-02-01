@@ -339,9 +339,16 @@ class Resampling:
 
         self.outfile_name = self.config.GetFileName(option="resampled")
         self.outfile_path = self.config.config["parameters"]["sample_path"]
+        self.resampled_path = self.config.config["parameters"]["file_path"]
 
+        # Check if the directory for the outfile is existing
         if os.path.dirname(self.outfile_name):
             os.makedirs(os.path.dirname(self.outfile_name), exist_ok=True)
+
+        # Check if the directory for the resampled, scaled files
+        # (normally preprocessed/) exists
+        if os.path.dirname(self.resampled_path):
+            os.makedirs(os.path.dirname(self.resampled_path), exist_ok=True)
 
         # Get class labels from sampling/preparation.
         # Try/Except here for backward compatibility
@@ -1296,7 +1303,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
             ],
         )
         save_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             f"inter_func_{store_key}",
         )
@@ -1429,7 +1436,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         """Get unnormalised PDF weight."""
         # Get the inter_func
         load_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             f"inter_func_{store_key}",
         )
@@ -1469,7 +1476,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
         # Load number to sample
         load_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             "target_data.json",
         )
@@ -1591,7 +1598,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         create_file = True
         chunk_counter = 0
         save_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             self.options["samples"][sample_category][sample_id] + "_selected.h5",
         )
@@ -1684,7 +1691,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
         # Load number to sample
         load_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             "target_data.json",
         )
@@ -1693,7 +1700,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         number_to_sample = target_data["number_to_sample"][sample_name]
 
         index_file = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             self.options["samples"][sample_category][sample_id] + "_indices.h5",
         )
@@ -1704,7 +1711,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         duplicate = True
 
         save_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             self.options["samples"][sample_category][sample_id] + "_selected.h5",
         )
@@ -1879,12 +1886,14 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
             "target_fraction": self.target_fractions,
         }
         save_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             "target_data.json",
         )
-        if not os.path.exists(os.path.join(self.outfile_path, "PDF_sampling")):
-            os.mkdir(os.path.join(self.outfile_path, "PDF_sampling"))
+
+        # Ensure the output path exists
+        os.makedirs(os.path.join(self.resampled_path, "PDF_sampling"), exist_ok=True)
+
         with open(save_name, "w") as write_file:
             json.dump(save_data, write_file, cls=JsonNumpyEncoder)
 
@@ -1899,7 +1908,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         """
 
         load_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             "target_data.json",
         )
@@ -1998,7 +2007,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
         # Load the target data
         load_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             "target_data.json",
         )
@@ -2060,14 +2069,14 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
         sample_name = self.options["samples"][sample_category][sample_id]
         save_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             self.options["samples"][sample_category][sample_id] + "_indices.h5",
         )
 
         # Load number to sample
         load_name = os.path.join(
-            self.outfile_path,
+            self.resampled_path,
             "PDF_sampling",
             "target_data.json",
         )
@@ -2180,7 +2189,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         ):
             for _, sample_category in enumerate(self.options["samples"]):
                 load_name = os.path.join(
-                    self.outfile_path,
+                    self.resampled_path,
                     "PDF_sampling",
                     self.options["samples"][sample_category][sample_id]
                     + "_selected.h5",
@@ -2333,7 +2342,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
         # Check if the directory for the plots exists
         plot_dir_path = os.path.join(
-            self.config.config["parameters"]["sample_path"],
+            self.resampled_path,
             "plots/",
         )
         os.makedirs(plot_dir_path, exist_ok=True)
@@ -2362,7 +2371,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         ):
             for cat_ind, sample_category in enumerate(self.options["samples"]):
                 load_name = os.path.join(
-                    self.outfile_path,
+                    self.resampled_path,
                     "PDF_sampling",
                     self.options["samples"][sample_category][sample_id]
                     + "_selected.h5",
@@ -2559,7 +2568,7 @@ class Weighting(ResamplingTools):
 
         # Check if the directory for the plots exists
         plot_dir_path = os.path.join(
-            self.config.config["parameters"]["sample_path"],
+            self.resampled_path,
             "plots/",
         )
         os.makedirs(plot_dir_path, exist_ok=True)
@@ -2813,7 +2822,7 @@ class UnderSampling(ResamplingTools):
 
         # Check if the directory for the plots exists
         plot_dir_path = os.path.join(
-            self.config.config["parameters"]["sample_path"],
+            self.resampled_path,
             "plots/",
         )
         os.makedirs(plot_dir_path, exist_ok=True)

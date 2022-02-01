@@ -425,8 +425,8 @@ class Scaling:
                 # Loop over chunks
                 for chunk_counter in range(n_chunks):
                     logger.info(
-                        f"Calculating track scales for chunk {chunk_counter+1} of"
-                        f" {n_chunks}"
+                        f"Calculating track scales for {tracks_name} for chunk"
+                        f" {chunk_counter+1} of {n_chunks}"
                     )
                     # Check if this is the first time loading from the generator
                     if chunk_counter == 0:
