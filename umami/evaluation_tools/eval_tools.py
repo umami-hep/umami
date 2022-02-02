@@ -114,9 +114,11 @@ def GetRejectionPerEfficiencyDict(
                 y_true=y_true,
                 class_labels=class_labels,
                 main_class=main_class,
-                frac_dict=frac_values[f"{tagger}"]
-                if tagger in tagger_names
-                else frac_values_comp[f"{tagger}"],
+                frac_dict=(
+                    frac_values[f"{tagger}"]
+                    if tagger in tagger_names
+                    else frac_values_comp[f"{tagger}"]
+                ),
                 target_eff=eff,
             )
 
@@ -130,6 +132,11 @@ def GetRejectionPerEfficiencyDict(
 
     # Remove double entries and print warning
     skipped_taggers = list(dict.fromkeys(skipped_taggers))
+    if skipped_taggers:
+        logger.warning(
+            "Taggers which do not have probability values for all requested class "
+            "labels are not evaluated."
+        )
     logger.warning(f"Following taggers are skipped for file: {skipped_taggers}")
 
     # Remove entries of not loaded taggers from the dicts
@@ -203,11 +210,13 @@ def GetScoresProbsDict(
         class_labels_copy = copy.deepcopy(class_labels)
 
         for flav_index, flav in enumerate(class_labels):
+            # Get probability values of freshly trained tagger from provided predictions
             if tagger in tagger_names:
                 df_discs_dict[
                     f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
                 ] = tagger_preds[tagger_names.index(tagger)][:, flav_index]
 
+            # Get probablility values of comparison taggers from dataframe (from file)
             else:
                 try:
                     df_discs_dict[
@@ -215,7 +224,6 @@ def GetScoresProbsDict(
                     ] = jets[f'{tagger}_{flavour_categories[flav]["prob_var_name"]}']
 
                 except KeyError:
-
                     # Skipping not available taggers probabilities
                     continue
 
@@ -244,6 +252,10 @@ def GetScoresProbsDict(
                         )
 
                 except KeyError:
+                    logger.warning(
+                        f"Did not find probability values of flavour {flav} "
+                        f"for tagger {tagger}. This is ignored."
+                    )
                     class_labels_copy.remove(flav)
 
             # Check if tagger is in file
@@ -261,9 +273,11 @@ def GetScoresProbsDict(
                 y_pred=y_pred,
                 class_labels=class_labels_copy,
                 main_class=main_class,
-                frac_dict=frac_values[f"{tagger}"]
-                if tagger in tagger_names
-                else frac_values_comp[f"{tagger}"],
+                frac_dict=(
+                    frac_values[f"{tagger}"]
+                    if tagger in tagger_names
+                    else frac_values_comp[f"{tagger}"]
+                ),
             )
 
         except KeyError:

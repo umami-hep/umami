@@ -27,13 +27,15 @@ tf.compat.v1.disable_eager_execution()
 
 def GetParser():
     """
-    Argument parser for Preprocessing script.
+    Argument parser for the evaluation script.
 
     Returns
     -------
     args: parse_args
     """
-    parser = argparse.ArgumentParser(description="Preprocessing command line options.")
+    parser = argparse.ArgumentParser(
+        description="Evaluation script command line options."
+    )
 
     parser.add_argument(
         "-c",
@@ -64,8 +66,10 @@ def GetParser():
     parser.add_argument(
         "--nJets",
         type=int,
-        help="""Number of jets used for the testing. By default it will
-        use all available jets in the test files.""",
+        help="""Number of jets used for the testing. This will overwrite the value which
+        is provided in the training config file. If no value is provided either in the
+        command line or in the training config file it will use all available jets in
+        the test files.""",
     )
 
     parser.add_argument(
@@ -213,8 +217,7 @@ def EvaluateModel(
     )
     variables += list(set(label_var_list))
 
-    # Add the predictions labels for the defined taggers to
-    # variables list
+    # Add the predictions labels for the defined taggers to variables list
     for tagger in tagger_list:
         variables += uct.get_class_prob_var_names(
             tagger_name=f"{tagger}", class_labels=class_labels
@@ -229,8 +232,7 @@ def EvaluateModel(
         cut_vars_dict=var_cuts,
     )
 
-    # Get the discriminant values and probabilities of each tagger
-    # for each jet
+    # Get the discriminant values and probabilities of each tagger for each jet
     df_discs_dict = uet.GetScoresProbsDict(
         jets=jets,
         y_true=truth_internal_labels,
@@ -446,8 +448,7 @@ def EvaluateModelDips(
     )
     variables += list(set(label_var_list))
 
-    # Add the predictions labels for the defined taggers to
-    # variables list
+    # Add the predictions labels for the defined taggers to variables list
     for tagger_i in tagger_list:
         variables += uct.get_class_prob_var_names(
             tagger_name=f"{tagger_i}", class_labels=class_labels
@@ -462,8 +463,7 @@ def EvaluateModelDips(
         cut_vars_dict=var_cuts,
     )
 
-    # Get the discriminant values and probabilities of each tagger
-    # for each jet
+    # Get the discriminant values and probabilities of each tagger for each jet
     df_discs_dict = uet.GetScoresProbsDict(
         jets=jets,
         y_true=truth_internal_labels,
