@@ -283,6 +283,8 @@ def create_metadata_folder(
         scale_dict_path,
         preprocess_parameters_path,
     ]:
+        if file_path is None:
+            continue
         if (overwrite_config is True) or not os.path.isfile(
             os.path.join(model_name, "metadata", os.path.basename(file_path))
         ):
