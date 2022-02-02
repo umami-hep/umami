@@ -46,8 +46,8 @@ def check_kwargs_var_plots(kwargs: dict, **custom_default):
         - ylabel : str
             Y-label.
         - ycolor : str
-        -     Y-axis-label colour.
-        legFontSize : int
+            Y-axis-label colour.
+        - legFontSize : int
             Legend font size.
         - ncol : int
             Number of columns of the legend.
@@ -119,32 +119,7 @@ def plot_nTracks_per_Jet(
     track_origin : str
         Track set that is to be used for plotting.
     **kwargs: dict
-        - plot_type : str
-            Plottype, like pdf or png
-        - UseAtlasTag : bool
-            Define if ATLAS Tag is used or not.
-        - ApplyATLASStyle : bool
-            Apply ATLAS Style of the plot (for approval etc.).
-        - AtlasTag : str
-            Main tag. Mainly "Internal Simulation".
-        - SecondTag : str
-            Lower tag in the ATLAS label with infos.
-        - yAxisAtlasTag : float
-            Y axis position of the ATLAS label.
-        - yAxisIncrease : float
-            Y axis increase factor to fit the ATLAS label.
-        - figsize : list
-            List of the figure size. i.e [5, 6]
-        - Log : bool
-            Set y-axis log True or False.
-        - ylabel : str
-            Y-label.
-        - ycolor : str
-        -     Y-axis-label colour.
-        legFontSize : int
-            Legend font size.
-        - ncol : int
-            Number of columns of the legend.
+        additional arguments passed to `check_kwargs_var_plots`
     """
     # check the kwargs
     kwargs = check_kwargs_var_plots(kwargs)
@@ -493,32 +468,7 @@ def plot_input_vars_trks_comparison(
     tracks_name : str
         Track collection to use, default is 'tracks'.
     **kwargs: dict
-        - plot_type : str
-            Plottype, like pdf or png
-        - UseAtlasTag : bool
-            Define if ATLAS Tag is used or not.
-        - ApplyATLASStyle : bool
-            Apply ATLAS Style of the plot (for approval etc.).
-        - AtlasTag : str
-            Main tag. Mainly "Internal Simulation".
-        - SecondTag : str
-            Lower tag in the ATLAS label with infos.
-        - yAxisAtlasTag : float
-            Y axis position of the ATLAS label.
-        - yAxisIncrease : float
-            Y axis increase factor to fit the ATLAS label.
-        - figsize : list
-            List of the figure size. i.e [5, 6]
-        - Log : bool
-            Set y-axis log True or False.
-        - ylabel : str
-            Y-label.
-        - ycolor : str
-        -     Y-axis-label colour.
-        legFontSize : int
-            Legend font size.
-        - ncol : int
-            Number of columns of the legend.
+        additional arguments passed to `check_kwargs_var_plots`
 
     Raises
     ------
@@ -974,32 +924,7 @@ def plot_input_vars_trks(
     tracks_name : str
         Track collection to use, default is 'tracks'.
     **kwargs: dict
-        - plot_type : str
-            Plottype, like pdf or png
-        - UseAtlasTag : bool
-            Define if ATLAS Tag is used or not.
-        - ApplyATLASStyle : bool
-            Apply ATLAS Style of the plot (for approval etc.).
-        - AtlasTag : str
-            Main tag. Mainly "Internal Simulation".
-        - SecondTag : str
-            Lower tag in the ATLAS label with infos.
-        - yAxisAtlasTag : float
-            Y axis position of the ATLAS label.
-        - yAxisIncrease : float
-            Y axis increase factor to fit the ATLAS label.
-        - figsize : list
-            List of the figure size. i.e [5, 6]
-        - Log : bool
-            Set y-axis log True or False.
-        - ylabel : str
-            Y-label.
-        - ycolor : str
-        -     Y-axis-label colour.
-        legFontSize : int
-            Legend font size.
-        - ncol : int
-            Number of columns of the legend.
+        additional arguments passed to `check_kwargs_var_plots`
 
     Raises
     ------
@@ -1339,32 +1264,7 @@ def plot_input_vars_jets(
     output_directory: str
         output_directory: Name of the output directory. Only the dir name not path!
     **kwargs: dict
-        - plot_type : str
-            Plottype, like pdf or png
-        - UseAtlasTag : bool
-            Define if ATLAS Tag is used or not.
-        - ApplyATLASStyle : bool
-            Apply ATLAS Style of the plot (for approval etc.).
-        - AtlasTag : str
-            Main tag. Mainly "Internal Simulation".
-        - SecondTag : str
-            Lower tag in the ATLAS label with infos.
-        - yAxisAtlasTag : float
-            Y axis position of the ATLAS label.
-        - yAxisIncrease : float
-            Y axis increase factor to fit the ATLAS label.
-        - figsize : list
-            List of the figure size. i.e [5, 6]
-        - Log : bool
-            Set y-axis log True or False.
-        - ylabel : str
-            Y-label.
-        - ycolor : str
-        -     Y-axis-label colour.
-        legFontSize : int
-            Legend font size.
-        - ncol : int
-            Number of columns of the legend.
+        additional arguments passed to `check_kwargs_var_plots`
 
     Raises
     ------
@@ -1616,32 +1516,7 @@ def plot_input_vars_jets_comparison(
     Ratio_Cut : list
         List of y-axis cuts for the ratio block.
     **kwargs: dict
-        - plot_type : str
-            Plottype, like pdf or png
-        - UseAtlasTag : bool
-            Define if ATLAS Tag is used or not.
-        - ApplyATLASStyle : bool
-            Apply ATLAS Style of the plot (for approval etc.).
-        - AtlasTag : str
-            Main tag. Mainly "Internal Simulation".
-        - SecondTag : str
-            Lower tag in the ATLAS label with infos.
-        - yAxisAtlasTag : float
-            Y axis position of the ATLAS label.
-        - yAxisIncrease : float
-            Y axis increase factor to fit the ATLAS label.
-        - figsize : list
-            List of the figure size. i.e [5, 6]
-        - Log : bool
-            Set y-axis log True or False.
-        - ylabel : str
-            Y-label.
-        - ycolor : str
-        -     Y-axis-label colour.
-        legFontSize : int
-            Legend font size.
-        - ncol : int
-            Number of columns of the legend.
+        additional arguments passed to `check_kwargs_var_plots`
 
     Raises
     ------

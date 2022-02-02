@@ -28,7 +28,7 @@ def SamplingGenerator(
     label_classes: list,
     use_tracks: bool = False,
     tracks_names: list = None,
-    chunk_size: int = 10000,
+    chunk_size: int = 10_000,
     seed=42,
     duplicate: bool = False,
 ):
@@ -42,28 +42,38 @@ def SamplingGenerator(
         - 2nd list: all indices repeated at least 2 times.
         - 3rd list: ............................. 3 ......
         ...
+
     Parameters
     ----------
-    file: str, the path to the h5 file to read
-    indices: list or numpy array, the indices of entries to read
-    label: int, the label of the jets being read
-    label_classes: list or numpy array, the combined labelling scheme
-    use_tracks: bool, whether to store tracks
-    tracks_names: list, list of tracks collection names to use
-    chunk_size: int, the size of each chunk
-                (last chunk might at most be twice this size)
-    seed: int, random seed to use
-    duplicate: bool, whether the reading should assume duplicates are
-                present. DO NOT USE IF NO DUPLICATES ARE EXPECTED.
-
-    Returns
-    -------
-    An iterator to read the jets datasets (+ labels + tracks)
+    file : str
+        the path to the h5 file to read
+    indices : list or numpy.array
+        the indices of entries to read
+    label : int
+        the label of the jets being read
+    label_classes : list
+        the combined labelling scheme
+    use_tracks : bool
+        whether to store tracks, by default False
+    tracks_names : list
+        list of tracks collection names to use, by default None
+    chunk_size : int
+        the size of each chunk (last chunk might at most be twice this size),
+        by default 10000
+    seed : int
+        random seed to use, by default 42
+    duplicate : bool
+        whether the reading should assume duplicates are present.
+        DO NOT USE IF NO DUPLICATES ARE EXPECTED!, by default False
 
     Yields
     -------
-    jets, (tracks), labels arrays.
-
+    numpy.ndarray
+        jets
+    numpy.ndarray
+        tracks, if `use_tracks` is True
+    numpy.ndarray
+        labels
     """
     tracks_names = tracks_names or ["tracks"]
     with h5py.File(file, "r") as f:
@@ -131,6 +141,27 @@ def read_dataframe_repetition(
     """
     Implements a fancier reading of H5 dataframe (allowing repeated indices).
     Designed to read a h5 file with jets (and tracks if use_track is true).
+
+    Parameters
+    ----------
+    file_df : file
+        file containing datasets
+    loading_indices : list
+        indices to load
+    duplicate : bool
+        whether the reading should assume duplicates are present.
+        DO NOT USE IF NO DUPLICATES ARE EXPECTED!, by default False
+    use_tracks : bool
+        whether to store tracks, by default False
+    tracks_names : list
+        list of tracks collection names to use, by default "tracks"
+
+    Returns
+    -------
+    numpy.ndarray
+        jets
+    numpy.ndarray
+        tracks if `use_tracks` is True
     """
     if duplicate and quick_check_duplicates(loading_indices):
         # Duplicate indices, fancy indexing of H5 not working, manual approach.
@@ -171,19 +202,35 @@ def read_dataframe_repetition(
 
 
 class JsonNumpyEncoder(JSONEncoder):
-    """
-    This functions converts the numpy type to a json compatible format.
+    """This functions converts the numpy type to a json compatible format.
+
+    Parameters
+    ----------
+    JSONEncoder : class
+        base class from json package
     """
 
-    def default(self, obj):  # pylint: disable=arguments-renamed
+    def default(self, o):
+        """overwriting default function of JSONEncoder class
+
+        Parameters
+        ----------
+        o : numpy integer, float or ndarray
+            objects from json loader
+
+        Returns
+        -------
+        class
+            modified JSONEncoder class
+        """
         # TODO: change this when using python 3.10
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super().default(obj)
+        if isinstance(o, np.integer):
+            return int(o)
+        if isinstance(o, np.floating):
+            return float(o)
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        return super().default(o)
 
 
 def CorrectFractions(
