@@ -31,10 +31,11 @@ class Configuration:
             first_line = conf.readline()
         first_line = first_line.split("!include ")
         if first_line[0] != "parameters: ":
-            raise ValueError(
-                "Please specify in the first line of the preprocessing config"
-                " the 'parameters' with the !include option."
+            logger.warning(
+                "You did not specify in the first line of the preprocessing config  the"
+                " 'parameters' with the !include option. Ignoring any parameter file."
             )
+            return None
 
         preprocess_parameters_path = os.path.join(
             os.path.dirname(self.ConfigPath),
