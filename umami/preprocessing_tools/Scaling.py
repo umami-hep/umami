@@ -128,6 +128,8 @@ class Scaling:
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
         self.compression = compression
         self.mask_value = 0
+
+        logger.info(f"Using variable dict at {config.var_file}")
         self.variable_config = GetVariableDict(config.var_file)
 
     def join_mean_scale(

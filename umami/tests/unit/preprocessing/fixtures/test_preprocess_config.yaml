@@ -1,9 +1,4 @@
-parameters:
-  # file path
-  file_path: &file_path ./
-  ntuple_path: &ntuple_path ./
-  sample_path: &sample_path ./
-
+parameters: !include test_parameters.yaml
 
 preparation:
   ntuples:
