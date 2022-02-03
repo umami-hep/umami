@@ -14,8 +14,18 @@ from umami.data_tools import GetCategoryCuts, GetSampleCuts
 
 def GetPreparationSamplePath(sample):
     """
-    Retrieves the output sample path of the samples defined in the
-    'samples' block in the preprocessing config.
+    Retrieves the output sample path of the samples defined in the `samples` block in
+    the preprocessing config.
+
+    Parameters
+    ----------
+    sample : dict
+        sample configuration
+
+    Returns
+    -------
+    str
+        output sample path
     """
     return os.path.join(sample.get("f_output")["path"], sample.get("f_output")["file"])
 
@@ -24,7 +34,7 @@ class PrepareSamples:
     """
     This class is preparing the samples for further processing defined in the
     configuration file:
-        - extracts the selected jets (applying cuts: flavour, pT etc)
+        - extracts the selected jets (applying cuts: flavour, pT etc.)
         - writes these iteratively to h5 output files
 
     This class will take the information provided in the `samples` block in
@@ -32,11 +42,36 @@ class PrepareSamples:
     """
 
     def __init__(self, args, config) -> None:
+        """Preparation of h5 samples.
+
+        Parameters
+        ----------
+        args : parse_args
+            command line arguments
+        config : config class
+            preprocessing configuration class containing all info about preprocessing
+        """
         self.config = config
         self.__setup(args)
         self.rnd_seed = 42
 
     def __setup(self, args):
+        """Setting up preparation class
+
+        Parameters
+        ----------
+        args : parse_args
+            command line arguments
+
+        Raises
+        ------
+        KeyError
+            if no samples defined in preprocessing config
+        KeyError
+            if specified sample not in preprocessing configuration
+        KeyError
+            if requested sample category not defined in global config
+        """
         # check if sample is provided, otherwise exit
         if not args.sample:
             raise KeyError("Please provide --sample to prepare hybrid samples")
@@ -96,8 +131,20 @@ class PrepareSamples:
 
     def GetBatchesPerFile(self, filename: str):
         """
-        Split the file into batches to avoid that the loaded
-        data is too large
+        Split the file into batches to avoid that the loaded data is too large.
+
+        Parameters
+        ----------
+        filename : str
+            name of file to be split in batches
+
+        Returns
+        -------
+        str
+            filename
+        list
+            tuples of start and end index of batch
+
         """
         batch_size = self.batch_size
         with h5py.File(filename, "r") as data_set:
@@ -115,18 +162,26 @@ class PrepareSamples:
                 indices_batches.append((start_batch, end_batch))
         return (filename, indices_batches)
 
-    def jets_generator(self, files_in_batches):
-        """Helper function to extract jet and track information from a h5 ntuple.
+    def jets_generator(self, files_in_batches: list):
+        """
+        Helper function to extract jet and track information from a h5 ntuple.
 
-        :param filename: path to the h5 ntuple
-        :returns: generates (jets, tracks), where jets is a numpy array of jets with
-                  the size of one batch.
-                Similarly, tracks is a numpy array of tracks but is only created
-                if `self.save_tracks` is set to True.
+        Parameters
+        ----------
+        files_in_batches : list
+            tuples of filename and tuple of start and end index of batch
+
+        Yields
+        -------
+        numpy.ndarray
+            jets
+        numpy.ndarray
+            tracks if `self.save_tracks` is set to True
         """
         for filename, batches in files_in_batches:
             if self.n_jets_to_get <= 0:
                 break
+            logger.debug(f"Opening file {filename}.")
             with h5py.File(filename, "r") as data_set:
                 for batch in batches:
                     # load jets in batches
@@ -146,7 +201,7 @@ class PrepareSamples:
                     yield (jets, tracks)
 
     def Run(self):
-        """Run over Ntuples to extract jets (and potentially also tracks)"""
+        """Run over Ntuples to extract jets (and potentially also tracks)."""
         logger.info(
             f"Preparing ntuples for {self.sample_type} {self.sample_category}..."
         )
@@ -156,6 +211,7 @@ class PrepareSamples:
         files_in_batches = map(self.GetBatchesPerFile, self.ntuples)
         # loop over batches for all files and load the batches separately
         n_jets_check = self.n_jets_to_get
+        displayed_writing_output = True
         for jets, tracks in self.jets_generator(files_in_batches):
             if jets.shape[0] == 0:
                 continue
@@ -202,7 +258,8 @@ class PrepareSamples:
                             )
             else:
                 # appending to existing dataset
-                pbar.write("Writing to output file: " + self.output_file)
+                if displayed_writing_output:
+                    pbar.write("Writing to output file: " + self.output_file)
                 with h5py.File(self.output_file, "a") as out_file:
                     out_file["jets"].resize(
                         (out_file["jets"].shape[0] + jets.shape[0]),
@@ -221,7 +278,7 @@ class PrepareSamples:
                             out_file[tracks_name][
                                 -tracks[tracks_name].shape[0] :
                             ] = tracks[tracks_name]
-
+                displayed_writing_output = False
             if self.n_jets_to_get <= 0:
                 break
         pbar.close()
