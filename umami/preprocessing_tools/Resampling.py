@@ -389,8 +389,9 @@ class Resampling:
         self.resampled_path = self.config.config["parameters"]["file_path"]
 
         # Check if the directory for the outfile is existing
-        if os.path.dirname(self.outfile_name):
-            os.makedirs(os.path.dirname(self.outfile_name), exist_ok=True)
+        out_dir = os.path.dirname(self.outfile_name)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
 
         # Check if the directory for the resampled, scaled files
         # (normally preprocessed/) exists

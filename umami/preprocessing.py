@@ -108,6 +108,10 @@ if __name__ == "__main__":
 
     # Check for preparation
     if args.prepare:
+
+        # Copy config to output directory
+        config.copy_to_out_dir("preparation")
+
         # Check if one specific sample is given
         if args.sample:
             preparation_tool = upt.PrepareSamples(args, config)
@@ -130,6 +134,9 @@ if __name__ == "__main__":
 
     # Check for resampling
     elif args.resampling:
+
+        # Copy config to output directory
+        config.copy_to_out_dir("resampling")
 
         # Check the method which should be used for resampling
         if config.sampling["method"] == "count":
@@ -158,11 +165,18 @@ if __name__ == "__main__":
 
     # Apply scaling of the previous calculated scale dicts
     elif args.apply_scales:
+
+        # Copy config to output directory
+        config.copy_to_out_dir("scaling")
+
         Scaling = upt.Scaling(config)
         Scaling.ApplyScales()
 
     # Check for final writing to disk in train format
     elif args.write:
+        # Copy config to output directory
+        config.copy_to_out_dir("write")
+
         Writer = upt.TrainSampleWriter(config, compression=config.config["compression"])
         Writer.WriteTrainSample()
 

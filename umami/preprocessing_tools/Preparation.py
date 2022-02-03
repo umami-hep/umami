@@ -74,17 +74,19 @@ class PrepareSamples:
 
         output_path = sample.get("f_output")["path"]
         self.output_file = os.path.join(output_path, sample.get("f_output")["file"])
+        os.makedirs(output_path, exist_ok=True)
+
         # bookkeeping variables for running over the ntuples
         self.jets_loaded = 0
         self.create_file = True
         self.shuffle_array = args.shuffle_array
+
         # set up ntuples
         ntuples = self.config.preparation["ntuples"]
         ntuple_path = ntuples.get(sample["type"])["path"]
         ntuple_file_pattern = ntuples.get(sample["type"])["file_pattern"]
         self.ntuples = glob(os.path.join(ntuple_path, ntuple_file_pattern))
-        # ensure output path exists
-        os.makedirs(output_path, exist_ok=True)
+
         # get size of batches
         if "batchsize" not in self.config.preparation:
             logger.warning("no batch size given. Batch size set to 1,000,000")

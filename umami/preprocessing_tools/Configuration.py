@@ -1,5 +1,7 @@
 """Configuration module for preprocessing."""
 import os
+import copy
+import shutil
 import warnings
 
 import yaml
@@ -13,6 +15,7 @@ class Configuration:
 
     def __init__(self, yaml_config=None):
         super().__init__()
+        self.YAML = YAML(typ="safe", pure=True)
         self.yaml_config = yaml_config
         self.yaml_default_config = "configs/preprocessing_default_config.yaml"
         self.LoadConfigFiles()
@@ -26,11 +29,21 @@ class Configuration:
 
     @property
     def ParameterConfigPath(self):
-        """Return parameter config path."""
+        """Return parameter config path, as found on some line in the config file.
+
+        Raises
+        ------
+        ValueError
+            if the config file is missing the file parameters include statement
+        """
+
         with open(self.yaml_config, "r") as conf:
-            first_line = conf.readline()
-        first_line = first_line.split("!include ")
-        if first_line[0] != "parameters: ":
+            line = conf.readline()
+            while "!include" not in line:
+                line = conf.readline()
+
+        line = line.split("!include ")
+        if line[0] != "parameters: ":
             logger.warning(
                 "You did not specify in the first line of the preprocessing config  the"
                 " 'parameters' with the !include option. Ignoring any parameter file."
@@ -39,7 +52,7 @@ class Configuration:
 
         preprocess_parameters_path = os.path.join(
             os.path.dirname(self.ConfigPath),
-            first_line[1].strip(),
+            line[1].strip(),
         )
         return preprocess_parameters_path
 
@@ -51,9 +64,9 @@ class Configuration:
         with open(self.yaml_default_config, "r") as conf:
             self.default_config = yaml.load(conf, Loader=yaml_loader)
         logger.info(f"Using config file {self.yaml_config}")
-        umami_yaml = YAML(typ="safe", pure=True)
+
         with open(self.yaml_config, "r") as conf:
-            self.config = umami_yaml.load(conf)
+            self.config = self.YAML.load(conf)
 
     def GetConfiguration(self):
         """Assigne configuration from file to class variables.
@@ -155,3 +168,52 @@ class Configuration:
             self.sampling["options"]["tracks_names"] = [
                 self.sampling["options"]["tracks_names"]
             ]
+
+    def copy_to_out_dir(self, suffix):
+        """Write the current config object to a new file, in the output dir
+        of the current preprocessing job
+
+        Parameters
+        ----------
+        suffix: append this string to the copied config file name
+
+        """
+
+        # get output directory of this preprocessing job
+        out_dir = os.path.dirname(self.config["parameters"]["file_path"])
+
+        # don't run during tests
+        if out_dir == ".":
+            return
+
+        # deepcopy current config dict
+        config = copy.deepcopy(self.config)
+
+        # get new var dict path and update copied config
+        new_var_dict_path = os.path.join(out_dir, os.path.basename(self.var_file))
+        config["parameters"]["var_file"] = new_var_dict_path
+
+        # copy var dict
+        if not os.path.exists(new_var_dict_path):
+            logger.info(f"Copying variable dict to {new_var_dict_path}")
+            shutil.copyfile(self.var_file, new_var_dict_path)
+        else:
+            logger.info(f"Already found variable dict at {new_var_dict_path}")
+
+        # get path for copy of current conifg
+        root, ext = os.path.splitext(os.path.basename(self.yaml_config))
+        if suffix not in root:
+            new_config_fname = root + "_" + suffix + ext
+        else:
+            new_config_fname = root + ext
+        new_config_path = os.path.join(out_dir, new_config_fname)
+
+        # warn user on overwrite
+        if os.path.exists(new_config_path):
+            logger.warning(f"Overwriting existing config at {new_config_path}")
+
+        # write config
+        logger.info(f"Copying config file to {new_config_path}")
+        os.makedirs(os.path.dirname(new_config_path), exist_ok=True)
+        with open(new_config_path, "w") as f:
+            yaml.dump(self.config, f)
