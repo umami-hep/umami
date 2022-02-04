@@ -30,6 +30,7 @@ from umami.preprocessing_tools.Scaling import (
     Gen_default_dict,
     Scaling,
     apply_scaling_trks,
+    get_track_mask,
 )
 from umami.preprocessing_tools.utils import (
     GetBinaryLabels,
