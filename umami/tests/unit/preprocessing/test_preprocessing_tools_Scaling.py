@@ -183,9 +183,12 @@ class ScalingTestCase(unittest.TestCase):
             )
 
     def test_get_scaling_tracks(self):
-        self.data = np.arange(0, 240, 1).reshape((3, 40, 2))
+        njet = 3
+        ntrack = 40
+        nvar = 2
+        self.data = np.arange(0, 240, 1).reshape((njet, ntrack, nvar))
         self.var_names = ["variable", "variable_2"]
-        self.mask_value = 0
+        self.track_mask = np.ones((njet, ntrack)).astype(bool)
 
         self.nTrks_control = 120
         self.scale_dict_control = {
@@ -198,7 +201,7 @@ class ScalingTestCase(unittest.TestCase):
         scale_dict, nTrks = scaling_class.get_scaling_tracks(
             data=self.data,
             var_names=self.var_names,
-            mask_value=self.mask_value,
+            track_mask=self.track_mask,
         )
 
         self.assertEqual(nTrks, self.nTrks_control)

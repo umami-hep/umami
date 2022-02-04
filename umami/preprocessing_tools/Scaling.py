@@ -32,6 +32,37 @@ def Gen_default_dict(scale_dict):
     return default_dict
 
 
+def get_track_mask(tracks: np.ndarray):
+    """
+    Parameters
+    ----------
+    tracks : np.ndarray
+        Loaded tracks with shape (nJets, nTrks, nTrkFeatures). Note, the
+        input tracks should not already be converted with np.nan_to_num, as this
+        function relies on a np.isnan check in the case where the valid flag is
+        not present.
+
+    Returns
+    -------
+    bool_array : np.ndarray
+        A bool array (nJets, nTrks), True for tracks that are present.
+    """
+
+    # try to use the valid flag, present in newer samples
+    if "valid" in tracks.dtype.names:
+        return tracks["valid"]
+
+    # instead look for a float variable to use, which will be NaN
+    # for the padded tracks
+    for var, dtype in tracks.dtype.fields.items():
+        if "f" in dtype[0].str:
+            return ~np.isnan(tracks[var])
+
+    raise ValueError(
+        "Need 'valid' flag or at least one float variable in your input tracks."
+    )
+
+
 def apply_scaling_trks(
     trks,
     variable_config: dict,
@@ -54,8 +85,8 @@ def apply_scaling_trks(
     # Init a list for the variables
     var_arr_list = []
 
-    # Check masking
-    trk_mask = ~np.isnan(trks[trks.dtype.names[0]])
+    # Get track mask
+    track_mask = get_track_mask(trks)
 
     # Get the track variables
     tracks_noNormVars = variable_config["track_train_variables"][tracks_name][
@@ -79,12 +110,12 @@ def apply_scaling_trks(
             shift = np.float32(scale_dict[var]["shift"])
             scale = np.float32(scale_dict[var]["scale"])
             x = np.where(
-                trk_mask,
+                track_mask,
                 x - shift,
                 x,
             )
             x = np.where(
-                trk_mask,
+                track_mask,
                 x / scale,
                 x,
             )
@@ -127,7 +158,6 @@ class Scaling:
         self.bool_use_tracks = config.sampling["options"]["save_tracks"]
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
         self.compression = compression
-        self.mask_value = 0
 
         logger.info(f"Using variable dict at {config.var_file}")
         self.variable_config = GetVariableDict(config.var_file)
@@ -264,33 +294,43 @@ class Scaling:
 
         return combined_dict_list
 
-    def get_scaling_tracks(self, data, var_names, mask_value=0):
+    def get_scaling_tracks(
+        self, data: np.ndarray, var_names: list, track_mask: np.ndarray
+    ):
         """
         Calculate the scale dict for the tracks and return the dict.
 
-        Input:
-        - data: Loaded tracks with shape (nJets, nTrks, nTrkFeatures)
-        - var_names: List of variables which are to be scaled
-        - mask_value: Masking value to use. Default: 0
+        Parameters
+        ----------
+        data : np.ndarray
+            Loaded tracks with shape (nJets, nTrks, nTrkFeatures)
+        var_names : list
+            List of variables which are to be scaled
+        track_mask : np.ndarray
+            Boolen array where False denotes padded tracks,
+            with shape (nJets, nTrks)
 
-        Output:
-        - scale_dict: Scale dict with scaling/shifting values for each variable
-        - nTrks: Number of tracks used to calculate the scaling/shifting
+        Returns
+        -------
+        scale_dict : dict
+            Scale dict with scaling/shifting values for each variable
+        nTrks : int
+            Number of tracks used to calculate the scaling/shifting
         """
         # TODO add weight support for tracks
 
-        # Track variables
-        # data has shape nJets,nTrks,nFeatures,so to sort out the mask,
-        # we need to find where the value is masked for a track over
-        # all it's features
-        # mask has shape nJets,nTrks
-        mask = ~np.all(data == mask_value, axis=-1)
-
+        # Initalise scale dict
         scale_dict = {}
+
+        # For each track variable
         for v, name in enumerate(var_names):
             f = data[:, :, v]
-            slc = f[mask]
+
+            # Get tracks
+            slc = f[track_mask]
             nTrks = len(slc)
+
+            # Caculate normalisation parameters
             m, s = slc.mean(), slc.std()
             scale_dict[name] = {"shift": float(m), "scale": float(s)}
 
@@ -392,7 +432,6 @@ class Scaling:
             if chunk_counter == 0:
                 # Get the first chunk of scales from the generator
                 scale_dict, nJets_loaded = next(jets_scaling_generator)
-
             else:
                 # Get the next chunk of scales from the generator
                 tmp_scale_dict, tmp_nJets_loaded = next(jets_scaling_generator)
@@ -608,28 +647,28 @@ class Scaling:
                     infile_all[f"/{tracks_name}"][index_tuple[0] : index_tuple[1]]
                 )
 
+                # Get the masking
+                track_mask = get_track_mask(trks)
+
                 # Stack the arrays by their variable
                 X_trk_train = np.stack(
                     [np.nan_to_num(trks[v]) for v in trkVars], axis=-1
                 )
-
-                # Get the masking
-                mask = ~np.all(X_trk_train == self.mask_value, axis=-1)
 
                 # Add small value, so log(0) does not happen
                 eps = 1e-8
 
                 # Take the log of the desired variables
                 for i, _ in enumerate(logNormVars):
-                    X_trk_train[:, :, i][mask] = np.log(
-                        X_trk_train[:, :, i][mask] + eps
+                    X_trk_train[:, :, i][track_mask] = np.log(
+                        X_trk_train[:, :, i][track_mask] + eps
                     )
 
                 # Scale the variables
                 scale_dict_trk, nTrks = self.get_scaling_tracks(
                     data=X_trk_train[:, :, :],
                     var_names=logNormVars + jointNormVars,
-                    mask_value=self.mask_value,
+                    track_mask=track_mask,
                 )
 
                 # Yield the scale dict and the number jets
