@@ -186,19 +186,12 @@ class Configuration:
         if out_dir == ".":
             return
 
+        # go up one level
+        if os.path.basename(out_dir) == "preprocessed":
+            out_dir = os.path.dirname(out_dir)
+
         # deepcopy current config dict
         config = copy.deepcopy(self.config)
-
-        # get new var dict path and update copied config
-        new_var_dict_path = os.path.join(out_dir, os.path.basename(self.var_file))
-        config["parameters"]["var_file"] = new_var_dict_path
-
-        # copy var dict
-        if not os.path.exists(new_var_dict_path):
-            logger.info(f"Copying variable dict to {new_var_dict_path}")
-            shutil.copyfile(self.var_file, new_var_dict_path)
-        else:
-            logger.info(f"Already found variable dict at {new_var_dict_path}")
 
         # get path for copy of current conifg
         root, ext = os.path.splitext(os.path.basename(self.yaml_config))
@@ -208,12 +201,22 @@ class Configuration:
             new_config_fname = root + ext
         new_config_path = os.path.join(out_dir, new_config_fname)
 
-        # warn user on overwrite
+        # get new var dict path and update copied config
+        new_var_dict_path = os.path.join(out_dir, os.path.basename(self.var_file))
+        config["parameters"]["var_file"] = new_var_dict_path
+
+        # make output dir
+        os.makedirs(os.path.dirname(new_config_path), exist_ok=True)
+
+        # copy config
+        logger.info(f"Copying config file to {new_config_path}")
         if os.path.exists(new_config_path):
             logger.warning(f"Overwriting existing config at {new_config_path}")
-
-        # write config
-        logger.info(f"Copying config file to {new_config_path}")
-        os.makedirs(os.path.dirname(new_config_path), exist_ok=True)
         with open(new_config_path, "w") as f:
-            yaml.dump(self.config, f)
+            yaml.dump(config, f)
+
+        # copy var dict
+        logger.info(f"Copying variable dict to {new_config_path}")
+        if os.path.exists(new_var_dict_path):
+            logger.warning(f"Overwriting existing variable dict at {new_var_dict_path}")
+        shutil.copyfile(self.var_file, new_var_dict_path)
