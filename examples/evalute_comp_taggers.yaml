@@ -36,6 +36,9 @@ test_files:
 
 # Values for the neural network
 NN_structure:
+    # Use evaluated tagger scores in h5 file and not trained model
+    tagger: None
+
     # Define which classes are used for training
     # These are defined in the global_config
     class_labels: ["ujets", "cjets", "bjets"]

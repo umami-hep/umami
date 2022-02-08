@@ -788,17 +788,22 @@ if __name__ == "__main__":
     parser_args = GetParser()
     training_config = utt.Configuration(parser_args.config_file)
 
-    # Check for evaluation only is used
+    # Check for evaluation only (= evaluation of tagger scores in files) is used:
+    # if nothing is specified, assume that freshly trained tagger is evaluated
     try:
-        training_config.evaluate_trained_model  # pylint: disable=pointless-statement
-        preprocessing_config = training_config
+        evaluate_trained_model = training_config.evaluate_trained_model
     except AttributeError:
-        preprocessing_config = Configuration(training_config.preprocess_config)
+        evaluate_trained_model = True
+
+    preprocessing_config = (
+        Configuration(training_config.preprocess_config)
+        if evaluate_trained_model
+        else training_config
+    )
 
     # Get the tagger from args. If not given, use the one from train config
     if parser_args.tagger:
         tagger_name = parser_args.tagger
-
     else:
         try:
             tagger_name = training_config.NN_structure["tagger"]
@@ -840,12 +845,11 @@ if __name__ == "__main__":
                 tagger=tagger_name,
             )
 
-    elif tagger_name == "umami" or tagger_name is None:
-        if tagger_name is None:
-            logger.info("Start evaluating in-file taggers with test files...")
-
-        else:
+    elif tagger_name == "umami" or not evaluate_trained_model:
+        if tagger_name == "umami":
             logger.info("Start evaluating UMAMI with test files...")
+        else:
+            logger.info("Start evaluating in-file taggers with test files...")
 
         for (
             test_file_identifier,
