@@ -879,27 +879,60 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
     and a target as importance weights.
     """
 
-    def __init__(self, config, flavour=None) -> None:
+    def __init__(self, config: object, flavour: int = None) -> None:
         """
-        Initialise class. Set flavour to 'target' or an int corresponding to the index
+        Initialise class.  to 'target' or an int corresponding to the index
         of the flavour to process (in the list of samples from config samples).
+
+        Parameters
+        ----------
+        config : object
+            Loaded preprocessing config.
+        flavour : int, optional
+            Set flavour to a flavour corresponding to the given int (index entry). If
+            None is given, the 'target' will be used, by default None.
+
+        Raises
+        ------
+        ValueError
+            if given flavour index is out of range.
         """
+
         super().__init__(config)
+
+        # Set up the dicts and set random seed
         self.inter_func_dict = {}
         self._ratio_dict = {}
         self._bin_edges_dict = {}
         self.rnd_seed = 42
+
+        # Check for usage of multiprocessing
+        self.use_multiprocessing = True
+        self.nProcesses = 4
+
         # Setting some limits: important for good spline approximation
         sampling_var = self.options.get("sampling_variables")
+
+        # Init a list for the bin info and ranges info
         bin_info = []
         ranges_info = []
         extreme_ranges = []
+
+        # Iterate over the chosen variables which are used for resampling
         for samp_var in sampling_var:
+
+            # Iterate over the variables
             for _, var in enumerate(list(samp_var.keys())):
+
+                # Add the bin and range info to the lists
                 while len(bin_info) < len(samp_var[var]["bins"]):
                     bin_info.append([])
                     ranges_info.append([])
+
+                # Init a default min and max
                 themin, themax = 1e8, 0
+
+                # Add bin infos of the categories
                 for i, bin_cat in enumerate(samp_var[var]["bins"]):
                     bin_info[i].append(bin_cat[2])
                     ranges_info[i].append((bin_cat[0], bin_cat[1]))
@@ -907,20 +940,26 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         themin = bin_cat[0]
                     if bin_cat[1] > themax:
                         themax = bin_cat[1]
+
+                # Add them to the extreme ranges list
                 extreme_ranges.append([themin, themax])
+
+        # Init a dict with the bins, ranges and extreme ranges
         self.limit = {
             "bins": bin_info,
             "ranges": ranges_info,
             "extreme_ranges": extreme_ranges,
         }
+
+        # Init a dict for the number to sample
         self.number_to_sample = {}
 
+        # Get the max flavour index
         flavour_index = len(
             self.options["samples"][list(self.options["samples"].keys())[0]]
         )
-        self.do_target = False
-        self.do_plotting = False
-        self.do_combination = False
+
+        # Check if flavour is given
         if flavour is not None:
             new_flavour_list = []
             for item in flavour:
@@ -937,6 +976,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                         f"Flavour key {item} unrecognised or out of range."
                     )
             self.do_flavours = new_flavour_list
+
         else:
             self.do_target = True
             self.do_plotting = True
@@ -945,12 +985,26 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
     @property
     def Ratio(self):
-        """Get ratio."""
+        """
+        Return the dict with the ratios inside.
+
+        Returns
+        -------
+        Ratio_dict
+            Dict with the ratios inside.
+        """
         return self._ratio_dict
 
     @property
     def Inter_Func_Dict(self):
-        """Get interpolation function."""
+        """
+        Return the dict with the interpolation functions inside.
+
+        Returns
+        -------
+        inter_func_dict
+            Dict with the interpolation functions inside.
+        """
         return self.inter_func_dict
 
     def Load_Samples_Generator(self, sample_category, sample_id, chunk_size):
@@ -1133,24 +1187,27 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
     def Initialise_Flavour_Samples(self):
         """
         Initialising input files: this one just creates the map.
-        (basd on UnderSampling one).
-        Parameters
-        ----------
-
-        Returns
-        -------
-        At this point the arrays of the 2 variables are loaded which are used
+        (based on UnderSampling one). At this point the arrays of
+        the 2 variables are loaded which are used
         for the sampling and saved into class variables.
+
+        Raises
+        ------
+        KeyError
+            If the samples are not provided
         """
 
+        # Get the samples
         try:
             samples = self.options["samples"]
+
         except KeyError as Error:
             raise KeyError(
                 "You chose the 'pdf' option for the sampling but didn't"
                 "provide the samples to use. Please specify them in the"
                 "configuration file!"
             ) from Error
+
         # saving a list of sample categories with associated IDs
         self.sample_categories = {
             elem: i for i, elem in enumerate(list(samples.keys()))
@@ -2174,19 +2231,18 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
         Parameters
         ----------
-        sample_category: str, the name of the category study.
-        category_id: int, the location of the category in the list.
-        sample_id: int, the location of the sample flavour in the category dict.
-        iterator: bool, whether to use the iterator approach or load the whole sample
-                        in memory.
-        chunk_size: int, the size of the chunks
-                        (the last chunk may be at most 2 * chunk_size).
-        selected_indices: None or array of int: the indices to resample.
-                            If None, iterator approach used.
-
-        Returns
-        -------
-        Stores to memory the selected data
+        sample_category : str
+            The name of the category study.
+        sample_id : int
+            The location of the category in the list.
+        selected_indices : dict, optional
+            The location of the sample flavour in the category dict, by default None
+        chunk_size : int, optional
+            The size of the chunks (the last chunk may be at most 2 * chunk_size),
+            by default 1e5
+        iterator : bool, optional
+            Whether to use the iterator approach or load the whole sample
+            in memory, by default True
         """
 
         logger.info(
@@ -2215,48 +2271,78 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
     def Combine_Flavours(self, chunk_size: int = 1e6):
         """
-        This method loads the stored flavour resampled and combines them
-        iteratively into a single file.
+        This method loads the stored resampled flavour samples and combines
+        them iteratively into a single file.
 
         Parameters
         ----------
-
-        Returns
-        -------
-        Stores to memory the combined selected data
-        into a single file.
+        chunk_size : int, optional
+            Number of jets that are loaded in one chunk, by default 1e6
         """
+
+        # Get the output name of the final single file
         output_name = self.config.GetFileName(option="resampled")
+
+        # Log infos
         logger.info("Combining all the flavours into a single file.")
         logger.info(f"Storing to {self.outfile_path}")
         logger.info(f"Storing to {output_name}")
 
+        # Set the create_file to True for first loop
         create_file = True
+
+        # Loop over the different flavour types (like bjets, cjets etc.)
         for sample_id, _ in enumerate(
             self.options["samples"][list(self.sample_categories.keys())[0]]
         ):
+
+            # Iterate over the different sample types (ttbar, zpext)
             for _, sample_category in enumerate(self.options["samples"]):
+
+                # Get the name of the file where the selected jets are stored in
+                # for the given combination of flavour and sample type
                 load_name = os.path.join(
                     self.resampled_path,
                     "PDF_sampling",
                     self.options["samples"][sample_category][sample_id]
                     + "_selected.h5",
                 )
+
+                # Open the file with the selected jets
+                # for the given combination of flavour and sample type
                 with h5py.File(load_name, "r") as f:
+
+                    # Get the flavour type
                     category = self.sample_file_map[sample_category][sample_id][1].get(
                         "category"
                     )
                     logger.info(f"Working on {sample_category} {category}.")
+
+                    # Get the total number of jets in the file
                     total_size_file = len(f["jets"])
-                    load_per_iteration = chunk_size
-                    number_of_chunks = round(total_size_file / load_per_iteration + 0.5)
+
+                    # Get the number of chunks that need to be loaded
+                    number_of_chunks = round(total_size_file / chunk_size + 0.5)
+
+                    # Set the counter for writing them to file
                     start_ind = 0
                     chunk_number = 0
+
+                    # Define a progress bar for the writing
                     pbar = tqdm(total=np.sum(total_size_file))
+
+                    # Loop over all chunks until limit is reached
                     while chunk_number < number_of_chunks:
-                        end_ind = int(start_ind + load_per_iteration)
+
+                        # Get the end index of the chunk
+                        end_ind = int(start_ind + chunk_size)
+
+                        # If the last chunk is processed, set the
+                        # end index to the total number of jets
                         if chunk_number == number_of_chunks - 1:
                             end_ind = int(total_size_file)
+
+                        # Get a chunk of labels, tracks and jets
                         jets = f["jets"][start_ind:end_ind]
                         labels = f["labels"][start_ind:end_ind]
                         if self.save_tracks:
@@ -2264,15 +2350,26 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                                 f[tracks_name][start_ind:end_ind]
                                 for tracks_name in self.tracks_names
                             ]
+
+                        # Set the new start index to old end index
                         start_ind = end_ind
 
+                        # Update the progress bar with the number of loaded
+                        # jets in the chunks
                         pbar.update(jets.size)
+
+                        # Check if this is the first chunk that is written to the final
+                        # output file.
                         if create_file:
+
+                            # Create the output directory if not exist
                             logger.info(
                                 "Creating output directory if doesn't exist yet"
                             )
                             os.makedirs(output_name.rsplit("/", 1)[0], exist_ok=True)
-                            create_file = False
+
+                            # Open the final output file and create the datasets
+                            # needed.
                             with h5py.File(output_name, "w") as out_file:
                                 out_file.create_dataset(
                                     "jets",
@@ -2288,6 +2385,8 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                                     chunks=True,
                                     maxshape=(None, labels.shape[1]),
                                 )
+
+                                # If tracks are used, save them also
                                 if self.save_tracks:
                                     for i, tracks_name in enumerate(self.tracks_names):
                                         out_file.create_dataset(
@@ -2300,18 +2399,30 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                                                 tracks[i].shape[1],
                                             ),
                                         )
+
+                            # Set create file to False because it is created now
+                            create_file = False
+
                         else:
+
+                            # Open the already existing output file and datasets
+                            # and append the chunk to it
                             with h5py.File(output_name, "a") as out_file:
+                                # Save jets
                                 out_file["jets"].resize(
                                     (out_file["jets"].shape[0] + jets.shape[0]),
                                     axis=0,
                                 )
                                 out_file["jets"][-jets.shape[0] :] = jets
+
+                                # Save labels
                                 out_file["labels"].resize(
                                     (out_file["labels"].shape[0] + labels.shape[0]),
                                     axis=0,
                                 )
                                 out_file["labels"][-labels.shape[0] :] = labels
+
+                                # If tracks are used, save them also
                                 if self.save_tracks:
                                     for i, tracks_name in enumerate(self.tracks_names):
                                         out_file[tracks_name].resize(
@@ -2324,7 +2435,11 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                                         out_file[tracks_name][
                                             -tracks[i].shape[0] :
                                         ] = tracks[i]
+
+                        # Set the chunk counter up by one
                         chunk_number += 1
+
+                    # Close the progress bar
                     pbar.close()
 
     def Make_plots(
