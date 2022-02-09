@@ -11,15 +11,11 @@ def getArgumentParser():
     parser = ArgumentParser()
     parser.add_argument("input_file_path")
     parser.add_argument("-t", "--tagger", default="DL1dLoose20210824r22")
-    parser.add_argument(
-        "-c", "--class_labels", default=["bjets", "cjets", "ujets"]
-    )
+    parser.add_argument("-c", "--class_labels", default=["bjets", "cjets", "ujets"])
     parser.add_argument("-p", "--prob_var_names", default=["pb", "pc", "pu"])
     parser.add_argument("-f", "--fractions", default=[0.0, 0.018, 0.982])
     parser.add_argument("-m", "--main_class", default="bjets")
-    parser.add_argument(
-        "-w", "--working_points", default=[0.60, 0.70, 0.77, 0.85]
-    )
+    parser.add_argument("-w", "--working_points", default=[0.60, 0.70, 0.77, 0.85])
     parser.add_argument("-n", "--n_jets", default=22_000_000)
     return parser
 
@@ -61,9 +57,7 @@ def main():
     # compute b-tagging score using function in umami training tools
     for flav_index, flav in enumerate(class_labels):
         if flav_index == 0:
-            tmp = selected_jets[
-                f"{tagger}_{prob_var_names[flav_index]}"
-            ].values
+            tmp = selected_jets[f"{tagger}_{prob_var_names[flav_index]}"].values
         else:
             tmp = np.append(
                 tmp,
