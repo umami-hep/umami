@@ -56,84 +56,119 @@ def prepareConfig(
         Path to the created config that is to be used for the test.
     """
 
-    # For DIPS Cond att, the files from the umami preprocessing are used.
-    # We need to give this info so those are correctly loaded.
-    if preprocess_files_from is None:
-        preprocess_files = tagger
-
-    else:
-        preprocess_files = preprocess_files_from
-
     # Get test configuration
     data = getConfiguration()
 
-    # config files, will be copied to test dir
+    if tagger != "evalute_comp_taggers":
+        # For CADS, the files from the umami preprocessing are used.
+        # We need to give this info so those are correctly loaded.
+        if preprocess_files_from is None:
+            preprocess_files = tagger
+
+        else:
+            preprocess_files = preprocess_files_from
+
+        # config files, will be copied to test dir
+        preprocessing_config_source = os.path.join(
+            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            os.path.basename(data["test_preprocessing"]["config"]),
+        )
+        preprocessing_config_paths_source = os.path.join(
+            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            os.path.basename(data["test_preprocessing"]["config_paths"]),
+        )
+        preprocessing_config = os.path.join(
+            test_dir, os.path.basename(preprocessing_config_source)
+        )
+        preprocessing_config_paths = os.path.join(
+            test_dir, os.path.basename(preprocessing_config_paths_source)
+        )
+
+        var_dict_source = os.path.join(
+            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            os.path.basename(
+                data["test_preprocessing"][f"var_dict_{preprocess_files}"]
+            ),
+        )
+        var_dict = os.path.join(test_dir, os.path.basename(var_dict_source))
+
+        # input files, will be downloaded to test dir
+        logger.info("Retrieving files from preprocessing...")
+
+        train_file = os.path.join(
+            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
+        )
+        scale_dict = os.path.join(
+            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            "PFlow-scale_dict.json",
+        )
+
+        # Copy preprocess configs and var dict
+        copyfile(preprocessing_config_source, preprocessing_config)
+        copyfile(preprocessing_config_paths_source, preprocessing_config_paths)
+        copyfile(var_dict_source, var_dict)
+
+        # modify copy of preprocessing config file for test
+        replaceLineInFile(
+            preprocessing_config_paths,
+            ".outfile_name:",
+            f".outfile_name: &outfile_name {train_file}",
+        )
+        replaceLineInFile(
+            preprocessing_config_paths,
+            ".dict_file:",
+            f".dict_file: &dict_file {scale_dict}",
+        )
+
+    # Get the train config file and copy it to test dir
     config_source = os.path.join(os.getcwd(), data[f"test_{tagger}"]["config"])
     config = os.path.join(test_dir, os.path.basename(config_source))
 
-    preprocessing_config_source = os.path.join(
-        f"./test_preprocessing_{preprocess_files}/preprocessing/",
-        os.path.basename(data["test_preprocessing"]["config"]),
-    )
-    preprocessing_config_paths_source = os.path.join(
-        f"./test_preprocessing_{preprocess_files}/preprocessing/",
-        os.path.basename(data["test_preprocessing"]["config_paths"]),
-    )
-    preprocessing_config = os.path.join(
-        test_dir, os.path.basename(preprocessing_config_source)
-    )
-    preprocessing_config_paths = os.path.join(
-        test_dir, os.path.basename(preprocessing_config_paths_source)
-    )
-
-    var_dict_source = os.path.join(
-        f"./test_preprocessing_{preprocess_files}/preprocessing/",
-        os.path.basename(data["test_preprocessing"][f"var_dict_{preprocess_files}"]),
-    )
-    var_dict = os.path.join(test_dir, os.path.basename(var_dict_source))
-
-    # input files, will be downloaded to test dir
-    logger.info("Retrieving files from preprocessing...")
-
-    train_file = os.path.join(
-        f"./test_preprocessing_{preprocess_files}/preprocessing/",
-        "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
-    )
-    test_file_ttbar = os.path.join(test_dir, "ci_ttbar_testing.h5")
-    test_file_zprime = os.path.join(test_dir, "ci_zpext_testing.h5")
-    scale_dict = os.path.join(
-        f"./test_preprocessing_{preprocess_files}/preprocessing/",
-        "PFlow-scale_dict.json",
-    )
-
     # prepare config files by modifying local copies of config files
     logger.info(f"Preparing config file based on {config_source} in {config}...")
-
-    # Copy configs and var dict
     copyfile(config_source, config)
-    copyfile(preprocessing_config_source, preprocessing_config)
-    copyfile(preprocessing_config_paths_source, preprocessing_config_paths)
-    copyfile(var_dict_source, var_dict)
 
-    # modify copy of preprocessing config file for test
-    replaceLineInFile(
-        preprocessing_config_paths,
-        ".outfile_name:",
-        f".outfile_name: &outfile_name {train_file}",
-    )
-    replaceLineInFile(
-        preprocessing_config_paths,
-        ".dict_file:",
-        f".dict_file: &dict_file {scale_dict}",
-    )
+    # Get the path to the test files
+    test_file_ttbar = os.path.join(test_dir, "ci_ttbar_testing.h5")
+    test_file_zprime = os.path.join(test_dir, "ci_zpext_testing.h5")
 
     # modify copy of training config file for test
     with open(config, "r") as con:
         config_file = yaml.load(con, Loader=yaml_loader)
 
+    if tagger != "evalute_comp_taggers":
+        config_file["preprocess_config"] = f"{preprocessing_config}"
+        config_file["train_file"] = f"{train_file}"
+        config_file["var_dict"] = f"{var_dict}"
+        config_file["NN_structure"]["batch_size"] = 50
+        config_file["NN_structure"]["epochs"] = 2
+        config_file["NN_structure"]["nJets_train"] = 100
+
+        # Add some validation files for testing
+        config_file.update(
+            {
+                "validation_files": {
+                    "ttbar_r21_val": {
+                        "path": f"{test_dir}/ci_ttbar_testing.h5",
+                        "label": "$t\\bar{t}$ Release 21",
+                        "variable_cuts": [
+                            {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
+                        ],
+                    },
+                    "zprime_r21_val": {
+                        "path": f"{test_dir}/ci_zpext_testing.h5",
+                        "label": "$Z'$ Release 21",
+                        "variable_cuts": [
+                            {"pt_btagJes": {"operator": ">", "condition": 250_000}}
+                        ],
+                    },
+                }
+            }
+        )
+
+    # Set model_name
     config_file["model_name"] = data[f"test_{tagger}"]["model_name"]
-    config_file["preprocess_config"] = f"{preprocessing_config}"
-    config_file["train_file"] = f"{train_file}"
 
     # Erase all not used test files
     del config_file["test_files"]
@@ -154,33 +189,9 @@ def prepareConfig(
             }
         }
     )
-    config_file["var_dict"] = f"{var_dict}"
-    config_file["NN_structure"]["batch_size"] = 50
-    config_file["NN_structure"]["epochs"] = 2
-    config_file["NN_structure"]["nJets_train"] = 100
+
     config_file["Eval_parameters_validation"]["n_jets"] = 4_000
     config_file["Eval_parameters_validation"]["eff_min"] = 0.60
-    # Add some validation files for testing
-    config_file.update(
-        {
-            "validation_files": {
-                "ttbar_r21_val": {
-                    "path": f"{test_dir}/ci_ttbar_testing.h5",
-                    "label": "$t\\bar{t}$ Release 21",
-                    "variable_cuts": [
-                        {"pt_btagJes": {"operator": "<=", "condition": 250_000}}
-                    ],
-                },
-                "zprime_r21_val": {
-                    "path": f"{test_dir}/ci_zpext_testing.h5",
-                    "label": "$Z'$ Release 21",
-                    "variable_cuts": [
-                        {"pt_btagJes": {"operator": ">", "condition": 250_000}}
-                    ],
-                },
-            }
-        }
-    )
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
@@ -223,32 +234,33 @@ def runTraining(config: dict, tagger: str) -> bool:
         Training succeeded or not.
     """
 
-    logger.info(f"Test: running train.py for {tagger}...")
-    run_train = run(["train.py", "-c", f"{config}"], check=True)
+    if tagger:
+        logger.info(f"Test: running train.py for {tagger}...")
+        run_train = run(["train.py", "-c", f"{config}"], check=True)
 
-    try:
-        run_train.check_returncode()
+        try:
+            run_train.check_returncode()
 
-    except CalledProcessError as Error:
-        raise AssertionError(f"Test failed: train.py for {tagger}.") from Error
+        except CalledProcessError as Error:
+            raise AssertionError(f"Test failed: train.py for {tagger}.") from Error
 
-    logger.info(f"Test: running plotting_epoch_performance.py for {tagger}...")
-    run_plot_epoch = run(
-        [
-            "plotting_epoch_performance.py",
-            "-c",
-            f"{config}",
-        ],
-        check=True,
-    )
+        logger.info(f"Test: running plotting_epoch_performance.py for {tagger}...")
+        run_plot_epoch = run(
+            [
+                "plotting_epoch_performance.py",
+                "-c",
+                f"{config}",
+            ],
+            check=True,
+        )
 
-    try:
-        run_plot_epoch.check_returncode()
+        try:
+            run_plot_epoch.check_returncode()
 
-    except CalledProcessError as Error:
-        raise AssertionError(
-            f"Test failed: plotting_epoch_performance.py for {tagger}."
-        ) from Error
+        except CalledProcessError as Error:
+            raise AssertionError(
+                f"Test failed: plotting_epoch_performance.py for {tagger}."
+            ) from Error
 
     logger.info(f"Test: running evaluate_model.py for {tagger}...")
     run_evaluate_model = run(
@@ -363,3 +375,16 @@ class TestTraining(unittest.TestCase):
         )
 
         self.assertTrue(runTraining(config=config, tagger="UMAMI"))
+
+    def test_evaluate_tagger_in_files(self):
+        """
+        Integration test the evaluation of only the taggers available in
+        the files.
+        """
+
+        config = prepareConfig(
+            tagger="evalute_comp_taggers",
+            test_dir=self.test_dir,
+        )
+
+        self.assertTrue(runTraining(config=config, tagger=None))

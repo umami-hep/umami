@@ -22,6 +22,16 @@
     junit: report.xml
 
 
+.dependencies_from_train_stage: &dependencies_from_train_stage
+  - test_train_dips
+  - test_train_tfrecords_dips
+  - test_train_cads
+  - test_train_dl1r
+  - test_train_umami
+  - test_train_tfrecords_umami
+  - test_evaluate_tagger_in_files
+
+
 test_preprocessing_dips_count:
   <<: *test_template
   stage: integration_test_preprocessing
@@ -142,7 +152,10 @@ test_preprocessing_umami_weighting:
 test_train_dips:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_dips_count", "test_preprocessing_dips_pdf", "test_preprocessing_dips_weighting"]
+  needs:
+    - test_preprocessing_dips_count
+    - test_preprocessing_dips_pdf
+    - test_preprocessing_dips_weighting
   dependencies:
     - test_preprocessing_dips_count
     - test_preprocessing_dips_pdf
@@ -159,7 +172,10 @@ test_train_dips:
 test_train_tfrecords_dips:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_dips_count", "test_preprocessing_dips_pdf", "test_preprocessing_dips_weighting"]
+  needs:
+    - test_preprocessing_dips_count
+    - test_preprocessing_dips_pdf
+    - test_preprocessing_dips_weighting
   dependencies:
     - test_preprocessing_dips_count
     - test_preprocessing_dips_pdf
@@ -176,7 +192,10 @@ test_train_tfrecords_dips:
 test_train_cads:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_umami_count", "test_preprocessing_umami_pdf", "test_preprocessing_umami_weighting"]
+  needs:
+    - test_preprocessing_umami_count
+    - test_preprocessing_umami_pdf
+    - test_preprocessing_umami_weighting
   dependencies:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
@@ -193,7 +212,10 @@ test_train_cads:
 test_train_dl1r:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_dl1r_count", "test_preprocessing_dl1r_pdf", "test_preprocessing_dl1r_weighting"]
+  needs:
+    - test_preprocessing_dl1r_count
+    - test_preprocessing_dl1r_pdf
+    - test_preprocessing_dl1r_weighting
   dependencies:
     - test_preprocessing_dl1r_count
     - test_preprocessing_dl1r_pdf
@@ -210,7 +232,10 @@ test_train_dl1r:
 test_train_umami:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_umami_count", "test_preprocessing_umami_pdf", "test_preprocessing_umami_weighting"]
+  needs:
+    - test_preprocessing_umami_count
+    - test_preprocessing_umami_pdf
+    - test_preprocessing_umami_weighting
   dependencies:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
@@ -227,7 +252,10 @@ test_train_umami:
 test_train_tfrecords_umami:
   <<: *test_template
   stage: integration_test_tagger
-  needs: ["test_preprocessing_umami_count", "test_preprocessing_umami_pdf", "test_preprocessing_umami_weighting"]
+  needs:
+    - test_preprocessing_umami_count
+    - test_preprocessing_umami_pdf
+    - test_preprocessing_umami_weighting
   dependencies:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
@@ -241,17 +269,23 @@ test_train_tfrecords_umami:
       - test_umami_model_tfrecords/
       - coverage_files/
 
+test_evaluate_tagger_in_files:
+  <<: *test_template
+  stage: integration_test_tagger
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_evaluate_tagger_in_files"
+    - cp .coverage ./coverage_files/.coverage.test_evaluate_tagger_in_files
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_evalute_comp_taggers_model/
+      - coverage_files/
+
 test_plot_input_vars:
   <<: *test_template
   stage: integration_test_plotting
-  needs: ["test_train_dips", "test_train_tfrecords_dips", "test_train_cads", "test_train_dl1r", "test_train_umami", "test_train_tfrecords_umami"]
-  dependencies:
-    - test_train_dips
-    - test_train_tfrecords_dips
-    - test_train_cads
-    - test_train_dl1r
-    - test_train_umami
-    - test_train_tfrecords_umami
+  needs: *dependencies_from_train_stage
+  dependencies: *dependencies_from_train_stage
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_input_vars_plot.py -v -s --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_input_vars_plot
@@ -265,7 +299,9 @@ test_plot_input_vars:
 test_plotting_umami_dips:
   <<: *test_template
   stage: integration_test_plotting
-  needs: ["test_train_dips", "test_train_tfrecords_dips"]
+  needs:
+    - test_train_dips
+    - test_train_tfrecords_dips
   dependencies:
     - test_train_dips
     - test_train_tfrecords_dips
@@ -281,7 +317,8 @@ test_plotting_umami_dips:
 test_plotting_umami_dl1:
   <<: *test_template
   stage: integration_test_plotting
-  needs: ["test_train_dl1r"]
+  needs:
+    - test_train_dl1r
   dependencies:
     - test_train_dl1r
   script:
@@ -296,7 +333,9 @@ test_plotting_umami_dl1:
 test_plotting_umami_umami:
   <<: *test_template
   stage: integration_test_plotting
-  needs: ["test_train_umami", "test_train_tfrecords_umami"]
+  needs:
+    - test_train_umami
+    - test_train_tfrecords_umami
   dependencies:
     - test_train_umami
     - test_train_tfrecords_umami

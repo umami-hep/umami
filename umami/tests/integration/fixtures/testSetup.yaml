@@ -56,6 +56,15 @@ test_umami:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
 
+test_evalute_comp_taggers:
+    data_subfolder: 'preprocessing'
+    model_name: 'test_evalute_comp_taggers_model'
+    config: 'examples/evalute_comp_taggers.yaml'
+    testdir: '/tmp/umami/evalute_comp_taggers'
+    files:
+        - ci_ttbar_testing.h5
+        - ci_zpext_testing.h5
+
 test_input_vars_plot:
     data_subfolder: 'plot_input_vars'
     testdir: /tmp/umami/plot_input_vars/
