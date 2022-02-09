@@ -961,6 +961,10 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
         # Check if flavour is given
         if flavour is not None:
+            self.do_target = False
+            self.do_plotting = False
+            self.do_combination = False
+
             new_flavour_list = []
             for item in flavour:
                 if "target" == item:
