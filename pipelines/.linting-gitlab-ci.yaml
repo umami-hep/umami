@@ -35,6 +35,13 @@
   script:
     - pylint -j2 ./umami
 
+.black_check_template: &black_check_template
+  stage: linting
+  image: python:3.8-slim
+  script:
+    - pip install black==21.5b1
+    - black --check .
+
 .linting_rules_template: &linting_rules_template
   rules:
     - if: $CI_COMMIT_BRANCH != ''
@@ -55,6 +62,10 @@ doc_string_check:
 
 pylint:
   <<: *pylint_template
+  <<: *linting_rules_template
+
+black:
+  <<: *black_check_template
   <<: *linting_rules_template
 
 update_todos:
