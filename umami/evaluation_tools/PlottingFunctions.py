@@ -96,71 +96,98 @@ def FlatEfficiencyPerBin(
 
 
 def plotEfficiencyVariable(
-    df: list,
+    df: pd.DataFrame,
     class_labels_list: list,
     main_class: str,
     variable: str,
-    var_bins: np.float64,
+    var_bins: np.ndarray,
     plot_name: str,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
-    ThirdTag="DL1r",
+    ThirdTag: str = "DL1r",
     yAxisIncrease: float = 1.4,
     yAxisAtlasTag: float = 0.9,
-    efficiency=0.70,
-    frac_values=None,
-    centralise_bins=True,
-    xticksval=None,
-    xticks=None,
-    minor_ticks_frequency=None,
-    xlabel=None,
-    Log=False,
+    efficiency: float = 0.70,
+    frac_values: dict = None,
+    centralise_bins: bool = True,
+    xticksval: list = None,
+    xticks: list = None,
+    minor_ticks_frequency: int = None,
+    xlabel: str = None,
+    logy: bool = False,
     ymin: float = None,
     ymax: float = None,
     dpi: int = 400,
 ):
     """
     For a given variable (string) in the panda dataframe df, plots
-    the eff for each flavour as a function of variable.
-                 (discretised in bins as indicated by var_bins input)
-
-
-    The following options are needed:
-    - df: panda dataframe with columns:
-        - The efficiency is computed from the tag column of df.
-        - variable (see eponymous parameter)
-        - labels (as defined in the preprocessing, MUST MATCH class_labels_list)
-    - class_labels_list: list indicating the class order
-                         as defined in the preprocessing!
-                         WARNING: wrong behaviour if order is different.
-    - main_class: string of the main class label (in class labels_list).
-    - variable: string of the variable in the dataframe to plot against
-    - var_bins: numpy array of the bins to use
-    - plot_name: string of the base name for saving
-    - efficiency: the working point (b tagging). NOT IN PERCENT.
-
-    Optional:
-    - ThirdTag: additional tag
-    - frac_values: dictionary of flavour fractions
-    - centralise_bins: boolean to centralise point in the bins
-    - xticksval: list of ticks values (must agree with the one below)
-    - xticks: list of ticks (must agree with the one above)
-    - minor_ticks_frequency: int,
-                    if given, sets the frequency of minor ticks
-
-    - xlabel: string, label for x-axis.
-    - Log: boolean, whether to set the y-axis in log-scale.
-    - colors: Custom color list for the different models
-    - UseAtlasTag: boolean, whether to use the ATLAS tag or not.
-    - AtlasTag: string: tag to attached to ATLAS
-    - SecondTag: string: second line of the ATLAS tag.
-    - ThirdTag: tag on the top left of the plot, indicate model
-        and fractions used.
+    the eff for each flavour as a function of variable
+    (discretised in bins as indicated by var_bins input).
 
     Note: to get a flat efficiency plot, you need to produce a 'tag' column
     in df using FlatEfficiencyPerBin (defined above).
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Pandas.DataFrame with the columns needed are:
+        - The efficiency is computed from the tag column of df.
+        - variable (see eponymous parameter)
+        - labels (as defined in the preprocessing, MUST MATCH class_labels_list)
+    class_labels_list : list
+        List indicating the class order
+        as defined in the preprocessing!
+        WARNING: wrong behaviour if order is different.
+    main_class : str
+        Name of the main class.
+    variable : str
+        String of the variable in the dataframe to plot against.
+    var_bins : np.ndarray
+        Array of the bins to use.
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample"
+    ThirdTag : str, optional
+        Additional tag, by default "DL1r"
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag in, by default 1.4
+    yAxisAtlasTag : float, optional
+        Relative y axis position of the ATLAS Tag, by default 0.9
+    efficiency : float, optional
+        Working point value, by default 0.70
+    frac_values : dict, optional
+        Dict with the fraction values inside, by default None
+    centralise_bins : bool, optional
+        Decide to centralise point in the bins, by default True
+    xticksval : list, optional
+        List with the xticks values, by default None
+    xticks : list, optional
+        List with the xticks for the given values, by default None
+    minor_ticks_frequency : int, optional
+        If given, sets the frequency of minor ticks, by default None
+    xlabel : str, optional
+        x axis label, by default None
+    logy : bool, optional
+        Decide, to set the y axis to logarithmic, by default False
+    ymin : float, optional
+        Minimal y axis value, by default None
+    ymax : float, optional
+        Maximal y axis value, by default None
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
     """
 
     # Apply the ATLAS Style with the bars on the axes
@@ -297,7 +324,7 @@ def plotEfficiencyVariable(
         _, plot_ymax = ax.get_ylim()
 
     # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
-    if Log is True:
+    if logy is True:
         ax.set_yscale("log")
         if plot_ymin <= 0:
             plot_ymin = 1e-4
@@ -319,7 +346,7 @@ def plotEfficiencyVariable(
     if minor_ticks_frequency is not None:
         ax_t.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
     ax_t.set_xticklabels([])
-    if Log:
+    if logy:
         ax_r.set_yscale("log")
     ax_r.tick_params(axis="y", direction="in", which="both")
     ax_t.tick_params(axis="x", direction="in", which="both")
@@ -342,71 +369,98 @@ def plotEfficiencyVariableComparison(
     class_labels_list: list,
     main_class: str,
     variable: str,
-    var_bins: np.float64,
+    var_bins: np.ndarray,
     plot_name: str,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
     AtlasTag: str = "Internal Simulation",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
-    ThirdTag="DL1r",
+    ThirdTag: str = "DL1r",
     yAxisIncrease: float = 1.3,
     yAxisAtlasTag: float = 0.9,
-    efficiency=0.70,
-    frac_values=None,
-    centralise_bins=True,
-    xticksval=None,
-    xticks=None,
-    minor_ticks_frequency=None,
-    xlabel=None,
-    Log=False,
-    colors=None,
+    efficiency: float = 0.70,
+    frac_values: dict = None,
+    centralise_bins: bool = True,
+    xticksval: list = None,
+    xticks: list = None,
+    minor_ticks_frequency: int = None,
+    xlabel: str = None,
+    logy: bool = False,
+    colors: list = None,
     ymin: float = None,
     ymax: float = None,
     dpi: int = 400,
 ):
     """
     For a given variable (string) in the panda dataframe df, plots
-    the eff of each flavour as a function of variable for several taggers.
-                 (discretised in bins as indicated by var_bins input)
-
-
-    The following options are needed:
-    - df_list: list of panda dataframe with columns (one per tagger)
-        - The efficiency is computed from the tag column of df.
-        - variable (see eponymous parameter)
-        - labels (as defined in the preprocessing, MUST MATCH class_labels_list)
-    - model_labels: list (1 label per model)
-    - tagger_list: list of tagger name
-    - class_labels_list: list of list (1 per tagger), indicating the class order
-                         as defined in the preprocessing!
-                         WARNING: wrong behaviour if order is different.
-    - main_class: string of the main class label (in class labels_list).
-                  Must be the same for all taggers
-    - variable: string of the variable in the dataframe to plot against
-    - var_bins: numpy array of the bins to use
-    - plot_name: string of the base name for saving
-    - efficiency: the working point (b tagging). NOT IN PERCENT.
-
-    Optional:
-    - ThirdTag: additional tag
-    - frac_values: dictionary of flavour fractions
-    - centralise_bins: boolean to centralise point in the bins
-    - xticksval: list of ticks values (must agree with the one below)
-    - xticks: list of ticks (must agree with the one above)
-    - minor_ticks_frequency: int,
-                    if given, sets the frequency of minor ticks
-
-    - xlabel: string, label for x-axis.
-    - Log: boolean, whether to set the y-axis in log-scale.
-    - colors: Custom color list for the different models
-    - UseAtlasTag: boolean, whether to use the ATLAS tag or not.
-    - AtlasTag: string: tag to attached to ATLAS
-    - SecondTag: string: second line of the ATLAS tag.
-    - ThirdTag: tag on the top left of the plot, indicate model
-        and fractions used.
+    the eff of each flavour as a function of variable for several taggers
+    (discretised in bins as indicated by var_bins input).
 
     Note: to get a flat efficiency plot, you need to produce a 'tag' column
     in df using FlatEfficiencyPerBin (defined above).
+
+    Parameters
+    ----------
+    df_list : list
+        List with the pd.DataFrame for the given models
+    model_labels : list
+        Legend labels for the given models
+    tagger_list : list
+        List with the names of the taggers
+    class_labels_list : list
+        List indicating the class order
+        as defined in the preprocessing!
+        WARNING: wrong behaviour if order is different.
+    main_class : str
+        Name of the main class.
+    variable : str
+        String of the variable in the dataframe to plot against.
+    var_bins : np.ndarray
+        Array of the bins to use.
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically,
+        by default
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample"
+    ThirdTag : str, optional
+        Additional tag, by default "DL1r"
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag in, by default 1.4
+    yAxisAtlasTag : float, optional
+        Relative y axis position of the ATLAS Tag, by default 0.9
+    efficiency : float, optional
+        Working point value, by default 0.70
+    frac_values : dict, optional
+        Dict with the fraction values inside, by default None
+    centralise_bins : bool, optional
+        Decide to centralise point in the bins, by default True
+    xticksval : list, optional
+        List with the xticks values, by default None
+    xticks : list, optional
+        List with the xticks for the given values, by default None
+    minor_ticks_frequency : int, optional
+        If given, sets the frequency of minor ticks, by default None
+    xlabel : str, optional
+        x axis label, by default None
+    logy : bool, optional
+        Decide, to set the y axis to logarithmic, by default False
+    colors : list, optional
+        List of costum colours, by default None
+    ymin : float, optional
+        Minimal y axis value, by default None
+    ymax : float, optional
+        Maximal y axis value, by default None
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
     """
 
     # Apply the ATLAS Style with the bars on the axes
@@ -560,7 +614,7 @@ def plotEfficiencyVariableComparison(
             _, plot_ymax = ax.get_ylim()
 
         # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
-        if Log is True:
+        if logy is True:
             ax.set_yscale("log")
             if plot_ymin <= 0:
                 plot_ymin = 1e-4
@@ -582,7 +636,7 @@ def plotEfficiencyVariableComparison(
         if minor_ticks_frequency is not None:
             ax_t.xaxis.set_minor_locator(plt.MultipleLocator(minor_ticks_frequency))
         ax_t.set_xticklabels([])
-        if Log:
+        if logy:
             ax_r.set_yscale("log")
         ax_r.tick_params(axis="y", direction="in", which="both")
         ax_t.tick_params(axis="x", direction="in", which="both")
@@ -622,7 +676,7 @@ def plotPtDependence(
     Grid: bool = False,
     binomialErrors: bool = True,
     xlabel: str = r"$p_T$ in GeV",
-    Log: bool = False,
+    logy: bool = False,
     colors: list = None,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
@@ -696,8 +750,8 @@ def plotPtDependence(
         Use binomial errors, by default True
     xlabel : str, optional
         Label for x-axis, by default r"$ in GeV"
-    Log : bool, optional
-        Set yscale to Log, by default False
+    logy : bool, optional
+        Set yscale to logy, by default False
     colors : list, optional
         Custom color list for the different models, by default None
     ApplyAtlasStyle : bool, optional
@@ -1036,7 +1090,7 @@ def plotPtDependence(
     axis_dict["left"]["ratio"].tick_params(axis="y", labelsize=labelFontSize)
 
     # Check for Logscale
-    if Log is True:
+    if logy is True:
         axis_dict["left"]["top"].set_yscale("log")
 
     # Set limits
@@ -1053,7 +1107,7 @@ def plotPtDependence(
         _, ymax = axis_dict["left"]["top"].get_ylim()
 
     # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
-    if Log is True:
+    if logy is True:
         axis_dict["left"]["top"].set_ylim(
             ymin,
             ymin * ((ymax / ymin) ** yAxisIncrease),
@@ -1173,7 +1227,7 @@ def plotROCRatio(
     ratio_id: list = 0,
     ycolor: str = "black",
     ycolor_right: str = "black",
-    set_logy: bool = True,
+    logy: bool = True,
     dpi: int = 400,
 ):
     """Plotting the rejection curve for a given background class
@@ -1268,7 +1322,7 @@ def plotROCRatio(
         Color of the left y-axis, by default "black"
     ycolor_right : str, optional
         Color of the right y-axis, by default "black"
-    set_logy : bool, optional
+    logy : bool, optional
         y-axis in log format, by default True
     dpi : int, optional
         Sets a DPI value for the plot that is produced (mainly for png),
@@ -1473,7 +1527,7 @@ def plotROCRatio(
     axis_dict["left"]["top"].set_title(title)
     axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
     axis_dict["left"]["top"].grid()
-    if set_logy:
+    if logy:
         axis_dict["left"]["top"].set_yscale("log")
     axis_dict["left"]["ratio"].set_xlabel(
         f'{flav_cat[main_class]["legend_label"]} Efficiency',
@@ -1493,7 +1547,7 @@ def plotROCRatio(
             color=ycolor_right,
         )
         axis_dict["right"]["top"].tick_params(axis="y", labelcolor=ycolor_right)
-        if set_logy:
+        if logy:
             axis_dict["right"]["top"].set_yscale("log")
 
     plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
@@ -1515,7 +1569,7 @@ def plotROCRatio(
         axis_dict["left"]["top"].set_xlim(xmin, 1)
 
     # Check for ymin/ymax and set y-axis
-    if set_logy is True:
+    if logy is True:
         left_y_limits = axis_dict["left"]["top"].get_ylim()
         yAxisIncrease = (
             left_y_limits[0]
@@ -1602,7 +1656,7 @@ def plotROCRatioComparison(
     same_height_WP: bool = True,
     ratio_id: list = 0,
     ycolor: str = "black",
-    set_logy: bool = True,
+    logy: bool = True,
     dpi: int = 400,
 ):
     """ "Plotting the rejection curve for a given background class
@@ -1694,7 +1748,7 @@ def plotROCRatioComparison(
         Color of the left y-axis, by default "black"
     ycolor_right : str, optional
         Color of the right y-axis, by default "black"
-    set_logy : bool, optional
+    logy : bool, optional
         y-axis in log format, by default True
     dpi : int, optional
         Sets a DPI value for the plot that is produced (mainly for png),
@@ -1949,7 +2003,7 @@ def plotROCRatioComparison(
     axis_dict["left"]["top"].grid()
 
     # Check for log scale
-    if set_logy:
+    if logy:
         axis_dict["left"]["top"].set_yscale("log")
 
     # Set grid for the ratio plots and set ylabel
@@ -1998,7 +2052,7 @@ def plotROCRatioComparison(
         axis_dict["left"]["top"].set_xlim(xmin, 1)
 
     # Check for ymin/ymax and set y-axis
-    if set_logy is True:
+    if logy is True:
         left_y_limits = axis_dict["left"]["top"].get_ylim()
         yAxisIncrease = (
             left_y_limits[0]
@@ -2953,7 +3007,7 @@ def plot_prob(
     AtlasTag: str = "Internal Simulation",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     nBins: int = 50,
-    Log: bool = False,
+    logy: bool = False,
     figsize: list = None,
     labelFontSize: int = 10,
     loc_legend: str = "best",
@@ -2990,7 +3044,7 @@ def plot_prob(
         "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample"
     nBins : int, optional
         Number of bins to use, by default 50
-    Log : bool, optional
+    logy : bool, optional
         Plot a logarithmic y-axis, by default False
     figsize : list, optional
         Size of the resulting figure as a list with two elements. First
@@ -3081,7 +3135,7 @@ def plot_prob(
                 **global_config.hist_err_style,
             )
 
-    if Log is True:
+    if logy is True:
         plt.yscale("log")
         ymin, ymax = plt.ylim()
 
@@ -3159,7 +3213,7 @@ def plot_prob_comparison(
     ymax: float = None,
     ycolor: str = "black",
     title: str = None,
-    set_logy: bool = False,
+    logy: bool = False,
     dpi: int = 400,
 ):
     """Plot the probability output for the given flavour for
@@ -3227,7 +3281,7 @@ def plot_prob_comparison(
         y-axis color, by default "black"
     title : str, optional
         Title over the plot, by default None
-    set_logy : bool, optional
+    logy : bool, optional
         y-axis in log format, by default True
     dpi : int, optional
         Sets a DPI value for the plot that is produced (mainly for png),
@@ -3428,16 +3482,16 @@ def plot_prob_comparison(
         alpha=0.5,
     )
 
-    if set_logy is True:
+    if logy is True:
         axis_dict["left"]["top"].set_yscale("log")
 
     left_y_limits = axis_dict["left"]["top"].get_ylim()
-    if set_logy is False:
+    if logy is False:
         axis_dict["left"]["top"].set_ylim(
             left_y_limits[0], left_y_limits[1] * yAxisIncrease
         )
 
-    elif set_logy is True:
+    elif logy is True:
         axis_dict["left"]["top"].set_ylim(
             left_y_limits[0] * 0.5,
             left_y_limits[0] * ((left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease),
@@ -3531,3 +3585,340 @@ def plot_confusion(
     # Save the plot to path
     plt.savefig(plot_name, transparent=transparent_bkg, dpi=dpi)
     plt.close()
+
+
+def plotFractionContour(  # pylint: disable=W0102
+    df_results_list: list,
+    tagger_list: list,
+    label_list: list,
+    colour_list: list,
+    linestyle_list: list,
+    rejections_to_plot: list,
+    plot_name: str,
+    rejections_to_fix_list: list,
+    marked_points_list: list,
+    ApplyAtlasStyle: bool = True,
+    transparent_bkg: bool = True,
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow,\n$t\\bar{t}$ Test Sample, WP = 77%",
+    yAxisAtlasTag: float = 0.9,
+    yAxisIncrease: float = 1.3,
+    figsize: list = [11.69 * 0.8, 8.27 * 0.8],
+    legcols: int = 1,
+    labelFontSize: int = 10,
+    legFontSize: int = 10,
+    loc_legend: str = "best",
+    xlim: list = None,
+    ylim: list = None,
+    grid: bool = True,
+    title: str = "",
+    xcolour: str = "black",
+    ycolour: str = "black",
+    dpi: int = 400,
+    **kwargs,  # pylint: disable=unused-argument
+):
+    """Plot contour plots for the given taggers for two rejections.
+    The rejections are calulated with different fractions. If more
+    than two rejections are available, the others need to be set to
+    a fixed value.
+
+    Parameters
+    ----------
+    df_results_list : list
+        List of dicts with the results of evaluate_model.py inside for
+        the different models which are to be plotted.
+    tagger_list : list
+        List of the models/taggers that are to be plotted.
+    label_list : list
+        List with the labels for the given taggers.
+    colour_list : list
+        List with colours for the given taggers. If an empty list is given,
+        the colours will be set automatically.
+    linestyle_list : list
+        List with linestyles for the given taggers. If an empty list is given,
+        the linestyles will be set automatically.
+    rejections_to_plot : list
+        List with two elements. The elements are the names for the two
+        rejections that are plotted against each other. For example,
+        ["cjets", "ujets"].
+    plot_name : str
+        Path, Name and format of the resulting plot file.
+    rejections_to_fix : list
+        List of dicts with the extra rejections. If more than two rejections are
+        available, you need to fix the other rejections to a specific
+        value. The dict entry key is the name of the rejection, for
+        example "bbjets", and the entry is the value that it is set to,
+        for example 0.2.
+    marked_points_list : list
+        List with marker dicts for each model provided. The dict contains
+        the information needed to plot the marker, like the fraction values,
+        which colour is used etc.
+    ApplyAtlasStyle : bool, optional
+        Apply ATLAS style for matplotlib, by default True
+    UseAtlasTag : bool, optional
+        Use the ATLAS Tag in the plots, by default True
+    AtlasTag : str, optional
+        First row of the ATLAS Tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second Row of the ATLAS Tag. No need to add WP or fc. It will
+        be added automatically, by default,
+        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, WP = 77"
+    yAxisAtlasTag : float, optional
+        y position where the ATLAS logo is placed in parts of the full y axis
+        (0 is bottom, 1 is tom). By default 0.9
+    yAxisIncrease : float, optional
+        Increasing the y axis to fit the ATLAS Tag, by default 1.3
+    figsize : list, optional
+        List with the figure size, first entry is the width, second is the
+        height. By default [11.69 * 0.8, 8.27 * 0.8]
+    legcols : int, optional
+        Number of legend columns, by default 1
+    labelFontSize : int, optional
+        Fontsize of the axis labels, by default 10
+    legFontSize : int, optional
+        Fontsize of the legend, by default 10
+    loc_legend : str, optional
+        Position of the legend in the plot, by default "best"
+    xlim : list, optional
+        List with two elements, lower and upper limit for the x-axis,
+        by default None
+    ylim : list, optional
+        List with two elements, lower and upper limit for the y-axis,
+        by default None
+    grid : bool, optional
+        Decide, if a grid is plotted or not, by default True
+    title : str, optional
+        Title of the plot, by default ""
+    ycolour : str, optional
+        Color of the x-axis, by default "black"
+    ycolour : str, optional
+        Color of the y-axis, by default "black"
+    dpi : int, optional
+        Sets a DPI value for the plot that is produced (mainly for png),
+        by default 400
+    **kwargs
+        Arbitrary keyword arguments.
+
+    Raises
+    ------
+    IndexError
+        If the given number of tagger names, labels and data dicts are not
+        the same.
+    """
+
+    # Apply the ATLAS Style with the bars on the axes
+    if ApplyAtlasStyle is True:
+        applyATLASstyle(mtp)
+
+    # Get a full colour list
+    if len(colour_list) == 0:
+        colour_list_tmp = []
+
+        # Create new colour list
+        for i in range(len(df_results_list)):
+            colour_list_tmp.append(f"C{i}")
+
+        # Set the tmp colour list as the real one
+        colour_list = colour_list_tmp
+
+    # Get a full colour list
+    if len(linestyle_list) == 0:
+        linestyle_list = ["--" for i in range(len(df_results_list))]
+
+    # Get global config for flavours
+    flav_cat = global_config.flavour_categories
+
+    # Init new list for the fraction values
+    fraction_list = []
+
+    # Extract fraction steps from dict
+    for _, dict_values in df_results_list[0].items():
+        fraction_list.append(dict_values[f"{rejections_to_plot[0]}"])
+
+    # Remove all doubled items
+    fraction_list = list(dict.fromkeys(fraction_list))
+
+    # Set figure size
+    plt.figure(figsize=(figsize[0], figsize[1]))
+
+    # Ensure that for each model, a tagger name and a label is provided and vice versa
+    # TODO Change in 3.10 to strict=True in the zip() function which will ensure
+    # same length
+    if not all(
+        len(lst) == len(df_results_list)
+        for lst in [
+            tagger_list,
+            label_list,
+            colour_list,
+            linestyle_list,
+            rejections_to_fix_list,
+            marked_points_list,
+        ]
+    ):
+        raise IndexError(
+            "Not the same amount of Evaluation files, names and labels are given! "
+            "Please check that!"
+        )
+
+    # Loop over the combinations of the models
+    for (
+        df_results,
+        tagger,
+        label,
+        colour,
+        linestyle,
+        fixed_rejections,
+        marked_point_dict,
+    ) in zip(
+        df_results_list,
+        tagger_list,
+        label_list,
+        colour_list,
+        linestyle_list,
+        rejections_to_fix_list,
+        marked_points_list,
+    ):
+        # Init a dict for the rejections with an empty list for each rejection
+        df = {f"{rejection}": [] for rejection in rejections_to_plot}
+
+        # Loop over the fraction values
+        for frac in fraction_list:
+
+            # Loop over the entries in the provided results
+            for dict_key, dict_values in df_results.items():
+
+                # Init a rej_to_fix bool
+                rej_to_fix_bool = True
+
+                # Check if all not-plotted rejections have a fixed value given
+                if fixed_rejections:
+                    for (
+                        rej_to_fix_key,
+                        rej_to_fix_key_value,
+                    ) in fixed_rejections.items():
+                        if (
+                            not dict_values[f"{rej_to_fix_key}_rej"]
+                            == rej_to_fix_key_value
+                        ):
+                            rej_to_fix_bool = False
+
+                # Check that the correct combination of fraction value and
+                # rejection is chosen
+                if (
+                    f"{tagger}" in dict_key
+                    and dict_values[f"{rejections_to_plot[0]}"] == frac
+                    and rej_to_fix_bool
+                ):
+                    for rejection in rejections_to_plot:
+                        df[rejection].append(dict_values[f"{rejection}_rej"])
+
+                    if (
+                        marked_point_dict
+                        and marked_point_dict[f"{rejections_to_plot[0]}"]
+                        == dict_values[f"{rejections_to_plot[0]}"]
+                    ):
+                        plot_point_x = dict_values[f"{rejections_to_plot[0]}_rej"]
+                        plot_point_y = dict_values[f"{rejections_to_plot[1]}_rej"]
+
+        # Plot the contour
+        plt.plot(
+            df[rejections_to_plot[0]],
+            df[rejections_to_plot[1]],
+            label=label,
+            color=colour,
+            linestyle=linestyle,
+        )
+
+        if marked_point_dict:
+            # Build the correct for the point
+            frac_label_x = flav_cat[rejections_to_plot[0]]["prob_var_name"]
+            frac_x_value = marked_point_dict[f"{rejections_to_plot[0]}"]
+            frac_label_y = flav_cat[rejections_to_plot[1]]["prob_var_name"]
+            frac_y_value = marked_point_dict[f"{rejections_to_plot[1]}"]
+
+            point_label = (
+                fr"{label} $f_{{{frac_label_x}}} = {frac_x_value}$,"
+                fr" $f_{{{frac_label_y}}} = {frac_y_value}$"
+            )
+
+            # Plot the marker
+            plt.plot(
+                plot_point_x,
+                plot_point_y,
+                color=marked_point_dict["colour"]
+                if "colour" in marked_point_dict
+                and marked_point_dict["colour"] is not None
+                else colour,
+                marker=marked_point_dict["marker_style"]
+                if "marker_style" in marked_point_dict
+                and marked_point_dict["marker_style"] is not None
+                else "x",
+                label=marked_point_dict["marker_label"]
+                if "marker_label" in marked_point_dict
+                and marked_point_dict["marker_label"] is not None
+                else point_label,
+                markersize=marked_point_dict["markersize"]
+                if "markersize" in marked_point_dict
+                and marked_point_dict["markersize"] is not None
+                else 15,
+                markeredgewidth=marked_point_dict["markeredgewidth"]
+                if "markeredgewidth" in marked_point_dict
+                and marked_point_dict["markeredgewidth"] is not None
+                else 2,
+            )
+
+    # Set x and y label
+    plt.xlabel(
+        flav_cat[rejections_to_plot[0]]["legend_label"] + " rejection",
+        fontsize=labelFontSize,
+        horizontalalignment="right",
+        x=1.0,
+        color=ycolour,
+    )
+    plt.ylabel(
+        flav_cat[rejections_to_plot[1]]["legend_label"] + " rejection",
+        fontsize=labelFontSize,
+        horizontalalignment="right",
+        y=1.0,
+        color=xcolour,
+    )
+
+    # Set limits if defined
+    if xlim:
+        plt.xlim(bottom=xlim[0], top=xlim[1])
+
+    if ylim:
+        plt.xlim(bottom=ylim[0], top=ylim[1])
+
+    # Increase y limit for ATLAS tag
+    y_min, y_max = plt.ylim()
+    plt.ylim(bottom=y_min, top=y_max * yAxisIncrease)
+
+    # Check to use a meshgrid
+    if grid is True:
+        plt.grid()
+
+    # Set title of the plot
+    plt.title(title)
+
+    # Define ATLAS tag
+    if UseAtlasTag is True:
+        pas.makeATLAStag(
+            ax=plt.gca(),
+            fig=plt.gcf(),
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    # Set legend
+    plt.legend(loc=loc_legend, prop={"size": legFontSize}, ncol=legcols)
+
+    # Set tight layout
+    plt.tight_layout()
+
+    # Save plot
+    plt.savefig(plot_name, transparent=transparent_bkg, dpi=dpi)
+    plt.close()
+    plt.clf()

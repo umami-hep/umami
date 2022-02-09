@@ -19,7 +19,7 @@ samples. While DL1r / DL1d and DIPS work on one specific information set (DL1r/D
 After all files are preprocessed, we can start with the training. The train config files for the different trainings can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tree/master/examples). While the basic options needed/provided inside this config files are the same for all taggers, some options are only available for some other. A list with all options/explanations, if the option is necessary or optional and for which tagger the option can be used, is provided here.
 
 | Options | Tagger | Data Type | Necessary, Optional | Explanation |
-|---------|--------|-----------|--------------------|-------------|
+|---------|--------|-----------|---------------------|-------------|
 | `model_name` | All | `str` | Necessary | Name of the model you want to train. This will be the name of the folder, where all results etc. will be saved in. This folder will automatically be created if not existing. |
 | `preprocess_config` | All | `str` | Necessary | Path to your preprocess config you used producing your train datasets. When you start the training and the folder for the model is created, this file is copied to the `metadata/` folder inside the model folder. Also, the path here in the train config will be changed to the new path of the preprocess config inside the `metadata/` folder. |
 | `model_file` | All | `str` | Optional | If you already have a model and want to continue the training of this model, you can give the path to this model here. This model will be loaded and used instead of init a new one. |
@@ -33,7 +33,7 @@ After all files are preprocessed, we can start with the training. The train conf
 |`tracks_name`| DIPS, DIPS Attention, Umami, CADS | `str` | Necessary* | Name of the tracks data-set to use for training and evaluation, default is "tracks".  <br />* ***This option is necessary when using tracks, but, when working with old preprpocessed files (before January 2022, Tag 05 or older)  this option has to be removed form the config file to ensure compatibility*** |
 | `NN_structure` | All | `dict` | Necessary | A dict where all important information for the training are defined. |
 | `tagger` | All | `str` | Necessary | Name of the tagger that is used/to be trained. |
-| `load_optimiser` | All | `bool` | Optional | When loading a model (via `model_file`), you can load the optimiser state for continuing a training (`True`) or initialize a new optimiser to use the model as a start point for a fresh training (`False`).
+| `load_optimiser` | All | `bool` | Optional | When loading a model (via `model_file`), you can load the optimiser state for continuing a training (`True`) or initialize a new optimiser to use the model as a start point for a fresh training (`False`). |
 | `lr` | All | `float` | Necessary | Learning rate which is used for training. |
 | `batch_size` | All | `int` | Necessary | Batch size which is used for training. |
 | `epochs` | All | `int` | Necessary | Number of epochs of the training. |
@@ -66,9 +66,12 @@ After all files are preprocessed, we can start with the training. The train conf
 | `tagger` | All | `list` | Necessary | List of taggers used for comparison. This needs to be a list of `str` or a single `str`. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | All | `dict` | Necessary | `dict` with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `frac_values` | All | `dict` | Necessary | `dict` with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
-| `WP` | All | `float` | Necessary | Working point which is used in the validation and evaluation. |
-| `eff_min` | All | `float` | Optional | Minimal main class efficiency considered for ROC.
-| `eff_max` | All | `float` | Optional | Maximal main class efficiency considered for ROC. 
+| `WP` | All | `float` | Necessary | Working point which is used in the validation and evaluation. In the evaluation step, this is the value used for the fraction scan. |
+| `eff_min` | All | `float` | Optional | Minimal main class efficiency considered for ROC. |
+| `eff_max` | All | `float` | Optional | Maximal main class efficiency considered for ROC. |
+| `frac_step` | All | `float` | Optional | Step size of the fraction value scan. Please keep in mind that the fractions given to the background classes need to add up to one! All combinations that do not add up to one are ignored. If you choose a combination `frac_min`, `frac_max` or `frac_step` where the fractions of the brackground classes do not add up to one, you will get an error while running `evaluate_model.py` |
+| `frac_min` | All | `float` | Optional | Minimal fraction value which is set for a background class in the fraction scan. |
+| `frac_max` | All | `float` | Optional | Maximal fraction value which is set for a background class in the fraction scan. |
 | `Calculate_Saliency` | DIPS | `bool` | Optional | Decide, if the saliency maps are calculated or not. This takes a lot of time and resources! |
 | `add_variables_eval` | DL1r, DL1d | `list` | Optional | A list to add available variables to the evaluation files. |
 | `shapley` | DL1r, DL1d | `dict` | Optional | `dict` with the options for the feature importance explanation with SHAPley |

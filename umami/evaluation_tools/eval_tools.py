@@ -6,12 +6,218 @@ Script with all the higher level evaluation functions.
 
 from umami.configuration import global_config, logger  # isort:skip
 import copy
+from itertools import permutations
 
 import numpy as np
 from tensorflow.keras.layers import Lambda
 from tensorflow.keras.models import Model
 
 import umami.metrics as umt
+
+
+def calculate_fraction_dict(
+    class_labels_wo_main: list, frac_min: float, frac_max: float, step: float
+) -> list:
+    """Return all combinations of fractions for the given background classes
+    which adds up to one.
+
+    Parameters
+    ----------
+    class_labels_wo_main : list
+        List of the background classes.
+    frac_min : float
+        Minimum value of the fractions.
+    frac_max : float
+        Minimum value of the fractions.
+    step : float
+        Step size of the loop.
+
+    Returns
+    -------
+    list
+        List with the different dicts inside.
+
+    Raises
+    ------
+    ValueError
+        If no combination of fractions yields a sum of 1.
+    """
+    # Create a list for the dicts
+    dict_list = []
+
+    # Create the permutations
+    combinations = permutations(
+        np.arange(frac_min, frac_max, step).tolist(), len(class_labels_wo_main)
+    )
+
+    # Iterate over the combinations
+    for iterator in combinations:
+
+        # Add up the values
+        Sum = np.sum(np.round(iterator, decimals=4))
+
+        # Check if the values add up to one
+        if Sum == 1:
+            # Round the values in the tuple to 4 decimals
+            iterator = tuple(
+                map(lambda x: isinstance(x, float) and round(x, 4) or x, iterator)
+            )
+
+            # Create a dict for the values
+            tmp_dict = {}
+            for counter, bkg_class in enumerate(class_labels_wo_main):
+                tmp_dict[bkg_class] = iterator[counter]
+
+            # Append the dict to list
+            dict_list.append(tmp_dict)
+
+    if len(dict_list) == 0:
+        raise ValueError(
+            "You defined a frac_min, frac_max, step wrong. No combination of the"
+            " fractions produce them sum of 1. Please change frac_min, frac_max or"
+            " step!"
+        )
+
+    # Return the complete list
+    return dict_list
+
+
+def GetRejectionPerFractionDict(
+    jets,
+    y_true: np.ndarray,
+    tagger_preds: list,
+    tagger_names: list,
+    tagger_list: list,
+    class_labels: list,
+    main_class: str,
+    target_eff: float,
+    step: float = 0.01,
+    frac_min: float = 0.01,
+    frac_max: float = 1.0,
+) -> dict:
+    """Calculate the rejections for the background classes for all possible
+    combinations of fraction values of the background classes. The fractions
+    need to add up to one to be valid.
+
+    Parameters
+    ----------
+    jets : pandas.DataFrame
+        Dataframe with jets and the probabilites of the comparison taggers as columns.
+    y_true : numpy.ndarray
+        Truth labels of the jets.
+    tagger_preds : list
+        Prediction output of the taggers listed. [pred_dips, pred_umami]
+    tagger_names : list
+        Names of the freshly trained taggers. ["dips", "umami"]
+    tagger_list : list
+        List of the comparison tagger names.
+    class_labels : list
+        List of class labels which are used.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
+    target_eff : float
+        Target efficiency for which the rejections are calculated.
+    step : float, optional
+        Step size of the change of the fraction values, by default 0.01
+    frac_min : float
+        Minimum value of the fractions, by default 0.01.
+    frac_max : float
+        Minimum value of the fractions, by default 1.0.
+
+    Returns
+    -------
+    dict
+        Dict with the rejections for the taggers for the given fraction combinations.
+    """
+
+    # Get flavour categories
+    flavour_categories = global_config.flavour_categories
+
+    logger.info("Calculating rejections per fractions")
+
+    # Prepare lists of class_labels without main and tagger with freshly trained
+    class_labels_wo_main = copy.deepcopy(class_labels)
+    class_labels_wo_main.remove(main_class)
+    extended_tagger_list = tagger_list + tagger_names
+
+    # Init a dict where the results can be added to
+    tagger_rej_dict = {}
+
+    # Get the list with the combinations of the fractions as dicts
+    dict_list = calculate_fraction_dict(
+        class_labels_wo_main=class_labels_wo_main,
+        frac_min=frac_min,
+        frac_max=frac_max,
+        step=step,
+    )
+
+    # Init a tagger-skipped list
+    skipped_taggers = []
+
+    # Loop over effs for ROC plots
+    for frac_dict in dict_list:
+
+        # Create dict entry key for the given fraction dict
+        dict_key = ""
+
+        # Loop over the items in the dict and make a string out of it
+        for bkg_class, value in frac_dict.items():
+            dict_key += f"{bkg_class}_{value}"
+
+            if bkg_class != list(frac_dict.keys())[-1]:
+                dict_key += "_"
+
+        # Loop over the taggers
+        for tagger in extended_tagger_list:
+
+            # If the tagger is fresh, load the provided y_pred
+            if tagger in tagger_names:
+                y_pred = tagger_preds[tagger_names.index(tagger)]
+
+            # If the tagger is from the files, load the probabilities
+            else:
+                try:
+                    y_pred = jets[
+                        [
+                            f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                            for flav in class_labels
+                        ]
+                    ].values
+
+                except KeyError:
+                    # Skipping this tagger if not in all flavours
+                    # or the tagger present in file
+                    logger.debug(tagger)
+                    skipped_taggers.append(tagger)
+                    continue
+
+            # Calculate the rejections for the given tagger
+            rej_dict_tmp, _ = umt.GetRejection(
+                y_pred=y_pred,
+                y_true=y_true,
+                class_labels=class_labels,
+                main_class=main_class,
+                frac_dict=frac_dict,
+                target_eff=target_eff,
+            )
+
+            # Store the rejections and the fraction values in a new dict
+            tagger_rej_dict[f"{tagger}_{dict_key}"] = {**rej_dict_tmp, **frac_dict}
+
+    # Remove double entries and print warning
+    skipped_taggers = list(set(skipped_taggers))
+
+    if skipped_taggers:
+        logger.warning(
+            "Taggers which do not have probability values for all requested class "
+            "labels are not evaluated."
+        )
+
+    # Check if taggers where skipped and print them
+    if len(skipped_taggers) != 0:
+        logger.warning(f"Following taggers are skipped for file: {skipped_taggers}")
+
+    return tagger_rej_dict
 
 
 def GetRejectionPerEfficiencyDict(
@@ -137,7 +343,9 @@ def GetRejectionPerEfficiencyDict(
             "Taggers which do not have probability values for all requested class "
             "labels are not evaluated."
         )
-    logger.warning(f"Following taggers are skipped for file: {skipped_taggers}")
+
+    if len(skipped_taggers) != 0:
+        logger.warning(f"Following taggers are skipped for file: {skipped_taggers}")
 
     # Remove entries of not loaded taggers from the dicts
     for skipped_tagger in skipped_taggers:

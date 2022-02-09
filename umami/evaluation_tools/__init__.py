@@ -2,6 +2,7 @@
 # pylint: skip-file
 from umami.evaluation_tools.eval_tools import (
     GetRejectionPerEfficiencyDict,
+    GetRejectionPerFractionDict,
     GetSaliencyMapDict,
     GetScoresProbsDict,
     RecomputeScore,
@@ -15,6 +16,7 @@ from umami.evaluation_tools.PlottingFunctions import (
     plot_score_comparison,
     plotEfficiencyVariable,
     plotEfficiencyVariableComparison,
+    plotFractionContour,
     plotFractionScan,
     plotPtDependence,
     plotROCRatio,
