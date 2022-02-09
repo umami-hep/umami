@@ -1024,6 +1024,89 @@ def plot_saliency(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
+def plot_frac_contour(
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+    print_model: bool,
+):
+    """Plot the fraction contour plot.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path + name of the plot
+    plot_config : dict
+        Loaded plotting config as dict.
+    eval_params : dict
+        Evaluation parameters from the plotting config.
+    eval_file_dir : str
+        File which is to use for plotting.
+    print_model : bool
+        Print the logger while plotting.
+    """
+
+    # Get the epoch which is to be evaluated
+    eval_epoch = int(eval_params["epoch"])
+
+    df_results_list = []
+    tagger_list = []
+    labels = []
+    linestyles = []
+    colours = []
+    fixed_rejections = []
+    marker_list = []
+
+    for model_name, model_config in plot_config["models_to_plot"].items():
+        if print_model:
+            logger.info(f"model: {model_name}")
+
+        if ("evaluation_file" not in model_config) or (
+            model_config["evaluation_file"] is None
+        ):
+            model_config["df_results_frac_rej"] = pd.read_hdf(
+                eval_file_dir + f"/results-rej_per_fractions-{eval_epoch}.h5",
+                model_config["data_set_name"],
+            )
+
+        else:
+            model_config["df_results_frac_rej"] = pd.read_hdf(
+                model_config["evaluation_file"], model_config["data_set_name"]
+            )
+
+        if "fixed_rejections" not in model_config:
+            fixed_rejections.append(None)
+
+        else:
+            fixed_rejections.append(model_config["fixed_rejections"])
+
+        if "marker" not in model_config:
+            marker_list.append(None)
+
+        else:
+            marker_list.append(model_config["marker"])
+
+        df_results_list.append(model_config["df_results_frac_rej"])
+        tagger_list.append(model_config["tagger_name"])
+        labels.append(model_config["label"])
+        linestyles.append(model_config["linestyle"])
+        colours.append(model_config["colour"])
+
+    uet.plotFractionContour(
+        df_results_list=df_results_list,
+        tagger_list=tagger_list,
+        label_list=labels,
+        colour_list=colours,
+        linestyle_list=linestyles,
+        rejections_to_fix_list=fixed_rejections,
+        rejections_to_plot=plot_config["rejections"],
+        marked_points_list=marker_list,
+        plot_name=plot_name,
+        **plot_config["plot_settings"],
+    )
+
+
 def SetUpPlots(
     plotting_config, plot_directory, eval_file_dir, file_format, print_model
 ):
@@ -1065,7 +1148,16 @@ def SetUpPlots(
             )
 
         # Check for plot type and use the needed function
-        if plot_config["type"] == "ROC":
+        if plot_config["type"] == "Frac_Contour":
+            plot_frac_contour(
+                plot_name=save_plot_to,
+                plot_config=plot_config,
+                eval_params=eval_params,
+                eval_file_dir=eval_file_dir,
+                print_model=print_model,
+            )
+
+        elif plot_config["type"] == "ROC":
             plot_ROC(
                 plot_name=save_plot_to,
                 plot_config=plot_config,

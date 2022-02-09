@@ -119,6 +119,7 @@ def EvaluateModel(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
+    working_point = Eval_params["WP"]
     tracks_name = train_config.tracks_name
     var_cuts = (
         test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
@@ -294,7 +295,39 @@ def EvaluateModel(
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/" + f"results-rej_per_eff-{epoch}.h5",
+        f"{train_config.model_name}/results/results-rej_per_eff-{epoch}.h5",
+        "a",
+    ) as f:
+        f.attrs["N_test"] = len(jets)
+
+    # Get the rejections, discs and f_* values for the taggers
+    tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
+        jets=jets,
+        y_true=truth_internal_labels,
+        tagger_preds=tagger_preds,
+        tagger_names=tagger_names,
+        tagger_list=tagger_list,
+        class_labels=class_labels,
+        main_class=main_class,
+        target_eff=working_point,
+        step=0.01 if "frac_step" not in Eval_params else Eval_params["frac_step"],
+        frac_min=0.01 if "frac_min" not in Eval_params else Eval_params["frac_min"],
+        frac_max=1.0 if "frac_max" not in Eval_params else Eval_params["frac_max"],
+    )
+
+    # Form the dict to a Dataframe and save it
+    df_frac_rej = pd.DataFrame(tagger_fraction_rej_dict)
+    del tagger_fraction_rej_dict
+
+    df_frac_rej.to_hdf(
+        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        data_set_name,
+    )
+
+    # Save the number of jets in the test file to the h5 file.
+    # This is needed to calculate the binomial errors
+    with h5py.File(
+        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -347,6 +380,7 @@ def EvaluateModelDips(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
+    working_point = Eval_params["WP"]
     tracks_name = train_config.tracks_name
     var_cuts = (
         test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
@@ -516,7 +550,38 @@ def EvaluateModelDips(
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/" + f"results-rej_per_eff-{args.epoch}.h5",
+        f"{train_config.model_name}/results/results-rej_per_eff-{args.epoch}.h5",
+        "a",
+    ) as f:
+        f.attrs["N_test"] = len(jets)
+
+    # Get the rejections, discs and f_* values for the taggers
+    tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
+        jets=jets,
+        y_true=truth_internal_labels,
+        tagger_preds=[pred_dips],
+        tagger_names=["dips"],
+        tagger_list=tagger_list,
+        class_labels=class_labels,
+        main_class=main_class,
+        target_eff=working_point,
+        step=0.01 if "frac_step" not in Eval_params else Eval_params["frac_step"],
+        frac_min=0.01 if "frac_min" not in Eval_params else Eval_params["frac_min"],
+        frac_max=1.0 if "frac_max" not in Eval_params else Eval_params["frac_max"],
+    )
+
+    df_frac_rej = pd.DataFrame(tagger_fraction_rej_dict)
+    del tagger_fraction_rej_dict
+
+    df_frac_rej.to_hdf(
+        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        data_set_name,
+    )
+
+    # Save the number of jets in the test file to the h5 file.
+    # This is needed to calculate the binomial errors
+    with h5py.File(
+        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -589,6 +654,7 @@ def EvaluateModelDL1(
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
     frac_values_comp = Eval_params["frac_values_comp"]
+    working_point = Eval_params["WP"]
     var_cuts = (
         test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
@@ -755,7 +821,39 @@ def EvaluateModelDL1(
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/" + f"results-rej_per_eff-{args.epoch}.h5",
+        f"{train_config.model_name}/results/results-rej_per_eff-{args.epoch}.h5",
+        "a",
+    ) as f:
+        f.attrs["N_test"] = len(jets)
+
+    # Get the rejections, discs and f_* values for the taggers
+    tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
+        jets=jets,
+        y_true=truth_internal_labels,
+        tagger_preds=[pred_DL1],
+        tagger_names=["DL1"],
+        tagger_list=tagger_list,
+        class_labels=class_labels,
+        main_class=main_class,
+        target_eff=working_point,
+        step=0.01 if "frac_step" not in Eval_params else Eval_params["frac_step"],
+        frac_min=0.01 if "frac_min" not in Eval_params else Eval_params["frac_min"],
+        frac_max=1.0 if "frac_max" not in Eval_params else Eval_params["frac_max"],
+    )
+
+    # Form the dict to a Dataframe and save it
+    df_frac_rej = pd.DataFrame(tagger_fraction_rej_dict)
+    del tagger_fraction_rej_dict
+
+    df_frac_rej.to_hdf(
+        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        data_set_name,
+    )
+
+    # Save the number of jets in the test file to the h5 file.
+    # This is needed to calculate the binomial errors
+    with h5py.File(
+        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)

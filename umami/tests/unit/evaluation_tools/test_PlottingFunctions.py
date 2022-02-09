@@ -15,6 +15,7 @@ from umami.evaluation_tools.PlottingFunctions import (
     plot_prob_comparison,
     plot_score,
     plot_score_comparison,
+    plotFractionContour,
     plotPtDependence,
     plotROCRatio,
     plotROCRatioComparison,
@@ -80,6 +81,7 @@ class plot_score_TestCase(unittest.TestCase):
         self.results_url = self.data_url + "results-1_new.h5"
         self.rej_url = self.data_url + "results-rej_per_eff-1_new.h5"
         self.saliency_url = self.data_url + "saliency_1_ttbar_new.pkl"
+        self.frac_url = self.data_url + "results-rej_per_fractions-1.h5"
         self.dips_df_key = "dips_ujets_rej"
         self.rnnip_df_key = "rnnip_ujets_rej"
         self.class_labels = ["ujets", "cjets", "bjets"]
@@ -91,6 +93,14 @@ class plot_score_TestCase(unittest.TestCase):
             [
                 "wget",
                 self.saliency_url,
+                "--directory-prefix",
+                self.tmp_plot_dir,
+            ]
+        )
+        run(
+            [
+                "wget",
+                self.frac_url,
                 "--directory-prefix",
                 self.tmp_plot_dir,
             ]
@@ -299,6 +309,37 @@ class plot_score_TestCase(unittest.TestCase):
             compare_images(
                 self.plots_dir + "plot_prob_comparison.png",
                 self.tmp_plot_dir + "plot_prob_comparison.png",
+                tol=1,
+            ),
+        )
+
+    def test_plotFractionContour(self):
+        """Test the plotFractionContour function."""
+        df_results_ttbar = pd.read_hdf(
+            self.tmp_plot_dir + "/results-rej_per_fractions-1.h5",
+            "ttbar_r21",
+        )
+
+        plotFractionContour(
+            df_results_list=[df_results_ttbar, df_results_ttbar],
+            tagger_list=["dips", "rnnip"],
+            label_list=["DIPS", "RNNIP"],
+            colour_list=["b", "r"],
+            linestyle_list=["--", "--"],
+            rejections_to_plot=["ujets", "cjets"],
+            marked_points_list=[
+                {"cjets": 0.1, "ujets": 0.9},
+                {"cjets": 0.1, "ujets": 0.9},
+            ],
+            plot_name=self.tmp_plot_dir + "plotFractionContour.png",
+            rejections_to_fix_list=[None, None],
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.plots_dir + "plotFractionContour.png",
+                self.tmp_plot_dir + "plotFractionContour.png",
                 tol=1,
             ),
         )

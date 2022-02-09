@@ -5,6 +5,27 @@ Eval_parameters:
   epoch: 10
   epoch_to_name: True
 
+# Contour fraction plot
+contour_fraction_ttbar:
+  type: "Frac_Contour"
+  rejections: ["ujets", "cjets"]
+  models_to_plot:
+    dl1r:
+      tagger_name: "DL1"
+      colour: "b"
+      linestyle: "--"
+      label: "DL1r"
+      data_set_name: "ttbar_r21"
+      marker:
+        cjets: 0.1
+        ujets: 0.9
+  plot_settings:
+    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, WP = 77 %"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+
 scores_DL1r: # Each item on this level defines one plot. The name of this key is later used for the name of the output file.
   type: "scores"
   data_set_name: "ttbar_r21" # data set to use. This is the dict entry name of the file you want to plot in the train config
@@ -75,7 +96,7 @@ eff_vs_pt:
     AtlasTag: "Internal"
     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
     ThirdTag: "Flat efficiency DL1r"
-    Log: True
+    logy: True
 
 eff_vs_pt_comp:
   type: "ROCvsVar_comparison"
@@ -118,4 +139,4 @@ eff_vs_pt_comp:
     AtlasTag: "Internal"
     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$"
     ThirdTag: "Flat efficiency DL1r"
-    Log: True
+    logy: True

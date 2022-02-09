@@ -5,6 +5,34 @@ Eval_parameters:
   epoch: 249
   epoch_to_name: True
 
+# Contour fraction plot
+contour_fraction_ttbar:
+  type: "Frac_Contour"
+  rejections: ["ujets", "cjets"]
+  models_to_plot:
+    dips:
+      tagger_name: "dips"
+      colour: "b"
+      linestyle: "--"
+      label: "DIPS"
+      data_set_name: "ttbar_r21"
+      marker:
+        cjets: 0.1
+        ujets: 0.9
+        marker_style: "x"
+    umami:
+      tagger_name: "umami"
+      colour: "r"
+      linestyle: "--"
+      label: "Umami"
+      data_set_name: "ttbar_r21"
+  plot_settings:
+    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
+    UseAtlasTag: True # Enable/Disable AtlasTag
+    AtlasTag: "Internal Simulation"
+    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, WP = 77 %"
+    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+
 # Dips, ttbar
 scores_Umami_ttbar:
   type: "scores"
@@ -83,7 +111,7 @@ Umami_prob_pb:
   class_labels: ["ujets", "cjets", "bjets"]
   prob_class: "bjets"
   plot_settings:
-    Log: True
+    logy: True
     nBins: 50
     yAxisIncrease: 10
     UseAtlasTag: True
@@ -107,7 +135,7 @@ Umami_prob_comparison_pb:
       class_labels: ["ujets", "cjets", "bjets"]
   plot_settings:
     nBins: 50
-    set_logy: False
+    logy: False
     yAxisIncrease: 100
     figsize: [8, 6]
     UseAtlasTag: True
