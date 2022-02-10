@@ -1,0 +1,110 @@
+# This will inherit all the config from the preprocessing config,
+# except the ones we replace in this file
+<<: !include PFlow-Preprocessing.yaml
+
+# Defining yaml anchors to be used later, avoiding duplication
+.cuts_template_ttbar_validation: &cuts_template_ttbar_validation
+  cuts:
+    - eventNumber:
+        operator: mod_6_==
+        condition: 4 # use same value for all validation samples
+    - pt_btagJes:
+        operator: "<="
+        condition: 3.5e5 # same pT cut as the training samples
+    - *outlier_cuts
+
+.cuts_template_zprime_validation: &cuts_template_zprime_validation
+  cuts:
+    - eventNumber:
+        operator: mod_6_==
+        condition: 4
+    - pt_btagJes:
+        operator: ">"
+        condition: 3.5e5
+    - *outlier_cuts
+
+
+preparation:
+  # All the preparation parameters are inherited from PFlow-Preprocessing.yaml
+  # expect for the ones we redefine here
+  <<: *preparation
+
+  samples:
+    validation_ttbar_bjets:
+      type: ttbar
+      category: bjets
+      n_jets: 10e6
+      <<: *cuts_template_ttbar_validation
+      f_output:
+        path: *sample_path
+        file: MC16d-bjets_validation_ttbar_PFlow.h5
+
+    validation_ttbar_cjets:
+      type: ttbar
+      category: cjets
+      # Number of c jets available in MC16d
+      n_jets: 12745953
+      <<: *cuts_template_ttbar_validation
+      f_output:
+        path: *sample_path
+        file: MC16d-cjets_validation_ttbar_PFlow.h5
+
+    validation_ttbar_ujets:
+      type: ttbar
+      category: ujets
+      n_jets: 20e6
+      <<: *cuts_template_ttbar_validation
+      f_output:
+        path: *sample_path
+        file: MC16d-ujets_validation_ttbar_PFlow.h5
+
+    validation_zprime_bjets:
+      type: zprime
+      category: bjets
+      n_jets: 10e6
+      <<: *cuts_template_zprime_validation
+      f_output:
+        path: *sample_path
+        file: MC16d-bjets_validation_zprime_PFlow.h5
+
+    validation_zprime_cjets:
+      type: zprime
+      category: cjets
+      n_jets: 10e6
+      <<: *cuts_template_zprime_validation
+      f_output:
+        path: *sample_path
+        file: MC16d-cjets_validation_zprime_PFlow.h5
+
+    validation_zprime_ujets:
+      type: zprime
+      category: ujets
+      n_jets: 10e6
+      <<: *cuts_template_zprime_validation
+      f_output:
+        path: *sample_path
+        file: MC16d-ujets_validation_zprime_PFlow.h5
+
+sampling:
+  # All the sampling parameters are inherited from PFlow-Preprocessing.yaml
+  # expect for the ones we redefine here
+  <<: *sampling
+  # The options depend on the sampling method
+  options:
+    <<: *sampling_options
+    # Decide, which of the in preparation defined samples are used in the resampling.
+    samples:
+      ttbar:
+        - validation_ttbar_bjets
+        - validation_ttbar_cjets
+        - validation_ttbar_ujets
+      zprime:
+        - validation_zprime_bjets
+        - validation_zprime_cjets
+        - validation_zprime_ujets
+    njets: 5e6
+    intermediate_index_file: *intermediate_index_file_validation
+
+# Name of the output file from the preprocessing
+outfile_name: *outfile_name_validation
+plot_name: PFlow_ext-hybrid-validation

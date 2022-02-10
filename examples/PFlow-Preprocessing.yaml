@@ -63,7 +63,7 @@ parameters: !include Preprocessing-parameters.yaml
         condition: 5
     - *outlier_cuts
 
-preparation:
+preparation: &preparation
   # Number of jets loaded per batch from the files for preparation.
   batchsize: 50000
 
@@ -188,7 +188,7 @@ preparation:
         path: *sample_path
         file: MC16d-inclusive_testing_zprime_PFlow.h5
 
-sampling:
+sampling: &sampling
   # Classes which are used in the resampling. Order is important.
   # The order needs to be the same as in the training config!
   class_labels: [ujets, cjets, bjets]
@@ -197,7 +197,7 @@ sampling:
   method: count
 
   # The options depend on the sampling method
-  options:
+  options: &sampling_options
     sampling_variables:
       - pt_btagJes:
           # bins take either a list containing the np.linspace arguments
