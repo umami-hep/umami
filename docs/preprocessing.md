@@ -499,6 +499,24 @@ preprocessing.py --config <path to config file> --to_records
 
 There are several training and validation/test samples to produce. See the following link for a list of all the necessary ones in a complete configuration file: [`examples/PFlow-Preprocessing.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml)
 
+## Hybrid validation and testing preparation
+
+To create hybrid `ttbar` and `zprime` validation samples that are also resampled like the training samples see the following file for a full example: [`examples/PFlow-Preprocessing-hybrid-validation.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-hybrid-validation.yaml).
+
+???+ warning "Do not use for creating training samples"
+
+    This preprocessing config example should only be used to create the hybrid validation or testing samples. This example should be adapted to reflect your training sample resampling method.
+
+Then you can just do:
+
+```bash
+# prepare, apply cuts and split all flavours
+preprocessing.py --config examples/PFlow-Preprocessing-hybrid-validation.yaml --prepare
+# resample and recombine
+preprocessing.py --config examples/PFlow-Preprocessing-hybrid-validation.yaml --resampling
+
+```
+
 ## Ntuple Preparation for bb-jets
 
 TODO: Rewrite this!
