@@ -67,9 +67,11 @@ def CalcDiscValues(
 
     Examples
     --------
-    >>> jets_dict = {"bjets": np.array([[0.1, 0.1, 0.8], [0.0, 0.1, 0.9]]),
-    ...              "cjets": np.array([[0.2, 0.6, 0.2], [0.1, 0.8, 0.1]]),
-    ...              "ujets": np.array([[0.9, 0.1, 0.0], [0.7, 0.2, 0.1]])}
+    >>> jets_dict = {
+    ...     "bjets": np.array([[0.1, 0.1, 0.8], [0.0, 0.1, 0.9]]),
+    ...     "cjets": np.array([[0.2, 0.6, 0.2], [0.1, 0.8, 0.1]]),
+    ...     "ujets": np.array([[0.9, 0.1, 0.0], [0.7, 0.2, 0.1]]),
+    ... }
     {'bjets': array([[0.1, 0.1, 0.8],
         [0. , 0.1, 0.9]]),
      'cjets': array([[0.2, 0.6, 0.2],
@@ -90,19 +92,23 @@ def CalcDiscValues(
     Note that if no rej_class is given, the discriminant values for the main
     class jets are calculated.
 
-    >>> disc_score = CalcDiscValues(jets_dict=jets_dict,
-    ...                             index_dict=index_dict,
-    ...                             main_class=main_class,
-    ...                             frac_dict=frac_dict)
+    >>> disc_score = CalcDiscValues(
+    ...     jets_dict=jets_dict,
+    ...     index_dict=index_dict,
+    ...     main_class=main_class,
+    ...     frac_dict=frac_dict,
+    ... )
     [2.07944154, 6.21460804]
 
     Now, we can calculate the discriminant values for the cjets class.
 
-    >>> disc_score = CalcDiscValues(jets_dict=jets_dict,
-    ...                             index_dict=index_dict,
-    ...                             main_class=main_class,
-    ...                             frac_dict=frac_dict,
-    ...                             rej_class"cjets")
+    >>> disc_score = CalcDiscValues(
+    ...     jets_dict=jets_dict,
+    ...     index_dict=index_dict,
+    ...     main_class=main_class,
+    ...     frac_dict=frac_dict,
+    ...     rej_class"cjets",
+    ... )
     [-0.03536714, -0.11867153]
     """
 
@@ -165,10 +171,14 @@ def GetScore(
 
     Examples
     --------
-    >>> y_pred = np.array([[0.1, 0.1, 0.8],
-    ...                    [0.0, 0.1, 0.9],
-    ...                    [0.2, 0.6, 0.2],
-    ...                    [0.1, 0.8, 0.1]])
+    >>> y_pred = np.array(
+    ...     [
+    ...         [0.1, 0.1, 0.8],
+    ...         [0.0, 0.1, 0.9],
+    ...         [0.2, 0.6, 0.2],
+    ...         [0.1, 0.8, 0.1],
+    ...     ]
+    ... )
     array([[0.1, 0.1, 0.8],
            [0. , 0.1, 0.9],
            [0.2, 0.6, 0.2],
@@ -186,10 +196,12 @@ def GetScore(
     Now we can call the function which will return the discriminant values
     for the given jets based on their given NN outputs (y_pred).
 
-    >>> disc_scores = GetScore(y_pred=y_pred,
-    ...                        class_labels=class_labels,
-    ...                        main_class=main_class,
-    ...                        frac_dict=frac_dict)
+    >>> disc_scores = GetScore(
+    ...     y_pred=y_pred,
+    ...     class_labels=class_labels,
+    ...     main_class=main_class,
+    ...     frac_dict=frac_dict,
+    ... )
     [2.07944154, 6.21460804, -0.03536714, -0.11867153]
     """
 
@@ -366,19 +378,27 @@ def GetRejection(
 
     Examples
     --------
-    >>> y_pred = np.array([[0.1, 0.1, 0.8],
-    ...                    [0.0, 0.1, 0.9],
-    ...                    [0.2, 0.6, 0.2],
-    ...                    [0.1, 0.8, 0.1]])
+    >>> y_pred = np.array(
+    ...     [
+    ...         [0.1, 0.1, 0.8],
+    ...         [0.0, 0.1, 0.9],
+    ...         [0.2, 0.6, 0.2],
+    ...         [0.1, 0.8, 0.1],
+    ...     ]
+    ... )
     array([[0.1, 0.1, 0.8],
            [0. , 0.1, 0.9],
            [0.2, 0.6, 0.2],
            [0.1, 0.8, 0.1]])
 
-    >>> y_true = np.array([[0, 0, 1],
-    ...                    [0, 0, 1],
-    ...                    [0, 1, 0],
-    ...                    [0, 1, 0]])
+    >>> y_true = np.array(
+    ...     [
+    ...         [0, 0, 1],
+    ...         [0, 0, 1],
+    ...         [0, 1, 0],
+    ...         [0, 1, 0],
+    ...     ]
+    ... )
     array([[0, 0, 1],
            [0, 0, 1],
            [0, 1, 0],
@@ -399,12 +419,14 @@ def GetRejection(
     The following will output the rejection for the given jets
     based on their NN outputs.
 
-    >>> Rej_Dict = GetRejection(y_pred=y_pred,
-    ...                         y_true=y_true,
-    ...                         class_labels=class_labels,
-    ...                         main_class=main_class,
-    ...                         frac_dict=frac_dict,
-    ...                         target_eff=target_eff)
+    >>> Rej_Dict = GetRejection(
+    ...     y_pred=y_pred,
+    ...     y_true=y_true,
+    ...     class_labels=class_labels,
+    ...     main_class=main_class,
+    ...     frac_dict=frac_dict,
+    ...     target_eff=target_eff,
+    ... )
     """
 
     # Assert that y_pred and y_true have the same shape
