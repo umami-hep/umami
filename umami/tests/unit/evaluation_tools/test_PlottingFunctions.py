@@ -5,12 +5,10 @@ import unittest
 from subprocess import run
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from matplotlib.testing.compare import compare_images
 
 from umami.evaluation_tools.PlottingFunctions import (
-    eff_err,
     plot_prob,
     plot_prob_comparison,
     plot_score,
@@ -20,42 +18,7 @@ from umami.evaluation_tools.PlottingFunctions import (
     plotROCRatio,
     plotROCRatioComparison,
     plotSaliency,
-    rej_err,
 )
-
-
-class Small_funcs_TestCase(unittest.TestCase):
-    """
-    Test eff_err, rej_err
-    """
-
-    def setUp(self):
-        # reset matplotlib parameters
-        plt.rcdefaults()
-        plt.close("all")
-        self.x_eff = np.array([0.25, 0.5, 0.75])
-        self.x_rej = np.array([20, 50, 100])
-        self.error_eff = np.array([0.043301, 0.05, 0.043301])
-        self.error_rej = np.array([0.021794, 0.014, 0.00995])
-        self.N = 100
-
-    def test_eff_err(self):
-        error = eff_err(
-            x=self.x_eff,
-            N=self.N,
-        )
-
-        self.assertEqual(len(error), len(self.x_eff))
-        np.testing.assert_array_almost_equal(error, self.error_eff)
-
-    def test_rej_err(self):
-        error = rej_err(
-            x=self.x_rej,
-            N=self.N,
-        )
-
-        self.assertEqual(len(error), len(self.x_rej))
-        np.testing.assert_array_almost_equal(error, self.error_rej)
 
 
 class plot_score_TestCase(unittest.TestCase):
@@ -206,7 +169,7 @@ class plot_score_TestCase(unittest.TestCase):
             plot_name=self.tmp_plot_dir + "ROC_Comparison_Test.png",
             nTest=[100000, 100000, 100000, 100000],
             WorkingPoints=[0.60, 0.70, 0.77, 0.85],
-            ratio_id=[0, 0, 1, 1],
+            reference_ratio=[True, False, True, False],
         )
 
         self.assertEqual(
@@ -256,7 +219,7 @@ class plot_score_TestCase(unittest.TestCase):
             plot_name=self.tmp_plot_dir + "plotSaliency.png",
             title="Test Saliency",
         )
-
+        # TODO: what happens here?
         # self.assertEqual(
         #     None,
         #     compare_images(

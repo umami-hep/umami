@@ -2,6 +2,8 @@
 # pylint: disable=consider-using-f-string
 from umami.configuration import global_config, logger  # isort:skip
 
+from collections import OrderedDict
+
 import matplotlib as mtp
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -11,56 +13,12 @@ from matplotlib import gridspec
 from mlxtend.evaluate import confusion_matrix
 from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.interpolate import pchip
 
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
 from umami.helper_tools import hist_ratio, hist_w_unc
+from umami.metrics import eff_err
+from umami.plotting import roc, roc_plot
 from umami.tools import applyATLASstyle
-
-
-def eff_err(x, N):
-    """Calculate statistical efficiency uncertainty.
-
-    Parameters
-    ----------
-    x : numpy.array
-        efficiency values
-    N : int
-        number of used statistics to calculate efficiency
-
-    Returns
-    -------
-    numpy.array
-        efficiency uncertainties
-
-    Notes
-    -----
-    This method uses binomial errors as described in section 2.2 of
-    https://inspirehep.net/files/57287ac8e45a976ab423f3dd456af694
-    """
-    return np.sqrt(x * (1 - x) / N)
-
-
-def rej_err(x, N):
-    """Calculate the rejection uncertainties.
-
-    Parameters
-    ----------
-    x : numpy.array
-        rejection values
-    N : int
-        number of used statistics to calculate rejection
-
-    Returns
-    -------
-    numpy.array
-        rejection uncertainties
-
-    Notes
-    -----
-    special case of `eff_err()`
-    """
-    return np.sqrt((1 / x) * (1 - (1 / x)) / N)
 
 
 def FlatEfficiencyPerBin(
@@ -1005,7 +963,12 @@ def plotPtDependence(
         else:
             # Calculate rejection
             rej = 1 / effs
-            yerr = np.power(rej, 2) * eff_err(effs, nTest) if binomialErrors else None
+            yerr = (
+                np.power(rej, 2)
+                * eff_err(effs, nTest, suppress_zero_divison_error=True)
+                if binomialErrors
+                else None
+            )
 
             # Plot the "hists"
             axis_dict["left"]["top"].errorbar(
@@ -1194,41 +1157,19 @@ def plotROCRatio(
     tagger_list: list,
     rej_class_list: list,
     labels: list,
-    plot_name: str,
     main_class: str,
+    plot_name: str,
     df_eff_key: str = "effs",
-    title: str = "",
-    ApplyAtlasStyle: bool = True,
-    UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",  # noqa: E501 # pylint: disable=line-too-long
-    yAxisAtlasTag: float = 0.9,
-    yAxisIncrease: float = 1.3,
-    styles: list = None,
-    colors: list = None,
-    xmin: float = None,
-    ymax: float = None,
-    ymin: float = None,
-    ymax_right: float = None,
-    ymin_right: float = None,
-    legFontSize: int = 10,
-    loc_legend: str = "best",
-    rrange: list = None,
+    draw_errors: bool = True,
     rlabel: str = "Ratio",
-    binomialErrors: bool = True,
-    nTest: list = 0,
-    alabel: dict = None,
-    figsize: list = None,
-    legcols: int = 1,
     labelpad: int = None,
-    which_axis: list = "left",
     WorkingPoints: list = None,
     same_height_WP: bool = True,
-    ratio_id: list = 0,
-    ycolor: str = "black",
-    ycolor_right: str = "black",
-    logy: bool = True,
-    dpi: int = 400,
+    linestyles: list = None,
+    colours: list = None,
+    n_test=None,
+    ratio_id=0,
+    **kwargs,
 ):
     """Plotting the rejection curve for a given background class
     for the given models/taggers against the main_class efficiency.
@@ -1246,380 +1187,139 @@ def plotROCRatio(
         List of the class rejection which is to be plotted for each model.
     labels : list
         List of labels for the given models.
-    plot_name : str
-        Path, Name and format of the resulting plot file.
     main_class : str
         The main discriminant class. For b-tagging obviously "bjets"
+    plot_name : str
+        Path, Name and format of the resulting plot file.
     df_eff_key : str, optional
-        Dict key under which the efficiencies of the main class are
-        saved, by default "effs"
-    title : str, optional
-        Title of the plot, by default ""
-    ApplyAtlasStyle : bool, optional
-        Apply ATLAS style for matplotlib, by default True
-    UseAtlasTag : bool, optional
-        Use the ATLAS Tag in the plots, by default True
-    AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
-    SecondTag : str, optional
-        Second Row of the ATLAS Tag. No need to add WP or fc. It will
-        be added automatically,
-        by default,
-        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
-    yAxisIncrease : float, optional
-        Increasing the y axis to fit the ATLAS Tag, by default 1.3
-    styles : list, optional
-        List of linestyles to use for the given models, by default None
-    colors : list, optional
-        List of linecolors to use for the given models, by default None
-    xmin : float, optional
-        Minimum value of the x-axis, by default None
-    ymax : float, optional
-        Maximum value of the y-axis, by default None
-    ymin : float, optional
-        Minimum value of the y-axis, by default None
-    ymax_right : float, optional
-        Maximum value of the right y-axis, by default None
-    ymin_right : float, optional
-        Minimum value of the right y-axis, by default None
-    legFontSize : int, optional
-        Fontsize of the legend, by default 10
-    loc_legend : str, optional
-        Position of the legend in the plot, by default "best"
-    rrange : list, optional
-        The range on the y-axis for the ratio panel, by default None
+        Dict key under which the efficiencies of the main class are saved,
+        by default "effs"
+    draw_errors : bool, optional
+        Binominal errors on the lines, by default True
     rlabel : str, optional
         The label for the y-axis for the ratio panel, by default "Ratio"
-    binomialErrors : bool, optional
-        Binominal errors on the lines, by default True
-    nTest : list, optional
-        A list of the same length as class_rejections, with the number of
-        events used to calculate the background efficiencies.
-        We need this To calculate the binomial errors on the background
-        rejection, using the formula given by
-        http://home.fnal.gov/~paterno/images/effic.pdf, by default 0
-    alabel : dict, optional
-        Dict with the axis labels, by default None
-    figsize : list, optional
-        Size of the resulting figure as a list with two elements. First
-        is the width, second the height. By default None.
-    legcols : int, optional
-        Number of columns to use in the legend, by default 1
     labelpad : int, optional
         Spacing in points from the axes bounding box including
         ticks and tick labels, by default None
-    which_axis : list, optional
-        List which y-axis to use for the given models, by default "left"
     WorkingPoints : list, optional
         List of working points which are to be plotted as
         vertical lines in the plot, by default None
     same_height_WP : bool, optional
         Decide, if all working points lines have the same height or
         not, by default True
-    ratio_id : list, optional
+    linestyles : list, optional
+        List of linestyles to use for the given models, by default None
+    colours : list, optional
+        List of linecolors to use for the given models, by default None
+    n_test : [type], optional
+        A list of the same length as class_rejections, with the number of
+        events used to calculate the background efficiencies.
+        We need this To calculate the binomial errors on the background
+        rejection, using the formula given by
+        http://home.fnal.gov/~paterno/images/effic.pdf, by default 0
+    ratio_id : int, optional
         List to which given model the ratio is calulcated, by default 0
-    ycolor : str, optional
-        Color of the left y-axis, by default "black"
-    ycolor_right : str, optional
-        Color of the right y-axis, by default "black"
-    logy : bool, optional
-        y-axis in log format, by default True
-    dpi : int, optional
-        Sets a DPI value for the plot that is produced (mainly for png),
-        by default 400
-    """
 
-    # Apply the ATLAS Style with the bars on the axes
-    if ApplyAtlasStyle is True:
-        applyATLASstyle(mtp)
+    Raises
+    ------
+    ValueError
+        if n_test not int, float of given for each roc
+    ValueError
+        if lists don't have the same length
+    """
+    n_rocs = len(df_results_list)
+    # maintain backwards compatibility
+    if "nTest" in kwargs and n_test is None:
+        n_test = kwargs["nTest"]
+        kwargs.pop("nTest")
+    if "colors" in kwargs and colours is None:
+        colours = kwargs["colors"]
+        kwargs.pop("colors")
+    if "binomialErrors" in kwargs and colours is None:
+        draw_errors = kwargs["binomialErrors"]
+        kwargs.pop("binomialErrors")
+    if "styles" in kwargs and colours is None:
+        linestyles = kwargs["styles"]
+        kwargs.pop("styles")
 
     # Get global config for flavours
     flav_cat = global_config.flavour_categories
 
-    if binomialErrors is True:
-        # Check if nTest is provided in all samples
-        nTest_in_file = []
-        for df_results in df_results_list:
-            if "N_test" not in df_results:
-                nTest_in_file.append(False)
+    if draw_errors is True:
+        # Check if n_test is provided in all samples
+        if n_test is None:
+            n_test_in_file = ["N_test" in df_results for df_results in df_results_list]
 
-            else:
-                nTest_in_file.append(True)
+            if not all(n_test_in_file):
+                logger.error(
+                    "Requested binomialErrors, but not all models have n_test. "
+                    "Will NOT plot rej errors."
+                )
+                draw_errors = False
 
-        if nTest == 0 and not all(nTest_in_file):
-            logger.error(
-                "Requested binomialErrors, but not all models have nTest. Will"
-                " NOT plot rej errors."
-            )
-            binomialErrors = False
+        elif isinstance(n_test, (int, float)):
+            n_test = [n_test] * len(df_results_list)
+        elif isinstance(n_test, list):
+            if len(n_test) != len(df_results_list):
+                raise ValueError(
+                    "The provided `n_test` do not have the same length as the "
+                    "`df_results_list`."
+                )
 
-    if styles is None:
-        styles = ["-" for i in labels]
-    if colors is None:
-        colors = [f"C{i}" for i in range(len(labels))]
-        colors_WP = f"C{len(colors) + 1}"
+    if linestyles is None:
+        linestyles = ["-" for _ in labels]
+    if colours is None:
+        colours = [f"C{i}" for i in range(n_rocs)]
 
-    else:
-        colors_WP = "red"
+    # check length
+    # TODO: change in python 3.10 -> add to zip() with strict=True argument
+    if not all(
+        len(elem) == n_rocs
+        for elem in [
+            df_results_list,
+            tagger_list,
+            rej_class_list,
+            labels,
+        ]
+    ):
+        raise ValueError("Passed lists do not have same length.")
 
-    if not isinstance(nTest, list):
-        nTest = [nTest] * len(labels)
-
-    if not isinstance(which_axis, list):
-        which_axis = [which_axis] * len(labels)
-
-    if not isinstance(ratio_id, list):
-        ratio_id = [ratio_id] * len(labels)
-
-    # Define the figure with two subplots of unequal sizes
-    axis_dict = {}
-
-    if figsize is None:
-        fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
-
-    else:
-        fig = plt.figure(figsize=(figsize[0], figsize[1]))
-
-    gs = gridspec.GridSpec(8, 1, figure=fig)
-    axis_dict["left"] = {}
-    axis_dict["left"]["top"] = fig.add_subplot(gs[:5, 0])
-    axis_dict["left"]["ratio"] = fig.add_subplot(
-        gs[5:, 0], sharex=axis_dict["left"]["top"]
+    plot_roc = roc_plot(
+        n_ratio_panels=1,
+        ylabel=f'{flav_cat[rej_class_list[0]]["legend_label"]} Rejection',
+        xlabel=f'{flav_cat[main_class]["legend_label"]} Efficiency',
     )
-    if "right" in which_axis:
-        axis_dict["right"] = {}
-        axis_dict["right"]["top"] = axis_dict["left"]["top"].twinx()
-
+    plot_roc.set_ratio_class(ratio_panel=1, rej_class=rej_class_list[0])
     if WorkingPoints is not None:
-        for WP in WorkingPoints:
-
-            # Set y-point of the WP lines/text
-            ytext = 0.65 if same_height_WP else 1.25 - WP
-
-            axis_dict["left"]["top"].axvline(
-                x=WP,
-                ymax=ytext,
-                color=colors_WP,
-                linestyle="dashed",
-                linewidth=1.0,
-            )
-
-            # Set the number above the line
-            axis_dict["left"]["top"].text(
-                x=WP - 0.005,
-                y=ytext + 0.005,
-                s=f"{int(WP * 100)}%",
-                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(0)[0],
-                fontsize=10,
-            )
-
-            axis_dict["left"]["ratio"].axvline(
-                x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
-            )
-
-    # Create lines list and ratio dict for looping
-    lines = []
-    f0_ratio = {}
+        plot_roc.draw_wps(WorkingPoints, same_height_WP)
 
     # Loop over the models with the different settings for each model
-    for _, (
-        df_results,
-        tagger,
-        rej_class,
-        label,
-        style,
-        color,
-        nte,
-        which_a,
-        r_id,
-    ) in enumerate(
+    for i, (df_results, tagger, rej_class, label, linestyle, colour, nte) in enumerate(
         zip(
             df_results_list,
             tagger_list,
             rej_class_list,
             labels,
-            styles,
-            colors,
-            nTest,
-            which_axis,
-            ratio_id,
+            linestyles,
+            colours,
+            n_test,
         )
     ):
-
-        # Get the main class efficency for x-axis
-        main_class_effs = df_results[df_eff_key]
-
-        # Get the rejections
-        class_rejections = df_results[f"{tagger}_{rej_class}_rej"]
-
-        # Check which rejection is on which axis and set label
-        if which_a == "right":
-            ylabel_right = f'{flav_cat[rej_class]["legend_label"]} Rejection'
-
-        elif which_a == "left":
-            ylabel = f'{flav_cat[rej_class]["legend_label"]} Rejection'
-
-        # Mask the points where there was no change in the signal eff
-        dx = np.concatenate((np.ones(1), np.diff(main_class_effs)))
-
-        # Also mask the rejections that are 0
-        nonzero = (class_rejections != 0) & (dx > 0)
-        if xmin:
-            nonzero = nonzero & (main_class_effs > xmin)
-        x = main_class_effs[nonzero]
-        y = class_rejections[nonzero]
-
-        # Plot the lines in the main plot and add them to lines list
-        lines = lines + axis_dict[which_a]["top"].plot(
-            x, y, linestyle=style, color=color, label=label, zorder=2
+        roc_curve = roc(
+            df_results[df_eff_key],
+            df_results[f"{tagger}_{rej_class}_rej"],
+            n_test=nte,
+            rej_class=rej_class,
+            signal_class=main_class,
+            label=label,
+            colour=colour,
+            linestyle=linestyle,
         )
+        plot_roc.add_roc(roc_curve, reference=i == ratio_id)
 
-        # Calculate and plot binominal errors for main plot
-        if binomialErrors is True:
-            yerr = np.power(y, 2) * rej_err(class_rejections[nonzero], nte)
-            y1 = y - yerr
-            y2 = y + yerr
-
-            axis_dict[which_a]["top"].fill_between(
-                x, y1, y2, color=color, alpha=0.3, zorder=2
-            )
-
-        # Interpolate the rejection function for nicer plotting
-        f = pchip(x, y)
-
-        # Check if the ratio_id divisor was already used or not
-        # If not, calculate the divisor for ratio_id and add it to list
-        if r_id not in f0_ratio:
-            f0_ratio[r_id] = f
-            axis_dict["left"]["ratio"].plot(
-                x, np.ones(len(x)), linestyle=style, color=color, linewidth=1.6
-            )
-            if binomialErrors is True:
-                axis_dict["left"]["ratio"].fill_between(
-                    x,
-                    1 - yerr / y,
-                    1 + yerr / y,
-                    color=color,
-                    alpha=0.3,
-                    zorder=1,
-                )
-            continue
-
-        # If ratio_id divisor already calculated, plot calculate ratio and plot
-        ratio_ix = f(x) / f0_ratio[r_id](x)
-        axis_dict["left"]["ratio"].plot(
-            x, ratio_ix, linestyle=style, color=color, linewidth=1.6
-        )
-        if binomialErrors is True:
-            axis_dict["left"]["ratio"].fill_between(
-                x,
-                ratio_ix - yerr / f(x),
-                ratio_ix + yerr / f(x),
-                color=color,
-                alpha=0.3,
-                zorder=1,
-            )
-
-    # Add axes, titles and the legend
-    axis_dict["left"]["top"].set_ylabel(
-        ylabel, fontsize=12, horizontalalignment="right", y=1.0, color=ycolor
-    )
-    axis_dict["left"]["top"].set_title(title)
-    axis_dict["left"]["top"].tick_params(axis="y", labelcolor=ycolor)
-    axis_dict["left"]["top"].grid()
-    if logy:
-        axis_dict["left"]["top"].set_yscale("log")
-    axis_dict["left"]["ratio"].set_xlabel(
-        f'{flav_cat[main_class]["legend_label"]} Efficiency',
-        fontsize=12,
-        horizontalalignment="right",
-        x=1.0,
-    )
-    axis_dict["left"]["ratio"].set_ylabel(rlabel, labelpad=labelpad, fontsize=12)
-    axis_dict["left"]["ratio"].grid()
-
-    if "right" in axis_dict:
-        axis_dict["right"]["top"].set_ylabel(
-            ylabel_right,
-            fontsize=12,
-            horizontalalignment="right",
-            y=1.0,
-            color=ycolor_right,
-        )
-        axis_dict["right"]["top"].tick_params(axis="y", labelcolor=ycolor_right)
-        if logy:
-            axis_dict["right"]["top"].set_yscale("log")
-
-    plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
-
-    # Print label
-    if alabel is not None:
-        axis_dict["left"]["top"].text(
-            **alabel, transform=axis_dict["left"]["top"].transAxes
-        )
-
-    # Auto set x-limit
-    axis_dict["left"]["top"].set_xlim(
-        df_results_list[0][df_eff_key].iloc[0],
-        df_results_list[0][df_eff_key].iloc[-1],
-    )
-
-    # Manually set xmin
-    if xmin:
-        axis_dict["left"]["top"].set_xlim(xmin, 1)
-
-    # Check for ymin/ymax and set y-axis
-    if logy is True:
-        left_y_limits = axis_dict["left"]["top"].get_ylim()
-        yAxisIncrease = (
-            left_y_limits[0]
-            * ((left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease)
-            / left_y_limits[1]
-        )
-
-    left_y_limits = axis_dict["left"]["top"].get_ylim()
-    new_ymin_left = left_y_limits[0] if ymin is None else ymin
-    new_ymax_left = left_y_limits[1] * yAxisIncrease if ymax is None else ymax
-    axis_dict["left"]["top"].set_ylim(new_ymin_left, new_ymax_left)
-
-    if "right" in axis_dict:
-        right_y_limits = axis_dict["right"]["top"].get_ylim()
-        new_ymin_right = right_y_limits[0] if ymin_right is None else ymin_right
-        new_ymax_right = (
-            right_y_limits[1] * yAxisIncrease if ymax_right is None else ymax_right
-        )
-        axis_dict["right"]["top"].set_ylim(new_ymin_right, new_ymax_right)
-
-    # Increase the ratio y-axis if wanted
-    if rrange is not None:
-        axis_dict["left"]["ratio"].set_ylim(rrange)
-
-    # Define the legend
-    axis_dict["left"]["top"].legend(
-        handles=lines,
-        labels=[line.get_label() for line in lines],
-        loc=loc_legend,
-        fontsize=legFontSize,
-        ncol=legcols,
-    )
-
-    # Define ATLAS tag
-    if UseAtlasTag is True:
-        pas.makeATLAStag(
-            ax=axis_dict["left"]["top"],
-            fig=fig,
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-        )
-
-    # Set tight layout
-    plt.tight_layout()
-
-    # Save plot
-    plt.savefig(plot_name, transparent=True, dpi=dpi)
-    plt.close()
-    plt.clf()
+    plot_roc.draw(rlabel=rlabel, labelpad=labelpad)
+    plot_roc.savefig(plot_name)
+    plot_roc.clear()
 
 
 def plotROCRatioComparison(
@@ -1628,41 +1328,22 @@ def plotROCRatioComparison(
     rej_class_list: list,
     labels: list,
     plot_name: str,
-    df_eff_key: str = "effs",
     main_class: str = "bjets",
-    title: str = "",
-    ApplyAtlasStyle: bool = True,
-    UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
-    yAxisAtlasTag: float = 0.9,
-    yAxisIncrease: float = 1.3,
-    linestyles: list = None,
-    colors: list = None,
-    xmin: float = None,
-    ymax: float = None,
-    ymin: float = None,
-    labelFontSize: int = 10,
-    legFontSize: int = 10,
-    loc_legend: str = "best",
-    Ratio_Cut: list = None,
-    binomialErrors: bool = True,
-    nTest: list = 0,
-    alabel: dict = None,
-    figsize: list = None,
-    legcols: int = 1,
+    df_eff_key: str = "effs",
+    draw_errors: bool = True,
     labelpad: int = None,
     WorkingPoints: list = None,
     same_height_WP: bool = True,
-    ratio_id: list = 0,
-    ycolor: str = "black",
-    logy: bool = True,
-    dpi: int = 400,
+    linestyles: list = None,
+    colours: list = None,
+    n_test=None,
+    reference_ratio: list = None,
+    **kwargs,
 ):
-    """ "Plotting the rejection curve for a given background class
+    """Plotting the rejection curve for a given background class
     for the given models/taggers against the main_class efficiency.
-    Two rejections to the main class can be shown at the same time
-    with two ratio plots as subpanels below the main plot.
+    A ratio plot (first given model is the reference) is plotted in
+    a subpanel underneath.
 
     Parameters
     ----------
@@ -1675,64 +1356,17 @@ def plotROCRatioComparison(
         List of the class rejection which is to be plotted for each model.
     labels : list
         List of labels for the given models.
+    main_class : str
+        The main discriminant class. For b-tagging obviously "bjets"
     plot_name : str
         Path, Name and format of the resulting plot file.
     df_eff_key : str, optional
-        Dict key under which the efficiencies of the main class are
-        saved, by default "effs"
-    main_class : str
-        The main discriminant class. For b-tagging obviously "bjets"
-    title : str, optional
-        Title of the plot, by default ""
-    ApplyAtlasStyle : bool, optional
-        Apply ATLAS style for matplotlib, by default True
-    UseAtlasTag : bool, optional
-        Use the ATLAS Tag in the plots, by default True
-    AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
-    SecondTag : str, optional
-        Second Row of the ATLAS Tag. No need to add WP or fc. It will
-        be added automatically,
-        by default,
-        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
-    yAxisAtlasTag : float, optional
-        y position of the ATLAS Tag, by default 0.9
-    yAxisIncrease : float, optional
-        Increasing the y axis to fit the ATLAS Tag, by default 1.3
-    linestyles : list, optional
-        List of linestyles to use for the given models, by default None
-    colors : list, optional
-        List of linecolors to use for the given models, by default None
-    xmin : float, optional
-        Minimum value of the x-axis, by default None
-    ymax : float, optional
-        Maximum value of the y-axis, by default None
-    ymin : float, optional
-        Minimum value of the y-axis, by default None
-    labelFontSize : int, optional
-        Fontsize of the axis labels, by default 10
-    legFontSize : int, optional
-        Fontsize of the legend, by default 10
-    loc_legend : str, optional
-        Position of the legend in the plot, by default "best"
-    Ratio_Cut : list, optional
-        List of the lower and upper y-limit for the ratio plot,
-        by default None
-    binomialErrors : bool, optional
-        Use binomial errors, by default True
-    nTest : list, optional
-        A list of the same length as class_rejections, with the number of
-        events used to calculate the background efficiencies.
-        We need this To calculate the binomial errors on the background
-        rejection, using the formula given by
-        http://home.fnal.gov/~paterno/images/effic.pdf, by default 0
-    alabel : dict, optional
-        Dict with the axis labels, by default None
-    figsize : list, optional
-        Size of the resulting figure as a list with two elements. First
-        is the width, second the height. By default None.
-    legcols : int, optional
-        Number of columns to use in the legend, by default 1
+        Dict key under which the efficiencies of the main class are saved,
+        by default "effs"
+    draw_errors : bool, optional
+        Binominal errors on the lines, by default True
+    rlabel : str, optional
+        The label for the y-axis for the ratio panel, by default "Ratio"
     labelpad : int, optional
         Spacing in points from the axes bounding box including
         ticks and tick labels, by default None
@@ -1742,392 +1376,184 @@ def plotROCRatioComparison(
     same_height_WP : bool, optional
         Decide, if all working points lines have the same height or
         not, by default True
-    ratio_id : list, optional
-        List to which given model the ratio is calulcated, by default 0
-    ycolor : str, optional
-        Color of the left y-axis, by default "black"
-    ycolor_right : str, optional
-        Color of the right y-axis, by default "black"
-    logy : bool, optional
-        y-axis in log format, by default True
-    dpi : int, optional
-        Sets a DPI value for the plot that is produced (mainly for png),
-        by default 400
+    linestyles : list, optional
+        List of linestyles to use for the given models, by default None
+    colours : list, optional
+        List of linecolors to use for the given models, by default None
+    n_test : [type], optional
+        A list of the same length as class_rejections, with the number of
+        events used to calculate the background efficiencies.
+        We need this To calculate the binomial errors on the background
+        rejection, using the formula given by
+        http://home.fnal.gov/~paterno/images/effic.pdf, by default 0
+    reference_ratio : list, optional
+        List of bools indicating which roc used as reference for ratio calculation,
+        by default None
 
     Raises
     ------
     ValueError
-        If more than two different rejections are given.
+        if n_test not int, floar of given for each roc
+    ValueError
+        if lists don't have the same length
     """
-    if linestyles is None:
-        linestyles = []
-    if colors is None:
-        colors = []
+    n_rocs = len(df_results_list)
+    # maintain backwards compatibility
+    if "nTest" in kwargs and n_test is None:
+        n_test = kwargs["nTest"]
+        kwargs.pop("nTest")
+    if "colors" in kwargs and colours is None:
+        colours = kwargs["colors"]
+        # remnant of old implementation passing empty list as default
+        if kwargs["colors"] == []:
+            colours = None
+        kwargs.pop("colors")
+    if "binomialErrors" in kwargs and draw_errors is None:
+        draw_errors = kwargs["binomialErrors"]
+        kwargs.pop("binomialErrors")
+    if (
+        "ratio_id" in kwargs
+        and reference_ratio is None
+        and kwargs["ratio_id"] is not None
+    ):
+        # if old keyword is used the syntax was also different
+        # translating this now into the new syntax
+        # the old syntax looked like
+        # ratio_id = [0, 0, 1, 1]
+        # rej_class_list = ['ujets', 'ujets', 'cjets', 'cjets']
+        # tagger_list = ['RNNIP', 'DIPS', 'RNNIP', 'DIPS']
+        # in that case the first entry was used for the upper ratio and the 3rd entry
+        # for the 2nd ratio
+        # in the new syntax this would mean
+        # reference_ratio = [True, False, True, False]
+        reference_ratio = []
+        _tmp_ratio_id = []
+        for elem in kwargs["ratio_id"]:
+            reference_ratio.append(elem not in _tmp_ratio_id)
+            _tmp_ratio_id.append(elem)
+        kwargs.pop("ratio_id")
 
-    # Apply the ATLAS Style with the bars on the axes
-    if ApplyAtlasStyle is True:
-        applyATLASstyle(mtp)
+    # catching default value as in old implementation to maintain backwards
+    # compatibility
+    if reference_ratio is None:
+        reference_ratio = []
+        _tmp_ratio_id = []
+        for elem in rej_class_list:
+            reference_ratio.append(elem not in _tmp_ratio_id)
+            _tmp_ratio_id.append(elem)
+
+    # remnant of old implementation passing empty list as default
+    if linestyles == []:
+        linestyles = None
 
     # Get global config for flavours
     flav_cat = global_config.flavour_categories
 
     # Loop over the given rejection types and add them to a lists
-    flav_list = list(dict.fromkeys(rej_class_list))
+    flav_list = list(OrderedDict.fromkeys(rej_class_list))
+    if len(flav_list) > 2:
+        raise ValueError("Can't plot more than 2 rejections!")
 
     # Append a linestyles for each model determined by the rejections
-    if len(linestyles) == 0:
-        for which_j in rej_class_list:
-            for i, flav in enumerate(flav_list):
-                if which_j == flav:
-                    if i == 0:
-                        # This is solids
-                        linestyles.append("-")
-
-                    elif i == 1:
-                        # This is densly dashed dotted
-                        linestyles.append((0, (3, 1, 1, 1)))
-
-                    else:
-                        raise ValueError("Can't plot more than 2 rejections!")
+    # with solid lines or dashed dotted lines
+    if linestyles is None:
+        linestyles = [
+            "-" if elem == flav_list[0] else (0, (3, 1, 1, 1))
+            for elem in rej_class_list
+        ]
 
     # Create list for the models
-    model_list = []
-    for label in labels:
-        if label not in model_list:
-            model_list.append(label)
+    model_list = list(OrderedDict.fromkeys(labels))
 
     # Fill in the colors for the models given
-    if len(colors) == 0:
-        for label in labels:
-            for i, model in enumerate(model_list):
-                if label == model:
-                    colors.append(f"C{i}")
+    if colours is None:
+        model_colours = {model: f"C{i}" for i, model in enumerate(model_list)}
+        colours = [model_colours[elem] for elem in labels]
 
-    # Set WP colors
-    colors_WP = "red"
+    if draw_errors is True:
+        # Check if n_test is provided in all samples
+        if n_test is None:
+            n_test_in_file = ["N_test" in df_results for df_results in df_results_list]
 
-    if binomialErrors is True:
-        # Check if nTest is provided in all samples
-        nTest_in_file = []
-        for df_results in df_results_list:
-            if "N_test" not in df_results:
-                nTest_in_file.append(False)
+            if not all(n_test_in_file):
+                logger.error(
+                    "Requested binomialErrors, but not all models have n_test. "
+                    "Will NOT plot rej errors."
+                )
+                draw_errors = False
 
-            else:
-                nTest_in_file.append(True)
-
-        if nTest == 0 and not all(nTest_in_file):
-            logger.error(
-                "Requested binomialErrors, but not all models have nTest. Will"
-                " NOT plot rej errors."
-            )
-            binomialErrors = False
-
-    if not isinstance(nTest, list):
-        nTest = [nTest] * len(labels)
-
-    # Define the figure with two subplots of unequal sizes
-    axis_dict = {}
-
-    # Create figure with the given size, if provided.
-    if figsize is None:
-        fig = plt.figure(figsize=(8, 8))
-
-    else:
-        fig = plt.figure(figsize=(figsize[0], figsize[1]))
-
-    # Define the grid of the subplots
-    gs = gridspec.GridSpec(11, 1, figure=fig)
-    axis_dict["left"] = {}
-
-    # Define the top subplot for the curves
-    axis_dict["left"]["top"] = fig.add_subplot(gs[:5, 0])
-
-    # Define the ratio plots for the rejections
-    axis_dict["left"][flav_list[0]] = fig.add_subplot(
-        gs[5:8, 0], sharex=axis_dict["left"]["top"]
-    )
-    axis_dict["left"][flav_list[1]] = fig.add_subplot(
-        gs[8:, 0], sharex=axis_dict["left"]["top"]
-    )
-
-    # Draw WP lines at the specifed WPs
-    if WorkingPoints is not None:
-        for WP in WorkingPoints:
-
-            # Set y-point of the WP lines/text
-            ytext = 0.65 if same_height_WP else 1.25 - WP
-
-            # Plot the vertical WP lines for top plot
-            axis_dict["left"]["top"].axvline(
-                x=WP,
-                ymax=ytext,
-                color=colors_WP,
-                linestyle="dashed",
-                linewidth=1.0,
-            )
-
-            # Set the number above the line
-            axis_dict["left"]["top"].text(
-                x=WP - 0.005,
-                y=ytext + 0.005,
-                s=f"{int(WP * 100)}%",
-                transform=axis_dict["left"]["top"].get_xaxis_text1_transform(0)[0],
-                fontsize=legFontSize,
-            )
-
-            # Draw the WP lines in the ratio plots
-            for flav in flav_list:
-                axis_dict["left"][flav].axvline(
-                    x=WP, color=colors_WP, linestyle="dashed", linewidth=1.0
+        elif isinstance(n_test, (int, float)):
+            n_test = [n_test] * len(df_results_list)
+        elif isinstance(n_test, list):
+            if len(n_test) != len(df_results_list):
+                raise ValueError(
+                    "The provided `n_test` do not have the same length as the "
+                    "`df_results_list`."
                 )
 
-    # Create lines list and ratio dict for looping
-    lines = []
-    f0_ratio = {}
-
-    assert (
-        len(df_results_list)
-        == len(tagger_list)
-        == len(rej_class_list)
-        == len(labels)
-        == len(linestyles)
-        == len(colors)
-        == len(nTest)
-        == len(ratio_id)
-    ), "Input configs must be given for each model. Dimension Error!"
-
-    # Loop over the models with the different settings for each model
-    for i, (
-        df_results,
-        tagger,
-        rej_class,
-        label,
-        style,
-        color,
-        nte,
-        r_id,
-    ) in enumerate(
-        zip(
+    # check length
+    # TODO: change in python 3.10 -> add to zip() with strict=True argument
+    if not all(
+        len(elem) == n_rocs
+        for elem in [
             df_results_list,
             tagger_list,
             rej_class_list,
             labels,
             linestyles,
-            colors,
-            nTest,
-            ratio_id,
-        )
+            colours,
+            n_test,
+            reference_ratio,
+        ]
     ):
+        raise ValueError("Passed lists do not have same length.")
 
-        # Get the main class efficency for x-axis
-        main_class_effs = df_results[df_eff_key]
-
-        # Get the rejections
-        class_rejections = df_results[f"{tagger}_{rej_class}_rej"]
-
-        # Mask the points where there was no change in the signal eff
-        dx = np.concatenate((np.ones(1), np.diff(main_class_effs)))
-
-        # Also mask the rejections that are 0
-        nonzero = (class_rejections != 0) & (dx > 0)
-        if xmin:
-            nonzero = nonzero & (main_class_effs > xmin)
-        x = main_class_effs[nonzero]
-        y = class_rejections[nonzero]
-
-        # Plot the lines in the main plot and add them to lines list
-        lines = lines + axis_dict["left"]["top"].plot(
-            x, y, linestyle=style, color=color, label=label, zorder=2
-        )
-
-        # Calculate and plot binominal errors for main plot
-        if binomialErrors:
-            yerr = np.power(y, 2) * rej_err(class_rejections[nonzero], nte)
-
-            y1 = y - yerr
-            y2 = y + yerr
-
-            axis_dict["left"]["top"].fill_between(
-                x, y1, y2, color=color, alpha=0.3, zorder=2
-            )
-
-        # Interpolate the rejection function for nicer plotting
-        f = pchip(x, y)
-
-        # Check if the ratio_id divisor was already used or not
-        # If not, calculate the divisor for ratio_id and add it to list
-        if r_id not in f0_ratio:
-            f0_ratio[r_id] = f
-            axis_dict["left"][rej_class].plot(
-                x, np.ones(len(x)), linestyle=style, color=color, linewidth=1.6
-            )
-            if binomialErrors:
-                axis_dict["left"][rej_class].fill_between(
-                    x,
-                    1 - yerr / y,
-                    1 + yerr / y,
-                    color=color,
-                    alpha=0.3,
-                    zorder=1,
-                )
-            continue
-
-        # If ratio_id divisor already calculated, plot calculate ratio and plot
-        ratio_ix = f(x) / f0_ratio[r_id](x)
-        axis_dict["left"][rej_class].plot(
-            x, ratio_ix, linestyle=style, color=color, linewidth=1.6
-        )
-        if binomialErrors:
-            axis_dict["left"][rej_class].fill_between(
-                x,
-                ratio_ix - yerr / f(x),
-                ratio_ix + yerr / f(x),
-                color=color,
-                alpha=0.3,
-                zorder=1,
-            )
-
-    # Add axes, titles and the legend
-    axis_dict["left"]["top"].set_ylabel(
-        "Background rejection",
-        fontsize=labelFontSize,
-        horizontalalignment="right",
-        y=1.0,
-        color=ycolor,
+    plot_roc = roc_plot(
+        n_ratio_panels=2,
+        ylabel="Background rejection",
+        xlabel=f'{flav_cat[main_class]["legend_label"]} efficiency',
     )
-    axis_dict["left"]["top"].set_title(title)
-    axis_dict["left"]["top"].tick_params(
-        axis="y", labelcolor=ycolor, labelsize=labelFontSize
+    plot_roc.set_ratio_class(ratio_panel=1, rej_class=flav_list[0])
+    plot_roc.set_ratio_class(ratio_panel=2, rej_class=flav_list[1])
+    if WorkingPoints is not None:
+        plot_roc.draw_wps(WorkingPoints, same_height_WP)
+
+    # Loop over the models with the different settings for each model
+    for df_results, tagger, rej_class, label, linestyle, colour, nte, ratio_ref in zip(
+        df_results_list,
+        tagger_list,
+        rej_class_list,
+        labels,
+        linestyles,
+        colours,
+        n_test,
+        reference_ratio,
+    ):
+        roc_curve = roc(
+            df_results[df_eff_key],
+            df_results[f"{tagger}_{rej_class}_rej"],
+            n_test=nte,
+            rej_class=rej_class,
+            signal_class=main_class,
+            label=label,
+            colour=colour,
+            linestyle=linestyle,
+        )
+        plot_roc.add_roc(roc_curve, reference=ratio_ref)
+
+    plot_roc.draw(
+        rlabel=[
+            f'{flav_cat[flav_list[0]]["legend_label"]} ratio',
+            f'{flav_cat[flav_list[1]]["legend_label"]} ratio',
+        ],
+        leg_class_labels=[
+            f'{flav_cat[flav_list[0]]["legend_label"]} rejection',
+            f'{flav_cat[flav_list[1]]["legend_label"]} rejection',
+        ],
+        labelpad=labelpad,
     )
-    axis_dict["left"]["top"].grid()
-
-    # Check for log scale
-    if logy:
-        axis_dict["left"]["top"].set_yscale("log")
-
-    # Set grid for the ratio plots and set ylabel
-    for flav in flav_list:
-        axis_dict["left"][flav].grid()
-        rlabel = f'{flav_cat[flav]["legend_label"]} ratio'
-
-        axis_dict["left"][flav].set_ylabel(
-            rlabel,
-            labelpad=labelpad,
-            fontsize=labelFontSize,
-        )
-
-        axis_dict["left"][flav].tick_params(
-            axis="y", labelcolor=ycolor, labelsize=labelFontSize
-        )
-
-    # Set xlabel for lowest ratio plot
-    axis_dict["left"][flav_list[1]].set_xlabel(
-        f'{flav_cat[main_class]["legend_label"]} efficiency',
-        fontsize=labelFontSize,
-        horizontalalignment="right",
-        x=1.0,
-    )
-
-    axis_dict["left"][flav_list[1]].tick_params(axis="x", labelsize=labelFontSize)
-
-    # Hide the xlabels of the upper ratio and the main plot
-    plt.setp(axis_dict["left"]["top"].get_xticklabels(), visible=False)
-    plt.setp(axis_dict["left"][flav_list[0]].get_xticklabels(), visible=False)
-
-    # Print label om plot
-    if alabel is not None:
-        axis_dict["left"]["top"].text(
-            **alabel, transform=axis_dict["left"]["top"].transAxes
-        )
-
-    # Auto set x-limit
-    axis_dict["left"]["top"].set_xlim(
-        df_results_list[0][df_eff_key].iloc[0],
-        df_results_list[0][df_eff_key].iloc[-1],
-    )
-
-    # Manually set xmin
-    if xmin:
-        axis_dict["left"]["top"].set_xlim(xmin, 1)
-
-    # Check for ymin/ymax and set y-axis
-    if logy is True:
-        left_y_limits = axis_dict["left"]["top"].get_ylim()
-        yAxisIncrease = (
-            left_y_limits[0]
-            * ((left_y_limits[1] / left_y_limits[0]) ** yAxisIncrease)
-            / left_y_limits[1]
-        )
-
-    # Check for ymin/ymax and set y-axis
-    left_y_limits = axis_dict["left"]["top"].get_ylim()
-    new_ymin_left = left_y_limits[0] if ymin is None else ymin
-    new_ymax_left = left_y_limits[1] * yAxisIncrease if ymax is None else ymax
-    axis_dict["left"]["top"].set_ylim(new_ymin_left, new_ymax_left)
-
-    # Set ratio range
-    if Ratio_Cut is not None:
-        for flav in flav_list:
-            axis_dict["left"][flav].set_ylim(Ratio_Cut[0], Ratio_Cut[1])
-
-    # Create the two legends for rejection and model
-    line_list_rej = []
-    for i in range(2):
-        label = f'{flav_cat[flav_list[i]]["legend_label"]} rejection'
-        line = axis_dict["left"]["top"].plot(
-            np.nan, np.nan, color="k", label=label, linestyle=["-", "--"][i]
-        )
-        line_list_rej += line
-
-    legend1 = axis_dict["left"]["top"].legend(
-        handles=line_list_rej,
-        labels=[tmp.get_label() for tmp in line_list_rej],
-        loc="upper center",
-        fontsize=legFontSize,
-        ncol=legcols,
-    )
-
-    # Add the second legend to plot
-    axis_dict["left"]["top"].add_artist(legend1)
-
-    # Get the labels for the legends
-    labels_list = []
-    lines_list = []
-
-    for line in lines:
-        for model in model_list:
-            if line.get_label() == model and line.get_label() not in labels_list:
-                labels_list.append(line.get_label())
-                lines_list.append(line)
-
-    # Define the legend
-    axis_dict["left"]["top"].legend(
-        handles=lines_list,
-        labels=labels_list,
-        loc=loc_legend,
-        fontsize=legFontSize,
-        ncol=legcols,
-    )
-
-    # Define ATLASTag
-    if UseAtlasTag is True:
-        pas.makeATLAStag(
-            ax=axis_dict["left"]["top"],
-            fig=fig,
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-            fontsize=legFontSize,
-        )
-
-    # Set tight layout
-    plt.tight_layout()
-
-    # Set filename and save figure
-    plt.savefig(plot_name, transparent=True, dpi=dpi)
-    plt.close()
-    plt.clf()
+    plot_roc.savefig(plot_name)
+    plot_roc.clear()
 
 
 def plotSaliency(
