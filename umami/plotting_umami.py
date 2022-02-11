@@ -184,7 +184,7 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
             ) as h5_file:
                 plot_config["plot_settings"]["nTest"].append(h5_file.attrs["N_test"])
         else:
-            plot_config["plot_settings"]["nTest"] = 0
+            plot_config["plot_settings"]["nTest"] = None
 
     if len(colors) == 0:
         colors = None
@@ -263,7 +263,7 @@ def plot_ROC_Comparison(
             ) as h5_file:
                 plot_config["plot_settings"]["nTest"].append(h5_file.attrs["N_test"])
         else:
-            plot_config["plot_settings"]["nTest"] = 0
+            plot_config["plot_settings"]["nTest"] = None
 
     # Get the right ratio id for correct ratio calculation
     ratio_dict = {}
