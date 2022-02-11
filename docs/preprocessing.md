@@ -285,11 +285,6 @@ In the `Preparation`, the size of the batches which are be loaded from the ntupl
 The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. Also you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
 
- Setting | Explanation      |
-| ------ | ---------------- |
-| `batchsize` | size of loaded batches |
-
-
 #### Sampling
 
 ```yaml
@@ -301,39 +296,15 @@ sampling:
   # Decide, which resampling method is used.
   method: count
 
-  # The options depend on the sampling method
-  options:
-    sampling_variables:
-      - pt_btagJes:
-          # bins take either a list containing the np.linspace arguments
-          # or a list of them
-          # For PDF sampling: must be the np.linspace arguments.
-          #   - list of list, one list for each category (in samples)
-          #   - define the region of each category.
-          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+```
 
-      - absEta_btagJes:
-          # For PDF sampling: same structure as in pt_btagJes.
-          bins: [0, 2.5, 10]
+In `sampling`, we can define the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
 
-    # Decide, which of the in preparation defined samples are used in the resampling.
-    samples:
-      ttbar:
-        - training_ttbar_bjets
-        - training_ttbar_cjets
-        - training_ttbar_ujets
-      zprime:
-        - training_zprime_bjets
-        - training_zprime_cjets
-        - training_zprime_ujets
+An important part are the `class_labels` which are defined here. You can define which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
 
-    custom_njets_initial:
-      # these are empiric values ensuring a smooth hybrid sample.
-      # These values are retrieved for a hybrid ttbar + zprime sample for the count method!
-      training_ttbar_bjets: 5.5e6
-      training_ttbar_cjets: 11.5e6
-      training_ttbar_ujets: 13.5e6
+For an explanation of the resampling function specific `options`, have a look in the section of the resampling method you want to use. The general `options` are explained in the following:
 
+```yaml
     # Fractions of ttbar/zprime jets in final training set. This needs to add up to one.
     fractions:
       ttbar: 0.7
@@ -351,55 +322,27 @@ sampling:
     save_tracks: True
 
     # Name(s) of the track collection(s) to use.
-    tracks_names: "tracks"
+    tracks_names: ["tracks"]
 
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
-
-    # for method: weighting
-    # relative to which distribution the weights should be calculated
-    weighting_target_flavour: 'bjets'
-
-    # If you want to attach weights to the final files
-    bool_attach_sample_weights: False
 ```
 
-In `sampling`, we can define the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are:
-
-| Method | Explanation      |
-| ------ | ---------------- |
-| `count` | Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used |
-| `pdf` | NOTE: If your sample's statistics are small and/or your lowest distribution is other than the b-jet distribution, you can force the b-jet distribution shape on the other jet flavour distributions. This will ensure ensure all the distributions have the b-shape and the same fractions. Additionally, when building the target distribution for "probability_ratio", `pT_max` (set in the config file [PFlow-Preprocessing.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing.yaml)) will be used to compute the probability ratios or PDFs. Not setting `pT_max` will allow you to keep more jets (bigger fractions) but with more noise (uncertainty) loosing the guarantee that all the distributions will have the same b-jet distribution shape. WARNING: The `pdf` method does not work well with taus as of now.|
-|`weighting`| Alternatively you can calculate weights between the flavor of bins in the 2d(pt,eta) histogram and write out all jets. These weights can be forwarded to the training to weigh the loss function of the training. If you want to use them don't forget to set `bool_attach_sample_weights` to `True` |
-
-Another important part are the `class_labels` which are defined here. You can define here which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list here to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
-
-The `options` are some options for the different resampling methods. You need to define the sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins.
-Another thing you need to define are the `samples` which are to be resampled. You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`.
-`fractions` gives us the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! The `save_tracks` and the `tracks_names` options define the using of tracks. `save_tracks` is bool while `tracks_names` is a string or a list of strings. The latter is the name of the tracks how they are called in the .h5 files coming from the dumper, multiple tracks datasets can be preprocessed simultaneously when a list is given. After the preparation stage, they will have the name `tracks`. The rest of the variables are pretty self-explanatory.
-If you want to use the PDF sampling, have a look at the example config [PFlow-Preprocessing-taus.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-taus.yaml).
-
-For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml).
+| Setting | Type | Explanation |
+| ------- | ---- | ----------- |
+| `fractions` | `dict` | Gives the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! |
+| `njets`  | `int` |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class, while for other methods it is the total number of jets after resampling. |
+| `save_tracks` | `bool` | Define if tracks are processed or not. These are not needed to train DL1r/DL1d |
+| `tracks_names` | `list` of `str` | Name of the tracks (in the .h5 files coming from the dumper) which are processed. Multiple tracks datasets can be preprocessed simultaneously when two `str` are given in the list. |
+| `intermediate_index_file` | `str` | For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). |
 
 
-| Setting | used in method | Explanation      |
-| ------ | ------ | ------ |
-| `sampling_variables`  |  `all` |  Needs exactly 2 variables. Sampling variables which are used for resampling. For example, if you want to resample in `pt_btagJes` and `absEta_btagJes` bins, you just define them with their respective bins. They are defined as a list of dics of the form `[{var_name1:{ bins: <bins>}}, {var_name2:{ bins: <bins>}}]`  |
-| `samples`  | `all`  |  Samples which are to be resampled. The samples defined in here are the ones we prepared in the step above. |
-| `custom_njets_initial`  | `count`  |  Used jets per sample to ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples.  |
-| `fractions`  | `all`  |  Fractions of used samples in the final training sample.  |
-| `njets`  |   |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class, while for other methods it is the total number of jets after resampling. If set to -1: max out to target numbers (limited by fractions ratio) |
-| `save_tracks`  | `all`  |  Flag if storing tracks.  |
-| `tracks_names`  | `all`  |  Name of the tracks how they are called in the .h5 files coming from the dumper.  |
-| `intermediate_index_file`  | `all`  |  Stores the indices per sample into an intermediate file.  |
-| `weighting_target_flavour`  | `weighting`  |  Defines to which distribution the weights are relatively calculated   |
-| `bool_attach_sample_weights`  | `weighting`  | If you want to attach these weights in the final training config. For all other resampling methods, this should be `False`.  |
-
+**Note**: `nJets` are the number of jets you want to have in your final training file for the `count` and `weighting` method. For the `pdf` method, this is the number of jets per flavour in the training file!
 
 ### General settings
 
-| Setting | Explanation      |
-| ------ | ---------------- |
+| Setting | Explanation |
+| ------- | ----------- |
 | `outfile_name` | name of the output file of the preprocessing |
 | `plot_name` | defines the names of the control plots which are produced in the preprocessing |
 | `var_file` | path to the variable dict |
@@ -441,6 +384,145 @@ If you want to save the samples as TFRecord files you can specify under `convert
     TF records are the Tensorflow's own file format to store datasets. Especially when working with large datasets this format can be useful. In TF records the data is saved as a sequence of binary strings. This has the advatage that reading the data is significatly faster than from a .h5 file. In addition the data can be saved in multiple files instead of one big file containing all data. This way the reading procedure can be parallised which speeds up the whole training.
     Besides of this, since TF records are the Tensorflow's own file format, it is optimised for the usage with Tensorflow. For example, the dataset is not stored completely in memory but automatically loaded in batches as soon as needed.
 
+### Sampling Methods
+
+Different sampling methods can be used in Umami to produce the training sets. They are all working on the principle of 2D resampling. Due to differences in the number of jets in different `pT` and _η_ regions, the tagging of the jets is not independent of those regions. To ensure a kinematic indepedent tagging of the jets, the resampling methods sample the different flavours so that in the given pT and _η_ bins, the same amount of jets per flavour are present. The technique how this is done are specific to the method. In their respective section, this will be explained more in detail.
+
+#### Count Sampling
+
+Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used.
+
+```yaml
+  options:
+    sampling_variables:
+      - pt_btagJes:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          # For PDF sampling: must be the np.linspace arguments.
+          #   - list of list, one list for each category (in samples)
+          #   - define the region of each category.
+          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+
+      - absEta_btagJes:
+          # For PDF sampling: same structure as in pt_btagJes.
+          bins: [0, 2.5, 10]
+
+    # Decide, which of the in preparation defined samples are used in the resampling.
+    samples:
+      ttbar:
+        - training_ttbar_bjets
+        - training_ttbar_cjets
+        - training_ttbar_ujets
+      zprime:
+        - training_zprime_bjets
+        - training_zprime_cjets
+        - training_zprime_ujets
+
+    custom_njets_initial:
+      # these are empiric values ensuring a smooth hybrid sample.
+      # These values are retrieved for a hybrid ttbar + zprime sample for the count method!
+      training_ttbar_bjets: 5.5e6
+      training_ttbar_cjets: 11.5e6
+      training_ttbar_ujets: 13.5e6
+```
+
+| Setting | Type | Explanation |
+| ------- | ---- | ----------- |
+| `sampling_variables` | `list` |  Needs exactly 2 variables. Sampling variables which are used for resampling. The example shows this for the `pt_btagJes` and `absEta_btagJes` variables. In case of the `count` method, you define a nested list (one sublist for each category (ttbar or zprime)) with the first and last bin edge and the number of bins to use. |
+| `custom_njets_initial` | `dict` | Used jets per sample to ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples. |
+| `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`. |
+
+#### PDF Sampling
+
+The PDF sampling method is based on the principles of importance sampling. If your sample's statistics are small and/or your lowest distribution is other than the target distribution (in case of b-tagging, this is the b-jet distribution), you can force the b-jet distribution shape on the other jet flavour distributions. This will ensure all the distributions have the target distribution shape and the same fractions for the two given resampling variables. To enforce the same shape and number of jets per `pT` and _η_ bin, the statistically higher flavours are undersampled and the statistically lower flavours are upsampled to the target flavour. An example for the reprocessing config file which uses the pdf sampling can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-taus.yaml). In this case, four different flavours are used.
+
+The options for the pdf method seems quite similar to the ones from the `count` method. But there are some important differences!
+First are the bins for the two resampling variables. You need to define a nested list with the regions for both sample categories (ttbar and zprime). Even if they are the same!
+
+```yaml
+  options:
+    sampling_variables:
+      - pt_btagJes:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          # For PDF sampling: must be the np.linspace arguments.
+          #   - list of of list, one list for each category (in samples)
+          #   - define the region of each category.
+          bins: [[0, 25e4, 100], [25e4, 6e6, 100]]
+
+      - absEta_btagJes:
+          bins: [[0, 2.5, 10], [0, 2.5, 10]]
+
+    # Decide, which of the in preparation defined samples are used in the resampling.
+    samples:
+      ttbar:
+        - training_ttbar_bjets
+        - training_ttbar_cjets
+        - training_ttbar_ujets
+      zprime:
+        - training_zprime_bjets
+        - training_zprime_cjets
+        - training_zprime_ujets
+
+    custom_njets_initial: # Leave empty for pdf method
+
+    # For PDF sampling, this is the maximum upsampling rate (important to limit tau upsampling)
+    # File are referred by their key (as in custom_njets_initial)
+    max_upsampling_ratio:
+      training_ttbar_cjets: 5
+      training_zprime_cjets: 5
+```
+
+| Setting | Type | Explanation |
+| ------- | ---- | ----------- |
+| `sampling_variables` | `list` |  Needs exactly 2 variables. Sampling variables which are used for resampling. The example shows this for the `pt_btagJes` and `absEta_btagJes` variables. In case of the `pdf` method, you define a nested list (one sublist for each category (ttbar or zprime)) with the first and last bin edge and the number of bins to use (np.linespace arguments). |
+| `custom_njets_initial` | `None` | These values are used only in the `count` and `weighting` method. |
+| `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`. |
+| `max_upsampling_ratio` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a maximal ratio of upsampling. If there are not enough cjets and the `max_upsampling_ratio` is reached, the form of the distribution is applied but not the number. So there can be different numbers of jets per bin per class, but the shape of distributions will still be the same (if you normalise them). |
+
+#### Weighting Sampling
+
+Alternatively you can calculate weights between the flavor of bins in the 2d(pt,eta) histogram and write out all jets. These weights can be forwarded to the training to weigh the loss function of the training. If you want to use them don't forget to set `bool_attach_sample_weights` to `True`.
+
+```yaml
+  options:
+    sampling_variables:
+      - pt_btagJes:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          # For PDF sampling: must be the np.linspace arguments.
+          #   - list of list, one list for each category (in samples)
+          #   - define the region of each category.
+          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+
+      - absEta_btagJes:
+          # For PDF sampling: same structure as in pt_btagJes.
+          bins: [0, 2.5, 10]
+
+    # Decide, which of the in preparation defined samples are used in the resampling.
+    samples:
+      ttbar:
+        - training_ttbar_bjets
+        - training_ttbar_cjets
+        - training_ttbar_ujets
+      zprime:
+        - training_zprime_bjets
+        - training_zprime_cjets
+        - training_zprime_ujets
+
+    # for method: weighting
+    # relative to which distribution the weights should be calculated
+    weighting_target_flavour: 'bjets'
+
+    # If you want to attach weights to the final files
+    bool_attach_sample_weights: False
+```
+
+| Setting | Type | Explanation |
+| ------- | ---- | ----------- |
+| `weighting_target_flavour` | `str` | To which distribution the weights are relatively calculated to. |
+| `bool_attach_sample_weights` | `bool` | Decide, if you want to attach these weights in the final training config. For all other resampling methods, this should be `False`. |
+
 ### Running the sample preparation
 
 To run the sample preparation for the ttbar b-jet sample `training_ttbar_bjets`, which has been defined in the config file in the `preparation: samples:` block, execute:
@@ -468,7 +550,36 @@ The steps defined in the following segment are only performed on the training sa
 preprocessing.py --config <path to config file> --resampling
 ```
 
-If you want to also use the tracks of the jets, you need to set the option `save_tracks` in the preprocessing config to `True`. If the tracks have a different name than `"tracks"` in the .h5 files coming from the dumper, you can also set change `tracks_names` to your needs. Track information are not needed for the DL1r but for DIPS and Umami.
+??? info "Parallel processing for the PDF method"
+
+    If you want to also use the tracks of the jets, you need to set the option `save_tracks` in the preprocessing config to `True`. If the tracks have a different name than `"tracks"` in the .h5 files coming from the dumper, you can also set change `tracks_names` to your needs. Track information are not needed for the DL1r but for DIPS and Umami.
+    If you are using the `pdf` resampling method, you can further split this up into sub-components. First you need to start with working on the target distribution:
+
+    ```bash
+    preprocessing.py --config <path to config file> --resampling --flavour target
+    ```
+
+    This will process the target distribution for both categories, ttbar and zprime. After this is finished, you can run in parallel the following step:
+
+    ```bash
+    preprocessing.py --config <path to config file> --resampling --flavour $0
+    ```
+
+    where the `$0` stands for an index in `samples/ttbar`. If we take the example from the PDF Sampling section, this contains the samples of the bjets, cjets and ujets. 0 is therefore the bjets, 1 is the cjets and 2 is the ujets. Note: This will process the bjets for both categories, ttbar and zprime, although we need to look in `samples/ttbar`. Only the flavour is important here.
+
+    After all these subjobs are finished, you can continue with the plotting and the combination of the flavours into our final resampled file. For that you need to run
+
+    ```bash
+    preprocessing.py --config <path to config file> --resampling --flavour plotting
+    ```
+
+    and 
+
+    ```bash
+    preprocessing.py --config <path to config file> --resampling --flavour combining
+    ```
+
+    where the plotting step can also be skipped if you want to.
 
 2\. Retrieving scaling and shifting factors:
 
