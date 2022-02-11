@@ -132,6 +132,19 @@ def EvaluateModel(
             " Please check if you defined them!"
         )
 
+    if (
+        "results_filename_extension" in Eval_params
+        and Eval_params["results_filename_extension"] is not None
+    ):
+        results_filename_extension = Eval_params["results_filename_extension"]
+        logger.warning(
+            f"Results filename extension is set to {results_filename_extension}. "
+            "This means you have to specify the 'evaluation_file' when plotting your "
+            "results."
+        )
+    else:
+        results_filename_extension = ""
+
     # Init the placeholder lists for tagger_names
     tagger_names = []
     tagger_preds = []
@@ -260,7 +273,8 @@ def EvaluateModel(
 
     # Save dataframe to h5
     df_discs.to_hdf(
-        f"{train_config.model_name}/results/results-{epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-{epoch}.h5",
         data_set_name,
     )
 
@@ -288,14 +302,16 @@ def EvaluateModel(
     del tagger_rej_dicts
 
     df_eff_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_eff-{epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/results-rej_per_eff-{epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -320,14 +336,16 @@ def EvaluateModel(
     del tagger_fraction_rej_dict
 
     df_frac_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -385,6 +403,19 @@ def EvaluateModelDips(
     var_cuts = (
         test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
+
+    if (
+        "results_filename_extension" in Eval_params
+        and Eval_params["results_filename_extension"] is not None
+    ):
+        results_filename_extension = Eval_params["results_filename_extension"]
+        logger.warning(
+            f"Results filename extension is set to {results_filename_extension}. "
+            "This means you have to specify the 'evaluation_file' when plotting your "
+            "results."
+        )
+    else:
+        results_filename_extension = ""
 
     # Print a warning that no variable cuts are used for the file
     if var_cuts is None:
@@ -519,7 +550,8 @@ def EvaluateModelDips(
 
     # Save dataframe to h5
     df_discs.to_hdf(
-        f"{train_config.model_name}/results/results-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-{args.epoch}.h5",
         data_set_name,
     )
 
@@ -543,14 +575,16 @@ def EvaluateModelDips(
     del tagger_rej_dicts
 
     df_eff_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_eff-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_eff-{args.epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/results-rej_per_eff-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_eff-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -574,14 +608,16 @@ def EvaluateModelDips(
     del tagger_fraction_rej_dict
 
     df_frac_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -604,8 +640,8 @@ def EvaluateModelDips(
         # Create results dir and pickle file
         os.system(f"mkdir -p {train_config.model_name}/results")
         with open(
-            f"{train_config.model_name}/results/saliency_{args.epoch}"
-            + f"_{data_set_name}.pkl",
+            f"{train_config.model_name}/results/saliency{results_filename_extension}"
+            f"_{args.epoch}_{data_set_name}.pkl",
             "wb",
         ) as f:
             pickle.dump(saliency_map_dict, f)
@@ -665,6 +701,19 @@ def EvaluateModelDL1(
             f"No variable cuts are given for {data_set_name}."
             " Please check if you defined them!"
         )
+
+    if (
+        "results_filename_extension" in Eval_params
+        and Eval_params["results_filename_extension"] is not None
+    ):
+        results_filename_extension = Eval_params["results_filename_extension"]
+        logger.warning(
+            f"Results filename extension is set to {results_filename_extension}. "
+            "This means you have to specify the 'evaluation_file' when plotting your "
+            "results."
+        )
+    else:
+        results_filename_extension = ""
 
     # Check if epochs are set or not
     if args.epoch is None:
@@ -790,7 +839,8 @@ def EvaluateModelDL1(
 
     # Save dataframe to h5
     df_discs.to_hdf(
-        f"{train_config.model_name}/results/results-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-{args.epoch}.h5",
         data_set_name,
     )
 
@@ -814,14 +864,16 @@ def EvaluateModelDL1(
     del tagger_rej_dicts
 
     df_eff_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_eff-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_eff-{args.epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/results-rej_per_eff-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_eff-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
@@ -846,14 +898,16 @@ def EvaluateModelDL1(
     del tagger_fraction_rej_dict
 
     df_frac_rej.to_hdf(
-        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         data_set_name,
     )
 
     # Save the number of jets in the test file to the h5 file.
     # This is needed to calculate the binomial errors
     with h5py.File(
-        f"{train_config.model_name}/results/results-rej_per_fractions-{args.epoch}.h5",
+        f"{train_config.model_name}/results/"
+        f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as f:
         f.attrs["N_test"] = len(jets)
