@@ -81,8 +81,9 @@ custom_defaults_vars:
   jointNormVars:
     - numberOfPixelHits
     - numberOfSCTHits
-    - btagIp_d0
-    - btagIp_z0SinTheta
+    - d0         # Modified name in R22. Was: btagIp_d0
+    - z0SinTheta # Modified name in R22. Was: btagIp_z0SinTheta
+
 
 
 track_train_variables:
