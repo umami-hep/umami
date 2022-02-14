@@ -27,7 +27,7 @@ class roc_TestCase(unittest.TestCase):
         """Test roc divide function."""
         roc_curve = roc(self.sig_eff, self.bkg_rej)
         roc_curve_ref = roc(self.sig_eff, self.bkg_rej)
-        ratio = roc_curve.divide(roc_curve_ref)
+        _, ratio, _ = roc_curve.divide(roc_curve_ref)
 
         np.testing.assert_array_almost_equal(ratio, np.ones(len(self.bkg_rej)))
 
@@ -35,15 +35,30 @@ class roc_TestCase(unittest.TestCase):
         """Test roc divide function."""
         roc_curve = roc(self.sig_eff, self.bkg_rej)
         roc_curve_ref = roc(self.sig_eff, self.bkg_rej * 2)
-        ratio = roc_curve.divide(roc_curve_ref)
+        _, ratio, _ = roc_curve.divide(roc_curve_ref)
 
         np.testing.assert_array_almost_equal(ratio, 1 / 2 * np.ones(len(self.bkg_rej)))
+
+    def test_ratio_different_sig_interval(self):
+        """Test roc divide function."""
+        sig_eff = np.linspace(0.4, 0.9, 6)
+        sig_eff_ref = np.linspace(0.6, 1, 5)
+        bkg_rej = np.exp(-sig_eff) * 10e3
+        bkg_rej_ref = np.exp(-sig_eff_ref) * 10e3
+        roc_curve = roc(sig_eff, bkg_rej)
+        roc_curve_ref = roc(sig_eff_ref, bkg_rej_ref * 2)
+        sig_eff, ratio, _ = roc_curve.divide(roc_curve_ref)
+
+        np.testing.assert_array_almost_equal(
+            [sig_eff, ratio],
+            [np.linspace(0.6, 0.9, 4), 1 / 2 * np.ones(4)],
+        )
 
     def test_ratio_factor_two_inverse(self):
         """Test roc divide function."""
         roc_curve = roc(self.sig_eff, self.bkg_rej)
         roc_curve_ref = roc(self.sig_eff, self.bkg_rej * 2)
-        ratio = roc_curve.divide(roc_curve_ref, inverse=True)
+        _, ratio, _ = roc_curve.divide(roc_curve_ref, inverse=True)
 
         np.testing.assert_array_almost_equal(ratio, 2 * np.ones(len(self.bkg_rej)))
 
@@ -158,6 +173,3 @@ class roc_mask_TestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             roc_curve.non_zero, (result_bkg_rej, result_sig_eff)
         )
-
-
-# what happens when dividing two rocs which are defined in different intervals?

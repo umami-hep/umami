@@ -4,6 +4,8 @@ from umami.metrics.metrics import (
     CalcDiscValues,
     GetRejection,
     GetScore,
+    calc_eff,
+    calc_rej,
     discriminant_output_shape,
     get_gradients,
 )

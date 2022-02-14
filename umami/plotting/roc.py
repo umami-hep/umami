@@ -132,8 +132,11 @@ class roc(plot_line_object):
         Returns
         -------
         np.array
-            ratio
+            signal efficiency used for the ratio calculation which is the overlapping
+            interval of the two roc curves
         np.array
+            ratio
+        np.array or None
             ratio_err if `n_test` was provided to class
         """
         # if same objects return array with value 1
@@ -144,18 +147,24 @@ class roc(plot_line_object):
             logger.debug("roc objects are identical -> ratio is 1.")
             ratio = np.ones(len(self.sig_eff))
             if self.n_test is None:
-                return ratio
+                return self.sig_eff, ratio, None
             ratio_err = self.binomial_error(norm=True)
-            return ratio, ratio_err
+            return self.sig_eff, ratio, ratio_err
+
+        # get overlapping sig_eff interval of the two roc curves
+        min_eff = max(self.sig_eff.min(), roc_comp.sig_eff.min())
+        max_eff = min(self.sig_eff.max(), roc_comp.sig_eff.max())
+        eff_mask = np.all([self.sig_eff >= min_eff, self.sig_eff <= max_eff], axis=0)
+        ratio_sig_eff = self.sig_eff[eff_mask]
 
         # Ratio of interpolated rejection functions
-        ratio = self.fct_inter(self.sig_eff) / roc_comp.fct_inter(roc_comp.sig_eff)
+        ratio = self.fct_inter(ratio_sig_eff) / roc_comp.fct_inter(ratio_sig_eff)
         if inverse:
             ratio = 1 / ratio
         if self.n_test is None:
-            return ratio
+            return ratio_sig_eff, ratio, None
         ratio_err = self.binomial_error(norm=True)
-        return ratio, ratio_err
+        return ratio_sig_eff, ratio, ratio_err[eff_mask]
 
     @property
     def fct_inter(self):

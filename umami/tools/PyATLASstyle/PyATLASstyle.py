@@ -5,7 +5,7 @@ Adapted from https://github.com/rateixei/PyATLASstyle
 import os
 
 
-def get_good_colors():
+def get_good_colours():
     """List of colours adequate for plotting
 
     Returns
