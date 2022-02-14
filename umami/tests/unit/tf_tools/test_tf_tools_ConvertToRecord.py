@@ -6,8 +6,11 @@ import unittest
 import h5py
 import numpy as np
 
+from umami.configuration import logger, set_log_level
 from umami.preprocessing_tools import Configuration
 from umami.tf_tools import Convert_to_Record
+
+set_log_level(logger, "DEBUG")
 
 
 class ConvertTest(unittest.TestCase):

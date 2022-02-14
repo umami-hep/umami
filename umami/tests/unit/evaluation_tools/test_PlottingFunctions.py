@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.testing.compare import compare_images
 
+from umami.configuration import logger, set_log_level
 from umami.evaluation_tools.PlottingFunctions import (
     plot_prob,
     plot_prob_comparison,
@@ -19,6 +20,8 @@ from umami.evaluation_tools.PlottingFunctions import (
     plotROCRatioComparison,
     plotSaliency,
 )
+
+set_log_level(logger, "DEBUG")
 
 
 class plot_score_TestCase(unittest.TestCase):

@@ -3,8 +3,10 @@ import tempfile
 import unittest
 from subprocess import run
 
-from umami.configuration import global_config
+from umami.configuration import global_config, logger, set_log_level
 from umami.data_tools.Loaders import LoadJetsFromFile, LoadTrksFromFile
+
+set_log_level(logger, "DEBUG")
 
 
 class Load_Files_TestCase(unittest.TestCase):

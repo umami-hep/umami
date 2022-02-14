@@ -3,7 +3,10 @@ import unittest
 import numpy as np
 import pandas as pd
 
+from umami.configuration import logger, set_log_level
 from umami.data_tools import GetCategoryCuts, GetSampleCuts
+
+set_log_level(logger, "DEBUG")
 
 
 class GetSampleCutsTestCase(unittest.TestCase):

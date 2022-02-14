@@ -3,7 +3,10 @@ import os
 import unittest  # noqa
 from unittest import mock
 
+from umami.configuration import logger, set_log_level
 from umami.preprocessing import GetParser
+
+set_log_level(logger, "DEBUG")
 
 
 class PreprocessingTestParser(unittest.TestCase):

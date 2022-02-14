@@ -1,8 +1,10 @@
 import numpy as np
 import tensorflow as tf
 
-from umami.configuration import logger
+from umami.configuration import logger, set_log_level
 from umami.tf_tools import Attention, DeepSet, DenseNet
+
+set_log_level(logger, "DEBUG")
 
 
 class test_Attention(tf.test.TestCase):

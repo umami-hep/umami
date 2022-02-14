@@ -4,7 +4,10 @@ import unittest
 import h5py
 import pandas as pd
 
+from umami.configuration import logger, set_log_level
 from umami.data_tools import compare_h5_files_variables
+
+set_log_level(logger, "DEBUG")
 
 
 class compare_h5_files_variablesTestCase(unittest.TestCase):

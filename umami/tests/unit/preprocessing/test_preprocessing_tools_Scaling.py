@@ -3,7 +3,10 @@ import unittest
 
 import numpy as np
 
+from umami.configuration import logger, set_log_level
 from umami.preprocessing_tools import Configuration, Scaling, apply_scaling_trks
+
+set_log_level(logger, "DEBUG")
 
 
 class apply_scaling_trks_TestCase(unittest.TestCase):

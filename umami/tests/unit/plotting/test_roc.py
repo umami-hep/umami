@@ -8,7 +8,10 @@ import unittest
 
 import numpy as np
 
+from umami.configuration import logger, set_log_level
 from umami.plotting.roc import roc
+
+set_log_level(logger, "DEBUG")
 
 
 class roc_TestCase(unittest.TestCase):

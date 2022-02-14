@@ -8,7 +8,10 @@ import unittest
 
 import numpy as np
 
+from umami.configuration import logger, set_log_level
 from umami.metrics import eff_err, rej_err
+
+set_log_level(logger, "DEBUG")
 
 
 class eff_err_TestCase(unittest.TestCase):

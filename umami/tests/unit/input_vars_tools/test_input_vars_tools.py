@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import yaml
 from matplotlib.testing.compare import compare_images
 
+from umami.configuration import logger, set_log_level
 from umami.input_vars_tools.PlottingFunctions import (
     check_kwargs_var_plots,
     plot_input_vars_jets,
@@ -16,6 +17,8 @@ from umami.input_vars_tools.PlottingFunctions import (
     plot_nTracks_per_Jet,
 )
 from umami.tools import yaml_loader
+
+set_log_level(logger, "DEBUG")
 
 
 class KwargsCheck_TestCase(unittest.TestCase):

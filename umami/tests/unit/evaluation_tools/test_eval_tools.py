@@ -6,7 +6,10 @@ Unit test script for the functions in eval_tools.py
 
 import unittest
 
+from umami.configuration import logger, set_log_level
 from umami.evaluation_tools.eval_tools import calculate_fraction_dict
+
+set_log_level(logger, "DEBUG")
 
 
 class small_functions_TestCase(unittest.TestCase):

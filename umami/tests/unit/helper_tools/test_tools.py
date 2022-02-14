@@ -9,8 +9,11 @@ import tempfile
 import unittest
 from shutil import copyfile
 
+from umami.configuration import logger, set_log_level
 from umami.tools import replaceLineInFile
 from umami.train_tools.Configuration import Configuration
+
+set_log_level(logger, "DEBUG")
 
 
 class replaceLineInFile_TestCase(unittest.TestCase):
