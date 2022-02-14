@@ -157,6 +157,7 @@ class plot_base(plot_object):
         self.axis_top = None
         self.axis_ratio_1 = None
         self.axis_ratio_2 = None
+        self.ratio_y_labels = {}
         self.fig = None
 
     def initialise_figure(self):
@@ -397,6 +398,28 @@ class plot_base(plot_object):
             **kwargs,
         )
 
+    def set_ratio_label(self, ratio_panel: int, label: str):
+        """Associate the rejection class to a ratio panel
+
+        Parameters
+        ----------
+        ratio_panel : int
+            ratio panel either 1 or 2
+        label : str
+            y-axis label of the ratio panel
+
+        Raises
+        ------
+        ValueError
+            if requested ratio panels and given ratio_panel do not match.
+        """
+        # TODO: could add possibility to specify ratio label as function of rej_class
+        if self.n_ratio_panels < ratio_panel and ratio_panel not in [1, 2]:
+            raise ValueError(
+                "Requested ratio panels and given ratio_panel do not match."
+            )
+        self.ratio_y_labels[ratio_panel] = label
+
 
 class roc_plot(plot_base):
     """Roc plot class"""
@@ -414,9 +437,15 @@ class roc_plot(plot_base):
         self.rocs = {}
         self.roc_ratios = {}
         self.ratio_axes = {}
+        self.rej_class_ls = {}
+        self.label_colours = {}
+        self.leg_rej_labels = {}
         self.reference_roc = None
         self.initialise_figure()
         self.eff_min, self.eff_max = (1, 0)
+        # setting default linestyles if no linestyles provided
+        # solid line and densed dotted dashed
+        self.default_linestyles = ["-", (0, (3, 1, 1, 1))]
 
     def add_roc(self, roc: object, key: str = None, reference: bool = False):
         """Adding roc object to figure.
@@ -441,8 +470,41 @@ class roc_plot(plot_base):
             raise KeyError(
                 f"Duplicated key {key} already used for roc unique identifier."
             )
-        # check if rej class defined for ratios
+
         self.rocs[key] = roc
+        # set linestyle
+        if roc.rej_class not in self.rej_class_ls:
+            self.rej_class_ls[roc.rej_class] = (
+                self.default_linestyles[len(self.rej_class_ls)]
+                if roc.linestyle is None
+                else roc.linestyle
+            )
+        elif (
+            roc.linestyle != self.rej_class_ls[roc.rej_class]
+            and roc.linestyle is not None
+        ):
+            logger.warning(
+                "You specified a different linestyle for the same rejection class "
+                f"{roc.rej_class}. Will keep the linestyle defined first."
+            )
+        if roc.linestyle is None:
+            roc.linestyle = self.rej_class_ls[roc.rej_class]
+
+        # set colours
+        if roc.label not in self.label_colours:
+            self.label_colours[roc.label] = (
+                pas.get_good_colours()[len(self.label_colours)]
+                if roc.colour is None
+                else roc.colour
+            )
+        elif roc.colour != self.label_colours[roc.label] and roc.colour is not None:
+            logger.warning(
+                f"You specified a different colour for the same label {roc.label}. "
+                "This will lead to a mismatch in the line colours and the legend."
+            )
+        if roc.colour is None:
+            roc.colour = self.label_colours[roc.label]
+
         if reference:
             logger.debug(f"Setting roc {key} as reference for {roc.rej_class}.")
             self.set_roc_reference(key, roc.rej_class)
@@ -478,7 +540,19 @@ class roc_plot(plot_base):
             )
             self.reference_roc[rej_class] = key
 
-    def set_ratio_class(self, ratio_panel: int, rej_class: str):
+    def set_leg_rej_labels(self, rej_class: str, label: str):
+        """Set legend label for rejection class
+
+        Parameters
+        ----------
+        rej_class : str
+            rejection class
+        label : str
+            label added in legend
+        """
+        self.leg_rej_labels[rej_class] = label
+
+    def set_ratio_class(self, ratio_panel: int, rej_class: str, label: str):
         """Associate the rejection class to a ratio panel
 
         Parameters
@@ -487,6 +561,8 @@ class roc_plot(plot_base):
             ratio panel either 1 or 2
         rej_class : str
             rejeciton class associated to that panel
+        label : str
+            y-axis label of the ratio panel
 
         Raises
         ------
@@ -498,6 +574,7 @@ class roc_plot(plot_base):
                 "Requested ratio panels and given ratio_panel do not match."
             )
         self.ratio_axes[ratio_panel] = rej_class
+        self.set_ratio_label(ratio_panel, label)
 
     def add_ratios(self):
         """Calculating ratios.
@@ -546,23 +623,26 @@ class roc_plot(plot_base):
         for key, elem in self.rocs.items():
             if elem.rej_class != rej_class:
                 continue
-            ratio, ratio_err = elem.divide(self.rocs[self.reference_roc[rej_class]])
-            self.roc_ratios[key] = (ratio, ratio_err)
+            ratio_sig_eff, ratio, ratio_err = elem.divide(
+                self.rocs[self.reference_roc[rej_class]]
+            )
+            self.roc_ratios[key] = (ratio_sig_eff, ratio, ratio_err)
             ax.plot(
-                elem.sig_eff,
+                ratio_sig_eff,
                 ratio,
                 color=elem.colour,
                 linestyle=elem.linestyle,
                 linewidth=1.6,
             )
-            ax.fill_between(
-                elem.sig_eff,
-                ratio - ratio_err,
-                ratio + ratio_err,
-                color=elem.colour,
-                alpha=0.3,
-                zorder=1,
-            )
+            if ratio_err is not None:
+                ax.fill_between(
+                    ratio_sig_eff,
+                    ratio - ratio_err,
+                    ratio + ratio_err,
+                    color=elem.colour,
+                    alpha=0.3,
+                    zorder=1,
+                )
 
     def draw_wps(self, wps: list, same_height: bool = False, colour: str = "red"):
         """Drawing working points in plot
@@ -606,20 +686,14 @@ class roc_plot(plot_base):
                     x=wp, color=colour, linestyle="dashed", linewidth=1.0
                 )
 
-    def make_split_legend(
-        self, leg_class_labels: list, handles, linestyles: list = None
-    ):
+    def make_split_legend(self, handles):
         """Draw legend for the case of 2 ratios, splitting up legend into models and
         rejection class.
 
         Parameters
         ----------
-        leg_class_labels : list
-            labels of the different flavour (rejection) classes
         handles : list
             list of Line2D objects to extract info for legend
-        linestyles : list, optional
-            list of linestyles for flavour classes, by default None
 
         Raises
         ------
@@ -629,17 +703,16 @@ class roc_plot(plot_base):
 
         if self.n_ratio_panels != 2:
             raise ValueError("For a split legend you need 2 ratio panels.")
-        if linestyles is None:
-            linestyles = ["-", (0, (3, 1, 1, 1))]
+
         line_list_rej = []
-        for i in range(2):
+        for elem in [self.ratio_axes[1], self.ratio_axes[2]]:
             line_list_rej.append(
                 mtp.lines.Line2D(
                     [],
                     [],
                     color="k",
-                    label=leg_class_labels[i],
-                    linestyle=linestyles[i],
+                    label=self.leg_rej_labels[elem],
+                    linestyle=self.rej_class_ls[elem],
                 )
             )
 
@@ -676,22 +749,16 @@ class roc_plot(plot_base):
         self,
         rlabel: str = None,
         labelpad: int = None,
-        leg_class_labels: list = None,
-        leg_class_linestyles: list = None,
     ):
         """Draw ploting
 
         Parameters
         ----------
         rlabel : str or list, optional
-            label of ratio panels, str if 1 ratio if 2 ratios list, by default None
+            label of ratio panels if only 1 ratio is requested
         labelpad : int, optional
             Spacing in points from the axes bounding box including
             ticks and tick labels, by default None
-        leg_class_labels : list
-            y-axis labels of the ratio panels
-        leg_class_linestyles : list
-            linestyles of the different rejection classes
 
         Raises
         ------
@@ -709,17 +776,22 @@ class roc_plot(plot_base):
         self.set_ylabel(self.axis_top)
 
         if self.n_ratio_panels > 0:
-            if rlabel is None:
-                raise ValueError("specify a value for `rlabel` when requesting ratios.")
+            if rlabel is not None:
+                rlabel_1 = rlabel[0] if len(rlabel) > 0 else rlabel
+            else:
+                rlabel_1 = self.ratio_y_labels[1]
             self.set_ylabel(
                 self.axis_ratio_1,
-                rlabel[0] if len(rlabel) > 0 else rlabel,
+                rlabel_1,
                 align_right=False,
                 labelpad=labelpad,
             )
         if self.n_ratio_panels == 2:
             self.set_ylabel(
-                self.axis_ratio_2, rlabel[1], align_right=False, labelpad=labelpad
+                self.axis_ratio_2,
+                self.ratio_y_labels[2] if rlabel is None else rlabel[1],
+                align_right=False,
+                labelpad=labelpad,
             )
         if self.use_atlas_tag:
             self.make_atlas_tag()
@@ -727,11 +799,11 @@ class roc_plot(plot_base):
         if self.n_ratio_panels < 2:
             self.make_legend(plt_handles)
         else:
-            self.make_split_legend(
-                handles=plt_handles,
-                leg_class_labels=leg_class_labels,
-                linestyles=leg_class_linestyles,
-            )
+            if not self.leg_rej_labels:
+                self.leg_rej_labels[self.ratio_axes[1]] = self.ratio_axes[1]
+                self.leg_rej_labels[self.ratio_axes[2]] = self.ratio_axes[2]
+
+            self.make_split_legend(handles=plt_handles)
         self.tight_layout()
 
     def plot_roc(self, **kwargs):

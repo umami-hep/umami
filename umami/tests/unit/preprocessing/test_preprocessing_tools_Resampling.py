@@ -335,7 +335,7 @@ class PDFResamplingTestCase(unittest.TestCase):
                     global_config.etavariable
                 ]
 
-    # Need some tests.
+    # TODO: adding tests for PDFSampling class
 
 
 class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):

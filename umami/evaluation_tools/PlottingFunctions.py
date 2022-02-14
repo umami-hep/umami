@@ -1289,7 +1289,7 @@ def plotROCRatio(
         ylabel=f'{flav_cat[rej_class_list[0]]["legend_label"]} Rejection',
         xlabel=f'{flav_cat[main_class]["legend_label"]} Efficiency',
     )
-    plot_roc.set_ratio_class(ratio_panel=1, rej_class=rej_class_list[0])
+    plot_roc.set_ratio_class(ratio_panel=1, rej_class=rej_class_list[0], label=rlabel)
     if WorkingPoints is not None:
         plot_roc.draw_wps(WorkingPoints, same_height_WP)
 
@@ -1317,7 +1317,7 @@ def plotROCRatio(
         )
         plot_roc.add_roc(roc_curve, reference=i == ratio_id)
 
-    plot_roc.draw(rlabel=rlabel, labelpad=labelpad)
+    plot_roc.draw(labelpad=labelpad)
     plot_roc.savefig(plot_name)
     plot_roc.clear()
 
@@ -1513,8 +1513,16 @@ def plotROCRatioComparison(
         ylabel="Background rejection",
         xlabel=f'{flav_cat[main_class]["legend_label"]} efficiency',
     )
-    plot_roc.set_ratio_class(ratio_panel=1, rej_class=flav_list[0])
-    plot_roc.set_ratio_class(ratio_panel=2, rej_class=flav_list[1])
+    plot_roc.set_ratio_class(
+        ratio_panel=1,
+        rej_class=flav_list[0],
+        label=f'{flav_cat[flav_list[0]]["legend_label"]} ratio',
+    )
+    plot_roc.set_ratio_class(
+        ratio_panel=2,
+        rej_class=flav_list[1],
+        label=f'{flav_cat[flav_list[1]]["legend_label"]} ratio',
+    )
     if WorkingPoints is not None:
         plot_roc.draw_wps(WorkingPoints, same_height_WP)
 
@@ -1541,15 +1549,15 @@ def plotROCRatioComparison(
         )
         plot_roc.add_roc(roc_curve, reference=ratio_ref)
 
+    plot_roc.set_leg_rej_labels(
+        flav_list[0],
+        label=f'{flav_cat[flav_list[0]]["legend_label"]} rejection',
+    )
+    plot_roc.set_leg_rej_labels(
+        flav_list[1],
+        label=f'{flav_cat[flav_list[1]]["legend_label"]} rejection',
+    )
     plot_roc.draw(
-        rlabel=[
-            f'{flav_cat[flav_list[0]]["legend_label"]} ratio',
-            f'{flav_cat[flav_list[1]]["legend_label"]} ratio',
-        ],
-        leg_class_labels=[
-            f'{flav_cat[flav_list[0]]["legend_label"]} rejection',
-            f'{flav_cat[flav_list[1]]["legend_label"]} rejection',
-        ],
         labelpad=labelpad,
     )
     plot_roc.savefig(plot_name)

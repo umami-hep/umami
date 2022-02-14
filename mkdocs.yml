@@ -23,6 +23,7 @@ nav:
     - Plotting:
           - "Input variables": plotting/plotting_inputs.md
           - "Tagger performance": plotting/plotting_umami.md
+          - "Python API": plotting/python_api.md
     - Feature Importance: Feature_Importance.md
 
 plugins:
@@ -35,6 +36,7 @@ markdown_extensions:
     - pymdownx.details
     - pymdownx.inlinehilite
     - pymdownx.smartsymbols
+    - pymdownx.snippets
     - pymdownx.superfences
 
 

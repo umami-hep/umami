@@ -128,4 +128,4 @@ class CustomFormatter(logging.Formatter):
 
 global_config = Configuration()
 logger = global_config.logger
-logger.info(f"Loading global config {global_config.yaml_config}")
+logger.debug(f"Loading global config {global_config.yaml_config}")
