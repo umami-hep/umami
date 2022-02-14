@@ -8,12 +8,15 @@ import unittest
 
 import numpy as np
 
+from umami.configuration import logger, set_log_level
 from umami.metrics.metrics import (
     CalcDiscValues,
     GetRejection,
     GetScore,
     discriminant_output_shape,
 )
+
+set_log_level(logger, "DEBUG")
 
 
 class Metrics_Small_TestCase(unittest.TestCase):

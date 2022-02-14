@@ -6,6 +6,7 @@ from subprocess import run
 
 import numpy as np
 
+from umami.configuration import logger, set_log_level
 from umami.tools import replaceLineInFile
 from umami.train_tools.Configuration import Configuration
 from umami.train_tools.NN_tools import (
@@ -26,6 +27,8 @@ from umami.train_tools.NN_tools import (
     load_validation_data_umami,
     setup_output_directory,
 )
+
+set_log_level(logger, "DEBUG")
 
 
 class get_unique_identifiers_TestCase(unittest.TestCase):

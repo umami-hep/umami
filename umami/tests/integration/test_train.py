@@ -12,8 +12,10 @@ from subprocess import CalledProcessError, run
 
 import yaml
 
-from umami.configuration import logger
+from umami.configuration import logger, set_log_level
 from umami.tools import replaceLineInFile, yaml_loader
+
+set_log_level(logger, "DEBUG")
 
 
 def getConfiguration():

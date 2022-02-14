@@ -6,7 +6,10 @@ Unit test script for the functions in metrics.py
 
 import unittest
 
+from umami.configuration import logger, set_log_level
 from umami.plotting import plot_object
+
+set_log_level(logger, "DEBUG")
 
 
 class plot_object_TestCase(unittest.TestCase):

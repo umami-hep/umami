@@ -7,6 +7,9 @@ import numpy as np
 from matplotlib.testing.compare import compare_images
 
 import umami.preprocessing_tools as upt
+from umami.configuration import logger, set_log_level
+
+set_log_level(logger, "DEBUG")
 
 
 class PreprocessPlotting_TestCase(unittest.TestCase):

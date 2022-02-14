@@ -126,6 +126,29 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+def set_log_level(umami_logger, log_level: str):
+    """Setting log level
+
+    Parameters
+    ----------
+    umami_logger : logger
+        logger object
+    log_level : str
+        logging level corresponding CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+    """
+    log_levels = {
+        "CRITICAL": logging.CRITICAL,
+        "ERROR": logging.ERROR,
+        "WARNING": logging.WARNING,
+        "INFO": logging.INFO,
+        "DEBUG": logging.DEBUG,
+        "NOTSET": logging.NOTSET,
+    }
+    umami_logger.setLevel(log_levels[log_level])
+    for handler in umami_logger.handlers:
+        handler.setLevel(log_levels[log_level])
+
+
 global_config = Configuration()
 logger = global_config.logger
 logger.info(f"Loading global config {global_config.yaml_config}")

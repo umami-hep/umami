@@ -2,7 +2,10 @@ import unittest
 
 import numpy as np
 
+from umami.configuration import logger, set_log_level
 from umami.helper_tools import hist_ratio, hist_w_unc, save_divide
+
+set_log_level(logger, "DEBUG")
 
 
 class hist_w_unc_TestCase(unittest.TestCase):

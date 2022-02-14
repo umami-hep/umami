@@ -5,7 +5,7 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from umami.configuration import global_config
+from umami.configuration import global_config, logger, set_log_level
 from umami.preprocessing_tools import (  # PDFSampling,
     CalculateBinning,
     Configuration,
@@ -13,6 +13,8 @@ from umami.preprocessing_tools import (  # PDFSampling,
     ProbabilityRatioUnderSampling,
     UnderSampling,
 )
+
+set_log_level(logger, "DEBUG")
 
 
 class CorrectFractionsTestCase(unittest.TestCase):

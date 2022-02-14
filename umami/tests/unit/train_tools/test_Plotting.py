@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.testing.compare import compare_images
 
+from umami.configuration import logger, set_log_level
 from umami.train_tools.Plotting import (
     CompTaggerRejectionDict,
     PlotAccuracies,
@@ -18,6 +19,8 @@ from umami.train_tools.Plotting import (
     PlotRejPerEpoch,
     PlotRejPerEpochComparison,
 )
+
+set_log_level(logger, "DEBUG")
 
 
 class GetRejection_TestCase(unittest.TestCase):

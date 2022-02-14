@@ -4,6 +4,7 @@ import unittest
 import h5py
 import numpy as np
 
+from umami.configuration import logger, set_log_level
 from umami.preprocessing_tools import (
     add_data,
     check_keys,
@@ -12,6 +13,8 @@ from umami.preprocessing_tools import (
     create_datasets,
     get_size,
 )
+
+set_log_level(logger, "DEBUG")
 
 
 class Check_SizeTestCase(unittest.TestCase):

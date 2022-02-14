@@ -8,7 +8,10 @@ from subprocess import CalledProcessError, run
 import yaml
 
 from umami.configuration import global_config  # noqa: F401 # pylint: disable=W0611
+from umami.configuration import logger, set_log_level
 from umami.tools import yaml_loader
+
+set_log_level(logger, "DEBUG")
 
 
 def getConfiguration():
