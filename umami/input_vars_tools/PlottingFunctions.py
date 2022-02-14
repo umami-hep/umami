@@ -1240,6 +1240,7 @@ def plot_input_vars_jets(
     class_labels: list,
     special_param_jets: dict = None,
     output_directory: str = "input_vars_jets",
+    normalise: bool = True,
     **kwargs,
 ):
     """
@@ -1248,21 +1249,23 @@ def plot_input_vars_jets(
     Parameters
     ----------
     datasets_filepaths: list
-        datasets_filepaths: List of filepaths to the files.
+        List of filepaths to the files.
     datasets_labels: list
-        datasets_labels: Label of the dataset for the legend.
+        Label of the dataset for the legend.
     var_dict: dict
-        var_dict: Variable dict where all variables of the files are saved.
+        Variable dict where all variables of the files are saved.
     nJets: int
-        nJets: Number of jets to use for plotting.
+        Number of jets to use for plotting.
     binning: dict
-        binning: Decide which binning is used.
+        Decide which binning is used.
     class_labels: list
-        class_labels: List of class_labels which are to be plotted.
+        List of class_labels which are to be plotted.
     special_param_jets: dict
         Give specific x-axis-limits for variable.
     output_directory: str
-        output_directory: Name of the output directory. Only the dir name not path!
+        Name of the output directory. Only the dir name not path!
+    normalise: bool, optional
+        Bool to specify if distributions are normalised, by default True.
     **kwargs: dict
         additional arguments passed to `check_kwargs_var_plots`
 
@@ -1392,8 +1395,7 @@ def plot_input_vars_jets(
 
                     # Calculate bins
                     bins, weights, unc, band = hist_w_unc(
-                        a=jets_flavour,
-                        bins=Binning,
+                        a=jets_flavour, bins=Binning, normed=normalise
                     )
 
                     plt.hist(
@@ -1449,6 +1451,15 @@ def plot_input_vars_jets(
                         color=kwargs["ycolor"],
                     )
 
+                if normalise is False:
+                    plt.ylabel(
+                        "Number of jets",
+                        fontsize=12,
+                        horizontalalignment="right",
+                        y=1.0,
+                        color=kwargs["ycolor"],
+                    )
+
                 if kwargs["Log"] is True:
                     plt.yscale("log")
                     ymin, ymax = plt.ylim()
@@ -1490,6 +1501,7 @@ def plot_input_vars_jets_comparison(
     special_param_jets: dict = None,
     output_directory: str = "input_vars_jets",
     Ratio_Cut: list = None,
+    normalise: bool = True,
     **kwargs,
 ):
     """
@@ -1515,6 +1527,9 @@ def plot_input_vars_jets_comparison(
         Name of the output directory. Only the dir name not path!
     Ratio_Cut : list
         List of y-axis cuts for the ratio block.
+    normalise: bool, optional
+        Bool to specify if distributions are normalised, by default True.
+
     **kwargs: dict
         additional arguments passed to `check_kwargs_var_plots`
 
@@ -1666,8 +1681,7 @@ def plot_input_vars_jets_comparison(
 
                     # Calculate bins
                     bins, weights, unc, band = hist_w_unc(
-                        a=jets_flavour,
-                        bins=Binning,
+                        a=jets_flavour, bins=Binning, normed=normalise
                     )
 
                     hist_counts, _, _ = axis_dict["left"]["top"].hist(
@@ -1753,6 +1767,8 @@ def plot_input_vars_jets_comparison(
                 right=Binning[-1],
             )
 
+            axis_dict["left"]["ratio"].set_ylabel("Ratio", fontsize=12)
+
             # Add axes, titels and the legend
             if kwargs["Bin_Width_y_axis"] is True:
                 Bin_Width = abs(Binning[1] - Binning[0])
@@ -1767,6 +1783,15 @@ def plot_input_vars_jets_comparison(
             else:
                 axis_dict["left"]["top"].set_ylabel(
                     kwargs["ylabel"],
+                    fontsize=12,
+                    horizontalalignment="right",
+                    y=1.0,
+                    color=kwargs["ycolor"],
+                )
+
+            if normalise is False:
+                axis_dict["left"]["top"].set_ylabel(
+                    "Number of jets",
                     fontsize=12,
                     horizontalalignment="right",
                     y=1.0,
