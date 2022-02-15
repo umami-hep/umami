@@ -13,7 +13,6 @@
       --destination ${IMAGE_DESTINATION}
     # Print the full registry path of the pushed image
     - echo "Image pushed successfully to ${IMAGE_DESTINATION}"
-
   image:
     # We recommend using the CERN version of the Kaniko image: gitlab-registry.cern.ch/ci-tools/docker-image-builder
     name: gitlab-registry.cern.ch/ci-tools/docker-image-builder
@@ -33,13 +32,13 @@ build_umamibase_cpu:
   variables:
     BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+    IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:latest'
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       <<: *requirement_changes
     - if: $CI_COMMIT_TAG
       variables:
-        IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
+        IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG'
 
 build_umamibase_gpu:
   <<: *image_build_template
@@ -47,21 +46,21 @@ build_umamibase_gpu:
   variables:
     BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG-gpu'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
+    IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:latest-gpu'
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       <<: *requirement_changes
     - if: $CI_COMMIT_TAG
       variables:
-        IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+        IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG-gpu'
 
 build_umamibase_plus_cpu:
   <<: *image_build_template
   stage: image_build_umamibase
   variables:
-    BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+    BASE: 'BASE_IMAGE=${REGISTY_PATH}/umamibase:latest'
     DOCKER_FILE: docker/umamibase-plus/Dockerfile
-    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase-plus:latest'
+    IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase-plus:latest'
   needs:
     - job: build_umamibase_cpu
       optional: true
@@ -77,16 +76,16 @@ build_umamibase_plus_cpu:
         - .gitlab-ci.yml
     - if: $CI_COMMIT_TAG
       variables:
-        BASE: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
-        IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
+        BASE: '${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG'
+        IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG'
 
 build_umamibase_plus_gpu:
   <<: *image_build_template
   stage: builds
   variables:
-    BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
+    BASE: 'BASE_IMAGE=${REGISTY_PATH}/umamibase:latest-gpu'
     DOCKER_FILE: docker/umamibase-plus/Dockerfile
-    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase-plus:latest-gpu'
+    IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase-plus:latest-gpu'
   needs:
     - job: build_umamibase_gpu
       optional: true
@@ -100,8 +99,8 @@ build_umamibase_plus_gpu:
         - .gitlab-ci.yml
     - if: $CI_COMMIT_TAG
       variables:
-        BASE: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
-        IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+        BASE: '${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+        IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG-gpu'
 
 build_umamibase_gpu_pytorch:
   <<: *image_build_template
@@ -109,7 +108,7 @@ build_umamibase_gpu_pytorch:
   variables:
     BASE: 'BASE_IMAGE=pytorch/pytorch:$TORCHTAG'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-pytorch-gpu'
+    IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:latest-pytorch-gpu'
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       <<: *requirement_changes
@@ -120,28 +119,28 @@ build_umami_cpu:
   <<: *image_build_template
   stage: image_build_umami
   variables:
-    BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest'
+    BASE: 'BASE_IMAGE=${REGISTY_PATH}/umamibase:latest'
     DOCKER_FILE: docker/umami/Dockerfile
     IMAGE_DESTINATION: '${CI_REGISTRY_IMAGE}:latest'
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
       variables:
-        BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG'
+        BASE: 'BASE_IMAGE=${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG'
         IMAGE_DESTINATION: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
 
 build_umami_gpu:
   <<: *image_build_template
   stage: image_build_umami
   variables:
-    BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:latest-gpu'
+    BASE: 'BASE_IMAGE=${REGISTY_PATH}/umamibase:latest-gpu'
     DOCKER_FILE: docker/umami/Dockerfile
     IMAGE_DESTINATION: '${CI_REGISTRY_IMAGE}:latest-gpu'
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG
       variables:
-        BASE: 'BASE_IMAGE=${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/umamibase:$CI_COMMIT_REF_SLUG-gpu'
+        BASE: 'BASE_IMAGE=${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG-gpu'
         IMAGE_DESTINATION: '$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu'
 
 
@@ -161,7 +160,7 @@ build_umamibase_cpu_MR:
   variables:
     BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+    IMAGE_DESTINATION: '${REGISTY_PATH}/temporary_images:${CI_MERGE_REQUEST_IID}-base'
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
       <<: *requirement_changes
@@ -180,7 +179,7 @@ build_umamibase_gpu_MR:
   variables:
     BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG-gpu'
     DOCKER_FILE: docker/umamibase/Dockerfile
-    IMAGE_DESTINATION: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/temporary_images:${CI_MERGE_REQUEST_IID}-gpu-base'
+    IMAGE_DESTINATION: '${REGISTY_PATH}/temporary_images:${CI_MERGE_REQUEST_IID}-gpu-base'
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
       when: manual
@@ -190,54 +189,43 @@ build_umamibase_gpu_MR:
 # copies of the images built in gitlab CI/CD will be deployed to Docker Hub
 # ----------------------------------------------------------------------------
 
-.push_to_hub_template: &push_to_hub_template
+.push_to_hub_template:
   stage: publish
   image: matthewfeickert/skopeo-docker:skopeo0.1.42
   variables:
     USER: btagging
     IMAGE: umami
-
-push_to_hub_cpu:
-  <<: *push_to_hub_template
   script:
     - /home/docker/skopeo copy
       --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
       --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
-      docker://$CI_REGISTRY_IMAGE:latest
-      docker://${USER}/${IMAGE}:latest
+      docker://$CI_REGISTRY_IMAGE:${IMAGE_TAG}
+      docker://${USER}/${IMAGE}:${IMAGE_TAG}
+
+push_to_hub_cpu:
+  extends: .push_to_hub_template
+  variables:
+    IMAGE_TAG: latest
   only:
     - master@atlas-flavor-tagging-tools/algorithms/umami
 
-
 push_to_hub_gpu:
-  <<: *push_to_hub_template
-  script:
-    - /home/docker/skopeo copy
-      --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
-      --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
-      docker://$CI_REGISTRY_IMAGE:latest-gpu
-      docker://${USER}/${IMAGE}:latest-gpu
+  extends: .push_to_hub_template
+  variables:
+    IMAGE_TAG: latest-gpu
   only:
     - master@atlas-flavor-tagging-tools/algorithms/umami
 
 push_to_hub_tag:
-  <<: *push_to_hub_template
-  script:
-    - /home/docker/skopeo copy
-      --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
-      --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
-      docker://$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-      docker://${USER}/${IMAGE}:$CI_COMMIT_REF_SLUG
+  extends: .push_to_hub_template
+  variables:
+    IMAGE_TAG: $CI_COMMIT_REF_SLUG
   only:
     - tags@atlas-flavor-tagging-tools/algorithms/umami
 
 push_to_hub_gpu_tag:
-  <<: *push_to_hub_template
-  script:
-    - /home/docker/skopeo copy
-      --src-creds ${CI_REGISTRY_USER}:${CI_BUILD_TOKEN}
-      --dest-creds ${DH_USERNAME}:${DH_PASSWORD}
-      docker://$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-gpu
-      docker://${USER}/${IMAGE}:$CI_COMMIT_REF_SLUG-gpu
+  extends: .push_to_hub_template
+  variables:
+    IMAGE_TAG: $CI_COMMIT_REF_SLUG-gpu
   only:
     - tags@atlas-flavor-tagging-tools/algorithms/umami

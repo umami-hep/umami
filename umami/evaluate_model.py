@@ -9,10 +9,8 @@ import pickle
 import h5py
 import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.models import load_model  # pylint: disable=no-name-in-module
-from tensorflow.keras.utils import (
-    CustomObjectScope,  # pylint: disable=no-name-in-module
-)
+from tensorflow.keras.models import load_model  # pylint: disable=import-error
+from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-error
 
 import umami.classification_tools as uct
 import umami.data_tools as udt

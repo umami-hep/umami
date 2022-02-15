@@ -8,6 +8,7 @@ variables:
   I18NSTATIC_VERSION: '0.17'
   IMAGE_TYPE: umamibase:latest
   SLIM_IMAGE: python:3.8-slim
+  REGISTY_PATH: ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami
 
 stages:
   - check_mr

@@ -7,16 +7,7 @@
   - test_plotting_umami_dips
   - test_plotting_umami_dl1
   - test_plotting_umami_umami
-  - unittest_classification_tools
-  - unittest_data_tools
-  - unittest_evaluation_tools
-  - unittest_helper_tools
-  - unittest_input_vars_tools
-  - unittest_metrics
-  - unittest_plotting
-  - unittest_preprocessing
-  - unittest_tf_tools
-  - unittest_train_tools
+  - unittest_parallel
 
 test_coverage:
   stage: coverage_test_stage

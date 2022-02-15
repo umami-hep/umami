@@ -9,9 +9,9 @@ from shutil import copyfile
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import CustomObjectScope
+from tensorflow.keras.callbacks import Callback  # pylint: disable=import-error
+from tensorflow.keras.models import load_model  # pylint: disable=import-error
+from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-error
 
 import umami.metrics as umt
 import umami.tf_tools as utf
