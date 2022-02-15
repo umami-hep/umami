@@ -254,7 +254,6 @@ class test_DeepSet(tf.test.TestCase):
 
         # Get net output
         out = deepset(inputs=inputs, mask=2)
-        logger.warning(out)
 
         # Test output
         np.testing.assert_almost_equal(expected_output, out)

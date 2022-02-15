@@ -24,7 +24,6 @@ unittest:
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/unit/$UNIT_TEST_MODULE/ -v -s --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_$UNIT_TEST_MODULE
-
   artifacts:
     when: always
     paths:
@@ -33,52 +32,18 @@ unittest:
       junit: report.xml
   retry: 2
 
-unittest_evaluation_tools:
+unittest_parallel:
   <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: evaluation_tools
-
-unittest_helper_tools:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: helper_tools
-
-unittest_input_vars_tools:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: input_vars_tools
-
-unittest_preprocessing:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: preprocessing
-
-unittest_tf_tools:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: tf_tools
-
-unittest_train_tools:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: train_tools
-
-unittest_metrics:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: metrics
-
-unittest_classification_tools:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: classification_tools
-
-unittest_data_tools:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: data_tools
-
-unittest_plotting:
-  <<: *unittest_template
-  variables:
-    UNIT_TEST_MODULE: plotting
+  parallel:
+    matrix:
+      - UNIT_TEST_MODULE:
+        - evaluation_tools
+        - helper_tools
+        - input_vars_tools
+        - preprocessing
+        - tf_tools
+        - train_tools
+        - metrics
+        - classification_tools
+        - data_tools
+        - plotting

@@ -5,16 +5,16 @@ import os
 
 import h5py
 import tensorflow as tf
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import (
+from tensorflow.keras.callbacks import ModelCheckpoint  # pylint: disable=import-error
+from tensorflow.keras.layers import (  # pylint: disable=import-error
     Activation,
     BatchNormalization,
     Dense,
     Dropout,
     Input,
 )
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Model, load_model  # pylint: disable=import-error
+from tensorflow.keras.optimizers import Adam  # pylint: disable=import-error
 
 import umami.tf_tools as utf
 import umami.train_tools as utt

@@ -1,8 +1,12 @@
 """
 Implementations by Johnny Raine
 """
-from tensorflow.keras import backend as K
-from tensorflow.keras.layers import BatchNormalization, Dense, Layer
+from tensorflow.keras import backend as K  # pylint: disable=import-error
+from tensorflow.keras.layers import (  # pylint: disable=import-error
+    BatchNormalization,
+    Dense,
+    Layer,
+)
 
 
 class DenseNet(Layer):
@@ -12,12 +16,29 @@ class DenseNet(Layer):
 
     def __init__(
         self,
-        nodes,
-        output_nodes=1,
-        activation="relu",
-        batch_norm=False,
+        nodes: list,
+        output_nodes: int = 1,
+        activation: str = "relu",
+        batch_norm: bool = False,
         **kwargs,
     ):
+        """
+        Init the DenseNet layer
+
+        Parameters
+        ----------
+        nodes : list
+            List with the number of neurons per node
+        output_nodes : int
+            Number of outputs in the output node
+        activation : str, optional
+            Activation which is used, by default "relu"
+        batch_norm : bool, optional
+            Use batch normalisation, by default False
+        **kwargs : dict
+            Additional arguments passed.
+        """
+
         # Define the attributes
         self.nodes = nodes
         self.output_nodes = output_nodes
@@ -48,13 +69,34 @@ class DenseNet(Layer):
         assert len(nodes), "No layers in DenseNet"
         super().__init__(**kwargs)
 
-    def call(self, inputs):  # pylint: disable=arguments-differ
+    def call(self, inputs):
+        """
+        Define what happens when the layer is called
+
+        Parameters
+        ----------
+        inputs : object
+            Input to the network.
+
+        Returns
+        -------
+        output : object
+            Output of the network.
+        """
         out = self.layers[0](inputs)
         for layer in self.layers[1:]:
             out = layer(out)
         return out
 
-    def get_config(self):
+    def get_config(self) -> dict:
+        """
+        Return the settings of the network.
+
+        Returns
+        -------
+        dict
+            Dict with the config settings.
+        """
         # Get configuration of the network
         config = {
             "nodes": self.nodes,
@@ -75,12 +117,28 @@ class DeepSet(Layer):
 
     def __init__(
         self,
-        nodes,
-        activation="relu",
-        batch_norm=False,
-        mask_zero=True,
+        nodes: list,
+        activation: str = "relu",
+        batch_norm: bool = False,
+        mask_zero: bool = True,
         **kwargs,
     ):
+        """
+        Init the DeepSet Layer.
+
+        Parameters
+        ----------
+        nodes : list
+            List with the number of neurons per node
+        activation : str, optional
+            Activation which is used, by default "relu"
+        batch_norm : bool, optional
+            Use batch normalisation, by default False
+        mask_zero : bool, optional
+            Use 0 as mask value, by default True
+        **kwargs : dict
+            Additional arguments passed.
+        """
         # Define attributes
         self.nodes = nodes
         self.activation = activation
@@ -108,7 +166,22 @@ class DeepSet(Layer):
         assert self.layers, "No layers in DeepSet"
         super().__init__(**kwargs)
 
-    def call(self, inputs, mask=None):  # pylint: disable=arguments-differ
+    def call(self, inputs, mask: float = None):  # pylint: disable=arguments-differ
+        """
+        Return the output of the network for a given input.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to layer.
+        mask : float, optional
+            Mask value, by default None
+
+        Returns
+        -------
+        output
+            Layer output.
+        """
         # Assert that the tensor shape is at least rank 3
         assert len(inputs.shape) == 3, (
             "DeepSets layer requires tensor of rank 3. Shape of tensor"
@@ -126,12 +199,26 @@ class DeepSet(Layer):
         for layer in self.layers[1:]:
             out = layer(out)
 
-        # if mask is not None:
-        #    out *= (1-K.cast(mask,dtype="float32"))
-
         return out
 
-    def compute_mask(self, inputs, mask=None):
+    def compute_mask(
+        self, inputs, mask: float = None
+    ):  # pylint: disable=unused-argument
+        """
+        Compute the masking.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to a layer.
+        mask : float
+            Custom mask value (needed in tensorflow).
+
+        Returns
+        -------
+        masking
+            Return correct masking
+        """
 
         # Check if mask zero is true
         if not self.mask_zero:
@@ -141,6 +228,14 @@ class DeepSet(Layer):
         return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
+        """
+        Return the settings of the network.
+
+        Returns
+        -------
+        dict
+            Dict with the config settings.
+        """
         # Get configuration of the network
         config = {
             "nodes": self.nodes,
@@ -158,17 +253,42 @@ class MaskedSoftmax(Layer):
     """Softmax layer with masking."""
 
     def __init__(self, axis=-1, **kwargs):
+        """
+        Init masked softmax layer
+
+        Parameters
+        ----------
+        axis : int, optional
+            Which axis is used for softmax, by default -1
+        **kwargs : dict
+            Additional arguments passed.
+        """
         # Get attributes
         self.axis = axis
         self.supports_masking = True
         super().__init__(**kwargs)
 
-    def call(self, inputs, mask=None):  # pylint: disable=arguments-differ
+    def call(self, inputs, mask: float = None):  # pylint: disable=arguments-differ
+        """
+        Return the output of the softmax layer.
+
+        Parameters
+        ----------
+        inputs : object
+            Layer input.
+        mask : float, optional
+            Masking value, by default None
+
+        Returns
+        -------
+        output
+            Return output of the layer.
+        """
         # Check for masking
         if mask is None:
 
             # Compute masking for not existing inputs
-            mask = self.compute_mask(inputs)
+            mask = self.compute_mask(inputs, mask)
 
         # Calculate Softmax
         inputs = K.exp(inputs) * (1 - K.cast(mask, dtype="float32"))
@@ -176,11 +296,36 @@ class MaskedSoftmax(Layer):
         # Return Masked Softmax
         return inputs / K.sum(inputs, axis=1, keepdims=True)
 
-    def compute_mask(self, inputs, mask=None):
+    def compute_mask(
+        self, inputs, mask: float = None
+    ):  # pylint: disable=no-self-use,unused-argument
+        """
+        Compute mask.
+
+        Parameters
+        ----------
+        inputs : object
+            Layer input.
+        mask : float
+            Custom mask value (needed in tensorflow).
+
+        Returns
+        -------
+        masking
+            Masking for the given input.
+        """
         # Return mask
         return K.equal(inputs, 0)
 
     def get_config(self):
+        """
+        Return the settings of the network.
+
+        Returns
+        -------
+        dict
+            Dict with the config settings.
+        """
         config = {"axis": self.axis}
         base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -193,12 +338,28 @@ class Attention(Layer):
 
     def __init__(
         self,
-        nodes,
-        activation="relu",
-        mask_zero=True,
-        apply_softmax=True,
+        nodes: list,
+        activation: str = "relu",
+        mask_zero: bool = True,
+        apply_softmax: bool = True,
         **kwargs,
     ):
+        """
+        Init the Attention layer
+
+        Parameters
+        ----------
+        nodes : list
+            List with the number of neurons per node
+        activation : str, optional
+            Activation which is used, by default "relu"
+        mask_zero : bool, optional
+            Use 0 as mask value, by default True
+        apply_softmax : bool, optional
+            Use softmax, by default True
+        **kwargs : dict
+            Additional arguments passed.
+        """
         self.nodes = nodes
         self.activation = activation
         self.mask_zero = mask_zero
@@ -211,7 +372,23 @@ class Attention(Layer):
         assert self.layers, "No layers in DeepSet"
         super().__init__(**kwargs)
 
-    def call(self, inputs, mask=None):  # pylint: disable=arguments-differ
+    def call(self, inputs, mask: float = None):  # pylint: disable=arguments-differ
+        """
+        Return the output of the network for a given input.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to layer.
+        mask : float, optional
+            Mask value, by default None
+
+        Returns
+        -------
+        output
+            Layer output.
+        """
+
         assert len(inputs.shape) == 3, (
             "Attention layer requires tensor of rank 3. Shape of tensor"
             f" received {inputs.shape}"
@@ -235,13 +412,38 @@ class Attention(Layer):
             return attention_out
         return attention
 
-    def compute_mask(self, inputs, mask=None):
+    def compute_mask(
+        self, inputs, mask: float = None
+    ):  # pylint: disable=unused-argument
+        """
+        Compute mask.
+
+        Parameters
+        ----------
+        inputs : object
+            Layer input.
+        mask : float
+            Custom mask value (needed in tensorflow).
+
+        Returns
+        -------
+        masking
+            Masking for the given input.
+        """
         if not self.mask_zero:
             return None
 
         return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
+        """
+        Return the settings of the network.
+
+        Returns
+        -------
+        dict
+            Dict with the config settings.
+        """
         config = {
             "nodes": self.nodes,
             "activation": self.activation,
@@ -252,15 +454,35 @@ class Attention(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-class AttentionPooling(Layer):
+class AttentionPooling(Layer):  # pylint: disable=too-few-public-methods
     """
     Define Attention Pooling Layer.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs):  # pylint: disable=useless-super-delegation
+        """Init Attention Pooling layer
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Additional arguments passed.
+        """
         super().__init__(**kwargs)
 
-    def call(self, inputs):  # pylint: disable=arguments-differ
+    def call(self, inputs):  # pylint: disable=arguments-differ,no-self-use
+        """
+        Return the output of the layer for a given input.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to layer.
+
+        Returns
+        -------
+        output
+            Layer output.
+        """
 
         # Get attention and feature tensor
         attention, features = inputs[:2]
@@ -287,12 +509,28 @@ class ConditionalAttention(Layer):
 
     def __init__(
         self,
-        nodes,
-        activation="relu",
-        mask_zero=True,
-        apply_softmax=True,
+        nodes: list,
+        activation: str = "relu",
+        mask_zero: bool = True,
+        apply_softmax: bool = True,
         **kwargs,
     ):
+        """
+        Init the Conditional Attention Layer.
+
+        Parameters
+        ----------
+        nodes : list
+            List with the number of neurons per node
+        activation : str, optional
+            Activation which is used, by default "relu"
+        mask_zero : bool, optional
+            Use 0 as mask value, by default True
+        apply_softmax : bool, optional
+            Use softmax, by default True
+        **kwargs : dict
+            Additional arguments passed.
+        """
         # Define attributes
         self.nodes = nodes
         self.activation = activation
@@ -309,6 +547,19 @@ class ConditionalAttention(Layer):
         super().__init__(**kwargs)
 
     def call(self, inputs):  # pylint: disable=arguments-differ
+        """
+        Return the output of the network for a given input.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to layer.
+
+        Returns
+        -------
+        output
+            Layer output.
+        """
 
         # Retrieve repeated vector and condition vector
         repeat, condition = inputs[:2]
@@ -338,7 +589,25 @@ class ConditionalAttention(Layer):
         # Return attention output
         return attention_out
 
-    def compute_mask(self, inputs, mask=None):
+    def compute_mask(
+        self, inputs, mask: float = None
+    ):  # pylint: disable=unused-argument
+        """
+        Compute the masking.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to a layer.
+        mask : float
+            Custom mask value (needed in tensorflow).
+
+        Returns
+        -------
+        masking
+            Return correct masking
+        """
+
         # Check for mask
         if not self.mask_zero:
             return None
@@ -347,6 +616,14 @@ class ConditionalAttention(Layer):
         return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
+        """
+        Return the settings of the network.
+
+        Returns
+        -------
+        dict
+            Dict with the config settings.
+        """
         # Get the configs of the layer as dict
         config = {
             "nodes": self.nodes,
@@ -365,12 +642,29 @@ class ConditionalDeepSet(Layer):
 
     def __init__(
         self,
-        nodes,
-        activation="relu",
-        batch_norm=False,
-        mask_zero=True,
+        nodes: list,
+        activation: str = "relu",
+        batch_norm: bool = False,
+        mask_zero: bool = True,
         **kwargs,
     ):
+        """
+        Init the DeepSet Layer.
+
+        Parameters
+        ----------
+        nodes : list
+            List with the number of neurons per node
+        activation : str, optional
+            Activation which is used, by default "relu"
+        batch_norm : bool, optional
+            Use batch normalisation, by default False
+        mask_zero : bool, optional
+            Use 0 as mask value, by default True
+        **kwargs : dict
+            Additional arguments passed.
+        """
+
         # Get attributes
         self.nodes = nodes
         self.activation = activation
@@ -386,6 +680,19 @@ class ConditionalDeepSet(Layer):
         super().__init__(**kwargs)
 
     def call(self, inputs):  # pylint: disable=arguments-differ
+        """
+        Return the output of the layer for a given input.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to layer.
+
+        Returns
+        -------
+        output
+            Layer output.
+        """
 
         # Get repeated vector and conditions vector
         repeat, condition = inputs[:2]
@@ -415,7 +722,24 @@ class ConditionalDeepSet(Layer):
         # Retrun conditional deep sets output
         return deepsets_out
 
-    def compute_mask(self, inputs, mask=None):
+    def compute_mask(
+        self, inputs, mask: float = None
+    ):  # pylint: disable=unused-argument
+        """
+        Compute the masking.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to a layer.
+        mask : float
+            Custom mask value (needed in tensorflow).
+
+        Returns
+        -------
+        masking
+            Return correct masking
+        """
 
         # Check if masking is zero
         if not self.mask_zero:
@@ -425,6 +749,14 @@ class ConditionalDeepSet(Layer):
         return K.equal(K.sum(inputs ** 2, axis=-1), 0)
 
     def get_config(self):
+        """
+        Return the settings of the network.
+
+        Returns
+        -------
+        dict
+            Dict with the config settings.
+        """
         # Get the configs of the layer as dict
         config = {
             "nodes": self.nodes,
@@ -438,13 +770,37 @@ class ConditionalDeepSet(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-class MaskedAverage1DPooling(Layer):
+class MaskedAverage1DPooling(Layer):  # pylint: disable=too-few-public-methods
     """Keras layer for masked 1D average pooling."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs):  # pylint: disable=useless-super-delegation
+        """Init the masked average 1d pooling layer.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Additional arguments passed.
+        """
         super().__init__(**kwargs)
 
-    def call(self, inputs, mask=None):  # pylint: disable=arguments-differ
+    def call(
+        self, inputs, mask: float = None
+    ):  # pylint: disable=arguments-differ,no-self-use
+        """
+        Return the output of the layer for a given input.
+
+        Parameters
+        ----------
+        inputs : object
+            Input to layer.
+        mask : float, optional
+            Mask value, by default None
+
+        Returns
+        -------
+        output
+            Layer output.
+        """
         # Check for masking
         if mask is not None:
 
@@ -487,19 +843,77 @@ class Sum(Layer):
     """
 
     def __init__(self, **kwargs):
+        """
+        Init the class.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Additional arguments passed.
+        """
         super().__init__(**kwargs)
         self.supports_masking = True
 
-    def build(self, input_shape):
-        pass
+    def build(self, input_shape):  # pylint: disable=unused-argument
+        """Build step which is skipped.
 
-    def call(self, x, mask=None):  # pylint: disable=arguments-differ
+        Parameters
+        ----------
+        input_shape : object
+            Input shape of the layer (is needed in tensorflow).
+
+        """
+        pass  # pylint: disable=unnecessary-pass
+
+    def call(self, x, mask: float = None):  # pylint: disable=no-self-use
+        """
+        Return the output of the layer.
+
+        Parameters
+        ----------
+        x : object
+            Layer input
+        mask : float, optional
+            Mask value, by default None
+
+        Returns
+        -------
+        output
+            Output of the layer
+        """
         if mask is not None:
             x = x * K.cast(mask, K.dtype(x))[:, :, None]
         return K.sum(x, axis=1)
 
-    def compute_output_shape(self, input_shape):
+    def compute_output_shape(self, input_shape):  # pylint: disable=no-self-use
+        """
+        Compute the output shape.
+
+        Parameters
+        ----------
+        input_shape : object
+            Layer input shape
+
+        Returns
+        -------
+        output
+            Layer output.
+        """
         return input_shape[0], input_shape[2]
 
-    def compute_mask(self, inputs, mask):  # pylint: disable=signature-differs
+    def compute_mask(self, inputs, mask):  # pylint: disable=no-self-use,unused-argument
+        """Compute masking
+
+        Parameters
+        ----------
+        inputs : object
+            Layer input.
+        mask : float
+            Custom mask value (needed in tensorflow).
+
+        Returns
+        -------
+        masking
+            Return the masking
+        """
         return None

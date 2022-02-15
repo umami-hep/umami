@@ -9,8 +9,8 @@ import copy
 from itertools import permutations
 
 import numpy as np
-from tensorflow.keras.layers import Lambda
-from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Lambda  # pylint: disable=import-error
+from tensorflow.keras.models import Model  # pylint: disable=import-error
 
 import umami.metrics as umt
 

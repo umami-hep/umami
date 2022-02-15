@@ -1,5 +1,5 @@
 """Helper tools for tensorflow."""
-from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.callbacks import ReduceLROnPlateau  # pylint: disable=import-error
 
 
 def GetLRReducer(
@@ -37,7 +37,9 @@ def GetLRReducer(
         number of epochs to wait before resuming normal operation after
         lr has been reduced, by default 5
     LRR_min_lr : float, optional
-        ower bound on the learning rate, by default 0.000001
+        Lower bound on the learning rate, by default 0.000001
+    **kwargs : dict
+        Additional arguments.
 
     Returns
     -------

@@ -2,9 +2,14 @@
 Implementations by Johnny Raine
 """
 
-import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Concatenate, GlobalMaxPool1D, Input, Lambda
-from tensorflow.keras.models import Model
+import tensorflow.keras.backend as K  # pylint: disable=import-error
+from tensorflow.keras.layers import (  # pylint: disable=import-error
+    Concatenate,
+    GlobalMaxPool1D,
+    Input,
+    Lambda,
+)
+from tensorflow.keras.models import Model  # pylint: disable=import-error
 
 from .layers import (
     Attention,

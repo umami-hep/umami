@@ -4,9 +4,9 @@ import json
 
 import h5py
 import tensorflow as tf
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.models import load_model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import ModelCheckpoint  # pylint: disable=import-error
+from tensorflow.keras.models import load_model  # pylint: disable=import-error
+from tensorflow.keras.optimizers import Adam  # pylint: disable=import-error
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
