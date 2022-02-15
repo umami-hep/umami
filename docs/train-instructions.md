@@ -91,7 +91,7 @@ Note: When working with `Singularity`, the `python install` option is not writab
 source run_setup.sh
 ```
 
-This will create links to the executables. Note: If you know change something in the files, this will immediately become active (Like for `python setup.py develop`). A more detailed explanation can be found [here](https://umami-docs.web.cern.ch/installation/).
+This will create links to the executables. Note: If you now change something in the files, this will immediately become active. A more detailed explanation can be found [here](https://umami-docs.web.cern.ch/installation/).
 
 After that, you can switch to the folder `umami/umami` and run the training, using the following command
 
@@ -99,7 +99,7 @@ After that, you can switch to the folder `umami/umami` and run the training, usi
 train.py -c <path>/<to>/<train>/<config>
 ```
 
-The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the train config.   
+The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the train config.
 
 ## Plotting the Training Metrics
 If you want to check how your model is performing while training, you can use the following command:
@@ -108,7 +108,7 @@ If you want to check how your model is performing while training, you can use th
 plotting_epoch_performance.py -c <path>/<to>/<train>/<config> --dict <path>/<to>/<validation>/<json>
 ```
 
-This will write out plots for the non-main flavour rejections, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. The validation json mentioned here will be produced by the `MyCallback` function which is running on each epoch end. As a result, a json file will be filled with different metrics. The validation json is updated after each epoch. The file will be stored in the `umami/umami/MODELNAME/` folder.   
+This will write out plots for the non-main flavour rejections, accuracy and loss per epoch to `umami/umami/MODELNAME/plots/`. The validation json mentioned here will be produced by the `MyCallback` function which is running on each epoch end. As a result, a json file will be filled with different metrics. The validation json is updated after each epoch. The file will be stored in the `umami/umami/MODELNAME/` folder.
 If you don't provide a json with the `--dict` argument, the performance measurements, like the rejection performances, will be recalculated using the working point, the `frac_values` and the number of validation jets defined in the train config. This can take a long time without a GPU, because each saved model is loaded and evaluated with the validation files. We strongly advice you to only do that if you changed the validation files!
 
 ## Evaluating the results

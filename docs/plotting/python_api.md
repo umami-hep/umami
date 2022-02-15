@@ -3,7 +3,7 @@
 Currently the plotting part of umami is rewritten for better usage with the python api.
 For now, the plotting of roc curves was rewritten.
 
-An example of the roc plotting can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting/python_api.md).
+An example of the roc plotting can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plot_rocs.py).
 
 
 ## ROC curve plotting API

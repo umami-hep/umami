@@ -79,7 +79,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     ]:
         run_prepare = run(
             [
-                "preprocessing.py",
+                "python",
+                "umami/preprocessing.py",
                 "-c",
                 f"{config}",
                 "--sample",
@@ -100,7 +101,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     logger.info("Test: running the resampling...")
     run_resampling = run(
         [
-            "preprocessing.py",
+            "python",
+            "umami/preprocessing.py",
             "-c",
             f"{config}",
             "--resampling",
@@ -117,7 +119,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     logger.info("Test: retrieving scaling and shifting factors...")
     run_scaling = run(
         [
-            "preprocessing.py",
+            "python",
+            "umami/preprocessing.py",
             "-c",
             f"{config}",
             "--scaling",
@@ -136,7 +139,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     logger.info("Test: applying shifting and scaling factors...")
     run_apply_scales = run(
         [
-            "preprocessing.py",
+            "python",
+            "umami/preprocessing.py",
             "-c",
             f"{config}",
             "--apply_scales",
@@ -152,7 +156,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     logger.info("Test: shuffling the samples and writing the samples to disk...")
     run_write = run(
         [
-            "preprocessing.py",
+            "python",
+            "umami/preprocessing.py",
             "-c",
             f"{config}",
             "--write",
@@ -174,7 +179,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     if tagger != "dl1r":
         run_record = run(
             [
-                "preprocessing.py",
+                "python",
+                "umami/preprocessing.py",
                 "-c",
                 f"{config}",
                 "--to_records",

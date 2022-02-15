@@ -238,7 +238,7 @@ def runTraining(config: dict, tagger: str) -> bool:
 
     if tagger:
         logger.info(f"Test: running train.py for {tagger}...")
-        run_train = run(["train.py", "-c", f"{config}"], check=True)
+        run_train = run(["python", "umami/train.py", "-c", f"{config}"], check=True)
 
         try:
             run_train.check_returncode()
@@ -249,7 +249,8 @@ def runTraining(config: dict, tagger: str) -> bool:
         logger.info(f"Test: running plotting_epoch_performance.py for {tagger}...")
         run_plot_epoch = run(
             [
-                "plotting_epoch_performance.py",
+                "python",
+                "umami/plotting_epoch_performance.py",
                 "-c",
                 f"{config}",
             ],
@@ -267,7 +268,8 @@ def runTraining(config: dict, tagger: str) -> bool:
     logger.info(f"Test: running evaluate_model.py for {tagger}...")
     run_evaluate_model = run(
         [
-            "evaluate_model.py",
+            "python",
+            "umami/evaluate_model.py",
             "-c",
             f"{config}",
             "-e",

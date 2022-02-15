@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 This script plots the given input variables of the given files and
 also a comparison.

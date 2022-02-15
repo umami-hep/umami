@@ -5,7 +5,7 @@ unittest:
     - pip install -r requirements.txt
     - apt-get update
     - apt-get install -y wget
-    - python setup.py develop
+    - . run_setup.sh
     - pytest ./umami/tests/unit/ -v -s
   rules:
     - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
@@ -20,7 +20,7 @@ unittest:
     - linter
     - build_umamibase_cpu_MR
   before_script:
-    - python setup.py develop
+    - . run_setup.sh
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/unit/$UNIT_TEST_MODULE/ -v -s --junitxml=report.xml
     - cp .coverage coverage_files/.coverage.unittest_$UNIT_TEST_MODULE

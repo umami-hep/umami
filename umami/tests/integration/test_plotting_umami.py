@@ -58,7 +58,8 @@ def runPlotting(config, tagger):
     logger.info(f"Test: running plotting_umami.py for {tagger}...")
     run_plotting_umami = run(
         [
-            "plotting_umami.py",
+            "python",
+            "umami/plotting_umami.py",
             "-c",
             f"{config}",
             "-o",

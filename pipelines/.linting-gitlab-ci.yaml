@@ -1,6 +1,6 @@
 .linter_template: &linter_template
   stage: linting
-  image: python:3.8-slim
+  image: $SLIM_IMAGE
   script:
     - mkdir coverage_files/
     - pip install flake8
@@ -18,7 +18,7 @@
 
 .doc_string_check_template: &doc_string_check_template
   stage: linting
-  image: python:3.8-slim
+  image: $SLIM_IMAGE
   script:
     - pip install darglint
     - darglint --list-errors
@@ -37,7 +37,7 @@
 
 .black_check_template: &black_check_template
   stage: linting
-  image: python:3.8-slim
+  image: $SLIM_IMAGE
   script:
     - pip install black==21.5b1
     - black --check .
