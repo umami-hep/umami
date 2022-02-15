@@ -1152,6 +1152,37 @@ def plotPtDependence(
     plt.close()
 
 
+def translate_kwargs(kwargs):
+    """Maintaining backwards compatibility for the kwargs and the new plot_base syntax.
+
+    Parameters
+    ----------
+    kwargs : dict
+        dictionary with kwargs
+
+    Returns
+    -------
+    dict
+        kwargs compatible with new naming.
+    """
+    mapping = {
+        "UseAtlasTag": "use_atlas_tag",
+        "AtlasTag": "atlas_first_tag",
+        "SecondTag": "atlas_second_tag",
+        "yAxisAtlasTag": "atlas_ymax",
+        "legcols": "leg_ncol",
+        "loc_legend": "leg_loc",
+        "legFontSize": "leg_loc",
+        "set_logy": "logy",
+        "yAxisIncrease": "y_scale",
+    }
+    for key, elem in mapping.items():
+        if key in kwargs:
+            kwargs[key] = elem
+            kwargs.pop(key)
+    return kwargs
+
+
 def plotROCRatio(
     df_results_list: list,
     tagger_list: list,
@@ -1229,18 +1260,23 @@ def plotROCRatio(
     """
     n_rocs = len(df_results_list)
     # maintain backwards compatibility
-    if "nTest" in kwargs and n_test is None:
-        n_test = kwargs["nTest"]
+    if "nTest" in kwargs:
+        if n_test is None:
+            n_test = kwargs["nTest"]
         kwargs.pop("nTest")
-    if "colors" in kwargs and colours is None:
-        colours = kwargs["colors"]
+    if "colors" in kwargs:
+        if colours is None:
+            colours = kwargs["colors"]
         kwargs.pop("colors")
-    if "binomialErrors" in kwargs and colours is None:
-        draw_errors = kwargs["binomialErrors"]
+    if "binomialErrors" in kwargs:
+        if draw_errors is None:
+            draw_errors = kwargs["binomialErrors"]
         kwargs.pop("binomialErrors")
-    if "styles" in kwargs and colours is None:
-        linestyles = kwargs["styles"]
+    if "styles" in kwargs:
+        if linestyles is None:
+            linestyles = kwargs["styles"]
         kwargs.pop("styles")
+    kwargs = translate_kwargs(kwargs)
 
     # Get global config for flavours
     flav_cat = global_config.flavour_categories
@@ -1288,6 +1324,7 @@ def plotROCRatio(
         n_ratio_panels=1,
         ylabel=f'{flav_cat[rej_class_list[0]]["legend_label"]} Rejection',
         xlabel=f'{flav_cat[main_class]["legend_label"]} Efficiency',
+        **kwargs,
     )
     plot_roc.set_ratio_class(ratio_panel=1, rej_class=rej_class_list[0], label=rlabel)
     if WorkingPoints is not None:
@@ -1399,39 +1436,40 @@ def plotROCRatioComparison(
     """
     n_rocs = len(df_results_list)
     # maintain backwards compatibility
-    if "nTest" in kwargs and n_test is None:
-        n_test = kwargs["nTest"]
+    if "nTest" in kwargs:
+        if n_test is None:
+            n_test = kwargs["nTest"]
         kwargs.pop("nTest")
-    if "colors" in kwargs and colours is None:
-        colours = kwargs["colors"]
-        # remnant of old implementation passing empty list as default
-        if kwargs["colors"] == []:
-            colours = None
+    if "colors" in kwargs:
+        if colours is None:
+            colours = kwargs["colors"]
+            # remnant of old implementation passing empty list as default
+            if kwargs["colors"] == []:
+                colours = None
         kwargs.pop("colors")
-    if "binomialErrors" in kwargs and draw_errors is None:
-        draw_errors = kwargs["binomialErrors"]
+    if "binomialErrors" in kwargs:
+        if draw_errors is None:
+            draw_errors = kwargs["binomialErrors"]
         kwargs.pop("binomialErrors")
-    if (
-        "ratio_id" in kwargs
-        and reference_ratio is None
-        and kwargs["ratio_id"] is not None
-    ):
-        # if old keyword is used the syntax was also different
-        # translating this now into the new syntax
-        # the old syntax looked like
-        # ratio_id = [0, 0, 1, 1]
-        # rej_class_list = ['ujets', 'ujets', 'cjets', 'cjets']
-        # tagger_list = ['RNNIP', 'DIPS', 'RNNIP', 'DIPS']
-        # in that case the first entry was used for the upper ratio and the 3rd entry
-        # for the 2nd ratio
-        # in the new syntax this would mean
-        # reference_ratio = [True, False, True, False]
-        reference_ratio = []
-        _tmp_ratio_id = []
-        for elem in kwargs["ratio_id"]:
-            reference_ratio.append(elem not in _tmp_ratio_id)
-            _tmp_ratio_id.append(elem)
+    if "ratio_id" in kwargs:
+        if reference_ratio is None and kwargs["ratio_id"] is not None:
+            # if old keyword is used the syntax was also different
+            # translating this now into the new syntax
+            # the old syntax looked like
+            # ratio_id = [0, 0, 1, 1]
+            # rej_class_list = ['ujets', 'ujets', 'cjets', 'cjets']
+            # tagger_list = ['RNNIP', 'DIPS', 'RNNIP', 'DIPS']
+            # in that case the first entry was used for the upper ratio and the
+            #  3rd entry for the 2nd ratio
+            # in the new syntax this would mean
+            # reference_ratio = [True, False, True, False]
+            reference_ratio = []
+            _tmp_ratio_id = []
+            for elem in kwargs["ratio_id"]:
+                reference_ratio.append(elem not in _tmp_ratio_id)
+                _tmp_ratio_id.append(elem)
         kwargs.pop("ratio_id")
+    kwargs = translate_kwargs(kwargs)
 
     # catching default value as in old implementation to maintain backwards
     # compatibility
@@ -1512,6 +1550,7 @@ def plotROCRatioComparison(
         n_ratio_panels=2,
         ylabel="Background rejection",
         xlabel=f'{flav_cat[main_class]["legend_label"]} efficiency',
+        **kwargs,
     )
     plot_roc.set_ratio_class(
         ratio_panel=1,

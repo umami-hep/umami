@@ -59,6 +59,14 @@ pre-commit install
 
 This will run `isort`, `black`, `flake8` and `yamllint` on staged python files when commiting.
 
+### Excluding files from git only locally
+
+If you want to exclude certain files only locally for you and not changing the `.gitignore` file from `umami` you can
+find some solution on [stack overflow](https://stackoverflow.com/questions/5724455/can-i-make-a-user-specific-gitignore-file).
+
+You can e.g. add the patterns for the files which should be excluded to the file in your git folder `.git/info/exclude`.
+
+
 ## General good coding practices
 
 In the following we are listing some good code practices, we are asking to follow when making merge requests to the repository. We would like to ask you to use British English for your contributions.
