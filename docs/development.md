@@ -397,3 +397,17 @@ The first entry here sets the automated python formatter to use. Like in Umami, 
 entry enables auto-format on save. So everytime you save, `black` will format your code (style-wise). The third entry set the docstring style used in the
 [Python Docstring Generator](https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring). Just press `Ctrl + Shift + 2` (in Linux) below
 a function header and the generator will generate a fresh docstring with all arguments, their types and their default values (if defined in the function head) in the `numpy` docstring style (which is used in Umami).
+
+### VSCode Debugger
+There are plenty of tutorials and instructions for the VSCode debugger.
+However, you might run into trouble when trying to debug a script which is using Umami, with the debugger telling you it can not locate the `umami` package.
+In this case, try adding the directory where umami is located to the environment variables that are loaded with a new debugger terminal.
+
+Click on `create a launch.json` as explained [here](https://code.visualstudio.com/docs/python/debugging), select the directory where you want to store it (in case you have multiple folders open) and select "Python File".
+VSCode will create the default configuration file for you (located in `.vscode`). All you have to do is adding the following to the `configurations` section:
+```json
+            "env": {
+                "PYTHONPATH": "<your_umami_dir>"
+            }
+```
+Afterwards, the debugger should find the umami package.
