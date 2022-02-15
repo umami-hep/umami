@@ -4,6 +4,8 @@ Adapted from https://github.com/rateixei/PyATLASstyle
 """
 import os
 
+from matplotlib import font_manager
+
 
 def get_good_colours():
     """List of colours adequate for plotting
@@ -28,8 +30,6 @@ def applyATLASstyle(mtp):
     font_dirs = [
         font_dir,
     ]
-
-    import matplotlib.font_manager as font_manager
 
     font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
     for f in font_files:

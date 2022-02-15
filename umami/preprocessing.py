@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Execution script to run preprocessing steps."""
 import argparse
 

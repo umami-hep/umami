@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 This script allows to plot the ROC curves (and ratios to other models),
 the confusion matrix and the output scores (pb, pc, pu).

@@ -7,6 +7,7 @@ variables:
   MATERIAL_VERSION: '7.1.10'
   I18NSTATIC_VERSION: '0.17'
   IMAGE_TYPE: umamibase:latest
+  SLIM_IMAGE: python:3.8-slim
 
 stages:
   - check_mr
@@ -24,7 +25,7 @@ stages:
 
 checking_mr:
   stage: check_mr
-  image: python:3.8-slim
+  image: $SLIM_IMAGE
   before_script:
     - pip install --upgrade pip setuptools wheel
     - pip install python-gitlab==2.10.1

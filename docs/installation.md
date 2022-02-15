@@ -142,13 +142,13 @@ git clone ssh://git@gitlab.cern.ch:7999/atlas-flavor-tagging-tools/algorithms/um
 ```
 to make the `umami` package now accessible in python you need to run
 ```bash
-python setup.py develop
+python -m pip install -e .
 ```
 within the `umami` folder.
 
 
 ???+ info "Newer singularity versions"
-    On certain clusters `Singularity` might be configured such that it is not writable and `python setup.py develop` will fail. In this case you need to set your `PYTHONPATH` to e.g. the current directory (`export PYTHONPATH=$PWD:$PYTHONPATH`) and choose the current folder also as install directory via `python setup.py develop --install-dir .`. It can then also happen that you are getting a weird error with `RecursionError: maximum recursion depth exceeded in comparison`, then you need to clean up your repository via ` rm -rf umami.egg-*`.
+    On certain clusters `Singularity` might be configured such that it is not writable and `python -m pip install -e .` will fail. In this case you need to set your `PYTHONPATH` to e.g. the current directory (`export PYTHONPATH=$PWD:$PYTHONPATH`) and choose a folder e.g. `python_install` also as install directory via `python -m pip install --prefix python_install  -e .` (you first need to create the `python_install` folder). It can then also happen that you are getting a weird error with `RecursionError: maximum recursion depth exceeded in comparison`, then you need to clean up your repository via ` rm -rf umami.egg-*`.
 
     This is also bundled in a script you can use
     ```bash
@@ -185,11 +185,11 @@ within the `umami` folder.
 
     Then, install the project locally.
     ```bash
-    python setup.py install
+    python -m pip install .
     ```
-    Alternatively, if you want to develop the code, use the `develop` install command, which creates a symbolic link to the local directory instead of copying it.
+    Alternatively, if you want to develop the code, use the `-e` option, which creates a symbolic link to the local directory instead of copying it.
     Consequently, any changes you make to the code are directly picked up.
 
     ```bash
-    python setup.py develop
+    python -m pip install -e .
     ```

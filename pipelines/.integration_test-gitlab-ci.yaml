@@ -1,6 +1,6 @@
 .test_template: &test_template
   before_script:
-    - python setup.py develop
+    - . run_setup.sh
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
