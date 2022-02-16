@@ -17,8 +17,15 @@ unittest:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   dependencies:
-    - linter
     - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
+  needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
   before_script:
     - . run_setup.sh
   script:

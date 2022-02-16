@@ -7,9 +7,12 @@
   image: "${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE"
   dependencies:
     - build_umamibase_cpu_MR
+    - build_umamibase_cpu
     - linter
   needs:
     - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
       optional: true
     - linter
   retry: 2
