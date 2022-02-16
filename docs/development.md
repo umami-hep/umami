@@ -74,58 +74,57 @@ In the following we are listing some good code practices, we are asking to follo
 ### Commenting your Code
 If you write new code for Umami, please keep in mind to comment your code properly. It is very hard to understand what you are doing something and why you are doing it. Please keep this in mind! This will make it easier to revise your code.
 
-To make the framework modular, new code that is repeated should be written in a function. When defining a function, please provide a proper doc string and type of the input variables. For example:
+To make the framework modular, new code that is repeated should be written in a function. When defining a function, please provide a proper doc string and type of the input variables. The type of the input variables of packages (like `numpy`) can also be set when the package is imported (`np.ndarray` for example). An example of this can be seen here:
 
 ```python
-def LoadJetsFromFile(
-    filepath: str,
+def example_function(
+    y_pred: np.ndarray,
     class_labels: list,
-    nJets: int,
-    variables: list = None,
-    cut_vars_dict: dict = None,
-    print_logger: bool = True,
-):
+    unique_identifier: str = None,
+) -> dict:  # You can say what the function returns (this only works for one return value)
     """
-    Load jets from file. Only jets from classes in class_labels are returned.
+    Add here a description of what the function does.
 
     Parameters
     ----------
-    filepath : str
-        Path to the .h5 file with the jets.
+    y_pred : numpy.ndarray
+        Add here a description of the argument.
     class_labels : list
-        List of class labels which are used.
-    nJets : int
-        Number of jets to load.
-    variables : list
-        Variables which are loaded.
-    cut_vars_dict : dict
-        Variable cuts that are applied when loading the jets.
-    print_logger : bool
-        Decide if the number of jets loaded from the file is printed.
+        Add here a description of the argument.
+    unique_identifier: str
+        Add here a description of the argument and also a
+        "as default None" if a default value is given 
 
     Returns
     -------
-    Jets : numpy ndarray
-        The jets as numpy ndarray
-    Umami_labels : numpy ndarray
-        The internal class label for each jet. Corresponds with the index of
-        the class label in class_labels.
-    """
+    Rejection_Dict : dict
+        Add here a description of the returned element.
 
+    Raises
+    ------
+    ValueError
+        If you have raise statements in the function, list them here
+        and add here (where this text stands) a description in which
+        cases this error is called.
+    """
 ```
 
-
 ### Doc strings
-
 Each function and class should have a doc string describing its functionality.
 The numpy style for doc strings is being used which is documented [here](https://numpydoc.readthedocs.io/en/latest/format.html)
 
+In the section above is an example for a docstring given. In `Parameters`, all arguments of the function are listed. First is the name of the argument followed by whitespace, double point and again whitespace and then the argument type. The line below needs a indentation to signal that this is the explanation for this argument. Multiple lines can be written like that. `self` for class functions doesn't need to be added here.
+The same rules are for the `Returns` part. If nothing is returned, add a `-> None` in the function definition (in the example there is `-> dict` currently).
+If your function has a `raise` statement, you also need to add a section called `Raises`, where the Error is added and a line below, with indentation, a description why the error was raised. This needs to be done for all raise statements. So multiple `ValueError` can be in this section. 
+
 To check if your doc string is compatible with the recommended style you can use
+
 ```bash
-darglint * -s numpy -z full  --log-level INFO
+darglint <path/to/your/file> -s numpy -z full --log-level INFO
 ```
 
 You can choose for yourself whether it is necessary to also document the keys for dictionaries. There is no official recommendation in the doc strings docs or from the [community](https://stackoverflow.com/questions/62511086/how-to-document-kwargs-according-to-numpy-style-docstring). If you prefer to document also `dict` keys, here is an [example](https://numpy.org/doc/stable/reference/generated/numpy.set_printoptions.html) from numpy.
+
 ### Unit/Integration Tests
 If you contribute to Umami, please keep in mind that all code should be tested by unit- and integration tests. Normally, the integration test will cover small changes in the pipeline directly, but unit test should be added for all new functions added! Please make sure that all cases of the new functions are tested!
 
