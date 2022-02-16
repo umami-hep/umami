@@ -35,13 +35,18 @@ n_test = len(df)
 
 
 # define a small function to calculate discriminant
-def disc_fct(a: np.ndarray):
+def disc_fct(a: np.ndarray) -> np.ndarray:
     """Tagger discriminant
 
     Parameters
     ----------
     a : numpy.ndarray
         array with with shape (, 3)
+
+    Returns
+    -------
+    np.ndarray
+        Array with the discriminant values inside.
     """
     # you can adapt this for your needs
     return np.log(a[2] / (0.018 * a[1] + 0.92 * a[0]))

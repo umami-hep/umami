@@ -3425,22 +3425,6 @@ class Weighting(ResamplingTools):
         """
         Calculate ratios (weights) from bins in 2d (pt,eta) histogram between
         different flavours.
-
-        Parameters
-        -----------
-        config : Preprocessing config file
-
-        Returns
-        -----------
-        weights_dict : dict of callables
-            weights_dict per flavour with some additional info written into a
-            pickle file at /hybrids/flavour_weights
-
-            - 'bjets', etc. : weights
-            - 'bins_x' : pt bins
-            - 'bins_y' : eta bins
-            - 'bin_indices_flat' : flattened indices of the bins in the histogram
-            - 'label_map' : {0: 'ujets', 1: 'cjets', 2: 'bjets'}
         """
 
         # calculate the 2D bin statistics for each sample and add it to
@@ -3848,12 +3832,18 @@ class UnderSamplingProp:
         self.eta_var_name = global_config.etavariable
         self.rnd_seed = 42
 
-    def GetIndices(self):
+    def GetIndices(self) -> tuple:
         """
         Applies the weighted UnderSampling to the given arrays.
-        Returns the indices for the jets to be used separately for b, c and
-        light jets (as well as taus, optionally).
+        Returns the
+
+        Returns
+        -------
+        tuple
+            Indices for the jets to be used separately for b, c and
+            light jets (as well as taus, optionally).
         """
+
         binnumbers_b, ind_b, stat_b, total_b = self.GetBins(self.bjets)
         binnumbers_c, _, stat_c, total_c = self.GetBins(self.cjets)
         binnumbers_u, _, stat_u, total_u = self.GetBins(self.ujets)
@@ -3914,8 +3904,22 @@ class UnderSamplingProp:
             sorted_taujets,
         )
 
-    def GetBins(self, df):
-        """Retrieving bins."""
+    def GetBins(self, df: dict):
+        """
+        Retrieving bins.
+
+        Parameters
+        ----------
+        df : dict
+            Dict with the pT and eta variable inside.
+
+        Returns
+        -------
+        tuple
+            The binnumber, bin indicies flat, weighted flatten statistics
+            and the total count.
+        """
+
         statistic, binnumber = binned_statistic_2d(
             x=df[self.pT_var_name],
             y=df[self.eta_var_name],
@@ -3961,15 +3965,18 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         """
         Applies the undersampling to the given arrays.
 
-        Parameters
-        ----------
-
         Returns
         -------
-        Returns the indices for the jets to be used separately for each
-        category and sample.
+        np.ndarray
+            Indices for the jets to be used separately for each
+            category and sample.
 
+        Raises
+        ------
+        ValueError
+            If no target is given.
         """
+
         try:
             target_distribution = self.options["target_distribution"]
         except KeyError as Error:
@@ -4080,8 +4087,10 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         return self.indices_to_keep
 
     def GetSamplingProbability(  # pylint: disable=no-self-use
-        self, target_stat, original_stat
-    ):
+        self,
+        target_stat: np.ndarray,
+        original_stat: np.ndarray,
+    ) -> dict:
         """
         Computes probability ratios against the target distribution.
         The probability ratios are scaled by the max ratio to ensure the
@@ -4090,15 +4099,17 @@ class ProbabilityRatioUnderSampling(UnderSampling):
 
         Parameters
         ----------
-        target_stat: Target distribution or histogram, i.e. bjets histo, to compute
-        probability ratios against.
-        original_stat: Original distribution or histogram, i.e. cjets histo, to
-        scale using target_stat.
+        target_stat : np.ndarray
+            Target distribution or histogram, i.e. bjets histo, to compute
+            probability ratios against.
+        original_stat : np.ndarray
+            Original distribution or histogram, i.e. cjets histo, to
+            scale using target_stat.
 
         Returns
         -------
-        A dictionary of the sampling probabilities for each flavour.
-
+        dict
+            A dictionary of the sampling probabilities for each flavour.
         """
 
         ratios = np.divide(
@@ -4122,22 +4133,29 @@ class ProbabilityRatioUnderSampling(UnderSampling):
         Computes probability ratios against the target distribution for each flavour.
         The probability ratios are scaled by the max ratio to ensure all the flavour
         distributions, i.e. cjets, ujets, taujets, are always below the target
-        distribution
-        and with the same shape as the target distribution. Also ensures the resulting
-        flavour
-        fractions are the same.
+        distribution and with the same shape as the target distribution. Also ensures
+        the resulting flavour fractions are the same.
 
         Parameters
         ----------
-        target_distribution: Target distribution, i.e. bjets, to compute
-        probability ratios against.
-        stats: Dictionary of stats such as bin count for different jet flavours
+        target_distribution : str, optional
+            Target distribution, i.e. bjets, to compute
+            probability ratios against, by default "bjets"
+        stats : dict, optional
+            Dictionary of stats such as bin count for different jet flavours,
+            by default None
 
         Returns
         -------
-        A dictionary of the sampling probabilities for each flavour.
+        dict
+            A dictionary of the sampling probabilities for each flavour.
 
+        Raises
+        ------
+        ValueError
+            If target distribution class does not exist in your sample classes.
         """
+
         if stats is None:
             stats = {
                 "bjets": np.ndarray,

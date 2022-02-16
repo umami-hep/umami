@@ -142,7 +142,9 @@ def Dips(args, train_config, preprocess_config):
     Raises
     ------
     ValueError
-        if inputs are neither in .h5 or directory with tfrecords files given
+        If inputs are neither in .h5 or directory with tfrecords files given
+    KeyError
+        If not metadata file is given for training with tfrecords.
     """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure

@@ -14,8 +14,21 @@ from umami.tools import yaml_loader
 set_log_level(logger, "DEBUG")
 
 
-def getConfiguration():
-    """Load yaml file with settings for integration test of the input vars plotting."""
+def getConfiguration() -> object:
+    """
+    Load yaml file with settings for integration test of the input vars plotting.
+
+    Returns
+    -------
+    object
+        Loaded configuration file.
+
+    Raises
+    ------
+    YAMLError
+        If a needed key is not in file.
+    """
+
     path_configuration = "umami/tests/integration/fixtures/testSetup.yaml"
     with open(path_configuration, "r") as conf:
         conf_setup = yaml.load(conf, Loader=yaml_loader)
@@ -27,9 +40,20 @@ def getConfiguration():
     return conf_setup
 
 
-def runPlotInputVars(config):
+def runPlotInputVars(config: str) -> bool:
     """Call plot_input_vars.py.
-    Return value `True` if training succeeded, `False` if one step did not succees."""
+
+    Parameters
+    ----------
+    config : str
+        Path to config file.
+
+    Returns
+    -------
+    bool
+        True if tests pass, False if tests fail.
+    """
+
     isSuccess = True
 
     logging.info("Test: running plot_input_vars.py tracks...")

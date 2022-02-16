@@ -68,9 +68,28 @@ def GetParser():
 
 
 def plot_probability_comparison(
-    plot_name, plot_config, eval_params, eval_file_dir, print_model
-):
-    """Plots probability comparison."""
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+    print_model: bool,
+) -> None:
+    """
+    Plots probability comparison.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
+    eval_params : dict
+        Dict with the evaluation parameters.
+    eval_file_dir : str
+        Path to the results directory of the model.
+    print_model : bool
+        Print the models which are plotted while plotting.
+    """
     # Init dataframe list
     df_list = []
     model_labels = []
@@ -113,21 +132,28 @@ def plot_probability_comparison(
     )
 
 
-def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
-    """Plot ROC curves.
+def plot_ROC(
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+    print_model: bool,
+) -> None:
+    """
+    Plots ROC.
 
     Parameters
     ----------
     plot_name : str
-        Name of the plot
-    plot_config : object
-        Plot configuration
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
     eval_params : dict
-        evaluation parameters
+        Dict with the evaluation parameters.
     eval_file_dir : str
-        directory of evaluation file
+        Path to the results directory of the model.
     print_model : bool
-        Prints out model summary
+        Print the models which are plotted while plotting.
     """
     df_results_list = []
     tagger_list = []
@@ -205,9 +231,28 @@ def plot_ROC(plot_name, plot_config, eval_params, eval_file_dir, print_model):
 
 
 def plot_ROC_Comparison(
-    plot_name, plot_config, eval_params, eval_file_dir, print_model
-):
-    """Plot ROC comparisons."""
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+    print_model: bool,
+) -> None:
+    """
+    Plot ROC comparison.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
+    eval_params : dict
+        Dict with the evaluation parameters.
+    eval_file_dir : str
+        Path to the results directory of the model.
+    print_model : bool
+        Print the models which are plotted while plotting.
+    """
     df_results_list = []
     tagger_list = []
     rej_class_list = []
@@ -290,11 +335,11 @@ def plot_ROC_Comparison(
 
 
 def plot_ROCvsVar(
-    plot_name,
-    plot_config,
-    eval_params,
-    eval_file_dir,
-):
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+) -> None:
     """
     Plots ROC curve as a function of specified variable.
 
@@ -520,29 +565,33 @@ def plot_ROCvsVar(
 
 
 def plot_ROCvsVar_comparison(
-    plot_name, plot_config, eval_params, eval_file_dir, print_model
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+    print_model: bool,
 ):
     """
-     Plots ROC curve as a function of specified variable and compares it to
-     another tagger.
+    Plots ROC curve as a function of specified variable and compares it to
+    another tagger.
 
-     Parameters
-     ----------
+    Parameters
+    ----------
     plot_name : str
-         Name of the saved plot.
-     plot_config : dict
-         Plotting configuration
-     eval_params : dict
-         Evaluation parameters
-     eval_file_dir : str
-         Directory of the results file to be used for plotting.
-     print_model : bool
-         Prints model name if set to True
+        Name of the saved plot.
+    plot_config : dict
+        Plotting configuration
+    eval_params : dict
+        Evaluation parameters
+    eval_file_dir : str
+        Directory of the results file to be used for plotting.
+    print_model : bool
+        Prints model name if set to True
 
-     Raises
-     ------
-     ValueError
-         If specified variable is not contained in results dataframe.
+    Raises
+    ------
+    ValueError
+        If specified variable is not contained in results dataframe.
 
     """
     # Get the epoch which is to be evaluated
@@ -819,8 +868,26 @@ def plot_ROCvsVar_comparison(
     )
 
 
-def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
-    """Plot confusion matrix."""
+def plot_confusion_matrix(
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+) -> None:
+    """
+    Plot confusion matrix.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
+    eval_params : dict
+        Dict with the evaluation parameters.
+    eval_file_dir : str
+        Path to the results directory of the model.
+    """
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
@@ -845,8 +912,29 @@ def plot_confusion_matrix(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
-def score_comparison(plot_name, plot_config, eval_params, eval_file_dir, print_model):
-    """Plot score comparison."""
+def score_comparison(
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+    print_model: bool,
+) -> None:
+    """
+    Plot score comparison.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
+    eval_params : dict
+        Dict with the evaluation parameters.
+    eval_file_dir : str
+        Path to the results directory of the model.
+    print_model : bool
+        Print the models which are plotted while plotting.
+    """
     # Init dataframe list
     df_list = []
     tagger_list = []
@@ -889,8 +977,29 @@ def score_comparison(plot_name, plot_config, eval_params, eval_file_dir, print_m
     )
 
 
-def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir, print_model):
-    """ "Plot pT vs efficiency."""
+def plot_pT_vs_eff(
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+    print_model: bool,
+) -> None:
+    """
+    Plot pT vs efficiency.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
+    eval_params : dict
+        Dict with the evaluation parameters.
+    eval_file_dir : str
+        Path to the results directory of the model.
+    print_model : bool
+        Print the models which are plotted while plotting.
+    """
     # Init label and dataframe list
     df_list = []
     model_labels = []
@@ -938,8 +1047,26 @@ def plot_pT_vs_eff(plot_name, plot_config, eval_params, eval_file_dir, print_mod
     )
 
 
-def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
-    """Plot score."""
+def plot_score(
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+) -> None:
+    """
+    Plot score.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
+    eval_params : dict
+        Dict with the evaluation parameters.
+    eval_file_dir : str
+        Path to the results directory of the model.
+    """
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
@@ -967,8 +1094,26 @@ def plot_score(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
-def plot_prob(plot_name, plot_config, eval_params, eval_file_dir):
-    """Plot probability."""
+def plot_prob(
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+) -> None:
+    """
+    Plot probability outputs.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
+    eval_params : dict
+        Dict with the evaluation parameters.
+    eval_file_dir : str
+        Path to the results directory of the model.
+    """
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
@@ -996,8 +1141,27 @@ def plot_prob(plot_name, plot_config, eval_params, eval_file_dir):
     )
 
 
-def plot_saliency(plot_name, plot_config, eval_params, eval_file_dir):
-    """Plot saliency maps."""
+def plot_saliency(
+    plot_name: str,
+    plot_config: dict,
+    eval_params: dict,
+    eval_file_dir: str,
+) -> None:
+    """
+    Plot saliency maps.
+
+    Parameters
+    ----------
+    plot_name : str
+        Full path of the plot.
+    plot_config : dict
+        Dict with the plot configs.
+    eval_params : dict
+        Dict with the evaluation parameters.
+    eval_file_dir : str
+        Path to the results directory of the model.
+    """
+
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
@@ -1107,9 +1271,33 @@ def plot_frac_contour(
 
 
 def SetUpPlots(
-    plotting_config, plot_directory, eval_file_dir, file_format, print_model
+    plotting_config: dict,
+    plot_directory: str,
+    eval_file_dir: str,
+    file_format: str,
+    print_model: bool,
 ):
-    """Setting up plot settings."""
+    """Setting up plot settings.
+
+    Parameters
+    ----------
+    plotting_config : dict
+        Dict with the plot settings.
+    plot_directory : str
+        Path to the output directory of the plots.
+    eval_file_dir : str
+        Path to the directory where the result files are saved.
+    file_format : str
+        String of the file format.
+    print_model : bool
+        Print the logger while plotting.
+
+    Raises
+    ------
+    NameError
+        If given plottype is not supported.
+    """
+
     # Extract the eval parameters
     eval_params = plotting_config["Eval_parameters"]
 

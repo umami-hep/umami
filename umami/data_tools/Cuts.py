@@ -6,25 +6,42 @@ from functools import reduce
 import numpy as np
 
 
-def GetSampleCuts(jets, cuts):
-    """Given an array of jets and a list of cuts, the function provides a list of
-       indices which are removed by applying the cuts.
-       Users can define the cuts either via the variable name and logical operators:
-       ==, !=, >, >=, <, <= or using the dedicated modulo operator.
-
-       The latter is defined as follows:
-       mod_[N]_[operator] with
-       - [N] denoting "modulo N "
-       - [operator] denoting operator used for comparison to condition
-
-    Args:
-        jets (array of jets): array of jets which need to pass certain cuts
-        cuts (list): list from config file which contains dict objects for individual
-                     cuts
-
-    Returns:
-        indices_to_remove: numpy array of indices to be removed by the cuts
+def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
     """
+    Given an array of jets and a list of cuts, the function provides a list of
+    indices which are removed by applying the cuts.
+    Users can define the cuts either via the variable name and logical operators:
+    ==, !=, >, >=, <, <= or using the dedicated modulo operator.
+
+    The latter is defined as follows:
+    mod_[N]_[operator] with
+    - [N] denoting "modulo N "
+    - [operator] denoting operator used for comparison to condition
+
+    Parameters
+    ----------
+    jets : np.ndarray
+        Array of jets which need to pass certain cuts.
+    cuts : list
+        List from config file which contains dict objects for individual cuts.
+
+    Returns
+    -------
+    indices_to_remove : np.ndarray
+        Numpy array of indices to be removed by the cuts
+
+    Raises
+    ------
+    KeyError
+        If the cut object in the list is not a dict with one entry.
+    RuntimeError
+        If the modulo is incorrectly used.
+    RuntimeError
+        If the modulo is incorrectly used. Operation is not supported.
+    KeyError
+        If unsupported operator is provided.
+    """
+
     # define operator dict to be able to call them via string from config
     inverted_ops = {
         "==": operator.ne,
@@ -106,11 +123,29 @@ def GetSampleCuts(jets, cuts):
     return indices_to_remove
 
 
-def GetCategoryCuts(label_var, label_value):
+def GetCategoryCuts(label_var: str, label_value: float) -> list:
     """
     This function returns the cut object for the categories used in the
     preprocessing.
+
+    Parameters
+    ----------
+    label_var : str
+        Name of the variable.
+    label_value : float, int, list
+        Value for the cut of the variable.
+
+    Returns
+    -------
+    list
+        List with the cut objects inside.
+
+    Raises
+    ------
+    ValueError
+        If label_value is not a float, int or a list.
     """
+
     cut_object = []
     if isinstance(label_value, (float, int, list)):
         cut_object.append(

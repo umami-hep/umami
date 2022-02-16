@@ -603,14 +603,21 @@ class roc_plot(plot_base):
             self.axis_ratio_2.grid()
 
     def get_xlim_auto(self):
-        """Returns min and max efficiency values"""
+        """Returns min and max efficiency values
+
+        Returns
+        -------
+        float
+            min and max efficiency values
+        """
+
         for elem in self.rocs.values():
             self.eff_min = min(np.min(elem.sig_eff), self.eff_min)
             self.eff_max = max(np.max(elem.sig_eff), self.eff_min)
 
         return self.eff_min, self.eff_max
 
-    def plot_ratios(self, ax, rej_class: str):
+    def plot_ratios(self, ax: plt.axis, rej_class: str):
         """Plotting ratio curves
 
         Parameters
@@ -759,11 +766,6 @@ class roc_plot(plot_base):
         labelpad : int, optional
             Spacing in points from the axes bounding box including
             ticks and tick labels, by default None
-
-        Raises
-        ------
-        ValueError
-            if `rlabel` not provided when requesting ratios
         """
         plt_handles = self.plot_roc()
         xmin, xmax = self.get_xlim_auto()

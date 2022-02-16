@@ -8,14 +8,14 @@ from matplotlib import colors
 
 
 def ShapleyOneFlavor(
-    model,
-    test_data,
-    model_output=2,
-    feature_sets=200,
-    plot_size=(11, 11),
-    plot_path=None,
-    plot_name="shapley_b-jets",
-):
+    model: object,
+    test_data: np.ndarray,
+    model_output: int = 2,
+    feature_sets: int = 200,
+    plot_size: tuple = (11, 11),
+    plot_path: str = None,
+    plot_name: str = "shapley_b-jets",
+) -> None:
     """
     https://github.com/slundberg/shap
 
@@ -25,11 +25,24 @@ def ShapleyOneFlavor(
     model_output: is the output node of the model like:
     tau_index, b_index, c_index, u_index = 3, 2, 1, 0
 
-    feature_sets: how many whole sets of features to be calculated over.
-    Corresponds to the number of dots per feature in the beeswarm plot
-
-    plot_size: (11,11) works well for DL1r
-
+    Parameters
+    ----------
+    model : Keras Model
+        Loaded model which is to be evaluated.
+    test_data : np.ndarray
+        Array with the test data
+    model_output : int, optional
+        How many outputs the model has, by default 2
+    feature_sets : int, optional
+        How many whole sets of features to be calculated over.
+        Corresponds to the number of dots per feature in the
+        beeswarm plot , by default 200
+    plot_size : tuple, optional
+        Tuple with the plot size, by default (11, 11)
+    plot_path : str, optional
+        Path where the plot is aved, by default None
+    plot_name : str, optional
+        Name of the output file, by default "shapley_b-jets"
     """
 
     explainer = shap.Explainer(model.predict, masker=test_data.values)
@@ -53,15 +66,14 @@ def ShapleyOneFlavor(
 
 
 def ShapleyAllFlavors(
-    model,
-    test_data,
-    feature_sets=200,
-    averaged_sets=50,
-    plot_size=(11, 11),
-    plot_path=None,
-    plot_name="shapley_all_flavors",
-):
-
+    model: object,
+    test_data: np.ndarray,
+    feature_sets: int = 200,
+    averaged_sets: int = 50,
+    plot_size: tuple = (11, 11),
+    plot_path: str = None,
+    plot_name: str = "shapley_all_flavors",
+) -> None:
     """
     Makes a bar plot for the influence of features for all flavour outputs as
     categories in one plot.
@@ -69,6 +81,24 @@ def ShapleyAllFlavors(
     averaged_sets: let's you average over input features before
     they are handed to the shap framework to decrease runtime.
 
+    Parameters
+    ----------
+    model : Keras Model
+        Loaded model which is to be evaluated.
+    test_data : np.ndarray
+        Array with the test data
+    feature_sets : int, optional
+        How many whole sets of features to be calculated over.
+        Corresponds to the number of dots per feature in the
+        beeswarm plot , by default 200
+    averaged_sets : int, optional
+        Average sets, by default 50
+    plot_size : tuple, optional
+        Tuple with the plot size, by default (11, 11)
+    plot_path : str, optional
+        Path where the plot is aved, by default None
+    plot_name : str, optional
+        Name of the output file, by default "shapley_b-jets"
     """
 
     # it is just calculating mean values, not an actual kmeans algorithm
