@@ -21,10 +21,10 @@
 
 .requirement_changes: &requirement_changes
   changes:
-        - requirements.txt
-        - docker/umamibase/Dockerfile
-        - pipelines/.docker-gitlab-ci.yaml
-        - .gitlab-ci.yml
+    - requirements.txt
+    - docker/umamibase/Dockerfile
+    - pipelines/.docker-gitlab-ci.yaml
+    - .gitlab-ci.yml
 
 build_umamibase_cpu:
   <<: *image_build_template
