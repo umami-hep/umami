@@ -241,6 +241,7 @@ def create_metadata_folder(
     var_dict_path: str,
     model_name: str,
     preprocess_config_path: str,
+    model_file_path: str = None,
     overwrite_config: bool = False,
 ) -> None:
     """
@@ -258,6 +259,8 @@ def create_metadata_folder(
         Model name that is used.
     preprocess_config_path : str
         Path to the preprocessing config that is used.
+    model_file_path : str
+        Path to a model to start from (the model given in model_file).
     overwrite_config : bool
         If configs already in metadata folder, overwrite
         them or not.
@@ -282,6 +285,7 @@ def create_metadata_folder(
         var_dict_path,
         scale_dict_path,
         preprocess_parameters_path,
+        model_file_path,
     ]:
         if file_path is None:
             continue
@@ -322,6 +326,22 @@ def create_metadata_folder(
                     "var_dict:",
                     f"var_dict: {metadata_var_dict_path}",
                 )
+
+                if model_file_path:
+                    metadata_model_file_path = os.path.join(
+                        os.getcwd(),
+                        model_name,
+                        "metadata",
+                        os.path.basename(model_file_path),
+                    )
+
+                    replaceLineInFile(
+                        os.path.join(
+                            model_name, "metadata", os.path.basename(file_path)
+                        ),
+                        "model_file:",
+                        f"model_file: {metadata_model_file_path}",
+                    )
 
             elif file_path == preprocess_parameters_path:
                 metadata_scale_dict_path = os.path.join(
