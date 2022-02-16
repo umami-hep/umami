@@ -102,12 +102,14 @@ def ResamplingPlots(
     Log: bool
         boolean indicating if plot is in log scale or not (default True)
     after_sampling: bool
-        If False (default) using the synthax of `concat_samples`
+        If False (default) using the syntax of `concat_samples`
     normalised: bool
-        Normalises the integral of the histogram to 1
+        Normalises the integral of the histogram to 1 (default False)
+    use_weights: bool
+        If True, the weights are used for the histogram (default False)
     hist_input: bool
         If True the concat_samples is a dictionary of histograms and binning is
-        already the full axes.
+        already the full axes (default False)
     second_tag: str
         Second tag which is inserted below the ATLAS tag (using the makeATLAStag
         function)
@@ -123,12 +125,10 @@ def ResamplingPlots(
     if variable_names is None:
         variable_names = ["pT", "abseta"]
     if binning is None:
-        binning = (
-            {
-                "pT": np.linspace(10000, 2000000, 200),
-                "abseta": np.linspace(0, 2.5, 26),
-            },
-        )
+        binning = {
+            "pT": np.linspace(10000, 2000000, 200),
+            "abseta": np.linspace(0, 2.5, 26),
+        }
 
     applyATLASstyle(mtp)
 
@@ -401,7 +401,6 @@ def generate_process_tag(preparation_ntuples_keys):
     processes = ""
     combined_sample = False
     logger.info("Looking for different processes in preprocessing config.")
-    # for process in self.config.preparation["ntuples"].keys():
     for process in preparation_ntuples_keys:
         try:
             label = global_config.process_labels[process]["label"]

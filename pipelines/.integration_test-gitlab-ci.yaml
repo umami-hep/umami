@@ -278,7 +278,7 @@ test_evaluate_tagger_in_files:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_evalute_comp_taggers_model/
+      - test_evaluate_comp_taggers_model/
       - coverage_files/
 
 test_plot_input_vars:

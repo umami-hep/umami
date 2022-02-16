@@ -61,7 +61,7 @@ def prepareConfig(
     # Get test configuration
     data = getConfiguration()
 
-    if tagger != "evalute_comp_taggers":
+    if tagger != "evaluate_comp_taggers":
         # For CADS, the files from the umami preprocessing are used.
         # We need to give this info so those are correctly loaded.
         if preprocess_files_from is None:
@@ -139,7 +139,7 @@ def prepareConfig(
     with open(config, "r") as con:
         config_file = yaml.load(con, Loader=yaml_loader)
 
-    if tagger != "evalute_comp_taggers":
+    if tagger != "evaluate_comp_taggers":
         config_file["preprocess_config"] = f"{preprocessing_config}"
         config_file["train_file"] = f"{train_file}"
         config_file["var_dict"] = f"{var_dict}"
@@ -387,7 +387,7 @@ class TestTraining(unittest.TestCase):
         """
 
         config = prepareConfig(
-            tagger="evalute_comp_taggers",
+            tagger="evaluate_comp_taggers",
             test_dir=self.test_dir,
         )
 

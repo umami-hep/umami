@@ -32,6 +32,26 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
         )
         self.config = upt.Configuration(self.config_file)
 
+        # Set random seed for reproducibility
+        np.random.seed(1)
+
+        # Number of bins in the two variables (eta and pT usually)
+        self.nbins_pT = 199
+        self.nbins_eta = 25
+
+        # Intialise some random data
+        self.histo_dict = {
+            "ujets": np.abs(
+                np.random.normal(loc=1, size=(self.nbins_pT, self.nbins_eta))
+            ),
+            "cjets": np.abs(
+                np.random.normal(loc=1, size=(self.nbins_pT, self.nbins_eta))
+            ),
+            "bjets": np.abs(
+                np.random.normal(loc=1, size=(self.nbins_pT, self.nbins_eta))
+            ),
+        }
+
     def test_generate_process_tag(self):
         """
         Test the function which creates the second tag for plots (including
@@ -47,6 +67,7 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
 
         dict_ttbar_zprime = {"ttbar": "_", "zprime": "_"}
         dict_ttbar_zprime_zjets = {"ttbar": "_", "zprime": "_", "zjets": "_"}
+        dict_nothing = {"not_in_dict": "_"}
 
         # Test the case where we have only one entry preparation.ntuples
         # in the preprocessing config.
@@ -66,37 +87,53 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
             upt.utils.generate_process_tag(dict_ttbar_zprime_zjets.keys()),
         )
 
+        # Test the case with a key which is not in the global_config
+        self.assertRaises(KeyError, upt.utils.generate_process_tag, dict_nothing.keys())
+
+    def test_resampling_plot_default(self):
+        """
+        Testing the ResamplingPlots function with default parameters
+        """
+
+        # TODO: This is not the default value, write unit test for hist_input=False
+        # Produce the pT and eta plots
+        upt.utils.ResamplingPlots(
+            concat_samples=self.histo_dict,
+            plot_base_name=self.tmp_plot_dir,
+            hist_input=True,
+            second_tag=upt.utils.generate_process_tag(
+                self.config.preparation["ntuples"].keys()
+            ),
+            fileformat="png",
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.control_plots_dir + "default_pT.png",
+                self.tmp_plot_dir + "pT.png",
+                tol=1,
+            ),
+        )
+
     def test_resampling_plot(self):
         """
-        Testing the ResamplingPlots function
+        Testing the ResamplingPlots function given specific parameters
         """
-
-        # Set random seed for reproducibility
-        np.random.seed(1)
-
-        # Number of bins in the two variables (eta and pT usually)
-        nbins_pT = 20
-        nbins_eta = 20
-
-        # Intialise some random data
-        histo_dict = {
-            "ujets": np.abs(np.random.normal(loc=1, size=(nbins_pT, nbins_eta))),
-            "cjets": np.abs(np.random.normal(loc=1, size=(nbins_pT, nbins_eta))),
-            "bjets": np.abs(np.random.normal(loc=1, size=(nbins_pT, nbins_eta))),
-        }
 
         # Produce the pT and eta plots
         upt.utils.ResamplingPlots(
-            concat_samples=histo_dict,
+            concat_samples=self.histo_dict,
             positions_x_y=[0, 1],
             variable_names=["pT", "eta"],
             plot_base_name=self.tmp_plot_dir,
-            # plot_base_name=self.control_plots_dir,
             binning={
-                "pT": np.linspace(-2, 2, nbins_pT + 1),
-                "eta": np.linspace(-2, 2, nbins_eta + 1),
+                "pT": np.linspace(-2, 2, self.nbins_pT + 1),
+                "eta": np.linspace(-2, 2, self.nbins_eta + 1),
             },
-            Log=True,
+            Log=False,
+            after_sampling=True,
+            normalised=True,
             hist_input=True,
             second_tag=upt.utils.generate_process_tag(
                 self.config.preparation["ntuples"].keys()
