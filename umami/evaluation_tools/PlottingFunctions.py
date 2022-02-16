@@ -1175,6 +1175,7 @@ def translate_kwargs(kwargs):
         "legFontSize": "leg_loc",
         "set_logy": "logy",
         "yAxisIncrease": "y_scale",
+        "labelFontSize": "fontsize",
     }
     for key, elem in mapping.items():
         if key in kwargs:

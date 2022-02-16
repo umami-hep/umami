@@ -602,13 +602,13 @@ class roc_plot(plot_base):
             self.plot_ratios(ax=self.axis_ratio_2, rej_class=self.ratio_axes[2])
             self.axis_ratio_2.grid()
 
-    def set_xlim_auto(self):
-        """Setting x limits automatically to min and max efficiency values"""
+    def get_xlim_auto(self):
+        """Returns min and max efficiency values"""
         for elem in self.rocs.values():
             self.eff_min = min(np.min(elem.sig_eff), self.eff_min)
             self.eff_max = max(np.max(elem.sig_eff), self.eff_min)
 
-        self.set_xlim(self.eff_min, self.eff_max)
+        return self.eff_min, self.eff_max
 
     def plot_ratios(self, ax, rej_class: str):
         """Plotting ratio curves
@@ -766,7 +766,12 @@ class roc_plot(plot_base):
             if `rlabel` not provided when requesting ratios
         """
         plt_handles = self.plot_roc()
-        self.set_xlim_auto()
+        xmin, xmax = self.get_xlim_auto()
+        # if self.xmin is not None or self.xmax is not None:
+        self.set_xlim(
+            xmin if self.xmin is None else self.xmin,
+            xmax if self.xmax is None else self.xmax,
+        )
         self.add_ratios()
         self.axis_top.grid()
         self.set_title()
