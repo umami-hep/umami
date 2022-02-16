@@ -53,7 +53,7 @@ def CalcDiscValues(
     disc_score : numpy.ndarray
         Array with the discriminant score values for the jets.
 
-    Nodes
+    Notes
     -----
     The function calculates the discriminant values for the jets
     with the following equation:
@@ -325,7 +325,7 @@ def GetRejection(
         (nJets, nClasses) (One-Hot-encoded).
     class_labels : list
         A list of the class_labels which are used. This must be the
-        same order as the truth! See the nodes for more details.
+        same order as the truth! See the Notes for more details.
     main_class : str
         The main discriminant class. For b-tagging obviously "bjets".
     frac_dict : dict
@@ -350,16 +350,16 @@ def GetRejection(
 
     Raises
     ------
-    ZeroDivisionError
-        If no jets which passes the cut value are given. E.g. if
-        no light jet is passing the WP cut, the rejection would
-        be infinite.
     ValueError
         If the given y_true does not match the provided class_labels.
     ValueError
         If the given shape of y_true is not supported!
+    ZeroDivisionError
+        If no jets which passes the cut value are given. E.g. if
+        no light jet is passing the WP cut, the rejection would
+        be infinite.
 
-    Nodes
+    Notes
     -----
     The function calculates the discriminant values for the given jets
     with the following equation:
@@ -529,7 +529,6 @@ def calc_eff(
 
     Returns
     -------
-
     float or np.ndarray
         efficiency
         if target_eff is a float, a float is returned if it's a list a np.ndarray
@@ -577,7 +576,6 @@ def calc_rej(
         Specifies if the cut values corresponding to the provided WPs are returned.
         If target_eff is a float, only one cut value will be returned. If target_eff
         is an array, target_eff is an array as well.
-
 
     Returns
     -------

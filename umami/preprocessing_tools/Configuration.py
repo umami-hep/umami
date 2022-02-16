@@ -1,6 +1,6 @@
 """Configuration module for preprocessing."""
-import os
 import copy
+import os
 import shutil
 import warnings
 
@@ -13,7 +13,14 @@ from umami.tools import YAML, yaml_loader
 class Configuration:
     """docstring for Configuration."""
 
-    def __init__(self, yaml_config=None):
+    def __init__(self, yaml_config: str):
+        """Init the Configuration class.
+
+        Parameters
+        ----------
+        yaml_config : str
+            Path to yaml config file.
+        """
         super().__init__()
         self.YAML = YAML(typ="safe", pure=True)
         self.yaml_config = yaml_config
@@ -23,18 +30,26 @@ class Configuration:
         self.CheckTracksNames()
 
     @property
-    def ConfigPath(self):
-        """Return config path."""
+    def ConfigPath(self) -> str:
+        """
+        Return config path.
+
+        Returns
+        -------
+        str
+            Config path.
+        """
         return self.yaml_config
 
     @property
-    def ParameterConfigPath(self):
-        """Return parameter config path, as found on some line in the config file.
+    def ParameterConfigPath(self) -> str:
+        """
+        Return parameter config path, as found on some line in the config file.
 
-        Raises
-        ------
-        ValueError
-            if the config file is missing the file parameters include statement
+        Returns
+        -------
+        str
+            Preprocessing parameter filepath
         """
 
         with open(self.yaml_config, "r") as conf:
@@ -56,7 +71,7 @@ class Configuration:
         )
         return preprocess_parameters_path
 
-    def LoadConfigFiles(self):
+    def LoadConfigFiles(self) -> None:
         """Load config file from disk."""
         self.yaml_default_config = os.path.join(
             os.path.dirname(__file__), self.yaml_default_config
@@ -68,7 +83,7 @@ class Configuration:
         with open(self.yaml_config, "r") as conf:
             self.config = self.YAML.load(conf)
 
-    def GetConfiguration(self):
+    def GetConfiguration(self) -> None:
         """Assigne configuration from file to class variables.
 
         Raises
@@ -112,9 +127,36 @@ class Configuration:
                 setattr(self, elem, self.default_config[elem])
 
     def GetFileName(
-        self, iteration=None, option=None, extension=".h5", custom_path=None
-    ):
-        """Get the file name for different preprocessing steps."""
+        self,
+        iteration: int = None,
+        option: str = None,
+        extension: str = ".h5",
+        custom_path: str = None,
+    ) -> str:
+        """
+        Get the file name for different preprocessing steps.
+
+        Parameters
+        ----------
+        iteration : int, optional
+            Number of iterations, by default None
+        option : str, optional
+            Option name for file, by default None
+        extension : str, optional
+            File extension, by default ".h5"
+        custom_path : str, optional
+            Custom path to file, by default None
+
+        Returns
+        -------
+        str
+            Path of the output file.
+
+        Raises
+        ------
+        ValueError
+            If the outfile is not a .h5 file.
+        """
         if option is None and iteration is None:
             return self.outfile_name
         out_file = self.outfile_name
@@ -150,7 +192,7 @@ class Configuration:
         out_file = out_file[:idx] + inserttxt + extension
         return out_file
 
-    def CheckTracksNames(self):
+    def CheckTracksNames(self) -> None:
         """Checks if the option tracks_name is given."""
         if (
             "tracks_names" not in self.sampling["options"]
@@ -169,14 +211,15 @@ class Configuration:
                 self.sampling["options"]["tracks_names"]
             ]
 
-    def copy_to_out_dir(self, suffix):
-        """Write the current config object to a new file, in the output dir
+    def copy_to_out_dir(self, suffix: str) -> None:
+        """
+        Write the current config object to a new file, in the output dir
         of the current preprocessing job
 
         Parameters
         ----------
-        suffix: append this string to the copied config file name
-
+        suffix : str
+            Append this string to the copied config file name
         """
 
         # get output directory of this preprocessing job

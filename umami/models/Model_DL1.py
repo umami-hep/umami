@@ -23,17 +23,23 @@ from umami.preprocessing_tools import GetVariableDict
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 
-def DL1_model(train_config, input_shape, feature_connect_indices=None):
+def DL1_model(
+    train_config: object,
+    input_shape: tuple,
+    feature_connect_indices: list = None,
+):
     """
     Constructs or loads the DL1 model
 
     Parameters
     ----------
-    train_config : dict
+    train_config : object
         Training configuration with NN_structure sub-dict
         giving the structure of the NN.
     input_shape : tuple
         Size of the input: (nFeatures,).
+    feature_connect_indices : list
+        List with features that are feeded in another time.
 
     Returns
     -------

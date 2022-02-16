@@ -54,6 +54,11 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
             Number of conditions used for training of CADS.
         print_logger : bool
             Decide, if the logger outputs are printed or not.
+
+        Raises
+        ------
+        ValueError
+            If neither X_Name or X_Trk_Name is given.
         """
 
         self.train_file_path = train_file_path

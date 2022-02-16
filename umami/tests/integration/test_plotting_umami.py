@@ -20,7 +20,19 @@ set_log_level(logger, "DEBUG")
 
 
 def getConfiguration():
-    """Load yaml file with settings for integration test of dips training."""
+    """
+    Load yaml file with settings for integration test of dips training.
+
+    Returns
+    -------
+    object
+        Loaded configuration file.
+
+    Raises
+    ------
+    YAMLError
+        If a needed key is not in file.
+    """
     path_configuration = "umami/tests/integration/fixtures/testSetup.yaml"
     with open(path_configuration, "r") as conf:
         conf_setup = yaml.load(conf, Loader=yaml_loader)

@@ -609,11 +609,31 @@ def get_jet_feature_indices(variable_header: dict, exclude: list = None):
     return variables, excluded_variables, excluded_var_indices
 
 
-def get_jet_feature_position(variable_list, column_names):
+def get_jet_feature_position(
+    variable_list: list,
+    column_names: list,
+) -> list:
     """
-    Return the index position of the variables listed in variable_list within
+     Return the index position of the variables listed in variable_list within
     the column_names list.
     WARNING: should match the column order of the training data!
+
+    Parameters
+    ----------
+    variable_list : list
+        List with the variables
+    column_names : list
+        List with the names of the columns
+
+    Returns
+    -------
+    list
+        List with the positions of the columns
+
+    Raises
+    ------
+    ValueError
+        If the variable is not in the set.
     """
     position_list = []
     for variable in variable_list:

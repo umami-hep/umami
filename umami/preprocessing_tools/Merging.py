@@ -4,11 +4,24 @@ Helper functions to merge hdf5 (big) files
 import h5py
 
 
-def check_size(data):
-    """Check if #entries is the same for all keys and return it
+def check_size(data) -> int:
+    """
+    Check if #entries is the same for all keys and return it
 
-    Keyword arguments:
-    data -- data dictionary
+    Parameters
+    ----------
+    data : dict
+        Array with the entries inside.
+
+    Returns
+    -------
+    int
+        Number of entries
+
+    Raises
+    ------
+    ValueError
+        If not all datasets have the same number of entries.
     """
 
     sizes = [d.shape[0] for d in data.values()]
@@ -21,14 +34,28 @@ def check_size(data):
     return sizes[0]
 
 
-def check_keys(data1, data2):
-    """Check it both files have the same datasets.
+def check_keys(data1, data2) -> bool:
+    """
+    Check it both files have the same datasets.
     Return True if both have the same datasets or
     raise a ValueError otherwise.
 
-    Keyword arguments:
-    data1 -- current data dictionary
-    data2 -- data dictionary to be added
+    Parameters
+    ----------
+    data1 : dict
+        current data dictionary
+    data2 : dict
+        data dictionary to be added
+
+    Returns
+    -------
+    bool
+        True if everything works.
+
+    Raises
+    ------
+    ValueError
+        If Files have different datasets!
     """
     if data1.keys() != data2.keys():
         raise ValueError("Files have different datasets!")
@@ -36,13 +63,27 @@ def check_keys(data1, data2):
 
 
 def check_shapes(data1, data2):
-    """Check if shapes of datasets are the same.
+    """
+    Check if shapes of datasets are the same.
     Return True if both datasets have the same shapes or
     raise a ValueError otherwise.
 
-    Keyword arguments:
-    data1 -- current data dictionary
-    data2 -- data dictionary to be added
+    Parameters
+    ----------
+    data1 : dict
+        current data dictionary
+    data2 : dict
+        data dictionary to be added
+
+    Returns
+    -------
+    bool
+        If shapes are the same, return True, else False
+
+    Raises
+    ------
+    ValueError
+        If shapes are different.
     """
     # datasets must have equal keys, otherwise comparison does not make sense
     check_keys(data1, data2)
@@ -52,11 +93,21 @@ def check_shapes(data1, data2):
     return True
 
 
-def get_size(filelist):
-    """Get total size of datasets; return size and ranges per file.
+def get_size(filelist: list):
+    """
+    Get total size of datasets; return size and ranges per file.
 
-    Keyword arguments:
-    filelist -- the list of input files
+    Parameters
+    ----------
+    filelist : list
+        List of input files
+
+    Returns
+    -------
+    total_size : list
+        Size of the files.
+    ranges : list
+        Ranges of the files.
     """
 
     total_size = 0
@@ -72,14 +123,19 @@ def get_size(filelist):
     return total_size, ranges
 
 
-def create_datasets(output, source, size):
-    """Prepare datasets for merged file based on dictionary.
+def create_datasets(output, source: dict, size):
+    """
+    Prepare datasets for merged file based on dictionary.
 
-    Keyword argument:
-    output -- output merged hdf5 file
-    source -- dict with arrays to save per key or /
-              path to one input hdf5 file or / one input hdf5 file
-    size -- total number of entries per dataset
+    Parameters
+    ----------
+    output : h5py File
+        output merged hdf5 file
+    source : dict
+        dict with arrays to save per key or path to one input hdf5 file or
+        one input hdf5 file
+    size : int
+        total number of entries per dataset
     """
 
     # check if 'source' is a dict, otherwise assume it is a path to a hdf5 file
@@ -97,12 +153,17 @@ def create_datasets(output, source, size):
 
 
 def add_data(source, output, data_range):
-    """Add content of "source" to "output" hdf5 file.
+    """
+    Add content of "source" to "output" hdf5 file.
 
-    Keyword arguments:
-    source -- input hdf5 file path / input hdf5 file / dictionary
-    output -- output hdf5 file
-    data_range -- where to save data in output arrays
+    Parameters
+    ----------
+    source : str, dict
+        input hdf5 file path / input hdf5 file / dictionary
+    output : h5py File
+        output hdf5 file
+    data_range : list
+        where to save data in output arrays
     """
     # check if 'source' is a dict, otherwise assume it is a path to a hdf5 file
     close_file = False

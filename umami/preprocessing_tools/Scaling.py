@@ -12,16 +12,20 @@ from umami.configuration import logger
 from .utils import GetVariableDict
 
 
-def Gen_default_dict(scale_dict):
+def Gen_default_dict(scale_dict: dict) -> dict:
     """
     Generates default value dictionary from scale/shift dictionary.
 
-    Input:
-    - scale_dict: Scale dict loaded from json.
+    Parameters
+    ----------
+    scale_dict : dict
+        Scale dict loaded from json.
 
-    Output:
-    - default_dict: Returns a dict with all given variables but with
-                    default values. With these, NaNs can be filled.
+    Returns
+    -------
+    dict
+        Returns a dict with all given variables but with
+        default values. With these, NaNs can be filled.
     """
 
     default_dict = {}
@@ -32,8 +36,9 @@ def Gen_default_dict(scale_dict):
     return default_dict
 
 
-def get_track_mask(tracks: np.ndarray):
-    """
+def get_track_mask(tracks: np.ndarray) -> np.ndarray:
+    """_summary_
+
     Parameters
     ----------
     tracks : np.ndarray
@@ -44,8 +49,13 @@ def get_track_mask(tracks: np.ndarray):
 
     Returns
     -------
-    bool_array : np.ndarray
+    np.ndarray
         A bool array (nJets, nTrks), True for tracks that are present.
+
+    Raises
+    ------
+    ValueError
+        If no 'valid' flag or at least one float variable in your input tracks.
     """
 
     # try to use the valid flag, present in newer samples
@@ -64,22 +74,31 @@ def get_track_mask(tracks: np.ndarray):
 
 
 def apply_scaling_trks(
-    trks,
+    trks: np.ndarray,
     variable_config: dict,
     scale_dict: dict,
     tracks_name: str,
 ):
     """
-    Apply the scaling/shifting to the tracks
+    Apply the scaling/shifting to the tracks.
 
-    Input:
-    - trks: Loaded tracks as numpy array.
-    - variable_config: Loaded variable config.
-    - scale_dict: Loaded scale dict.
+    Parameters
+    ----------
+    trks : np.ndarray
+        Loaded tracks as numpy array.
+    variable_config : dict
+        Loaded variable config.
+    scale_dict : dict
+        Loaded scale dict.
+    tracks_name : str
+        Name of the tracks.
 
-    Output:
-    - scaled_trks: The tracks scaled and shifted.
-    - trk_labels: The track labels, if defined in the variable config.
+    Returns
+    -------
+    scaled_trks : np.ndarray
+        The tracks scaled and shifted.
+    trk_labels : np.ndarray
+        The track labels, if defined in the variable config.
     """
 
     # Init a list for the variables
@@ -144,15 +163,18 @@ class Scaling:
     and can apply it.
     """
 
-    def __init__(self, config, compression="gzip") -> None:
+    def __init__(self, config: object, compression: str = "gzip") -> None:
         """
         Init the needed configs and variables
 
-        Input:
-        - config: Loaded config file for the preprocessing.
-        - compression: Type of compression which should be used.
-                       Default: gzip
+        Parameters
+        ----------
+        config : object
+            Loaded config file for the preprocessing.
+        compression : str, optional
+            Type of compression which should be used., by default "gzip"
         """
+
         self.config = config
         self.scale_dict_path = config.dict_file
         self.bool_use_tracks = config.sampling["options"]["save_tracks"]
@@ -173,18 +195,27 @@ class Scaling:
         """
         Combine the mean and scale of the two input scale dict.
 
-        Input:
-        - first_scale_dict: First scale dict with the variable and
-                            their respective mean/std inside.
-        - second_scale_dict: Second scale dict with the variable and
-                            their respective mean/std inside.
-        - variable: Variable which is to be combined.
-        - first_N: Number of tracks/jets used to calculate mean/std for first dict.
-        - second_N: Number of tracks/jets used to calculate mean/std for second dict.
+        Parameters
+        ----------
+        first_scale_dict : dict
+            First scale dict with the variable and
+            their respective mean/std inside.
+        second_scale_dict : dict
+            Second scale dict with the variable and
+            their respective mean/std inside.
+        variable : str
+            Variable which is to be combined.
+        first_N : int
+            Number of tracks/jets used to calculate mean/std for first dict.
+        second_N : int
+            Number of tracks/jets used to calculate mean/std for second dict.
 
-        Output:
-        combined_mean: Combined mean/shift.
-        combined_std: Combined std/scale.
+        Returns
+        -------
+        combined_mean : float
+            Combined mean/shift.
+        combined_std : float
+            Combined std/scale.
         """
 
         # Get the values in variables
@@ -215,16 +246,25 @@ class Scaling:
         second_scale_dict: dict,
         first_nTrks: int,
         second_nTrks: int,
-    ):
+    ) -> dict:
         """
         Combining the scale dicts of two track chunks.
 
-        Input:
-        - first_scale_dict: First scale dict to join.
-        - second_scale_dict: Second scale dict to join.
+        Parameters
+        ----------
+        first_scale_dict : dict
+            First scale dict to join.
+        second_scale_dict : dict
+            Second scale dict to join.
+        first_nTrks : int
+            Number of tracks used for the first scale dict.
+        second_nTrks : int
+            Number of tracks used for the second scale dict.
 
-        Output:
-        - combined_scale_dict: The combined scale dict.
+        Returns
+        -------
+        combined_scale_dict : dict
+            The combined scale dict.
         """
 
         # Init a new combined scale dict
@@ -254,16 +294,24 @@ class Scaling:
         second_scale_dict: dict,
         first_nJets: int,
         second_nJets: int,
-    ):
-        """
-        Combining the scale dicts of two track chunks.
+    ) -> list:
+        """_summary_
 
-        Input:
-        - first_scale_dict: First scale dict two join.
-        - second_scale_dict: Second scale dict two join.
+        Parameters
+        ----------
+        first_scale_dict : dict
+            First scale dict to join.
+        second_scale_dict : dict
+            Second scale dict to join.
+        first_nJets : int
+            Number of jets used for the first scale dict.
+        second_nJets : int
+            Number of jets used for the second scale dict.
 
-        Output:
-        - combined_scaled_dict: The combined scale dict list.
+        Returns
+        -------
+        combined_scaled_dict : list
+            The combined scale dict list.
         """
 
         # Init a combined list for the dicts
@@ -295,7 +343,10 @@ class Scaling:
         return combined_dict_list
 
     def get_scaling_tracks(
-        self, data: np.ndarray, var_names: list, track_mask: np.ndarray
+        self,
+        data: np.ndarray,
+        var_names: list,
+        track_mask: np.ndarray,
     ):
         """
         Calculate the scale dict for the tracks and return the dict.
@@ -336,20 +387,34 @@ class Scaling:
 
         return scale_dict, nTrks
 
-    def get_scaling(self, vec, varname, custom_defaults_vars):
+    def get_scaling(
+        self,
+        vec: np.ndarray,
+        varname: str,
+        custom_defaults_vars: dict,
+    ):
         """
         Calculates the weighted average and std for vector vec.
 
-        Input:
-        - vec: Array with variable values for the jets
-        - varname: Name of the variable which is to be scaled
-        - custom_defaults_var: Dict with custom default variable values
+        Parameters
+        ----------
+        vec : np.ndarray
+            Array with variable values for the jets
+        varname : str
+            Name of the variable which is to be scaled
+        custom_defaults_vars : dict
+            Dict with custom default variable values
 
-        Output:
-        - varname: Name of the variable
-        - average: Average of the variable
-        - std: Std of the variable
-        - default: Default value of the variable
+        Returns
+        -------
+        varname : str
+            Name of the variable
+        average : float
+            Average of the variable
+        std : float
+            Std of the variable
+        default : float
+            Default value of the variable
         """
 
         # find NaN values
@@ -367,18 +432,31 @@ class Scaling:
         std = np.float64(np.sqrt(np.average((vec - average) ** 2)))
         return varname, average, std, default
 
-    def dict_in(self, varname, average, std, default):
+    def dict_in(
+        self,
+        varname: str,
+        average: float,
+        std: float,
+        default: float,
+    ) -> dict:
         """
         Creates dictionary entry containing scale and shift parameters.
 
-        Input:
-        - varname: Name of the variable
-        - average: Average of the variable
-        - std: Standard deviation of the variable
-        - default: Default value of the variable
+        Parameters
+        ----------
+        varname : str
+            Name of the variable
+        average : float
+            Average of the variable
+        std : float
+            Standard deviation of the variable
+        default : float
+            Default value of the variable
 
-        Output:
-        - Scale_dict: Dict with the name, shift, scale and default
+        Returns
+        -------
+        Scale_dict : dict
+            Dict with the name, shift, scale and default
         """
 
         return {
@@ -388,15 +466,20 @@ class Scaling:
             "default": default,
         }
 
-    def GetScaleDict(self, input_file: str = None, chunkSize: int = 1e5):
+    def GetScaleDict(
+        self,
+        input_file: str = None,
+        chunkSize: int = 1e5,
+    ):
         """
         Calculates the scaling, shifting and default values and saves them to json.
 
-        Input:
-        - input_file: File which is used to calculate scaling/shifting
-
-        Output:
-        - Scale dict: Scale dict calculated using the given file
+        Parameters
+        ----------
+        input_file : str, optional
+            File which is used to calculate scaling/shifting, by default None
+        chunkSize : int, optional
+            Scale dict calculated using the given file, by default 1e5
         """
 
         # Get input filename to calculate scaling and shifting
@@ -507,14 +590,22 @@ class Scaling:
         """
         Set up a generator that loads the jets in chunks and calculates the mean/std.
 
-        Input:
-        - input_file: File which is to be scaled.
-        - nJets: Number of jets which are to be scaled.
-        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
+        Parameters
+        ----------
+        input_file : str
+            File which is to be scaled.
+        nJets : int
+            Number of jets which are to be scaled.
+        chunkSize : int, optional
+            The number of jets which are loaded and scaled/shifted per step,
+            by default int(10000)
 
-        Output:
-        - scale_dict_trk: Dict with the scale/shift values for each variable.
-        - nJets: Number of jets used for scaling/shifting.
+        Yields
+        ------
+        scale_dict_trk : dict
+            Dict with the scale/shift values for each variable.
+        nJets : int
+            Number of jets used for scaling/shifting.
         """
 
         # Extract the correct variables
@@ -599,14 +690,25 @@ class Scaling:
         """
         Set up a generator that loads the tracks in chunks and calculates the mean/std.
 
-        Input:
-        - input_file: File which is to be scaled.
-        - nJets: Number of jets which are to be scaled.
-        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
 
-        Output:
-        - scale_dict_trk: Dict with the scale/shift values for each variable.
-        - nTrks: Number of tracks used for scaling/shifting.
+        Parameters
+        ----------
+        input_file : str
+            File which is to be scaled.
+        nJets : int
+            Number of jets which are to be scaled.
+        tracks_name : str
+            Name of the tracks
+        chunkSize : int, optional
+            The number of jets which are loaded and scaled/shifted per step,
+            by default int(10000)
+
+        Yields
+        ------
+        scale_dict_trk : dict
+            Dict with the scale/shift values for each variable.
+        nTrks : int
+            Number of tracks used for scaling/shifting.
         """
 
         # Load the variables which are scaled/shifted
@@ -685,19 +787,39 @@ class Scaling:
         chunkSize: int = int(10000),
     ):
         """
-        Set up a generator who applies the scaling/shifting for the given jet variables.
+        Set up a generator who applies the scaling/shifting for the given
+        jet variables.
 
-        Input:
-        - input_file: File which is to be scaled.
-        - jets_variables: Variables of the jets which are to be scaled.
-        - jets_scale_dict: Scale dict of the jet variables with the values inside.
-        - jets_default_dict: Default scale dict of the jets.
-        - nJets: Number of jets which are to be scaled.
-        - tracks_scale_dict: Scale dict of the track variables.
-        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
+        Parameters
+        ----------
+        input_file : str
+            File which is to be scaled.
+        jets_variables : list
+            Variables of the jets which are to be scaled.
+        jets_scale_dict : dict
+            Scale dict of the jet variables with the values inside.
+        jets_default_dict : dict
+            Default scale dict of the jets.
+        nJets : int
+            Number of jets which are to be scaled.
+        tracks_scale_dict : dict, optional
+            Scale dict of the track variables., by default None
+        chunkSize : int, optional
+            The number of jets which are loaded and scaled/shifted per step,
+            by default int(10000)
 
-        Output:
-        - Yield: The yielded scaled/shifted jets/tracks and the labels
+        Yields
+        ------
+        jets : np.ndarray
+            Yielded jets
+        tracks : np.ndarray
+            Yielded tracks
+        labels : np.ndarray
+            Yielded labels
+        tracks_labels : np.ndarray
+            Yielded track labels
+        flavour : np.ndarray
+            Yielded flavours
         """
 
         # Open the file and load the jets
@@ -772,17 +894,23 @@ class Scaling:
 
             # TODO: Add plotting
 
-    def ApplyScales(self, input_file: str = None, chunkSize: int = 1e6):
+    def ApplyScales(
+        self,
+        input_file: str = None,
+        chunkSize: int = 1e6,
+    ):
         """
         Apply the scaling and shifting.
 
-        Input:
-        - input_file: File which is to be scaled.
-        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
-
-        Output:
-        - scaled_file: Returns the scaled/shifted file
+        Parameters
+        ----------
+        input_file : str, optional
+            File which is to be scaled., by default None
+        chunkSize : int, optional
+            The number of jets which are loaded and scaled/shifted per step,
+            by default 1e6
         """
+
         # Get input filename to calculate scaling and shifting
         if input_file is None:
             input_file = self.config.GetFileName(option="resampled")

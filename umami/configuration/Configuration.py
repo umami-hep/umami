@@ -69,8 +69,15 @@ class Configuration:
         self.logger.debug(f"Setting TFDebugLevel to {self.config['TFDebugLevel']}")
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(self.config["TFDebugLevel"])
 
-    def SetLoggingLevel(self):
-        """Set DebugLevel for logging."""
+    def SetLoggingLevel(self) -> object:
+        """Set DebugLevel for logging.
+
+        Returns
+        -------
+        object
+            Umami logger.
+        """
+
         log_levels = {
             "CRITICAL": logging.CRITICAL,
             "ERROR": logging.ERROR,

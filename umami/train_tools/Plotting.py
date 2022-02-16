@@ -193,7 +193,7 @@ def PlotDiscCutPerEpoch(
         Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
     SecondTag : str, optional
         Lower tag in the ATLAS label with infos,
-        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+        by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisAtlasTag : float, optional
         Y axis position of the ATLAS label, by default 0.9
     yAxisIncrease : float, optional
@@ -286,7 +286,7 @@ def PlotDiscCutPerEpochUmami(
         Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
     SecondTag : str, optional
         Lower tag in the ATLAS label with infos,
-        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+        by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisAtlasTag : float, optional
         Y axis position of the ATLAS label, by default 0.9
     yAxisIncrease : float, optional
@@ -409,7 +409,7 @@ def PlotRejPerEpochComparison(
         Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
     SecondTag : str, optional
         Lower tag in the ATLAS label with infos,
-        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+        by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisAtlasTag : float, optional
         Y axis position of the ATLAS label, by default 0.95
     yAxisIncrease : float, optional
@@ -666,7 +666,7 @@ def PlotRejPerEpoch(
         Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
     SecondTag : str, optional
         Lower tag in the ATLAS label with infos,
-        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+        by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisAtlasTag : float, optional
         Y axis position of the ATLAS label, by default 0.9
     yAxisIncrease : float, optional
@@ -841,7 +841,7 @@ def PlotLosses(
         Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
     SecondTag : str, optional
         Lower tag in the ATLAS label with infos,
-        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+        by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisIncrease : float, optional
         Y axis increase factor to fit the ATLAS label, by default 1.2
     yAxisAtlasTag : float, optional
@@ -943,7 +943,7 @@ def PlotAccuracies(
         Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
     SecondTag : str, optional
         Lower tag in the ATLAS label with infos,
-        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+        by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisIncrease : float, optional
         Y axis increase factor to fit the ATLAS label, by default 1.2
     yAxisAtlasTag : float, optional
@@ -1045,7 +1045,7 @@ def PlotLossesUmami(
         Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
     SecondTag : str, optional
         Lower tag in the ATLAS label with infos,
-        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+        by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisIncrease : float, optional
         Y axis increase factor to fit the ATLAS label, by default 1.4
     yAxisAtlasTag : float, optional
@@ -1162,7 +1162,7 @@ def PlotAccuraciesUmami(
         Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
     SecondTag : str, optional
         Lower tag in the ATLAS label with infos,
-        by default :math:`"\n$\\sqrt{s}=13$ TeV, PFlow jets"`
+        by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisIncrease : float, optional
         Y axis increase factor to fit the ATLAS label, by default 1.4
     yAxisAtlasTag : float, optional

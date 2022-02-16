@@ -14,15 +14,22 @@ from umami.preprocessing_tools import GetVariableDict
 class TrainSampleWriter:
     """Class to write training files to disk."""
 
-    def __init__(self, config, compression=None) -> None:
+    def __init__(
+        self,
+        config: object,
+        compression: str = None,
+    ) -> None:
         """
         Init the needed configs and variables
 
-        Input:
-        - config: Loaded config file for the preprocessing.
-        - compression: Type of compression which should be used.
-                       Default: None
+        Parameters
+        ----------
+        config : object
+            Loaded config file for the preprocessing.
+        compression : str, optional
+            Type of compression which should be used, by default None
         """
+
         self.config = config
         self.bool_use_tracks = config.sampling["options"]["save_tracks"]
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
@@ -32,19 +39,40 @@ class TrainSampleWriter:
         self.variable_config = GetVariableDict(config.var_file)
 
     def load_generator(
-        self, input_file: str, index: int, nJets: int, chunkSize: int = 100_000
+        self,
+        input_file: str,
+        index: list,
+        nJets: int,
+        chunkSize: int = 100_000,
     ):
         """
         Set up a generator who loads the scaled file and save it in the format for
         training.
 
-        Input:
-        - input_file: File which is to be scaled.
-        - nJets: Number of jets used.
-        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
+        Parameters
+        ----------
+        input_file : str
+            File which is to be scaled.
+        index : list
+            List with the indicies.
+        nJets : int
+            Number of jets used.
+        chunkSize : int, optional
+            The number of jets which are loaded and scaled/shifted
+            per step, by default 100_000
 
-        Output:
-        - Yield: The yielded jets/tracks and labels loaded from file
+        Yields
+        ------
+        jets : np.ndarray
+            Yielded jets
+        tracks : np.ndarray
+            Yielded tracks
+        labels : np.ndarray
+            Yielded labels
+        tracks_labels : np.ndarray
+            Yielded track labels
+        flavour : np.ndarray
+            Yielded flavours
         """
 
         # Open the file and load the jets
@@ -113,10 +141,30 @@ class TrainSampleWriter:
 
                     yield jets, tracks, labels, track_labels, flavour
 
-    def better_shuffling(self, thearray, nJets, slice_size=int(1e4)):
+    def better_shuffling(
+        self,
+        thearray: np.ndarray,
+        nJets: int,
+        slice_size: int = int(1e4),
+    ) -> np.ndarray:
         """
         Shuffles the index list with fixed slices.
+
+        Parameters
+        ----------
+        thearray : np.ndarray
+            Input array with the values to shuffle.
+        nJets : int
+            Number of jets in the array
+        slice_size : int, optional
+            How much values are shuffeld at one, by default int(1e4)
+
+        Returns
+        -------
+        np.ndarray
+            Shuffeld input array.
         """
+
         missing = slice_size - nJets % slice_size
         adding = np.asarray([np.nan] * missing)
         thearray = np.concatenate([thearray, adding])
@@ -133,17 +181,21 @@ class TrainSampleWriter:
         input_file: str = None,
         output_file: str = None,
         chunkSize: int = 100_000,
-    ):
+    ) -> None:
         """
-        Input:
-        - input_file: File with scaled/shifted jets. Default is name from
-                        config + resampled_scaled
-        - output_file: Name of the output file. Default is name from
-                        config + resampled_scaled_shuffled.
-        - chunkSize: The number of jets which are loaded and scaled/shifted per step.
+        Write the training file.
 
-        Output:
-        - Train File: File which ready for training with the NN's.
+        Parameters
+        ----------
+        input_file : str, optional
+            File with scaled/shifted jets. Default is name from
+            config + resampled_scaled, by default None
+        output_file : str, optional
+            Name of the output file. Default is name from
+            config + resampled_scaled_shuffled., by default None
+        chunkSize : int, optional
+            The number of jets which are loaded and scaled/shifted per step,
+            by default 100_000
         """
 
         # Get the input files for writing/merging
@@ -305,14 +357,19 @@ class TrainSampleWriter:
                 chunk_counter += 1
                 jet_idx = jet_idx_end
 
-    def calculateWeights(self, weights_dict, jets, labels):
+    def calculateWeights(
+        self,
+        weights_dict: dict,
+        jets: np.ndarray,
+        labels: np.ndarray,
+    ):
         """
         Finds the according weight for the jet, with the weights calculated
         from the GetFlavorWeights method. Writes it onto the jets["weight"].
 
         Parameters
         ---------
-        weights_dict : dict of callables
+        weights_dict : dict
             weights_dict per flavor and some additional info written into a
             pickle file at /hybrids/flavour_weights
 
@@ -322,10 +379,11 @@ class TrainSampleWriter:
             - 'bin_indices_flat' : flattened indices of the bins in the histogram
             - 'label_map' : {0: 'ujets', 1: 'cjets', 2: 'bjets'}
 
-        jets : arraylike
+        jets : np.ndarray
             Containing values of jet variables
-        labels : arraylike (nJets x (nFlavor x 1))
-            Binarized truth value of flavor for jet.
+        labels : np.ndarray
+            Binarized truth value of flavor for jet with shape
+            (nJets x (nFlavor x 1))
         """
         # scale to original values for binning
         with open(self.config.dict_file, "r") as infile:

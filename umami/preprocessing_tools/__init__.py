@@ -35,7 +35,6 @@ from umami.preprocessing_tools.Scaling import (
 from umami.preprocessing_tools.utils import (
     GetBinaryLabels,
     GetVariableDict,
-    MakePlots,
     ResamplingPlots,
     generate_process_tag,
 )
