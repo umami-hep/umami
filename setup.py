@@ -10,7 +10,7 @@ from setuptools import setup
 
 setup(
     name="umami",
-    version="0.5",  # Also change in module
+    version="0.6",  # Also change in module
     packages=[
         "umami",
         "umami.classification_tools",
