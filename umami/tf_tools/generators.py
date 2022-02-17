@@ -320,3 +320,40 @@ class cads_generator(Model_Generator):
             ]
             small_step += 1
             yield {"input_1": batch_x_trk, "input_2": batch_x}, batch_y
+
+
+class umami_condition_generator(Model_Generator):
+    """Generator class for UMAMI with conditional attention.
+
+    This class provides the a generator that loads the training dataset
+    for UMAMI with conditional attention.
+    """
+
+    def __call__(self):
+        self.load_in_memory(part=0, load_jets=True, load_tracks=True)
+        n = 1
+        small_step = 0
+        for idx in range(self.length):
+            if (idx + 1) * self.batch_size > self.step_size * n:
+                self.load_in_memory(part=n, load_jets=True, load_tracks=True)
+                n += 1
+                small_step = 0
+            batch_x = self.x_in_mem[
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
+            ]
+            batch_x_cond = self.x_in_mem[
+                small_step * self.batch_size : (1 + small_step) * self.batch_size,
+                : self.nConds,
+            ]
+            batch_x_trk = self.x_trk_in_mem[
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
+            ]
+            batch_y = self.y_in_mem[
+                small_step * self.batch_size : (1 + small_step) * self.batch_size
+            ]
+            small_step += 1
+            yield {
+                "input_1": batch_x_trk,
+                "input_2": batch_x_cond,
+                "input_3": batch_x,
+            }, batch_y

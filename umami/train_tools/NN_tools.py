@@ -923,6 +923,7 @@ def load_validation_data_umami(
     nJets: int,
     jets_var_list: list = None,
     convert_to_tensor: bool = False,
+    nCond: int = None,
 ) -> dict:
     """
     Load the validation data for UMAMI.
@@ -940,6 +941,8 @@ def load_validation_data_umami(
     convert_to_tensor : bool
         Decide, if the validation data are converted to
         tensorflow tensors to avoid memory leaks.
+    nCond: int
+        Number of addittional variables used for attention
 
     Returns
     -------
@@ -996,11 +999,19 @@ def load_validation_data_umami(
             val_data_dict[f"Y_valid_{val_file_identifier}"] = tf.convert_to_tensor(
                 Y_valid, dtype=tf.int64
             )
+            if nCond is not None:
+                val_data_dict[
+                    f"X_valid_addvars_{val_file_identifier}"
+                ] = tf.convert_to_tensor(X_valid.iloc[:, :nCond], dtype=tf.float64)
 
         else:
             val_data_dict[f"X_valid_{val_file_identifier}"] = X_valid
             val_data_dict[f"X_valid_trk_{val_file_identifier}"] = X_valid_trk
             val_data_dict[f"Y_valid_{val_file_identifier}"] = Y_valid
+            if nCond is not None:
+                val_data_dict[f"X_valid_addvars_{val_file_identifier}"] = X_valid.iloc[
+                    :, :nCond
+                ]
 
     # Return the val data dict
     return val_data_dict
@@ -1279,11 +1290,19 @@ def evaluate_model_umami(
     for val_file_identifier in validation_file_identifiers:
         # Check which input data need to be used
         # Calculate accuracy andloss of UMAMI and Dips part
-        (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
-            [
+        if f"X_valid_addvars_{val_file_identifier}" in data_dict:
+            x = [
+                data_dict[f"X_valid_trk_{val_file_identifier}"],
+                data_dict[f"X_valid_addvars_{val_file_identifier}"],
+                data_dict[f"X_valid_{val_file_identifier}"],
+            ]
+        else:
+            x = [
                 data_dict[f"X_valid_trk_{val_file_identifier}"],
                 data_dict[f"X_valid_{val_file_identifier}"],
-            ],
+            ]
+        (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
+            x,
             data_dict[f"Y_valid_{val_file_identifier}"],
             batch_size=15_000,
             use_multiprocessing=True,
@@ -1293,10 +1312,7 @@ def evaluate_model_umami(
 
         # Evaluate with the model for predictions
         y_pred_dips, y_pred_umami = model.predict(
-            [
-                data_dict[f"X_valid_trk_{val_file_identifier}"],
-                data_dict[f"X_valid_{val_file_identifier}"],
-            ],
+            x,
             batch_size=15_000,
             use_multiprocessing=True,
             workers=8,

@@ -321,7 +321,7 @@ class test_DenseNet(tf.test.TestCase):
         )
 
         # Get net output
-        out = self.my_dense(inputs=inputs)
+        _, out = self.my_dense(inputs=inputs)
 
         # Test output
         np.testing.assert_almost_equal(expected_output, out)

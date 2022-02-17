@@ -95,6 +95,13 @@ if __name__ == "__main__":
             preprocess_config=preprocess_config,
         )
 
+    elif tagger_name == "umami_cond_att":
+        utm.UmamiCondAtt(
+            args=args,
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+        )
+
     else:
         raise ValueError(
             f"""
