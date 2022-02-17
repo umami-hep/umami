@@ -35,6 +35,10 @@ class h5toTFRecordConverter:
         # TODO: adding possibility to use more than first element of 'tracks_names'
         # only first element of the tracks_names list get converted only
         self.tracks_name = config.sampling["options"]["tracks_names"][0]
+        if "N_add_vars" in config.convert_to_tfrecord:
+            self.n_add_vars = config.convert_to_tfrecord["N_add_vars"]
+        else:
+            self.n_add_vars = None
 
     def load_h5File_Train(self):
         """
@@ -70,7 +74,11 @@ class h5toTFRecordConverter:
                 X_trks = hFile[f"X_{self.tracks_name}_train"][start:end]
                 Y = hFile["Y_train"][start:end]
                 Weights = hFile["weight"][start:end]
-                yield X_jets, X_trks, Y, Weights
+                if self.n_add_vars is not None:
+                    X_Add_Vars = hFile["X_train"][start:end, : self.n_add_vars]
+                else:
+                    X_Add_Vars = [None] * (end - start)
+                yield X_jets, X_trks, Y, Weights, X_Add_Vars
 
     def save_parameters(self, record_dir):
         """
@@ -87,12 +95,14 @@ class h5toTFRecordConverter:
             nTrks = len(h5file[f"X_{self.tracks_name}_train"][0])
             nFeatures = len(h5file[f"X_{self.tracks_name}_train"][0][0])
             nDim = len(h5file["Y_train"][0])
+            n_add_vars = self.n_add_vars
             data = {
                 "nJets": nJets,
                 "njet_features": njet_feature,
                 "nTrks": nTrks,
                 "nFeatures": nFeatures,
                 "nDim": nDim,
+                "nadd_vars": n_add_vars,
             }
         metadata_filename = record_dir + "/metadata.json"
         with open(metadata_filename, "w") as metadata:
@@ -107,7 +117,7 @@ class h5toTFRecordConverter:
         os.makedirs(record_dir, exist_ok=True)
         tf_filename_start = record_dir.split("/")[-1]
         n = 0
-        for X_jets, X_trks, Y, Weights in self.load_h5File_Train():
+        for X_jets, X_trks, Y, Weights, X_Add_Vars in self.load_h5File_Train():
             n += 1
             filename = (
                 record_dir
@@ -118,7 +128,9 @@ class h5toTFRecordConverter:
                 + ".tfrecord"
             )
             with tf.io.TFRecordWriter(filename) as file_writer:
-                for (x_jets, x_trks, y, weight) in zip(X_jets, X_trks, Y, Weights):
+                for (x_jets, x_trks, y, weight, x_add_vars) in zip(
+                    X_jets, X_trks, Y, Weights, X_Add_Vars
+                ):
                     record_bytes = tf.train.Example()
                     record_bytes.features.feature["X_jets"].float_list.value.extend(
                         x_jets.reshape(-1)
@@ -130,6 +142,10 @@ class h5toTFRecordConverter:
                     record_bytes.features.feature["Weights"].float_list.value.extend(
                         weight.reshape(-1)
                     )
+                    if x_add_vars is not None:
+                        record_bytes.features.feature[
+                            "X_Add_Vars"
+                        ].float_list.value.extend(x_add_vars.reshape(-1))
                     file_writer.write(record_bytes.SerializeToString())
                 logger.info(f"Data written in {filename}")
         self.save_parameters(record_dir=record_dir)

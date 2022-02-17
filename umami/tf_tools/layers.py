@@ -84,9 +84,10 @@ class DenseNet(Layer):
             Output of the network.
         """
         out = self.layers[0](inputs)
-        for layer in self.layers[1:]:
+        for layer in self.layers[1 : len(self.layers) - 1]:
             out = layer(out)
-        return out
+        out_last = self.layers[-1](out)
+        return out, out_last
 
     def get_config(self) -> dict:
         """

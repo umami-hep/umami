@@ -7,7 +7,7 @@ import tensorflow as tf
 class TFRecordReader:
     """Reader for tf records datasets."""
 
-    def __init__(self, path, batch_size, nfiles):
+    def __init__(self, path, batch_size, nfiles, sample_weights=False, n_cond=None):
         """
         Reads the tf records dataset.
 
@@ -19,10 +19,17 @@ class TFRecordReader:
             size of batches for the training
         nfiles : int
             number of tf record files loaded in parallel
+        sample_weights : bool
+            decide wether or not the sample weights should
+            be returned
+        n_cond : int
+            number of additional variables used for attention
         """
         self.path = path
         self.batch_size = batch_size
         self.nfiles = nfiles
+        self.sample_weights = sample_weights
+        self.n_cond = n_cond
 
     def load_Dataset(self):
         """
@@ -77,21 +84,38 @@ class TFRecordReader:
             "shape_Xtrks": [metadata["nTrks"], metadata["nFeatures"]],
             "shape_Y": [metadata["nDim"]],
         }
-        parse_ex = tf.io.parse_example(  # pylint: disable=no-value-for-parameter
-            record_bytes,
-            {
-                "X_jets": tf.io.FixedLenFeature(
-                    shape=shapes["shape_Xjets"], dtype=tf.float32
-                ),
-                "X_trks": tf.io.FixedLenFeature(
-                    shape=shapes["shape_Xtrks"], dtype=tf.float32
-                ),
-                "Y": tf.io.FixedLenFeature(shape=shapes["shape_Y"], dtype=tf.int64),
-                "Weights": tf.io.FixedLenFeature(shape=[1], dtype=tf.float32),
-            },
-        )
+        features = {
+            "X_jets": tf.io.FixedLenFeature(
+                shape=shapes["shape_Xjets"], dtype=tf.float32
+            ),
+            "X_trks": tf.io.FixedLenFeature(
+                shape=shapes["shape_Xtrks"], dtype=tf.float32
+            ),
+            "Y": tf.io.FixedLenFeature(shape=shapes["shape_Y"], dtype=tf.int64),
+            "Weights": tf.io.FixedLenFeature(shape=[1], dtype=tf.float32),
+        }
+        if self.n_cond is not None:
+            shapes["shape_Add_Vars"] = [metadata["nadd_vars"]]
+            features["X_Add_Vars"] = tf.io.FixedLenFeature(
+                shape=shapes["shape_Add_Vars"], dtype=tf.float32
+            )
+
+        parse_ex = tf.io.parse_example(record_bytes, features)  # pylint: disable=E1120
+
         # return the jet inputs and labels
-        return {
-            "input_1": parse_ex["X_trks"],
-            "input_2": parse_ex["X_jets"],
-        }, parse_ex["Y"]
+        if self.n_cond is not None:
+            input_dir = {
+                "input_1": parse_ex["X_trks"],
+                "input_2": parse_ex["X_Add_Vars"][:, : self.n_cond],
+                "input_3": parse_ex["X_jets"],
+            }
+        else:
+            input_dir = {
+                "input_1": parse_ex["X_trks"],
+                "input_2": parse_ex["X_jets"],
+            }
+
+        if self.sample_weights:
+            return input_dir, parse_ex["Y"], parse_ex["Weights"]
+
+        return input_dir, parse_ex["Y"]

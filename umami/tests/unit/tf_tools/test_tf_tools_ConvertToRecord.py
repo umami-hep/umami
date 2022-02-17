@@ -53,6 +53,26 @@ class ConvertTest(unittest.TestCase):
             "nTrks": 40,
             "nFeatures": 5,
             "nDim": 3,
+            "nadd_vars": None,
+        }
+        metadata_file = os.path.join(record_dir.name, "metadata.json")
+        with open(metadata_file, "r") as metadata:
+            parameters_saved = json.load(metadata)
+        self.assertEqual(parameters, parameters_saved)
+
+    def test_save_parameters_nadd_vars(self):
+        cv = Convert_to_Record.h5toTFRecordConverter(self.config)
+        # create temporary directory where data should be saved
+        record_dir = tempfile.TemporaryDirectory()
+        cv.n_add_vars = 4
+        cv.save_parameters(record_dir.name)
+        parameters = {
+            "nJets": 3,
+            "njet_features": 41,
+            "nTrks": 40,
+            "nFeatures": 5,
+            "nDim": 3,
+            "nadd_vars": 4,
         }
         metadata_file = os.path.join(record_dir.name, "metadata.json")
         with open(metadata_file, "r") as metadata:
