@@ -58,10 +58,13 @@ Splitting the model into architecture `arch_file` and weight file `hdf5_file` ca
 This script will return two files which are in this case `architecture-lwtnn_model.json` and `weights-lwtnn_model.h5`
 
 ### Final JSON File
-Finally, the three produced files can be merged via [kerasfunc2json.py](https://github.com/lwtnn/lwtnn/blob/master/converters/kerasfunc2json.py)
+Finally, the three produced files can be merged via [kerasfunc2json.py](https://github.com/lwtnn/lwtnn/blob/master/converters/kerasfunc2json.py).
+Before you can use this script, you have to clone [the lwtnn repo](https://github.com/lwtnn/lwtnn) to the directory where your architecture, weight and variables files are located.
+Afterwards, you can run the script with
 
-```
-python kerasfunc2json.py architecture-lwtnn_model.json weights-lwtnn_model.h5 lwtnn_vars.json > FINAL-model.json
+```bash
+git clone git@github.com:lwtnn/lwtnn.git
+python lwtnn/converters/kerasfunc2json.py architecture-lwtnn_model.json weights-lwtnn_model.h5 lwtnn_vars.json > FINAL-model.json
 ```
 
 To test if the created model is properly working you can use the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and add the created model to a config (e.g. [EMPFlow.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/configs/single-b-tag/EMPFlow.json)). This can exemplarily look like
