@@ -104,8 +104,20 @@ def Cads(args, train_config, preprocess_config):
     """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
-    Val_params = train_config.Eval_parameters_validation
+    val_params = train_config.Validation_metrics_settings
+    eval_params = train_config.Eval_parameters_validation
     tracks_key = train_config.tracks_key
+
+    # Init a list for the callbacks
+    callbacks = []
+
+    # Get needed variable from the train config
+    WP = float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
+    n_jets = (
+        int(val_params["n_jets"])
+        if "n_jets" in val_params
+        else int(eval_params["n_jets"])
+    )
 
     # Get the shapes for training
     with h5py.File(train_config.train_file, "r") as f:
@@ -187,18 +199,24 @@ def Cads(args, train_config, preprocess_config):
         save_weights_only=False,
     )
 
+    # Append the callback
+    callbacks.append(cads_mChkPt)
+
     if "LRR" in NN_structure and NN_structure["LRR"] is True:
         # Define LearningRate Reducer as Callback
         reduce_lr = utf.GetLRReducer(**NN_structure)
 
+        # Append the callback
+        callbacks.append(reduce_lr)
+
     # Load validation data for callback
     val_data_dict = None
-    if Val_params["n_jets"] > 0:
+    if n_jets > 0:
         if NN_structure["N_Conditions"] is None:
             val_data_dict = utt.load_validation_data_dips(
                 train_config=train_config,
                 preprocess_config=preprocess_config,
-                nJets=int(Val_params["n_jets"]),
+                nJets=n_jets,
                 convert_to_tensor=True,
             )
 
@@ -214,7 +232,7 @@ def Cads(args, train_config, preprocess_config):
             val_data_dict = utt.load_validation_data_umami(
                 train_config=train_config,
                 preprocess_config=preprocess_config,
-                nJets=int(Val_params["n_jets"]),
+                nJets=n_jets,
                 convert_to_tensor=True,
                 jets_var_list=["absEta_btagJes", "pt_btagJes"],
             )
@@ -237,14 +255,17 @@ def Cads(args, train_config, preprocess_config):
         class_labels=NN_structure["class_labels"],
         main_class=NN_structure["main_class"],
         val_data_dict=val_data_dict,
-        target_beff=Val_params["WP"],
-        frac_dict=Val_params["frac_values"],
+        target_beff=WP,
+        frac_dict=eval_params["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
-            WP=Val_params["WP"],
-            n_jets=int(Val_params["n_jets"]),
+            WP=WP,
+            n_jets=n_jets,
             dir_name=train_config.model_name,
         ),
     )
+
+    # Append the callback
+    callbacks.append(my_callback)
 
     logger.info("Start training")
     history = cads.fit(
@@ -252,7 +273,7 @@ def Cads(args, train_config, preprocess_config):
         epochs=nEpochs,
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=validation_data,
-        callbacks=[cads_mChkPt, reduce_lr, my_callback],
+        callbacks=callbacks,
         steps_per_epoch=nJets / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,

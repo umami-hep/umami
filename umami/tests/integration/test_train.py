@@ -261,15 +261,29 @@ def runTraining(config: dict, tagger: str) -> bool:
             raise AssertionError(f"Test failed: train.py for {tagger}.") from Error
 
         logger.info(f"Test: running plotting_epoch_performance.py for {tagger}...")
-        run_plot_epoch = run(
-            [
-                "python",
-                "umami/plotting_epoch_performance.py",
-                "-c",
-                f"{config}",
-            ],
-            check=True,
-        )
+
+        if tagger != "DL1r":
+            run_plot_epoch = run(
+                [
+                    "python",
+                    "umami/plotting_epoch_performance.py",
+                    "-c",
+                    f"{config}",
+                ],
+                check=True,
+            )
+
+        else:
+            run_plot_epoch = run(
+                [
+                    "python",
+                    "umami/plotting_epoch_performance.py",
+                    "-c",
+                    f"{config}",
+                    "--recalculate",
+                ],
+                check=True,
+            )
 
         try:
             run_plot_epoch.check_returncode()
