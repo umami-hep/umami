@@ -130,11 +130,17 @@ NN_structure:
 
 # Plotting settings for training metrics plots
 Validation_metrics_settings:
+    # Number of jets used for validation
+    n_jets: 3e5
+
     # Define which taggers should also be plotted
     taggers_from_file: ["rnnip", "DL1r"]
 
     # Enable/Disable atlas tag
     UseAtlasTag: True
+
+    # Working point used in the validation
+    WP: 0.77
 
     # fc_value and WP_b are autmoatically added to the plot label
     AtlasTag: "Internal Simulation"
@@ -144,7 +150,7 @@ Validation_metrics_settings:
     plot_datatype: "pdf"
 
 Eval_parameters_validation:
-    # Number of jets used for each validation sample. Set this to 0 if you have memory problems
+    # Number of jets used for evaluation
     n_jets: 3e5
 
     # Define taggers that are used for comparison in evaluate_model

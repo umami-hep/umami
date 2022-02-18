@@ -99,11 +99,17 @@ NN_structure:
 
 # Plotting settings for training metrics plots
 Validation_metrics_settings:
+    # Number of jets used for validation
+    n_jets: 3e5
+
     # Define which taggers should also be plotted
     taggers_from_file: ["DL1r"]
 
     # Label for the freshly trained tagger
     tagger_label: "DL1r"
+
+    # Working point used in the validation
+    WP: 0.77
 
     # Enable/Disable atlas tag
     UseAtlasTag: True
@@ -117,7 +123,7 @@ Validation_metrics_settings:
 
 # Eval parameters for validation evaluation while training
 Eval_parameters_validation:
-    # Number of jets used for validation
+    # Number of jets used for evaluation
     n_jets: 3e5
 
     # Define taggers that are used for comparison in evaluate_model

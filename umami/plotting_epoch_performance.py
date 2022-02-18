@@ -51,8 +51,15 @@ def GetParser():
         default=None,
         help="""Name of the json file which should be plotted. With
         this option the validation metrics are NOT calculated! Only
-        the available values are plotted. This also means that
-        --cfrac, --beff and --nJets have no impact on anything!""",
+        the available values are plotted.""",
+    )
+
+    parser.add_argument(
+        "-r",
+        "--recalculate",
+        action="store_true",
+        help="""The validation json (with the values per epoch inside)
+        will be recalculated using the values from the train config.""",
     )
 
     parser.add_argument(
@@ -83,12 +90,27 @@ def main(args, train_config, preprocess_config):
     ValueError
         If the given tagger is not supported.
     """ """"""
+    # Get the eval and val params from the train config
+    val_params = train_config.Validation_metrics_settings
+    eval_params = train_config.Eval_parameters_validation
+
     # Check for nJets args
     if args.nJets is None:
-        nJets = int(train_config.Eval_parameters_validation["n_jets"])
+        nJets = (
+            int(val_params["n_jets"])
+            if "n_jets" in val_params
+            else int(eval_params["n_jets"])
+        )
 
     else:
         nJets = args.nJets
+
+    # Get the b eff
+    if args.beff:
+        WP = args.beff
+
+    else:
+        WP = float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
 
     # Get the tagger from args. If not given, use the one from train config
     if args.tagger:
@@ -106,18 +128,24 @@ def main(args, train_config, preprocess_config):
             parameters = utt.get_parameters_from_validation_dict_name(output_file_name)
             beff = parameters["WP"]
 
-        else:
+        elif args.recalculate:
             # Calculate the validation metrics and save them
             output_file_name = utt.calc_validation_metrics(
                 train_config=train_config,
                 preprocess_config=preprocess_config,
-                target_beff=args.beff
-                if args.beff
-                else train_config.Eval_parameters_validation["WP"],
+                target_beff=WP,
                 nJets=nJets,
                 tagger=tagger,
             )
-            beff = train_config.Eval_parameters_validation["WP"]
+            beff = WP
+
+        else:
+            output_file_name = utt.get_validation_dict_name(
+                WP=WP,
+                n_jets=nJets,
+                dir_name=train_config.model_name,
+            )
+            beff = WP
 
         # Run the Performance check with the values from the dict and plot them
         RunPerformanceCheck(

@@ -114,11 +114,11 @@ def EvaluateModel(
 
     # Get train parameters
     test_set_config = train_config.test_files[data_set_name]
-    Eval_params = train_config.Eval_parameters_validation
+    eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
-    frac_values_comp = Eval_params["frac_values_comp"]
-    working_point = Eval_params["WP"]
+    frac_values_comp = eval_params["frac_values_comp"]
+    working_point = eval_params["WP"]
     tracks_name = train_config.tracks_name
     var_cuts = (
         test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
@@ -132,10 +132,10 @@ def EvaluateModel(
         )
 
     if (
-        "results_filename_extension" in Eval_params
-        and Eval_params["results_filename_extension"] is not None
+        "results_filename_extension" in eval_params
+        and eval_params["results_filename_extension"] is not None
     ):
-        results_filename_extension = Eval_params["results_filename_extension"]
+        results_filename_extension = eval_params["results_filename_extension"]
         logger.warning(
             f"Results filename extension is set to {results_filename_extension}. "
             "This means you have to specify the 'evaluation_file' when plotting your "
@@ -149,7 +149,7 @@ def EvaluateModel(
     tagger_preds = []
 
     # Set number of nJets for testing
-    nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
+    nJets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Check the config if the trained model is also to be evaluated
     try:
@@ -163,9 +163,9 @@ def EvaluateModel(
 
     # Test if multiple taggers are given or not
     tagger_list = (
-        [Eval_params["tagger"]]
-        if isinstance(Eval_params["tagger"], str)
-        else Eval_params["tagger"]
+        [eval_params["tagger"]]
+        if isinstance(eval_params["tagger"], str)
+        else eval_params["tagger"]
     )
     try:
         assert isinstance(tagger_list, list)
@@ -255,8 +255,8 @@ def EvaluateModel(
         class_labels=class_labels,
         main_class=main_class,
         frac_values={
-            "dips": Eval_params["frac_values"]["dips"],
-            "umami": Eval_params["frac_values"]["umami"],
+            "dips": eval_params["frac_values"]["dips"],
+            "umami": eval_params["frac_values"]["umami"],
         }
         if tagger_preds != []  # pylint: disable=use-implicit-booleaness-not-comparison
         else None,
@@ -287,14 +287,14 @@ def EvaluateModel(
         class_labels=class_labels,
         main_class=main_class,
         frac_values={
-            "dips": Eval_params["frac_values"]["dips"],
-            "umami": Eval_params["frac_values"]["umami"],
+            "dips": eval_params["frac_values"]["dips"],
+            "umami": eval_params["frac_values"]["umami"],
         }
         if tagger_preds != []  # pylint: disable=use-implicit-booleaness-not-comparison
         else None,
         frac_values_comp=frac_values_comp,
-        eff_min=0.49 if "eff_min" not in Eval_params else Eval_params["eff_min"],
-        eff_max=1.0 if "eff_max" not in Eval_params else Eval_params["eff_max"],
+        eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
+        eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
     )
 
     df_eff_rej = pd.DataFrame(tagger_rej_dicts)
@@ -325,9 +325,9 @@ def EvaluateModel(
         class_labels=class_labels,
         main_class=main_class,
         target_eff=working_point,
-        step=0.01 if "frac_step" not in Eval_params else Eval_params["frac_step"],
-        frac_min=0.01 if "frac_min" not in Eval_params else Eval_params["frac_min"],
-        frac_max=1.0 if "frac_max" not in Eval_params else Eval_params["frac_max"],
+        step=0.01 if "frac_step" not in eval_params else eval_params["frac_step"],
+        frac_min=0.01 if "frac_min" not in eval_params else eval_params["frac_min"],
+        frac_max=1.0 if "frac_max" not in eval_params else eval_params["frac_max"],
     )
 
     # Form the dict to a Dataframe and save it
@@ -393,21 +393,21 @@ def EvaluateModelDips(
 
     # Get train parameters
     test_set_config = train_config.test_files[data_set_name]
-    Eval_params = train_config.Eval_parameters_validation
+    eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
-    frac_values_comp = Eval_params["frac_values_comp"]
-    working_point = Eval_params["WP"]
+    frac_values_comp = eval_params["frac_values_comp"]
+    working_point = eval_params["WP"]
     tracks_name = train_config.tracks_name
     var_cuts = (
         test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
 
     if (
-        "results_filename_extension" in Eval_params
-        and Eval_params["results_filename_extension"] is not None
+        "results_filename_extension" in eval_params
+        and eval_params["results_filename_extension"] is not None
     ):
-        results_filename_extension = Eval_params["results_filename_extension"]
+        results_filename_extension = eval_params["results_filename_extension"]
         logger.warning(
             f"Results filename extension is set to {results_filename_extension}. "
             "This means you have to specify the 'evaluation_file' when plotting your "
@@ -424,14 +424,14 @@ def EvaluateModelDips(
         )
 
     # Set number of nJets for testing
-    nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
+    nJets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Test if multiple taggers are given or not
-    if isinstance(Eval_params["tagger"], str):
-        tagger_list = [Eval_params["tagger"]]
+    if isinstance(eval_params["tagger"], str):
+        tagger_list = [eval_params["tagger"]]
 
-    elif isinstance(Eval_params["tagger"], list):
-        tagger_list = Eval_params["tagger"]
+    elif isinstance(eval_params["tagger"], list):
+        tagger_list = eval_params["tagger"]
 
     else:
         raise ValueError(
@@ -536,7 +536,7 @@ def EvaluateModelDips(
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={"dips": Eval_params["frac_values"]},
+        frac_values={"dips": eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
     )
 
@@ -563,10 +563,10 @@ def EvaluateModelDips(
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={"dips": Eval_params["frac_values"]},
+        frac_values={"dips": eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
-        eff_min=0.49 if "eff_min" not in Eval_params else Eval_params["eff_min"],
-        eff_max=1.0 if "eff_max" not in Eval_params else Eval_params["eff_max"],
+        eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
+        eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
     )
 
     # Form the dict to a Dataframe and save it
@@ -598,9 +598,9 @@ def EvaluateModelDips(
         class_labels=class_labels,
         main_class=main_class,
         target_eff=working_point,
-        step=0.01 if "frac_step" not in Eval_params else Eval_params["frac_step"],
-        frac_min=0.01 if "frac_min" not in Eval_params else Eval_params["frac_min"],
-        frac_max=1.0 if "frac_max" not in Eval_params else Eval_params["frac_max"],
+        step=0.01 if "frac_step" not in eval_params else eval_params["frac_step"],
+        frac_min=0.01 if "frac_min" not in eval_params else eval_params["frac_min"],
+        frac_max=1.0 if "frac_max" not in eval_params else eval_params["frac_max"],
     )
 
     df_frac_rej = pd.DataFrame(tagger_fraction_rej_dict)
@@ -622,8 +622,8 @@ def EvaluateModelDips(
         f.attrs["N_test"] = len(jets)
 
     if (
-        "Calculate_Saliency" in Eval_params
-        and Eval_params["Calculate_Saliency"] is True
+        "Calculate_Saliency" in eval_params
+        and eval_params["Calculate_Saliency"] is True
     ):
         # Get the saliency map dict
         saliency_map_dict = uet.GetSaliencyMapDict(
@@ -633,7 +633,7 @@ def EvaluateModelDips(
             Y_test=Y_test,
             class_labels=class_labels,
             main_class=main_class,
-            frac_dict=Eval_params["frac_values"],
+            frac_dict=eval_params["frac_values"],
         )
 
         # Create results dir and pickle file
@@ -685,11 +685,11 @@ def EvaluateModelDL1(
 
     # Get train parameters
     test_set_config = train_config.test_files[data_set_name]
-    Eval_params = train_config.Eval_parameters_validation
+    eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
-    frac_values_comp = Eval_params["frac_values_comp"]
-    working_point = Eval_params["WP"]
+    frac_values_comp = eval_params["frac_values_comp"]
+    working_point = eval_params["WP"]
     var_cuts = (
         test_set_config["variable_cuts"] if "variable_cuts" in test_set_config else None
     )
@@ -702,10 +702,10 @@ def EvaluateModelDL1(
         )
 
     if (
-        "results_filename_extension" in Eval_params
-        and Eval_params["results_filename_extension"] is not None
+        "results_filename_extension" in eval_params
+        and eval_params["results_filename_extension"] is not None
     ):
-        results_filename_extension = Eval_params["results_filename_extension"]
+        results_filename_extension = eval_params["results_filename_extension"]
         logger.warning(
             f"Results filename extension is set to {results_filename_extension}. "
             "This means you have to specify the 'evaluation_file' when plotting your "
@@ -719,14 +719,14 @@ def EvaluateModelDL1(
         raise ValueError("You need to give an epoch which is to be evaluated!")
 
     # Set number of nJets for testing
-    nJets = int(Eval_params["n_jets"]) if not args.nJets else args.nJets
+    nJets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Test if multiple taggers are given or not
-    if isinstance(Eval_params["tagger"], str):
-        tagger_list = [Eval_params["tagger"]]
+    if isinstance(eval_params["tagger"], str):
+        tagger_list = [eval_params["tagger"]]
 
-    elif isinstance(Eval_params["tagger"], list):
-        tagger_list = Eval_params["tagger"]
+    elif isinstance(eval_params["tagger"], list):
+        tagger_list = eval_params["tagger"]
 
     else:
         raise ValueError(
@@ -819,7 +819,7 @@ def EvaluateModelDL1(
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={"DL1": Eval_params["frac_values"]},
+        frac_values={"DL1": eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
     )
 
@@ -852,10 +852,10 @@ def EvaluateModelDL1(
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={"DL1": Eval_params["frac_values"]},
+        frac_values={"DL1": eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
-        eff_min=0.49 if "eff_min" not in Eval_params else Eval_params["eff_min"],
-        eff_max=1.0 if "eff_max" not in Eval_params else Eval_params["eff_max"],
+        eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
+        eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
     )
 
     # Add dict to Dataframe and delete dict
@@ -887,9 +887,9 @@ def EvaluateModelDL1(
         class_labels=class_labels,
         main_class=main_class,
         target_eff=working_point,
-        step=0.01 if "frac_step" not in Eval_params else Eval_params["frac_step"],
-        frac_min=0.01 if "frac_min" not in Eval_params else Eval_params["frac_min"],
-        frac_max=1.0 if "frac_max" not in Eval_params else Eval_params["frac_max"],
+        step=0.01 if "frac_step" not in eval_params else eval_params["frac_step"],
+        frac_min=0.01 if "frac_min" not in eval_params else eval_params["frac_min"],
+        frac_max=1.0 if "frac_max" not in eval_params else eval_params["frac_max"],
     )
 
     # Form the dict to a Dataframe and save it
@@ -916,20 +916,20 @@ def EvaluateModelDL1(
         FeatureImportance.ShapleyOneFlavor(
             model=model,
             test_data=X_test,
-            model_output=Eval_params["shapley"]["model_output"],
-            feature_sets=Eval_params["shapley"]["feature_sets"],
-            plot_size=Eval_params["shapley"]["plot_size"],
+            model_output=eval_params["shapley"]["model_output"],
+            feature_sets=eval_params["shapley"]["feature_sets"],
+            plot_size=eval_params["shapley"]["plot_size"],
             plot_path=f"{train_config.model_name}/",
             plot_name=test_file_entry + "_shapley_b-jets",
         )
 
-        if Eval_params["shapley"]["bool_all_flavor_plot"]:
+        if eval_params["shapley"]["bool_all_flavor_plot"]:
             FeatureImportance.ShapleyAllFlavors(
                 model=model,
                 test_data=X_test,
-                feature_sets=Eval_params["shapley"]["feature_sets"],
-                averaged_sets=Eval_params["shapley"]["averaged_sets"],
-                plot_size=Eval_params["shapley"]["plot_size"],
+                feature_sets=eval_params["shapley"]["feature_sets"],
+                averaged_sets=eval_params["shapley"]["averaged_sets"],
+                plot_size=eval_params["shapley"]["plot_size"],
                 plot_path=f"{train_config.model_name}/",
                 plot_name=test_file_entry + "_shapley_all_flavors",
             )
