@@ -1,6 +1,7 @@
 """Keras model of the CADS tagger."""
 from umami.configuration import logger  # isort:skip
 import json
+import os
 
 import h5py
 import tensorflow as tf
@@ -90,7 +91,8 @@ def Cads_model(train_config, input_shape):
 
 
 def Cads(args, train_config, preprocess_config):
-    """Training handling of CADS.
+    """
+    Training handling of CADS.
 
     Parameters
     ----------
@@ -101,7 +103,16 @@ def Cads(args, train_config, preprocess_config):
     preprocess_config : object
         preprocessing configuration
 
+    Raises
+    ------
+    ValueError
+        If input is neither a h5 nor a directory.
+    KeyError
+        When no metadata file is given for tfrecords.
+    ValueError
+        If input is neither a h5 nor a directory.
     """
+
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
     val_params = train_config.Validation_metrics_settings
@@ -119,67 +130,127 @@ def Cads(args, train_config, preprocess_config):
         else int(eval_params["n_jets"])
     )
 
-    # Get the shapes for training
-    with h5py.File(train_config.train_file, "r") as f:
-        nJets, nTrks, nFeatures = f[tracks_key].shape
-        nJets, nDim = f["Y_train"].shape
+    if ".h5" in train_config.train_file:
+        # Get the shapes for training
+        with h5py.File(train_config.train_file, "r") as f:
+            nJets, nTrks, nFeatures = f[tracks_key].shape
+            nJets, nDim = f["Y_train"].shape
 
         if NN_structure["nJets_train"] is not None:
             nJets = int(NN_structure["nJets_train"])
 
-    # Print how much jets are used
-    logger.info(f"Number of Jets used for training: {nJets}")
+        if NN_structure["use_sample_weights"]:
+            tensor_types = (
+                {"input_1": tf.float32, "input_2": tf.float32},
+                tf.float32,
+                tf.float32,
+            )
+            tensor_shapes = (
+                {
+                    "input_1": tf.TensorShape([None, nTrks, nFeatures]),
+                    "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
+                },
+                tf.TensorShape([None, nDim]),
+                tf.TensorShape([None]),
+            )
+        else:
+            tensor_types = (
+                {"input_1": tf.float32, "input_2": tf.float32},
+                tf.float32,
+            )
+            tensor_shapes = (
+                {
+                    "input_1": tf.TensorShape([None, nTrks, nFeatures]),
+                    "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
+                },
+                tf.TensorShape([None, nDim]),
+            )
+
+        # Get training set from generator
+        train_dataset = (
+            tf.data.Dataset.from_generator(
+                utf.cads_generator(
+                    train_file_path=train_config.train_file,
+                    X_Name="X_train",
+                    X_trk_Name=tracks_key,
+                    Y_Name="Y_train",
+                    n_jets=nJets,
+                    batch_size=NN_structure["batch_size"],
+                    nConds=NN_structure["N_Conditions"],
+                    chunk_size=int(1e6),
+                    sample_weights=NN_structure["use_sample_weights"],
+                ),
+                output_types=tensor_types,
+                output_shapes=tensor_shapes,
+            )
+            .repeat()
+            .prefetch(tf.data.AUTOTUNE)
+        )
+
+    elif os.path.isdir(train_config.train_file):
+
+        # Get the files in dir
+        train_file_names = os.listdir(train_config.train_file)
+
+        # Loop over files in dir
+        for train_file_name in train_file_names:
+
+            # Check if file is tfrecords or .h5
+            if not (".tfrecord" in train_file_name) and not (
+                train_file_name == "metadata.json"
+            ):
+                raise ValueError(
+                    f"Input file {train_config.train_file} is neither a "
+                    ".h5 file nor a directory with TF Record Files. "
+                    "You should check this."
+                )
+
+        # Check if train file is in metadata
+        if "metadata.json" not in train_file_names:
+            raise KeyError("No metadata file in directory.")
+
+        # Check if nfiles is given. Otherwise set to 5
+        try:
+            nfiles = train_config.config["nfiles"]
+
+        except KeyError:
+            logger.warning(
+                "No number of files to be loaded in parallel defined. Set to 5"
+            )
+            nfiles = 5
+
+        # Get the tfrecords
+        tfrecord_reader = utf.TFRecordReader(
+            train_config.train_file,
+            NN_structure["batch_size"],
+            nfiles,
+            NN_structure["use_sample_weights"],
+            NN_structure["N_Conditions"],
+        )
+
+        # Load the dataset from reader
+        train_dataset = tfrecord_reader.load_Dataset()
+
+        # Get the metadata name
+        metadata_name = (train_config.train_file + "/metadata.json").replace("//", "/")
+
+        # Load metadata in file
+        with open(metadata_name, "r") as metadata_file:
+            metadata = json.load(metadata_file)
+            nJets = metadata["nJets"]
+            nTrks = metadata["nTrks"]
+            nFeatures = metadata["nFeatures"]
+            nDim = metadata["nDim"]
+    else:
+        raise ValueError(
+            f"input file {train_config.train_file} is neither a .h5 file nor "
+            "a directory with TF Record Files. You should check this."
+        )
+
+    logger.info(f"nJets: {nJets}, nTrks: {nTrks}")
 
     # Init CADS model
     cads, epochs = Cads_model(train_config=train_config, input_shape=(nTrks, nFeatures))
-
-    if NN_structure["use_sample_weights"]:
-        tensor_types = (
-            {"input_1": tf.float32, "input_2": tf.float32},
-            tf.float32,
-            tf.float32,
-        )
-        tensor_shapes = (
-            {
-                "input_1": tf.TensorShape([None, nTrks, nFeatures]),
-                "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
-            },
-            tf.TensorShape([None, nDim]),
-            tf.TensorShape([None]),
-        )
-    else:
-        tensor_types = (
-            {"input_1": tf.float32, "input_2": tf.float32},
-            tf.float32,
-        )
-        tensor_shapes = (
-            {
-                "input_1": tf.TensorShape([None, nTrks, nFeatures]),
-                "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
-            },
-            tf.TensorShape([None, nDim]),
-        )
-
-    # Get training set from generator
-    train_dataset = (
-        tf.data.Dataset.from_generator(
-            utf.cads_generator(
-                train_file_path=train_config.train_file,
-                X_Name="X_train",
-                X_trk_Name=tracks_key,
-                Y_Name="Y_train",
-                n_jets=nJets,
-                batch_size=NN_structure["batch_size"],
-                nConds=NN_structure["N_Conditions"],
-                chunk_size=int(1e6),
-                sample_weights=NN_structure["use_sample_weights"],
-            ),
-            output_types=tensor_types,
-            output_shapes=tensor_shapes,
-        )
-        .repeat()
-        .prefetch(tf.data.AUTOTUNE)
-    )
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
