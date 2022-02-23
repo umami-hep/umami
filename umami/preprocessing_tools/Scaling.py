@@ -246,7 +246,7 @@ class Scaling:
         second_scale_dict: dict,
         first_nTrks: int,
         second_nTrks: int,
-    ) -> dict:
+    ):
         """
         Combining the scale dicts of two track chunks.
 
@@ -265,6 +265,8 @@ class Scaling:
         -------
         combined_scale_dict : dict
             The combined scale dict.
+        combined_nTrks : int
+            The combined number of tracks.
         """
 
         # Init a new combined scale dict
@@ -286,7 +288,10 @@ class Scaling:
                 second_N=second_nTrks,
             )
 
-        return combined_scale_dict
+        # Sum of nTrks corresponding to combined scale dict
+        combined_nTrks = first_nTrks + second_nTrks
+
+        return combined_scale_dict, combined_nTrks
 
     def join_scale_dicts_jets(
         self,
@@ -294,8 +299,9 @@ class Scaling:
         second_scale_dict: dict,
         first_nJets: int,
         second_nJets: int,
-    ) -> list:
-        """_summary_
+    ):
+        """
+        Combine two scale dicts for jet variables.
 
         Parameters
         ----------
@@ -312,6 +318,8 @@ class Scaling:
         -------
         combined_scaled_dict : list
             The combined scale dict list.
+        combined_nJets : int
+            The combined number of jets (corresponding to the combined dicts).
         """
 
         # Init a combined list for the dicts
@@ -340,7 +348,10 @@ class Scaling:
                     )
                 )
 
-        return combined_dict_list
+        # Sum of nJets corresponding to combined scale dict
+        combined_nJets = first_nJets + second_nJets
+
+        return combined_dict_list, combined_nJets
 
     def get_scaling_tracks(
         self,
@@ -520,7 +531,7 @@ class Scaling:
                 tmp_scale_dict, tmp_nJets_loaded = next(jets_scaling_generator)
 
                 # Combine the scale dicts coming from the generator
-                scale_dict = self.join_scale_dicts_jets(
+                scale_dict, nJets_loaded = self.join_scale_dicts_jets(
                     first_scale_dict=scale_dict,
                     second_scale_dict=tmp_scale_dict,
                     first_nJets=nJets_loaded,
@@ -563,12 +574,16 @@ class Scaling:
                         tmp_dict_trk, tmp_nTrks_loaded = next(trks_scaling_generator)
 
                         # Combine the scale dicts coming from the generator
-                        scale_dict_trk_selection = self.join_scale_dicts_trks(
+                        (
+                            scale_dict_trk_selection,
+                            nTrks_loaded,
+                        ) = self.join_scale_dicts_trks(
                             first_scale_dict=scale_dict_trk_selection,
                             second_scale_dict=tmp_dict_trk,
                             first_nTrks=nTrks_loaded,
                             second_nTrks=tmp_nTrks_loaded,
                         )
+
                 # Add scale dict for given tracks selection to the more general one
                 scale_dict_trk.update({tracks_name: scale_dict_trk_selection})
 

@@ -94,12 +94,14 @@ class ScalingTestCase(unittest.TestCase):
 
         scaling_class = Scaling(self.config)
 
-        combined_scale_dict = scaling_class.join_scale_dicts_trks(
+        combined_scale_dict, combined_nTrks = scaling_class.join_scale_dicts_trks(
             first_scale_dict=self.first_scale_dict,
             second_scale_dict=self.second_scale_dict,
             first_nTrks=10,
             second_nTrks=15,
         )
+
+        self.assertEqual(combined_nTrks, 25)
 
         for var in combined_scale_dict:
             self.assertEqual(
@@ -137,12 +139,14 @@ class ScalingTestCase(unittest.TestCase):
 
         scaling_class = Scaling(self.config)
 
-        combined_scale_dict = scaling_class.join_scale_dicts_jets(
+        combined_scale_dict, combined_nJets = scaling_class.join_scale_dicts_jets(
             first_scale_dict=self.first_scale_dict,
             second_scale_dict=self.second_scale_dict,
             first_nJets=10,
             second_nJets=15,
         )
+
+        self.assertEqual(combined_nJets, 25)
 
         for var in range(len(combined_scale_dict)):
             self.assertEqual(
