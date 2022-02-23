@@ -3044,13 +3044,21 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         # Set the create_file to True for first loop
         create_file = True
 
+        # TODO add contextmanager and dataclass
+        # Create dicts to for the files from which the jets are loaded
+        sample_dict = {}
+        sample_length = {}
+        sample_sum = {}
+        sample_start_ind = {}
+        sample_end_ind = {}
+
         # Loop over the different flavour types (like bjets, cjets etc.)
         for sample_id, _ in enumerate(
             self.options["samples"][list(self.sample_categories.keys())[0]]
         ):
 
             # Iterate over the different sample types (ttbar, zpext)
-            for _, sample_category in enumerate(self.options["samples"]):
+            for sample_category in self.options["samples"]:
 
                 # Get the name of the file where the selected jets are stored in
                 # for the given combination of flavour and sample type
@@ -3061,139 +3069,189 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                     + "_selected.h5",
                 )
 
-                # Open the file with the selected jets
-                # for the given combination of flavour and sample type
-                with h5py.File(load_name, "r") as f:
+                # Add the h5 file to dict to loop over it
+                sample_dict[f"{sample_category}_{sample_id}"] = h5py.File(
+                    load_name, "r"
+                )
 
-                    # Get the flavour type
-                    category = self.sample_file_map[sample_category][sample_id][1].get(
-                        "category"
-                    )
-                    logger.info(f"Working on {sample_category} {category}.")
+                # Get the total number of jets in the file
+                sample_length[f"{sample_category}_{sample_id}"] = len(
+                    sample_dict[f"{sample_category}_{sample_id}"]["/jets"]
+                )
 
-                    # Get the total number of jets in the file
-                    total_size_file = len(f["jets"])
+                # Set the start and end indicies for the file
+                sample_start_ind[f"{sample_category}_{sample_id}"] = 0
+                sample_end_ind[f"{sample_category}_{sample_id}"] = 0
 
-                    # Get the number of chunks that need to be loaded
-                    number_of_chunks = round(total_size_file / chunk_size + 0.5)
+            # Get the total number of jets for this flavour
+            sample_sum[f"{sample_id}"] = np.sum(
+                [
+                    sample_length[f"{sample_category}_{sample_id}"]
+                    for sample_category in self.options["samples"]
+                ]
+            )
 
-                    # Set the counter for writing them to file
-                    start_ind = 0
-                    chunk_number = 0
+        # Set the counter for the chunks and the chunk start and end indicies
+        chunk_number = 0
+        chunk_start = 0
+        chunk_end = 0
 
-                    # Define a progress bar for the writing
-                    pbar = tqdm(total=np.sum(total_size_file))
+        # Get the number of chunks
+        sample_sum = np.sum([item for _, item in sample_length.items()])
+        number_of_chunks = round(sample_sum / chunk_size + 0.5)
 
-                    # Loop over all chunks until limit is reached
-                    while chunk_number < number_of_chunks:
+        # Define a progress bar for the writing
+        pbar = tqdm(total=np.sum(number_of_chunks))
 
-                        # Get the end index of the chunk
-                        end_ind = int(start_ind + chunk_size)
+        # Get a random seed for shuffling at the end of the chunk
+        seed_generator = np.random.default_rng(seed=self.rnd_seed)
 
-                        # If the last chunk is processed, set the
-                        # end index to the total number of jets
-                        if chunk_number == number_of_chunks - 1:
-                            end_ind = int(total_size_file)
+        # Loop over all chunks until limit is reached
+        while chunk_number < number_of_chunks:
 
-                        # Get a chunk of labels, tracks and jets
-                        jets = f["jets"][start_ind:end_ind]
-                        labels = f["labels"][start_ind:end_ind]
+            # Loop over the files
+            for file_counter, (dict_key, df) in enumerate(sample_dict.items()):
+
+                # Get the chunk size for this file
+                chunk_size_file = int(
+                    np.round((sample_length[dict_key] / sample_sum) * chunk_size)
+                )
+
+                # Get the end index of the chunk
+                sample_end_ind[dict_key] = int(
+                    sample_start_ind[dict_key] + chunk_size_file
+                )
+
+                # If the last chunk is processed, set the
+                # end index to the total number of jets in this file
+                if chunk_number == number_of_chunks - 1:
+                    sample_end_ind[dict_key] = int(sample_length[dict_key])
+
+                # Get a chunk of labels, tracks and jets
+                jets = df["jets"][sample_start_ind[dict_key] : sample_end_ind[dict_key]]
+                labels = df["labels"][
+                    sample_start_ind[dict_key] : sample_end_ind[dict_key]
+                ]
+                if self.save_tracks:
+                    tracks = [
+                        df[tracks_name][
+                            sample_start_ind[dict_key] : sample_end_ind[dict_key]
+                        ]
+                        for tracks_name in self.tracks_names
+                    ]
+
+                # Set the old end index as new start index for the next chunk
+                sample_start_ind[dict_key] = sample_end_ind[dict_key]
+
+                # Append the number of jets that are loaded from this file to the
+                # number of jets loaded in this chunk
+                chunk_end += len(jets)
+
+                # Check if this is the first chunk that is written to the final
+                # output file.
+                if create_file:
+
+                    # Create the output directory if not exist
+                    os.makedirs(output_name.rsplit("/", 1)[0], exist_ok=True)
+
+                    # Open the final output file and create the datasets
+                    # needed.
+                    with h5py.File(output_name, "w") as out_file:
+                        out_file.create_dataset(
+                            "jets",
+                            data=jets,
+                            compression="gzip",
+                            chunks=True,
+                            maxshape=(None,),
+                        )
+                        out_file.create_dataset(
+                            "labels",
+                            data=labels,
+                            compression="gzip",
+                            chunks=True,
+                            maxshape=(None, labels.shape[1]),
+                        )
+
+                        # If tracks are used, save them also
                         if self.save_tracks:
-                            tracks = [
-                                f[tracks_name][start_ind:end_ind]
-                                for tracks_name in self.tracks_names
-                            ]
+                            for i, tracks_name in enumerate(self.tracks_names):
+                                out_file.create_dataset(
+                                    tracks_name,
+                                    data=tracks[i],
+                                    compression="gzip",
+                                    chunks=True,
+                                    maxshape=(
+                                        None,
+                                        tracks[i].shape[1],
+                                    ),
+                                )
 
-                        # Set the new start index to old end index
-                        start_ind = end_ind
+                    # Set create file to False because it is created now
+                    create_file = False
 
-                        # Update the progress bar with the number of loaded
-                        # jets in the chunks
-                        pbar.update(jets.size)
+                else:
 
-                        # Check if this is the first chunk that is written to the final
-                        # output file.
-                        if create_file:
+                    # Open the already existing output file and datasets
+                    # and append the chunk to it
+                    with h5py.File(output_name, "a") as out_file:
+                        # Save jets
+                        out_file["jets"].resize(
+                            (out_file["jets"].shape[0] + jets.shape[0]),
+                            axis=0,
+                        )
+                        out_file["jets"][-jets.shape[0] :] = jets
 
-                            # Create the output directory if not exist
-                            logger.info(
-                                "Creating output directory if doesn't exist yet"
+                        # Save labels
+                        out_file["labels"].resize(
+                            (out_file["labels"].shape[0] + labels.shape[0]),
+                            axis=0,
+                        )
+                        out_file["labels"][-labels.shape[0] :] = labels
+
+                        # If tracks are used, save them also
+                        if self.save_tracks:
+                            for i, tracks_name in enumerate(self.tracks_names):
+                                out_file[tracks_name].resize(
+                                    (
+                                        out_file[tracks_name].shape[0]
+                                        + tracks[i].shape[0]
+                                    ),
+                                    axis=0,
+                                )
+                                out_file[tracks_name][-tracks[i].shape[0] :] = tracks[i]
+
+                        if file_counter == len(sample_dict) - 1:
+                            chunk_shuffle_seed = seed_generator.integers(
+                                low=0, high=1000, size=1
                             )
-                            os.makedirs(output_name.rsplit("/", 1)[0], exist_ok=True)
 
-                            # Open the final output file and create the datasets
-                            # needed.
-                            with h5py.File(output_name, "w") as out_file:
-                                out_file.create_dataset(
-                                    "jets",
-                                    data=jets,
-                                    compression="gzip",
-                                    chunks=True,
-                                    maxshape=(None,),
-                                )
-                                out_file.create_dataset(
-                                    "labels",
-                                    data=labels,
-                                    compression="gzip",
-                                    chunks=True,
-                                    maxshape=(None, labels.shape[1]),
-                                )
+                            # Shuffle all jets, labels and tracks
+                            rng = np.random.default_rng(seed=chunk_shuffle_seed)
+                            rng.shuffle(out_file["jets"][chunk_start:chunk_end])
+                            rng = np.random.default_rng(seed=chunk_shuffle_seed)
+                            rng.shuffle(out_file["labels"][chunk_start:chunk_end])
+                            if self.save_tracks:
+                                for tracks_name in self.tracks_names:
+                                    rng = np.random.default_rng(seed=chunk_shuffle_seed)
+                                    rng.shuffle(
+                                        out_file[tracks_name][chunk_start:chunk_end]
+                                    )
 
-                                # If tracks are used, save them also
-                                if self.save_tracks:
-                                    for i, tracks_name in enumerate(self.tracks_names):
-                                        out_file.create_dataset(
-                                            tracks_name,
-                                            data=tracks[i],
-                                            compression="gzip",
-                                            chunks=True,
-                                            maxshape=(
-                                                None,
-                                                tracks[i].shape[1],
-                                            ),
-                                        )
+            # Set the end index of the chunk as new start index
+            chunk_start = chunk_end
 
-                            # Set create file to False because it is created now
-                            create_file = False
+            # Update the progress bar
+            pbar.update(1)
 
-                        else:
+            # Set the chunk counter up by one
+            chunk_number += 1
 
-                            # Open the already existing output file and datasets
-                            # and append the chunk to it
-                            with h5py.File(output_name, "a") as out_file:
-                                # Save jets
-                                out_file["jets"].resize(
-                                    (out_file["jets"].shape[0] + jets.shape[0]),
-                                    axis=0,
-                                )
-                                out_file["jets"][-jets.shape[0] :] = jets
+        # Close the progress bar
+        pbar.close()
 
-                                # Save labels
-                                out_file["labels"].resize(
-                                    (out_file["labels"].shape[0] + labels.shape[0]),
-                                    axis=0,
-                                )
-                                out_file["labels"][-labels.shape[0] :] = labels
-
-                                # If tracks are used, save them also
-                                if self.save_tracks:
-                                    for i, tracks_name in enumerate(self.tracks_names):
-                                        out_file[tracks_name].resize(
-                                            (
-                                                out_file[tracks_name].shape[0]
-                                                + tracks[i].shape[0]
-                                            ),
-                                            axis=0,
-                                        )
-                                        out_file[tracks_name][
-                                            -tracks[i].shape[0] :
-                                        ] = tracks[i]
-
-                        # Set the chunk counter up by one
-                        chunk_number += 1
-
-                    # Close the progress bar
-                    pbar.close()
+        # Close all h5 files
+        for _, item in sample_dict.items():
+            item.close()
 
     def Make_plots(
         self,
@@ -3767,42 +3825,6 @@ class UnderSampling(ResamplingTools):
 
         # Write file to disk
         self.WriteFile(self.indices_to_keep)
-
-    # TODO: write the following functions also for flexible amount of classes
-    # plot_name = self.config.GetFileName(
-    #     x + 1,
-    #     option="downsampled-pt_eta",
-    #     extension=".pdf",
-    #     custom_path="plots/",
-    # )
-    # upt.MakePlots(
-    #     bjets,
-    #     cjets,
-    #     ujets,
-    #     taujets,
-    #     plot_name=plot_name,
-    #     binning={
-    #         global_config.pTvariable: downs.pt_bins,
-    #         global_config.etavariable: downs.eta_bins,
-    #     },
-    # )
-    # plot_name = self.config.GetFileName(
-    #     x + 1,
-    #     extension=".pdf",
-    #     option="downsampled-pt_eta-wider_bins",
-    #     custom_path="plots/",
-    # )
-    # upt.MakePlots(
-    #     bjets,
-    #     cjets,
-    #     ujets,
-    #     taujets,
-    #     plot_name=plot_name,
-    #     binning={
-    #         global_config.pTvariable: 200,
-    #         global_config.etavariable: 20,
-    #     },
-    # )
 
 
 class UnderSamplingProp:
