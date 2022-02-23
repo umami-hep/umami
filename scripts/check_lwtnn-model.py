@@ -71,7 +71,10 @@ def GetParser():
         "--ntracks_max",
         type=int,
         default=np.inf,
-        help="Number of tracks per jet to ignore.",
+        help=(
+            "Maximum number of tracks per jet. Jets with ntracks > ntracks_max"
+            " are ignored in the evaluation."
+        ),
     )
 
     parser.add_argument(

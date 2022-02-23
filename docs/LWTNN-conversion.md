@@ -261,7 +261,7 @@ wait
 
 ```
 
-After having the hdf5 ntuples produced, the script [`check_lwtnn-model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn_vardict.py) can be used to compare the athena evaluation with the keras evaluation. The script requiries several arguments to be correctly runned. Here is a usage example:
+After having the hdf5 ntuples produced, the script [`check_lwtnn-model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn-model.py) can be used to compare the athena evaluation with the keras evaluation. The script requiries several arguments to be correctly runned. Here is a usage example:
 ```
 # Path to the variables yaml file
 VARIABLESDICT=examples/Dips_Variables.yaml
