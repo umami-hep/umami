@@ -378,9 +378,7 @@ Dips_pT_vs_beff:
     main_class: "bjets"
     WP: 0.77
     WP_Line: True
-    binomialErrors: True
     Fixed_WP_Bin: False
-    SWP_Comparison: False
     figsize: [7, 5]
     logy: False
     UseAtlasTag: True
@@ -404,9 +402,7 @@ Dips_pT_vs_beff:
 | `main_class` | `str` | Class which is to be tagged. |
 | `WP` | `float` | Necessary | Float of the working point that will be used. |
 | `WP_line` | `float` | Optional | Print a horizontal line at this value efficiency. |
-| `binomialErrors` | `bool` | Optional | Plot binomial errors to plot. |
 | `Fixed_WP_Bin` | `bool` | Optional | Calculate the WP cut on the discriminant per bin. |
-| `SWP_Comparison` | `bool` | Optional | Use the same cut value on the discriminant for all models with the same SWP_label. Not works with Fixed_WP_Bin True.
 | `figsize` | `list` | Optional |A list of the width and height of the plot.
 | `logy` | `bool` | Optional | Decide if the y axis is plotted as logarithmic or not.
 | `UseAtlasTag` | `bool` | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
@@ -421,6 +417,9 @@ Dips_pT_vs_beff:
 | `legFontSize` | `int` | Optional | Set the fontsize of the legend. |
 | `Ratio_Cut` | `list` | List with the lower and upper y-limit which is to be set for the ratio plot. |
 | `dpi` | `int` | Optional | Set the DPI value for the plot. Default is 400 |
+
+`SWP_Comparison` (can be realised with the new python API) and `binomialErrors` (now always used) are deprecated in the highlevel function.
+
 
 #### Fraction Contour Plot
 Plot two rejections against each other for a given working point with different fraction values.

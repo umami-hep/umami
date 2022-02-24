@@ -35,6 +35,11 @@ class h5toTFRecordConverter:
         # TODO: adding possibility to use more than first element of 'tracks_names'
         # only first element of the tracks_names list get converted only
         self.tracks_name = config.sampling["options"]["tracks_names"][0]
+        logger.warning(
+            "Only first element of `track_names` from the config file is converted to "
+            f"tf records {self.tracks_name}. In case you want to convert another track "
+            "collection, please adapt your config file."
+        )
         if "N_add_vars" in config.convert_to_tfrecord:
             self.n_add_vars = config.convert_to_tfrecord["N_add_vars"]
         else:
