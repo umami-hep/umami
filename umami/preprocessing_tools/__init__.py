@@ -15,17 +15,20 @@ from umami.preprocessing_tools.Preparation import (
     GetPreparationSamplePath,
     PrepareSamples,
 )
-from umami.preprocessing_tools.Resampling import (
+from umami.preprocessing_tools.resampling.count_sampling import (
+    ProbabilityRatioUnderSampling,
+    UnderSampling,
+)
+from umami.preprocessing_tools.resampling.pdf_sampling import PDFSampling
+from umami.preprocessing_tools.resampling.proportional_sampling import UnderSamplingProp
+from umami.preprocessing_tools.resampling.resampling_base import (
     CalculateBinning,
     CorrectFractions,
-    PDFSampling,
-    ProbabilityRatioUnderSampling,
     Resampling,
+    ResamplingTools,
     SamplingGenerator,
-    UnderSampling,
-    UnderSamplingProp,
-    Weighting,
 )
+from umami.preprocessing_tools.resampling.weighting import Weighting
 from umami.preprocessing_tools.Scaling import (
     Gen_default_dict,
     Scaling,
