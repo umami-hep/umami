@@ -74,8 +74,11 @@ def plot_trks_variables(plot_config, plot_type):
         logger.info(f"Start {plot_name}...\n")
         filepath_list = []
         labels_list = []
+        tracks_list = []
+
         # Default to no selection based on track_origin
         trk_origins = ["All"]
+
         # Update list of track origins if specified
         if "track_origins" in plotting_config:
             trk_origins = plotting_config["track_origins"]
@@ -91,6 +94,9 @@ def plot_trks_variables(plot_config, plot_type):
                 labels_list.append(
                     plotting_config["Datasets_to_plot"][f"{model_name}"]["label"]
                 )
+                tracks_list.append(
+                    plotting_config["Datasets_to_plot"][f"{model_name}"]["tracks_name"]
+                )
 
         for trk_origin in trk_origins:
             if len(filepath_list) >= 2:
@@ -100,6 +106,7 @@ def plot_trks_variables(plot_config, plot_type):
                     uit.plot_nTracks_per_Jet(
                         datasets_filepaths=filepath_list,
                         datasets_labels=labels_list,
+                        datasets_track_names=tracks_list,
                         class_labels=plotting_config["class_labels"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
                         output_directory=plotting_config["folder_to_save"]
@@ -114,6 +121,7 @@ def plot_trks_variables(plot_config, plot_type):
                     uit.plot_input_vars_trks_comparison(
                         datasets_filepaths=filepath_list,
                         datasets_labels=labels_list,
+                        datasets_track_names=tracks_list,
                         class_labels=plotting_config["class_labels"],
                         var_dict=plot_config["Eval_parameters"]["var_dict"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
@@ -133,6 +141,7 @@ def plot_trks_variables(plot_config, plot_type):
                     uit.plot_nTracks_per_Jet(
                         datasets_filepaths=filepath_list,
                         datasets_labels=labels_list,
+                        datasets_track_names=tracks_list,
                         class_labels=plotting_config["class_labels"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),
                         output_directory=plotting_config["folder_to_save"]
@@ -147,6 +156,7 @@ def plot_trks_variables(plot_config, plot_type):
                     uit.plot_input_vars_trks(
                         datasets_filepaths=filepath_list,
                         datasets_labels=labels_list,
+                        datasets_track_names=tracks_list,
                         class_labels=plotting_config["class_labels"],
                         var_dict=plot_config["Eval_parameters"]["var_dict"],
                         nJets=int(plot_config["Eval_parameters"]["nJets"]),

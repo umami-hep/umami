@@ -92,6 +92,7 @@ def check_kwargs_var_plots(kwargs: dict, **custom_default):
 def plot_nTracks_per_Jet(
     datasets_filepaths: list,
     datasets_labels: list,
+    datasets_track_names: list,
     nJets: int,
     class_labels: list,
     output_directory: str = "input_vars_trks",
@@ -108,6 +109,8 @@ def plot_nTracks_per_Jet(
         List of filepaths to the files.
     datasets_labels : list
         Label of the dataset for the legend.
+    datasets_track_names : list
+        List with the track names of the files.
     nJets : int
         Number of jets to use.
     class_labels : list
@@ -132,9 +135,8 @@ def plot_nTracks_per_Jet(
 
     # Iterate over the different dataset filepaths and labels
     # defined in the config
-    for (filepath, label) in zip(
-        datasets_filepaths,
-        datasets_labels,
+    for (filepath, label, tracks_name) in zip(
+        datasets_filepaths, datasets_labels, datasets_track_names
     ):
         # Init jet counter
         nJets_counter = 0
@@ -149,6 +151,7 @@ def plot_nTracks_per_Jet(
                     filepath=file,
                     class_labels=class_labels,
                     nJets=nJets,
+                    tracks_name=tracks_name,
                     print_logger=False,
                 )
 
@@ -426,6 +429,7 @@ def plot_nTracks_per_Jet(
 def plot_input_vars_trks_comparison(
     datasets_filepaths: list,
     datasets_labels: list,
+    datasets_track_names: list,
     var_dict: dict,
     nJets: int,
     binning: dict,
@@ -435,7 +439,6 @@ def plot_input_vars_trks_comparison(
     output_directory: str = "input_vars_trks",
     Ratio_Cut: list = None,
     track_origin: str = "All",
-    tracks_name: str = "tracks",
     **kwargs,
 ):
     """
@@ -447,6 +450,8 @@ def plot_input_vars_trks_comparison(
         List of filepaths to the files.
     datasets_labels : list
         Label of the dataset for the legend.
+    datasets_track_names : list
+        List with the track names of the files.
     var_dict : dict
         Variable dict where all variables of the files are saved.
     nJets : int
@@ -465,8 +470,6 @@ def plot_input_vars_trks_comparison(
         List of y-axis cuts for the ratio block.
     track_origin: str
         Track set that is to be used for plotting.
-    tracks_name : str
-        Track collection to use, default is 'tracks'.
     **kwargs: dict
         additional arguments passed to `check_kwargs_var_plots`
 
@@ -528,9 +531,10 @@ def plot_input_vars_trks_comparison(
 
     # Iterate over the different dataset filepaths and labels
     # defined in the config
-    for filepath, label in zip(
+    for filepath, label, tracks_name in zip(
         datasets_filepaths,
         datasets_labels,
+        datasets_track_names,
     ):
 
         # Get the tracks and the labels from the file/files
@@ -538,6 +542,7 @@ def plot_input_vars_trks_comparison(
             filepath=filepath,
             class_labels=class_labels,
             nJets=nJets,
+            tracks_name=tracks_name,
             print_logger=False,
         )
 
@@ -551,15 +556,40 @@ def plot_input_vars_trks_comparison(
     # Loading track variables
     try:
         trksVars = variable_config["tracks"]
+
     except KeyError:
-        noNormVars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
-        logNormVars = variable_config["track_train_variables"][tracks_name][
+        noNormVars = variable_config["track_train_variables"][datasets_track_names[0]][
+            "noNormVars"
+        ]
+        logNormVars = variable_config["track_train_variables"][datasets_track_names[0]][
             "logNormVars"
         ]
-        jointNormVars = variable_config["track_train_variables"][tracks_name][
-            "jointNormVars"
-        ]
+        jointNormVars = variable_config["track_train_variables"][
+            datasets_track_names[0]
+        ]["jointNormVars"]
         trksVars = noNormVars + logNormVars + jointNormVars
+
+        # Check for variables in the other
+        for counter, track_names in enumerate(datasets_track_names):
+            if counter != 0:
+                noNormVars_tmp = variable_config["track_train_variables"][track_names][
+                    "noNormVars"
+                ]
+                logNormVars_tmp = variable_config["track_train_variables"][track_names][
+                    "logNormVars"
+                ]
+                jointNormVars_tmp = variable_config["track_train_variables"][
+                    track_names
+                ]["jointNormVars"]
+                trksVars_tmp = noNormVars_tmp + logNormVars_tmp + jointNormVars_tmp
+
+                for iter_var in trksVars_tmp:
+                    if iter_var not in trksVars:
+                        logger.warning(
+                            f"Variable {iter_var} of {datasets_labels[counter]} "
+                            f"not in {datasets_labels[0]} track collection. "
+                            "Skipping..."
+                        )
 
     for nLeading in n_Leading:
         if nLeading == "None":
@@ -885,6 +915,7 @@ def plot_input_vars_trks_comparison(
 def plot_input_vars_trks(
     datasets_filepaths: list,
     datasets_labels: list,
+    datasets_track_names: list,
     var_dict: dict,
     nJets: int,
     binning: dict,
@@ -893,7 +924,6 @@ def plot_input_vars_trks(
     n_Leading: list = None,
     output_directory: str = "input_vars_trks",
     track_origin: str = "All",
-    tracks_name: str = "tracks",
     **kwargs,
 ):
     """
@@ -905,6 +935,8 @@ def plot_input_vars_trks(
         List of filepaths to the files.
     datasets_labels : list
         Label of the dataset for the legend.
+    datasets_track_names : list
+        List with the track names of the files.
     var_dict : dict
         Variable dict where all variables of the files are saved.
     nJets : int
@@ -921,8 +953,6 @@ def plot_input_vars_trks(
         Name of the output directory. Only the dir name not path!
     track_origin: str
         Track set that is to be used for plotting.
-    tracks_name : str
-        Track collection to use, default is 'tracks'.
     **kwargs: dict
         additional arguments passed to `check_kwargs_var_plots`
 
@@ -981,9 +1011,10 @@ def plot_input_vars_trks(
 
     # Iterate over the different dataset filepaths and labels
     # defined in the config
-    for (filepath, label) in zip(
+    for (filepath, label, tracks_name) in zip(
         datasets_filepaths,
         datasets_labels,
+        datasets_track_names,
     ):
 
         # Get the tracks and the labels from the file/files
@@ -991,6 +1022,7 @@ def plot_input_vars_trks(
             filepath=filepath,
             class_labels=class_labels,
             nJets=nJets,
+            tracks_name=tracks_name,
             print_logger=False,
         )
 
@@ -1002,9 +1034,13 @@ def plot_input_vars_trks(
     variable_config = GetVariableDict(var_dict)
 
     # Loading track variables
-    noNormVars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
-    logNormVars = variable_config["track_train_variables"][tracks_name]["logNormVars"]
-    jointNormVars = variable_config["track_train_variables"][tracks_name][
+    noNormVars = variable_config["track_train_variables"][datasets_track_names[0]][
+        "noNormVars"
+    ]
+    logNormVars = variable_config["track_train_variables"][datasets_track_names[0]][
+        "logNormVars"
+    ]
+    jointNormVars = variable_config["track_train_variables"][datasets_track_names[0]][
         "jointNormVars"
     ]
     trksVars = noNormVars + logNormVars + jointNormVars
