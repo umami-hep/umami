@@ -42,15 +42,15 @@ def hist_w_unc(a, bins, normed: bool = True):
     return bin_edges, hist, unc, band
 
 
-def save_divide(nominator, denominator, default=1.0):
+def save_divide(numerator, denominator, default=1.0):
     """
     Division using numpy divide function returning default value in cases where
     denoinator is 0.
 
     Parameters
     ----------
-    nominator: array_like
-        Nominator in the ratio calculation.
+    numerator: array_like
+        Numerator in the ratio calculation.
     denominator: array_like
         Denominator in the ratio calculation.
     default: float
@@ -60,16 +60,16 @@ def save_divide(nominator, denominator, default=1.0):
     -------
     ratio: array_like
     """
-    if isinstance(nominator, (int, float)) and isinstance(denominator, (int, float)):
+    if isinstance(numerator, (int, float)) and isinstance(denominator, (int, float)):
         output_shape = 1
     else:
         try:
             output_shape = denominator.shape
         except AttributeError:
-            output_shape = nominator.shape
+            output_shape = numerator.shape
 
     ratio = np.divide(
-        nominator,
+        numerator,
         denominator,
         out=np.ones(
             output_shape,
@@ -81,19 +81,19 @@ def save_divide(nominator, denominator, default=1.0):
     return ratio
 
 
-def hist_ratio(nominator, denominator, nominator_unc, denominator_unc):
+def hist_ratio(numerator, denominator, numerator_unc, denominator_unc):
     """
     This method calculates the ratio of the given bincounts and
     returns the input for a step function that plots the ratio.
 
     Parameters
     ----------
-    nominator : array_like
-        Nominator in the ratio calculation.
+    numerator : array_like
+        Numerator in the ratio calculation.
     denominator : array_like
         Denominator in the ratio calculation.
-    nominator_unc : array_like
-        Uncertainty of the nominator.
+    numerator_unc : array_like
+        Uncertainty of the numerator.
     denominator_unc : array_like
         Uncertainty of the denominator.
 
@@ -111,25 +111,25 @@ def hist_ratio(nominator, denominator, nominator_unc, denominator_unc):
         If inputs don't have the same shape.
 
     """
-    if nominator.shape != denominator.shape:
-        raise AssertionError("Nominator and denominator don't have the same legth")
-    if nominator.shape != nominator_unc.shape:
-        raise AssertionError("Nominator and nominator_unc don't have the same legth")
+    if numerator.shape != denominator.shape:
+        raise AssertionError("Numerator and denominator don't have the same legth")
+    if numerator.shape != numerator_unc.shape:
+        raise AssertionError("Numerator and numerator_unc don't have the same legth")
     if denominator.shape != denominator_unc.shape:
         raise (
             AssertionError("Denominator and denominator_unc don't have the same legth")
         )
-    step_ratio = save_divide(nominator, denominator)
+    step_ratio = save_divide(numerator, denominator)
     # Add an extra bin in the beginning to have the same binning as the input
     # Otherwise, the ratio will not be exactly above each other (due to step)
     step_ratio = np.append(np.array([step_ratio[0]]), step_ratio)
 
     # Calculate rel uncertainties
-    nominator_rel_unc = save_divide(nominator_unc, nominator, default=0)
+    numerator_rel_unc = save_divide(numerator_unc, numerator, default=0)
     denominator_rel_unc = save_divide(denominator_unc, denominator, default=0)
 
     # Calculate rel uncertainty
-    step_rel_unc = np.sqrt(nominator_rel_unc ** 2 + denominator_rel_unc ** 2)
+    step_rel_unc = np.sqrt(numerator_rel_unc ** 2 + denominator_rel_unc ** 2)
 
     # Add the first value again (same reason as for the step calculation)
     step_rel_unc = np.append(np.array([step_rel_unc[0]]), step_rel_unc)

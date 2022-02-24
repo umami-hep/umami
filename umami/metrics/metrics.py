@@ -226,7 +226,7 @@ def GetScore(
     class_labels_wo_main.remove(main_class)
 
     # Calculate counter of disc_score
-    counter = y_pred[:, index_dict[main_class]] + add_small
+    numerator = y_pred[:, index_dict[main_class]] + add_small
 
     # Calculate denominator of disc_score
     for class_label in class_labels_wo_main:
@@ -235,10 +235,10 @@ def GetScore(
 
     # Calculate final disc_score and return it
     if use_keras_backend is True:
-        disc_value = K.log(counter / denominator)
+        disc_value = K.log(numerator / denominator)
 
     else:
-        disc_value = np.log(counter / denominator)
+        disc_value = np.log(numerator / denominator)
 
     return disc_value
 

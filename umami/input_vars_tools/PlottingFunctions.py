@@ -295,9 +295,9 @@ def plot_nTracks_per_Jet(
         if model_number != 0:
             for flavour in class_labels:
                 step, step_unc = hist_ratio(
-                    nominator=bincounts[f"{flavour}{model_number}"],
+                    numerator=bincounts[f"{flavour}{model_number}"],
                     denominator=bincounts[f"{flavour}0"],
-                    nominator_unc=bincounts_unc[f"{flavour}{model_number}"],
+                    numerator_unc=bincounts_unc[f"{flavour}{model_number}"],
                     denominator_unc=bincounts_unc[f"{flavour}0"],
                 )
 
@@ -733,9 +733,9 @@ def plot_input_vars_trks_comparison(
                     if model_number != 0:
                         for flavour in class_labels:
                             step, step_unc = hist_ratio(
-                                nominator=bincounts[f"{flavour}{model_number}"],
+                                numerator=bincounts[f"{flavour}{model_number}"],
                                 denominator=bincounts[f"{flavour}0"],
-                                nominator_unc=bincounts_unc[f"{flavour}{model_number}"],
+                                numerator_unc=bincounts_unc[f"{flavour}{model_number}"],
                                 denominator_unc=bincounts_unc[f"{flavour}0"],
                             )
 
@@ -1728,9 +1728,9 @@ def plot_input_vars_jets_comparison(
                 if model_number != 0:
                     for flavour in class_labels:
                         step, step_unc = hist_ratio(
-                            nominator=bincounts[f"{flavour}{model_number}"],
+                            numerator=bincounts[f"{flavour}{model_number}"],
                             denominator=bincounts[f"{flavour}0"],
-                            nominator_unc=bincounts_unc[f"{flavour}{model_number}"],
+                            numerator_unc=bincounts_unc[f"{flavour}{model_number}"],
                             denominator_unc=bincounts_unc[f"{flavour}0"],
                         )
 
