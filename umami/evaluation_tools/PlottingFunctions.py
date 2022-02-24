@@ -2218,9 +2218,9 @@ def plot_score_comparison(
 
                 # Calculate the step and step_unc for ratio
                 step, step_unc = hist_ratio(
-                    nominator=bincounts[f"{flavour}{i}"],
+                    numerator=bincounts[f"{flavour}{i}"],
                     denominator=bincounts[f"{flavour}0"],
-                    nominator_unc=bincounts_unc[f"{flavour}{i}"],
+                    numerator_unc=bincounts_unc[f"{flavour}{i}"],
                     denominator_unc=bincounts_unc[f"{flavour}0"],
                 )
 
@@ -2877,9 +2877,9 @@ def plot_prob_comparison(
 
                 # Calculate the step and step_unc for ratio
                 step, step_unc = hist_ratio(
-                    nominator=bincounts[f"{iter_flav}{i}"],
+                    numerator=bincounts[f"{iter_flav}{i}"],
                     denominator=bincounts[f"{iter_flav}0"],
-                    nominator_unc=bincounts_unc[f"{iter_flav}{i}"],
+                    numerator_unc=bincounts_unc[f"{iter_flav}{i}"],
                     denominator_unc=bincounts_unc[f"{iter_flav}0"],
                 )
 

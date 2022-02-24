@@ -71,16 +71,16 @@ class save_divide_TestCase(unittest.TestCase):
         steps = save_divide(np.ones(2), 2)
         np.testing.assert_equal(steps, 0.5 * np.ones(2))
 
-    def test_nominator_float(self):
+    def test_numerator_float(self):
         steps = save_divide(1, np.ones(2) * 2)
         np.testing.assert_equal(steps, 0.5 * np.ones(2))
 
 
 class hist_ratio_TestCase(unittest.TestCase):
     def setUp(self):
-        self.nominator = np.array([5, 3, 2, 5, 6, 2])
+        self.numerator = np.array([5, 3, 2, 5, 6, 2])
         self.denominator = np.array([3, 6, 2, 7, 10, 12])
-        self.nominator_unc = np.array([0.5, 1, 0.3, 0.2, 0.5, 0.3])
+        self.numerator_unc = np.array([0.5, 1, 0.3, 0.2, 0.5, 0.3])
         self.denominator_unc = np.array([1, 0.3, 2, 1, 5, 3])
         self.step = np.array([1.6666667, 1.6666667, 0.5, 1, 0.7142857, 0.6, 0.1666667])
         self.step_unc = np.array(
@@ -97,9 +97,9 @@ class hist_ratio_TestCase(unittest.TestCase):
 
     def test_hist_ratio(self):
         step, step_unc = hist_ratio(
-            nominator=self.nominator,
+            numerator=self.numerator,
             denominator=self.denominator,
-            nominator_unc=self.nominator_unc,
+            numerator_unc=self.numerator_unc,
             denominator_unc=self.denominator_unc,
         )
 
@@ -109,26 +109,26 @@ class hist_ratio_TestCase(unittest.TestCase):
     def test_hist_not_same_length_nominator_denominator(self):
         with self.assertRaises(AssertionError):
             _, _ = hist_ratio(
-                nominator=np.ones(2),
+                numerator=np.ones(2),
                 denominator=np.ones(3),
-                nominator_unc=np.ones(3),
+                numerator_unc=np.ones(3),
                 denominator_unc=np.ones(3),
             )
 
     def test_hist_not_same_length_nomiantor_and_unc(self):
         with self.assertRaises(AssertionError):
             _, _ = hist_ratio(
-                nominator=np.ones(3),
+                numerator=np.ones(3),
                 denominator=np.ones(3),
-                nominator_unc=np.ones(2),
+                numerator_unc=np.ones(2),
                 denominator_unc=np.ones(3),
             )
 
     def test_hist_not_same_length_denomiantor_and_unc(self):
         with self.assertRaises(AssertionError):
             _, _ = hist_ratio(
-                nominator=np.ones(3),
+                numerator=np.ones(3),
                 denominator=np.ones(3),
-                nominator_unc=np.ones(3),
+                numerator_unc=np.ones(3),
                 denominator_unc=np.ones(2),
             )
