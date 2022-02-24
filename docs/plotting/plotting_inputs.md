@@ -24,11 +24,13 @@ nTracks_ttbar_loose:
   track_origins: ['All', 'Pileup', 'Fake', 'Primary', 'FromB', 'FromBC', 'FromC', 'FromTau', 'OtherSecondary']
   Datasets_to_plot:
     R21:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
+      files: <path>/<to>/<h5>/<files>/*.h5
       label: "R21 Loose"
+      tracks_name: "tracks"
     R22:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4441/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
+      files: <path>/<to>/<h5>/<files>/*.h5
       label: "R22 Loose"
+      tracks_name: "tracks"
   plot_settings:
     Log: True
     UseAtlasTag: True
@@ -42,24 +44,25 @@ nTracks_ttbar_loose:
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `nTracks_ttbar_loose` | String | Necessary | Name of the plots. This does not effect anything for the plots itself. |
-| `variables` | String | Necessary | Must be set to "tracks" for this function. Decides, which functions for plotting are used. |
-| `folder_to_save` | String | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
-| `nTracks` | Bool | Necessary | MUST BE TRUE HERE! Decide if the Tracks per Jets are plotted or the input variable. |
+| `nTracks_ttbar_loose` | `str` | Necessary | Name of the plots. This does not effect anything for the plots itself. |
+| `variables` | `str` | Necessary | Must be set to "tracks" for this function. Decides, which functions for plotting are used. |
+| `folder_to_save` | `str` | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
+| `nTracks` | `bool` | Necessary | MUST BE TRUE HERE! Decide if the Tracks per Jets are plotted or the input variable. |
 | `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
 | `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
-| `label` | String | Necessary | Plot label for the plot legend. |
+| `files` | `str` | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
+| `label` | `str` | Necessary | Plot label for the plot legend. |
+| `tracks_name` | `str` | Necessary | Name of the tracks inside the h5 files you want to plot. |
 | `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |
-| `Log` | Bool | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
-| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
- | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
-| `Ratio_Cut` | List | Optional | Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `track_origins` | List | Optional | List that gives the desired track origins when plotting. |
+| `Log` | `bool` | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
+| `UseAtlasTag` | `bool` | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | `str` | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | `str` | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | `float` |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+ | `yAxisIncrease` | `float` | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | `list` | Optional | Two element `list` that gives the shape of the plot. (First is width, second is height). |
+| `Ratio_Cut` | `list` | Optional | Two element `list` that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `track_origins` | `list` | Optional | `list` that gives the desired track origins when plotting. |
 
 #### Input Variables Tracks
 To plot the track input variables, the following options are used.
@@ -71,11 +74,13 @@ input_vars_trks_ttbar_loose_ptfrac:
   track_origins: ['All', 'Pileup', 'Fake', 'Primary', 'FromB', 'FromBC', 'FromC', 'FromTau', 'OtherSecondary']
   Datasets_to_plot:
     R21:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
+      files: <path>/<to>/<h5>/<files>/*.h5
       label: "R21 Loose"
+      tracks_name: "tracks"
     R22:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4441/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
+      files: <path>/<to>/<h5>/<files>/*.h5
       label: "R22 Loose"
+      tracks_name: "tracks"
   plot_settings:
     sorting_variable: "ptfrac"
     n_Leading: [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -107,27 +112,28 @@ input_vars_trks_ttbar_loose_ptfrac:
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `input_vars_trks_ttbar_loose_ptfrac` | String | Necessary | Name of the plots. This does not effect anything for the plots itself. |
-| `variables` | String | Necessary | Must be set to "tracks" for this function. Decides, which functions for plotting are used. |
-| `folder_to_save` | String | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
-| `nTracks` | Bool | Necessary | To plot the input variable distributions, this must be `False`. |
+| `input_vars_trks_ttbar_loose_ptfrac` | `str` | Necessary | Name of the plots. This does not effect anything for the plots itself. |
+| `variables` | `str` | Necessary | Must be set to "tracks" for this function. Decides, which functions for plotting are used. |
+| `folder_to_save` | `str` | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
+| `nTracks` | `bool` | Necessary | To plot the input variable distributions, this must be `False`. |
 | `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
 | `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
-| `label` | String | Necessary | Plot label for the plot legend. |
+| `files` | `str` | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
+| `label` | `str` | Necessary | Plot label for the plot legend. |
+| `tracks_name` | `str` | Necessary | Name of the tracks inside the h5 files you want to plot. |
 | `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |
-| `sorting_variable` | String | Optional | Variable Name to sort after. |
-| `n_Leading` | List | Optional | List of the x leading tracks. If `None`, all tracks will be plotted. If `0` the leading tracks sorted after `sorting variable` will be plotted. You can add like `None`, `0` and `1` for example and it will plot all 3 of them, each in their own folders with according labeling. This must be a list! Even if there is only one option given. |
-| `Log` | Bool | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
-| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
- | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
-| `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
-| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second is stop and third is the step width. The so arranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
-| `track_origins` | List | Optional | List that gives the desired track origins when plotting. |
+| `sorting_variable` | `str` | Optional | Variable Name to sort after. |
+| `n_Leading` | `list` | Optional | `list` of the x leading tracks. If `None`, all tracks will be plotted. If `0` the leading tracks sorted after `sorting variable` will be plotted. You can add like `None`, `0` and `1` for example and it will plot all 3 of them, each in their own folders with according labeling. This must be a `list`! Even if there is only one option given. |
+| `Log` | `bool` | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
+| `UseAtlasTag` | `bool` | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | `str` | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | `str` | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | `float` |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+| `yAxisIncrease` | `float` | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | `list` | Optional | Two element `list` that gives the shape of the plot. (First is width, second is height). |
+| `Ratio_Cut` | `list` | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element `list` that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is the step width. The so arranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
+| `track_origins` | `list` | Optional | `list` that gives the desired track origins when plotting. |
 
 #### Input Variables Jets
 To plot the jet input variables, the following options are used.
@@ -138,10 +144,10 @@ input_vars_ttbar_loose:
   folder_to_save: input_vars_ttbar_loose
   Datasets_to_plot:
     R21:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p3985/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
+      files: <path>/<to>/<h5>/<files>/*.h5
       label: "R21 Loose"
     R22:
-      files: /work/ws/nemo/fr_af1100-Training-Simulations-0/ntuples_p4441/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
+      files: <path>/<to>/<h5>/<files>/*.h5
       label: "R22 Loose"
   special_param_jets:
     IP2D_cu:
@@ -237,21 +243,21 @@ input_vars_ttbar_loose:
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `input_vars_trks_ttbar_loose_ptfrac` | String | Necessary | Name of the plots. This does not effect anything for the plots itself. |
-| `variables` | String | Necessary | Must be set to "jets" for this function. Decides, which functions for plotting are used. |
-| `folder_to_save` | String | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
+| `input_vars_trks_ttbar_loose_ptfrac` | `str` | Necessary | Name of the plots. This does not effect anything for the plots itself. |
+| `variables` | `str` | Necessary | Must be set to "jets" for this function. Decides, which functions for plotting are used. |
+| `folder_to_save` | `str` | Necessary | Path where the plots should be saved. This is a relative path. Add a folder name as path. |
 | `Datasets_to_plot` | None | Necessary | Here the category starts of which plots shall be plotted. |
 | `R21` | None | Necessary | Name of the fileset which is to be plotted. Does not effect anything! |
-| `files` | String | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
-| `label` | String | Necessary | Plot label for the plot legend. |
+| `files` | `str` | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
+| `label` | `str` | Necessary | Plot label for the plot legend. |
 | `special_param_jets` | None | Necessary | Here starts the special x axis limits for a variable. If you want to set the x range by hand, add the variable here and also the `lim_left` for xmin and `lift_right` for xmax. |
-| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element list which will be used in the `numpy.arange` function. The first element is start, second is stop and third is the step width. The so arranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. Variables that are not in here are not plotted! |
+| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is the step width. The so arranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. Variables that are not in here are not plotted! |
 | `plot_settings` | None | Necessary | Here starts the plot settings. Do not fill! |
-| `Log` | Bool | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
-| `UseAtlasTag` | Bool | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `AtlasTag` | String | Optional | The first line of text right behind the 'ATLAS'. |
-| `SecondTag` | String | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
-| `yAxisAtlasTag` | Float |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
- | `yAxisIncrease` | Float | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `figsize` | List | Optional | Two element list that gives the shape of the plot. (First is width, second is height). |
-| `Ratio_Cut` | List | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element list that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
+| `Log` | `bool` | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
+| `UseAtlasTag` | `bool` | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
+| `AtlasTag` | `str` | Optional | The first line of text right behind the 'ATLAS'. |
+| `SecondTag` | `str` | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
+| `yAxisAtlasTag` | `float` |  Optional | y-axis position of the ATLAS Tag in parts of the y-axis (0: lower left corner, 1: upper left corner). |
+ | `yAxisIncrease` | `float` | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
+| `figsize` | `list` | Optional | Two element `list` that gives the shape of the plot. (First is width, second is height). |
+| `Ratio_Cut` | `list` | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element `list` that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |

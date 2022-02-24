@@ -217,6 +217,7 @@ class JetPlotting_TestCase(unittest.TestCase):
     def test_plot_input_vars_trks_wrong_type(self):
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
+        tracks_name_list = ["tracks"]
         labels_list = ["R21 Test"]
 
         # Change type in plotting_config to string to produce error
@@ -228,6 +229,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             plot_input_vars_trks(
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
+                datasets_track_names=tracks_name_list,
                 class_labels=plotting_config["class_labels"],
                 var_dict=self.plot_config["Eval_parameters"]["var_dict"],
                 nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
@@ -240,6 +242,7 @@ class JetPlotting_TestCase(unittest.TestCase):
     def test_plot_input_vars_trks(self):
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
+        tracks_name_list = ["tracks"]
         labels_list = ["R21 Test"]
 
         del plotting_config["plot_settings"]["Ratio_Cut"]
@@ -247,6 +250,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         plot_input_vars_trks(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
+            datasets_track_names=tracks_name_list,
             class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
@@ -329,6 +333,7 @@ class JetPlotting_TestCase(unittest.TestCase):
     def test_plot_input_vars_trks_comparison_wrong_type(self):
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
+        tracks_name_list = ["tracks"]
         labels_list = ["R21 Test"]
 
         # Change type in plotting_config to string to produce error
@@ -338,6 +343,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             plot_input_vars_trks_comparison(
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
+                datasets_track_names=tracks_name_list,
                 class_labels=plotting_config["class_labels"],
                 var_dict=self.plot_config["Eval_parameters"]["var_dict"],
                 nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
@@ -350,11 +356,13 @@ class JetPlotting_TestCase(unittest.TestCase):
     def test_plot_input_vars_trks_comparison(self):
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
+        tracks_name_list = ["tracks", "tracks"]
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_input_vars_trks_comparison(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
+            datasets_track_names=tracks_name_list,
             class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
@@ -437,11 +445,13 @@ class JetPlotting_TestCase(unittest.TestCase):
     def test_plot_nTracks_per_Jet(self):
         plotting_config = self.plot_config["nTracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
+        tracks_name_list = ["tracks", "tracks"]
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_nTracks_per_Jet(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
+            datasets_track_names=tracks_name_list,
             class_labels=plotting_config["class_labels"],
             nJets=int(self.plot_config["Eval_parameters"]["nJets"]),
             output_directory=f"{self.tmp_plot_dir}",

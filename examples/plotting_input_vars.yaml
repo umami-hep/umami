@@ -120,9 +120,11 @@ nTracks:
     R21:
       files: <path_palce_holder>/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
       label: "R21 Loose"
+      tracks_name: "tracks"
     R22:
       files: <path_palce_holder>/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
       label: "R22 Loose"
+      tracks_name: "tracks"
   plot_settings:
     Log: True
     UseAtlasTag: True
@@ -141,9 +143,11 @@ tracks_input_vars:
     R21:
       files: <path_palce_holder>/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
       label: "R21 Loose"
+      tracks_name: "tracks"
     R22:
       files: <path_palce_holder>/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
       label: "R22 Loose"
+      tracks_name: "tracks"
   plot_settings:
     sorting_variable: "ptfrac"
     n_Leading: [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
