@@ -349,7 +349,7 @@ For an explanation of the resampling function specific `options`, have a look in
 | `dict_file` | path to the scale dict |
 | `compression` | Decide, which compression is used for the final training sample. Due to slow loading times, this should be `null`. Possible options are for example `gzip`. |
 | `precision` | The precision of the final output file. The values are saved with the given precision to save space. |
-| `convert_to_tfrecord` | Options for the conversion to tfrecords. |
+| `convert_to_tfrecord` | Options for the conversion to tfrecords. Possible options to define are the `chunk_size` which gives the number of samples saved per file and the number of additional variables to be saved in tf records `N_Add_Vars`.|
 
 ```yaml
 # Name of the output file from the preprocessing
@@ -371,6 +371,7 @@ precision: float16
 # Options for the conversion to tfrecords
 convert_to_tfrecord:
   chunk_size: 5000
+  N_Add_Vars: 4
 
 ```
 In the last part, the path to the variable dict `var_file` and the scale dict `dict_file` is defined. Those values are set in the `parameters` file. For example, the training variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
