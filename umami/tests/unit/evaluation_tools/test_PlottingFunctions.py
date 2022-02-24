@@ -12,10 +12,10 @@ from umami.configuration import logger, set_log_level
 from umami.evaluation_tools.PlottingFunctions import (
     plot_prob,
     plot_prob_comparison,
+    plot_pt_dependence,
     plot_score,
     plot_score_comparison,
     plotFractionContour,
-    plotPtDependence,
     plotROCRatio,
     plotROCRatioComparison,
     plotSaliency,
@@ -184,7 +184,7 @@ class plot_score_TestCase(unittest.TestCase):
             ),
         )
 
-    def test_plotPtDependence(self):
+    def test_plot_pt_dependence(self):
         df_results_ttbar = pd.read_hdf(
             self.tmp_plot_dir + "/results-1_new.h5",
             "ttbar",
@@ -194,7 +194,7 @@ class plot_score_TestCase(unittest.TestCase):
         self.tagger_list = ["dips", "dips"]
         self.model_labels = ["DIPS ttbar", "DIPS 2"]
 
-        plotPtDependence(
+        plot_pt_dependence(
             df_list=self.df_list,
             tagger_list=self.tagger_list,
             model_labels=self.model_labels,

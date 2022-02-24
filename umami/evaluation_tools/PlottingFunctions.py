@@ -17,21 +17,74 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
 from umami.helper_tools import hist_ratio, hist_w_unc
 from umami.metrics import eff_err
-from umami.plotting import roc, roc_plot
+from umami.plotting import roc, roc_plot, var_vs_eff, var_vs_eff_plot
 from umami.tools import applyATLASstyle
+
+
+def translate_kwargs(kwargs):
+    """Maintaining backwards compatibility for the kwargs and the new plot_base syntax.
+
+    Parameters
+    ----------
+    kwargs : dict
+        dictionary with kwargs
+
+    Returns
+    -------
+    dict
+        kwargs compatible with new naming.
+    """
+    mapping = {
+        "UseAtlasTag": "use_atlas_tag",
+        "AtlasTag": "atlas_first_tag",
+        "SecondTag": "atlas_second_tag",
+        "yAxisAtlasTag": "atlas_ymax",
+        "legcols": "leg_ncol",
+        "loc_legend": "leg_loc",
+        "legFontSize": "leg_fontsize",
+        "set_logy": "logy",
+        "yAxisIncrease": "y_scale",
+        "labelFontSize": "fontsize",
+    }
+    for key, elem in mapping.items():
+        if key in kwargs:
+            logger.debug(f"Mapping from old naming: {elem}: {kwargs[key]}")
+            kwargs[elem] = kwargs[key]
+            kwargs.pop(key)
+    return kwargs
 
 
 def FlatEfficiencyPerBin(
     df, predictions, variable, var_bins, classes, target="bjets", wp=0.7
 ):
-    """
-    For each bin in var_bins of variable, cuts the score in
-    predictions column to get the desired WP (working point)
-    df must (at least) contain the following columns:
+    """For each bin in var_bins of variable, cuts the score in predictions column to get
+    the desired WP (working point) df must (at least) contain the following columns:
         - score
         - value of variable
         - labels (with the true labels)
     Creates a column 'tag' with the tagged (1/0) info in df.
+
+    Parameters
+    ----------
+    df : pd.Dataframe
+        dataframe
+    predictions : str
+        predictions column name
+    variable : string
+        variable
+    var_bins : list
+        bins
+    classes : list
+        classes
+    target : str, optional
+        target flavour, by default "bjets"
+    wp : float, optional
+        working point, by default 0.7
+
+    Returns
+    -------
+    np.ndarray
+        tag indicating if jet is tagged (1/0)
     """
     target_index = classes.index(target)
     df["tag"] = 0
@@ -53,6 +106,7 @@ def FlatEfficiencyPerBin(
     return df["tag"]
 
 
+# TODO: move this to new python API
 def plotEfficiencyVariable(
     df: pd.DataFrame,
     class_labels_list: list,
@@ -320,6 +374,7 @@ def plotEfficiencyVariable(
     plt.close()
 
 
+# TODO: move this to new python API
 def plotEfficiencyVariableComparison(
     df_list: list,
     model_labels: list,
@@ -614,7 +669,7 @@ def plotEfficiencyVariableComparison(
         plt.close()
 
 
-def plotPtDependence(
+def plot_pt_dependence(
     df_list: list,
     tagger_list: list,
     model_labels: list,
@@ -622,41 +677,19 @@ def plotPtDependence(
     class_labels: list,
     main_class: str,
     flavour: str,
-    WP: float = 0.77,
-    Disc_Cut_Value: float = None,
-    SWP_Comparison: bool = False,
-    SWP_label_list: list = None,
-    Passed: bool = True,
-    Fixed_WP_Bin: bool = False,
+    working_point: float = 0.77,
+    disc_cut: float = None,
+    fixed_eff_bin: bool = False,
     bin_edges: list = None,
-    WP_Line: bool = False,
-    figsize: list = None,
-    Grid: bool = False,
-    binomialErrors: bool = True,
-    xlabel: str = r"$p_T$ in GeV",
-    logy: bool = False,
-    colors: list = None,
-    ApplyAtlasStyle: bool = True,
-    UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, fc=0.018",  # noqa: E501 # pylint: disable=line-too-long
-    yAxisAtlasTag: float = 0.9,
-    yAxisIncrease: float = 1.1,
-    frameon: bool = False,
-    labelFontSize: int = 10,
-    legFontSize: int = 10,
-    Ratio_Cut: list = None,
-    ncol: int = 1,
-    ymin: float = None,
-    ymax: float = None,
+    wp_line: bool = False,
+    grid: bool = False,
+    colours: list = None,
     alpha: float = 0.8,
     trans: bool = True,
     linewidth: float = 1.6,
-    dpi: int = 400,
+    **kwargs,
 ):
-    """For a given list of models, plot the b-eff,
-    l and c-rej as a function of jet pt for customizable
-    WP and fc values.
+    """For a given list of models, plot the b-eff, l and c-rej as a function of jet pt.
 
     Parameters
     ----------
@@ -672,516 +705,170 @@ def plotPtDependence(
     class_labels : list
         A list of the class_labels which are used.
     main_class : str
-        The main discriminant class. For b-tagging obviously "bjets"
+        The main discriminant class (= signal class). For b-tagging obviously "bjets"
     flavour : str
         Class that is to be plotted. For all non-signal classes, this
         will be the rejection and for the signal class, this will be
         the efficiency.
-    WP : float, optional
+    working_point : float, optional
         Working point which is to be used, by default 0.77.
-    Disc_Cut_Value : float, optional
+    disc_cut : float, optional
         Set a discriminant cut value for all taggers/models.
-        SWP_Comparsion needs to be False for this, by default None.
-    SWP_Comparison : bool, optional
-        Use the same cut value on the discriminant for all
-        models with the same SWP_label. Not works with Fixed_WP_Bin
-        True, by default False.
-    SWP_label_list : list, optional
-        List of labels for each model. Models with same SWP label get
-        the same Disc_cut_value, by default None.
-    Passed : bool, optional
-        Select if the selected jets need to pass the discriminant WP cut,
-        by default True.
-    Fixed_WP_Bin : bool, optional
+    fixed_eff_bin : bool, optional
         Calculate the WP cut on the discriminant per bin, by default False.
     bin_edges : list, optional
         As the name says, the edges of the bins used. Will be set
         automatically, if None. By default None.
-    WP_Line : bool, optional
+    wp_line : bool, optional
         Print a WP line in the upper plot, by default False.
-    figsize : list, optional
-        Size of the resulting figure as a list with two elements. First
-        is the width, second the height. By default None.
-    Grid : bool, optional
+    grid : bool, optional
         Use a grid in the plots, by default False
-    binomialErrors : bool, optional
-        Use binomial errors, by default True
-    xlabel : str, optional
-        Label for x-axis, by default r"$ in GeV"
-    logy : bool, optional
-        Set yscale to logy, by default False
-    colors : list, optional
-        Custom color list for the different models, by default None
-    ApplyAtlasStyle : bool, optional
-        Apply ATLAS style for matplotlib, by default True
-    UseAtlasTag : bool, optional
-        Use the ATLAS Tag in the plots, by default True
-    AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
-    SecondTag : str, optional
-        Second Row of the ATLAS Tag. No need to add WP or fc. It will
-        be added automatically,
-        by default
-        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
-    yAxisAtlasTag : float, optional
-        Relative y axis position of the ATLAS Tag, by default 0.9
-    yAxisIncrease : float, optional
-        Increasing the y axis to fit the ATLAS Tag in, by default 1.1
-    frameon : bool, optional
-        Set the frame around legend off/on, by default False
-    labelFontSize : int, optional
-        Fontsize of the labels of the axes, by default 10
-    legFontSize : int, optional
-        Fontsize of the legend, by default 10
-    Ratio_Cut : list, optional
-        List of the lower and upper y-limit for the ratio plot, by default None
-    ncol : int, optional
-        Number of columns in the legend, by default 1
-    ymin : float, optional
-        y axis minimum, by default None
-    ymax : float, optional
-        y axis maximum, by default None
+    colours : list, optional
+        Custom colour list for the different models, by default None
     alpha : float, optional
         Value for visibility of the plot lines, by default 0.8
     trans : bool, optional
-        Sets the transparity of the background. If true, the background is erased.
-        If False, the background is white, by default True
+        saving figure with transparent background, by default True
     linewidth : float, optional
         Define the linewidth of the plotted lines, by default 1.6
-    dpi : int, optional
-        Sets a DPI value for the plot that is produced (mainly for png),
-        by default 400
+    **kwargs : kwargs
+        kwargs for `var_vs_eff_plot` function
 
     Raises
     ------
     ValueError
-        If the given Ratio_Cut is either not a list or has more then two
-        entries.
+        If deprecated options are given.
     """
-    if SWP_label_list is None:
-        SWP_label_list = []
+    if "colors" in kwargs:
+        if colours is None:
+            colours = kwargs["colors"]
+        kwargs.pop("colors")
+    if "WP" in kwargs:
+        if working_point is None:
+            working_point = kwargs["WP"]
+        kwargs.pop("WP")
+    if "Disc_Cut_Value" in kwargs:
+        if disc_cut is None:
+            disc_cut = kwargs["Disc_Cut_Value"]
+        kwargs.pop("Disc_Cut_Value")
+    if "Fixed_WP_Bin" in kwargs:
+        if fixed_eff_bin is None:
+            fixed_eff_bin = kwargs["Fixed_WP_Bin"]
+        kwargs.pop("Fixed_WP_Bin")
+    if "Grid" in kwargs:
+        grid = kwargs["Grid"]
+        kwargs.pop("Grid")
+    if "WP_Line" in kwargs:
+        wp_line = kwargs["WP_Line"]
+        kwargs.pop("WP_Line")
+    kwargs = translate_kwargs(kwargs)
+
+    deprecated = {
+        "SWP_Comparison",
+        "SWP_label_list",
+        "Passed",
+        "binomialErrors",
+        "frameon",
+        "Ratio_Cut",
+    } & set(kwargs.keys())
+    if deprecated:
+        raise ValueError(
+            f"The options {list(deprecated)} are deprecated. "
+            "Please use the plotting python API."
+        )
+    if "xlabel" not in kwargs:
+        kwargs["xlabel"] = r"$p_T$ [GeV]"
+
     if bin_edges is None:
         bin_edges = [0, 20, 50, 90, 150, 300, 1000]
-    # Apply ATLAS style
-    if ApplyAtlasStyle is True:
-        applyATLASstyle(mtp)
-
     # Get global config of the classes
     flav_cat = global_config.flavour_categories
-
-    # Get the bins for the histogram
-    pt_midpts = (np.asarray(bin_edges)[:-1] + np.asarray(bin_edges)[1:]) / 2.0
-    bin_widths = (np.asarray(bin_edges)[1:] - np.asarray(bin_edges)[:-1]) / 2.0
-    Npts = pt_midpts.size
-
-    if SWP_Comparison is True:
-        SWP_Cut_Dict = {}
+    n_curves = len(tagger_list)
+    if colours is None:
+        colours = [f"C{i}" for i in range(n_curves)]
 
     # Get the indicies of the flavours
     index_dict = {f"{flavour}": i for i, flavour in enumerate(class_labels)}
 
-    # Set color if not provided
-    if colors is None:
-        colors = [f"C{i}" for i in range(len(df_list))]
-
-    # Define the figure with two subplots of unequal sizes
-    axis_dict = {}
-
-    # Ratio save. Used for ratio calculation
-    ratio_eff = {
-        "pt_midpts": [],
-        "effs": [],
-        "rej": [],
-        "bin_widths": [],
-        "yerr": [],
-    }
-
-    # Init new figure
-    if figsize is None:
-        fig = plt.figure(figsize=(11.69 * 0.8, 8.27 * 0.8))
-
-    else:
-        fig = plt.figure(figsize=(figsize[0], figsize[1]))
-
-    gs = gridspec.GridSpec(8, 1, figure=fig)
-    axis_dict["left"] = {}
-    axis_dict["left"]["top"] = fig.add_subplot(gs[:6, 0])
-    axis_dict["left"]["ratio"] = fig.add_subplot(
-        gs[6:, 0], sharex=axis_dict["left"]["top"]
-    )
-
-    for i, (df_results, model_label, tagger, color) in enumerate(
-        zip(df_list, model_labels, tagger_list, colors)
+    # check length
+    # TODO: change in python 3.10 -> add to zip() with strict=True argument
+    if not all(
+        len(elem) == n_curves
+        for elem in [
+            df_list,
+            model_labels,
+            tagger_list,
+            colours,
+        ]
     ):
+        raise ValueError("Passed lists do not have same length.")
 
-        # Placeholder for the sig eff and bkg rejections
-        effs = np.zeros(Npts)
+    mode = "bkg_rej"
+    y_label = f'{flav_cat[flavour]["legend_label"]} rejection'
+    if main_class == flavour:
+        mode = "sig_eff"
+        y_label = f'{flav_cat[flavour]["legend_label"]} efficiency'
 
-        # Get truth labels
-        truth_labels = df_results["labels"]
-
-        if Fixed_WP_Bin is False:
-            if SWP_Comparison is False:
-                if Disc_Cut_Value is None:
-                    # Calculate WP cutoff for b-disc
-                    disc_cut = np.percentile(
-                        df_results.query(f"labels=={index_dict[main_class]}")[
-                            f"disc_{tagger}"
-                        ],
-                        (1 - WP) * 100,
-                    )
-
-                elif Disc_Cut_Value is not None:
-                    disc_cut = Disc_Cut_Value
-
-            elif SWP_Comparison is True and SWP_label_list[i] not in SWP_Cut_Dict:
-                # Calc disc cut value for the SWP label model
-                disc_cut = np.percentile(
-                    df_results.query(f"labels=={index_dict[main_class]}")[
-                        f"disc_{tagger}"
-                    ],
-                    (1 - WP) * 100,
-                )
-
-                # Set Value globally for the SWP label
-                SWP_Cut_Dict.update({SWP_label_list[i]: disc_cut})
-
-            elif SWP_Comparison is True and SWP_label_list[i] in SWP_Cut_Dict:
-                # Set disc_cut for the model after its SWP label
-                disc_cut = SWP_Cut_Dict[SWP_label_list[i]]
-
-        # Get jet pts
-        jetPts = df_results["pt"] / 1000
-
-        # For calculating the binomial errors, let nTest be an array of
-        # the same shape as the the # of pT bins that we have
-        nTest = np.zeros(Npts)
-
-        for j, pt_min, pt_max in zip(np.arange(Npts), bin_edges[:-1], bin_edges[1:]):
-
-            # Cut on selected flavour jets with the wanted pt range
-            den_mask = (
-                (jetPts > pt_min)
-                & (jetPts < pt_max)
-                & (truth_labels == index_dict[flavour])
-            )
-
-            if Fixed_WP_Bin is False:
-                # Cut on jets which passed the WP
-                if Passed is True:
-                    num_mask = den_mask & (df_results[f"disc_{tagger}"] > disc_cut)
-
-                else:
-                    num_mask = den_mask & (df_results[f"disc_{tagger}"] <= disc_cut)
-
-            else:
-                # Setting pT mask for the selected bin to calculate
-                # the disc cut value fot the particular bin
-                pT_mask = (jetPts > pt_min) & (jetPts < pt_max)
-
-                # If SWP is used, calculate the disc cut for the model if
-                # its not added to the dict yet. If its already added,
-                # the value is loaded. If SWP is false, the disc value
-                # will be calculated for each of the models independently
-                if SWP_Comparison is False:
-                    disc_cut = np.percentile(
-                        df_results.query(f"labels=={index_dict[main_class]}")[
-                            f"disc_{tagger}"
-                        ][pT_mask],
-                        (1 - WP) * 100,
-                    )
-
-                elif SWP_Comparison is True and SWP_label_list[i] not in SWP_Cut_Dict:
-                    # Calc disc cut value for the SWP label model
-                    disc_cut = np.percentile(
-                        df_results.query(f"labels=={index_dict[main_class]}")[
-                            f"disc_{tagger}"
-                        ][pT_mask],
-                        (1 - WP) * 100,
-                    )
-
-                    # Set Value globally for the SWP label
-                    SWP_Cut_Dict.update({SWP_label_list[i]: disc_cut})
-
-                elif SWP_Comparison is True and SWP_label_list[i] in SWP_Cut_Dict:
-                    # Set disc_cut for the model after its SWP label
-                    disc_cut = SWP_Cut_Dict[SWP_label_list[i]]
-
-                # Cut on jets which passed the WP
-                if Passed is True:
-                    num_mask = den_mask & (df_results[f"disc_{tagger}"] > disc_cut)
-
-                else:
-                    num_mask = den_mask & (df_results[f"disc_{tagger}"] <= disc_cut)
-
-            # Sum masks for binominal error calculation
-            nTest[j] = den_mask.sum()
-            effs[j] = num_mask.sum() / nTest[j]
-
-        # For b-jets, plot the eff: for l and c-jets, look at the rej
-        if flavour == main_class:
-            yerr = eff_err(effs, nTest) if binomialErrors else None
-
-            axis_dict["left"]["top"].errorbar(
-                pt_midpts,
-                effs,
-                xerr=bin_widths,
-                yerr=yerr,
-                color=color,
-                fmt=".",
-                label=model_label,
-                alpha=alpha,
-                linewidth=linewidth,
-            )
-
-            # Calculate Ratio
-            # Check if its not the first model which is used as reference
-            if i != 0:
-                effs_ratio = effs / ratio_eff["effs"]
-                yerr_ratio = (
-                    (yerr / effs) + (ratio_eff["yerr"] / ratio_eff["effs"])
-                ) * effs_ratio
-
-                axis_dict["left"]["ratio"].errorbar(
-                    pt_midpts,
-                    effs_ratio,
-                    xerr=bin_widths,
-                    yerr=yerr_ratio,
-                    color=color,
-                    fmt=".",
-                    label=model_label,
-                    alpha=alpha,
-                    linewidth=linewidth,
-                )
-
-            else:
-                ratio_eff["pt_midpts"] = pt_midpts
-                ratio_eff["effs"] = effs
-                ratio_eff["bin_widths"] = bin_widths
-                ratio_eff["yerr"] = yerr
-
-        else:
-            # Calculate rejection
-            rej = 1 / effs
-            yerr = (
-                np.power(rej, 2)
-                * eff_err(effs, nTest, suppress_zero_divison_error=True)
-                if binomialErrors
-                else None
-            )
-
-            # Plot the "hists"
-            axis_dict["left"]["top"].errorbar(
-                pt_midpts,
-                rej,
-                xerr=bin_widths,
-                yerr=yerr,
-                color=color,
-                fmt=".",
-                label=model_label,
-                alpha=alpha,
-                linewidth=linewidth,
-            )
-
-            # Calculate Ratio
-            # Check if its not the first model which is used as reference
-            if i != 0:
-                rej_ratio = rej / ratio_eff["rej"]
-                yerr_ratio = (
-                    (yerr / rej) + (ratio_eff["yerr"] / ratio_eff["rej"])
-                ) * rej_ratio
-
-                axis_dict["left"]["ratio"].errorbar(
-                    pt_midpts,
-                    rej_ratio,
-                    xerr=bin_widths,
-                    yerr=yerr_ratio,
-                    color=color,
-                    fmt=".",
-                    label=model_label,
-                    alpha=alpha,
-                    linewidth=linewidth,
-                )
-
-            else:
-                ratio_eff["pt_midpts"] = pt_midpts
-                ratio_eff["rej"] = rej
-                ratio_eff["bin_widths"] = bin_widths
-                ratio_eff["yerr"] = yerr
-
-    # Set labels
-    axis_dict["left"]["ratio"].set_xlabel(
-        xlabel,
-        horizontalalignment="right",
-        x=1.0,
-        fontsize=labelFontSize,
+    plot_pt = var_vs_eff_plot(
+        mode=mode,
+        ylabel=y_label,
+        **kwargs,
     )
-
-    axis_dict["left"]["ratio"].tick_params(axis="x", labelsize=labelFontSize)
-
-    # Set metric
-    if flavour == main_class:
-        metric = "efficiency"
-
-    else:
-        metric = "rejection"
-
-    # Set addition to y label if fixed WP bin is True
-    if Fixed_WP_Bin is False:
-        Fixed_WP_Label = "Inclusive"
-
-    else:
-        Fixed_WP_Label = "Fixed"
-
-    # Set y label
-    axis_dict["left"]["top"].set_ylabel(
-        f'{Fixed_WP_Label} {flav_cat[flavour]["legend_label"]} {metric}',
-        horizontalalignment="right",
-        y=1.0,
-        fontsize=labelFontSize,
-    )
-
-    axis_dict["left"]["top"].tick_params(axis="y", labelsize=labelFontSize)
-
-    # Set ratio y label
-    axis_dict["left"]["ratio"].set_ylabel(
-        "Ratio",
-        y=1.0,
-        fontsize=labelFontSize,
-    )
-
-    axis_dict["left"]["ratio"].tick_params(axis="y", labelsize=labelFontSize)
-
-    # Check for Logscale
-    if logy is True:
-        axis_dict["left"]["top"].set_yscale("log")
-
-    # Set limits
-    axis_dict["left"]["top"].set_xlim(bin_edges[0], bin_edges[-1])
-
-    # Increase ymax so atlas tag don't cut plot
-    if (ymin is None) and (ymax is None):
-        ymin, ymax = axis_dict["left"]["top"].get_ylim()
-
-    elif ymin is None:
-        ymin, _ = axis_dict["left"]["top"].get_ylim()
-
-    elif ymax is None:
-        _, ymax = axis_dict["left"]["top"].get_ylim()
-
-    # Increase the yaxis limit upper part by given factor to fit ATLAS Tag in
-    if logy is True:
-        axis_dict["left"]["top"].set_ylim(
-            ymin,
-            ymin * ((ymax / ymin) ** yAxisIncrease),
-        )
-
-    else:
-        axis_dict["left"]["top"].set_ylim(bottom=ymin, top=yAxisIncrease * ymax)
-
-    # Apply y-limits for the ratio plot
-    if Ratio_Cut is not None:
-        if isinstance(Ratio_Cut, list) and len(Ratio_Cut) == 2:
-            axis_dict["left"]["ratio"].set_ylim(bottom=Ratio_Cut[0], top=Ratio_Cut[1])
-
-        else:
-            raise ValueError(f"{Ratio_Cut} can't be used as ratio cut!")
-
-    elif ApplyAtlasStyle is True:
-        ymin_ratio, ymax_ratio = axis_dict["left"]["ratio"].get_ylim()
-        axis_dict["left"]["ratio"].set_ylim(
-            bottom=0.8 if ymin_ratio >= 1 else ymin_ratio * 0.8,
-            top=ymax_ratio * 1.1,
-        )
-
-    # Get xlim for the horizontal and vertical lines
-    xmin, xmax = axis_dict["left"]["top"].get_xlim()
-
-    # Set WP Line
-    if WP_Line is True:
-        axis_dict["left"]["top"].hlines(
-            y=WP,
-            xmin=xmin,
-            xmax=xmax,
-            colors="black",
-            linestyle="dotted",
-            alpha=0.5,
-        )
-
-    # Ratio line
-    axis_dict["left"]["ratio"].hlines(
-        y=1,
-        xmin=xmin,
-        xmax=xmax,
-        colors=colors[0],
-        linestyle="dotted",
-        alpha=0.5,
-    )
-
-    # Set grid
-    if Grid is True:
-        axis_dict["left"]["top"].grid()
-        axis_dict["left"]["ratio"].grid()
-
-    # Define legend
-    axis_dict["left"]["top"].legend(loc="upper right", ncol=ncol, frameon=frameon)
-
     # Redefine Second Tag with inclusive or fixed tag
-    if Fixed_WP_Bin is True:
-        SecondTag = f"{SecondTag}\nConstant" fr"$\epsilon_b$ = {int(WP * 100)}% per bin"
-
+    if fixed_eff_bin:
+        plot_pt.atlas_second_tag = (
+            f"{plot_pt.atlas_second_tag}\nConstant "
+            fr"$\epsilon_b$ = {int(working_point * 100)}% per bin"
+        )
     else:
-        SecondTag = f"{SecondTag}\nInclusive " + fr"$\epsilon_b$ = {int(WP * 100)}%"
-
-    # Set the ATLAS Tag
-    if UseAtlasTag is True:
-        pas.makeATLAStag(
-            ax=axis_dict["left"]["top"],
-            fig=fig,
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-            fontsize=legFontSize,
+        plot_pt.atlas_second_tag = (
+            f"{plot_pt.atlas_second_tag}\nInclusive "
+            fr"$\epsilon_b$ = {int(working_point * 100)}%"
         )
 
-    # Set tight layout
-    plt.tight_layout()
+    for i, (df_results, model_label, tagger, colour) in enumerate(
+        zip(df_list, model_labels, tagger_list, colours)
+    ):
+        # Get jet pts
+        jetPts = df_results["pt"] / 1e3
+        # Get truth labels
+        is_signal = df_results["labels"] == index_dict[main_class]
+        is_bkg = (
+            df_results["labels"] == index_dict[flavour] if mode == "bkg_rej" else None
+        )
+        disc = df_results[f"disc_{tagger}"]
+        plot_pt.add(
+            var_vs_eff(
+                x_var_sig=jetPts[is_signal],
+                disc_sig=disc[is_signal],
+                x_var_bkg=jetPts[is_bkg] if mode == "bkg_rej" else None,
+                disc_bkg=disc[is_bkg] if mode == "bkg_rej" else None,
+                bins=bin_edges,
+                wp=working_point,
+                disc_cut=disc_cut,
+                fixed_eff_bin=fixed_eff_bin,
+                label=model_label,
+                colour=colour,
+                alpha=alpha,
+                linewidth=linewidth,
+            ),
+            reference=i == 0,
+        )
 
-    # Save figure
-    plt.savefig(plot_name, transparent=trans, dpi=dpi)
-    plt.close()
-
-
-def translate_kwargs(kwargs):
-    """Maintaining backwards compatibility for the kwargs and the new plot_base syntax.
-
-    Parameters
-    ----------
-    kwargs : dict
-        dictionary with kwargs
-
-    Returns
-    -------
-    dict
-        kwargs compatible with new naming.
-    """
-    mapping = {
-        "UseAtlasTag": "use_atlas_tag",
-        "AtlasTag": "atlas_first_tag",
-        "SecondTag": "atlas_second_tag",
-        "yAxisAtlasTag": "atlas_ymax",
-        "legcols": "leg_ncol",
-        "loc_legend": "leg_loc",
-        "legFontSize": "leg_loc",
-        "set_logy": "logy",
-        "yAxisIncrease": "y_scale",
-        "labelFontSize": "fontsize",
-    }
-    for key, elem in mapping.items():
-        if key in kwargs:
-            kwargs[key] = elem
-            kwargs.pop(key)
-    return kwargs
+    plot_pt.draw()
+    # Set grid
+    if grid is True:
+        plot_pt.set_grid()
+    # Set WP Line
+    if wp_line is True:
+        plot_pt.draw_hline(working_point)
+        if main_class != flavour:
+            logger.warning(
+                "You set `wp_line` to True but you are not looking at the singal "
+                "efficiency. It will probably not be visible on your plot."
+            )
+    plot_pt.savefig(plot_name, transparent=trans)
+    plot_pt.clear()
 
 
 def plotROCRatio(
@@ -1251,6 +938,9 @@ def plotROCRatio(
         http://home.fnal.gov/~paterno/images/effic.pdf, by default 0
     ratio_id : int, optional
         List to which given model the ratio is calulcated, by default 0
+    **kwargs : kwargs
+        kwargs passed to roc_plot
+
 
     Raises
     ------
@@ -1403,8 +1093,6 @@ def plotROCRatioComparison(
         by default "effs"
     draw_errors : bool, optional
         Binominal errors on the lines, by default True
-    rlabel : str, optional
-        The label for the y-axis for the ratio panel, by default "Ratio"
     labelpad : int, optional
         Spacing in points from the axes bounding box including
         ticks and tick labels, by default None
@@ -1427,6 +1115,8 @@ def plotROCRatioComparison(
     reference_ratio : list, optional
         List of bools indicating which roc used as reference for ratio calculation,
         by default None
+    **kwargs : kwargs
+        kwargs passed to roc_plot
 
     Raises
     ------
@@ -2042,7 +1732,7 @@ def plot_score_comparison(
         List of labels for the given models
     tagger_list : list
         List of tagger names of the used taggers
-    class_labels : list
+    class_labels_list : list
         A list of the class_labels which are used.
     main_class : str
         The main discriminant class. For b-tagging obviously "bjets"
@@ -2387,10 +2077,30 @@ def plotFractionScan(
     SecondTag: str = "$\\sqrt{s}=13$ TeV, PFlow Jets, $t\\bar{t}$",
     dpi: int = 400,
 ):
-    """
-    DEPRECATED. Plots a 2D heatmap of rej for a given eff
+    """DEPRECATED. Plots a 2D heatmap of rej for a given eff
         (frac flavour X vs frac flavour Y).
     Data needs to be a list of numpy arrays with the flavour
+
+    Parameters
+    ----------
+    data : _type_
+        data
+    label : _type_
+        label
+    plot_name : _type_
+        plot name
+    x_val : _type_
+        x values
+    y_val : _type_
+        y values
+    UseAtlasTag : bool, optional
+        adding ATLAS tag, by default True
+    AtlasTag : str, optional
+        ATLAS tag, by default "Internal"
+    SecondTag : str, optional
+        second line of ATLAS tag
+    dpi : int, optional
+        figure dpi, by default 400
     """
     if label == "umami_crej":
         draw_label = r"$c$-Jet Rejection from b ($1/\epsilon_{c}$)"
@@ -3118,7 +2828,7 @@ def plotFractionContour(  # pylint: disable=W0102
         ["cjets", "ujets"].
     plot_name : str
         Path, Name and format of the resulting plot file.
-    rejections_to_fix : list
+    rejections_to_fix_list : list
         List of dicts with the extra rejections. If more than two rejections are
         available, you need to fix the other rejections to a specific
         value. The dict entry key is the name of the rejection, for
@@ -3130,6 +2840,8 @@ def plotFractionContour(  # pylint: disable=W0102
         which colour is used etc.
     ApplyAtlasStyle : bool, optional
         Apply ATLAS style for matplotlib, by default True
+    transparent_bkg : bool, optional
+        if plot is saved with transparent background, by default True
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
@@ -3164,7 +2876,7 @@ def plotFractionContour(  # pylint: disable=W0102
         Decide, if a grid is plotted or not, by default True
     title : str, optional
         Title of the plot, by default ""
-    ycolour : str, optional
+    xcolour : str, optional
         Color of the x-axis, by default "black"
     ycolour : str, optional
         Color of the y-axis, by default "black"

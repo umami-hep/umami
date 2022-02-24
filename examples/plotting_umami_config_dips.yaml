@@ -89,9 +89,7 @@ Dips_pT_vs_beff:
     main_class: "bjets"
     WP: 0.77
     WP_Line: True
-    binomialErrors: True
     Fixed_WP_Bin: False
-    SWP_Comparison: False
     figsize: [7, 5]
     logy: False
     UseAtlasTag: True

@@ -1,9 +1,11 @@
 # Plotting with the Python API
 
 Currently the plotting part of umami is rewritten for better usage with the python api.
-For now, the plotting of roc curves was rewritten.
+Example implementations with the new API are located [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/).
 
-An example of the roc plotting can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plot_rocs.py).
+The following plots have been rewritten so far:
+- roc curve plotting ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/plot_rocs.py))
+- variable vs efficiency/rejection plotting ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/plot_pt_vs_eff.py))
 
 
 ## ROC curve plotting API

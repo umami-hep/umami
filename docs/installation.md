@@ -132,6 +132,12 @@ singularity exec --contain --nv --bind /afs  --bind /cvmfs --bind /eos docker://
     singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest-gpu bash
     ```
 
+???+ warning "Singualrity cache"
+    By default, `singualrity` will store the cache in your home directory, which might cause space issues.
+    You can redirect the cache to another folder via `export SINGULARITY_CACHEDIR=<alternative_folder>` which could be for instance the afs work istead of home
+
+
+
 
 ## Cloning the repository
 As mentioned before, if you plan to modify the code, the best choice are the Base images. How to use images on your local machine or cluster you can see below.

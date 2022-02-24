@@ -15,6 +15,7 @@ ttbar_file = (
     "user.alfroch.410470.btagTraining.e6337_s3681_r13144_p4931.EMPFlowAll."
     "2022-02-07-T174158_output.h5/user.alfroch.28040424._001207.output.h5"
 )
+
 logger.info("load file")
 with h5py.File(ttbar_file, "r") as f:
     df = pd.DataFrame(
@@ -31,7 +32,6 @@ with h5py.File(ttbar_file, "r") as f:
         )[:300000]
     )
 logger.info("caclulate tagger discriminants")
-n_test = len(df)
 
 
 # define a small function to calculate discriminant
@@ -75,6 +75,9 @@ is_light = df["HadronConeExclTruthLabelID"] == 0
 is_c = df["HadronConeExclTruthLabelID"] == 4
 is_b = df["HadronConeExclTruthLabelID"] == 5
 
+n_jets_light = sum(is_light)
+n_jets_c = sum(is_c)
+
 logger.info("Calculate rejection")
 rnnip_ujets_rej = calc_rej(discs_rnnip[is_b], discs_rnnip[is_light], sig_eff)
 rnnip_cjets_rej = calc_rej(discs_rnnip[is_b], discs_rnnip[is_c], sig_eff)
@@ -101,7 +104,7 @@ plot_roc.add_roc(
     roc(
         sig_eff,
         rnnip_ujets_rej,
-        n_test=n_test,
+        n_test=n_jets_light,
         rej_class="ujets",
         signal_class="bjets",
         label="RNNIP",
@@ -112,17 +115,17 @@ plot_roc.add_roc(
     roc(
         sig_eff,
         dips_ujets_rej,
-        n_test=n_test,
+        n_test=n_jets_light,
         rej_class="ujets",
         signal_class="bjets",
-        label="DIPS",
+        label="DIPS r22",
     ),
 )
 plot_roc.add_roc(
     roc(
         sig_eff,
         rnnip_cjets_rej,
-        n_test=n_test,
+        n_test=n_jets_c,
         rej_class="cjets",
         signal_class="bjets",
         label="RNNIP",
@@ -133,10 +136,10 @@ plot_roc.add_roc(
     roc(
         sig_eff,
         dips_cjets_rej,
-        n_test=n_test,
+        n_test=n_jets_c,
         rej_class="cjets",
         signal_class="bjets",
-        label="DIPS",
+        label="DIPS r22",
     ),
 )
 # setting which flavour rejection ratio is drawn in which ratio panel

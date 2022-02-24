@@ -1004,7 +1004,6 @@ def plot_pT_vs_eff(
     df_list = []
     model_labels = []
     tagger_list = []
-    SWP_label_list = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
@@ -1030,19 +1029,15 @@ def plot_pT_vs_eff(
                 model_config["data_set_name"],
             )
 
-        if "SWP_label" in model_config and model_config["SWP_label"] is not None:
-            SWP_label_list.append(model_config["SWP_label"])
-
         df_list.append(df_results)
         model_labels.append(model_config["label"])
         tagger_list.append(model_config["tagger_name"])
 
-    uet.plotPtDependence(
+    uet.plot_pt_dependence(
         df_list=df_list,
         tagger_list=tagger_list,
         model_labels=model_labels,
         plot_name=plot_name,
-        SWP_label_list=SWP_label_list,
         **plot_config["plot_settings"],
     )
 
