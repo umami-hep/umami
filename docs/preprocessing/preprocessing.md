@@ -1,27 +1,30 @@
-## Introduction
+# Preprocessing
 For the training of umami, the ntuples can be used which are specified in the section [MC Samples](mc-samples.md).
 
 Training ntuples are produced using the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) which dumps them directly into hdf5 files. The finished ntuples are also listed in the table in the file [MC-Samples.md](mc-samples.md). However, the training ntuples are not yet optimal for training the different b-taggers and require preprocessing.
 
-### Preprocessing
+
+
+## Motivation
 The motivation for preprocessing the training samples results from the fact that the input datasets are highly imbalanced in their flavour composition. While there are large quantities of light jets, the fraction of b-jets is small and the fraction of other flavours is even smaller.
 A widely adopted technique for dealing with highly unbalanced datasets is called resampling. It consists of removing samples from the majority class (under-sampling) and / or adding more examples from the minority class (over-sampling).
 In under-sampling, the simplest technique involves removing random records from the majority class, which can cause loss of information.
 Another approach can be to tell the network how important samples from each class are. For e.g. a majority class you can reduce the impact of samples from this class to the training. You can do this by assigning a weight to each sample and use it to weight the loss function used in the training.
 
-### Hybrid samples
+
+## Hybrid samples
 Umami/DIPS and DL1r are trained on so-called hybrid samples which are created using both ttbar and Z' input jets.
 The hybrid samples for PFlow jets are created by combining events from ttbar and Z' samples based on a pt threshold, which is defined by the `pt_btagJes` variable for all jet-flavours.
 Below a certain pt threshold (which needs to be defined for the preprocessing), ttbar events are used in the hybrid sample. Above this pt threshold, the jets are taken from Z' events.
 The advantage of these hybrid samples is the availability of sufficient jets with high pt, as the ttbar samples typically have lower-pt jets than those jets from the Z' sample.
 
-![Pt distribution of hybrid samples being composed from ttbar and Zjets samples](assets/pt_btagJes-cut_spectrum.png)
+![Pt distribution of hybrid samples being composed from ttbar and Zjets samples](../assets/pt_btagJes-cut_spectrum.png)
 
 The production of the hybrid samples in the preprocessing stage requires preparation of input files which are created from the training ntuples.
 
 Additional preprocessing steps for PFlow jets are required to ensure similar kinematic distributions for the jets of different flavours in the training samples in order to avoid kinematic biases. One of these techniques is downsampling which is used in the `Undersampling` approach.
 
-![Pt distribution of downsampled hybrid samples](assets/pt_btagJes-downsampled.png)
+![Pt distribution of downsampled hybrid samples](../assets/pt_btagJes-downsampled.png)
 
 Finally, the input features are scaled and shifted to normalise the range of the independent variables.
 [Wikipedia](https://en.wikipedia.org/wiki/Feature_scaling) gives a motivation for the scaling + shifting step:
@@ -29,28 +32,6 @@ Finally, the input features are scaled and shifted to normalise the range of the
 > Since the range of values of raw data varies widely, in some machine learning algorithms, objective functions will not work properly without normalization. For example, many classifiers calculate the distance between two points by the Euclidean distance. If one of the features has a broad range of values, the distance will be governed by this particular feature. Therefore, the range of all features should be normalized so that each feature contributes approximately proportionately to the final distance. Another reason why feature scaling is applied is that gradient descent converges much faster with feature scaling than without it.
 
 All these steps are implemented in the `preprocessing.py` script, whose usage is described below in the documentation.
-
-### Jet truth labelling
-The standard labelling is provided via the `HadronConeExclTruthLabelID` variable while an extended jet labelling is available via the `HadronConeExclExtendedTruthLabelID` variable.
-For more information, consider the [FTAG TWiki about flavour labelling](https://twiki.cern.ch/twiki/bin/view/AtlasProtected/FlavourTaggingLabeling).
-
-| HadronConeExclTruthLabelID | Category         |
-| -------------------------- | ---------------- |
-| 0                          | light jets       |
-| 4                          | c-jets           |
-| 5                          | b-jets    |
-| 15                         | tau-jets         |
-
-| HadronConeExclExtendedTruthLabelID | Category         |
-| ---------------------------------- | ---------------- |
-| 0                                  | light jets       |
-| 4                                  | c-jets           |
-| 5, 54                              | single b-jets    |
-| 15                                 | tau-jets         |
-| 44                                 | double c-jets    |
-| 55                                 | double b-jets    |
-
-For the `HadronConeExclTruthLabelID` labelling, the categories `4` and `44` as well as `5`, `54` and `55` are combined.
 
 
 ## Ntuple preparation
@@ -574,7 +555,7 @@ preprocessing.py --config <path to config file> --resampling
     preprocessing.py --config <path to config file> --resampling --flavour plotting
     ```
 
-    and 
+    and
 
     ```bash
     preprocessing.py --config <path to config file> --resampling --flavour combining

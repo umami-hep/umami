@@ -113,6 +113,21 @@ singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/alg
     singularity exec <folder_where_you_want_to_store_the_image>/umami_base_cpu.img bash
     ```
 
+???+ warning "Singualrity cache"
+    By default, `singualrity` will store the cache in your home directory, which might cause space issues.
+    You can redirect the cache to another folder via `export SINGULARITY_CACHEDIR=<alternative_folder>` which could be for instance the afs work istead of home on `lxplus`.
+    The easiest is to add to your `~/.bashrc` on `lxplus` the following line
+    ```bash
+    export SINGULARITY_CACHEDIR=/afs/cern.ch/work/${USER:0:1}/${USER}/singularity
+    ```
+    after having created the folder via
+    ```
+    mkdir /afs/cern.ch/work/${USER:0:1}/${USER}/singularity
+    ```
+    in case you don't have the `/afs` work not enabled, you can do that in your CERN account management.
+
+
+
 
 
 ### Launching containers with GPU support using Singularity (lxplus/institute cluster)
@@ -131,12 +146,6 @@ singularity exec --contain --nv --bind /afs  --bind /cvmfs --bind /eos docker://
     ```bash
     singularity exec --nv docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest-gpu bash
     ```
-
-???+ warning "Singualrity cache"
-    By default, `singualrity` will store the cache in your home directory, which might cause space issues.
-    You can redirect the cache to another folder via `export SINGULARITY_CACHEDIR=<alternative_folder>` which could be for instance the afs work istead of home
-
-
 
 
 ## Cloning the repository

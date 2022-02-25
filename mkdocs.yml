@@ -9,22 +9,43 @@ edit_uri: 'tree/master/docs'
 
 theme:
     name: material
+    palette:
+        primary: teal
+    features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+
 
 nav:
     - Home: index.md
-    - Installation: installation.md
-    - Development: development.md
-    - MC samples: mc-samples.md
-    - Preprocessing: preprocessing.md
-    - Training: train-instructions.md
-    - Running GNN: GNN-instructions.md
-    - LWTNN Conversion: LWTNN-conversion.md
-    - Evaluate Taggers in Samples: WO_trained_model.md
+    - Setup:
+        # - setup/index.md
+        - Installation: setup/installation.md
+        - Development:
+            - setup/development/index.md
+            - Good code practices: setup/development/good-practices.md
+            - VS Code: setup/development/VS_code.md
+
+        - Changelog: setup/changelog.md
+    - Preprocessing:
+        - Preprocessing: preprocessing/preprocessing.md
+        - MC samples: preprocessing/mc-samples.md
+        - Truth labels: preprocessing/truth_labels.md
+    - Trainings:
+        - trainings/index.md
+        - Instructions: trainings/train-instructions.md
+        - Running GNN: trainings/GNN-instructions.md
+        - Feature Importance: trainings/Feature_Importance.md
+        - LWTNN Conversion: trainings/LWTNN-conversion.md
     - Plotting:
-          - "Input variables": plotting/plotting_inputs.md
-          - "Tagger performance": plotting/plotting_umami.md
-          - "Python API": plotting/python_api.md
-    - Feature Importance: Feature_Importance.md
+        - plotting/index.md
+        - "Input variables": plotting/plotting_inputs.md
+        - "Tagger performance": plotting/plotting_umami.md
+        - Evaluate Taggers in Samples: plotting/WO_trained_model.md
+        - "Python API": plotting/python_api.md
 
 plugins:
     - search
