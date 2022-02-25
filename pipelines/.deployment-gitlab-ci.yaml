@@ -32,6 +32,7 @@ mr_pages:
     - apk add --no-cache git subversion
     - pip install --upgrade pip setuptools wheel
     - pip install mkdocs==${MKDOCS_VERSION} mkdocs-material==${MATERIAL_VERSION} mkdocs-static-i18n==${I18NSTATIC_VERSION}
+    - cp changelog.md docs/setup/changelog.md
     - mkdocs build -d public
     - if [[ -f _redirects ]]; then cp _redirects public; fi;
     - mv sphinx-docs public/sphinx-docs
