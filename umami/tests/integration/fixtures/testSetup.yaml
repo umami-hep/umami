@@ -56,6 +56,17 @@ test_umami:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
 
+test_umami_cond_att:
+    data_subfolder: 'preprocessing'
+    model_name: 'test_umami_cond_att_model'
+    config: 'examples/umami-Cond-Att-PFlow-Training-config.yaml'
+    preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
+    plotting_config: 'examples/plotting_umami_config_Umami.yaml'
+    testdir: '/tmp/umami/umami_cond_att'
+    files:
+        - ci_ttbar_testing.h5
+        - ci_zpext_testing.h5
+
 test_evaluate_comp_taggers:
     data_subfolder: 'preprocessing'
     model_name: 'test_evaluate_comp_taggers_model'

@@ -48,12 +48,11 @@ class ConvertTest(unittest.TestCase):
         record_dir = tempfile.TemporaryDirectory()
         cv.save_parameters(record_dir.name)
         parameters = {
-            "nJets": 3,
-            "njet_features": 41,
-            "nTrks": 40,
-            "nFeatures": 5,
-            "nDim": 3,
-            "nadd_vars": None,
+            "n_jets": 3,
+            "n_jet_features": 41,
+            "n_dim": 3,
+            "n_trks": {"tracks": 40},
+            "n_trk_features": {"tracks": 5},
         }
         metadata_file = os.path.join(record_dir.name, "metadata.json")
         with open(metadata_file, "r") as metadata:
@@ -67,12 +66,12 @@ class ConvertTest(unittest.TestCase):
         cv.n_add_vars = 4
         cv.save_parameters(record_dir.name)
         parameters = {
-            "nJets": 3,
-            "njet_features": 41,
-            "nTrks": 40,
-            "nFeatures": 5,
-            "nDim": 3,
-            "nadd_vars": 4,
+            "n_jets": 3,
+            "n_jet_features": 41,
+            "n_dim": 3,
+            "n_trks": {"tracks": 40},
+            "n_trk_features": {"tracks": 5},
+            "n_add_vars": 4,
         }
         metadata_file = os.path.join(record_dir.name, "metadata.json")
         with open(metadata_file, "r") as metadata:

@@ -107,37 +107,35 @@ def Cads(args, train_config, preprocess_config):
     ------
     ValueError
         If input is neither a h5 nor a directory.
-    KeyError
-        When no metadata file is given for tfrecords.
-    ValueError
-        If input is neither a h5 nor a directory.
     """
 
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
     val_params = train_config.Validation_metrics_settings
     eval_params = train_config.Eval_parameters_validation
-    tracks_key = train_config.tracks_key
+    tracks_name = train_config.tracks_name
 
     # Init a list for the callbacks
     callbacks = []
 
     # Get needed variable from the train config
     WP = float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
-    n_jets = (
+    n_jets_val = (
         int(val_params["n_jets"])
         if "n_jets" in val_params
         else int(eval_params["n_jets"])
     )
 
     if ".h5" in train_config.train_file:
+        # Init a metadata dict
+        metadata = {}
+
         # Get the shapes for training
         with h5py.File(train_config.train_file, "r") as f:
-            nJets, nTrks, nFeatures = f[tracks_key].shape
-            nJets, nDim = f["Y_train"].shape
-
-        if NN_structure["nJets_train"] is not None:
-            nJets = int(NN_structure["nJets_train"])
+            metadata["n_jets"], metadata["n_trks"], metadata["n_trk_features"] = f[
+                f"X_{tracks_name}_train"
+            ].shape
+            _, metadata["n_dim"] = f["Y_train"].shape
 
         if NN_structure["use_sample_weights"]:
             tensor_types = (
@@ -147,10 +145,12 @@ def Cads(args, train_config, preprocess_config):
             )
             tensor_shapes = (
                 {
-                    "input_1": tf.TensorShape([None, nTrks, nFeatures]),
+                    "input_1": tf.TensorShape(
+                        [None, metadata["n_trks"], metadata["n_trk_features"]]
+                    ),
                     "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
                 },
-                tf.TensorShape([None, nDim]),
+                tf.TensorShape([None, metadata["n_dim"]]),
                 tf.TensorShape([None]),
             )
         else:
@@ -160,10 +160,12 @@ def Cads(args, train_config, preprocess_config):
             )
             tensor_shapes = (
                 {
-                    "input_1": tf.TensorShape([None, nTrks, nFeatures]),
+                    "input_1": tf.TensorShape(
+                        [None, metadata["n_trks"], metadata["n_trk_features"]]
+                    ),
                     "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
                 },
-                tf.TensorShape([None, nDim]),
+                tf.TensorShape([None, metadata["n_dim"]]),
             )
 
         # Get training set from generator
@@ -172,9 +174,12 @@ def Cads(args, train_config, preprocess_config):
                 utf.cads_generator(
                     train_file_path=train_config.train_file,
                     X_Name="X_train",
-                    X_trk_Name=tracks_key,
+                    X_trk_Name=f"X_{tracks_name}_train",
                     Y_Name="Y_train",
-                    n_jets=nJets,
+                    n_jets=int(NN_structure["nJets_train"])
+                    if "nJets_train" in NN_structure
+                    and NN_structure["nJets_train"] is not None
+                    else metadata["n_jets"],
                     batch_size=NN_structure["batch_size"],
                     nConds=NN_structure["N_Conditions"],
                     chunk_size=int(1e6),
@@ -188,69 +193,21 @@ def Cads(args, train_config, preprocess_config):
         )
 
     elif os.path.isdir(train_config.train_file):
-
-        # Get the files in dir
-        train_file_names = os.listdir(train_config.train_file)
-
-        # Loop over files in dir
-        for train_file_name in train_file_names:
-
-            # Check if file is tfrecords or .h5
-            if not (".tfrecord" in train_file_name) and not (
-                train_file_name == "metadata.json"
-            ):
-                raise ValueError(
-                    f"Input file {train_config.train_file} is neither a "
-                    ".h5 file nor a directory with TF Record Files. "
-                    "You should check this."
-                )
-
-        # Check if train file is in metadata
-        if "metadata.json" not in train_file_names:
-            raise KeyError("No metadata file in directory.")
-
-        # Check if nfiles is given. Otherwise set to 5
-        try:
-            nfiles = train_config.config["nfiles"]
-
-        except KeyError:
-            logger.warning(
-                "No number of files to be loaded in parallel defined. Set to 5"
-            )
-            nfiles = 5
-
-        # Get the tfrecords
-        tfrecord_reader = utf.TFRecordReader(
-            train_config.train_file,
-            NN_structure["batch_size"],
-            nfiles,
-            NN_structure["use_sample_weights"],
-            NN_structure["N_Conditions"],
+        train_dataset, metadata = utf.load_tfrecords_train_dataset(
+            train_config=train_config
         )
 
-        # Load the dataset from reader
-        train_dataset = tfrecord_reader.load_Dataset()
-
-        # Get the metadata name
-        metadata_name = (train_config.train_file + "/metadata.json").replace("//", "/")
-
-        # Load metadata in file
-        with open(metadata_name, "r") as metadata_file:
-            metadata = json.load(metadata_file)
-            nJets = metadata["nJets"]
-            nTrks = metadata["nTrks"]
-            nFeatures = metadata["nFeatures"]
-            nDim = metadata["nDim"]
     else:
         raise ValueError(
             f"input file {train_config.train_file} is neither a .h5 file nor "
             "a directory with TF Record Files. You should check this."
         )
 
-    logger.info(f"nJets: {nJets}, nTrks: {nTrks}")
-
     # Init CADS model
-    cads, epochs = Cads_model(train_config=train_config, input_shape=(nTrks, nFeatures))
+    cads, epochs = Cads_model(
+        train_config=train_config,
+        input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
+    )
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
@@ -282,12 +239,12 @@ def Cads(args, train_config, preprocess_config):
 
     # Load validation data for callback
     val_data_dict = None
-    if n_jets > 0:
+    if n_jets_val > 0:
         if NN_structure["N_Conditions"] is None:
             val_data_dict = utt.load_validation_data_dips(
                 train_config=train_config,
                 preprocess_config=preprocess_config,
-                nJets=n_jets,
+                nJets=n_jets_val,
                 convert_to_tensor=True,
             )
 
@@ -303,7 +260,7 @@ def Cads(args, train_config, preprocess_config):
             val_data_dict = utt.load_validation_data_umami(
                 train_config=train_config,
                 preprocess_config=preprocess_config,
-                nJets=n_jets,
+                nJets=n_jets_val,
                 convert_to_tensor=True,
                 jets_var_list=["absEta_btagJes", "pt_btagJes"],
             )
@@ -330,7 +287,7 @@ def Cads(args, train_config, preprocess_config):
         frac_dict=eval_params["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
             WP=WP,
-            n_jets=n_jets,
+            n_jets=n_jets_val,
             dir_name=train_config.model_name,
         ),
     )
@@ -345,7 +302,9 @@ def Cads(args, train_config, preprocess_config):
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=validation_data,
         callbacks=callbacks,
-        steps_per_epoch=nJets / NN_structure["batch_size"],
+        steps_per_epoch=int(NN_structure["nJets_train"]) / NN_structure["batch_size"]
+        if "nJets_train" in NN_structure and NN_structure["nJets_train"] is not None
+        else metadata["n_jets"] / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
     )

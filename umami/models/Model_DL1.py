@@ -126,7 +126,12 @@ def TrainLargeFile(args, train_config, preprocess_config):
     preprocess_config : object
         preprocessing configuration
 
+    Raises
+    ------
+    ValueError
+        If input is neither a h5 nor a directory.
     """
+
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
     val_params = train_config.Validation_metrics_settings
@@ -137,7 +142,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
 
     # Get needed variable from the train config
     WP = float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
-    n_jets = (
+    n_jets_val = (
         int(val_params["n_jets"])
         if "n_jets" in val_params
         else int(eval_params["n_jets"])
@@ -165,56 +170,66 @@ def TrainLargeFile(args, train_config, preprocess_config):
         logger.info(f"Repeating the following variables in the last layer {repeat_end}")
         feature_connect_indices = utt.get_jet_feature_position(repeat_end, variables)
 
-    # Get the shapes for training
-    with h5py.File(train_config.train_file, "r") as f:
-        nJets, nFeatures = f["X_train"].shape
-        nJets, nDim = f["Y_train"].shape
-        if excluded_var is not None:
-            nFeatures -= len(excluded_var)
+    if ".h5" in train_config.train_file:
+        # Init a metadata dict
+        metadata = {}
 
-        if NN_structure["nJets_train"] is not None:
-            nJets = int(NN_structure["nJets_train"])
+        # Get the shapes for training
+        with h5py.File(train_config.train_file, "r") as f:
+            metadata["n_jets"], metadata["n_dim"] = f["Y_train"].shape
+            _, metadata["n_jet_features"] = f["X_train"].shape
 
-    # Print how much jets are used
-    logger.info(f"Number of Jets used for training: {nJets}")
+        if NN_structure["use_sample_weights"]:
+            tensor_types = (tf.float32, tf.float32, tf.float32)
+            tensor_shapes = (
+                tf.TensorShape([None, metadata["n_jet_features"]]),
+                tf.TensorShape([None, metadata["n_dim"]]),
+                tf.TensorShape([None]),
+            )
+        else:
+            tensor_types = (tf.float32, tf.float32)
+            tensor_shapes = (
+                tf.TensorShape([None, metadata["n_jet_features"]]),
+                tf.TensorShape([None, metadata["n_dim"]]),
+            )
 
-    # pass correct tensor types/shapes depending on using sample weights
-    if NN_structure["use_sample_weights"]:
-        tensor_types = (tf.float32, tf.float32, tf.float32)
-        tensor_shapes = (
-            tf.TensorShape([None, nFeatures]),
-            tf.TensorShape([None, nDim]),
-            tf.TensorShape([None]),
+        # Build train_datasets for training
+        train_dataset = (
+            tf.data.Dataset.from_generator(
+                utf.dl1_generator(
+                    train_file_path=train_config.train_file,
+                    X_Name="X_train",
+                    Y_Name="Y_train",
+                    n_jets=int(NN_structure["nJets_train"])
+                    if "nJets_train" in NN_structure
+                    and NN_structure["nJets_train"] is not None
+                    else metadata["n_jets"],
+                    batch_size=NN_structure["batch_size"],
+                    excluded_var=excluded_var,
+                    sample_weights=NN_structure["use_sample_weights"],
+                ),
+                tensor_types,
+                tensor_shapes,
+            )
+            .repeat()
+            .prefetch(tf.data.AUTOTUNE)
         )
+
+    elif os.path.isdir(train_config.train_file):
+        train_dataset, metadata = utf.load_tfrecords_train_dataset(
+            train_config=train_config
+        )
+
     else:
-        tensor_types = (tf.float32, tf.float32)
-        tensor_shapes = (
-            tf.TensorShape([None, nFeatures]),
-            tf.TensorShape([None, nDim]),
+        raise ValueError(
+            f"input file {train_config.train_file} is neither a .h5 file nor a"
+            " directory with TF Record Files. You should check this."
         )
-    # Build train_datasets for training
-    train_dataset = (
-        tf.data.Dataset.from_generator(
-            utf.dl1_generator(
-                train_file_path=train_config.train_file,
-                X_Name="X_train",
-                Y_Name="Y_train",
-                n_jets=nJets,
-                batch_size=NN_structure["batch_size"],
-                excluded_var=excluded_var,
-                sample_weights=NN_structure["use_sample_weights"],
-            ),
-            tensor_types,
-            tensor_shapes,
-        )
-        .repeat()
-        .prefetch(3)
-    )
 
     # Load model and epochs
     model, epochs = DL1_model(
         train_config=train_config,
-        input_shape=(nFeatures,),
+        input_shape=(metadata["n_jet_features"],),
         feature_connect_indices=feature_connect_indices,
     )
 
@@ -248,11 +263,11 @@ def TrainLargeFile(args, train_config, preprocess_config):
 
     # Load validation data for callback
     val_data_dict = None
-    if n_jets > 0:
+    if n_jets_val > 0:
         val_data_dict = utt.load_validation_data_dl1(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            nJets=n_jets,
+            nJets=n_jets_val,
         )
 
     # Set my_callback as callback. Writes history information
@@ -266,7 +281,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
         frac_dict=eval_params["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
             WP=WP,
-            n_jets=n_jets,
+            n_jets=n_jets_val,
             dir_name=train_config.model_name,
         ),
     )
@@ -281,7 +296,9 @@ def TrainLargeFile(args, train_config, preprocess_config):
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=callbacks,
-        steps_per_epoch=nJets / NN_structure["batch_size"],
+        steps_per_epoch=int(NN_structure["nJets_train"]) / NN_structure["batch_size"]
+        if "nJets_train" in NN_structure and NN_structure["nJets_train"] is not None
+        else metadata["n_jets"] / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
     )

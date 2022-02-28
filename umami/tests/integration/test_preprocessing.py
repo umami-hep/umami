@@ -380,6 +380,11 @@ class TestPreprocessing(unittest.TestCase):
             "    tracks_names:",
             "    tracks_names: ['tracks','tracks_loose']",
         )
+        replaceLineInFile(
+            self.config,
+            "  N_add_vars:",
+            "  N_add_vars: 2",
+        )
 
         # copy config file and change name to pdf for pdf preprocessing config
         self.pdf_config = self.config[:].replace(".yaml", "") + "_pdf.yaml"
@@ -466,19 +471,6 @@ class TestPreprocessing(unittest.TestCase):
 
         self.assertTrue(runPreprocessing(self.config, tagger="umami", method="count"))
 
-    def test_preprocessing_umami_cond_att_count(self):
-        """Integration test of preprocessing.py script using Umami variables."""
-        replaceLineInFile(
-            self.config_paths,
-            ".var_file:",
-            f".var_file: &var_file {self.var_dict_umami}",
-        )
-        replaceLineInFile(self.config, "  N_add_vars:", "  N_add_vars: 4")
-
-        self.assertTrue(
-            runPreprocessing(self.config, tagger="umami_cond_att", method="count")
-        )
-
     def test_preprocessing_dips_count(self):
         """Integration test of preprocessing.py script using DIPS variables."""
         replaceLineInFile(
@@ -513,19 +505,6 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(runPreprocessing(self.pdf_config, tagger="umami", method="pdf"))
-
-    def test_preprocessing_umami_cond_att_pdf(self):
-        """Integration test of preprocessing.py script using Umami variables."""
-        replaceLineInFile(
-            self.config_paths,
-            ".var_file:",
-            f".var_file: &var_file {self.var_dict_umami}",
-        )
-        replaceLineInFile(self.pdf_config, "  N_add_vars:", "  N_add_vars: 4")
-
-        self.assertTrue(
-            runPreprocessing(self.pdf_config, tagger="umami_cond_att", method="pdf")
-        )
 
     def test_preprocessing_dips_pdf(self):
         """Integration test of preprocessing.py script using DIPS variables."""
@@ -563,21 +542,6 @@ class TestPreprocessing(unittest.TestCase):
 
         self.assertTrue(
             runPreprocessing(self.weight_config, tagger="umami", method="weighting")
-        )
-
-    def test_preprocessing_umami_cond_att_weighting(self):
-        """Integration test of preprocessing.py script using Umami variables."""
-        replaceLineInFile(
-            self.config_paths,
-            ".var_file:",
-            f".var_file: &var_file {self.var_dict_umami}",
-        )
-        replaceLineInFile(self.weight_config, "  N_add_vars:", "  N_add_vars: 4")
-
-        self.assertTrue(
-            runPreprocessing(
-                self.weight_config, tagger="umami_cond_att", method="weighting"
-            )
         )
 
     def test_preprocessing_dips_weighting(self):

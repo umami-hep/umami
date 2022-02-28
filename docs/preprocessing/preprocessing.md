@@ -352,14 +352,14 @@ precision: float16
 # Options for the conversion to tfrecords
 convert_to_tfrecord:
   chunk_size: 5000
-  N_Add_Vars: 4
+  N_add_vars: null
 
 ```
 In the last part, the path to the variable dict `var_file` and the scale dict `dict_file` is defined. Those values are set in the `parameters` file. For example, the training variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
 
 Also the `outfile_name` is defined (which is also included in `parameters`). The `plot_name` here defines the names of the control plots which are produced in the preprocessing.
 
-If you want to save the samples as TFRecord files you can specify under `convert_to_tfrecord` the `chunk_size`, i.e. the number of samples to be loaded and saved per file.
+If you want to save the samples as TFRecord files you can specify under `convert_to_tfrecord` the `chunk_size`, i.e. the number of samples to be loaded and saved per file. The `N_add_vars` option is needed when you want to train a conditional attention model, like Umami Cond Att or CADS. This is an `int` with the number of jet variables that are given to the dips-like block as conditional information.
 
 ??? info "TF records"
 

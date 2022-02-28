@@ -86,6 +86,7 @@ def EvaluateModel(
     preprocess_config: object,
     test_file: str,
     data_set_name: str,
+    tagger: str,
 ):
     """
     Evaluate only the taggers in the files or also the UMAMI tagger.
@@ -103,6 +104,9 @@ def EvaluateModel(
     data_set_name : str
         Dataset name for the results files. The results will be saved in
         dicts. The key will be this dataset name.
+    tagger : str
+        Name of the tagger that is to be evaluated. Can either be umami or
+        umami_cond_att depending which architecture is used.
 
     Raises
     ------
@@ -193,26 +197,65 @@ def EvaluateModel(
         if "exclude" in train_config.config:
             exclude = train_config.config["exclude"]
 
-        # Load the test jets
-        X_test, X_test_trk, _ = utt.GetTestFile(
-            input_file=test_file,
-            var_dict=train_config.var_dict,
-            preprocess_config=preprocess_config,
-            class_labels=class_labels,
-            tracks_name=tracks_name,
-            nJets=nJets,
-            exclude=exclude,
-            cut_vars_dict=var_cuts,
-        )
+        # Check which test files need to be loaded depending on the CADS version
+        if tagger.casefold() == "umami_cond_att".casefold():
+            # Load the test jets
+            X_test, X_test_trk, _ = utt.GetTestFile(
+                input_file=test_file,
+                var_dict=train_config.var_dict,
+                preprocess_config=preprocess_config,
+                class_labels=class_labels,
+                tracks_name=tracks_name,
+                nJets=nJets,
+                exclude=exclude,
+                cut_vars_dict=var_cuts,
+                print_logger=False,
+            )
+
+            # Form the inputs for the network
+            X = [
+                X_test_trk,
+                X_test[
+                    [
+                        global_config.etavariable,
+                        global_config.pTvariable,
+                    ]
+                ],
+                X_test,
+            ]
+
+        else:
+            # Get the testfile with the needed configs
+            X_test, X_test_trk, _ = utt.GetTestFile(
+                input_file=test_file,
+                var_dict=train_config.var_dict,
+                preprocess_config=preprocess_config,
+                class_labels=class_labels,
+                tracks_name=tracks_name,
+                nJets=nJets,
+                exclude=exclude,
+                cut_vars_dict=var_cuts,
+            )
+
+            # Form the inputs for the network
+            X = [X_test_trk, X_test]
 
         # Load the model for evaluation. Note: The Sum is needed here!
-        with CustomObjectScope({"Sum": utf.Sum}):
+        with CustomObjectScope(
+            {
+                "Sum": utf.Sum,
+                "Attention": utf.Attention,
+                "DeepSet": utf.DeepSet,
+                "AttentionPooling": utf.AttentionPooling,
+                "DenseNet": utf.DenseNet,
+                "ConditionalAttention": utf.ConditionalAttention,
+                "ConditionalDeepSet": utf.ConditionalDeepSet,
+            }
+        ):
             model = load_model(model_file)
 
         # Predict the output of the model on the test jets
-        pred_dips, pred_umami = model.predict(
-            [X_test_trk, X_test], batch_size=5000, verbose=0
-        )
+        pred_dips, pred_umami = model.predict(X, batch_size=5000, verbose=0)
 
         # Fill the tagger_names and tagger_preds
         tagger_names = ["dips", "umami"]
@@ -231,9 +274,9 @@ def EvaluateModel(
     variables += list(set(label_var_list))
 
     # Add the predictions labels for the defined taggers to variables list
-    for tagger in tagger_list:
+    for tagger_iter in tagger_list:
         variables += uct.get_class_prob_var_names(
-            tagger_name=f"{tagger}", class_labels=class_labels
+            tagger_name=f"{tagger_iter}", class_labels=class_labels
         )
 
     # Load the jets and truth labels (internal) with selected variables
@@ -996,9 +1039,12 @@ if __name__ == "__main__":
                 tagger=tagger_name,
             )
 
-    elif tagger_name == "umami" or not evaluate_trained_model:
-        if tagger_name == "umami":
-            logger.info("Start evaluating UMAMI with test files...")
+    elif (
+        tagger_name.casefold() in ("umami", "umami_cond_att")
+        or not evaluate_trained_model
+    ):
+        if tagger_name.casefold() in ("umami", "umami_cond_att"):
+            logger.info(f"Start evaluating {tagger_name} with test files...")
         else:
             logger.info("Start evaluating in-file taggers with test files...")
 
@@ -1012,6 +1058,7 @@ if __name__ == "__main__":
                 preprocess_config=preprocessing_config,
                 test_file=test_file_config["path"],
                 data_set_name=test_file_identifier,
+                tagger=tagger_name,
             )
 
     else:

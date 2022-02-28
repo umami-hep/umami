@@ -1,13 +1,107 @@
 """Reader for tf records datasets."""
 import json
+import os
 
 import tensorflow as tf
+
+from umami.configuration import logger
+
+
+def load_tfrecords_train_dataset(
+    train_config: object,
+):
+    """
+    Load the train dataset from tfrecords files.
+
+    Parameters
+    ----------
+    train_config : object
+        Loaded train config.
+
+    Returns
+    -------
+    train_dataset : tfrecord.Dataset
+        Loaded train dataset from tfrecords.
+    metadata : dict
+        Dict with the metadata infos of the train dataset.
+
+    Raises
+    ------
+    ValueError
+        If one of the given input files is not a tfrecords file.
+    KeyError
+        If no metadata file could be found in tfrecords directory.
+    """
+    # Load NN Structure and training parameter from file
+    NN_structure = train_config.NN_structure
+    tracks_name = train_config.tracks_name
+
+    # Get the files in dir
+    train_file_names = os.listdir(train_config.train_file)
+
+    # Loop over files in dir
+    for train_file_name in train_file_names:
+
+        # Check if file is tfrecords or .h5
+        if not (".tfrecord" in train_file_name) and not (
+            train_file_name == "metadata.json"
+        ):
+            raise ValueError(
+                f"Input file {train_config.train_file} is neither a "
+                ".h5 file nor a directory with TF Record Files. "
+                "You should check this."
+            )
+
+    # Check if train file is in metadata
+    if "metadata.json" not in train_file_names:
+        raise KeyError("No metadata file in directory.")
+
+    # Check if nfiles is given. Otherwise set to 5
+    try:
+        nfiles = train_config.config["nfiles"]
+
+    except KeyError:
+        logger.warning("No number of files to be loaded in parallel defined. Set to 5")
+        nfiles = 5
+
+    # Get the tfrecords
+    tfrecord_reader = TFRecordReader(
+        path=train_config.train_file,
+        batch_size=NN_structure["batch_size"],
+        nfiles=nfiles,
+        tagger_name=NN_structure["tagger"],
+        tracks_name=tracks_name,
+        n_cond=NN_structure["N_Conditions"] if "N_Conditions" in NN_structure else None,
+    )
+
+    # Load the dataset from reader
+    train_dataset = tfrecord_reader.load_Dataset()
+
+    # Get the metadata name
+    metadata_name = (train_config.train_file + "/metadata.json").replace("//", "/")
+
+    # Load metadata in file
+    with open(metadata_name, "r") as metadata_file:
+        metadata = json.load(metadata_file)
+        metadata["n_trks"] = metadata["n_trks"][tracks_name]
+        metadata["n_trk_features"] = metadata["n_trk_features"][tracks_name]
+
+    return train_dataset, metadata
 
 
 class TFRecordReader:
     """Reader for tf records datasets."""
 
-    def __init__(self, path, batch_size, nfiles, sample_weights=False, n_cond=None):
+    def __init__(
+        self,
+        path: str,
+        batch_size: int,
+        nfiles: int,
+        tagger_name: str,
+        tracks_name: str = None,
+        sample_weights: bool = False,
+        n_cond: int = None,
+    ):
         """
         Reads the tf records dataset.
 
@@ -19,15 +113,23 @@ class TFRecordReader:
             size of batches for the training
         nfiles : int
             number of tf record files loaded in parallel
-        sample_weights : bool
+        tagger_name : str
+            Name of the tagger that is used
+        tracks_name : str, optional
+            Name of the track collection that is loaded,
+            by default None
+        sample_weights : bool, optional
             decide wether or not the sample weights should
-            be returned
-        n_cond : int
-            number of additional variables used for attention
+            be returned, by default False
+        n_cond : int, optional
+            number of additional variables used for attention,
+            by default None
         """
         self.path = path
         self.batch_size = batch_size
         self.nfiles = nfiles
+        self.tagger_name = tagger_name
+        self.tracks_name = tracks_name
         self.sample_weights = sample_weights
         self.n_cond = n_cond
 
@@ -75,45 +177,99 @@ class TFRecordReader:
         labels : tf_data
             tf data stream of labels
 
+        Raises
+        ------
+        KeyError
+            If given track selection not in metadata.
+        KeyError
+            If no conditional info is found in metadata.
+        ValueError
+            If tagger type is not supported.
         """
+
+        # Get metadata file and load it
         metadata_name = (self.path + "/metadata.json").replace("//", "/")
         with open(metadata_name, "r") as metadata_file:
             metadata = json.load(metadata_file)
-        shapes = {
-            "shape_Xjets": [metadata["njet_features"]],
-            "shape_Xtrks": [metadata["nTrks"], metadata["nFeatures"]],
-            "shape_Y": [metadata["nDim"]],
-        }
-        features = {
-            "X_jets": tf.io.FixedLenFeature(
+
+        # Set output shapes
+        shapes = {}
+        features = {}
+
+        if self.tagger_name.casefold() in ("dl1", "umami", "umami_cond_att"):
+            shapes["shape_Xjets"] = [metadata["n_jet_features"]]
+            features["X_jets"] = tf.io.FixedLenFeature(
                 shape=shapes["shape_Xjets"], dtype=tf.float32
-            ),
-            "X_trks": tf.io.FixedLenFeature(
-                shape=shapes["shape_Xtrks"], dtype=tf.float32
-            ),
-            "Y": tf.io.FixedLenFeature(shape=shapes["shape_Y"], dtype=tf.int64),
-            "Weights": tf.io.FixedLenFeature(shape=[1], dtype=tf.float32),
-        }
-        if self.n_cond is not None:
-            shapes["shape_Add_Vars"] = [metadata["nadd_vars"]]
-            features["X_Add_Vars"] = tf.io.FixedLenFeature(
-                shape=shapes["shape_Add_Vars"], dtype=tf.float32
             )
 
+        # Set track shape
+        if self.tagger_name.casefold() in ("dips", "umami", "umami_cond_att", "cads"):
+            try:
+                shapes[f"shape_X_{self.tracks_name}_train"] = [
+                    metadata["n_trks"][self.tracks_name],
+                    metadata["n_trk_features"][self.tracks_name],
+                ]
+                features[f"X_{self.tracks_name}_train"] = tf.io.FixedLenFeature(
+                    shape=shapes[f"shape_X_{self.tracks_name}_train"], dtype=tf.float32
+                )
+
+            except KeyError as Error:
+                raise KeyError(
+                    f"Track collection {self.tracks_name} not in metadata file!"
+                ) from Error
+
+        # Set label shape
+        shapes["shape_Y"] = [metadata["n_dim"]]
+        features["Y"] = tf.io.FixedLenFeature(shape=shapes["shape_Y"], dtype=tf.int64)
+
+        # Set weights shape
+        features["Weights"] = tf.io.FixedLenFeature(shape=[1], dtype=tf.float32)
+
+        # Set conditional variables shape
+        if self.n_cond is not None:
+            try:
+                shapes["shape_Add_Vars"] = [metadata["n_add_vars"]]
+                features["X_Add_Vars"] = tf.io.FixedLenFeature(
+                    shape=shapes["shape_Add_Vars"], dtype=tf.float32
+                )
+
+            except KeyError as Error:
+                raise KeyError(
+                    "No conditional information saved in tfrecords metadata file!"
+                ) from Error
+
+        # Get the parser
         parse_ex = tf.io.parse_example(record_bytes, features)  # pylint: disable=E1120
 
         # return the jet inputs and labels
-        if self.n_cond is not None:
+        if self.tagger_name.casefold() == "dl1":
+            input_dir = {"input_1": parse_ex["X_jets"]}
+
+        elif self.tagger_name.casefold() in ("dips", "cads"):
+            logger.warning(parse_ex.keys())
             input_dir = {
-                "input_1": parse_ex["X_trks"],
-                "input_2": parse_ex["X_Add_Vars"][:, : self.n_cond],
-                "input_3": parse_ex["X_jets"],
+                "input_1": parse_ex[f"X_{self.tracks_name}_train"],
             }
+
+            if self.n_cond is not None:
+                input_dir["input_2"] = parse_ex["X_Add_Vars"][:, : self.n_cond]
+
+        elif self.tagger_name.casefold() in ("umami", "umami_cond_att"):
+            if self.n_cond is not None:
+                input_dir = {
+                    "input_1": parse_ex[f"X_{self.tracks_name}_train"],
+                    "input_2": parse_ex["X_Add_Vars"][:, : self.n_cond],
+                    "input_3": parse_ex["X_jets"],
+                }
+
+            else:
+                input_dir = {
+                    "input_1": parse_ex[f"X_{self.tracks_name}_train"],
+                    "input_2": parse_ex["X_jets"],
+                }
+
         else:
-            input_dir = {
-                "input_1": parse_ex["X_trks"],
-                "input_2": parse_ex["X_jets"],
-            }
+            raise ValueError(f"Tagger '{self.tagger_name}' is not supported!")
 
         if self.sample_weights:
             return input_dir, parse_ex["Y"], parse_ex["Weights"]
