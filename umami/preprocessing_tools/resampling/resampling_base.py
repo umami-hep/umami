@@ -88,10 +88,12 @@ def SamplingGenerator(
         tupled_indices = rng.choice(tupled_indices, len(tupled_indices), replace=False)
         for index_tuple in tupled_indices:
             loading_indices = indices[index_tuple[0] : index_tuple[1]]
+            label_classes.append(-1)
             labels = label_binarize(
                 (np.ones(index_tuple[1] - index_tuple[0]) * label),
                 classes=label_classes,
-            )
+            )[:, :-1]
+            label_classes = label_classes[:-1]
             if duplicate and quick_check_duplicates(loading_indices):
                 # Duplicate indices, fancy indexing of H5 not working, manual approach.
                 list_loading_indices = []
@@ -604,13 +606,13 @@ class Resampling:
             # Iterate over the indicies
             for index_tuple in tupled_indices:
                 loading_indices = indices[index_tuple[0] : index_tuple[1]]
-
+                label_classes.append(-1)
                 # One hot encode the labels
                 labels = label_binarize(
                     (np.ones(index_tuple[1] - index_tuple[0]) * label),
                     classes=label_classes,
-                )
-
+                )[:, :-1]
+                label_classes = label_classes[:-1]
                 # Yield the jets and labels
                 # If tracks are used, also yield the tracks
                 if use_tracks:
