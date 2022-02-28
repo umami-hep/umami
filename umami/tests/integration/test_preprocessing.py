@@ -382,6 +382,11 @@ class TestPreprocessing(unittest.TestCase):
         )
         replaceLineInFile(
             self.config,
+            "    njets_to_plot:",
+            "    njets_to_plot: null",
+        )
+        replaceLineInFile(
+            self.config,
             "  N_add_vars:",
             "  N_add_vars: 2",
         )
@@ -422,6 +427,11 @@ class TestPreprocessing(unittest.TestCase):
             "      training_ttbar_ujets: 13.5e6",
             "",
         )
+        replaceLineInFile(
+            self.pdf_config,
+            "    njets_to_plot:",
+            "    njets_to_plot: 3e4",
+        )
 
         # copy config file and change name to pdf for pdf preprocessing config
         self.weight_config = self.config[:].replace(".yaml", "") + "_weighting.yaml"
@@ -432,6 +442,11 @@ class TestPreprocessing(unittest.TestCase):
             self.weight_config,
             "    bool_attach_sample_weights: False",
             "    bool_attach_sample_weights: True",
+        )
+        replaceLineInFile(
+            self.weight_config,
+            "    njets_to_plot:",
+            "    njets_to_plot: null",
         )
 
         logger.info("Downloading test data...")
@@ -487,7 +502,11 @@ class TestPreprocessing(unittest.TestCase):
             "    save_tracks:",
             "    save_tracks: False",
         )
-
+        replaceLineInFile(
+            self.config,
+            "    tracks_names:",
+            "    tracks_names: null",
+        )
         replaceLineInFile(
             self.config_paths,
             ".var_file:",
@@ -523,7 +542,11 @@ class TestPreprocessing(unittest.TestCase):
             "    save_tracks:",
             "    save_tracks: False",
         )
-
+        replaceLineInFile(
+            self.config,
+            "    tracks_names:",
+            "    tracks_names: null",
+        )
         replaceLineInFile(
             self.config_paths,
             ".var_file:",
@@ -562,7 +585,11 @@ class TestPreprocessing(unittest.TestCase):
             "    save_tracks:",
             "    save_tracks: False",
         )
-
+        replaceLineInFile(
+            self.config,
+            "    tracks_names:",
+            "    tracks_names: null",
+        )
         replaceLineInFile(
             self.config_paths,
             ".var_file:",

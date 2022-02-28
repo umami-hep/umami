@@ -10,7 +10,12 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     CorrectFractions,
     ResamplingTools,
 )
-from umami.preprocessing_tools.utils import ResamplingPlots, generate_process_tag
+from umami.preprocessing_tools.utils import (
+    GetVariableDict,
+    ResamplingPlots,
+    generate_process_tag,
+    preprocessing_plots,
+)
 
 
 class UnderSampling(ResamplingTools):
@@ -225,6 +230,24 @@ class UnderSampling(ResamplingTools):
 
         # Write file to disk
         self.WriteFile(self.indices_to_keep)
+
+        # Plot the variables from the output file of the resampling process
+        if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+            preprocessing_plots(
+                sample=self.config.GetFileName(option="resampled"),
+                var_dict=GetVariableDict(self.config.var_file),
+                class_labels=self.config.sampling["class_labels"],
+                plots_dir=os.path.join(
+                    self.resampled_path,
+                    "plots/resampling/",
+                ),
+                track_collection_list=self.options["tracks_names"]
+                if "tracks_names" in self.options
+                and "save_tracks" in self.options
+                and self.options["save_tracks"] is True
+                else None,
+                nJets=self.options["njets_to_plot"],
+            )
 
 
 class ProbabilityRatioUnderSampling(UnderSampling):

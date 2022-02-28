@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from subprocess import run
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -149,3 +150,77 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
                 tol=1,
             ),
         )
+
+
+class preprocessing_plots_TestCase(unittest.TestCase):
+    def setUp(self):
+        """
+        Get dataset for testing.
+        """
+        # reset matplotlib parameters
+        plt.rcdefaults()
+        plt.close("all")
+
+        # Create a temporary directory
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_plot_dir = f"{self.tmp_dir.name}/"
+        self.control_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
+
+        run(
+            [
+                "wget",
+                os.path.join(
+                    "https://umami-ci-provider.web.cern.ch/",
+                    "preprocessing",
+                    "ci_preprocessing_plotting.h5",
+                ),
+                "--directory-prefix",
+                self.tmp_plot_dir,
+            ],
+            check=True,
+        )
+
+    def test_preprocessing_plots(self):
+        upt.preprocessing_plots(
+            sample=os.path.join(
+                self.tmp_plot_dir,
+                "ci_preprocessing_plotting.h5",
+            ),
+            var_dict={
+                "train_variables": {"JetKinematics": ["absEta_btagJes", "pt_btagJes"]},
+                "track_train_variables": {
+                    "tracks": {
+                        "noNormVars": [],
+                        "logNormVars": [],
+                        "jointNormVars": ["d0", "z0SinTheta"],
+                    },
+                    "tracks_loose": {
+                        "noNormVars": [],
+                        "logNormVars": [],
+                        "jointNormVars": ["d0", "z0SinTheta"],
+                    },
+                },
+            },
+            class_labels=["ujets", "cjets", "bjets"],
+            plots_dir=self.tmp_plot_dir,
+            track_collection_list=["tracks", "tracks_loose"],
+            fileformat="png",
+        )
+
+        # Check plots
+        for var in [
+            "absEta_btagJes",
+            "pt_btagJes",
+            "tracks/d0",
+            "tracks/z0SinTheta",
+            "tracks_loose/d0",
+            "tracks_loose/z0SinTheta",
+        ]:
+            self.assertEqual(
+                None,
+                compare_images(
+                    self.control_plots_dir + f"{var}.png",
+                    self.tmp_plot_dir + f"{var}.png",
+                    tol=1,
+                ),
+            )

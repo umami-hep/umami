@@ -20,7 +20,12 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     SamplingGenerator,
     read_dataframe_repetition,
 )
-from umami.preprocessing_tools.utils import ResamplingPlots, generate_process_tag
+from umami.preprocessing_tools.utils import (
+    GetVariableDict,
+    ResamplingPlots,
+    generate_process_tag,
+    preprocessing_plots,
+)
 
 
 class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
@@ -1274,7 +1279,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                     f.create_dataset(
                         "jets",
                         data=selected_indices,
-                        compression="gzip",
+                        compression=self.config.compression,
                         chunks=True,
                         maxshape=(None,),
                     )
@@ -1399,14 +1404,14 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                     out_file.create_dataset(
                         "jets",
                         data=jets,
-                        compression="gzip",
+                        compression=self.config.compression,
                         chunks=True,
                         maxshape=(None,),
                     )
                     out_file.create_dataset(
                         "labels",
                         data=labels,
-                        compression="gzip",
+                        compression=self.config.compression,
                         chunks=True,
                         maxshape=(None, labels.shape[1]),
                     )
@@ -1415,7 +1420,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                             out_file.create_dataset(
                                 tracks_name,
                                 data=tracks[i],
-                                compression="gzip",
+                                compression=self.config.compression,
                                 chunks=True,
                                 maxshape=(None, tracks[i].shape[1]),
                             )
@@ -1596,14 +1601,14 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                     out_file.create_dataset(
                         "jets",
                         data=jets,
-                        compression="gzip",
+                        compression=self.config.compression,
                         chunks=True,
                         maxshape=(None,),
                     )
                     out_file.create_dataset(
                         "labels",
                         data=labels,
-                        compression="gzip",
+                        compression=self.config.compression,
                         chunks=True,
                         maxshape=(None, labels.shape[1]),
                     )
@@ -1612,7 +1617,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                             out_file.create_dataset(
                                 tracks_name,
                                 data=tracks[i],
-                                compression="gzip",
+                                compression=self.config.compression,
                                 chunks=True,
                                 maxshape=(None, tracks[i].shape[1]),
                             )
@@ -2011,7 +2016,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
             f.create_dataset(
                 "jets",
                 data=selected_indices,
-                compression="gzip",
+                compression=self.config.compression,
             )
 
         # Return the selected indicies
@@ -2516,6 +2521,25 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         # single large file
         if self.do_combination:
             self.Combine_Flavours()
+
+            # Plot the variables from the output file of the resampling process
+            if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+                preprocessing_plots(
+                    sample=self.config.GetFileName(option="resampled"),
+                    var_dict=GetVariableDict(self.config.var_file),
+                    class_labels=self.config.sampling["class_labels"],
+                    plots_dir=os.path.join(
+                        self.resampled_path,
+                        "plots/resampling/",
+                    ),
+                    track_collection_list=self.options["tracks_names"]
+                    if "tracks_names" in self.options
+                    and "save_tracks" in self.options
+                    and self.options["save_tracks"] is True
+                    else None,
+                    nJets=self.options["njets_to_plot"],
+                )
+
         else:
             logger.warning("Skipping combining step (not in list to execute).")
 
