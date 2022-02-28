@@ -212,7 +212,7 @@ def prepareConfig(
             f"./test_preprocessing_{preprocess_files}/preprocessing/",
             "PFlow-hybrid_70-test-resampled_scaled_shuffled",
         )
-        config_file["model_name"] = data["test_dips"]["model_name"] + "_tfrecords"
+        config_file["model_name"] = data[f"test_{tagger}"]["model_name"] + "_tfrecords"
 
         config = config[:].replace(".yaml", "") + "_tfrecords.yaml"
 
@@ -352,7 +352,7 @@ class TestTraining(unittest.TestCase):
         self.assertTrue(runTraining(config=config, tagger="DIPS"))
 
     def test_train_cads(self):
-        """Integration test of train.py for DIPS Conditional Attention script."""
+        """Integration test of train.py for CADS script."""
 
         config = prepareConfig(
             tagger="cads",
@@ -360,7 +360,7 @@ class TestTraining(unittest.TestCase):
             preprocess_files_from="umami",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="DIPS Conditional Attention"))
+        self.assertTrue(runTraining(config=config, tagger="CADS"))
 
     def test_train_dl1r(self):
         """Integration test of train.py for DL1r script."""
@@ -384,6 +384,17 @@ class TestTraining(unittest.TestCase):
 
         self.assertTrue(runTraining(config=config, tagger="UMAMI"))
 
+    def test_train_umami_cond_att(self):
+        """Integration test of train.py for UMAMI Cond Att script."""
+
+        config = prepareConfig(
+            tagger="umami_cond_att",
+            test_dir=self.test_dir,
+            preprocess_files_from="umami",
+        )
+
+        self.assertTrue(runTraining(config=config, tagger="UMAMI Cond Att"))
+
     def test_train_tfrecords_dips(self):
         """Integration test of train.py for DIPS script with TFRecords."""
 
@@ -396,6 +407,18 @@ class TestTraining(unittest.TestCase):
 
         self.assertTrue(runTraining(config=config, tagger="DIPS"))
 
+    def test_train_tfrecords_cads(self):
+        """Integration test of train.py for CADS script with TFRecords."""
+
+        config = prepareConfig(
+            tagger="cads",
+            test_dir=self.test_dir,
+            preprocess_files_from="umami",
+            useTFRecords=True,
+        )
+
+        self.assertTrue(runTraining(config=config, tagger="CADS"))
+
     def test_train_tfrecords_umami(self):
         """Integration test of train.py for UMAMI script with TFRecords."""
 
@@ -407,6 +430,18 @@ class TestTraining(unittest.TestCase):
         )
 
         self.assertTrue(runTraining(config=config, tagger="UMAMI"))
+
+    def test_train_tfrecords_umami_cond_att(self):
+        """Integration test of train.py for UMAMI Cond Att script with TFRecords."""
+
+        config = prepareConfig(
+            tagger="umami_cond_att",
+            test_dir=self.test_dir,
+            preprocess_files_from="umami",
+            useTFRecords=True,
+        )
+
+        self.assertTrue(runTraining(config=config, tagger="UMAMI Cond Att"))
 
     def test_evaluate_tagger_in_files(self):
         """

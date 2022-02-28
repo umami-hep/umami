@@ -277,4 +277,4 @@ precision: float16
 # Options for the conversion to tfrecords
 convert_to_tfrecord:
   chunk_size: 5000
-  N_add_vars:
+  N_add_vars: null

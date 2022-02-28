@@ -111,40 +111,24 @@ def UmamiCondAtt(args, train_config, preprocess_config):
     Raises
     ------
     ValueError
-        if inputs are neither in .h5 or directory with tfrecords files given
-    KeyError
-        if no metadata file in directory
+        If input is neither a h5 nor a directory.
     """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
     val_params = train_config.Validation_metrics_settings
     eval_params = train_config.Eval_parameters_validation
+    tracks_name = train_config.tracks_name
 
     # Init a list for the callbacks
     callbacks = []
 
     # Get needed variable from the train config
     WP = float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
-    n_jets = (
+    n_jets_val = (
         int(val_params["n_jets"])
         if "n_jets" in val_params
         else int(eval_params["n_jets"])
     )
-
-    if "N_Conditions" in NN_structure:
-        nCond = NN_structure["N_Conditions"]
-    else:
-        nCond = None
-
-    val_data_dict = None
-    if n_jets > 0:
-        val_data_dict = utt.load_validation_data_umami(
-            train_config=train_config,
-            preprocess_config=preprocess_config,
-            nJets=n_jets,
-            convert_to_tensor=True,
-            nCond=nCond,
-        )
 
     # Load the excluded variables from train_config
     if "exclude" in train_config.config:
@@ -163,104 +147,64 @@ def UmamiCondAtt(args, train_config, preprocess_config):
     )
 
     if ".h5" in train_config.train_file:
+        # Init a metadata dict
+        metadata = {}
+
+        # Get the shapes for training
         with h5py.File(train_config.train_file, "r") as f:
-            nJets, nTrks, nFeatures = f["X_trk_train"].shape
-            nJets, nDim = f["Y_train"].shape
-            nJets, njet_features = f["X_train"].shape
-    elif os.path.isdir(train_config.train_file):
-        train_file_names = os.listdir(train_config.train_file)
-        for train_file_name in train_file_names:
-            if not (".tfrecord" in train_file_name) and not (
-                train_file_name == "metadata.json"
-            ):
-                raise ValueError(
-                    f"input file {train_config.train_file} is neither a .h5 file nor a"
-                    " directory with TF Record Files. You should check this."
-                )
-        if "metadata.json" not in train_file_names:
-            raise KeyError("No metadata file in directory.")
-        try:
-            nfiles = train_config.config["nfiles"]
-        except KeyError:
-            logger.warning(
-                "no number of files to be loaded in parallel defined. Set to 5"
+            metadata["n_jets"], metadata["n_trks"], metadata["n_trk_features"] = f[
+                f"X_{tracks_name}_train"
+            ].shape
+            _, metadata["n_dim"] = f["Y_train"].shape
+            _, metadata["n_jet_features"] = f["X_train"].shape
+
+        if NN_structure["use_sample_weights"]:
+            tensor_types = (
+                {"input_1": tf.float32, "input_2": tf.float32, "input_3": tf.float32},
+                tf.float32,
+                tf.float32,
             )
-            nfiles = 5
-        sample_weights = NN_structure["use_sample_weights"]
-        tfrecord_reader = utf.TFRecordReader(
-            train_config.train_file,
-            NN_structure["batch_size"],
-            nfiles,
-            sample_weights,
-            nCond,
-        )
-        train_dataset = tfrecord_reader.load_Dataset()
-        metadata_name = (train_config.train_file + "/metadata.json").replace("//", "/")
-        with open(metadata_name, "r") as metadata_file:
-            metadata = json.load(metadata_file)
-            nJets = metadata["nJets"]
-            nTrks = metadata["nTrks"]
-            nFeatures = metadata["nFeatures"]
-            njet_features = metadata["njet_features"]
-            nDim = metadata["nDim"]
-    else:
-        raise ValueError(
-            f"input file {train_config.train_file} is neither a .h5 file nor a"
-            " directory with TF Record Files. You should check this."
-        )
+            tensor_shapes = (
+                {
+                    "input_1": tf.TensorShape(
+                        [None, metadata["n_trks"], metadata["n_trk_features"]]
+                    ),
+                    "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
+                    "input_3": tf.TensorShape([None, metadata["n_jet_features"]]),
+                },
+                tf.TensorShape([None, metadata["n_dim"]]),
+                tf.TensorShape([None]),
+            )
 
-    if NN_structure["nJets_train"] is not None:
-        nJets = int(NN_structure["nJets_train"])
+        else:
+            tensor_types = (
+                {"input_1": tf.float32, "input_2": tf.float32, "input_3": tf.float32},
+                tf.int64,
+            )
+            tensor_shapes = (
+                {
+                    "input_1": tf.TensorShape(
+                        [None, metadata["n_trks"], metadata["n_trk_features"]]
+                    ),
+                    "input_2": tf.TensorShape([None, NN_structure["N_Conditions"]]),
+                    "input_3": tf.TensorShape([None, metadata["n_jet_features"]]),
+                },
+                tf.TensorShape([None, metadata["n_dim"]]),
+            )
 
-    logger.info(f"nJets: {nJets}, nTrks: {nTrks}")
-    logger.info(f"nFeatures: {nFeatures}, njet_features: {njet_features}")
-
-    umami, _ = Umami_model(
-        train_config=train_config,
-        input_shape=(nTrks, nFeatures),
-        njet_features=njet_features,
-    )
-
-    if NN_structure["use_sample_weights"]:
-        tensor_types = (
-            {"input_1": tf.float32, "input_2": tf.float32, "input_3": tf.float32},
-            tf.float32,
-            tf.float32,
-        )
-        tensor_shapes = (
-            {
-                "input_1": tf.TensorShape([None, nTrks, nFeatures]),
-                "input_2": tf.TensorShape([None, nCond]),
-                "input_3": tf.TensorShape([None, njet_features]),
-            },
-            tf.TensorShape([None, nDim]),
-            tf.TensorShape([None]),
-        )
-    else:
-        tensor_types = (
-            {"input_1": tf.float32, "input_2": tf.float32, "input_3": tf.float32},
-            tf.int64,
-        )
-        tensor_shapes = (
-            {
-                "input_1": tf.TensorShape([None, nTrks, nFeatures]),
-                "input_2": tf.TensorShape([None, nCond]),
-                "input_3": tf.TensorShape([None, njet_features]),
-            },
-            tf.TensorShape([None, nDim]),
-        )
-
-    if ".h5" in train_config.train_file:
         train_dataset = (
             tf.data.Dataset.from_generator(
                 utf.umami_condition_generator(
                     train_file_path=train_config.train_file,
                     X_Name="X_train",
-                    X_trk_Name="X_trk_train",
+                    X_trk_Name=f"X_{tracks_name}_train",
                     Y_Name="Y_train",
-                    n_jets=nJets,
+                    n_jets=int(NN_structure["nJets_train"])
+                    if "nJets_train" in NN_structure
+                    and NN_structure["nJets_train"] is not None
+                    else metadata["n_jets"],
                     batch_size=NN_structure["batch_size"],
-                    nConds=nCond,
+                    nConds=NN_structure["N_Conditions"],
                     chunk_size=int(1e6),
                     excluded_var=excluded_var,
                     sample_weights=NN_structure["use_sample_weights"],
@@ -272,6 +216,23 @@ def UmamiCondAtt(args, train_config, preprocess_config):
             .prefetch(tf.data.AUTOTUNE)
         )
 
+    elif os.path.isdir(train_config.train_file):
+        train_dataset, metadata = utf.load_tfrecords_train_dataset(
+            train_config=train_config
+        )
+
+    else:
+        raise ValueError(
+            f"input file {train_config.train_file} is neither a .h5 file nor "
+            "a directory with TF Record Files. You should check this."
+        )
+
+    umami, _ = Umami_model(
+        train_config=train_config,
+        input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
+        njet_features=metadata["n_jet_features"],
+    )
+
     # Check if epochs is set via argparser or not
     if args.epochs is None:
         nEpochs = NN_structure["epochs"]
@@ -279,13 +240,6 @@ def UmamiCondAtt(args, train_config, preprocess_config):
     # If not, use epochs from config file
     else:
         nEpochs = args.epochs
-
-    if "LRR" in NN_structure and NN_structure["LRR"] is True:
-        # Define LearningRate Reducer as Callback
-        reduce_lr = utf.GetLRReducer(**NN_structure)
-
-        # Append the callback
-        callbacks.append(reduce_lr)
 
     # Set ModelCheckpoint as callback
     umami_mChkPt = ModelCheckpoint(
@@ -300,6 +254,24 @@ def UmamiCondAtt(args, train_config, preprocess_config):
     # Append the callback
     callbacks.append(umami_mChkPt)
 
+    if "LRR" in NN_structure and NN_structure["LRR"] is True:
+        # Define LearningRate Reducer as Callback
+        reduce_lr = utf.GetLRReducer(**NN_structure)
+
+        # Append the callback
+        callbacks.append(reduce_lr)
+
+    # Load validation data for callback
+    val_data_dict = None
+    if n_jets_val > 0:
+        val_data_dict = utt.load_validation_data_umami(
+            train_config=train_config,
+            preprocess_config=preprocess_config,
+            nJets=n_jets_val,
+            convert_to_tensor=True,
+            nCond=NN_structure["N_Conditions"],
+        )
+
     # Init the Umami callback
     my_callback = utt.MyCallbackUmami(
         model_name=train_config.model_name,
@@ -310,7 +282,7 @@ def UmamiCondAtt(args, train_config, preprocess_config):
         frac_dict=eval_params["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
             WP=WP,
-            n_jets=n_jets,
+            n_jets=n_jets_val,
             dir_name=train_config.model_name,
         ),
     )
@@ -324,7 +296,9 @@ def UmamiCondAtt(args, train_config, preprocess_config):
         train_dataset,
         epochs=nEpochs,
         callbacks=callbacks,
-        steps_per_epoch=nJets / NN_structure["batch_size"],
+        steps_per_epoch=int(NN_structure["nJets_train"]) / NN_structure["batch_size"]
+        if "nJets_train" in NN_structure and NN_structure["nJets_train"] is not None
+        else metadata["n_jets"] / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
     )

@@ -120,7 +120,7 @@ def main(args, train_config, preprocess_config):
         tagger = train_config.NN_structure["tagger"]
 
     # Check if the tagger given is supported
-    if tagger.casefold() in ["umami", "dl1", "dips", "cads"]:
+    if tagger.casefold() in ["umami", "umami_cond_att", "dl1", "dips", "cads"]:
 
         # If dict is given, the re-calculation is skipped
         if args.dict:
@@ -169,8 +169,8 @@ def main(args, train_config, preprocess_config):
 
     else:
         raise ValueError(
-            """
-            You need to define a model type!\n
+            f"""
+            Model type {tagger} is not supported.
             You can either use 'dips', 'cads', 'dl1' or 'umami'.
             """
         )

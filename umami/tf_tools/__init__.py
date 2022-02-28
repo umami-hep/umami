@@ -19,6 +19,6 @@ from umami.tf_tools.layers import (
     MaskedSoftmax,
     Sum,
 )
-from umami.tf_tools.load_tfrecord import TFRecordReader
+from umami.tf_tools.load_tfrecord import TFRecordReader, load_tfrecords_train_dataset
 from umami.tf_tools.models import Deepsets_model, Deepsets_model_umami
 from umami.tf_tools.tools import GetLRReducer

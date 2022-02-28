@@ -1342,7 +1342,7 @@ def RunPerformanceCheck(
     class_labels_wo_main.remove(main_class)
     n_rej = len(class_labels_wo_main)
 
-    if tagger == "umami":
+    if tagger.casefold() == "umami" or tagger.casefold() == "umami_cond_att":
         for subtagger in ["umami", "dips"]:
             if n_rej == 2:
                 for val_file_identifier, val_file_config in val_files.items():
