@@ -1,6 +1,7 @@
 """Collection of utility functions for preprocessing tools."""
 import os
 
+import h5py
 import matplotlib as mtp
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,6 +10,7 @@ import yaml
 from sklearn.preprocessing import LabelBinarizer
 
 from umami.configuration import global_config, logger
+from umami.helper_tools import hist_w_unc
 from umami.tools import applyATLASstyle, makeATLAStag, yaml_loader
 
 
@@ -76,6 +78,444 @@ def GetBinaryLabels(
 
     labels = np.array(df[column].values)
     return lb.fit_transform(labels)
+
+
+def plot_variable(
+    df,
+    labels: np.ndarray,
+    variable: str,
+    variable_index: int,
+    var_type: str,
+    class_labels: list,
+    output_dir: str,
+    binning: dict = None,
+    figsize: list = None,
+    normed: bool = True,
+    fileformat: str = "pdf",
+    UseAtlasTag: bool = True,
+    AtlasTag: str = "Internal Simulation",
+    SecondTag: str = "$\\sqrt{s}=13$ TeV, PFlow Jets",
+    y_scale: float = 1.3,
+    yAxisAtlasTag: float = 0.9,
+    leg_loc: str = "upper right",
+    label_fontsize: int = 12,
+    leg_fontsize: int = 10,
+    leg_ncol: int = 1,
+    logy: bool = True,
+    **kwargs,  # pylint: disable=unused-argument
+):
+    """
+    Plot a given variable.
+
+    Parameters
+    ----------
+    df : pd.DataFrame or np.ndarray
+        DataFrame (for jets) or ndarray (for tracks) with
+        the jets/tracks inside.
+    labels : np.ndarray
+        One hot encoded array with the truth values.
+    variable : str
+        Name of the variable which is to be plotted.
+    variable_index : int
+        Index of the variable in the final training set. This
+        is used to identify the variables in the final training
+        set.
+    var_type : str
+        Type of the variable that is used. Either `jets` or
+        `tracks`.
+    class_labels : list
+        List with the flavours used (ORDER IMPORTANT).
+    output_dir : str
+        Directory where the plot is saved.
+    binning : dict, optional
+        Dict with the variables as keys and binning as item,
+        by default None
+    figsize : list, optional
+        List with the size of the figure, by default None
+    normed : bool, optional
+        Normalise the flavours, by default True
+    fileformat : str, optional
+        Fileformat of the plots, by default "pdf"
+    UseAtlasTag : bool, optional
+        Use a ATLAS tag, by default True
+    AtlasTag : str, optional
+        First line of ATLAS tag, by default "Internal Simulation"
+    SecondTag : str, optional
+        Second line of ATLAS tag, by default "$sqrt{s}=13$ TeV, PFlow Jets"
+    y_scale : float, optional
+        Increase the y-axis to fit the ATALS tag in, by default 1.3
+    yAxisAtlasTag : float, optional
+        Relative y axis position of the ATLAS Tag, by default 0.9
+    leg_loc : str, optional
+        Position of the legend in the plot, by default "upper right"
+    label_fontsize : int, optional
+        Fontsize of the axis labels, by default 12
+    leg_fontsize : int, optional
+        Fontsize of the legend, by default 10
+    leg_ncol : int, optional
+        Number of columns in the legend, by default 1
+    logy : bool, optional
+        Plot a logarithmic y-axis, by default True
+    **kwargs : kwargs
+        kwargs from `plot_object`
+
+    Raises
+    ------
+    TypeError
+        If the given variable type is not supported.
+    """
+
+    # Check if binning is given. If not, init an empty dict
+    if not binning:
+        binning = {}
+
+    # Check if figsize is given. If not, init default size
+    if not figsize:
+        figsize = [11.69 * 0.8, 8.27 * 0.8]
+
+    # Set ATLAS plot style
+    applyATLASstyle(mtp)
+
+    # Give a debug logger
+    logger.debug(f"Plotting variable {variable}...")
+
+    # Get the binning
+    try:
+        _, bins = np.histogram(
+            a=np.nan_to_num(df[variable]),
+            bins=binning[variable]
+            if variable in binning and binning is not None
+            else 50,
+        )
+
+    except IndexError as Error:
+        if var_type.casefold() == "jets":
+            array = np.nan_to_num(df[:, variable_index])
+
+        elif var_type.casefold() == "tracks":
+            array = np.nan_to_num(df[:, :, variable_index])
+
+        else:
+            raise TypeError(
+                f"Variable type {var_type} not supported! Only jets and tracks!"
+            ) from Error
+
+        _, bins = np.histogram(
+            a=array,
+            bins=binning[variable]
+            if variable in binning and binning is not None
+            else 50,
+        )
+
+    # Init a new figure
+    fig = plt.figure(figsize=(figsize[0], figsize[1]))
+    ax = fig.subplots()
+
+    # Loop over the flavours
+    for flav_counter, flavour in enumerate(class_labels):
+
+        # Get all jets with the correct flavour
+        try:
+            flavour_jets = df[variable][labels[:, flav_counter] == 1].values
+
+        except AttributeError:
+            flavour_jets = df[variable][labels[:, flav_counter] == 1]
+
+        except IndexError as Error:
+            if var_type.casefold() == "jets":
+                flavour_jets = df[:, variable_index][
+                    labels[:, flav_counter] == 1
+                ].flatten()
+
+            elif var_type.casefold() == "tracks":
+                flavour_jets = df[:, :, variable_index][labels[:, flav_counter] == 1]
+
+            else:
+                raise TypeError(
+                    f"Variable type {var_type} not supported! Only jets and tracks!"
+                ) from Error
+
+        # Calculate bins
+        hist_bins, weights, unc, band = hist_w_unc(
+            a=flavour_jets,
+            bins=bins,
+            normed=normed,
+        )
+
+        # Plot the bins
+        ax.hist(
+            x=hist_bins[:-1],
+            bins=hist_bins,
+            weights=weights,
+            histtype="step",
+            linewidth=1.0,
+            color=global_config.flavour_categories[flavour]["colour"],
+            stacked=False,
+            fill=False,
+            label=global_config.flavour_categories[flavour]["legend_label"],
+        )
+
+        # Plot uncertainty
+        ax.hist(
+            x=hist_bins[:-1],
+            bins=hist_bins,
+            bottom=band,
+            weights=unc * 2,
+            label="stat. unc." if flavour == class_labels[-1] else None,
+            **global_config.hist_err_style,
+        )
+
+    # Set xlabel
+    ax.set_xlabel(
+        variable,
+        fontsize=label_fontsize,
+        horizontalalignment="right",
+        x=1.0,
+    )
+
+    if normed:
+        ax.set_ylabel(
+            "Normalised Number of Jets",
+            fontsize=label_fontsize,
+            horizontalalignment="right",
+            y=1.0,
+        )
+
+    else:
+        ax.set_ylabel(
+            "Number of Jets",
+            fontsize=label_fontsize,
+            horizontalalignment="right",
+            y=1.0,
+        )
+
+    # Set logscale for y axis
+    if logy is True:
+        ax.set_yscale("log")
+
+        # Increase ymax so atlas tag don't cut plot
+        ymin, ymax = ax.get_ylim()
+        ax.set_ylim(
+            ymin,
+            ymax * np.log(ymax / ymin) * 10 * y_scale,
+        )
+
+    else:
+
+        # Increase ymax so atlas tag don't cut plot
+        ymin, ymax = ax.get_ylim()
+        ax.set_ylim(bottom=ymin, top=y_scale * ymax)
+
+    # ATLAS tag
+    if UseAtlasTag is True:
+        makeATLAStag(
+            ax=ax,
+            fig=fig,
+            first_tag=AtlasTag,
+            second_tag=SecondTag,
+            ymax=yAxisAtlasTag,
+        )
+
+    # Set legend
+    ax.legend(
+        loc=leg_loc,
+        ncol=leg_ncol,
+        fontsize=leg_fontsize,
+    )
+
+    # Set the tight layout
+    plt.tight_layout()
+
+    # Save figure and clean it.
+    plt.savefig(
+        os.path.join(
+            output_dir,
+            f"{variable}.{fileformat}",
+        )
+    )
+    plt.close()
+    plt.clf()
+
+
+def preprocessing_plots(
+    sample: str,
+    var_dict: dict,
+    class_labels: list,
+    plots_dir: str,
+    use_random_jets: bool = False,
+    jet_collection: str = "jets",
+    track_collection_list: list = None,
+    nJets: int = 3e4,
+    figsize: list = None,
+    seed: int = 42,
+    **kwargs,  # pylint: disable=unused-argument
+):
+    """
+    Plotting the different track and jet variables after
+    the preprocessing steps.
+
+    Parameters
+    ----------
+    sample : str
+        Path to output file of the preprocessing step.
+    var_dict : dict
+        Loaded variable dict.
+    class_labels : list
+        List with the flavours used (ORDER IMPORTANT).
+    plots_dir : str
+        Path to folder where the plots are saved.
+    use_random_jets : bool, optional
+        Decide if random jets are drawn from the sample to
+        ensure correct mixing. Otherwise the first nJets are
+        used for plotting, by default False
+    jet_collection : str, optional
+        Name of the jet collection, by default "jets"
+    track_collection_list : list, optional
+        List of str of the track collections which are to be
+        plotted, by default None
+    nJets : int, optional
+        Number of jets to plot, by default int(3e4)
+    figsize : list, optional
+        List with the size of the figure, by default None
+    seed : int, optional
+        Random seed for the selection of the jets, by default 42
+    **kwargs : kwargs
+        kwargs from `plot_object`
+
+    Raises
+    ------
+    TypeError
+        If the provided track collection list is neither a string or
+        a list.
+    """
+
+    # Check if random values are used or not
+    if use_random_jets is True:
+
+        # Get max number of available jets
+        nJets_infile = len(h5py.File(sample, "r")["/jets"])
+
+        # Get a random generator with specified seed
+        rng = np.random.default_rng(seed=seed)
+
+        # Mix the chunks
+        selected_indicies = sorted(
+            rng.choice(
+                np.arange(nJets_infile, dtype=int),
+                int(nJets),
+                replace=False,
+            )
+        )
+
+    else:
+        selected_indicies = np.arange(nJets, dtype=int)
+
+    # Check if track collection list is valid
+    if isinstance(track_collection_list, str):
+        track_collection_list = [track_collection_list]
+
+    elif track_collection_list is None:
+        track_collection_list = []
+
+    elif not isinstance(track_collection_list, list):
+        raise TypeError(
+            "Track Collection list for variable plotting must be a list or a string!"
+        )
+
+    # Open the file which is to be plotted
+    with h5py.File(sample, "r") as infile:
+
+        # Get the labels of the jets to plot
+        try:
+            labels = infile["/labels"][selected_indicies]
+
+        except KeyError:
+            labels = infile["Y_train"][selected_indicies]
+
+        # Check if jet collection is given
+        if jet_collection:
+
+            # Check if output directory exists
+            os.makedirs(
+                plots_dir,
+                exist_ok=True,
+            )
+
+            # Extract the correct variables
+            variables_header = var_dict["train_variables"]
+            jet_var_list = [i for j in variables_header for i in variables_header[j]]
+
+            # Get the jets from file
+            try:
+                jets = pd.DataFrame(
+                    infile["/jets"].fields(jet_var_list)[selected_indicies]
+                )
+
+            except KeyError:
+                jets = np.asarray(infile["X_train"][selected_indicies])
+
+            # Loop over variables
+            for jet_var_counter, jet_var in enumerate(jet_var_list):
+
+                # Plotting
+                plot_variable(
+                    df=jets,
+                    labels=labels,
+                    variable=jet_var,
+                    variable_index=jet_var_counter,
+                    var_type="jets",
+                    class_labels=class_labels,
+                    output_dir=plots_dir,
+                    **kwargs,
+                )
+
+        # Loop over the track selections
+        for track_collection in track_collection_list:
+
+            # Check if output directory exists
+            os.makedirs(
+                os.path.join(
+                    plots_dir,
+                    track_collection,
+                ),
+                exist_ok=True,
+            )
+
+            # Loading track variables for given collection
+            noNormVars = var_dict["track_train_variables"][track_collection][
+                "noNormVars"
+            ]
+            logNormVars = var_dict["track_train_variables"][track_collection][
+                "logNormVars"
+            ]
+            jointNormVars = var_dict["track_train_variables"][track_collection][
+                "jointNormVars"
+            ]
+            trksVars = noNormVars + logNormVars + jointNormVars
+
+            # Get the tracks from file
+            try:
+                tracks = np.asarray(infile[f"/{track_collection}"][selected_indicies])
+
+            except KeyError:
+                tracks = np.asarray(
+                    infile[f"X_{track_collection}_train"][selected_indicies]
+                )
+
+            # Loop over track variables
+            for trk_var_counter, trk_var in enumerate(trksVars):
+
+                # Plotting
+                plot_variable(
+                    df=tracks,
+                    labels=labels,
+                    variable=trk_var,
+                    variable_index=trk_var_counter,
+                    var_type="tracks",
+                    class_labels=class_labels,
+                    output_dir=os.path.join(plots_dir, track_collection),
+                    **kwargs,
+                )
 
 
 def ResamplingPlots(

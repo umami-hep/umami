@@ -266,6 +266,10 @@ sampling:
     # If you want to attach weights to the final files
     bool_attach_sample_weights: False
 
+    # How many jets you want to use for the plotting of the results
+    # Give null (the yaml None) if you don't want to plot them
+    njets_to_plot: 3e4
+
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name
 plot_name: PFlow_ext-hybrid

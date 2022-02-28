@@ -1,5 +1,6 @@
 """Module handling training file writing to disk."""
 import json
+import os
 import pickle
 
 import h5py
@@ -8,7 +9,7 @@ from numpy.lib.recfunctions import repack_fields, structured_to_unstructured
 from scipy.stats import binned_statistic_2d
 
 from umami.configuration import logger
-from umami.preprocessing_tools import GetVariableDict
+from umami.preprocessing_tools import GetVariableDict, preprocessing_plots
 
 
 class TrainSampleWriter:
@@ -356,6 +357,27 @@ class TrainSampleWriter:
                 # increment counters
                 chunk_counter += 1
                 jet_idx = jet_idx_end
+
+        # Plot the variables from the output file of the resampling process
+        if (
+            "njets_to_plot" in self.config.sampling["options"]
+            and self.config.sampling["options"]["njets_to_plot"]
+        ):
+            preprocessing_plots(
+                sample=self.config.GetFileName(option="resampled_scaled_shuffled"),
+                var_dict=self.variable_config,
+                class_labels=self.config.sampling["class_labels"],
+                plots_dir=os.path.join(
+                    self.config.config["parameters"]["file_path"],
+                    "plots/resampling_scaled_shuffled/",
+                ),
+                track_collection_list=self.config.sampling["options"]["tracks_names"]
+                if "tracks_names" in self.config.sampling["options"]
+                and "save_tracks" in self.config.sampling["options"]
+                and self.config.sampling["options"]["save_tracks"] is True
+                else None,
+                nJets=self.config.sampling["options"]["njets_to_plot"],
+            )
 
     def calculateWeights(
         self,

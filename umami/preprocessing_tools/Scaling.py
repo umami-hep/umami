@@ -9,7 +9,7 @@ import pandas as pd
 
 from umami.configuration import logger
 
-from .utils import GetVariableDict
+from .utils import GetVariableDict, preprocessing_plots
 
 
 def Gen_default_dict(scale_dict: dict) -> dict:
@@ -163,7 +163,7 @@ class Scaling:
     and can apply it.
     """
 
-    def __init__(self, config: object, compression: str = "gzip") -> None:
+    def __init__(self, config: object) -> None:
         """
         Init the needed configs and variables
 
@@ -171,15 +171,13 @@ class Scaling:
         ----------
         config : object
             Loaded config file for the preprocessing.
-        compression : str, optional
-            Type of compression which should be used., by default "gzip"
         """
 
         self.config = config
         self.scale_dict_path = config.dict_file
         self.bool_use_tracks = config.sampling["options"]["save_tracks"]
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
-        self.compression = compression
+        self.compression = self.config.compression
 
         logger.info(f"Using variable dict at {config.var_file}")
         self.variable_config = GetVariableDict(config.var_file)
@@ -1087,3 +1085,24 @@ class Scaling:
                     break
 
                 chunk_counter += 1
+
+        # Plot the variables from the output file of the resampling process
+        if (
+            "njets_to_plot" in self.config.sampling["options"]
+            and self.config.sampling["options"]["njets_to_plot"]
+        ):
+            preprocessing_plots(
+                sample=self.config.GetFileName(option="resampled_scaled"),
+                var_dict=self.variable_config,
+                class_labels=self.config.sampling["class_labels"],
+                plots_dir=os.path.join(
+                    self.config.config["parameters"]["file_path"],
+                    "plots/scaling/",
+                ),
+                track_collection_list=self.config.sampling["options"]["tracks_names"]
+                if "tracks_names" in self.config.sampling["options"]
+                and "save_tracks" in self.config.sampling["options"]
+                and self.config.sampling["options"]["save_tracks"] is True
+                else None,
+                nJets=self.config.sampling["options"]["njets_to_plot"],
+            )

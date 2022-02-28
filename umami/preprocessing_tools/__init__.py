@@ -40,5 +40,7 @@ from umami.preprocessing_tools.utils import (
     GetVariableDict,
     ResamplingPlots,
     generate_process_tag,
+    plot_variable,
+    preprocessing_plots,
 )
 from umami.preprocessing_tools.Writing_Train_File import TrainSampleWriter

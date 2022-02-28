@@ -307,6 +307,10 @@ For an explanation of the resampling function specific `options`, have a look in
 
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
+
+    # How many jets you want to use for the plotting of the results
+    # Give null (the yaml None) if you don't want to plot them
+    njets_to_plot: 3e4
 ```
 
 | Setting | Type | Explanation |
@@ -316,6 +320,7 @@ For an explanation of the resampling function specific `options`, have a look in
 | `save_tracks` | `bool` | Define if tracks are processed or not. These are not needed to train DL1r/DL1d |
 | `tracks_names` | `list` of `str` | Name of the tracks (in the .h5 files coming from the dumper) which are processed. Multiple tracks datasets can be preprocessed simultaneously when two `str` are given in the list. |
 | `intermediate_index_file` | `str` | For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). |
+| `njets_to_plot` | `int` | Number of jets which are used for plotting the variables of the jets/tracks after each preprocessing step (resampling, scaling, shuffling/writing). If `null` is given, the plotting is skipped. |
 
 
 **Note**: `nJets` are the number of jets you want to have in your final training file for the `count` and `weighting` method. For the `pdf` method, this is the number of jets per flavour in the training file!
