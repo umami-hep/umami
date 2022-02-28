@@ -51,10 +51,6 @@ def GetParser():
         help="Epoch which should be evaluated.",
     )
 
-    # TODO: implement vr_overlap
-    # parser.add_argument('--vr_overlap', action='store_true', help='''Option
-    #                     toenable vr overlap removall for validation sets.''')
-
     parser.add_argument(
         "-t",
         "--tagger",

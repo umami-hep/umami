@@ -587,7 +587,7 @@ class Scaling:
                 # Add scale dict for given tracks selection to the more general one
                 scale_dict_trk.update({tracks_name: scale_dict_trk_selection})
 
-        # TODO: change in python3.9
+        # TODO: change in python 3.9
         # save scale/shift dictionary to json file
         scale_dict = {"jets": scale_dict}
         scale_dict.update(scale_dict_trk)
