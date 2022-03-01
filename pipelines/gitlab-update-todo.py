@@ -42,8 +42,8 @@ if __name__ == "__main__":
         "## General TODOs\n\n"
     )
 
-    python_3_9_todos = "\n\n##TODOs related to new features in Python 3.9\n"
-    python_3_10_todos = "\n\n##TODOs related to new features in Python 3.10\n"
+    python_3_9_todos = "\n\n## TODOs related to new features in Python 3.9\n"
+    python_3_10_todos = "\n\n## TODOs related to new features in Python 3.10\n"
     for files, msgs in zip(todo_files, todo_msgs):
         if "python 3.9".casefold() in msgs.casefold():
             python_3_9_todos += f"- [ ] {files} - *{msgs}*\n"
