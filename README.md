@@ -4,12 +4,12 @@
 
 The Umami documentation is avaliable here:
 
-[![Umami docs](https://img.shields.io/badge/info-documentation-informational)](https://umami-docs.web.cern.ch/)
+[![Umami docs](https://img.shields.io/badge/info-documentation-informational)](https://umami.docs.cern.ch/)
 
 Below is included a brief summary on how to get started fast.
 
 ## Installation
-You can find the detailed described in the [umami docs](https://umami.docs.cern.ch/installation/).
+You can find the detailed described in the [umami docs](https://umami.docs.cern.ch/setup/installation/).
 
 
 ## Testing & Linter
@@ -19,19 +19,15 @@ To better collaborate on this project, we require some code practices such as:
 - unit tests
 - integration tests
 
-More details can be found [here](https://umami.docs.cern.ch/development/)
+More details can be found [here](https://umami.docs.cern.ch/setup/development/).
 
 
 ## Preprocessing
 
-For the training of umami the ntuples are used as specified in the section [MC Samples](https://umami.docs.cern.ch/mc-samples/).
+For the training of umami the ntuples are used as specified in the section [MC Samples](https://umami.docs.cern.ch/preprocessing/mc-samples/).
 
-The ntuples need to be preprocessed following the [preprocessing instructions](https://umami.docs.cern.ch/preprocessing/).
+The ntuples need to be preprocessed following the [preprocessing instructions](https://umami.docs.cern.ch/preprocessing/preprocessing/).
 
-## DL1r instructions
+## Training
 
-If you want to train or evaluate DL1r please follow the [DL1r-instructions](https://umami.docs.cern.ch/DL1r-instructions/).
-
-## DIPS instructions
-
-If you want to train or evaluate DIPS please follow the [DIPS-instructions](https://umami.docs.cern.ch/Dips-instructions/)
+If you want to train or evaluate DL1r or DIPS please follow the [Training-instructions](https://umami.docs.cern.ch/trainings/train-instructions/).

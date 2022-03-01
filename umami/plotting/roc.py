@@ -44,7 +44,7 @@ class roc(plot_line_object):
         key : str
             identifier for roc curve e.g. tagger, by default None
         **kwargs : kwargs
-            kwargs passed to `plot_object`
+            kwargs passed to `plot_line_object`
 
         Raises
         ------
@@ -525,7 +525,7 @@ class roc_plot(plot_base):
         rlabel: str = None,
         labelpad: int = None,
     ):
-        """Draw ploting
+        """Draw plotting
 
         Parameters
         ----------
