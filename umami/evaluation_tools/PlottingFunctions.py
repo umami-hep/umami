@@ -2929,7 +2929,7 @@ def plotFractionContour(  # pylint: disable=W0102
     plt.figure(figsize=(figsize[0], figsize[1]))
 
     # Ensure that for each model, a tagger name and a label is provided and vice versa
-    # TODO Change in 3.10 to strict=True in the zip() function which will ensure
+    # TODO Change in Python 3.10 to strict=True in the zip() function which will ensure
     # same length
     if not all(
         len(lst) == len(df_results_list)
