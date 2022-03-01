@@ -67,12 +67,16 @@ class plot_object:
         by default 1.3
     logy : bool, optional
         Set log of y-axis of main panel, by default True
-    ylabel : int, optional
+    xlabel : str, optional
+        label of the x-axis, by default None
+    ylabel : str, optional
         label of the y-axis, by default None
+    label_fontsize : int, optional
+        used fontsize in label, by default 12
     fontsize : int, optional
-        used fontsize, by default 12
+        used fontsize, by default 10
     n_ratio_panels : int, optional
-        amount of ratio panels between 0 and 2, by default 2
+        amount of ratio panels between 0 and 2, by default 1
     figsize : (float, float)
         tuple of figure size `(width, height)` in inches.
     dpi : int, optional
@@ -88,7 +92,8 @@ class plot_object:
     use_atlas_tag : bool
         Use the ATLAS Tag in the plots, by default True
     atlas_first_tag : str
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag (i.e. the first row is "ATLAS <atlas_first_tag>"),
+        by default "Internal Simulation"
     atlas_second_tag : str
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,

@@ -56,7 +56,7 @@ class var_vs_eff(plot_line_object):
         key : str, optional
             identifier for the curve e.g. tagger, by default None
          **kwargs : kwargs
-            kwargs passed to `plot_object`
+            kwargs passed to `plot_line_object`
 
         Raises
         ------
