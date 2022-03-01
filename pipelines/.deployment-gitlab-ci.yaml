@@ -2,32 +2,8 @@
 # deploying the gitlab pages
 # ----------------------------------------------------------------------------
 
-pages:
+.pages_template: &pages_template
   image: python:3.8-alpine
-  stage: pages
-  script:
-    - apk add --no-cache git subversion
-    - pip install --upgrade pip setuptools wheel
-    - pip install mkdocs==${MKDOCS_VERSION} mkdocs-material==${MATERIAL_VERSION} mkdocs-static-i18n==${I18NSTATIC_VERSION}
-    - mkdocs build -d public
-    - if [[ -f _redirects ]]; then cp _redirects public; fi;
-    - mv sphinx-docs public/sphinx-docs
-  artifacts:
-    paths:
-      - public
-    expire_in: 1 hour
-  dependencies:
-    - sphinx-docs
-  needs:
-    - sphinx-docs
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
-      when: always
-
-
-mr_pages:
-  image: python:3.8-alpine
-  stage: builds
   script:
     - apk add --no-cache git subversion
     - pip install --upgrade pip setuptools wheel
@@ -44,6 +20,17 @@ mr_pages:
     - sphinx-docs
   needs:
     - sphinx-docs
+
+pages:
+  stage: pages
+  <<: *pages_template
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+      when: always
+
+mr_pages:
+  stage: builds
+  <<: *pages_template
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
       when: always

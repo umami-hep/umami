@@ -205,7 +205,7 @@ def prepareConfig(
     )
 
     config_file["Eval_parameters_validation"]["n_jets"] = 4_000
-    config_file["Eval_parameters_validation"]["eff_min"] = 0.60
+    config_file["Eval_parameters_validation"]["eff_min"] = 0.77
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
