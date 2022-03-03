@@ -1494,6 +1494,8 @@ def plot_score(
     xlabel: str = None,
     WorkingPoints_Legend: bool = False,
     dpi: int = 400,
+    xmin: float = None,
+    xmax: float = None,
 ):
     """Plot the discriminant score for a given model
 
@@ -1536,6 +1538,10 @@ def plot_score(
     dpi : int, optional
         Sets a DPI value for the plot that is produced (mainly for png),
         by default 400
+    xmin : float, optional
+        Minimum value of the x-axis, by default None
+    xmax : float, optional
+        Maximum value of the x-axis, by default None
     """
 
     # Apply the ATLAS Style with the bars on the axes
@@ -1607,6 +1613,8 @@ def plot_score(
     # Increase ymax so atlas tag don't cut plot
     ymin, ymax = plt.ylim()
     plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
+    if xmin is not None and xmax is not None:
+        plt.xlim(xmin, xmax)
 
     # Define handles and labels
     handles, _ = plt.gca().get_legend_handles_labels()
@@ -1641,7 +1649,7 @@ def plot_score(
                 x=x_value,
                 ymin=ymin,
                 ymax=WP * ymax,
-                colors="red",
+                colors="#990000",
                 linestyles="dashed",
                 linewidth=2.0,
             )
@@ -2200,6 +2208,10 @@ def plot_prob(
     yAxisIncrease: float = 1.3,
     yAxisAtlasTag: float = 0.9,
     dpi: int = 400,
+    xmin: float = None,
+    xmax: float = None,
+    ymin: float = None,
+    ymax: float = None,
 ):
     """Plot the probability output for the given flavour for one model.
 
@@ -2248,6 +2260,14 @@ def plot_prob(
     dpi : int, optional
         Sets a DPI value for the plot that is produced (mainly for png),
         by default 400
+    xmin : float, optional
+        Minimum value of the x-axis, by default None
+    xmax : float, optional
+        Maximum value of the x-axis, by default None
+    ymin : float, optional
+        Minimum value of the y-axis, by default None
+    ymax : float, optional
+        Maximum value of the y-axis, by default None
     """
 
     # Apply the ATLAS Style with the bars on the axes
@@ -2280,7 +2300,7 @@ def plot_prob(
     for iter_flavour in class_labels:
         # Select correct jets
         flav_tracks = df_results.query(f"labels=={index_dict[iter_flavour]}")[
-            f'{tagger_name}_{flav_cat[iter_flavour]["prob_var_name"]}'
+            f'{tagger_name}_{flav_cat[flavour]["prob_var_name"]}'
         ]
 
         bins, weights, unc, band = hist_w_unc(
@@ -2319,19 +2339,19 @@ def plot_prob(
                 **global_config.hist_err_style,
             )
 
+    # overwriting xlim and ylim if defined in config
+    xmin = plt.xlim()[0] if xmin is None else xmin
+    xmax = plt.xlim()[1] if xmax is None else xmax
+    ymin = plt.ylim()[0] if ymin is None else ymin
+    ymax = plt.ylim()[1] if ymax is None else ymax
+
     if logy is True:
         plt.yscale("log")
-        ymin, ymax = plt.ylim()
-
         ymin = max(ymin, 1e-08)
 
-        # Increase ymax so atlas tag don't cut plot
-        plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
-
-    else:
-        # Increase ymax so atlas tag don't cut plot
-        ymin, ymax = plt.ylim()
-        plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
+    # Increase ymax so atlas tag don't cut plot
+    plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
+    plt.xlim(xmin=ymin, xmax=xmax)
 
     # Set legend
     plt.legend(loc=loc_legend, ncol=ncol)
