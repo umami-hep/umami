@@ -23,6 +23,8 @@ env/*
 .vscode/*
 !umami/tests/unit/**/*.png
 python_install/
+METADATA
+top_level.txt
 # ignoring insitute dependent parameter files
 Preprocessing-parameters-*.yaml
 # ignoring preprocessing integration test folders
