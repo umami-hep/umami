@@ -137,7 +137,22 @@ class var_vs_eff_TestCase(unittest.TestCase):
             wp=self.wp,
             bins=n_bins,
         )
-        np.testing.assert_array_almost_equal(var_plot.sig_eff, var_plot_comp.sig_eff)
+        var_plot_list = var_vs_eff(
+            x_var_sig=self.disc_sig,
+            disc_sig=self.x_var_sig,
+            x_var_bkg=self.disc_bkg,
+            disc_bkg=self.x_var_bkg,
+            disc_cut=var_plot.disc_cut,
+            bins=n_bins,
+        )
+        with self.subTest("Comparison var_plot_comp"):
+            np.testing.assert_array_almost_equal(
+                var_plot.sig_eff, var_plot_comp.sig_eff
+            )
+        with self.subTest("Comparison var_plot_list"):
+            np.testing.assert_array_almost_equal(
+                var_plot.sig_eff, var_plot_list.sig_eff
+            )
 
     def test_var_vs_eff_divide_same(self):
         """Test var_vs_eff divide."""
