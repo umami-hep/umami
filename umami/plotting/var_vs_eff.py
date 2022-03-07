@@ -182,12 +182,15 @@ class var_vs_eff(plot_line_object):
             )
 
     def _get_disc_cuts(self):
-        """Retrieve cut values on discriminant."""
-        # disc_cut should be an array if fixed_eff_bin else a float
+        """Retrieve cut values on discriminant. If `disc_cut` is not given, retrieve
+        cut values from the working point.
+        """
         logger.debug("Calculate discriminant cut.")
         if isinstance(self.disc_cut, float):
             self.disc_cut = [self.disc_cut] * self.n_bins
-        if self.fixed_eff_bin:
+        elif isinstance(self.disc_cut, (list, np.ndarray)):
+            self.disc_cut = self.disc_cut
+        elif self.fixed_eff_bin:
             self.disc_cut = list(
                 map(
                     lambda x: np.percentile(x, (1 - self.wp) * 100),
