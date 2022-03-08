@@ -46,11 +46,6 @@ train_variables:
     - IP3D_bc
     - IP3D_cu
 
-  # useful variables which might want to be kept but being used for training
-spectator_variables:
-  - DL1r_pb
-  - DL1r_pu
-
 custom_defaults_vars:
   JetFitter_energyFraction: 0
   JetFitter_significance3d: 0

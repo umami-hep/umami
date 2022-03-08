@@ -239,6 +239,11 @@ def Umami(args, train_config, preprocess_config):
             ].shape
             _, metadata["n_dim"] = f["Y_train"].shape
             _, metadata["n_jet_features"] = f["X_train"].shape
+            if exclude is not None:
+                metadata["n_jet_features"] -= len(exclude)
+            logger.debug(
+                f"Input shape of jet training set: {metadata['n_jet_features']}"
+            )
 
         if NN_structure["use_sample_weights"]:
             tensor_types = (
