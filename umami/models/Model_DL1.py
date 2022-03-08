@@ -151,6 +151,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     # Load the excluded variables from train_config
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
+        logger.debug(f"Exclude option specified with values {exclude}.")
 
     else:
         exclude = None
@@ -178,6 +179,9 @@ def TrainLargeFile(args, train_config, preprocess_config):
         with h5py.File(train_config.train_file, "r") as f:
             metadata["n_jets"], metadata["n_dim"] = f["Y_train"].shape
             _, metadata["n_jet_features"] = f["X_train"].shape
+            if exclude is not None:
+                metadata["n_jet_features"] -= len(exclude)
+            logger.debug(f"Input shape of training set: {metadata['n_jet_features']}")
 
         if NN_structure["use_sample_weights"]:
             tensor_types = (tf.float32, tf.float32, tf.float32)
