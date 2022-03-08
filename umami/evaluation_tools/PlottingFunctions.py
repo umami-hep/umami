@@ -818,12 +818,12 @@ def plot_pt_dependence(
     if fixed_eff_bin:
         plot_pt.atlas_second_tag = (
             f"{plot_pt.atlas_second_tag}\nConstant "
-            fr"$\epsilon_b$ = {int(working_point * 100)}% per bin"
+            rf"$\epsilon_b$ = {int(working_point * 100)}% per bin"
         )
     else:
         plot_pt.atlas_second_tag = (
             f"{plot_pt.atlas_second_tag}\nInclusive "
-            fr"$\epsilon_b$ = {int(working_point * 100)}%"
+            rf"$\epsilon_b$ = {int(working_point * 100)}%"
         )
 
     for i, (df_results, model_label, tagger, colour) in enumerate(
@@ -3044,8 +3044,8 @@ def plotFractionContour(  # pylint: disable=W0102
             frac_y_value = marked_point_dict[f"{rejections_to_plot[1]}"]
 
             point_label = (
-                fr"{label} $f_{{{frac_label_x}}} = {frac_x_value}$,"
-                fr" $f_{{{frac_label_y}}} = {frac_y_value}$"
+                rf"{label} $f_{{{frac_label_x}}} = {frac_x_value}$,"
+                rf" $f_{{{frac_label_y}}} = {frac_y_value}$"
             )
 
             # Plot the marker

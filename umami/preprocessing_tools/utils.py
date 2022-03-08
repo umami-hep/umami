@@ -389,11 +389,15 @@ def preprocessing_plots(
         a list.
     """
 
+    # Get max number of available jets
+    with h5py.File(sample, "r") as f:
+        try:
+            nJets_infile = len(f["/jets"])
+        except KeyError:
+            nJets_infile = len(f["/X_train"])
+
     # Check if random values are used or not
     if use_random_jets is True:
-
-        # Get max number of available jets
-        nJets_infile = len(h5py.File(sample, "r")["/jets"])
 
         # Get a random generator with specified seed
         rng = np.random.default_rng(seed=seed)
@@ -408,7 +412,15 @@ def preprocessing_plots(
         )
 
     else:
-        selected_indicies = np.arange(nJets, dtype=int)
+
+        # if number of requested jets is larger that what is available,
+        # plot all available jets.
+        if nJets > nJets_infile:
+            logger.warning(
+                f"You requested {nJets} jets,"
+                f"but there are only {nJets_infile} jets in the input!"
+            )
+        selected_indicies = np.arange(min(nJets, nJets_infile), dtype=int)
 
     # Check if track collection list is valid
     if isinstance(track_collection_list, str):
@@ -424,7 +436,6 @@ def preprocessing_plots(
 
     # Open the file which is to be plotted
     with h5py.File(sample, "r") as infile:
-
         # Get the labels of the jets to plot
         try:
             labels = infile["/labels"][selected_indicies]
