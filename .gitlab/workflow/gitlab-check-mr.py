@@ -22,7 +22,7 @@ def get_labels(changed_files: list, labels_mr: list):
     labels_mr: list
     changed_files_in_docs : list
     """
-    with open("pipelines/label_mapping.yaml", "r") as file:
+    with open(".gitlab/workflow/label_mapping.yaml", "r") as file:
         labels = yaml.load(file, yaml.FullLoader)
 
     changed_files_in_docs = 0

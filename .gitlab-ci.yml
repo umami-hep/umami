@@ -35,12 +35,12 @@ checking_mr:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_EVENT_TYPE != "merge_train" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
   script:
-    - python pipelines/gitlab-check-mr.py
+    - python .gitlab/workflow/gitlab-check-mr.py
 
 include:
-  - 'pipelines/.linting-gitlab-ci.yaml'
-  - 'pipelines/.unit_test-gitlab-ci.yaml'
-  - 'pipelines/.docker-gitlab-ci.yaml'
-  - 'pipelines/.integration_test-gitlab-ci.yaml'
-  - 'pipelines/.coverage-gitlab-ci.yaml'
-  - 'pipelines/.deployment-gitlab-ci.yaml'
+  - '.gitlab/workflow/.linting-gitlab-ci.yaml'
+  - '.gitlab/workflow/.unit_test-gitlab-ci.yaml'
+  - '.gitlab/workflow/.docker-gitlab-ci.yaml'
+  - '.gitlab/workflow/.integration_test-gitlab-ci.yaml'
+  - '.gitlab/workflow/.coverage-gitlab-ci.yaml'
+  - '.gitlab/workflow/.deployment-gitlab-ci.yaml'

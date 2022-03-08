@@ -1,6 +1,6 @@
 CI/CD:
 - .gitlab-ci.yml
-- pipelines/
+- .gitlab/workflow/
 DIPS:
 - umami/models/Model_Dips.py
 - umami/models/Model_CADS.py
