@@ -319,6 +319,10 @@ Dips_Comparison_flavour_ttbar:
 | `binomialErrors` | `bool` | Optional | Plot binomial errors to plot. |
 | `xmin` | `float` | Optional | Set the minimum b efficiency in the plot (which is the xmin limit). |
 | `ymax` | `float` | Optional | The maximum y axis. |
+| `ymin_ratio_1` | `float` | Optional | Set the lower y limit of the first ratio subplot. |
+| `ymax_ratio_1` | `float` | Optional | Set the upper y limit of the first ratio subplot. |
+| `ymin_ratio_2` | `float` | Optional | Set the lower y limit of the second ratio subplot. |
+| `ymax_ratio_2` | `float` | Optional | Set the upper y limit of the second ratio subplot. |
 | `WorkingPoints` | `list` | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
 | `yAxisIncrease` | `float` | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
 | `figsize` | `list` | Optional |A list of the width and hight of the plot.
@@ -378,7 +382,7 @@ Dips_pT_vs_beff:
     main_class: "bjets"
     WP: 0.77
     WP_Line: True
-    Fixed_WP_Bin: False
+    fixed_eff_bin: False
     figsize: [7, 5]
     logy: False
     UseAtlasTag: True
@@ -402,7 +406,7 @@ Dips_pT_vs_beff:
 | `main_class` | `str` | Class which is to be tagged. |
 | `WP` | `float` | Necessary | Float of the working point that will be used. |
 | `WP_line` | `float` | Optional | Print a horizontal line at this value efficiency. |
-| `Fixed_WP_Bin` | `bool` | Optional | Calculate the WP cut on the discriminant per bin. |
+| `fixed_eff_bin` | `bool` | Optional | Calculate the WP cut on the discriminant per bin. |
 | `figsize` | `list` | Optional |A list of the width and height of the plot.
 | `logy` | `bool` | Optional | Decide if the y axis is plotted as logarithmic or not.
 | `UseAtlasTag` | `bool` | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |

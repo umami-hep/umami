@@ -715,7 +715,7 @@ def plot_pt_dependence(
     disc_cut : float, optional
         Set a discriminant cut value for all taggers/models.
     fixed_eff_bin : bool, optional
-        Calculate the WP cut on the discriminant per bin, by default False.
+        Calculate the WP cut on the discriminant per bin, by default None.
     bin_edges : list, optional
         As the name says, the edges of the bins used. Will be set
         automatically, if None. By default None.
@@ -740,16 +740,13 @@ def plot_pt_dependence(
         If deprecated options are given.
     """
     if "colors" in kwargs:
-        if colours is None:
-            colours = kwargs["colors"]
+        colours = kwargs["colors"]
         kwargs.pop("colors")
     if "WP" in kwargs:
-        if working_point is None:
-            working_point = kwargs["WP"]
+        working_point = kwargs["WP"]
         kwargs.pop("WP")
     if "Disc_Cut_Value" in kwargs:
-        if disc_cut is None:
-            disc_cut = kwargs["Disc_Cut_Value"]
+        disc_cut = kwargs["Disc_Cut_Value"]
         kwargs.pop("Disc_Cut_Value")
     if "Fixed_WP_Bin" in kwargs:
         fixed_eff_bin = kwargs["Fixed_WP_Bin"]

@@ -364,11 +364,15 @@ class roc_plot(plot_base):
                 "Ratio classes not set, set them first with `set_ratio_class`."
             )
         self.plot_ratios(ax=self.axis_ratio_1, rej_class=self.ratio_axes[1])
-        self.axis_ratio_1.grid()
+
+        if self.grid:
+            self.axis_ratio_1.grid()
 
         if self.n_ratio_panels == 2:
             self.plot_ratios(ax=self.axis_ratio_2, rej_class=self.ratio_axes[2])
-            self.axis_ratio_2.grid()
+
+            if self.grid:
+                self.axis_ratio_2.grid()
 
     def get_xlim_auto(self):
         """Returns min and max efficiency values
@@ -543,12 +547,13 @@ class roc_plot(plot_base):
             xmax if self.xmax is None else self.xmax,
         )
         self.add_ratios()
-        self.axis_top.grid()
         self.set_title()
         self.set_logy()
         self.set_y_lim()
         self.set_xlabel()
         self.set_ylabel(self.axis_top)
+        if self.grid:
+            self.axis_top.grid()
 
         if self.n_ratio_panels > 0:
             if rlabel is not None:
