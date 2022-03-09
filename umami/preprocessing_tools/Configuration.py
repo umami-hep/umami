@@ -7,7 +7,7 @@ import warnings
 import yaml
 
 from umami.configuration import logger
-from umami.tools import YAML, yaml_loader
+from umami.tools import YAML
 
 
 class Configuration:
@@ -77,7 +77,7 @@ class Configuration:
             os.path.dirname(__file__), self.yaml_default_config
         )
         with open(self.yaml_default_config, "r") as conf:
-            self.default_config = yaml.load(conf, Loader=yaml_loader)
+            self.default_config = self.YAML.load(conf)
         logger.info(f"Using config file {self.yaml_config}")
 
         with open(self.yaml_config, "r") as conf:

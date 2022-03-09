@@ -5,6 +5,8 @@ from functools import reduce
 
 import numpy as np
 
+from umami.configuration import logger
+
 
 def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
     """
@@ -42,6 +44,8 @@ def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
         If unsupported operator is provided.
     """
 
+    if cuts is None:
+        return []
     # define operator dict to be able to call them via string from config
     inverted_ops = {
         "==": operator.ne,
@@ -69,6 +73,7 @@ def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
 
         # expect a dictionary with only one entry
         cut = list(cut_entry.keys())
+        logger.debug(f"Cuts: {cuts}")
         if len(cut) != 1:
             raise KeyError(
                 "The cut object is expected to be a dictionary with one entry."
@@ -120,6 +125,7 @@ def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
     indices_to_remove = np.where(reduce(operator.or_, cut_rejections, False))[0]
     del cut_rejections
 
+    logger.debug(f"Cuts remove {len(indices_to_remove)} jets of a total of {len(jets)}")
     return indices_to_remove
 
 

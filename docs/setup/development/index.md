@@ -87,3 +87,22 @@ There is a [global configuration](https://gitlab.cern.ch/atlas-flavor-tagging-to
 |  `DebugLevel`      |      Defines the debug level. Possible values:  `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`      |
 |  `TFDebugLevel`      |      Defines the debug level of tensorflow, it takes integer values [0,1,2,3], where 0 prints all messages.      |
 
+
+## Updating CI files
+
+In certain cases it is necessary to update the CI files located e.g. in `/eos/user/u/umamibot/www/ci/preprocessing`.
+
+To prepare these preprocessing files you can use the provided config in `.gitlab/workflow/ci-preprocessing.yaml` and create the files then via
+
+```bash
+preprocessing.py -c .gitlab/workflow/ci-preprocessing.yaml --prepare
+```
+
+This will give you 5 different files
+
+- `ci_ttbar_basefile.h5`
+- `ci_ttbar_testing.h5`
+- `ci_zpext_basefile.h5`
+- `ci_zpext_testing.h5`
+
+To copy them to the `eos` area, please ask one of the umami responsibles.

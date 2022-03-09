@@ -9,8 +9,10 @@ import tempfile
 import unittest
 from shutil import copyfile
 
+import pytest
+
 from umami.configuration import logger, set_log_level
-from umami.tools import replaceLineInFile
+from umami.tools import compare_leading_spaces, replaceLineInFile
 from umami.train_tools.Configuration import Configuration
 
 set_log_level(logger, "DEBUG")
@@ -84,3 +86,26 @@ class replaceLineInFile_TestCase(unittest.TestCase):
                 "Defintly_not_in_the_file:",
                 "model_name: Unittest_Testname",
             )
+
+
+@pytest.mark.parametrize(
+    "input, expected_result",
+    [
+        (("test134", "test789"), 0),
+        (("   test134", "   test789"), 0),
+        ((" test134", "   test789"), -2),
+        (("   test134", " test789"), 2),
+    ],
+)
+def test_compare_leading_spaces(input: tuple, expected_result: int) -> None:
+    """Test different scenarios for `compare_leading_spaces` function.
+
+    Parameters
+    ----------
+    input : tuple
+        string tuples to test
+    expected_result : int
+        expected result
+    """
+    result = compare_leading_spaces(input[0], input[1])
+    assert result == expected_result

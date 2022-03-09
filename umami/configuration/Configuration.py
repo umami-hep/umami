@@ -6,8 +6,6 @@ import pathlib
 import matplotlib
 import yaml
 
-from umami.tools import yaml_loader
-
 
 class Configuration:
     """
@@ -29,7 +27,7 @@ class Configuration:
     def LoadConfigFile(self):
         """Load config file from disk."""
         with open(self.yaml_config, "r") as conf:
-            self.config = yaml.load(conf, Loader=yaml_loader)
+            self.config = yaml.load(conf, Loader=yaml.FullLoader)
 
     def GetConfiguration(self):
         """Assigne configuration from file to class variables.
