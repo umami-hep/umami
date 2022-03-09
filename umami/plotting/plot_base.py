@@ -62,6 +62,14 @@ class plot_object:
         Minimum value of the y-axis, by default None
     ymax : float, optional
         Maximum value of the y-axis, by default None
+    ymin_ratio_1 : float, optional
+        Set the lower y limit of the first ratio subplot, by default None.
+    ymax_ratio_1 : float, optional
+        Set the upper y limit of the first ratio subplot, by default None.
+    ymin_ratio_2 : float, optional
+        Set the lower y limit of the second ratio subplot, by default None.
+    ymax_ratio_2 : float, optional
+        Set the upper y limit of the second ratio subplot, by default None.
     y_scale : float
         Scaling up the y axis, e.g. to fit the ATLAS Tag. Applied if ymax not defined,
         by default 1.3
@@ -81,6 +89,8 @@ class plot_object:
         tuple of figure size `(width, height)` in inches.
     dpi : int, optional
         dpi used for plotting, by default 400
+    grid : bool, optional
+        Set the grid for the plots.
     leg_fontsize : int, optional
         Fontsize of the legend, by default 10
     leg_loc : str, optional
@@ -114,6 +124,10 @@ class plot_object:
     xmax: float = None
     ymin: float = None
     ymax: float = None
+    ymin_ratio_1: float = None
+    ymax_ratio_1: float = None
+    ymin_ratio_2: float = None
+    ymax_ratio_2: float = None
     y_scale: float = 1.3
     logy: bool = True
     xlabel: str = None
@@ -125,6 +139,8 @@ class plot_object:
 
     figsize: tuple = None
     dpi: int = 400
+
+    grid: bool = True
 
     # legend settings
     leg_fontsize: int = None
@@ -284,6 +300,30 @@ class plot_base(plot_object):
             ymin if self.ymin is None else self.ymin,
             ymax * self.y_scale if self.ymax is None else self.ymax,
         )
+
+        if self.axis_ratio_1:
+            if self.ymin_ratio_1 or self.ymax_ratio_1:
+                ymin, ymax = self.axis_ratio_1.get_ylim()
+
+                if self.ymin_ratio_1:
+                    ymin = self.ymin_ratio_1
+
+                if self.ymax_ratio_1:
+                    ymax = self.ymax_ratio_1
+
+                self.axis_ratio_1.set_ylim(bottom=ymin, top=ymax)
+
+        if self.axis_ratio_2:
+            if self.ymin_ratio_2 or self.ymax_ratio_2:
+                ymin, ymax = self.axis_ratio_2.get_ylim()
+
+                if self.ymin_ratio_2:
+                    ymin = self.ymin_ratio_2
+
+                if self.ymax_ratio_2:
+                    ymax = self.ymax_ratio_2
+
+                self.axis_ratio_2.set_ylim(bottom=ymin, top=ymax)
 
     def set_ylabel(self, ax, label: str = None, align_right: bool = True, **kwargs):
         """Set y-axis label.
@@ -449,7 +489,7 @@ class plot_base(plot_object):
             force ATLAS style also if class variable is False, by default False
         """
         if self.apply_atlas_style or force:
-            logger.info("Initialise ATLAS style.")
+            logger.debug("Initialise ATLAS style.")
             applyATLASstyle(mtp)
             if force:
                 logger.warning(
