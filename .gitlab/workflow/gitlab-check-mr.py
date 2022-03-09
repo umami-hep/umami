@@ -50,13 +50,14 @@ if __name__ == "__main__":
     mr = project.mergerequests.get(mr_id)
 
     changed_files_mr = [elem["new_path"] for elem in mr.changes()["changes"]]
+    changelog_changed = "changelog.md" in changed_files_mr
     mr_labels, changed_files_in_docs_mr = get_labels(changed_files_mr, mr.labels)
 
     mr.labels = mr_labels
     mr.save()
     print("Found following labels:", mr_labels)
     # define flag if only documentation is concerned
-    only_docs = changed_files_in_docs_mr == len(changed_files_mr)
+    only_docs = (changed_files_in_docs_mr + changelog_changed) == len(changed_files_mr)
     if len(changed_files_mr) == 0:
         only_docs = False
 
