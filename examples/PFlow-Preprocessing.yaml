@@ -14,18 +14,6 @@ parameters: !include Preprocessing-parameters.yaml
       operator: <
       condition: 0.6
       NaNcheck: True
-  - softMuon_pt:
-      operator: <
-      condition: 0.5e9
-      NaNcheck: True
-  - softMuon_momentumBalanceSignificance:
-      operator: <
-      condition: 50
-      NaNcheck: True
-  - softMuon_scatteringNeighbourSignificance:
-      operator: <
-      condition: 600
-      NaNcheck: True
 
 
 # Defining yaml anchors to be used later, avoiding duplication
@@ -85,7 +73,7 @@ preparation: &preparation
       <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d-bjets_training_ttbar_PFlow.h5
+        file: bjets_training_ttbar_PFlow.h5
 
     training_ttbar_cjets:
       type: ttbar
@@ -95,7 +83,7 @@ preparation: &preparation
       <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d-cjets_training_ttbar_PFlow.h5
+        file: cjets_training_ttbar_PFlow.h5
 
     training_ttbar_ujets:
       type: ttbar
@@ -104,7 +92,7 @@ preparation: &preparation
       <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d-ujets_training_ttbar_PFlow.h5
+        file: ujets_training_ttbar_PFlow.h5
 
     training_ttbar_taujets:
       type: ttbar
@@ -113,7 +101,7 @@ preparation: &preparation
       <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d-taujets_training_ttbar_PFlow.h5
+        file: taujets_training_ttbar_PFlow.h5
 
     training_zprime_bjets:
       type: zprime
@@ -122,7 +110,7 @@ preparation: &preparation
       <<: *cuts_template_zprime_train
       f_output:
         path: *sample_path
-        file: MC16d-bjets_training_zprime_PFlow.h5
+        file: bjets_training_zprime_PFlow.h5
 
     training_zprime_cjets:
       type: zprime
@@ -132,7 +120,7 @@ preparation: &preparation
       <<: *cuts_template_zprime_train
       f_output:
         path: *sample_path
-        file: MC16d-cjets_training_zprime_PFlow.h5
+        file: cjets_training_zprime_PFlow.h5
 
     training_zprime_ujets:
       type: zprime
@@ -141,7 +129,7 @@ preparation: &preparation
       <<: *cuts_template_zprime_train
       f_output:
         path: *sample_path
-        file: MC16d-ujets_training_zprime_PFlow.h5
+        file: ujets_training_zprime_PFlow.h5
 
     training_zprime_taujets:
       type: zprime
@@ -150,7 +138,7 @@ preparation: &preparation
       <<: *cuts_template_zprime_train
       f_output:
         path: *sample_path
-        file: MC16d-taujets_training_zprime_PFlow.h5
+        file: taujets_training_zprime_PFlow.h5
 
     validation_ttbar:
       type: ttbar
@@ -159,7 +147,7 @@ preparation: &preparation
       <<: *cuts_template_validation
       f_output:
         path: *sample_path
-        file: MC16d-inclusive_validation_ttbar_PFlow.h5
+        file: inclusive_validation_ttbar_PFlow.h5
 
     testing_ttbar:
       type: ttbar
@@ -168,7 +156,7 @@ preparation: &preparation
       <<: *cuts_template_test
       f_output:
         path: *sample_path
-        file: MC16d-inclusive_testing_ttbar_PFlow.h5
+        file: inclusive_testing_ttbar_PFlow.h5
 
     validation_zprime:
       type: zprime
@@ -177,7 +165,7 @@ preparation: &preparation
       <<: *cuts_template_validation
       f_output:
         path: *sample_path
-        file: MC16d-inclusive_validation_zprime_PFlow.h5
+        file: inclusive_validation_zprime_PFlow.h5
 
     testing_zprime:
       type: zprime
@@ -186,7 +174,7 @@ preparation: &preparation
       <<: *cuts_template_test
       f_output:
         path: *sample_path
-        file: MC16d-inclusive_testing_zprime_PFlow.h5
+        file: inclusive_testing_zprime_PFlow.h5
 
 sampling: &sampling
   # Classes which are used in the resampling. Order is important.

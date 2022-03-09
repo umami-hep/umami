@@ -25,30 +25,30 @@ train_file: <path_palce_holder>/PFlow-hybrid_70-test-preprocessed_shuffled.h5
 # Add validation files
 validation_files:
     ttbar_r21_val:
-        path: <path_palce_holder>/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_0.h5
+        path: <path_palce_holder>/inclusive_validation_ttbar_PFlow.h5
         label: "$t\\bar{t}$ Release 21"
         <<: *variable_cuts_ttbar
 
     zprime_r21_val:
-        path: <path_palce_holder>/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_0.h5
+        path: <path_palce_holder>/inclusive_validation_zprime_PFlow.h5
         label: "$Z'$ Release 21"
         <<: *variable_cuts_zpext
 
 test_files:
     ttbar_r21:
-        path: <path_palce_holder>/MC16d_hybrid_odd_100_PFlow-no_pTcuts-file_1.h5
+        path: <path_palce_holder>/inclusive_testing_ttbar_PFlow.h5
         <<: *variable_cuts_ttbar
 
     ttbar_r22:
-        path: <path_palce_holder>/MC16d_hybrid-r22_odd_100_PFlow-no_pTcuts-file_1.h5
+        path: <path_palce_holder>/inclusive_testing_ttbar_PFlow_r22.h5
         <<: *variable_cuts_ttbar
 
     zpext_r21:
-        path: <path_palce_holder>/MC16d_hybrid-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        path: <path_palce_holder>/inclusive_testing_zprime_PFlow.h5
         <<: *variable_cuts_zpext
 
     zpext_r22:
-        path: <path_palce_holder>/MC16d_hybrid-r22-ext_odd_0_PFlow-no_pTcuts-file_1.h5
+        path: <path_palce_holder>/inclusive_testing_zpext_PFlow_r22.h5
         <<: *variable_cuts_zpext
 
 # Path to Variable dict used in preprocessing

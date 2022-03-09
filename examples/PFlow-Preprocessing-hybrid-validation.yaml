@@ -37,7 +37,7 @@ preparation:
       <<: *cuts_template_ttbar_validation
       f_output:
         path: *sample_path
-        file: MC16d-bjets_validation_ttbar_PFlow.h5
+        file: bjets_validation_ttbar_PFlow.h5
 
     validation_ttbar_cjets:
       type: ttbar
@@ -47,7 +47,7 @@ preparation:
       <<: *cuts_template_ttbar_validation
       f_output:
         path: *sample_path
-        file: MC16d-cjets_validation_ttbar_PFlow.h5
+        file: cjets_validation_ttbar_PFlow.h5
 
     validation_ttbar_ujets:
       type: ttbar
@@ -56,7 +56,7 @@ preparation:
       <<: *cuts_template_ttbar_validation
       f_output:
         path: *sample_path
-        file: MC16d-ujets_validation_ttbar_PFlow.h5
+        file: ujets_validation_ttbar_PFlow.h5
 
     validation_zprime_bjets:
       type: zprime
@@ -65,7 +65,7 @@ preparation:
       <<: *cuts_template_zprime_validation
       f_output:
         path: *sample_path
-        file: MC16d-bjets_validation_zprime_PFlow.h5
+        file: bjets_validation_zprime_PFlow.h5
 
     validation_zprime_cjets:
       type: zprime
@@ -74,7 +74,7 @@ preparation:
       <<: *cuts_template_zprime_validation
       f_output:
         path: *sample_path
-        file: MC16d-cjets_validation_zprime_PFlow.h5
+        file: cjets_validation_zprime_PFlow.h5
 
     validation_zprime_ujets:
       type: zprime
@@ -83,7 +83,7 @@ preparation:
       <<: *cuts_template_zprime_validation
       f_output:
         path: *sample_path
-        file: MC16d-ujets_validation_zprime_PFlow.h5
+        file: ujets_validation_zprime_PFlow.h5
 
 sampling:
   # All the sampling parameters are inherited from PFlow-Preprocessing.yaml
