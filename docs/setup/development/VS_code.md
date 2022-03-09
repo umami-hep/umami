@@ -18,19 +18,32 @@ Now, to make everything working, you need to prepare two files. First is your ss
 needs to have the permission of only you are able to write/read it (`chmod 600`). In there, it can look like this for example:
 
 ```bash
+Host upimage~*
+    RemoteCommand singularity shell <some>/<image>/
+    RequestTTY yes
+
+Host tf2~*
+    RemoteCommand source /etc/profile && module load tools/singularity/3.8 && singularity shell --nv --contain -B /work -B /home -B /tmp docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest-gpu
+    RequestTTY yes
+
 Host login_node
     HostName <Login_Hostname>
     User <Login_Username>
     IdentityFile <path>/<to>/<private>/<key>
 
-Host working_node tf2~working_node
+Host working_node tf2~working_node upimage~working_node
     HostName <working_node_hostname>
     User <Username>
     ProxyJump login_node
 ```
 
-The first entry is, for example, the login node of your cluster. The second is the working node. The login node is jumped (used as a bridge). The
-second entry also has two names for the entry, one has a `tf2~` in front. This is *important* for the following part, so please add this here.
+The first and second Host here are the entries for the images you want to use. You need to define a name for the images, e.g. `tf2` and then add `~*` at the end. Two commands need to be given here. First is the `RemoteCommand`. Here you can define all the commands that are executed when logging into your working node. If you need to source a profile first or load singularity, you can simply chain the commands with `&&`. The last command of `RemoteCommand` must be the `singularity shell` command.   
+The second command is the `RequestTTY`. This must be `yes`.
+
+The third Host is the login node (if you need to login into this one before you can log into the working node. If you don't need that, you can ignore this host). Here you need to define all the things for the connection, like `HostName`, `User` or the `IdentityFile`.
+
+The last Host is the working node. Same as for the login node, you need to add here the options needed for the connection to the working node (if you don't use the login node, remove the last line with `ProxyJump`). The name here is a bit different. You need to add multiple names here. One for each image. Just add the name of the image and the base hostname as one e.g. `tf2~working_node`.
+
 After adapting the config file, you need to tell VSCode where to find it. This can be set in the `settings.json` of VSCode. You can find/open it in
 VSCode when pressing `Ctrl + Shift + P` and start typing `settings`. You will find the option `Preferences: Open Settings (JSON)`. When selecting this,
 the config json file of VSCode is opened. There you need to add the following line with the path of your ssh config file added (if the config is in the default path `~/.ssh/config`, you don't need to add this).
@@ -41,90 +54,11 @@ the config json file of VSCode is opened. There you need to add the following li
 "remote.SSH.enableRemoteCommand": true,
 ```
 
-The second option added here disables the `ListenOnSocket` function which blocks the running of the singularity images in some cases. The third option
-will enable the remote command needed for singularity which is blocked when `ListenOnSocket` is `True`. Node: If this gives you errors, you need to switch
-to the pre-release version of [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh). Just click on the extension in the extension tab and click `Switch to Pre-Release` at the top.
+The second option added here disables the `ListenOnSocket` function which blocks the running of the singularity images in some cases. The third option will enable the remote command needed for singularity which is blocked when `ListenOnSocket` is `True`.
 
-Next, you need to create a executable script, lets call it `singularity-ssh` here, which tells VSCode what to do when connecting. This file is the same
-for Linux/Mac but looks a bit different for Windows. After creating this files, you need to make them executable (`chmod +x <file>`) and also add them
-in the VSCode settings with:
+Now restart VSCode and open the Remote Explorer tab. At the top switch to `SSH Targets` and right-click on the `tf2~` connection and click on `Connect to Host in Current Window`. VSCode will now install a VSCode server on your ssh target to run on and will ask you to install your extensions on the ssh target. This will improve the performance of VSCode. It will also ask you which path to open. After that, you can open a python file and the Python extension will start and should show you at the bottom of VSCode the current Python Interpreter which is used.
+If you now click on the errors and warnings right to it, the console will open where you can switch between Problems, Output, Debug Console, Terminal and Ports. In terminal should be a fresh terminal with the singularity image running. If not, check out output and switch on the right from Tasks to Remote - SSH to see the output of the ssh connection.
 
-```json
-"remote.SSH.path": "<path>/<to>/<executable>",
-```
-
-Now restart VSCode and open the Remote Explorer tab. At the top switch to `SSH Targets` and right-click on the `tf2~` connection and click on
-`Connect to Host in Current Window`. VSCode will now install a VSCode server on your ssh target to run on and will ask you to install your
-extensions on the ssh target. This will improve the performance of VSCode. It will also ask you which path to open. After that, you can open
-a python file and the Python extension will start and should show you at the bottom of VSCode the current Python Interpreter which is used.
-If you now click on the errors and warnings right to it, the console will open where you can switch between Problems, Output, Debug Console, Terminal
-and Ports. In terminal should be a fresh terminal with the singularity image running. If not, check out output and switch on the right from Tasks to
-Remote - SSH to see the output of the ssh connection.
-
-### Singularity-SSH Linux/Mac
-```bash
-#!/bin/sh
-
-# Get last command line argument, should be hostname/alias
-for trghost; do true; done
-
-# Parse host-aliases of form "venvname~hostname"
-imagename=`echo "${trghost}" | sed 's/^\(\(.*\)~\)\?.*$/\2/'`
-
-# Note: VS Code will override "-t" option with "-T".
-
-if [[ "${imagename}" =~ tf2 ]]; then
-    exec ssh -t "$@" "source /etc/profile && module load tools/singularity/3.8 && singularity shell --nv --contain -B /work -B /home -B /tmp docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest-gpu"
-else
-    exec ssh "$@"
-fi
-```
-
-If somehow this is not working, you can try to extract the hostname directly with this:
-
-```bash
-#!/bin/sh
-
-# Get last command line argument, should be hostname/alias
-for trghost
-do
-    if [ "${trghost}" = "tf2~working_node" ]; then
-        image="${trghost}"
-    fi
-done
-
-# Parse host-aliases of form "venvname~hostname"
-imagename=`echo "${image}" | sed 's/^\(\(.*\)~\)\?.*$/\2/'`
-
-# Note: VS Code will override "-t" option with "-T".
-
-if [ "${imagename}" = "tf2" ]; then
-    exec ssh -t "$@" "source /etc/profile && module load tools/singularity/3.8 && singularity shell --nv --contain -B /work -B /home -B /tmp docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest-gpu"
-else
-    exec ssh "$@"
-fi
-```
-
-### Singularity-SSH Windows
-This file needs to have the file ending `.cmd`!
-
-```bat
-@echo off
-
-if NOT %1==-V (
-    for /F "tokens=1,3 delims=~" %%a in ("%~4") do (
-        if %%a==tf2 (
-            ssh.exe -t %2 %3 %4 "source /etc/profile && module load tools/singularity/3.8 && singularity shell --nv --contain -B /work -B /home -B /tmp docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest-gpu"
-        ) else if %%a==tf1 (
-            echo "connect with another image"
-        ) else (
-            ssh.exe %*
-        )
-    )
-) else (
-    ssh.exe -V
-)
-```
 
 ## Useful Extensions
 | Extension | Mandatory | Explanation |
