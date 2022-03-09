@@ -384,7 +384,7 @@ class TestTraining(unittest.TestCase):
 
         self.assertTrue(runTraining(config=config, tagger="UMAMI"))
 
-    def test_train_umami_cond_att(self):
+    def test_train_cond_att_umami(self):
         """Integration test of train.py for UMAMI Cond Att script."""
 
         config = prepareConfig(
@@ -431,7 +431,7 @@ class TestTraining(unittest.TestCase):
 
         self.assertTrue(runTraining(config=config, tagger="UMAMI"))
 
-    def test_train_tfrecords_umami_cond_att(self):
+    def test_train_tfrecords_cond_att_umami(self):
         """Integration test of train.py for UMAMI Cond Att script with TFRecords."""
 
         config = prepareConfig(

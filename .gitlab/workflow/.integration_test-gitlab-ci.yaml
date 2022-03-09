@@ -33,8 +33,8 @@
   - test_train_dl1r
   - test_train_umami
   - test_train_tfrecords_umami
-  - test_train_umami_cond_att
-  - test_train_tfrecords_umami_cond_att
+  - test_train_cond_att_umami
+  - test_train_tfrecords_cond_att_umami
   - test_evaluate_tagger_in_files
 
 
@@ -295,7 +295,7 @@ test_train_tfrecords_umami:
       - test_umami_model_tfrecords/
       - coverage_files/
 
-test_train_umami_cond_att:
+test_train_cond_att_umami:
   <<: *test_template
   stage: integration_test_tagger
   needs:
@@ -307,15 +307,15 @@ test_train_umami_cond_att:
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_umami_cond_att"
-    - cp .coverage ./coverage_files/.coverage.test_train_umami_cond_att
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_cond_att_umami"
+    - cp .coverage ./coverage_files/.coverage.test_train_cond_att_umami
   artifacts:
     <<: *artifact_template
     paths:
       - test_umami_cond_att_model/
       - coverage_files/
 
-test_train_tfrecords_umami_cond_att:
+test_train_tfrecords_cond_att_umami:
   <<: *test_template
   stage: integration_test_tagger
   needs:
@@ -327,8 +327,8 @@ test_train_tfrecords_umami_cond_att:
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
   script:
-    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_tfrecords_umami_cond_att"
-    - cp .coverage ./coverage_files/.coverage.test_train_tfrecords_umami_cond_att
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_tfrecords_cond_att_umami"
+    - cp .coverage ./coverage_files/.coverage.test_train_tfrecords_cond_att_umami
   artifacts:
     <<: *artifact_template
     paths:

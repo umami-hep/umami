@@ -66,18 +66,6 @@ This line specifies where the ntuples (which are used) are stored and where to s
       operator: <
       condition: 0.6
       NaNcheck: True
-  - softMuon_pt:
-      operator: <
-      condition: 0.5e9
-      NaNcheck: True
-  - softMuon_momentumBalanceSignificance:
-      operator: <
-      condition: 50
-      NaNcheck: True
-  - softMuon_scatteringNeighbourSignificance:
-      operator: <
-      condition: 600
-      NaNcheck: True
 
 # Defining yaml anchors to be used later, avoiding duplication
 .cuts_template_ttbar_train: &cuts_template_ttbar_train
@@ -158,7 +146,7 @@ preparation:
       <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d-bjets_training_ttbar_PFlow.h5
+        file: bjets_training_ttbar_PFlow.h5
 
     training_ttbar_cjets:
       type: ttbar
@@ -168,7 +156,7 @@ preparation:
       <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d-cjets_training_ttbar_PFlow.h5
+        file: cjets_training_ttbar_PFlow.h5
 
     training_ttbar_ujets:
       type: ttbar
@@ -177,16 +165,7 @@ preparation:
       <<: *cuts_template_ttbar_train
       f_output:
         path: *sample_path
-        file: MC16d-ujets_training_ttbar_PFlow.h5
-
-    training_ttbar_taujets:
-      type: ttbar
-      category: taujets
-      n_jets: 13e6
-      <<: *cuts_template_ttbar_train
-      f_output:
-        path: *sample_path
-        file: MC16d-taujets_training_ttbar_PFlow.h5
+        file: ujets_training_ttbar_PFlow.h5
 
     training_zprime_bjets:
       type: zprime
@@ -195,7 +174,7 @@ preparation:
       <<: *cuts_template_zprime_train
       f_output:
         path: *sample_path
-        file: MC16d-bjets_training_zprime_PFlow.h5
+        file: bjets_training_zprime_PFlow.h5
 
     training_zprime_cjets:
       type: zprime
@@ -205,7 +184,7 @@ preparation:
       <<: *cuts_template_zprime_train
       f_output:
         path: *sample_path
-        file: MC16d-cjets_training_zprime_PFlow.h5
+        file: cjets_training_zprime_PFlow.h5
 
     training_zprime_ujets:
       type: zprime
@@ -214,16 +193,7 @@ preparation:
       <<: *cuts_template_zprime_train
       f_output:
         path: *sample_path
-        file: MC16d-ujets_training_zprime_PFlow.h5
-
-    training_zprime_taujets:
-      type: zprime
-      category: taujets
-      n_jets: 10e6
-      <<: *cuts_template_zprime_train
-      f_output:
-        path: *sample_path
-        file: MC16d-taujets_training_zprime_PFlow.h5
+        file: ujets_training_zprime_PFlow.h5
 
     validation_ttbar:
       type: ttbar
@@ -232,7 +202,7 @@ preparation:
       <<: *cuts_template_validation
       f_output:
         path: *sample_path
-        file: MC16d-inclusive_validation_ttbar_PFlow.h5
+        file: inclusive_validation_ttbar_PFlow.h5
 
     testing_ttbar:
       type: ttbar
@@ -241,7 +211,7 @@ preparation:
       <<: *cuts_template_test
       f_output:
         path: *sample_path
-        file: MC16d-inclusive_testing_ttbar_PFlow.h5
+        file: inclusive_testing_ttbar_PFlow.h5
 
     validation_zprime:
       type: zprime
@@ -250,7 +220,7 @@ preparation:
       <<: *cuts_template_validation
       f_output:
         path: *sample_path
-        file: MC16d-inclusive_validation_zprime_PFlow.h5
+        file: inclusive_validation_zprime_PFlow.h5
 
     testing_zprime:
       type: zprime
@@ -259,7 +229,7 @@ preparation:
       <<: *cuts_template_test
       f_output:
         path: *sample_path
-        file: MC16d-inclusive_testing_zprime_PFlow.h5
+        file: inclusive_testing_zprime_PFlow.h5
 ```
 In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.
 
