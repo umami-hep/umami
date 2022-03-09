@@ -33,7 +33,7 @@ train_variables:
     - SV1_deltaR
     - SV1_Lxy
     - SV1_L3d
-    - SV1_significance3d
+    - SV1_correctSignificance3d # previously SV1_significance3d
   IP2D:
     - IP2D_isDefaults
     - IP2D_bu

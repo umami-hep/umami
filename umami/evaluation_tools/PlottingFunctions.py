@@ -752,8 +752,7 @@ def plot_pt_dependence(
             disc_cut = kwargs["Disc_Cut_Value"]
         kwargs.pop("Disc_Cut_Value")
     if "Fixed_WP_Bin" in kwargs:
-        if fixed_eff_bin is None:
-            fixed_eff_bin = kwargs["Fixed_WP_Bin"]
+        fixed_eff_bin = kwargs["Fixed_WP_Bin"]
         kwargs.pop("Fixed_WP_Bin")
     if "Grid" in kwargs:
         grid = kwargs["Grid"]

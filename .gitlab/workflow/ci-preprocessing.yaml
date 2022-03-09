@@ -1,0 +1,79 @@
+parameters:
+  file_path: ./
+
+.ntuple_path: &ntuple_path <path_to_ntuples>
+preparation:
+  # Number of jets loaded per batch from the files for preparation.
+  batchsize: 5000
+
+  # Path to the .h5 ntuples from the h5 dumper.
+  ntuples:
+    ttbar:
+      path: *ntuple_path
+      file_pattern: user.alfroch.410470.btagTraining.e6337_s3681_r13144_p4931.EMPFlowAll.2022-02-07-T174158_output.h5/user.alfroch.28040424._000593.output.h5
+    zprime:
+      path: *ntuple_path
+      file_pattern: user.alfroch.800030.btagTraining.e7954_s3681_r13144_p4931.EMPFlowAll.2022-02-07-T174158_output.h5/user.alfroch.28040426._000179.output.h5
+    ttbar_test:
+      path: *ntuple_path
+      file_pattern: user.alfroch.410470.btagTraining.e6337_s3681_r13144_p4931.EMPFlowAll.2022-02-07-T174158_output.h5/user.alfroch.28040424._000572.output.h5
+    zprime_test:
+      path: *ntuple_path
+      file_pattern: user.alfroch.800030.btagTraining.e7954_s3681_r13144_p4931.EMPFlowAll.2022-02-07-T174158_output.h5/user.alfroch.28040426._000039.output.h5
+
+  samples:
+    ttbar_inclusive:
+      type: ttbar
+      category: inclusive
+      n_jets: 85000
+      f_output:
+        path: ci/
+        file: ci_ttbar_basefile.h5
+
+    zprime_inclusive:
+      type: zprime
+      category: inclusive
+      n_jets: 50000
+      f_output:
+        path: ci/
+        file: ci_zpext_basefile.h5
+
+    ttbar_inclusive_testing:
+      type: ttbar_test
+      category: inclusive
+      cuts:
+        - eventNumber:
+            operator: mod_6_==
+            condition: 5
+      n_jets: 15000
+      f_output:
+        path: ci/
+        file: ci_ttbar_testing.h5
+
+    zprime_inclusive_testing:
+      type: zprime_test
+      category: inclusive
+      cuts:
+        - eventNumber:
+            operator: mod_6_==
+            condition: 5
+      n_jets: 10000
+      f_output:
+        path: ci/
+        file: ci_zpext_testing.h5
+
+sampling:
+  method: Null
+  options:
+    save_tracks: True
+    tracks_names: ["tracks", "tracks_loose"]
+
+outfile_name: null
+plot_name: null
+var_file: null
+dict_file: null
+compression: null
+precision: float16
+convert_to_tfrecord:
+  chunk_size: 5000
+  N_add_vars: null
