@@ -1,13 +1,15 @@
 """Plotting bases for specialised plotting."""
+
 from dataclasses import dataclass
 
-import matplotlib as mtp
-import matplotlib.pyplot as plt
+import atlasify
 from matplotlib import gridspec
+from matplotlib.figure import Figure
 
-import umami.tools.PyATLASstyle.PyATLASstyle as pas
 from umami.configuration import logger
-from umami.tools import applyATLASstyle
+from umami.plotting.utils import set_xaxis_ticklabels_invisible
+
+atlasify.LINE_SPACING = 1.3  # overwrite the default, which is 1.2
 
 
 # TODO: enable `kw_only` when switching to Python 3.10
@@ -109,12 +111,11 @@ class plot_object:
         be added automatically,
         by default,
         "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
-    atlas_xmin : float
-        x position of ATLAS label, by default 0.04
-    atlas_ymax : float
-        y position of ATLAS label, by default 0.9
     atlas_fontsize : float
         fontsize of ATLAS label, by default 10
+    plotting_done : bool
+        Bool that indicates if plotting is done. Only then `atlasify()` can be called,
+        by default False
     """
 
     title: str = ""
@@ -154,9 +155,8 @@ class plot_object:
     atlas_second_tag: str = (
         "$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
     )
-    atlas_xmin: float = 0.04
-    atlas_ymax: float = 0.9
     atlas_fontsize: int = None
+    plotting_done: bool = False
 
     def __post_init__(self):
         """Check for allowed values.
@@ -209,8 +209,6 @@ class plot_base(plot_object):
             kwargs from `plot_object`
         """
         super().__init__(**kwargs)
-        if self.apply_atlas_style:
-            self.initialise_atlas_style()
         self.axis_top = None
         self.axis_ratio_1 = None
         self.axis_ratio_2 = None
@@ -219,8 +217,8 @@ class plot_base(plot_object):
 
     def initialise_figure(self, sub_plot_index: int = 5):
         """
-        Initialising plt.figure for different scenarios depending how many ratio panels
-        are requested.
+        Initialising matplotlib.figure.Figure for different scenarios depending on how
+        many ratio panels are requested.
 
         Parameters
         ----------
@@ -231,13 +229,11 @@ class plot_base(plot_object):
         # TODO: switch to cases syntax in python 3.10
         if self.n_ratio_panels == 0:
             # no ratio panel
-            self.fig = plt.figure(
-                figsize=(8, 8) if self.figsize is None else self.figsize
-            )
-            self.axis_top = plt.gca()
+            self.fig = Figure(figsize=(8, 6) if self.figsize is None else self.figsize)
+            self.axis_top = self.fig.gca()
         elif self.n_ratio_panels == 1:
             # 1 ratio panel
-            self.fig = plt.figure(
+            self.fig = Figure(
                 figsize=(9.352, 6.616) if self.figsize is None else self.figsize
             )
 
@@ -249,9 +245,7 @@ class plot_base(plot_object):
 
         elif self.n_ratio_panels == 2:
             # 2 ratio panels
-            self.fig = plt.figure(
-                figsize=(8, 8) if self.figsize is None else self.figsize
-            )
+            self.fig = Figure(figsize=(8, 8) if self.figsize is None else self.figsize)
 
             # Define the grid of the subplots
             gs = gridspec.GridSpec(11, 1, figure=self.fig)
@@ -260,9 +254,9 @@ class plot_base(plot_object):
             self.axis_ratio_2 = self.fig.add_subplot(gs[8:, 0], sharex=self.axis_top)
 
         if self.n_ratio_panels >= 1:
-            plt.setp(self.axis_top.get_xticklabels(), visible=False)
+            set_xaxis_ticklabels_invisible(self.axis_top)
         if self.n_ratio_panels >= 2:
-            plt.setp(self.axis_ratio_1.get_xticklabels(), visible=False)
+            set_xaxis_ticklabels_invisible(self.axis_ratio_1)
 
     def set_title(self, title: str = None, **kwargs):
         """Set title of top panel.
@@ -273,7 +267,7 @@ class plot_base(plot_object):
             title of top panel, if None using the value form the class variables,
             by default None
         **kwargs : kwargs
-            kwargs passed to `plt.axis.set_title()`
+            kwargs passed to `matplotlib.axes.Axes.set_title()`
         """
         self.axis_top.set_title(self.title if title is None else title, **kwargs)
 
@@ -330,14 +324,14 @@ class plot_base(plot_object):
 
         Parameters
         ----------
-        ax : plt.axis
+        ax : matplotlib.axes.Axes
             matplotlib axis object
         label : str, optional
             x-axis label, by default None
         align_right : bool, optional
             alignment of y-axis label, by default True
         **kwargs, kwargs
-            kwargs passed to `plt.axis.set_ylabel()`
+            kwargs passed to `matplotlib.axes.Axes.set_ylabel()`
         """
         label_options = {}
         if align_right:
@@ -365,7 +359,7 @@ class plot_base(plot_object):
         label : str, optional
             x-axis label, by default None
         **kwargs : kwargs
-            kwargs passed to `plt.axis.set_xlabel`
+            kwargs passed to `matplotlib.axes.Axes.set_xlabel()`
         """
         xlabel_args = {
             "xlabel": self.xlabel if label is None else label,
@@ -390,7 +384,7 @@ class plot_base(plot_object):
             label size of x- and y- axis ticks, by default None
             if None then using global fontsize
         **kwargs : kwargs
-            kwargs passed to `plt.axis.set_xlabel`
+            kwargs passed to `matplotlib.axes.Axes.set_xlabel()`
         """
         labelsize = self.fontsize if labelsize is None else labelsize
         self.axis_top.tick_params(axis="y", labelsize=labelsize, **kwargs)
@@ -415,7 +409,7 @@ class plot_base(plot_object):
         xmax : float, optional
             max of x-axis, by default None
         **kwargs : kwargs
-            kwargs passed to `plt.axis.set_xlim`
+            kwargs passed to `matplotlib.axes.Axes.set_xlim()`
         """
         self.axis_top.set_xlim(
             self.xmin if xmin is None else xmin,
@@ -441,61 +435,75 @@ class plot_base(plot_object):
         dpi : int, optional
             dpi for plotting, by default 400
         **kwargs : kwargs
-            kwargs passed to `plt.savefig`
+            kwargs passed to `matplotlib.figure.Figure.savefig()`
         """
         logger.debug(f"Saving plot to {plot_name}")
-        plt.savefig(
+        self.fig.savefig(
             plot_name,
             transparent=transparent,
             dpi=self.dpi if dpi is None else dpi,
             **kwargs,
         )
 
-    @staticmethod
-    def tight_layout(**kwargs):
-        """abstract function of plt tight_layout
+    def tight_layout(self, **kwargs):
+        """abstract function of matplotlib.figure.Figure.tight_layout
 
         Parameters
         ----------
         **kwargs: kwargs
-            kwargs from `plt.tight_layout()`
+            kwargs from `matplotlib.figure.Figure.tight_layout()`
         """
-        plt.tight_layout(**kwargs)
+        self.fig.tight_layout(**kwargs)
 
-    @staticmethod
-    def clear():
-        """resetting matplolib figure"""
-        plt.close()
-        plt.clf()
-
-    def make_atlas_tag(self):
-        """Drawing ATLAS tag."""
-        pas.makeATLAStag(
-            ax=self.axis_top,
-            fig=self.fig,
-            first_tag=self.atlas_first_tag,
-            second_tag=self.atlas_second_tag,
-            xmin=self.atlas_xmin,
-            ymax=self.atlas_ymax,
-            fontsize=self.atlas_fontsize,
-        )
-
-    def initialise_atlas_style(self, force: bool = False):
-        """Initialising ATLAS style.
+    def atlasify(self, use_tag: bool = True, force: bool = False):
+        """Apply ATLAS style to all axes using the atlasify package
 
         Parameters
         ----------
+        use_tag : bool, optional
+            If False, ATLAS style will be applied but no tag will be put on the plot.
+            If True, the tag will be put on as well, by default True
         force : bool, optional
-            force ATLAS style also if class variable is False, by default False
+            Force ATLAS style also if class variable is False, by default False
         """
+
+        if self.plotting_done is False and force is False:
+            logger.warning(
+                "`atlasify()` has to be called after plotting --> "
+                "ATLAS style will not be adapted. If you want to do it anyway, "
+                "you can use `force`."
+            )
+            return
+
         if self.apply_atlas_style or force:
-            logger.debug("Initialise ATLAS style.")
-            applyATLASstyle(mtp)
-            if force:
-                logger.warning(
-                    "Initilising ATLAS style even though `apply_atlas_style` is set to "
-                    "False."
+            logger.info("Initialise ATLAS style using atlasify.")
+            if use_tag is True:
+                atlasify.atlasify(
+                    atlas=self.atlas_first_tag,
+                    subtext=self.atlas_second_tag,
+                    axes=self.axis_top,
+                    font_size=self.atlas_fontsize,
+                    label_font_size=self.atlas_fontsize,
+                    sub_font_size=self.atlas_fontsize,
+                    enlarge=1,
                 )
+            else:
+                atlasify.atlasify(atlas=False, axes=self.axis_top, enlarge=1)
+            if self.n_ratio_panels >= 1:
+                atlasify.atlasify(atlas=False, axes=self.axis_ratio_1, enlarge=1)
+            if self.n_ratio_panels == 2:
+                atlasify.atlasify(atlas=False, axes=self.axis_ratio_2, enlarge=1)
+            if force:
+                if self.apply_atlas_style is False:
+                    logger.warning(
+                        "Initialising ATLAS style even though `apply_atlas_style` is  "
+                        "set to False."
+                    )
+                if self.plotting_done is False:
+                    logger.warning(
+                        "Initialising ATLAS style even though `plotting_done` is set to"
+                        " False."
+                    )
 
     def make_legend(self, handles: list, labels: list = None, **kwargs):
         """Drawing legend on axis.

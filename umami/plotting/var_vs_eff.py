@@ -695,7 +695,8 @@ class var_vs_eff_plot(plot_base):
                 align_right=False,
                 labelpad=labelpad,
             )
-        if self.use_atlas_tag:
-            self.make_atlas_tag()
         self.make_legend(plt_handles)
         self.tight_layout()
+        self.plotting_done = True
+        if self.apply_atlas_style is True:
+            self.atlasify(use_tag=self.use_atlas_tag)

@@ -38,7 +38,6 @@ def translate_kwargs(kwargs):
         "UseAtlasTag": "use_atlas_tag",
         "AtlasTag": "atlas_first_tag",
         "SecondTag": "atlas_second_tag",
-        "yAxisAtlasTag": "atlas_ymax",
         "legcols": "leg_ncol",
         "loc_legend": "leg_loc",
         "legFontSize": "leg_fontsize",
@@ -46,11 +45,21 @@ def translate_kwargs(kwargs):
         "yAxisIncrease": "y_scale",
         "labelFontSize": "fontsize",
     }
+    deprecated_args = ["yAxisAtlasTag"]
     for key, elem in mapping.items():
         if key in kwargs:
             logger.debug(f"Mapping from old naming: {elem}: {kwargs[key]}")
             kwargs[elem] = kwargs[key]
             kwargs.pop(key)
+
+    # Remove deprecated arguments from kwargs
+    for dep_key in deprecated_args:
+        if dep_key in kwargs:
+            logger.warning(
+                f"You specified the argument {dep_key}, which is no longer"
+                " supported and will be ignored."
+            )
+            kwargs.pop(dep_key)
     return kwargs
 
 
@@ -864,7 +873,6 @@ def plot_pt_dependence(
                 "efficiency. It will probably not be visible on your plot."
             )
     plot_pt.savefig(plot_name, transparent=trans)
-    plot_pt.clear()
 
 
 def plotROCRatio(
@@ -1043,7 +1051,6 @@ def plotROCRatio(
 
     plot_roc.draw(labelpad=labelpad)
     plot_roc.savefig(plot_name)
-    plot_roc.clear()
 
 
 def plotROCRatioComparison(
@@ -1287,7 +1294,6 @@ def plotROCRatioComparison(
         labelpad=labelpad,
     )
     plot_roc.savefig(plot_name)
-    plot_roc.clear()
 
 
 def plotSaliency(

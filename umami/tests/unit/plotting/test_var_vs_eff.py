@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
 """
-Unit test script for the functions in metrics.py
+Unit test script for the functions in var_vs_eff.py
 """
 
+import os
+import tempfile
 import unittest
 
 import numpy as np
+from matplotlib.testing.compare import compare_images
 
 from umami.configuration import logger, set_log_level
-from umami.plotting.var_vs_eff import var_vs_eff
+from umami.plotting.var_vs_eff import var_vs_eff, var_vs_eff_plot
 
 set_log_level(logger, "DEBUG")
 
@@ -207,3 +210,163 @@ class var_vs_eff_TestCase(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             var_plot.divide(var_plot_comp, mode="sig_eff")
+
+
+class var_vs_eff_output_TestCase(unittest.TestCase):
+    """Test class for the umami.plotting.var_vs_eff_plot output"""
+
+    def setUp(self):
+        # Set up temp directory for comparison plots
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.actual_plots_dir = f"{self.tmp_dir.name}/"
+        self.expected_plots_dir = os.path.join(
+            os.path.dirname(__file__), "expected_plots"
+        )
+        # Generate discriminant and pT distribution for sig and bkg for two taggers
+        # We want that both taggers yield the same discriminant values for the bkg
+        # jets, a gaussian located at 0.
+        # For low pT, we want both taggers to perform similar (discriminant values
+        # are a gaussian located at 1).
+        # For high pT (here pT>110), the "new" tagger signal is better separated from
+        # bkg (discriminant values are then a gaussian located at 2)
+        np.random.seed(42)
+        n_random = 10_000
+
+        # background (same for both taggers)
+        self.disc_bkg = np.random.normal(loc=0, size=2 * n_random)
+        self.x_var_bkg = np.random.uniform(0, 250, size=2 * n_random)
+
+        # reference tagger (constant separation power for whole pT range)
+        self.disc_sig_1 = np.random.normal(loc=1, size=2 * n_random)
+        self.x_var_sig_1 = np.random.uniform(0, 250, size=2 * n_random)
+
+        # new tagger (better separation for pT > 110)
+        self.disc_sig_2 = np.concatenate(
+            (
+                np.random.normal(loc=1, size=n_random),
+                np.random.normal(loc=3, size=n_random),
+            )
+        )
+        self.x_var_sig_2 = np.concatenate(
+            (
+                np.random.uniform(0, 110, size=n_random),
+                np.random.uniform(110, 250, size=n_random),
+            )
+        )
+
+        # Define pT bins
+        self.bins = [20, 30, 40, 60, 85, 110, 140, 175, 250]
+
+    def test_output_plot_fixed_eff_bin_bkg_rejection(self):
+        # define the curves
+        ref_light = var_vs_eff(
+            x_var_sig=self.x_var_sig_1,
+            disc_sig=self.disc_sig_1,
+            x_var_bkg=self.x_var_bkg,
+            disc_bkg=self.disc_bkg,
+            bins=self.bins,
+            wp=0.5,
+            disc_cut=None,
+            fixed_eff_bin=True,
+            label="reference model",
+        )
+        better_light = var_vs_eff(
+            x_var_sig=self.x_var_sig_2,
+            disc_sig=self.disc_sig_2,
+            x_var_bkg=self.x_var_bkg,
+            disc_bkg=self.disc_bkg,
+            bins=self.bins,
+            wp=0.5,
+            disc_cut=None,
+            fixed_eff_bin=True,
+            label="better model (by construction better for $p_T$ > 110)",
+        )
+        plot_bkg_rej = var_vs_eff_plot(
+            mode="bkg_rej",
+            ylabel="background rejection",
+            xlabel=r"$p_{T}$ [GeV]",
+            logy=True,
+            atlas_second_tag=(
+                "Unit test plot based on gaussian distributions. \n"
+                "'reference model' should have bkg rejection of ~ 6.1 for the whole"
+                " whole $p_T$ range\n"
+                "'better model' should have bkg efficiency of ~ 6.1 for $p_T < 110$\n"
+                "'better model' should have quite large bkg efficiency $p_T > 110$\n"
+            ),
+            y_scale=1.5,
+        )
+        plot_bkg_rej.add(ref_light, reference=True)
+        plot_bkg_rej.add(better_light)
+
+        plot_bkg_rej.draw()
+
+        plotname = "test_pt_dependence_rejection.png"
+        plot_bkg_rej.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # plot_bkg_rej.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertEqual(
+            None,
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            ),
+        )
+
+    def test_output_plot_fixed_eff_bin_bkg_efficiency(self):
+        # define the curves
+        ref_light = var_vs_eff(
+            x_var_sig=self.x_var_sig_1,
+            disc_sig=self.disc_sig_1,
+            x_var_bkg=self.x_var_bkg,
+            disc_bkg=self.disc_bkg,
+            bins=self.bins,
+            wp=0.5,
+            disc_cut=None,
+            fixed_eff_bin=True,
+            label="reference model",
+        )
+        better_light = var_vs_eff(
+            x_var_sig=self.x_var_sig_2,
+            disc_sig=self.disc_sig_2,
+            x_var_bkg=self.x_var_bkg,
+            disc_bkg=self.disc_bkg,
+            bins=self.bins,
+            wp=0.5,
+            disc_cut=None,
+            fixed_eff_bin=True,
+            label="better model (by construction better for $p_T$ > 110)",
+        )
+        plot_bkg_rej = var_vs_eff_plot(
+            mode="bkg_eff",
+            ylabel="background efficiency",
+            xlabel=r"$p_{T}$ [GeV]",
+            logy=False,
+            atlas_second_tag=(
+                "Unit test plot based on gaussian distributions. \n"
+                "'reference model' should have bkg efficiency of ~ 0.16 "
+                " whole $p_T$ range\n"
+                "'better model' should have bkg efficiency of ~ 0.16 for $p_T < 110$\n"
+                "'better model' should have bkg efficiency of ~ 0 for $p_T > 110$\n"
+            ),
+            y_scale=1.5,
+        )
+        plot_bkg_rej.add(ref_light, reference=True)
+        plot_bkg_rej.add(better_light)
+        for cut in ref_light.disc_cut:
+            print(cut)
+
+        plot_bkg_rej.draw()
+
+        plotname = "test_pt_dependence_bkg_efficiency.png"
+        plot_bkg_rej.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # plot_bkg_rej.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertEqual(
+            None,
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            ),
+        )
