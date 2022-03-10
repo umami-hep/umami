@@ -210,6 +210,7 @@ class roc_plot(plot_base):
         # setting default linestyles if no linestyles provided
         # solid line and densed dotted dashed
         self.default_linestyles = ["-", (0, (3, 1, 1, 1))]
+        self.legend_flavs = None
 
     def add_roc(self, roc_curve: object, key: str = None, reference: bool = False):
         """Adding roc object to figure.
@@ -495,7 +496,7 @@ class roc_plot(plot_base):
                 )
             )
 
-        legend_flavs = self.axis_top.legend(
+        self.legend_flavs = self.axis_top.legend(
             handles=line_list_rej,
             labels=[handle.get_label() for handle in line_list_rej],
             loc="upper center",
@@ -504,7 +505,7 @@ class roc_plot(plot_base):
         )
 
         # Add the second legend to plot
-        self.axis_top.add_artist(legend_flavs)
+        self.axis_top.add_artist(self.legend_flavs)
 
         # Get the labels for the legends
         labels_list = []
@@ -541,7 +542,7 @@ class roc_plot(plot_base):
         """
         plt_handles = self.plot_roc()
         xmin, xmax = self.get_xlim_auto()
-        # if self.xmin is not None or self.xmax is not None:
+
         self.set_xlim(
             xmin if self.xmin is None else self.xmin,
             xmax if self.xmax is None else self.xmax,
@@ -573,8 +574,6 @@ class roc_plot(plot_base):
                 align_right=False,
                 labelpad=labelpad,
             )
-        if self.use_atlas_tag:
-            self.make_atlas_tag()
 
         if self.n_ratio_panels < 2:
             self.make_legend(plt_handles)
@@ -584,6 +583,15 @@ class roc_plot(plot_base):
                 self.leg_rej_labels[self.ratio_axes[2]] = self.ratio_axes[2]
 
             self.make_split_legend(handles=plt_handles)
+
+        self.plotting_done = True
+        if self.apply_atlas_style is True:
+            self.atlasify(use_tag=self.use_atlas_tag)
+            # atlasify can only handle one legend. Therefore, we remove the frame of
+            # the second legend by hand
+            if self.legend_flavs is not None:
+                self.legend_flavs.set_frame_on(False)
+
         self.tight_layout()
 
     def plot_roc(self, **kwargs):

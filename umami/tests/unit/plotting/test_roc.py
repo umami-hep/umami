@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
 """
-Unit test script for the functions in metrics.py
+Unit test script for the functions in roc.py
 """
 
+import os
+import tempfile
 import unittest
 
 import numpy as np
+from matplotlib.testing.compare import compare_images
 
 from umami.configuration import logger, set_log_level
-from umami.plotting.roc import roc
+from umami.plotting.roc import roc, roc_plot
 
 set_log_level(logger, "DEBUG")
 
@@ -175,4 +178,138 @@ class roc_mask_TestCase(unittest.TestCase):
         result_sig_eff = self.sig_eff[[False, False, False, True, True, False, False]]
         np.testing.assert_array_almost_equal(
             roc_curve.non_zero, (result_bkg_rej, result_sig_eff)
+        )
+
+
+class roc_output_TestCase(unittest.TestCase):
+    """Test class for the umami.plotting.roc_plot function."""
+
+    def setUp(self):
+        # Set up temp directory for comparison plots
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.actual_plots_dir = f"{self.tmp_dir.name}/"
+        self.expected_plots_dir = os.path.join(
+            os.path.dirname(__file__), "expected_plots"
+        )
+
+        self.sig_eff = np.array(
+            [0.5, 0.56, 0.63, 0.76, 0.83, 0.84, 0.85, 0.88, 0.9, 0.93, 1]
+        )
+        self.u_rej_1 = np.array([1542, 918, 426, 78, 31, 26, 22, 12, 8, 4, 1])
+        self.u_rej_2 = np.array([3061, 1642, 709, 112, 41, 34, 28, 15, 9, 4, 1])
+        self.c_rej_1 = np.array([26, 17, 10, 4.1, 2.9, 2.7, 2.6, 2.2, 1.9, 1.6, 1])
+        self.c_rej_2 = np.array([45, 27, 14, 4, 3, 2.9, 2.7, 2.2, 2.0, 1.63, 1])
+
+        # sig efficiency with different start
+        self.sig_eff_short = np.linspace(0.5, 1, 100)
+
+    def test_output_two_curves_one_ratio(self):
+        """Test with two curves of same flavour, one ratio panel"""
+        plot = roc_plot(
+            n_ratio_panels=1,
+            ylabel="background rejection",
+            xlabel="$b$-jets efficiency",
+            # logy=False,
+        )
+
+        # Add two roc curves
+        plot.add_roc(
+            roc(
+                self.sig_eff,
+                self.u_rej_1,
+                rej_class="ujets",
+                label="reference curve",
+            ),
+            reference=True,
+        )
+        plot.add_roc(
+            roc(
+                self.sig_eff,
+                self.u_rej_2,
+                rej_class="ujets",
+                label="second curve",
+            )
+        )
+
+        plot.set_ratio_class(1, "ujets", label="light-flavour jets ratio")
+
+        # Draw the figure
+        plot.draw()
+
+        plotname = "test_roc_two_curves_1_ratio.png"
+        plot.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # plot.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertEqual(
+            None,
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            ),
+        )
+
+    def test_output_four_curves_two_ratio(self):
+        """Test with two curves for each flavour, two ratio panels"""
+        plot = roc_plot(
+            n_ratio_panels=2,
+            ylabel="background rejection",
+            xlabel="$b$-jets efficiency",
+        )
+
+        # Add four roc curves
+        plot.add_roc(
+            roc(
+                self.sig_eff,
+                self.u_rej_1,
+                rej_class="ujets",
+                label="reference curve",
+            ),
+            reference=True,
+        )
+        plot.add_roc(
+            roc(
+                self.sig_eff,
+                self.u_rej_2,
+                rej_class="ujets",
+                label="second curve",
+            )
+        )
+        plot.add_roc(
+            roc(
+                self.sig_eff,
+                self.c_rej_1,
+                rej_class="cjets",
+                label="reference curve",
+            ),
+            reference=True,
+        )
+        plot.add_roc(
+            roc(
+                self.sig_eff,
+                self.c_rej_2,
+                rej_class="cjets",
+                label="second curve",
+            )
+        )
+
+        plot.set_ratio_class(1, "ujets", label="light-flavour jets ratio")
+        plot.set_ratio_class(2, "cjets", label="$c$-jets ratio")
+        plot.set_leg_rej_labels("ujets", "light-flavour jets rejection")
+        plot.set_leg_rej_labels("cjets", "$c$-jets rejection")
+
+        # Draw the figure
+        plot.draw()
+
+        plotname = "test_roc_four_curves_2_ratio.png"
+        plot.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # plot.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertEqual(
+            None,
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            ),
         )
