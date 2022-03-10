@@ -69,7 +69,7 @@ def check_kwargs_var_plots(kwargs: dict, **custom_default):
         "yAxisIncrease": 1,
         "figsize": None,
         "Log": True,
-        "ylabel": "Normalised Number of Tracks",
+        "ylabel": "Number of Tracks",
         "ycolor": "black",
         "legFontSize": 10,
         "ncol": 2,
@@ -85,6 +85,10 @@ def check_kwargs_var_plots(kwargs: dict, **custom_default):
             updated_kwargs[key] = custom_default[key]
         else:
             updated_kwargs[key] = value
+
+    # Check for y axis scale
+    if updated_kwargs["Log"] is True:
+        updated_kwargs["ylabel"] = "Normalised " + updated_kwargs["ylabel"]
 
     return updated_kwargs
 
@@ -1310,6 +1314,11 @@ def plot_input_vars_jets(
     ValueError
         If the type of the given binning is not supported.
     """
+
+    # Set the ylabel to jets
+    if "ylabel" not in kwargs:
+        kwargs["ylabel"] = "Number of Jets"
+
     # check the kwargs
     kwargs = check_kwargs_var_plots(kwargs, yAxisIncrease=10)
 
@@ -1574,6 +1583,10 @@ def plot_input_vars_jets_comparison(
     ValueError
         If the type of the given binning is not supported.
     """
+    # Set the ylabel to jets
+    if "ylabel" not in kwargs:
+        kwargs["ylabel"] = "Number of Jets"
+
     # check the kwargs
     kwargs = check_kwargs_var_plots(kwargs, yAxisIncrease=10)
 
