@@ -55,6 +55,15 @@ def GetParser():
     )
 
     parser.add_argument(
+        "-f",
+        "--format",
+        type=str,
+        default=None,
+        help="""Overwrite the file format for the plots given in the train
+        config file""",
+    )
+
+    parser.add_argument(
         "-r",
         "--recalculate",
         action="store_true",
@@ -93,6 +102,10 @@ def main(args, train_config, preprocess_config):
     # Get the eval and val params from the train config
     val_params = train_config.Validation_metrics_settings
     eval_params = train_config.Eval_parameters_validation
+
+    # Check for format option
+    if args.format:
+        train_config.Validation_metrics_settings["plot_datatype"] = args.format
 
     # Check for nJets args
     if args.nJets is None:
@@ -147,6 +160,14 @@ def main(args, train_config, preprocess_config):
             )
             beff = WP
 
+        # Get the comparison tagger variables
+        if val_params["taggers_from_file"]:
+            comp_tagger_list = (
+                val_params["taggers_from_file"].keys()
+                if isinstance(val_params["taggers_from_file"], dict)
+                else val_params["taggers_from_file"]
+            )
+
         # Run the Performance check with the values from the dict and plot them
         RunPerformanceCheck(
             train_config=train_config,
@@ -156,11 +177,9 @@ def main(args, train_config, preprocess_config):
                     tagger_name=f"{comp_tagger}",
                     class_labels=train_config.NN_structure["class_labels"],
                 )
-                for comp_tagger in train_config.Validation_metrics_settings[
-                    "taggers_from_file"
-                ]
+                for comp_tagger in comp_tagger_list
             }
-            if "taggers_from_file" in train_config.Validation_metrics_settings
+            if "taggers_from_file" in val_params
             else None,
             dict_file_name=output_file_name,
             train_history_dict_file_name=f"{train_config.model_name}/history.json",
