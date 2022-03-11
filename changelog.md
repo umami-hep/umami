@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding `--prepare` option to `train.py` and fix an issue with the `model_file` not copied into the metadata folder [!472](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/472)
 -  Move to `matplotlib.figure` API and `atlasify` for plotting python API [!464](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/464)
 - Fixing issue [#157](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/issues/157) with the `ylabel` of the input variable plots [!466](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/466).
 - Adding custom labels for the `taggers_from_files` option in the validation metrics plots.
