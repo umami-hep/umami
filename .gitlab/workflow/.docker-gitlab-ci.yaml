@@ -26,6 +26,21 @@
     - .gitlab/workflow/.docker-gitlab-ci.yaml
     - .gitlab-ci.yml
 
+build_slim_base:
+  <<: *image_build_template
+  stage: image_build_umamibase
+  variables:
+    BASE: 'BASE_IMAGE=$SLIM_IMAGE'
+    DOCKER_FILE: docker/umami-slim/Dockerfile
+    IMAGE_DESTINATION: '${REGISTY_PATH}/umami-slim:latest'
+  rules:
+    - if: $CI_COMMIT_BRANCH != ""
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      <<: *requirement_changes
+    - if: $CI_COMMIT_TAG
+      variables:
+        IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:$CI_COMMIT_REF_SLUG'
+
 build_umamibase_cpu:
   <<: *image_build_template
   stage: image_build_umamibase
