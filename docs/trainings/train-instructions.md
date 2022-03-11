@@ -137,6 +137,12 @@ train.py -c <path>/<to>/<train>/<config>
 
 The results after each epoch will be saved to the `umami/umami/MODELNAME/` folder. The modelname is the name defined in the train config.
 
+If you only want to produce the output folder (`umami/umami/MODELNAME/`) with the metadata already copied and ready to start (for cross-checking) but not start the training, you can give the `-p` or `--prepare` option like this:
+
+```bash
+train.py -c <path>/<to>/<train>/<config> -p
+```
+
 ## Plotting the Training Metrics
 If you want to check how your model is performing while training, you can use the following command:
 

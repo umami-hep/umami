@@ -36,6 +36,13 @@ def GetParser():
         help="Overwrite the configs files saved in metadata folder",
     )
 
+    parser.add_argument(
+        "-p",
+        "--prepare",
+        action="store_true",
+        help="Only prepare the metadata folder and the model directory.",
+    )
+
     parse_args = parser.parse_args()
     return parse_args
 
@@ -63,49 +70,51 @@ if __name__ == "__main__":
         model_name=train_config.model_name,
         preprocess_config_path=train_config.preprocess_config,
         overwrite_config=bool(args.overwrite_config),
+        model_file_path=train_config.model_file,
     )
 
-    # Check for DIPS
-    # TODO: Switch to case syntax with python 3.10
-    if tagger_name.casefold() == "dips":
-        utm.Dips(
-            args=args,
-            train_config=train_config,
-            preprocess_config=preprocess_config,
-        )
+    if not args.prepare:
+        # Check for DIPS
+        # TODO: Switch to case syntax with python 3.10
+        if tagger_name.casefold() == "dips":
+            utm.Dips(
+                args=args,
+                train_config=train_config,
+                preprocess_config=preprocess_config,
+            )
 
-    elif tagger_name.casefold() == "dl1":
-        utm.TrainLargeFile(
-            args=args,
-            train_config=train_config,
-            preprocess_config=preprocess_config,
-        )
+        elif tagger_name.casefold() == "dl1":
+            utm.TrainLargeFile(
+                args=args,
+                train_config=train_config,
+                preprocess_config=preprocess_config,
+            )
 
-    elif tagger_name.casefold() == "umami":
-        utm.Umami(
-            args=args,
-            train_config=train_config,
-            preprocess_config=preprocess_config,
-        )
+        elif tagger_name.casefold() == "umami":
+            utm.Umami(
+                args=args,
+                train_config=train_config,
+                preprocess_config=preprocess_config,
+            )
 
-    elif tagger_name.casefold() == "cads":
-        utm.Cads(
-            args=args,
-            train_config=train_config,
-            preprocess_config=preprocess_config,
-        )
+        elif tagger_name.casefold() == "cads":
+            utm.Cads(
+                args=args,
+                train_config=train_config,
+                preprocess_config=preprocess_config,
+            )
 
-    elif tagger_name == "umami_cond_att":
-        utm.UmamiCondAtt(
-            args=args,
-            train_config=train_config,
-            preprocess_config=preprocess_config,
-        )
+        elif tagger_name == "umami_cond_att":
+            utm.UmamiCondAtt(
+                args=args,
+                train_config=train_config,
+                preprocess_config=preprocess_config,
+            )
 
-    else:
-        raise ValueError(
-            f"""
-            Tagger {tagger_name} is not supported! Possible taggers are
-            dips, dl1, umami and cads!
-            """
-        )
+        else:
+            raise ValueError(
+                f"""
+                Tagger {tagger_name} is not supported! Possible taggers are
+                dips, dl1, umami and cads!
+                """
+            )
