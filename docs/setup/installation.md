@@ -113,8 +113,8 @@ singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/alg
     singularity exec <folder_where_you_want_to_store_the_image>/umami_base_cpu.img bash
     ```
 
-???+ warning "Singualrity cache"
-    By default, `singualrity` will store the cache in your home directory, which might cause space issues.
+???+ warning "Singularity cache"
+    By default, `singularity` will store the cache in your home directory, which might cause space issues.
     You can redirect the cache to another folder via `export SINGULARITY_CACHEDIR=<alternative_folder>` which could be for instance the afs work istead of home on `lxplus`.
     The easiest is to add to your `~/.bashrc` on `lxplus` the following line
     ```bash
