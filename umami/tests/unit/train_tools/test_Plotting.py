@@ -117,12 +117,10 @@ class GetRejection_TestCase(unittest.TestCase):
                 "accuracy_dips",
             ]
         }
-        self.comp_tagger_frac_dict = {"RNNIP": {"cjets": 0.018, "ujets": 0.982}}
-        self.frac_dict = {"cjets": 0.018, "ujets": 0.982}
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.main_class = "bjets"
         self.comp_tagger_rej_dict = {
-            "RNNIP": {"cjets_rej_ttbar_r21_val": 2, "ujets_rej_ttbar_r21_val": 1}
+            "rnnip": {"cjets_rej_ttbar_r21_val": 2, "ujets_rej_ttbar_r21_val": 1}
         }
         self.label_extension = r"$t\bar{t}$"
         self.frac_class = "cjets"
@@ -131,9 +129,8 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotRejPerEpochComparison(
             df_results=self.df_results,
             tagger_label="dips",
-            frac_dict=self.frac_dict,
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
-            comp_tagger_frac_dict=self.comp_tagger_frac_dict,
+            taggers_from_file={"rnnip": "Recomm. RNNIP"},
             unique_identifier="ttbar_r21_val",
             plot_name=self.tmp_plot_dir + "PlotRejPerEpochComparison",
             class_labels=self.class_labels,
@@ -157,10 +154,9 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotRejPerEpoch(
             df_results=self.df_results,
             tagger_label="dips",
-            frac_dict=self.frac_dict,
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
-            comp_tagger_frac_dict=self.comp_tagger_frac_dict,
             plot_name=self.tmp_plot_dir + "PlotRejPerEpoch",
+            taggers_from_file={"rnnip": "Recomm. RNNIP"},
             unique_identifier="ttbar_r21_val",
             class_labels=self.class_labels,
             main_class=self.main_class,
@@ -332,6 +328,7 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
             unique_identifier=self.validation_unique_identifiers[0],
             tagger_comp_var=self.tagger_comp_var_rnnip,
             recommended_frac_dict=self.recommended_frac_dict,
+            nJets=5000,
             WP=self.WP,
             class_labels=self.class_labels,
             main_class=self.main_class,
@@ -352,6 +349,7 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
             unique_identifier=self.validation_unique_identifiers[0],
             tagger_comp_var=self.tagger_comp_var_dl1r,
             recommended_frac_dict=self.recommended_frac_dict,
+            nJets=5000,
             WP=self.WP,
             class_labels=self.class_labels,
             main_class=self.main_class,

@@ -2,15 +2,14 @@
 import copy
 import os
 
-import h5py
 import matplotlib as mtp
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
 
-from umami.classification_tools import get_class_label_ids, get_class_label_variables
 from umami.configuration import global_config, logger
+from umami.data_tools import LoadJetsFromFile
 from umami.metrics import GetRejection
 from umami.preprocessing_tools import GetBinaryLabels
 from umami.tools import applyATLASstyle, makeATLAStag
@@ -64,9 +63,11 @@ def CompTaggerRejectionDict(
     unique_identifier: str,
     tagger_comp_var: list,
     recommended_frac_dict: dict,
+    nJets: int,
     WP: float,
     class_labels: list,
     main_class: str,
+    cut_vars_dict: dict = None,
 ):
     """Load the comparison tagger probability variables from the validation
     file and calculate the rejections.
@@ -81,12 +82,17 @@ def CompTaggerRejectionDict(
         List of the comparison tagger probability variable names.
     recommended_frac_dict : dict
         Dict with the fractions.
+    nJets : int
+        Number of jets to use for calculation of the comparison tagger
+        rejections
     WP : float
         Working point at which the rejections should be evaluated.
     class_labels : list
         List with the used class_labels.
     main_class : str
         The main discriminant class. For b-tagging obviously "bjets"
+    cut_vars_dict : dict
+        Dict with the cut variables and the values for selecting jets.
 
     Returns
     -------
@@ -94,43 +100,18 @@ def CompTaggerRejectionDict(
         Dict with the rejections for against the main class for all given flavours.
     """
 
-    # Get class_labels variables
-    class_ids = get_class_label_ids(class_labels)
-    class_label_vars, flatten_class_labels = get_class_label_variables(class_labels)
-
-    # Get the tagger variables and the class label variables
-    variables = list(dict.fromkeys(class_label_vars)) + tagger_comp_var
-
-    # Load the Jets
-    df = pd.DataFrame(h5py.File(file, "r")["/jets"][:][variables])
-
-    # Init new column for string labels
-    df["Umami_string_labels"] = np.zeros_like(df[class_label_vars[0]])
-    df["Umami_labels"] = np.zeros_like(df[class_label_vars[0]])
-
-    # Change type of column to string
-    df = df.astype({"Umami_string_labels": "str"})
-
-    # Iterate over the classes and add the correct labels to Umami columns
-    for class_id, class_label_var, class_label in zip(
-        class_ids, class_label_vars, flatten_class_labels
-    ):
-        indices_tochange = np.where(df[class_label_var].values == class_id)
-
-        # Add a string description which this class is
-        df["Umami_string_labels"].values[indices_tochange] = class_label
-
-        # Add the right column label to class
-        df["Umami_labels"].values[indices_tochange] = class_labels.index(class_label)
-
-    # Get the indices of the jets that are not used
-    indices_toremove = np.where(df["Umami_string_labels"] == "0")[0]
-
-    # Remove all unused jets
-    df = df.drop(indices_toremove)
+    df, labels = LoadJetsFromFile(
+        filepath=file,
+        class_labels=class_labels,
+        nJets=nJets,
+        variables=tagger_comp_var,
+        cut_vars_dict=cut_vars_dict,
+        print_logger=False,
+        chunk_size=1e6,
+    )
 
     # Binarize the labels
-    y_true = GetBinaryLabels(df["Umami_labels"].values)
+    y_true = GetBinaryLabels(labels)
 
     # Calculate rejections
     recomm_rej_dict, _ = GetRejection(
@@ -238,8 +219,13 @@ def PlotDiscCutPerEpoch(
     plt.legend(loc="upper right")
     ymin, ymax = plt.ylim()
     plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
-    plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
-    plt.ylabel(r"$b$-Tagging discriminant Cut Value")
+    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
+    plt.ylabel(
+        r"$b$-Tagging discriminant Cut Value",
+        fontsize=12,
+        horizontalalignment="right",
+        y=1.0,
+    )
     plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
@@ -334,8 +320,13 @@ def PlotDiscCutPerEpochUmami(
     plt.legend(loc="upper right")
     ymin, ymax = plt.ylim()
     plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
-    plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
-    plt.ylabel(r"$b$-Tagging discriminant Cut Value")
+    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
+    plt.ylabel(
+        r"$b$-Tagging discriminant Cut Value",
+        fontsize=12,
+        horizontalalignment="right",
+        y=1.0,
+    )
     plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
@@ -344,21 +335,20 @@ def PlotDiscCutPerEpochUmami(
 def PlotRejPerEpochComparison(
     df_results: dict,
     tagger_label: str,
-    frac_dict: dict,
     comp_tagger_rej_dict: dict,
-    comp_tagger_frac_dict: dict,
     unique_identifier: str,
     plot_name: str,
     class_labels: list,
     main_class: str,
     label_extension: str,
     rej_string: str,
+    taggers_from_file: dict = None,
     trained_taggers: list = None,
     target_beff: float = 0.77,
     UseAtlasTag: bool = True,
     ApplyATLASStyle: bool = True,
     AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
+    SecondTag: str = "$\\sqrt{s}=13$ TeV, PFlow jets",
     yAxisAtlasTag: float = 0.95,
     yAxisIncrease: float = 1.1,
     ncol: int = 1,
@@ -379,12 +369,8 @@ def PlotRejPerEpochComparison(
         Dict with the rejections of the trained tagger.
     tagger_label : str
         Name of trained tagger.
-    frac_dict : dict
-        Dict with the fractions of the trained tagger.
     comp_tagger_rej_dict : dict
         Dict with the rejections of the comp taggers.
-    comp_tagger_frac_dict : dict
-        Dict with the fractions of the comp taggers.
     unique_identifier : str
         Unique identifier of the used dataset (e.g. ttbar_r21).
     plot_name : str
@@ -397,6 +383,9 @@ def PlotRejPerEpochComparison(
         Extension of the legend label giving the process type.
     rej_string : str
         String that is added after the class for the key.
+    taggers_from_file : dict
+        Dict with the comparison taggers as keys and their labels for
+        the plots as values, by default None
     trained_taggers : list, optional
         List of dicts with needed info about local available taggers, by default None
     target_beff : float, optional
@@ -493,7 +482,9 @@ def PlotRejPerEpochComparison(
                         df_results["epoch"].max(),
                         color=f"C{counter_models}",
                         linestyle=linestyle_list[counter],
-                        label=f"Recomm. {comp_tagger}",
+                        label=taggers_from_file[comp_tagger]
+                        if taggers_from_file
+                        else comp_tagger,
                     )
 
                     # Set up the counter
@@ -509,7 +500,8 @@ def PlotRejPerEpochComparison(
                     )
 
         if trained_taggers is None:
-            logger.info("No local taggers defined. Not plotting those!")
+            if counter == 0:
+                logger.debug("No local taggers defined. Not plotting those!")
 
         else:
             for _, tt in enumerate(trained_taggers):
@@ -603,22 +595,21 @@ def PlotRejPerEpochComparison(
 def PlotRejPerEpoch(
     df_results: dict,
     tagger_label: str,
-    frac_dict: dict,
     comp_tagger_rej_dict: dict,
-    comp_tagger_frac_dict: dict,
     unique_identifier: str,
     plot_name: str,
     class_labels: list,
     main_class: str,
     label_extension: str,
     rej_string: str,
+    taggers_from_file: dict = None,
     trained_taggers: list = None,
     target_beff: float = 0.77,
     UseAtlasTag: bool = True,
     ApplyATLASStyle: bool = True,
     AtlasTag: str = "Internal Simulation",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisAtlasTag: float = 0.9,
+    yAxisAtlasTag: float = 0.95,
     yAxisIncrease: float = 1.1,
     ncol: int = 1,
     figsize: list = None,
@@ -636,12 +627,8 @@ def PlotRejPerEpoch(
         Dict with the rejections of the trained tagger.
     tagger_label : str
         Name of trained tagger.
-    frac_dict : dict
-        Dict with the fractions of the trained tagger.
     comp_tagger_rej_dict : dict
         Dict with the rejections of the comp taggers.
-    comp_tagger_frac_dict : dict
-        Dict with the fractions of the comp taggers.
     unique_identifier: str
         Unique identifier of the used dataset (e.g. ttbar_r21).
     plot_name : str
@@ -654,6 +641,9 @@ def PlotRejPerEpoch(
         Extension of the legend label giving the process type.
     rej_string : str
         String that is added after the class for the key.
+    taggers_from_file : dict
+        Dict with the comparison taggers as keys and their labels for
+        the plots as values, by default None
     trained_taggers : list, optional
         List of dicts with needed info about local available taggers, by default None
     target_beff : float, optional
@@ -668,7 +658,7 @@ def PlotRejPerEpoch(
         Lower tag in the ATLAS label with infos,
         by default "$sqrt{s}=13$ TeV, PFlow jets"
     yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.9
+        Y axis position of the ATLAS label, by default 0.95
     yAxisIncrease : float, optional
         Y axis increase factor to fit the ATLAS label, by default 1.1
     ncol : int, optional
@@ -733,7 +723,9 @@ def PlotRejPerEpoch(
                         df_results["epoch"].max(),
                         color=f"C{counter_models}",
                         linestyle="-",
-                        label=f"Recomm. {comp_tagger}",
+                        label=taggers_from_file[comp_tagger]
+                        if taggers_from_file
+                        else comp_tagger,
                     )
 
                     # Set up the counter
@@ -746,7 +738,7 @@ def PlotRejPerEpoch(
                     )
 
         if trained_taggers is None:
-            logger.info("No local taggers defined. Not plotting those!")
+            logger.debug("No local taggers defined. Not plotting those!")
 
         else:
             for _, tt in enumerate(trained_taggers):
@@ -898,8 +890,8 @@ def PlotLosses(
     if ymin is None and ymax is None:
         plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
 
-    plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
-    plt.ylabel("Loss")
+    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
+    plt.ylabel("Loss", fontsize=12, horizontalalignment="right", y=1.0)
     plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
@@ -999,8 +991,8 @@ def PlotAccuracies(
     if ymin is None and ymax is None:
         plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
 
-    plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
-    plt.ylabel("Accuracy")
+    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
+    plt.ylabel("Accuracy", fontsize=12, horizontalalignment="right", y=1.0)
     plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
@@ -1116,8 +1108,8 @@ def PlotLossesUmami(
             ymax=yAxisAtlasTag,
         )
 
-    plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
-    plt.ylabel("Loss")
+    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
+    plt.ylabel("Loss", fontsize=12, horizontalalignment="right", y=1.0)
     plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
@@ -1233,8 +1225,8 @@ def PlotAccuraciesUmami(
             ymax=yAxisAtlasTag,
         )
 
-    plt.xlabel("Epoch", fontsize=14, horizontalalignment="right", x=1.0)
-    plt.ylabel("Accuracy")
+    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
+    plt.ylabel("Accuracy", fontsize=12, horizontalalignment="right", y=1.0)
     plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
     plt.cla()
     plt.clf()
@@ -1322,6 +1314,10 @@ def RunPerformanceCheck(
                         unique_identifier=val_file_identifier,
                         tagger_comp_var=tagger_comp_vars[comp_tagger],
                         recommended_frac_dict=recommended_frac_dict[comp_tagger],
+                        nJets=Val_settings["n_jets"],
+                        cut_vars_dict=val_file_config["variable_cuts"]
+                        if "variable_cuts" in val_file_config
+                        else None,
                         WP=WP,
                         class_labels=class_labels,
                         main_class=main_class,

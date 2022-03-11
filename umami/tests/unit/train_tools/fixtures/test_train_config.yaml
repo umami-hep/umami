@@ -50,6 +50,10 @@ NN_structure:
 
 # Plotting settings for training metrics plots
 Validation_metrics_settings:
+    taggers_from_file:
+        rnnip: "Recomm. RNNIP"
+        DL1r: "Recomm. DL1r"
+
     # Enable/Disable atlas tag
     UseAtlasTag: True
 

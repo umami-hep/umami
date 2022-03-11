@@ -113,7 +113,9 @@ Validation_metrics_settings:
     n_jets: 3e5
 
     # Define which taggers should also be plotted
-    taggers_from_file: ["rnnip", "DL1r"]
+    taggers_from_file:
+        rnnip: "Recomm. RNNIP"
+        DL1r: "Recomm. DL1r"
 
     # Enable/Disable atlas tag
     UseAtlasTag: True
@@ -139,8 +141,8 @@ Eval_parameters_validation:
     # Define fc values for the taggers
     frac_values_comp: {
         "rnnip": {
-            "cjets": 0.08,
-            "ujets": 0.92,
+            "cjets": 0.07,
+            "ujets": 0.93,
         },
         "DL1r": {
             "cjets": 0.018,
