@@ -1,3 +1,4 @@
+"""Example how to calculate a custom pdf function for the pdf sampling."""
 import numpy as np
 
 from umami.preprocessing import PDFSampling

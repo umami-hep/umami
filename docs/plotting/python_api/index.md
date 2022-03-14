@@ -1,3 +1,5 @@
+# Python API
+
 Currently the plotting part of umami is rewritten for better usage with the python api.
 Example implementations with the new API are located [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/).
 

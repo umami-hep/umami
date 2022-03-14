@@ -1,10 +1,11 @@
+"""Script to validate an lwtnn model between output of keras and from the TDD."""
 import argparse
 
 import h5py
 import numpy as np
 import pandas as pd
-from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import CustomObjectScope
+from tensorflow.keras.models import load_model  # pylint: disable=E0401
+from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=E0401
 
 import umami.preprocessing_tools as upt
 import umami.train_tools as utt
@@ -88,7 +89,25 @@ def GetParser():
     return parser.parse_args()
 
 
-def load_model_umami(model_file, X_test_trk, X_test_jet):
+def load_model_umami(model_file: str, X_test_trk: np.ndarray, X_test_jet: np.ndarray):
+    """Load umami model
+
+    Parameters
+    ----------
+    model_file : str
+        file name of the model to load
+    X_test_trk : np.ndarray
+        test array for tracks
+    X_test_jet : np.ndarray
+        test array for jets
+
+    Returns
+    -------
+    np.ndarray
+        dips predictions
+    np.ndarray
+        umami predictions
+    """
     with CustomObjectScope({"Sum": Sum}):
         model = load_model(model_file)
     pred_dips, pred_umami = model.predict(
@@ -100,13 +119,31 @@ def load_model_umami(model_file, X_test_trk, X_test_jet):
 
 # workaround to not use the full preprocessing config
 class config:
-    def __init__(self, preprocess_config):
+    """Minimal implementation of preprocessing config."""
+
+    def __init__(self, preprocess_config: str):
+        """Initialise config class.
+
+        Parameters
+        ----------
+        preprocess_config : str
+            file name of preprocessing config
+        """
         self.dict_file = preprocess_config
         self.preparation = {"class_labels": ["ujets", "cjets", "bjets"]}
         self.tracks_name = "tracks"
 
 
-def __run():
+def main():
+    """Main function is called when executing the script.
+
+    Raises
+    ------
+    ValueError
+        if both --confing and --scale_dict options were given
+    ValueError
+        if neither either --config or --scale_dict is provided
+    """
     args = GetParser()
     logger.info(f"Opening input file {args.input}")
     with h5py.File(args.input, "r") as file:
@@ -237,4 +274,4 @@ def __run():
 
 
 if __name__ == "__main__":
-    __run()
+    main()
