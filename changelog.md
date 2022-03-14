@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing branch unit test (problem with changing style of matplotlib globally) [!478](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/478)
 - Adding dummy data generation of multi-class classification output [!475](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/475)
 - Adding slim umami image (mainly for plotting) [!473](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/473)
 - Move to `matplotlib.figure` API and `atlasify` for plotting python API [!464](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/464)

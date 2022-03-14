@@ -1,15 +1,3 @@
-unittest:
-  stage: unit_test
-  image: tensorflow/tensorflow:$TFTAG
-  script:
-    - pip install -r requirements.txt
-    - apt-get update
-    - apt-get install -y wget
-    - . run_setup.sh
-    - pytest ./umami/tests/unit/ -v -s
-  rules:
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
-
 .unittest_template: &unittest_template
   stage: unit_test
   rules:
@@ -39,8 +27,7 @@ unittest:
       junit: report.xml
   retry: 2
 
-unittest_parallel:
-  <<: *unittest_template
+.unittest_parallel_template: &unittest_parallel_template
   parallel:
     matrix:
       - UNIT_TEST_MODULE:
@@ -54,3 +41,21 @@ unittest_parallel:
         - classification_tools
         - data_tools
         - plotting
+
+unittest:
+  stage: unit_test
+  image: tensorflow/tensorflow:$TFTAG
+  before_script:
+    - pip install -r requirements.txt
+    - apt-get update
+    - apt-get install -y wget
+    - . run_setup.sh
+  script:
+    - pytest ./umami/tests/unit/$UNIT_TEST_MODULE/ -v -s
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
+  <<: *unittest_parallel_template
+
+unittest_parallel:
+  <<: *unittest_template
+  <<: *unittest_parallel_template
