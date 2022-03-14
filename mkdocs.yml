@@ -45,7 +45,10 @@ nav:
         - "Input variables": plotting/plotting_inputs.md
         - "Tagger performance": plotting/plotting_umami.md
         - Evaluate Taggers in Samples: plotting/WO_trained_model.md
-        - "Python API": plotting/python_api.md
+        - "Python API":
+            - plotting/python_api/index.md
+            - ROC plots: plotting/python_api/rocs.md
+            - Dummy data: plotting/python_api/dummy_data.md
 
 plugins:
     - search
