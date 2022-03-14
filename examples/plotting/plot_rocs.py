@@ -1,36 +1,13 @@
 """Produce roc curves from tagger output and labels."""
-import h5py
 import numpy as np
-import pandas as pd
 
 from umami.configuration import logger
 from umami.metrics import calc_rej
 from umami.plotting import roc, roc_plot
+from umami.plotting.utils import get_dummy_2_taggers
 
-# this is just an example to read in your h5 file
-# if you have tagger predictions you can plug them in directly in the `disc_fct` as well
+df = get_dummy_2_taggers()
 
-# using a random ttbar file
-ttbar_file = (
-    "user.alfroch.410470.btagTraining.e6337_s3681_r13144_p4931.EMPFlowAll."
-    "2022-02-07-T174158_output.h5/user.alfroch.28040424._001207.output.h5"
-)
-
-logger.info("load file")
-with h5py.File(ttbar_file, "r") as f:
-    df = pd.DataFrame(
-        f["jets"].fields(
-            [
-                "rnnip_pu",
-                "rnnip_pc",
-                "rnnip_pb",
-                "dipsLoose20210729_pu",
-                "dipsLoose20210729_pc",
-                "dipsLoose20210729_pb",
-                "HadronConeExclTruthLabelID",
-            ]
-        )[:300000]
-    )
 logger.info("caclulate tagger discriminants")
 
 
@@ -64,9 +41,7 @@ discs_rnnip = np.apply_along_axis(
     disc_fct, 1, df[["rnnip_pu", "rnnip_pc", "rnnip_pb"]].values
 )
 discs_dips = np.apply_along_axis(
-    disc_fct,
-    1,
-    df[["dipsLoose20210729_pu", "dipsLoose20210729_pc", "dipsLoose20210729_pb"]].values,
+    disc_fct, 1, df[["dips_pu", "dips_pc", "dips_pb"]].values
 )
 # defining target efficiency
 sig_eff = np.linspace(0.49, 1, 20)

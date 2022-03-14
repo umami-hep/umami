@@ -1,15 +1,14 @@
-# Plotting with the Python API
-
 Currently the plotting part of umami is rewritten for better usage with the python api.
 Example implementations with the new API are located [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/).
 
 The following plots have been rewritten so far:
+
 - roc curve plotting ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/plot_rocs.py))
 - variable vs efficiency/rejection plotting ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/plot_pt_vs_eff.py))
 
 
-## ROC curve plotting API
-In the following a small example how to plot a roc curve with the umami python api.
+## Some basics before plotting
+In the following a small example how to read in h5 and calculate discriminants.
 
 first you need to import some packages
 ```py
@@ -19,10 +18,9 @@ import pandas as pd
 
 
 from umami.metrics import calc_rej
-from umami.plotting import roc, roc_plot
 ```
 
-??? example "Reading `.h5` file"
+???+ example "Reading `.h5` file"
 
     ```py
     # this is just an example to read in your h5 file
@@ -49,7 +47,7 @@ from umami.plotting import roc, roc_plot
     n_test = len(df)
     ```
 
-??? example "Calculating discriminant"
+???+ example "Calculating discriminant"
 
     ```py
     # define a small function to calculate discriminant
@@ -85,7 +83,7 @@ from umami.plotting import roc, roc_plot
 
 To calculate the rejection values you can do the following or using a results file from umami directly.
 
-??? example "Rejection calculation"
+???+ example "Rejection calculation"
 
     ```py
     # defining target efficiency
@@ -101,7 +99,7 @@ To calculate the rejection values you can do the following or using a results fi
     dips_cjets_rej = calc_rej(discs_dips[is_b], discs_dips[is_c], sig_eff)
     ```
 
-??? example "Reading in results"
+???+ example "Reading in results"
 
     ```py
     # Alternatively you can simply use a results file with the rejection values
@@ -117,66 +115,3 @@ To calculate the rejection values you can do the following or using a results fi
     with h5py.File("results-rej_per_eff-1_new.h5", "r") as h5_file:
         n_test = h5_file.attrs["N_test"]
     ```
-
-Now we can start the actual plotting part
-
-```py
-# here the plotting of the roc starts
-plot_roc = roc_plot(
-    n_ratio_panels=2, ylabel="background rejection", xlabel="b-jets efficiency"
-)
-plot_roc.add_roc(
-    roc(
-        sig_eff,
-        rnnip_ujets_rej,
-        n_test=n_test,
-        rej_class="ujets",
-        signal_class="bjets",
-        label="RNNIP",
-    ),
-    reference=True,
-)
-plot_roc.add_roc(
-    roc(
-        sig_eff,
-        dips_ujets_rej,
-        n_test=n_test,
-        rej_class="ujets",
-        signal_class="bjets",
-        label="DIPS",
-    ),
-)
-plot_roc.add_roc(
-    roc(
-        sig_eff,
-        rnnip_cjets_rej,
-        n_test=n_test,
-        rej_class="cjets",
-        signal_class="bjets",
-        label="RNNIP",
-    ),
-    reference=True,
-)
-plot_roc.add_roc(
-    roc(
-        sig_eff,
-        dips_cjets_rej,
-        n_test=n_test,
-        rej_class="cjets",
-        signal_class="bjets",
-        label="DIPS",
-    ),
-)
-# setting which flavour rejection ratio is drawn in which ratio panel
-plot_roc.set_ratio_class(1, "ujets", label="light-flavour jets ratio")
-plot_roc.set_ratio_class(2, "cjets", label="c-jets ratio")
-# if you want to swap the ratios just uncomment the following 2 lines
-# plot_roc.set_ratio_class(2, "ujets", label="light-flavour jets ratio")
-# plot_roc.set_ratio_class(1, "cjets", label="c-jets ratio")
-plot_roc.set_leg_rej_labels("ujets", "light-flavour jets rejection")
-plot_roc.set_leg_rej_labels("cjets", "c-jets rejection")
-
-
-plot_roc.draw()
-plot_roc.savefig("roc.pdf")
-```

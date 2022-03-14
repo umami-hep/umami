@@ -4,6 +4,9 @@
 
 ### Latest
 
+- Adding dummy data generation of multi-class classification output [!475](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/475)
+- Adding slim umami image (mainly for plotting) [!473](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/473)
+- Move to `matplotlib.figure` API and `atlasify` for plotting python API [!464](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/464)
 - Adding `--prepare` option to `train.py` and fix an issue with the `model_file` not copied into the metadata folder [!472](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/472)
 -  Move to `matplotlib.figure` API and `atlasify` for plotting python API [!464](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/464)
 - Fixing issue [#157](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/issues/157) with the `ylabel` of the input variable plots [!466](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/466).
