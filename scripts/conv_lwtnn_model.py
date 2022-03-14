@@ -2,9 +2,9 @@
 architecture json files."""
 import argparse
 
-from tensorflow.keras.initializers import glorot_uniform
-from tensorflow.keras.models import load_model
-from tensorflow.keras.utils import CustomObjectScope
+from tensorflow.keras.initializers import glorot_uniform  # pylint: disable=E0401
+from tensorflow.keras.models import load_model  # pylint: disable=E0401
+from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=E0401
 
 from umami.tf_tools import Sum
 
@@ -41,10 +41,10 @@ def __run():
     # get the architecture as a json string
     arch = model.to_json()
     # save the architecture string to a file somehow, the below will work
-    with open("architecture-%s.json" % args.output_base, "w") as arch_file:
+    with open(f"architecture-{args.output_base}.json", "w") as arch_file:
         arch_file.write(arch)
     # now save the weights as an HDF5 file
-    model.save_weights("weights-%s.h5" % args.output_base)
+    model.save_weights(f"weights-{args.output_base}.h5")
 
 
 if __name__ == "__main__":

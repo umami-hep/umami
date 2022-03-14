@@ -1,4 +1,4 @@
-"""Script to determine efficiency working point cut values from tagger scores in input samples."""
+"""Script to determine efficiency WP cut values from tagger scores in input samples."""
 from umami.configuration import logger, global_config  # isort:skip
 from argparse import ArgumentParser
 
@@ -8,6 +8,12 @@ import umami.train_tools as utt
 
 
 def getArgumentParser():
+    """Argparse option for compute_workingpoint script.
+
+    Returns
+    -------
+    args: parse_args
+    """
     parser = ArgumentParser()
     parser.add_argument("input_file_path")
     parser.add_argument("-t", "--tagger", default="DL1dLoose20210824r22")
@@ -21,6 +27,7 @@ def getArgumentParser():
 
 
 def main():
+    """Main function called when executing script."""
     args = getArgumentParser().parse_args()
     tagger = args.tagger
     main_class = args.main_class
@@ -44,7 +51,7 @@ def main():
 
     # load jets from file
     logger.info(f"Loading jets from file(s) {args.input_file_path}...")
-    jets, truth_internal_labels = utt.LoadJetsFromFile(
+    jets, _ = utt.LoadJetsFromFile(
         args.input_file_path,
         class_labels=class_labels,
         nJets=int(args.n_jets),
@@ -55,7 +62,7 @@ def main():
     selected_jets = jets[jets["Umami_string_labels"] == main_class]
 
     # compute b-tagging score using function in umami training tools
-    for flav_index, flav in enumerate(class_labels):
+    for flav_index, _ in enumerate(class_labels):
         if flav_index == 0:
             tmp = selected_jets[f"{tagger}_{prob_var_names[flav_index]}"].values
         else:

@@ -60,7 +60,28 @@ def GetParser():
     return parser.parse_args()
 
 
-def GetTrackVariables(scale_dict, variable_config, tracks_name):
+def GetTrackVariables(scale_dict: dict, variable_config: dict, tracks_name: str):
+    """Retrieve track variable scaling factors.
+
+    Parameters
+    ----------
+    scale_dict : dict
+        scale configuration
+    variable_config : dict
+        variable config
+    tracks_name : str
+        name of the track collection
+
+    Returns
+    -------
+    list
+        list with track variables and scaling factors
+
+    Raises
+    ------
+    ValueError
+        if variable associated to logNormVars but not defined for it.
+    """
     noNormVars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
     logNormVars = variable_config["track_train_variables"][tracks_name]["logNormVars"]
     jointNormVars = variable_config["track_train_variables"][tracks_name][
@@ -99,7 +120,21 @@ def GetTrackVariables(scale_dict, variable_config, tracks_name):
     return track_variables
 
 
-def GetJetVariables(scale_dict, variable_config):
+def GetJetVariables(scale_dict: dict, variable_config: dict):
+    """Retrieve jet variable scaling factors.
+
+    Parameters
+    ----------
+    scale_dict : dict
+        scale configuration
+    variable_config : dict
+        variable config
+
+    Returns
+    -------
+    list
+        list with jet variables and scaling factors
+    """
     jetVars = [
         item
         for sublist in variable_config["train_variables"].values()
@@ -141,7 +176,7 @@ def __run():
             scale_dict, variable_config, args.tracks_name
         )
 
-        logger.info("Found %i variables" % len(track_variables))
+        logger.info(f"Found {len(track_variables)} variables")
         inputs = {}
         # inputs["name"] = "b-tagging" # only for DL1
         inputs["name"] = args.sequence_name
@@ -200,7 +235,9 @@ def __run():
             scale_dict = json.load(f)
 
         jet_variables = GetJetVariables(scale_dict, variable_config)
-        track_variables = GetTrackVariables(scale_dict, variable_config)
+        track_variables = GetTrackVariables(
+            scale_dict, variable_config, args.tracks_name
+        )
 
         logger.info(f"Found {len(track_variables)} track variables")
         logger.info(f"Found {len(jet_variables)} jet variables")

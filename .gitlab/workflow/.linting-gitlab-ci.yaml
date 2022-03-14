@@ -4,7 +4,7 @@
   script:
     - mkdir coverage_files/
     - pip install flake8
-    - flake8 ./umami
+    - flake8 .
   artifacts:
     when: always
     paths:
@@ -28,11 +28,16 @@
   stage: linting
   # using the latest umamibase image here - in case this breaks we can use
   # a freshly CI built one - would require to move backwards in CI chain then
-  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest
+  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest
   before_script:
     - pip install pylint==2.12.2
   script:
     - pylint -j2 ./umami
+    - source ./run_setup.sh
+    - pylint -j2 ./examples
+    - pylint -j2 .gitlab/workflow/*.py
+    - pylint -j2 ./scripts/
+
 
 .black_check_template: &black_check_template
   stage: linting
