@@ -26,7 +26,8 @@ nav:
         - Installation: setup/installation.md
         - Development:
             - setup/development/index.md
-            - Good code practices: setup/development/good-practices.md
+            - Good practices code: setup/development/good_practices_code.md
+            - Good practices docs: setup/development/good_practices_docs.md
             - VS Code: setup/development/VS_code.md
 
         - Changelog: setup/changelog.md
