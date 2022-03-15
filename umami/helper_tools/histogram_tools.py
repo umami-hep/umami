@@ -2,46 +2,6 @@
 import numpy as np
 
 
-def hist_w_unc(a, bins, normed: bool = True):
-    """
-    Computes histogram and the associated statistical uncertainty.
-
-    Parameters
-    ----------
-    a : array_like
-        Input data. The histogram is computed over the flattened array.
-    bins: int or sequence of scalars or str
-        bins parameter from np.histogram
-    normed: bool
-        If True (default) the calculated histogram is normalised to an integral
-        of 1.
-
-    Returns
-    -------
-    bin_edges : array of dtype float
-        Return the bin edges (length(hist)+1)
-    hist : numpy array
-        The values of the histogram. If normed is true (default), returns the
-        normed counts per bin
-    unc : numpy array
-        Statistical uncertainty per bin.
-        If normed is true (default), returns the normed values.
-    band : numpy array
-        lower uncertainty band location: hist - unc
-        If normed is true (default), returns the normed values.
-    """
-    arr_length = len(a)
-
-    # Calculate the counts and the bin edges
-    counts, bin_edges = np.histogram(a, bins=bins)
-
-    unc = np.sqrt(counts) / arr_length if normed else np.sqrt(counts)
-    band = counts / arr_length - unc if normed else counts - unc
-    hist = counts / arr_length if normed else counts
-
-    return bin_edges, hist, unc, band
-
-
 def save_divide(numerator, denominator, default=1.0):
     """
     Division using numpy divide function returning default value in cases where
@@ -83,6 +43,46 @@ def save_divide(numerator, denominator, default=1.0):
     if output_shape == 1:
         return float(ratio)
     return ratio
+
+
+def hist_w_unc(a, bins, normed: bool = True):
+    """
+    Computes histogram and the associated statistical uncertainty.
+
+    Parameters
+    ----------
+    a : array_like
+        Input data. The histogram is computed over the flattened array.
+    bins: int or sequence of scalars or str
+        bins parameter from np.histogram
+    normed: bool
+        If True (default) the calculated histogram is normalised to an integral
+        of 1.
+
+    Returns
+    -------
+    bin_edges : array of dtype float
+        Return the bin edges (length(hist)+1)
+    hist : numpy array
+        The values of the histogram. If normed is true (default), returns the
+        normed counts per bin
+    unc : numpy array
+        Statistical uncertainty per bin.
+        If normed is true (default), returns the normed values.
+    band : numpy array
+        lower uncertainty band location: hist - unc
+        If normed is true (default), returns the normed values.
+    """
+    arr_length = len(a)
+
+    # Calculate the counts and the bin edges
+    counts, bin_edges = np.histogram(a, bins=bins)
+
+    unc = save_divide(np.sqrt(counts), arr_length, 0) if normed else np.sqrt(counts)
+    band = save_divide(counts, arr_length, 0) - unc if normed else counts - unc
+    hist = save_divide(counts, arr_length, 0) if normed else counts
+
+    return bin_edges, hist, unc, band
 
 
 def hist_ratio(

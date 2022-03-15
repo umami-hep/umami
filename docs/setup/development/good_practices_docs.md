@@ -1,12 +1,59 @@
-### Writing documentation
+# Good practices for writing documentation
 
-#### File content placeholders
+### Line numbers for code snippets
+You can add line numbers to code blocks with the following syntax. Note that you can
+specify the starting line number in cases where you insert a specific part of a file.
+
+**Example**
+
+This markdown code
+
+    ```py linenums="5"
+    def sum(a, b):
+        """Returns the sum of a and b"""
+        sum_a_b = a + b
+        return sum_a_b
+    ```
+
+results like that when rendered. 
+```py linenums="5"
+def sum(a, b):
+    """Returns the sum of a and b"""
+    sum_a_b = a + b
+    return sum_a_b
+```
+
+### Highlight line numbers
+You can highlight certain line numbers of your code block with the `hl_lines` keyword.
+Note that the numbers for the highlighted lines are relative to your code block, while
+the total line numbers can start from any number.
+
+**Example**
+
+This markdown code
+
+    ```py linenums="5", hl_lines="2 3"
+    def sum(a, b):
+        """Returns the sum of a and b"""
+        sum_a_b = a + b
+        return sum_a_b
+    ```
+
+results like that when rendered. 
+```py linenums="5", hl_lines="2 3"
+def sum(a, b):
+    """Returns the sum of a and b"""
+    sum_a_b = a + b
+    return sum_a_b
+```
+
+### File content placeholders
 Inserting code snippets of examples often makes understanding the documentation much 
-easier. However, keeping code snippets in the docs in sync with the content of the 
-files they are referring to can get exhausting and is easily forgotten.
+easier. However, keeping these code snippets in sync with the content of the 
+files they are referring to can get exhausting and can be easily forgotten.
 
-To avoid this, you can make use of the following syntax for placing a code snippet
-in the documentation you are writing.
+To avoid this, please use the following syntax for placing a code snippet in the 
+documentation you are writing.
 
 ```md
 §§§<filename>:<start>:<end>§§§
@@ -19,7 +66,7 @@ docs, a script will create a processed copy of the corresponding markdown file.
 
 **Further examples**
 
-Below you can find different versions for inserting (parts) of the file 
+Below you can find different versions for inserting different parts of the file 
 `examples/plotting/plot_rocs.py` into your markdown file.
 
 | Placeholder | Result |
@@ -30,3 +77,5 @@ Below you can find different versions for inserting (parts) of the file
 |`§§§examples/plotting/plot_rocs.py::10§§§` | from top to line 10 |
 |`§§§examples/plotting/plot_rocs.py:10§§§` | from line 10 to bottom |
 |`§§§examples/plotting/plot_rocs.py:10:§§§` | from line 10 to bottom |
+
+
