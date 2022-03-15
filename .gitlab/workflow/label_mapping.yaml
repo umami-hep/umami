@@ -18,6 +18,7 @@ Plotting:
 - umami/plot_input_variables.py
 - umami/plotting_epoch_performance.py
 - umami/input_vars_tools/
+- umami/plotting/
 Preprocessing:
 - umami/preprocessing.py
 - umami/preprocessing_tools/
@@ -30,6 +31,12 @@ Setup/Dependencies:
 - setup.py
 - pyproject.toml
 - .pre-commit-config.yaml
+Tools:
+- umami/data_tools/
+- umami/helper_tools/
+- umami/tools/
+- umami/configuration/
+- umami/metrics/
 Training:
 - umami/models/
 - umami/tf_tools/

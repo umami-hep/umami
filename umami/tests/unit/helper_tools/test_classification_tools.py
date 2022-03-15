@@ -1,11 +1,11 @@
 import unittest
 
-from umami.classification_tools import (
+from umami.configuration import logger, set_log_level
+from umami.helper_tools import (
     get_class_label_ids,
     get_class_label_variables,
     get_class_prob_var_names,
 )
-from umami.configuration import logger, set_log_level
 
 set_log_level(logger, "DEBUG")
 
