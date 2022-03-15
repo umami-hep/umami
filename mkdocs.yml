@@ -25,30 +25,31 @@ nav:
         # - setup/index.md
         - Installation: setup/installation.md
         - Development:
-            - setup/development/index.md
+            - Overview: setup/development/index.md
             - Good practices code: setup/development/good_practices_code.md
             - Good practices docs: setup/development/good_practices_docs.md
             - VS Code: setup/development/VS_code.md
 
         - Changelog: setup/changelog.md
     - Preprocessing:
-        - Preprocessing: preprocessing/preprocessing.md
+        - Overview: preprocessing/preprocessing.md
         - MC samples: preprocessing/mc-samples.md
         - Truth labels: preprocessing/truth_labels.md
     - Trainings:
-        - trainings/index.md
+        - Overview: trainings/index.md
         - Instructions: trainings/train-instructions.md
         - Running GNN: trainings/GNN-instructions.md
         - Feature Importance: trainings/Feature_Importance.md
         - LWTNN Conversion: trainings/LWTNN-conversion.md
     - Plotting:
-        - plotting/index.md
-        - "Input variables": plotting/plotting_inputs.md
-        - "Tagger performance": plotting/plotting_umami.md
+        - Overview: plotting/index.md
+        - Input variables: plotting/plotting_inputs.md
+        - Tagger performance: plotting/plotting_umami.md
         - Evaluate Taggers in Samples: plotting/WO_trained_model.md
-        - "Python API":
-            - plotting/python_api/index.md
+        - Python API:
+            - Overview: plotting/python_api/index.md
             - ROC plots: plotting/python_api/rocs.md
+            - Histogram plots: plotting/python_api/histograms.md
             - Dummy data: plotting/python_api/dummy_data.md
 
 plugins:
