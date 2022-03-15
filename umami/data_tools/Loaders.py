@@ -6,9 +6,9 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from umami.classification_tools import get_class_label_ids, get_class_label_variables
 from umami.configuration import logger
 from umami.data_tools.Cuts import GetSampleCuts
+from umami.helper_tools import get_class_label_ids, get_class_label_variables
 from umami.tools import natural_keys
 
 

@@ -12,12 +12,12 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model  # pylint: disable=import-error
 from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-error
 
-import umami.classification_tools as uct
 import umami.data_tools as udt
 import umami.evaluation_tools as uet
 import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.evaluation_tools import FeatureImportance
+from umami.helper_tools import get_class_label_variables, get_class_prob_var_names
 from umami.preprocessing_tools import Configuration
 
 # from plottingFunctions import sigBkgEff
@@ -264,14 +264,14 @@ def EvaluateModel(
     ]
 
     # Adding all needed truth info variables
-    label_var_list, _ = uct.get_class_label_variables(
+    label_var_list, _ = get_class_label_variables(
         class_labels=class_labels,
     )
     variables += list(set(label_var_list))
 
     # Add the predictions labels for the defined taggers to variables list
     for tagger_iter in tagger_list:
-        variables += uct.get_class_prob_var_names(
+        variables += get_class_prob_var_names(
             tagger_name=f"{tagger_iter}", class_labels=class_labels
         )
 
@@ -546,14 +546,14 @@ def EvaluateModelDips(
     ]
 
     # Adding all needed truth info variables
-    label_var_list, _ = uct.get_class_label_variables(
+    label_var_list, _ = get_class_label_variables(
         class_labels=class_labels,
     )
     variables += list(set(label_var_list))
 
     # Add the predictions labels for the defined taggers to variables list
     for tagger_i in tagger_list:
-        variables += uct.get_class_prob_var_names(
+        variables += get_class_prob_var_names(
             tagger_name=f"{tagger_i}", class_labels=class_labels
         )
 
@@ -812,7 +812,7 @@ def EvaluateModelDL1(
     ]
 
     # Adding all needed truth info variables
-    label_var_list, _ = uct.get_class_label_variables(
+    label_var_list, _ = get_class_label_variables(
         class_labels=class_labels,
     )
     variables += list(set(label_var_list))
@@ -820,7 +820,7 @@ def EvaluateModelDL1(
     # Add the predictions labels for the defined taggers to
     # variables list
     for tagger_i in tagger_list:
-        variables += uct.get_class_prob_var_names(
+        variables += get_class_prob_var_names(
             tagger_name=f"{tagger_i}", class_labels=class_labels
         )
 

@@ -31,16 +31,15 @@
   parallel:
     matrix:
       - UNIT_TEST_MODULE:
-        - evaluation_tools
-        - helper_tools
-        - input_vars_tools
-        - preprocessing
-        - tf_tools
-        - train_tools
-        - metrics
-        - classification_tools
-        - data_tools
-        - plotting
+          - data_tools
+          - evaluation_tools
+          - helper_tools
+          - input_vars_tools
+          - metrics
+          - plotting
+          - preprocessing
+          - tf_tools
+          - train_tools
 
 unittest:
   stage: unit_test
