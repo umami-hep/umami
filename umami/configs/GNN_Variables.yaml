@@ -12,7 +12,6 @@ train_variables:
   JetKinematics:
     - eta_btagJes
     - pt_btagJes
-    - energy
 
 .tracks_variables: &tracks_variables
   noNormVars: []
