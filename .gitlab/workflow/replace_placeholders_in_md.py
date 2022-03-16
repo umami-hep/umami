@@ -172,15 +172,15 @@ def replace_placeholder_with_file_content(
                 char_counter = Counter(placeholder)
                 if char_counter[":"] == 0:
                     replacement_file = placeholder
-                    start, end = 0, -1
+                    start, end = 0, None
                 elif char_counter[":"] == 1:
                     replacement_file, start = placeholder.split(":")
                     start = 0 if start == "" else int(start) - 1
-                    end = -1
+                    end = None
                 elif char_counter[":"] == 2:
                     replacement_file, start, end = placeholder.split(":")
                     start = 0 if start == "" else int(start) - 1
-                    end = -1 if end == "" else int(end)
+                    end = None if end == "" else int(end)
                 else:
                     raise ValueError(
                         f"Placeholder {placeholder} contains more than 2 colons. "

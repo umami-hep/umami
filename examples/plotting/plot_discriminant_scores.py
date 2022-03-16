@@ -58,4 +58,4 @@ plot_histo.add(hist_rnnip_c)
 plot_histo.add(hist_rnnip_b)
 
 plot_histo.draw()
-plot_histo.savefig("plots/histogram_discriminant.png")
+plot_histo.savefig("histogram_discriminant.png")

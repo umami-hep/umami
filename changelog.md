@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding integration tests for plotting examples scripts + added plots to documentation [!480](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/480)
 - Adding slim umami image (mainly for plotting) [!473](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/473) [!482](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/482)
 - Update python packaging, fixing CI gitlab labels and moving `classification_tools` into `helper_tools` [!481](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/481)
 - Added histogram plots to the new plotting python API [!449](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/449)

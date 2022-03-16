@@ -5,6 +5,7 @@
 .pages_template: &pages_template
   image: python:3.8-alpine
   script:
+    - ls docs/ci_assets
     - apk add --no-cache git subversion
     - pip install --upgrade pip setuptools wheel
     - pip install mkdocs==${MKDOCS_VERSION} mkdocs-material==${MATERIAL_VERSION} mkdocs-static-i18n==${I18NSTATIC_VERSION}
@@ -19,8 +20,10 @@
     expire_in: 1 hour
   dependencies:
     - sphinx-docs
+    - test_examples
   needs:
     - sphinx-docs
+    - test_examples
 
 pages:
   stage: pages
