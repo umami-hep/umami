@@ -1,9 +1,9 @@
 FROM ${BASE_IMAGE}
 
-COPY additional_requirements.txt .
+COPY requirements_additional.txt .
 
 RUN apt-get install -y python3-sphinx
 
-RUN pip install -r additional_requirements.txt
+RUN pip install -r requirements_additional.txt
 
 

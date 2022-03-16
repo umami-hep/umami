@@ -15,5 +15,7 @@ RUN apt-get update && \
     apt-get install -y vim nano emacs less screen graphviz python3-tk wget
 
 COPY requirements.txt .
+COPY requirements_develop.txt .
 
 RUN pip install -r requirements.txt
+RUN pip install -r requirements_develop.txt

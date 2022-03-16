@@ -17,12 +17,16 @@ There are two different kind of images:
     - these are best suited for any developemts in `umami`
     - You can browse them [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry/8906) in the gitlab container registry
 - Base images plus
-    - these image types extend the `umamibase` image installing additional packages defined in [additional_requirements.txt](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/additional_requirements.txt)
+    - these image types extend the `umamibase` image installing additional packages defined in [requirements_additional.txt](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/requirements_additional.txt)
     - these are especially useful for R&D studies requiring additional packages
 - Packaged images
     - these images use the base images and have `umami` installed on top
     - these are the best choice if you just want to run `umami` but you don't want to change anything in the code
     - You can browse them [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry/8387) in the gitlab container registry
+- Packaged slim images
+    - these images which use minimal requirements, have `umami` installed on top and are meant for plotting (they don't ship with tensorflow)
+    - only useful for plotting tasks
+    - You can browse them [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry/13154) in the gitlab container registry
 
 
 ??? info "Overview Base images"
@@ -36,12 +40,16 @@ There are two different kind of images:
     | `0-1` | CPU base image of tag `0.1` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:0-1|
     | `0-1-gpu` | GPU base image of tag `0.1` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:0-1-gpu|
 
+    *not all tags are listed here, please have a look in the [gitlab registry](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry) for a complete list*
+
 
 ??? info "Overview BasePlus images"
     | Image tag | Description  | gitlab registry |
     | ---------- | ----------  | ---------- |
     | `latest` | CPU base image from `master` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest|
     | `latest-gpu` | GPU base image from `master` |  gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest-gpu|
+
+    *not all tags are listed here, please have a look in the [gitlab registry](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry) for a complete list*
 
 
 ??? info "Overview Packaged images"
@@ -55,6 +63,8 @@ There are two different kind of images:
     | `0-1` | CPU packaged image of tag `0.1` | btagging/umami:0-1 | gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami:0-1|
     | `0-1-gpu` | GPU packaged image of tag `0.1` | btagging/umami:0-1-gpu | gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami:0-1-gpu|
     | `jupyter-develop` | CPU packaged image of tag `jupyter-develop` | -- | gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami:jupyter-develop|
+
+    *not all tags are listed here, please have a look in the [gitlab registry](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry) for a complete list*
 
 
 
