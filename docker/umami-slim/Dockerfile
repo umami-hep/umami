@@ -10,7 +10,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -y git debconf-utils h5utils && \
-    apt-get install -y vim less graphviz python3-tk wget
+    apt-get install -y vim less wget
 
 
 COPY . /umami
