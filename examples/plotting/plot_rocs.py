@@ -6,6 +6,7 @@ from umami.metrics import calc_rej
 from umami.plotting import roc, roc_plot
 from umami.plotting.utils import get_dummy_2_taggers
 
+# The line below generates dummy data which is similar to a NN output
 df = get_dummy_2_taggers()
 
 logger.info("caclulate tagger discriminants")
@@ -128,4 +129,4 @@ plot_roc.set_leg_rej_labels("cjets", "c-jets rejection")
 
 
 plot_roc.draw()
-plot_roc.savefig("roc.pdf")
+plot_roc.savefig("roc.png")

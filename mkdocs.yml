@@ -49,6 +49,7 @@ nav:
         - Python API:
             - Overview: plotting/python_api/index.md
             - ROC plots: plotting/python_api/rocs.md
+            - Variable vs efficiency plots: plotting/python_api/var_vs_eff.md
             - Histogram plots: plotting/python_api/histograms.md
             - Dummy data: plotting/python_api/dummy_data.md
 

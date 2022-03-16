@@ -57,7 +57,9 @@ def get_dummy_multiclass_scores(
     return output, labels
 
 
-def get_dummy_2_taggers(size: int = 10_000, shuffle: bool = True, seed: int = 42):
+def get_dummy_2_taggers(
+    size: int = 10_000, shuffle: bool = True, seed: int = 42, add_pt: bool = False
+):
     """
     Wrapper function of `get_dummy_multiclass_scores` to generate classifier output
     for 2 taggers, in this case rnnip and dips as well as HadronConeExclTruthLabelID.
@@ -72,6 +74,8 @@ def get_dummy_2_taggers(size: int = 10_000, shuffle: bool = True, seed: int = 42
     seed : int, optional
         random seed for number generation (will count +10 for second tagger),
         by default 42
+    add_pt : bool, optional
+        specify if pt column should be added as well, by default False
 
     Returns
     -------
@@ -90,6 +94,9 @@ def get_dummy_2_taggers(size: int = 10_000, shuffle: bool = True, seed: int = 42
     )
     df2 = pd.DataFrame(output_dips, columns=["dips_pu", "dips_pc", "dips_pb"])
     df = pd.concat([df, df2], axis=1)
+    if add_pt:
+        rng = np.random.default_rng(seed=seed)
+        df["pt"] = rng.exponential(100_000, size=len(df))
     if shuffle:
         df = df.sample(frac=1).reset_index(drop=True)
     return df

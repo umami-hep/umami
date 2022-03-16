@@ -3,6 +3,8 @@
 Currently the plotting part of umami is rewritten for better usage with the python api.
 Example implementations with the new API are located [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/).
 
+You can find the Sphinx documentation [here](https://umami-docs.web.cern.ch/sphinx-docs/umami.plotting.html)
+
 The following plots have been rewritten so far:
 
 - roc curve plotting ([example](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting/plot_rocs.py))

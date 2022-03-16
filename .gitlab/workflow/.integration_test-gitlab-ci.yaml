@@ -413,3 +413,15 @@ test_plotting_umami_umami:
     paths:
       - test_umami_model/
       - coverage_files/
+
+test_examples:
+  # should be run early in the pipeline, otherwise we have to wait quite long to see
+  # the MR docs
+  <<: *test_template
+  stage: integration_test_plotting
+  script:
+    - pytest -v umami/tests/integration/test_examples.py
+  artifacts:
+    paths:
+      - docs/ci_assets
+    expire_in: 1 day

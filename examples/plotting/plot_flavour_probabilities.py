@@ -27,4 +27,4 @@ plot_histo.add(histogram(c_jets["dips_pb"], flavour="cjets"))
 plot_histo.add(histogram(b_jets["dips_pb"], flavour="bjets"))
 
 plot_histo.draw()
-plot_histo.savefig("plots/histogram_bjets_probability.png")
+plot_histo.savefig("histogram_bjets_probability.png")

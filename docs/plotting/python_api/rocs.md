@@ -5,6 +5,9 @@ To set up the inputs for the plots, have a look [here](./index.md).
 
 Then we can start the actual plotting part
 
-```py
-§§§examples/plotting/plot_rocs.py§§§
-```
+
+???+ example "ROC plot code"
+    ![rocs](../../ci_assets/roc.png)
+    ```py linenums="1"
+    §§§examples/plotting/plot_rocs.py§§§
+    ```
