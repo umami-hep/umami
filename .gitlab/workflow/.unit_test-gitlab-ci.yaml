@@ -43,7 +43,8 @@
 
 unittest:
   stage: unit_test
-  image: tensorflow/tensorflow:$TFTAG
+  # using the latest umamibase image here
+  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest
   before_script:
     - pip install -r requirements.txt
     - apt-get update
