@@ -5,6 +5,8 @@
 ### Latest
 
 
+### [v0.7](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.7)
+
 - Adding Script for input variables correlation plots to examples folder [!474](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/474)
 - Adding integration tests for plotting examples scripts + added plots to documentation [!480](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/480)
 - Adding slim umami image (mainly for plotting) [!473](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/473) [!482](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/482)
