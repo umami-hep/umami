@@ -65,3 +65,12 @@ class TestExamples(unittest.TestCase):
             run(command, shell=True, cwd="docs/ci_assets", check=True).returncode,
             0,
         )
+
+    def test_InputCorrelations(self):
+        """Test script examples/plotting/input_correlations.py"""
+
+        command = f"python {self.umami_dir}/examples/plotting/input_correlations.py"
+        self.assertEqual(
+            run(command, shell=True, cwd="docs/ci_assets", check=True).returncode,
+            0,
+        )
