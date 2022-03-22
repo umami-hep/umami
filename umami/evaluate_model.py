@@ -472,6 +472,9 @@ def EvaluateModelDips(
     elif isinstance(eval_params["tagger"], list):
         tagger_list = eval_params["tagger"]
 
+    elif eval_params["tagger"] is None:
+        tagger_list = []
+
     else:
         raise ValueError(
             """

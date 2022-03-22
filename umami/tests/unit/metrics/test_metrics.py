@@ -53,6 +53,26 @@ class CalcDiscValues_TestCase(unittest.TestCase):
             "ujets": 0.982,
         }
 
+        self.jets_dict_4_Classes = {
+            "bjets": np.random.uniform(0, 1, size=(100, 4)),
+            "cjets": np.random.uniform(0, 1, size=(100, 4)),
+            "ujets": np.random.uniform(0, 1, size=(100, 4)),
+            "taujets": np.random.uniform(0, 1, size=(100, 4)),
+        }
+        self.index_dict_4_Classes = {
+            "bjets": 0,
+            "cjets": 1,
+            "ujets": 2,
+            "taujets": 3,
+        }
+        self.main_class_4_Classes = ["bjets", "taujets"]
+        self.rej_class = "cjets"
+        self.frac_dict_4_Classes = {
+            "cjets": 0.018,
+            "ujets": 0.782,
+            "taujets": 0.2,
+        }
+
     def test_CalcDiscValues(self):
         """Test CalcDiscValues for three classes and bjets (main)."""
         disc_score = CalcDiscValues(
@@ -75,6 +95,41 @@ class CalcDiscValues_TestCase(unittest.TestCase):
         )
 
         self.assertEqual(len(disc_score), len(self.jets_dict["bjets"]))
+
+    def test_CalcDiscValues_2Singal_Classes(self):
+        """Test CalcDiscValues for three classes and cjets (not-main class)."""
+
+        disc_score = CalcDiscValues(
+            jets_dict=self.jets_dict_4_Classes,
+            index_dict=self.index_dict_4_Classes,
+            main_class=self.main_class_4_Classes,
+            frac_dict=self.frac_dict_4_Classes,
+        )
+
+        self.assertEqual(
+            len(disc_score),
+            len(self.jets_dict_4_Classes["bjets"])
+            + len(self.jets_dict_4_Classes["taujets"]),
+        )
+
+    def test_CalcDiscValues_2Signal_Classes_bkg_jets(self):
+        """
+        Test CalcDiscValues for four classes and 2 signal classes
+        and calculation of scores for background class (not-main class).
+        """
+
+        disc_score = CalcDiscValues(
+            jets_dict=self.jets_dict_4_Classes,
+            index_dict=self.index_dict_4_Classes,
+            main_class=self.main_class_4_Classes,
+            frac_dict=self.frac_dict_4_Classes,
+            rej_class=self.rej_class,
+        )
+
+        self.assertEqual(
+            len(disc_score),
+            len(self.jets_dict_4_Classes["cjets"]),
+        )
 
 
 class GetRejection_TestCase(unittest.TestCase):

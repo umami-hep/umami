@@ -3,6 +3,7 @@
 from umami.tools.PyATLASstyle.PyATLASstyle import applyATLASstyle, makeATLAStag
 from umami.tools.tools import (
     atoi,
+    check_main_class_input,
     compare_leading_spaces,
     natural_keys,
     replaceLineInFile,

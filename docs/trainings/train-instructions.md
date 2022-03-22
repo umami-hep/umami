@@ -62,7 +62,7 @@ Here all important information about the tagger you want to train are defined.
 | `nJets_train` | All | `int` | Necessary | Number of jets used for training. Leave empty to use all. |
 | `dropout` | All | `float` | Necessary | Dropout factor used in the _ϕ_ network. If 0, dropout is not used. |
 | `class_labels` | All | `list` | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
-| `main_class` | All | `str` | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. |
+| `main_class` | All | `str` or `list` of `str` | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. This can either be one single class (`str`) or multiple classes (`list` of `str`). |
 | `Batch_Normalisation` | All | `bool` | Necessary | Decide, if batch normalisation is used in the network. (Look in the model files where this is used for the specific models) |
 | `ppm_sizes` | DIPS, DIPS Attention, Umami, CADS | `list` | Necessary | List of nodes per layer of the _ϕ_ network. Every entry is one layer. The numbers need to be ints! |
 | `dense_sizes` | All | `list` | Necessary | List of nodes per layer of the _F_ network (DIPS/DIPS Attention/Umami/CADS). Every entry is one layer. The numbers need to be ints! For DL1r/DL1d, this is the number of nodes per layer. |

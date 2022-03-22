@@ -47,6 +47,7 @@ def prepareConfig(
     tagger: str,
     test_dir: str,
     preprocess_files_from: str = None,
+    four_classes_case: bool = False,
     useTFRecords: bool = False,
 ) -> dict:
     """
@@ -61,6 +62,8 @@ def prepareConfig(
     preprocess_files_from : str
         Name of the preprocessing files that should be used. If not given,
         the preprocessing files from the tagger will be tried to use.
+    four_classes_case : bool
+        Decide, if you want to run the test with four classes (light, c-, b- and tau)
     useTFRecords : bool
         Decide, if the TFRecords files are used for training or not.
 
@@ -207,6 +210,17 @@ def prepareConfig(
     config_file["Eval_parameters_validation"]["n_jets"] = 4_000
     config_file["Eval_parameters_validation"]["eff_min"] = 0.77
 
+    if four_classes_case is True:
+        config_file["NN_structure"]["main_class"] = ["bjets", "taujets"]
+        config_file["NN_structure"]["class_labels"] = [
+            "ujets",
+            "cjets",
+            "bjets",
+            "taujets",
+        ]
+        config_file["Validation_metrics_settings"]["taggers_from_file"] = None
+        config_file["Eval_parameters_validation"]["tagger"] = None
+
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
             f"./test_preprocessing_{preprocess_files}/preprocessing/",
@@ -347,6 +361,18 @@ class TestTraining(unittest.TestCase):
             tagger="dips",
             test_dir=self.test_dir,
             preprocess_files_from="dips",
+        )
+
+        self.assertTrue(runTraining(config=config, tagger="DIPS"))
+
+    def test_train_dips_four_classes(self):
+        """Integration test of train.py for DIPS script with four classes."""
+
+        config = prepareConfig(
+            tagger="dips",
+            test_dir=self.test_dir,
+            preprocess_files_from="dips",
+            four_classes_case=True,
         )
 
         self.assertTrue(runTraining(config=config, tagger="DIPS"))
