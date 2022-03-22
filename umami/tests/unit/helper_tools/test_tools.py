@@ -12,10 +12,48 @@ from shutil import copyfile
 import pytest
 
 from umami.configuration import logger, set_log_level
-from umami.tools import compare_leading_spaces, replaceLineInFile
+from umami.tools import (
+    check_main_class_input,
+    compare_leading_spaces,
+    replaceLineInFile,
+)
 from umami.train_tools.Configuration import Configuration
 
 set_log_level(logger, "DEBUG")
+
+
+class check_main_class_input_TestCase(unittest.TestCase):
+    """Testing the check function for the main class."""
+
+    def setUp(self) -> None:
+        """Set up the needed variables."""
+        self.main_class_str = "bjets"
+        self.main_class_str_control = {"bjets"}
+        self.main_class_list = ["bjets", "cjets"]
+        self.main_class_set = {"bjets", "cjets"}
+        self.main_class_control = {"bjets", "cjets"}
+        self.main_class_int = 5
+
+    def test_check_main_class_input_str(self):
+        """Test the behaviour for strings."""
+        main_class_check = check_main_class_input(self.main_class_str)
+        self.assertEqual(main_class_check, self.main_class_str_control)
+
+    def test_check_main_class_input_list(self):
+        """Test the behaviour for list."""
+        main_class_check = check_main_class_input(self.main_class_list)
+        self.assertEqual(main_class_check, self.main_class_control)
+
+    def test_check_main_class_input_set(self):
+        """Test the behaviour for set."""
+        main_class_check = check_main_class_input(self.main_class_set)
+        self.assertEqual(main_class_check, self.main_class_control)
+
+    def test_check_main_class_input_fail(self):
+        """Test the behaviour for a wrong type."""
+
+        with self.assertRaises(TypeError):
+            _ = check_main_class_input(self.main_class_int)
 
 
 class replaceLineInFile_TestCase(unittest.TestCase):

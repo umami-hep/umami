@@ -129,3 +129,39 @@ def natural_keys(text):
         List with the sorted strings inside.
     """
     return [atoi(c) for c in re.split(r"(\d+)", text)]
+
+
+def check_main_class_input(main_class) -> set:
+    """
+    Checks the given main class for type and returns
+    a set with the main classes inside.
+
+    Parameters
+    ----------
+    main_class : str or list
+        Main class loaded from the yaml file.
+
+    Returns
+    -------
+    main_class : set
+        The main class(es) as a set.
+
+    Raises
+    ------
+    TypeError
+        If the given main_class is neither a string, list or a set.
+    """
+
+    # Check main class if string or list and covert it to a set
+    if isinstance(main_class, str):
+        main_class = set([main_class])
+
+    elif isinstance(main_class, list):
+        main_class = set(main_class)
+
+    elif not isinstance(main_class, set):
+        raise TypeError(
+            f"Main class must either be a str or a list, not a {type(main_class)}"
+        )
+
+    return main_class

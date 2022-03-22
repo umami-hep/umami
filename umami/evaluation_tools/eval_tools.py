@@ -13,10 +13,14 @@ from tensorflow.keras.layers import Lambda  # pylint: disable=import-error
 from tensorflow.keras.models import Model  # pylint: disable=import-error
 
 import umami.metrics as umt
+from umami.tools import check_main_class_input
 
 
 def calculate_fraction_dict(
-    class_labels_wo_main: list, frac_min: float, frac_max: float, step: float
+    class_labels_wo_main: list,
+    frac_min: float,
+    frac_max: float,
+    step: float,
 ) -> list:
     """Return all combinations of fractions for the given background classes
     which adds up to one.
@@ -130,14 +134,21 @@ def GetRejectionPerFractionDict(
         Dict with the rejections for the taggers for the given fraction combinations.
     """
 
+    # Check the main class input and transform it into a set
+    main_class = check_main_class_input(main_class)
+
     # Get flavour categories
     flavour_categories = global_config.flavour_categories
 
     logger.info("Calculating rejections per fractions")
 
-    # Prepare lists of class_labels without main and tagger with freshly trained
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
+    # Get a deep copy of the class labels as set
+    class_labels_wo_main = copy.deepcopy(set(class_labels))
+
+    # Remove the main classes from the copy
+    class_labels_wo_main.difference_update(main_class)
+
+    # Create the extended tagger list with fresh taggers and taggers from file
     extended_tagger_list = tagger_list + tagger_names
 
     # Init a dict where the results can be added to
@@ -272,15 +283,22 @@ def GetRejectionPerEfficiencyDict(
         disc cuts per effs and the effs.
     """
 
+    # Check the main class input and transform it into a set
+    main_class = check_main_class_input(main_class)
+
     # Get flavour categories
     flavour_categories = global_config.flavour_categories
 
     logger.info("Calculating rejections per efficiency")
     effs = np.linspace(eff_min, eff_max, x_axis_granularity)
 
-    # Prepare lists of class_labels without main and tagger with freshly trained
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
+    # Get a deep copy of the class labels as set
+    class_labels_wo_main = copy.deepcopy(set(class_labels))
+
+    # Remove the main classes from the copy
+    class_labels_wo_main.difference_update(main_class)
+
+    # Create the extended tagger list with fresh taggers and taggers from file
     extended_tagger_list = tagger_list + tagger_names
 
     tagger_rej_dicts = {

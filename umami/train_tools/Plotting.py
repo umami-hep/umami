@@ -12,7 +12,7 @@ from umami.configuration import global_config, logger
 from umami.data_tools import LoadJetsFromFile
 from umami.metrics import GetRejection
 from umami.preprocessing_tools import GetBinaryLabels
-from umami.tools import applyATLASstyle, makeATLAStag
+from umami.tools import applyATLASstyle, check_main_class_input, makeATLAStag
 
 
 def plot_validation_files(
@@ -423,9 +423,14 @@ def PlotRejPerEpochComparison(
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    # Get a list of the background classes
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
+    # Check the main class input and transform it into a set
+    main_class = check_main_class_input(main_class)
+
+    # Get a deep copy of the class labels as set
+    class_labels_wo_main = copy.deepcopy(set(class_labels))
+
+    # Remove the main classes from the copy
+    class_labels_wo_main.difference_update(main_class)
 
     # Get flavour categories from global config
     flav_cat = global_config.flavour_categories
@@ -680,9 +685,14 @@ def PlotRejPerEpoch(
     if ApplyATLASStyle is True:
         applyATLASstyle(mtp)
 
-    # Get a list of the background classes
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
+    # Check the main class input and transform it into a set
+    main_class = check_main_class_input(main_class)
+
+    # Get a deep copy of the class labels as set
+    class_labels_wo_main = copy.deepcopy(set(class_labels))
+
+    # Remove the main classes from the copy
+    class_labels_wo_main.difference_update(main_class)
 
     # Get flavour categories from global config
     flav_cat = global_config.flavour_categories
@@ -1273,6 +1283,10 @@ def RunPerformanceCheck(
     # labels. These are used several times in this function
     val_files = train_config.validation_files
 
+    # Check the main class input and transform it into a set
+    main_class = check_main_class_input(main_class)
+
+    # Get a WP
     if WP is None:
         WP = Val_settings["WP"]
 
@@ -1333,9 +1347,12 @@ def RunPerformanceCheck(
     logger.info(f"saving plots to {plot_dir}")
     os.makedirs(plot_dir, exist_ok=True)
 
-    # Check how many rejections are needed to be plotted
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
+    # Get a deep copy of the class labels as set
+    class_labels_wo_main = copy.deepcopy(set(class_labels))
+
+    # Remove the main classes from the copy
+    class_labels_wo_main.difference_update(main_class)
+
     n_rej = len(class_labels_wo_main)
 
     if tagger.casefold() == "umami" or tagger.casefold() == "umami_cond_att":

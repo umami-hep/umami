@@ -180,6 +180,7 @@ def main(args, train_config, preprocess_config):
                 for comp_tagger in comp_tagger_list
             }
             if "taggers_from_file" in val_params
+            and val_params["taggers_from_file"] is not None
             else None,
             dict_file_name=output_file_name,
             train_history_dict_file_name=f"{train_config.model_name}/history.json",

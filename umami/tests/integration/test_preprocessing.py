@@ -535,6 +535,29 @@ class TestPreprocessing(unittest.TestCase):
 
         self.assertTrue(runPreprocessing(self.pdf_config, tagger="dips", method="pdf"))
 
+    def test_preprocessing_dips_four_classes_pdf(self):
+        """Integration test of preprocessing.py script using DIPS variables and four
+        classes."""
+        replaceLineInFile(
+            self.config_paths,
+            ".var_file:",
+            f".var_file: &var_file {self.var_dict_dips}",
+        )
+
+        replaceLineInFile(
+            self.pdf_config,
+            "    njets_to_plot:",
+            "    njets_to_plot: null",
+        )
+
+        replaceLineInFile(
+            self.pdf_config,
+            "  class_labels: [ujets, cjets, bjets]",
+            "  class_labels: [ujets, cjets, bjets, taujets]",
+        )
+
+        self.assertTrue(runPreprocessing(self.pdf_config, tagger="dips", method="pdf"))
+
     def test_preprocessing_dl1r_pdf(self):
         """Integration test of preprocessing.py script using DL1r variables."""
         replaceLineInFile(

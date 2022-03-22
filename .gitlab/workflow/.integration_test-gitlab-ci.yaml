@@ -27,6 +27,7 @@
 
 .dependencies_from_train_stage: &dependencies_from_train_stage
   - test_train_dips
+  - test_train_dips_four_classes
   - test_train_tfrecords_dips
   - test_train_cads
   - test_train_tfrecords_cads
@@ -88,6 +89,19 @@ test_preprocessing_dips_pdf:
     paths:
       - plots/
       - test_preprocessing_dips_pdf/
+      - coverage_files/
+
+test_preprocessing_dips_four_classes_pdf:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_dips_four_classes_pdf" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips_four_classes_pdf
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - plots/
+      - test_preprocessing_dips/
       - coverage_files/
 
 test_preprocessing_dl1r_pdf:
@@ -173,6 +187,22 @@ test_train_dips:
     <<: *artifact_template
     paths:
       - test_dips_model/
+      - coverage_files/
+
+test_train_dips_four_classes:
+  <<: *test_template
+  stage: integration_test_tagger
+  needs:
+    - test_preprocessing_dips_four_classes_pdf
+  dependencies:
+    - test_preprocessing_dips_four_classes_pdf
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_dips_four_classes"
+    - cp .coverage ./coverage_files/.coverage.test_train_dips_four_classes
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_dips_model_four_classes/
       - coverage_files/
 
 test_train_tfrecords_dips:

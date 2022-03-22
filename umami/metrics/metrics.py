@@ -10,6 +10,7 @@ import copy
 import numpy as np
 
 from umami.helper_tools import save_divide
+from umami.tools import check_main_class_input
 
 # Try to import keras from tensorflow
 try:
@@ -114,30 +115,54 @@ def CalcDiscValues(
     [-0.03536714, -0.11867153]
     """
 
+    # Check the main class input and transform it into a set
+    main_class = check_main_class_input(main_class)
+
     # Set the rejection class for rejection calculation
     if rej_class is None:
         rej_class = main_class
 
-    # Init denominator of disc_score and add_small
-    denominator = 0
-    add_small = 1e-10
+    elif isinstance(rej_class, str):
+        rej_class = [rej_class]
 
-    # Get class_labels list without main class
-    class_labels_wo_main = list(jets_dict.keys())
-    class_labels_wo_main.remove(main_class)
+    # Get a deep copy of the class labels as set
+    class_labels_wo_main = set(jets_dict.keys())
 
-    # Calculate counter of disc_score
-    counter = jets_dict[rej_class][:, index_dict[main_class]] + add_small
+    # Remove the main classes from the copy
+    class_labels_wo_main.difference_update(main_class)
 
-    # Calculate denominator of disc_score
-    for class_label in class_labels_wo_main:
-        denominator += (
-            frac_dict[class_label] * jets_dict[rej_class][:, index_dict[class_label]]
-        )
-    denominator += add_small
+    # Iterate over the rejection classes
+    for num_iter, rej_class_iterator in enumerate(rej_class):
+
+        # Init denominator of disc_score and add_small
+        numerator = 0
+        denominator = 0
+        add_small = 1e-10
+
+        # Calculate numerator of disc_score
+        for m_class in main_class:
+            numerator += jets_dict[rej_class_iterator][:, index_dict[m_class]]
+        numerator += add_small
+
+        # Calculate denominator of disc_score
+        for class_label in class_labels_wo_main:
+            denominator += (
+                frac_dict[class_label]
+                * jets_dict[rej_class_iterator][:, index_dict[class_label]]
+            )
+        denominator += add_small
+
+        # Calculate the final scores
+        if num_iter == 0:
+            disc_values = np.log(numerator / denominator)
+
+        else:
+            disc_values = np.append(
+                disc_values, np.log(numerator / denominator), axis=0
+            )
 
     # Calculate final disc_score and return it
-    return np.log(counter / denominator)
+    return disc_values
 
 
 def GetScore(
@@ -207,6 +232,9 @@ def GetScore(
     [2.07944154, 6.21460804, -0.03536714, -0.11867153]
     """
 
+    # Check the main class input and transform it into a set
+    main_class = check_main_class_input(main_class)
+
     # Check if y_pred and class_labels has the needed similar shapes
     assert np.shape(y_pred)[1] == len(class_labels)
 
@@ -219,14 +247,19 @@ def GetScore(
 
     # Init denominator of disc_score and add_small
     denominator = 0
+    numerator = 0
     add_small = 1e-10
 
-    # Get class_labels list without main class
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
+    # Get a deep copy of the class labels as set
+    class_labels_wo_main = copy.deepcopy(set(class_labels))
 
-    # Calculate counter of disc_score
-    numerator = y_pred[:, index_dict[main_class]] + add_small
+    # Remove the main classes from the copy
+    class_labels_wo_main.difference_update(main_class)
+
+    # Calculate numerator of disc_score
+    for class_label in main_class:
+        numerator += y_pred[:, index_dict[class_label]]
+    numerator += add_small
 
     # Calculate denominator of disc_score
     for class_label in class_labels_wo_main:
@@ -431,6 +464,9 @@ def GetRejection(
     ... )
     """
 
+    # Check the main class input and transform it into a set
+    main_class = check_main_class_input(main_class)
+
     # Assert that y_pred and y_true have the same shape
     if y_pred.shape == y_true.shape and (len(y_pred.shape) == 2):
         if not y_true.shape[1] == len(class_labels):
@@ -454,7 +490,7 @@ def GetRejection(
         jets_dict.update({f"{class_label}": y_pred[y_true == class_counter]})
         index_dict.update({f"{class_label}": class_counter})
 
-    # Calculate disc score
+    # Calculate disc score for the main class
     disc_scores = CalcDiscValues(
         jets_dict=jets_dict,
         index_dict=index_dict,
@@ -466,9 +502,11 @@ def GetRejection(
     # Calculate cutvalue on the discriminant depending of the WP
     cutvalue = np.percentile(disc_scores, 100.0 * (1.0 - target_eff))
 
-    # Get all non-main flavours
-    class_labels_wo_main = copy.deepcopy(class_labels)
-    class_labels_wo_main.remove(main_class)
+    # Get a deep copy of the class labels as set
+    class_labels_wo_main = copy.deepcopy(set(class_labels))
+
+    # Remove the main classes from the copy
+    class_labels_wo_main.difference_update(main_class)
 
     # Calculate efficiencies
     for iter_main_class in class_labels_wo_main:

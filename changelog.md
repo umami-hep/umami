@@ -4,6 +4,8 @@
 
 ### Latest
 
+- Adding support for multiple signal classes [!414](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/414)
+
 
 ### [v0.7](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.7)
 
