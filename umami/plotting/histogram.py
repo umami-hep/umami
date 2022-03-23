@@ -383,7 +383,10 @@ class histogram_plot(plot_base):
                     "plot_ratios() is called."
                 )
 
-            (ratio, ratio_err) = elem.divide(self.get_reference_histo(elem))
+            ratio, ratio_unc = elem.divide(self.get_reference_histo(elem))
+
+            ratio_unc_band_low = np.nan_to_num(ratio - ratio_unc, nan=0, posinf=0)
+            ratio_unc_band_high = np.nan_to_num(ratio + ratio_unc, nan=0, posinf=0)
 
             # Plot the ratio values with the step function
             self.axis_ratio_1.step(
@@ -397,8 +400,8 @@ class histogram_plot(plot_base):
             # Plot the ratio uncertainty
             self.axis_ratio_1.fill_between(
                 x=elem.bin_edges,
-                y1=ratio - ratio_err,
-                y2=ratio + ratio_err,
+                y1=ratio_unc_band_low,
+                y2=ratio_unc_band_high,
                 step="pre",
                 facecolor="none",
                 edgecolor=global_config.hist_err_style["edgecolor"],
