@@ -72,23 +72,23 @@ class plot_object:
         Set the lower y limit of the second ratio subplot, by default None.
     ymax_ratio_2 : float, optional
         Set the upper y limit of the second ratio subplot, by default None.
-    y_scale : float
+    y_scale : float, optional
         Scaling up the y axis, e.g. to fit the ATLAS Tag. Applied if ymax not defined,
         by default 1.3
     logy : bool, optional
         Set log of y-axis of main panel, by default True
     xlabel : str, optional
-        label of the x-axis, by default None
+        Label of the x-axis, by default None
     ylabel : str, optional
-        label of the y-axis, by default None
+        Label of the y-axis, by default None
     label_fontsize : int, optional
-        used fontsize in label, by default 12
+        Used fontsize in label, by default 12
     fontsize : int, optional
-        used fontsize, by default 10
+        Used fontsize, by default 10
     n_ratio_panels : int, optional
-        amount of ratio panels between 0 and 2, by default 1
+        Amount of ratio panels between 0 and 2, by default 1
     figsize : (float, float)
-        tuple of figure size `(width, height)` in inches.
+        Tuple of figure size `(width, height)` in inches.
     dpi : int, optional
         dpi used for plotting, by default 400
     grid : bool, optional
@@ -98,21 +98,25 @@ class plot_object:
     leg_loc : str, optional
         Position of the legend in the plot, by default "best"
     leg_ncol : int, optional
-        number of legend columns, by default 1
-    apply_atlas_style : bool
+        Number of legend columns, by default 1
+    apply_atlas_style : bool, optional
         Apply ATLAS style for matplotlib, by default True
-    use_atlas_tag : bool
+    use_atlas_tag : bool, optional
         Use the ATLAS Tag in the plots, by default True
-    atlas_first_tag : str
+    atlas_first_tag : str, optional
         First row of the ATLAS Tag (i.e. the first row is "ATLAS <atlas_first_tag>"),
         by default "Internal Simulation"
-    atlas_second_tag : str
+    atlas_second_tag : str, optional
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,
         by default,
         "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
-    atlas_fontsize : float
-        fontsize of ATLAS label, by default 10
+    atlas_fontsize : float, optional
+        Fontsize of ATLAS label, by default 10
+    atlas_vertical_offset : float, optional
+        Vertical offset of the ATLAS tag, by default 5
+    atlas_horizontal_offset : float, optional
+        Horizontal offset of the ATLAS tag, by default 8
     plotting_done : bool
         Bool that indicates if plotting is done. Only then `atlasify()` can be called,
         by default False
@@ -156,6 +160,8 @@ class plot_object:
         "$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
     )
     atlas_fontsize: int = None
+    atlas_vertical_offset: float = 5
+    atlas_horizontal_offset: float = 8
     plotting_done: bool = False
 
     def __post_init__(self):
@@ -485,6 +491,8 @@ class plot_base(plot_object):
                     font_size=self.atlas_fontsize,
                     label_font_size=self.atlas_fontsize,
                     sub_font_size=self.atlas_fontsize,
+                    offset=self.atlas_vertical_offset,
+                    indent=self.atlas_horizontal_offset,
                     enlarge=1,
                 )
             else:
