@@ -36,8 +36,8 @@ class histogram_TestCase(unittest.TestCase):
         """test if ratio is calculated correctly after plotting (without norm)"""
         hist_1 = histogram([1, 1, 1, 2, 2])
         hist_2 = histogram([1, 2, 2, 2])
-        binning = np.array([1, 2, 3])
-        hist_plot = histogram_plot(binning=binning, norm=False)
+        bins = np.array([1, 2, 3])
+        hist_plot = histogram_plot(bins=bins, norm=False)
         hist_plot.add(hist_1)
         hist_plot.add(hist_2)
         hist_plot.plot()
@@ -54,8 +54,8 @@ class histogram_TestCase(unittest.TestCase):
         """test if ratio is calculated correctly after plotting (with norm)"""
         hist_1 = histogram([1, 1, 1, 2, 2])
         hist_2 = histogram([1, 2, 2, 2])
-        binning = np.array([1, 2, 3])
-        hist_plot = histogram_plot(binning=binning, norm=True)
+        bins = np.array([1, 2, 3])
+        hist_plot = histogram_plot(bins=bins, norm=True)
         hist_plot.add(hist_1)
         hist_plot.add(hist_2)
         hist_plot.plot()
@@ -72,8 +72,8 @@ class histogram_TestCase(unittest.TestCase):
         """test if ratio is 1 for equal histograms (with norm)"""
         hist_1 = histogram([1, 1, 1, 2, 2])
         hist_2 = histogram([1, 1, 1, 2, 2])
-        binning = np.array([1, 2, 3])
-        hist_plot = histogram_plot(binning=binning, norm=True)
+        bins = np.array([1, 2, 3])
+        hist_plot = histogram_plot(bins=bins, norm=True)
         hist_plot.add(hist_1)
         hist_plot.add(hist_2)
         hist_plot.plot()
@@ -106,6 +106,31 @@ class histogram_plot_TestCase(unittest.TestCase):
         self.actual_plots_dir = f"{self.tmp_dir.name}/"
         self.expected_plots_dir = os.path.join(
             os.path.dirname(__file__), "expected_plots"
+        )
+
+    def test_invalid_bins_type(self):
+        """check if ValueError is raised when using invalid type in `bins` argument"""
+        hist_plot = histogram_plot(bins=1.1)
+        hist_plot.add(self.hist_1, reference=True)
+        with self.assertRaises(ValueError):
+            hist_plot.plot()
+
+    def test_custom_range(self):
+        """check if bins_range argument is used correctly"""
+        hist_plot = histogram_plot(bins=20, bins_range=(0, 4))
+        hist_plot.add(self.hist_1, reference=True)
+        hist_plot.draw()
+
+        plotname = "test_histogram_custom_range.png"
+        hist_plot.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # hist_plot.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertIsNone(
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            )
         )
 
     def test_output_ratio(self):

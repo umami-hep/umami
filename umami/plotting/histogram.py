@@ -140,7 +140,8 @@ class histogram_plot(plot_base):
 
     def __init__(
         self,
-        binning: np.ndarray = None,
+        bins=40,
+        bins_range: tuple = None,
         norm: bool = True,
         logy: bool = False,
         **kwargs,
@@ -149,10 +150,16 @@ class histogram_plot(plot_base):
 
         Parameters
         ----------
-        binning : np.ndarray, optional
-            Array that represents the bin edges of the histograms. If not provided, the
-            bin edges will be calculated from the histogram stack of all histograms in
-            the plot, ensuring that all data is shown in the plot. By default None.
+        bins : int or numpy.ndarray or list, optional
+            If bins is an int, it defines the number of equal-width bins in the given
+            range. If bins is a sequence, it defines a monotonically increasing array
+            of bin edges, including the rightmost edge, allowing for non-uniform
+            bin widths (like in numpy.histogram). By default 40
+        bins_range : tuple, optional
+            Tuple of two floats, specifying the range for the binning. If bins_range is
+            specified and bins is an integer, equal-width bins from bins_range[0] to
+            bins_range[1] are used for the histogram (like in numpy.histogram).
+            By default None
         norm : bool, optional
             Specify if the histograms are normalised, this means that histograms are
             divided by the total numer of counts. Therefore, the sum of the bin counts
@@ -171,7 +178,8 @@ class histogram_plot(plot_base):
 
         super().__init__(**kwargs)
         self.logy = logy
-        self.binning = binning
+        self.bins = bins
+        self.bins_range = bins_range
         self.norm = norm
         self.plot_objects = {}
         self.add_order = []
@@ -257,19 +265,36 @@ class histogram_plot(plot_base):
         **kwargs: kwargs
             kwargs passed to matplotlib.axes.Axes.hist()
 
-         Returns
+        Returns
         -------
         Line2D
             matplotlib Line2D object
+
+        Raises
+        ------
+        ValueError
+            If specified bins type is not supported.
         """
         plt_handles = []
 
-        # Calculate binning of stacked histograms to ensure all histograms fit
-        # in plot
-        if self.binning is None:
-            logger.info("No binning set --> calculating binning of stacked histograms.")
-            _, self.binning = np.histogram(
-                np.hstack(elem.values for elem in self.plot_objects.values()), bins=40
+        # Calculate bins of stacked histograms to ensure all histograms fit in plot
+        if isinstance(self.bins, (np.ndarray, list)):
+            logger.debug("Using bin edges defined in plot instance.")
+            if self.bins_range is not None:
+                logger.warning(
+                    "You defined a range for the histogram, but also an array with "
+                    "the bin edges. The range will be ignored."
+                )
+        elif isinstance(self.bins, int):
+            logger.info(f"Calculating bin edges of {self.bins} equal-width bins")
+            _, self.bins = np.histogram(
+                np.hstack([elem.values for elem in self.plot_objects.values()]),
+                bins=self.bins,
+                range=self.bins_range,
+            )
+        else:
+            raise ValueError(
+                "Unsupported type for bins. Supported types: int, numpy.array, list"
             )
 
         # Loop over all plot objects and plot them
@@ -278,7 +303,7 @@ class histogram_plot(plot_base):
 
             elem.bin_edges, elem.hist, elem.unc, elem.band = hist_w_unc(
                 elem.values,
-                bins=self.binning,
+                bins=self.bins,
                 normed=self.norm,
             )
 
@@ -299,7 +324,7 @@ class histogram_plot(plot_base):
             # Plot histogram uncertainty
             self.axis_top.hist(
                 x=elem.bin_edges[:-1],
-                bins=self.binning,
+                bins=self.bins,
                 bottom=elem.band,
                 weights=elem.unc * 2,
                 **global_config.hist_err_style,
@@ -424,8 +449,8 @@ class histogram_plot(plot_base):
         if self.n_ratio_panels > 0:
             self.plot_ratios()
         self.set_xlim(
-            self.binning[0] if self.xmin is None else self.xmin,
-            self.binning[-1] if self.xmax is None else self.xmax,
+            self.bins[0] if self.xmin is None else self.xmin,
+            self.bins[-1] if self.xmax is None else self.xmax,
         )
         self.make_legend(plt_handles)
 

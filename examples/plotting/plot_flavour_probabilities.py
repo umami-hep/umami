@@ -14,7 +14,7 @@ plot_histo = histogram_plot(
     logy=True,
     leg_ncol=1,
     figsize=(6, 4.5),
-    # binning=np.linspace(0, 1, 30),  # you can also force a binning for the plot here
+    # bins=np.linspace(0, 1, 30),  # you can also force a binning for the plot here
 )
 
 # Add the ttbar histograms
