@@ -8,7 +8,7 @@
     - ls docs/ci_assets
     - apk add --no-cache git subversion
     - pip install --upgrade pip setuptools wheel
-    - pip install mkdocs==${MKDOCS_VERSION} mkdocs-material==${MATERIAL_VERSION} mkdocs-static-i18n==${I18NSTATIC_VERSION}
+    - pip install  mkdocs-material==${MATERIAL_VERSION}
     - cp changelog.md docs/setup/changelog.md
     - python .gitlab/workflow/replace_placeholders_in_md.py --input "docs/**/*.md" --no_backup --exclude docs/setup/development/good_practices_docs.md
     - mkdocs build -d public

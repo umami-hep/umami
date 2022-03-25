@@ -3,9 +3,7 @@
 variables:
   TFTAG: 2.8.0
   TORCHTAG: 1.9.0-cuda11.1-cudnn8-runtime
-  MKDOCS_VERSION: '1.2.1'
-  MATERIAL_VERSION: '7.1.10'
-  I18NSTATIC_VERSION: '0.17'
+  MATERIAL_VERSION: '8.2.7'
   IMAGE_TYPE: umamibase:latest
   SLIM_IMAGE: python:3.8-slim
   REGISTY_PATH: ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami

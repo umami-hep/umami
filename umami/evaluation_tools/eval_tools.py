@@ -142,11 +142,12 @@ def GetRejectionPerFractionDict(
 
     logger.info("Calculating rejections per fractions")
 
-    # Get a deep copy of the class labels as set
-    class_labels_wo_main = copy.deepcopy(set(class_labels))
+    # Get a deep copy of the class labels
+    class_labels_wo_main = copy.deepcopy(list(dict.fromkeys(class_labels)))
 
     # Remove the main classes from the copy
-    class_labels_wo_main.difference_update(main_class)
+    for m_class in main_class:
+        class_labels_wo_main.remove(m_class)
 
     # Create the extended tagger list with fresh taggers and taggers from file
     extended_tagger_list = tagger_list + tagger_names
@@ -292,11 +293,12 @@ def GetRejectionPerEfficiencyDict(
     logger.info("Calculating rejections per efficiency")
     effs = np.linspace(eff_min, eff_max, x_axis_granularity)
 
-    # Get a deep copy of the class labels as set
-    class_labels_wo_main = copy.deepcopy(set(class_labels))
+    # Get a deep copy of the class labels
+    class_labels_wo_main = copy.deepcopy(list(dict.fromkeys(class_labels)))
 
     # Remove the main classes from the copy
-    class_labels_wo_main.difference_update(main_class)
+    for m_class in main_class:
+        class_labels_wo_main.remove(m_class)
 
     # Create the extended tagger list with fresh taggers and taggers from file
     extended_tagger_list = tagger_list + tagger_names
