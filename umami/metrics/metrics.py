@@ -125,11 +125,12 @@ def CalcDiscValues(
     elif isinstance(rej_class, str):
         rej_class = [rej_class]
 
-    # Get a deep copy of the class labels as set
-    class_labels_wo_main = set(jets_dict.keys())
+    # Get a deep copy of the class labels
+    class_labels_wo_main = copy.deepcopy(list(jets_dict.keys()))
 
     # Remove the main classes from the copy
-    class_labels_wo_main.difference_update(main_class)
+    for m_class in main_class:
+        class_labels_wo_main.remove(m_class)
 
     # Iterate over the rejection classes
     for num_iter, rej_class_iterator in enumerate(rej_class):
@@ -250,11 +251,12 @@ def GetScore(
     numerator = 0
     add_small = 1e-10
 
-    # Get a deep copy of the class labels as set
-    class_labels_wo_main = copy.deepcopy(set(class_labels))
+    # Get a deep copy of the class labels
+    class_labels_wo_main = copy.deepcopy(list(dict.fromkeys(class_labels)))
 
     # Remove the main classes from the copy
-    class_labels_wo_main.difference_update(main_class)
+    for m_class in main_class:
+        class_labels_wo_main.remove(m_class)
 
     # Calculate numerator of disc_score
     for class_label in main_class:
@@ -502,11 +504,12 @@ def GetRejection(
     # Calculate cutvalue on the discriminant depending of the WP
     cutvalue = np.percentile(disc_scores, 100.0 * (1.0 - target_eff))
 
-    # Get a deep copy of the class labels as set
-    class_labels_wo_main = copy.deepcopy(set(class_labels))
+    # Get a deep copy of the class labels
+    class_labels_wo_main = copy.deepcopy(list(dict.fromkeys(class_labels)))
 
     # Remove the main classes from the copy
-    class_labels_wo_main.difference_update(main_class)
+    for m_class in main_class:
+        class_labels_wo_main.remove(m_class)
 
     # Calculate efficiencies
     for iter_main_class in class_labels_wo_main:

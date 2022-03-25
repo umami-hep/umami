@@ -426,11 +426,12 @@ def PlotRejPerEpochComparison(
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
-    # Get a deep copy of the class labels as set
-    class_labels_wo_main = copy.deepcopy(set(class_labels))
+    # Get a deep copy of the class labels
+    class_labels_wo_main = copy.deepcopy(list(dict.fromkeys(class_labels)))
 
     # Remove the main classes from the copy
-    class_labels_wo_main.difference_update(main_class)
+    for m_class in main_class:
+        class_labels_wo_main.remove(m_class)
 
     # Get flavour categories from global config
     flav_cat = global_config.flavour_categories
@@ -688,11 +689,12 @@ def PlotRejPerEpoch(
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
-    # Get a deep copy of the class labels as set
-    class_labels_wo_main = copy.deepcopy(set(class_labels))
+    # Get a deep copy of the class labels
+    class_labels_wo_main = copy.deepcopy(list(dict.fromkeys(class_labels)))
 
     # Remove the main classes from the copy
-    class_labels_wo_main.difference_update(main_class)
+    for m_class in main_class:
+        class_labels_wo_main.remove(m_class)
 
     # Get flavour categories from global config
     flav_cat = global_config.flavour_categories
@@ -1347,11 +1349,12 @@ def RunPerformanceCheck(
     logger.info(f"saving plots to {plot_dir}")
     os.makedirs(plot_dir, exist_ok=True)
 
-    # Get a deep copy of the class labels as set
-    class_labels_wo_main = copy.deepcopy(set(class_labels))
+    # Get a deep copy of the class labels
+    class_labels_wo_main = copy.deepcopy(list(dict.fromkeys(class_labels)))
 
     # Remove the main classes from the copy
-    class_labels_wo_main.difference_update(main_class)
+    for m_class in main_class:
+        class_labels_wo_main.remove(m_class)
 
     n_rej = len(class_labels_wo_main)
 

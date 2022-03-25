@@ -131,10 +131,10 @@ def natural_keys(text):
     return [atoi(c) for c in re.split(r"(\d+)", text)]
 
 
-def check_main_class_input(main_class) -> set:
+def check_main_class_input(main_class) -> list:
     """
     Checks the given main class for type and returns
-    a set with the main classes inside.
+    a list with the main classes inside.
 
     Parameters
     ----------
@@ -143,8 +143,8 @@ def check_main_class_input(main_class) -> set:
 
     Returns
     -------
-    main_class : set
-        The main class(es) as a set.
+    main_class : list
+        The main class(es) as a list.
 
     Raises
     ------
@@ -154,12 +154,12 @@ def check_main_class_input(main_class) -> set:
 
     # Check main class if string or list and covert it to a set
     if isinstance(main_class, str):
-        main_class = set([main_class])
+        main_class = [main_class]
 
     elif isinstance(main_class, list):
-        main_class = set(main_class)
+        pass
 
-    elif not isinstance(main_class, set):
+    else:
         raise TypeError(
             f"Main class must either be a str or a list, not a {type(main_class)}"
         )

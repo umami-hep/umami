@@ -28,10 +28,10 @@ class check_main_class_input_TestCase(unittest.TestCase):
     def setUp(self) -> None:
         """Set up the needed variables."""
         self.main_class_str = "bjets"
-        self.main_class_str_control = {"bjets"}
+        self.main_class_str_control = ["bjets"]
         self.main_class_list = ["bjets", "cjets"]
         self.main_class_set = {"bjets", "cjets"}
-        self.main_class_control = {"bjets", "cjets"}
+        self.main_class_control = ["bjets", "cjets"]
         self.main_class_int = 5
 
     def test_check_main_class_input_str(self):
@@ -46,8 +46,8 @@ class check_main_class_input_TestCase(unittest.TestCase):
 
     def test_check_main_class_input_set(self):
         """Test the behaviour for set."""
-        main_class_check = check_main_class_input(self.main_class_set)
-        self.assertEqual(main_class_check, self.main_class_control)
+        with self.assertRaises(TypeError):
+            _ = check_main_class_input(self.main_class_set)
 
     def test_check_main_class_input_fail(self):
         """Test the behaviour for a wrong type."""
