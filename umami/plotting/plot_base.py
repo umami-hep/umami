@@ -117,6 +117,9 @@ class plot_object:
         Vertical offset of the ATLAS tag, by default 5
     atlas_horizontal_offset : float, optional
         Horizontal offset of the ATLAS tag, by default 8
+    atlas_brand : str, optional
+        `brand` argument handed to atlasify. If you want to remove it just use an empty
+        string or None, by default "ATLAS"
     plotting_done : bool
         Bool that indicates if plotting is done. Only then `atlasify()` can be called,
         by default False
@@ -162,6 +165,8 @@ class plot_object:
     atlas_fontsize: int = None
     atlas_vertical_offset: float = 5
     atlas_horizontal_offset: float = 8
+    atlas_brand: str = "ATLAS"
+
     plotting_done: bool = False
 
     def __post_init__(self):
@@ -494,6 +499,7 @@ class plot_base(plot_object):
                     offset=self.atlas_vertical_offset,
                     indent=self.atlas_horizontal_offset,
                     enlarge=1,
+                    brand="" if self.atlas_brand is None else self.atlas_brand,
                 )
             else:
                 atlasify.atlasify(atlas=False, axes=self.axis_top, enlarge=1)

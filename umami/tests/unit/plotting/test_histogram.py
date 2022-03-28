@@ -116,8 +116,15 @@ class histogram_plot_TestCase(unittest.TestCase):
             hist_plot.plot()
 
     def test_custom_range(self):
-        """check if bins_range argument is used correctly"""
-        hist_plot = histogram_plot(bins=20, bins_range=(0, 4))
+        """check if bins_range argument is used correctly + deactivate ATLAS branding"""
+        hist_plot = histogram_plot(
+            bins=20,
+            bins_range=(0, 4),
+            atlas_brand="",
+            atlas_first_tag="Simulation, $\\sqrt{s}=13$ TeV",
+            atlas_second_tag="",
+            figsize=(5, 4),
+        )
         hist_plot.add(self.hist_1, reference=True)
         hist_plot.draw()
 
