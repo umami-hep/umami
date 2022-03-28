@@ -4,6 +4,7 @@
 
 ### Latest
 
+- (Plotting API) Adding support for removing "ATLAS" branding on plots [!494](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/494)
 - (Plotting API) Adding option to specify number of bins (instead of bin edges) in histogram plots [!491](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/491)
 - (Plotting API) Adding support for ATLAS tag offset + Small fix for ratio uncertainty in histogram plots [!490](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/490)
 - Adding support for multiple signal classes [!414](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/414)
