@@ -58,11 +58,13 @@ def load_tfrecords_train_dataset(
 
     # Check if nfiles is given. Otherwise set to 5
     try:
-        nfiles = train_config.config["nfiles"]
+        nfiles = NN_structure["nfiles_tfrecord"]
 
     except KeyError:
-        logger.warning("No number of files to be loaded in parallel defined. Set to 5")
         nfiles = 5
+        logger.warning(
+            f"No number of files to be loaded in parallel defined. Set to {nfiles}"
+        )
 
     # Get the tfrecords
     tfrecord_reader = TFRecordReader(
@@ -246,7 +248,6 @@ class TFRecordReader:
             input_dir = {"input_1": parse_ex["X_jets"]}
 
         elif self.tagger_name.casefold() in ("dips", "cads"):
-            logger.warning(parse_ex.keys())
             input_dir = {
                 "input_1": parse_ex[f"X_{self.tracks_name}_train"],
             }

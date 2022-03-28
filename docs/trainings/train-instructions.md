@@ -25,7 +25,7 @@ After all files are preprocessed, we can start with the training. The train conf
 | `model_name` | All | `str` | Necessary | Name of the model you want to train. This will be the name of the folder, where all results etc. will be saved in. This folder will automatically be created if not existing. |
 | `preprocess_config` | All | `str` | Necessary | Path to your preprocess config you used producing your train datasets. When you start the training and the folder for the model is created, this file is copied to the `metadata/` folder inside the model folder. Also, the path here in the train config will be changed to the new path of the preprocess config inside the `metadata/` folder. |
 | `model_file` | All | `str` | Optional | If you already have a model and want to continue the training of this model, you can give the path to this model here. This model will be loaded and used instead of init a new one. |
-| `train_file` | All | `str` | Necessary | Path to the training sample. This is given by the `preprocessing` step of Umami |
+| `train_file` | All | `str` | Necessary | Path to the training sample. This is given by the `preprocessing` step of Umami. If you want to use the tfrecords format to train, this must be the path to the folder where the tfrecords files are saved. |
 | `var_dict` | All | `str` | Necessary | Path to the variable dict used in the `preprocess_config` to produce the train sample. |
 | `exclude` | DL1r, DL1d | `list` | Necessary | List of variables that are excluded from training. Only compatible with DL1r training. To include all, just give an empty list. |
 |`tracks_name`| DIPS, DIPS Attention, Umami, CADS | `str` | Necessary* | Name of the tracks data-set to use for training and evaluation, default is "tracks".  <br />* ***This option is necessary when using tracks, but, when working with old preprpocessed files (before January 2022, Tag 05 or older)  this option has to be removed form the config file to ensure compatibility*** |
@@ -67,6 +67,7 @@ Here all important information about the tagger you want to train are defined.
 | `ppm_sizes` | DIPS, DIPS Attention, Umami, CADS | `list` | Necessary | List of nodes per layer of the _ϕ_ network. Every entry is one layer. The numbers need to be ints! |
 | `dense_sizes` | All | `list` | Necessary | List of nodes per layer of the _F_ network (DIPS/DIPS Attention/Umami/CADS). Every entry is one layer. The numbers need to be ints! For DL1r/DL1d, this is the number of nodes per layer. |
 | `use_sample_weights` | All | `bool` | Optional | Applies the weights, you calculated with the `--weighting` flag from the preprocessing to the training loss function. |
+| `nfiles_tfrecord` | All | `int` | Optional | Number of files that are loaded at the same time when using tfrecords for training. |
 | `LRR` | All | `bool` | Optional | Decide, if a Learning Rate Reducer (LRR) is used or not. If yes, the following options can be added. |
 | `LRR_monitor` | All | `str` | Optional | Quantity to be monitored. Default: "loss" |
 | `LRR_factor` | All | `float` | Optional | Factor by which the learning rate will be reduced. `new_lr = lr * factor`. Default: 0.8 |
