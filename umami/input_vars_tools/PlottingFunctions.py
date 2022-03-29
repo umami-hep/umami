@@ -3,7 +3,6 @@
 """Plots the given input variables of the given files and also a comparison."""
 
 import os
-from glob import glob
 
 import matplotlib as mtp
 import matplotlib.pyplot as plt
@@ -16,7 +15,7 @@ from umami.helper_tools import hist_ratio, hist_w_unc
 from umami.plotting import histogram, histogram_plot
 from umami.plotting.utils import translate_kwargs
 from umami.preprocessing_tools import GetVariableDict
-from umami.tools import applyATLASstyle, makeATLAStag, natural_keys
+from umami.tools import applyATLASstyle, makeATLAStag
 
 
 def check_kwargs_var_plots(kwargs: dict, **custom_default):
@@ -155,51 +154,17 @@ def plot_nTracks_per_Jet(
     for (filepath, label, tracks_name) in zip(
         datasets_filepaths, datasets_labels, datasets_track_names
     ):
-        # Init jet counter
-        n_jets_counter = 0
-
-        # Get the filepath of the dataset
-        filepath = glob(filepath)
-
-        # Loop over files and get the amount of jets needed.
-        for file_counter, file in enumerate(sorted(filepath, key=natural_keys)):
-            if n_jets_counter < n_jets:
-                tmp_trks, tmp_flavour_labels = udt.LoadTrksFromFile(
-                    filepath=file,
-                    class_labels=class_labels,
-                    nJets=n_jets,
-                    tracks_name=tracks_name,
-                    print_logger=False,
-                )
-
-                if file_counter == 0:
-                    # Append to array
-                    trks = tmp_trks
-                    flavour_labels = tmp_flavour_labels
-
-                else:
-                    # Append to array
-                    trks = np.concatenate((trks, tmp_trks))
-                    flavour_labels = np.concatenate(
-                        (flavour_labels, tmp_flavour_labels)
-                    )
-
-                # Add number of jets to counter
-                n_jets_counter += len(tmp_trks)
-
-            else:
-                break
-
-        if len(trks) < n_jets:
-            n_trks = len(trks)
-            logger.warning(
-                f"{n_jets} were set to be used, but only {n_trks} are available"
-                f" for {label} files!"
-            )
+        loaded_trks, loaded_flavour_labels = udt.LoadTrksFromFile(
+            filepath=filepath,
+            class_labels=class_labels,
+            nJets=n_jets,
+            tracks_name=tracks_name,
+            print_logger=True,
+        )
 
         # Append trks to dict
-        trks_dict.update({label: trks[:n_jets]})
-        flavour_label_dict.update({label: flavour_labels[:n_jets]})
+        trks_dict.update({label: loaded_trks})
+        flavour_label_dict.update({label: loaded_flavour_labels})
 
     # Check if path is existing, if not mkdir
     if not os.path.isdir(f"{output_directory}/"):
