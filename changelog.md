@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Remove redundant loading loop [!496](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/496)
 - Use plotting python API in input var plots (track variables) [!488](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/488)
 - Fixing nFiles for tfrecords training [!495](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/495/)
 - (Plotting API) Adding support for removing "ATLAS" branding on plots [!494](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/494)
