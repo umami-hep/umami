@@ -18,49 +18,8 @@ import umami.tools.PyATLASstyle.PyATLASstyle as pas
 from umami.helper_tools import hist_ratio, hist_w_unc
 from umami.metrics import eff_err
 from umami.plotting import roc, roc_plot, var_vs_eff, var_vs_eff_plot
+from umami.plotting.utils import translate_kwargs
 from umami.tools import applyATLASstyle
-
-
-def translate_kwargs(kwargs):
-    """Maintaining backwards compatibility for the kwargs and the new plot_base syntax.
-
-    Parameters
-    ----------
-    kwargs : dict
-        dictionary with kwargs
-
-    Returns
-    -------
-    dict
-        kwargs compatible with new naming.
-    """
-    mapping = {
-        "UseAtlasTag": "use_atlas_tag",
-        "AtlasTag": "atlas_first_tag",
-        "SecondTag": "atlas_second_tag",
-        "legcols": "leg_ncol",
-        "loc_legend": "leg_loc",
-        "legFontSize": "leg_fontsize",
-        "set_logy": "logy",
-        "yAxisIncrease": "y_scale",
-        "labelFontSize": "fontsize",
-    }
-    deprecated_args = ["yAxisAtlasTag"]
-    for key, elem in mapping.items():
-        if key in kwargs:
-            logger.debug(f"Mapping from old naming: {elem}: {kwargs[key]}")
-            kwargs[elem] = kwargs[key]
-            kwargs.pop(key)
-
-    # Remove deprecated arguments from kwargs
-    for dep_key in deprecated_args:
-        if dep_key in kwargs:
-            logger.warning(
-                f"You specified the argument {dep_key}, which is no longer"
-                " supported and will be ignored."
-            )
-            kwargs.pop(dep_key)
-    return kwargs
 
 
 def FlatEfficiencyPerBin(

@@ -188,6 +188,13 @@ class plot_object:
             self.leg_fontsize = self.fontsize
         if self.atlas_fontsize is None:
             self.atlas_fontsize = self.fontsize
+        if self.apply_atlas_style is False and (
+            self.atlas_first_tag is not None or self.atlas_second_tag is not None
+        ):
+            logger.warning(
+                "You specified an ATLAS tag, but `apply_atlas_style` is set to false. "
+                "Tag will therefore not be shown on plot."
+            )
 
     def __check_figsize(self):
         """Check `figsize`
