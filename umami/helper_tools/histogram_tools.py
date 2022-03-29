@@ -145,7 +145,7 @@ def hist_ratio(
     )
 
     # Calculate rel uncertainty
-    step_rel_unc = np.sqrt(numerator_rel_unc ** 2 + denominator_rel_unc ** 2)
+    step_rel_unc = np.sqrt(numerator_rel_unc**2 + denominator_rel_unc**2)
 
     # Calculate final uncertainty
     step_unc = step_ratio * step_rel_unc
