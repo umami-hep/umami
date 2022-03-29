@@ -226,7 +226,7 @@ class DeepSet(Layer):
             return None
 
         # Return correct masking
-        return K.equal(K.sum(inputs ** 2, axis=-1), 0)
+        return K.equal(K.sum(inputs**2, axis=-1), 0)
 
     def get_config(self):
         """
@@ -434,7 +434,7 @@ class Attention(Layer):
         if not self.mask_zero:
             return None
 
-        return K.equal(K.sum(inputs ** 2, axis=-1), 0)
+        return K.equal(K.sum(inputs**2, axis=-1), 0)
 
     def get_config(self):
         """
@@ -614,7 +614,7 @@ class ConditionalAttention(Layer):
             return None
 
         # Return mask if used
-        return K.equal(K.sum(inputs ** 2, axis=-1), 0)
+        return K.equal(K.sum(inputs**2, axis=-1), 0)
 
     def get_config(self):
         """
@@ -747,7 +747,7 @@ class ConditionalDeepSet(Layer):
             return None
 
         # Return masking
-        return K.equal(K.sum(inputs ** 2, axis=-1), 0)
+        return K.equal(K.sum(inputs**2, axis=-1), 0)
 
     def get_config(self):
         """
@@ -810,7 +810,7 @@ class MaskedAverage1DPooling(Layer):  # pylint: disable=too-few-public-methods
 
         else:
             # Create standard mask with zero as value
-            mask1 = K.cast(K.equal(K.sum(inputs ** 2, axis=-1), 0), "float32")
+            mask1 = K.cast(K.equal(K.sum(inputs**2, axis=-1), 0), "float32")
 
         # Multiply inputs with new mask which is formed to correct dimension
         inputs = inputs * K.tile(

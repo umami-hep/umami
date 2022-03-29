@@ -11,8 +11,8 @@ y = np.random.default_rng().normal(1, 2, size=1000)
 h_original, x_bins, y_bins = np.histogram2d(x, y, [4, 5])
 
 # calculate a custom function
-pt = np.cos(x ** 2) + np.sin(x + y) + np.exp(x)
-eta = 20 - y ** 2
+pt = np.cos(x**2) + np.sin(x + y) + np.exp(x)
+eta = 20 - y**2
 
 h_target, _, _ = np.histogram2d(pt, eta, bins=[x_bins, y_bins])
 
