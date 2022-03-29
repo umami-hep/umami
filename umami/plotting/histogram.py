@@ -175,6 +175,7 @@ class histogram_plot(plot_base):
         ValueError
             If n_ratio_panels > 1
         """
+        # TODO: use union operator `|` for multiple types of `bins` in python 3.10
 
         super().__init__(**kwargs)
         self.logy = logy

@@ -122,7 +122,7 @@ class TestInput_Vars_Plotting(unittest.TestCase):
             self.config = yaml.load(conf, Loader=yaml_loader)
 
         # Changing eval params
-        self.config["Eval_parameters"]["nJets"] = 3e3
+        self.config["Eval_parameters"]["n_jets"] = 3e3
         self.config["Eval_parameters"]["var_dict"] = "umami/configs/Dips_Variables.yaml"
 
         # Change datasets for all

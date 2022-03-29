@@ -1,5 +1,5 @@
 Eval_parameters:
-  nJets: 3e3
+  n_jets: 3e3
   var_dict: umami/configs/Dips_Variables.yaml
 jets_input_vars:
   variables: "jets"
@@ -50,7 +50,7 @@ nTracks_Test:
     yAxisAtlasTag: 0.925
     yAxisIncrease: 5
     figsize: [7, 5]
-    Ratio_Cut: [0.5, 2]
+    ratio_cut: [0.5, 2]
   class_labels: ["bjets", "cjets", "ujets"]
 
 Tracks_Test:
@@ -65,17 +65,44 @@ Tracks_Test:
       label: "R22 Test"
   plot_settings:
     sorting_variable: "ptfrac"
-    n_Leading: [None, 0]
+    n_leading: [None, 0]
     Log: True
     UseAtlasTag: True
     AtlasTag: "Internal Simulation"
     SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3M Jets"
     yAxisAtlasTag: 0.925
-    yAxisIncrease: 5
+    yAxisIncrease: 1.5
     figsize: [7, 5]
-    Ratio_Cut: [0.5, 1.5]
+    ratio_cut: [0.5, 1.5]
   binning:
     IP3D_signed_d0_significance: 100
     numberOfInnermostPixelLayerHits: [0, 4, 1]
     dr:
+  class_labels: ["bjets", "cjets", "ujets"]
+
+tracks_test_not_normalised:
+  variables: "tracks"
+  folder_to_save: tracks_test_not_normalised
+  Datasets_to_plot:
+    R21:
+      files: /tmp/umami/plot_input_vars/plot_input_vars_r21_check.h5
+      label: "R21 Test"
+    R22:
+      files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
+      label: "R22 Test"
+  plot_settings:
+    sorting_variable: "ptfrac"
+    n_leading: [None]
+    Log: True
+    UseAtlasTag: True
+    apply_atlas_style: False
+    AtlasTag: "Internal Simulation"
+    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3M Jets"
+    yAxisAtlasTag: 0.925
+    yAxisIncrease: 1.5
+    figsize: [7, 5]
+    ratio_cut: [0.5, 1.5]
+    norm: False
+  binning:
+    IP3D_signed_d0_significance: 100
   class_labels: ["bjets", "cjets", "ujets"]
