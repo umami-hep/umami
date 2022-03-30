@@ -144,6 +144,7 @@ class histogram_plot(plot_base):
         bins_range: tuple = None,
         norm: bool = True,
         logy: bool = False,
+        bin_width_in_ylabel: bool = False,
         **kwargs,
     ) -> None:
         """histogram plot properties
@@ -167,6 +168,8 @@ class histogram_plot(plot_base):
             sum(bin_counts * bin_width). By default True.
         logy : bool, optional
             Set log scale on y-axis, by default False.
+        bin_width_in_ylabel : bool, optional
+            Specify if the bin width should be added to the ylabel, by default False
         **kwargs : kwargs
             kwargs from `plot_base`
 
@@ -181,6 +184,7 @@ class histogram_plot(plot_base):
         self.logy = logy
         self.bins = bins
         self.bins_range = bins_range
+        self.bin_width_in_ylabel = bin_width_in_ylabel
         self.norm = norm
         self.plot_objects = {}
         self.add_order = []
@@ -435,6 +439,29 @@ class histogram_plot(plot_base):
                 hatch=global_config.hist_err_style["hatch"],
             )
 
+    def add_bin_width_to_ylabel(self):
+        """Adds the bin width to the ylabel of a histogram plot. If the bin with is
+        smaller than 0.01, scientific notation will be used.
+
+        Raises
+        ------
+        ValueError
+            If plotting_done is False (therefore `bins` is not yet calculated)
+        """
+
+        if self.plotting_done is False:
+            raise ValueError(
+                "`add_bin_width_to_ylabel` should be called after plotting, since bins "
+                "are calculated during plotting."
+            )
+
+        bin_width = abs(self.bins[1] - self.bins[0])
+        if bin_width < 1e-2:
+            self.ylabel = f"{self.ylabel} / {bin_width:.0e}"
+        else:
+            self.ylabel = f"{self.ylabel} / {bin_width:.2f}"
+        self.set_ylabel(self.axis_top)
+
     def draw(self, rlabel: str = "Ratio", labelpad: int = None):
         """Draw figure.
 
@@ -461,6 +488,8 @@ class histogram_plot(plot_base):
         self.set_xlabel()
         self.set_tick_params()
         self.set_ylabel(self.axis_top)
+        if self.bin_width_in_ylabel is True:
+            self.add_bin_width_to_ylabel()
 
         if self.n_ratio_panels > 0:
             self.set_ylabel(

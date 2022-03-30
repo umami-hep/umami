@@ -115,8 +115,19 @@ class histogram_plot_TestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             hist_plot.plot()
 
+    def test_add_bin_width_to_ylabel(self):
+        """check if ValueError is raised when using invalid type in `bins` argument"""
+        hist_plot = histogram_plot(bins=60)
+        hist_plot.add(self.hist_1, reference=True)
+        with self.assertRaises(ValueError):
+            hist_plot.add_bin_width_to_ylabel()
+
     def test_custom_range(self):
-        """check if bins_range argument is used correctly + deactivate ATLAS branding"""
+        """check if
+        1. bins_range argument is used correctly
+        2. deactivate ATLAS branding works
+        3. adding bin width to ylabel works
+        """
         hist_plot = histogram_plot(
             bins=20,
             bins_range=(0, 4),
@@ -124,9 +135,11 @@ class histogram_plot_TestCase(unittest.TestCase):
             atlas_first_tag="Simulation, $\\sqrt{s}=13$ TeV",
             atlas_second_tag="",
             figsize=(5, 4),
+            ylabel="Number of jets",
         )
         hist_plot.add(self.hist_1, reference=True)
         hist_plot.draw()
+        hist_plot.add_bin_width_to_ylabel()
 
         plotname = "test_histogram_custom_range.png"
         hist_plot.savefig(f"{self.actual_plots_dir}/{plotname}")
@@ -187,6 +200,7 @@ class histogram_plot_TestCase(unittest.TestCase):
         )
 
     def test_output_empty_histogram_no_norm(self):
+        """Test if ratio is 1 for whole range if reference histogram is empty"""
         hist_plot = histogram_plot(
             norm=False,
             figsize=(6.5, 5),
@@ -211,6 +225,9 @@ class histogram_plot_TestCase(unittest.TestCase):
         )
 
     def test_output_different_range_histogram(self):
+        """Test if ratio yields the expected values for case of different histogram
+        ranges"""
+
         hist_plot = histogram_plot(
             atlas_second_tag=(
                 "Test ratio for the case of different histogram ranges. \n"

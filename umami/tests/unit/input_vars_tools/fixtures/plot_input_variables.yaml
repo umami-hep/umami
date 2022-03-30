@@ -1,6 +1,17 @@
+.default_plot_settings: &default_plot_settings
+    logy: True
+    use_atlas_tag: True
+    atlas_first_tag: "Internal Simulation"
+    atlas_second_tag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
+    y_scale: 1.8
+    figsize: [6.8, 5]
+    norm: True
+    bin_width_in_ylabel: True
+
 Eval_parameters:
   n_jets: 3e3
   var_dict: umami/configs/Dips_Variables.yaml
+
 jets_input_vars:
   variables: "jets"
   folder_to_save: jets_input_vars
@@ -12,13 +23,8 @@ jets_input_vars:
       files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
       label: "R22 Test"
   plot_settings:
-    Log: True
-    UseAtlasTag: True
-    AtlasTag: "Internal Simulation"
-    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
-    yAxisAtlasTag: 0.925
-    yAxisIncrease: 5
-    figsize: [7, 5]
+    <<: *default_plot_settings
+    ylabel: "Normalised number of jets"
   special_param_jets:
     IP2D_cu:
       lim_left: -30
@@ -43,14 +49,10 @@ nTracks_Test:
       files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
       label: "R22 Test"
   plot_settings:
-    Log: True
-    UseAtlasTag: True
-    AtlasTag: "Internal Simulation"
-    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
-    yAxisAtlasTag: 0.925
-    yAxisIncrease: 5
-    figsize: [7, 5]
+    <<: *default_plot_settings
+    y_scale: 1.5
     ratio_cut: [0.5, 2]
+    bin_width_in_ylabel: False
   class_labels: ["bjets", "cjets", "ujets"]
 
 Tracks_Test:
@@ -64,15 +66,10 @@ Tracks_Test:
       files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
       label: "R22 Test"
   plot_settings:
+    <<: *default_plot_settings
     sorting_variable: "ptfrac"
     n_leading: [None, 0]
-    Log: True
-    UseAtlasTag: True
-    AtlasTag: "Internal Simulation"
-    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3M Jets"
-    yAxisAtlasTag: 0.925
-    yAxisIncrease: 1.5
-    figsize: [7, 5]
+    y_scale: 1.5
     ratio_cut: [0.5, 1.5]
   binning:
     IP3D_signed_d0_significance: 100
@@ -91,16 +88,10 @@ tracks_test_not_normalised:
       files: /tmp/umami/plot_input_vars/plot_input_vars_r22_check.h5
       label: "R22 Test"
   plot_settings:
+    <<: *default_plot_settings
     sorting_variable: "ptfrac"
     n_leading: [None]
-    Log: True
-    UseAtlasTag: True
-    apply_atlas_style: False
-    AtlasTag: "Internal Simulation"
-    SecondTag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3M Jets"
-    yAxisAtlasTag: 0.925
-    yAxisIncrease: 1.5
-    figsize: [7, 5]
+    y_scale: 1.5
     ratio_cut: [0.5, 1.5]
     norm: False
   binning:
