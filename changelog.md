@@ -3,7 +3,7 @@
 
 
 ### Latest
-
+- change default fc for evaluation of Dips and Cads in training configs [!499](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/499)
 - Use plotting python API in input var plots (track variables) [!498](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/498)
 - Remove redundant loading loop [!496](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/496)
 - Use plotting python API in input var plots (track variables) [!488](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/488)
