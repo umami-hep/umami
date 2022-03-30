@@ -65,7 +65,7 @@ def plot_trks_variables(plot_config, plot_type):
     """
     # Iterate over the different plots which are to be plotted
     for plot_name, plotting_config in plot_config.items():
-        if plot_name == "Eval_parameters":
+        if plot_name == "Eval_parameters" or plot_name[0] == ".":
             continue
 
         if plotting_config["variables"] == "jets":
@@ -100,7 +100,7 @@ def plot_trks_variables(plot_config, plot_type):
 
         for trk_origin in trk_origins:
             if ("nTracks" in plotting_config) and (plotting_config["nTracks"] is True):
-                uit.plot_nTracks_per_Jet(
+                uit.plot_n_tracks_per_jet(
                     datasets_filepaths=filepath_list,
                     datasets_labels=labels_list,
                     datasets_track_names=tracks_list,
@@ -144,7 +144,7 @@ def plot_jets_variables(plot_config, plot_type):
     """
     # Iterate over the different plots which are to be plotted
     for plot_name, plotting_config in plot_config.items():
-        if plot_name == "Eval_parameters":
+        if plot_name == "Eval_parameters" or plot_name[0] == ".":
             continue
 
         if plotting_config["variables"] == "tracks":
@@ -166,37 +166,20 @@ def plot_jets_variables(plot_config, plot_type):
                     plotting_config["Datasets_to_plot"][f"{model_name}"]["label"]
                 )
 
-        if len(filepath_list) >= 2:
-            uit.plot_input_vars_jets_comparison(
-                datasets_filepaths=filepath_list,
-                datasets_labels=labels_list,
-                class_labels=plotting_config["class_labels"],
-                var_dict=plot_config["Eval_parameters"]["var_dict"],
-                n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
-                binning=plotting_config["binning"],
-                output_directory=plotting_config["folder_to_save"]
-                if plotting_config["folder_to_save"]
-                else "input_vars_jets/",
-                plot_type=plot_type,
-                special_param_jets=plotting_config["special_param_jets"],
-                **plotting_config["plot_settings"],
-            )
-
-        else:
-            uit.plot_input_vars_jets(
-                datasets_filepaths=filepath_list,
-                datasets_labels=labels_list,
-                class_labels=plotting_config["class_labels"],
-                var_dict=plot_config["Eval_parameters"]["var_dict"],
-                n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
-                binning=plotting_config["binning"],
-                output_directory=plotting_config["folder_to_save"]
-                if plotting_config["folder_to_save"]
-                else "input_vars_jets/",
-                plot_type=plot_type,
-                special_param_jets=plotting_config["special_param_jets"],
-                **plotting_config["plot_settings"],
-            )
+        uit.plot_input_vars_jets(
+            datasets_filepaths=filepath_list,
+            datasets_labels=labels_list,
+            class_labels=plotting_config["class_labels"],
+            var_dict=plot_config["Eval_parameters"]["var_dict"],
+            n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
+            binning=plotting_config["binning"],
+            output_directory=plotting_config["folder_to_save"]
+            if plotting_config["folder_to_save"]
+            else "input_vars_jets/",
+            plot_type=plot_type,
+            special_param_jets=plotting_config["special_param_jets"],
+            **plotting_config["plot_settings"],
+        )
 
 
 if __name__ == "__main__":

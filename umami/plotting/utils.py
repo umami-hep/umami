@@ -19,28 +19,35 @@ def translate_kwargs(kwargs):
         kwargs compatible with new naming.
     """
     mapping = {
-        "UseAtlasTag": "use_atlas_tag",
-        "AtlasTag": "atlas_first_tag",
         "ApplyATLASStyle": "apply_atlas_style",
-        "SecondTag": "atlas_second_tag",
-        "legcols": "leg_ncol",
-        "ncol": "leg_ncol",
-        "loc_legend": "leg_loc",
-        "legFontSize": "leg_fontsize",
-        "set_logy": "logy",
-        "Log": "logy",
-        "yAxisIncrease": "y_scale",
-        "labelFontSize": "fontsize",
+        "AtlasTag": "atlas_first_tag",
         "Bin_Width_y_axis": "bin_width_in_ylabel",
-        "Ratio_Cut": "ratio_cut",
-        "nJets": "n_jets",
+        "labelFontSize": "fontsize",
+        "legcols": "leg_ncol",
+        "legFontSize": "leg_fontsize",
+        "loc_legend": "leg_loc",
+        "Log": "logy",
         "n_Leading": "n_leading",
+        "ncol": "leg_ncol",
+        "nJets": "n_jets",
+        "normalise": "norm",
+        "Ratio_Cut": "ratio_cut",
+        "SecondTag": "atlas_second_tag",
+        "set_logy": "logy",
+        "UseAtlasTag": "use_atlas_tag",
+        "yAxisIncrease": "y_scale",
     }
     deprecated_args = ["yAxisAtlasTag"]
     for key, elem in mapping.items():
         if key in kwargs:
             logger.debug(f"Mapping from old naming: {elem}: {kwargs[key]}")
-            kwargs[elem] = kwargs[key]
+            if elem in kwargs:
+                logger.warning(
+                    "You specified two keyword arguments which mean the same: "
+                    f"{key}, {elem} --> using the new naming convention {elem}"
+                )
+            else:
+                kwargs[elem] = kwargs[key]
             kwargs.pop(key)
 
     # Remove deprecated arguments from kwargs

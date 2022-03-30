@@ -11,9 +11,8 @@ from umami.configuration import logger, set_log_level
 from umami.input_vars_tools.PlottingFunctions import (
     check_kwargs_var_plots,
     plot_input_vars_jets,
-    plot_input_vars_jets_comparison,
     plot_input_vars_trks,
-    plot_nTracks_per_Jet,
+    plot_n_tracks_per_jet,
 )
 from umami.tools import yaml_loader
 
@@ -26,19 +25,18 @@ class KwargsCheck_TestCase(unittest.TestCase):
         Duplicating default dict from function.
         """
         self.default_kwargs = {
-            "UseAtlasTag": True,
-            "ApplyATLASStyle": False,
-            "AtlasTag": "Internal Simulation",
-            "SecondTag": "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-            "yAxisAtlasTag": 0.925,
-            "yAxisIncrease": 1,
-            "figsize": None,
-            "Log": True,
+            "use_atlas_tag": True,
+            "apply_atlas_style": True,
+            "atlas_first_tag": "Internal Simulation",
+            "atlas_second_tag": "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
+            "y_scale": 1,
+            "figsize": (6.8, 5),
+            "logy": True,
             "ylabel": "Normalised Number of Tracks",
-            "ycolor": "black",
-            "legFontSize": 10,
-            "ncol": 1,
-            "Bin_Width_y_axis": True,
+            "leg_fontsize": 10,
+            "leg_ncol": 1,
+            "leg_loc": "upper right",
+            "bin_width_in_ylabel": True,
             "plot_type": "pdf",
             "transparent": True,
             "norm": True,
@@ -49,15 +47,15 @@ class KwargsCheck_TestCase(unittest.TestCase):
         self.assertEqual(kwargs, self.default_kwargs)
 
     def test_one_change(self):
-        kwargs = check_kwargs_var_plots({"UseAtlasTag": False})
+        kwargs = check_kwargs_var_plots({"use_atlas_tag": False})
         # TODO: change syntax in python 3.9
-        self.default_kwargs.update({"UseAtlasTag": False})
+        self.default_kwargs.update({"use_atlas_tag": False})
         self.assertEqual(kwargs, self.default_kwargs)
 
     def test_custom_default(self):
-        kwargs = check_kwargs_var_plots({"ApplyATLASStyle": True}, legFontSize=99)
+        kwargs = check_kwargs_var_plots({"apply_atlas_style": True}, leg_fontsize=99)
         # TODO: change syntax in python 3.9
-        self.default_kwargs.update({"ApplyATLASStyle": True, "legFontSize": 99})
+        self.default_kwargs.update({"apply_atlas_style": True, "leg_fontsize": 99})
         self.assertEqual(kwargs, self.default_kwargs)
 
 
@@ -165,7 +163,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         plotting_config["binning"]["IP2D_bu"] = "test"
 
         with self.assertRaises(ValueError):
-            plot_input_vars_jets_comparison(
+            plot_input_vars_jets(
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
                 class_labels=plotting_config["class_labels"],
@@ -183,7 +181,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         filepath_list = [self.r21_test_file, self.r22_test_file]
         labels_list = ["R21 Test", "R22 Test"]
 
-        plot_input_vars_jets_comparison(
+        plot_input_vars_jets(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
             class_labels=plotting_config["class_labels"],
@@ -459,13 +457,13 @@ class JetPlotting_TestCase(unittest.TestCase):
             ),
         )
 
-    def test_plot_nTracks_per_Jet(self):
+    def test_plot_n_tracks_per_jet(self):
         plotting_config = self.plot_config["nTracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
         tracks_name_list = ["tracks", "tracks"]
         labels_list = ["R21 Test", "R22 Test"]
 
-        plot_nTracks_per_Jet(
+        plot_n_tracks_per_jet(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
             datasets_track_names=tracks_name_list,

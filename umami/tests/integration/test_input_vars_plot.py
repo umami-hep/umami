@@ -7,7 +7,6 @@ from subprocess import CalledProcessError, run
 
 import yaml
 
-from umami.configuration import global_config  # noqa: F401 # pylint: disable=W0611
 from umami.configuration import logger, set_log_level
 from umami.tools import yaml_loader
 
@@ -127,7 +126,7 @@ class TestInput_Vars_Plotting(unittest.TestCase):
 
         # Change datasets for all
         for plot in self.config:
-            if plot != "Eval_parameters":
+            if plot != "Eval_parameters" and plot[0] != ".":
                 self.config[plot]["Datasets_to_plot"]["R21"][
                     "files"
                 ] = f"{test_dir}plot_input_vars_r21_check.h5"
