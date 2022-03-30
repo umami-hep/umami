@@ -1,13 +1,13 @@
 # Set modelname and path to Pflow preprocessing config file
 model_name: dips_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
-preprocess_config: <path_palce_holder>/umami/examples/PFlow-Preprocessing.yaml
+preprocess_config: <path_place_holder>/umami/examples/PFlow-Preprocessing.yaml
 
 # Add here a pretrained model to start with.
 # Leave empty for a fresh start
 model_file:
 
 # Add training file
-train_file: <path_palce_holder>/PFlow-hybrid-preprocessed_shuffled.h5
+train_file: <path_place_holder>/PFlow-hybrid-preprocessed_shuffled.h5
 
 # Defining templates for the variable cuts
 .variable_cuts_ttbar: &variable_cuts_ttbar
@@ -25,34 +25,34 @@ train_file: <path_palce_holder>/PFlow-hybrid-preprocessed_shuffled.h5
 # Add validation files
 validation_files:
     ttbar_r21_val:
-        path: <path_palce_holder>/inclusive_validation_ttbar_PFlow.h5
+        path: <path_place_holder>/inclusive_validation_ttbar_PFlow.h5
         label: "$t\\bar{t}$ Release 21"
         <<: *variable_cuts_ttbar
 
     zprime_r21_val:
-        path: <path_palce_holder>/inclusive_validation_zprime_PFlow.h5
+        path: <path_place_holder>/inclusive_validation_zprime_PFlow.h5
         label: "$Z'$ Release 21"
         <<: *variable_cuts_zpext
 
 test_files:
     ttbar_r21:
-        path: <path_palce_holder>/inclusive_testing_ttbar_PFlow.h5
+        path: <path_place_holder>/inclusive_testing_ttbar_PFlow.h5
         <<: *variable_cuts_ttbar
 
     ttbar_r22:
-        path: <path_palce_holder>/inclusive_testing_ttbar_PFlow_r22.h5
+        path: <path_place_holder>/inclusive_testing_ttbar_PFlow_r22.h5
         <<: *variable_cuts_ttbar
 
     zpext_r21:
-        path: <path_palce_holder>/inclusive_testing_zprime_PFlow.h5
+        path: <path_place_holder>/inclusive_testing_zprime_PFlow.h5
         <<: *variable_cuts_zpext
 
     zpext_r22:
-        path: <path_palce_holder>/inclusive_testing_zpext_PFlow_r22.h5
+        path: <path_place_holder>/inclusive_testing_zpext_PFlow_r22.h5
         <<: *variable_cuts_zpext
 
 # Path to Variable dict used in preprocessing
-var_dict: <path_palce_holder>/umami/umami/configs/Dips_Variables.yaml
+var_dict: <path_place_holder>/umami/umami/configs/Dips_Variables.yaml
 
 exclude: null
 
@@ -141,7 +141,7 @@ Eval_parameters_validation:
         }
 
     # Charm fraction value used for evaluation of the trained model
-    frac_values: {"cjets": 0.018, "ujets": 0.982}
+    frac_values: {"cjets": 0.005, "ujets": 0.995}
 
     # Working point used in the evaluation
     WP: 0.77
