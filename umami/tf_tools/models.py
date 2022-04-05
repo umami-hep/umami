@@ -2,6 +2,8 @@
 Implementations by Johnny Raine
 """
 
+import os
+
 import tensorflow.keras.backend as K  # pylint: disable=import-error
 from tensorflow.keras.layers import (  # pylint: disable=import-error
     Activation,
@@ -12,7 +14,10 @@ from tensorflow.keras.layers import (  # pylint: disable=import-error
     Input,
     Lambda,
 )
-from tensorflow.keras.models import Model  # pylint: disable=import-error
+from tensorflow.keras.models import Model, load_model  # pylint: disable=import-error
+
+from umami.configuration import logger
+from umami.tools import natural_keys
 
 from .layers import (
     Attention,
@@ -22,7 +27,115 @@ from .layers import (
     DeepSet,
     DenseNet,
     MaskedAverage1DPooling,
+    Sum,
 )
+
+
+def prepare_model(
+    train_config: object,
+    continue_training: bool = False,
+):
+    """Prepare the keras model.
+
+    Parameters
+    ----------
+    train_config : object
+        Loaded train config file.
+    continue_training : bool, optional
+        Decide if the training is continued (True) or if the given model is used
+        as start weights (False), by default False
+
+    Returns
+    -------
+    model
+        Loaded keras model (either the latest model for continuation or the given
+        one).
+    init_epoch
+        Internal epoch number for the training. If the training is continued, this
+        is the number of the lastest trained epoch (this is so that when the
+        training starts, epoch 1 is not overwritten).
+    load_optimiser
+        Decide, if the optimiser of the model is loaded (True) or if the model
+        will be recompiled.
+
+    Raises
+    ------
+    ValueError
+        If load_optimiser is True and no model file is given.
+    """
+    # Load NN Structure and training parameter from file
+    load_optimiser = (
+        train_config.NN_structure["load_optimiser"]
+        if "load_optimiser" in train_config.NN_structure
+        else False
+    )
+
+    # Check that load optimiser is only valid when a model file is given
+    if load_optimiser is True and train_config.model_file is None:
+        raise ValueError(
+            "You can't load the optimiser state from a model if not model is given!"
+        )
+
+    # Init the init_epoch
+    init_epoch = 0
+
+    if train_config.model_file is not None:
+        logger.info(f"Loading model from: {train_config.model_file}")
+        model_file = train_config.model_file
+
+    elif continue_training:
+        # Get the lastest epoch available
+        model_file_name = sorted(
+            os.listdir(os.path.join(train_config.model_name, "model_files")),
+            key=natural_keys,
+        )[-1]
+
+        # Load the latest model
+        logger.info(f"Continue training using model {model_file_name}")
+
+        # Set the load_optimiser to True so the model is not recompiled
+        load_optimiser = True
+
+        # Get the number of the last epoch which will be the init epoch
+        init_epoch = int(
+            model_file_name[
+                model_file_name.rfind("model_epoch")
+                + len("model_epoch") : model_file_name.rfind(".h5")
+            ]
+        )
+
+        # Get the path of the selected model
+        model_file = os.path.join(
+            train_config.model_name,
+            "model_files",
+            model_file_name,
+        )
+
+    else:
+        model_file = None
+
+    # Check if the model file is found/given or not.
+    if model_file:
+        model = load_model(
+            model_file,
+            {
+                "Sum": Sum,
+                "Attention": Attention,
+                "DeepSet": DeepSet,
+                "AttentionPooling": AttentionPooling,
+                "DenseNet": DenseNet,
+                "ConditionalAttention": ConditionalAttention,
+                "ConditionalDeepSet": ConditionalDeepSet,
+            },
+            compile=load_optimiser,
+        )
+
+    else:
+        model = None
+
+    # Return the model, init_epoch and the bool for loading of the
+    # optimiser
+    return model, init_epoch, load_optimiser
 
 
 def Deepsets_model(

@@ -113,16 +113,36 @@ def CompTaggerRejectionDict(
     # Binarize the labels
     y_true = GetBinaryLabels(labels)
 
-    # Calculate rejections
-    recomm_rej_dict, _ = GetRejection(
-        y_pred=df[tagger_comp_var].values,
-        y_true=y_true,
-        unique_identifier=unique_identifier,
-        class_labels=class_labels,
-        main_class=main_class,
-        frac_dict=recommended_frac_dict,
-        target_eff=WP,
-    )
+    # Get a list with all per-jets variables loaded
+    avai_variables = list(df.keys())
+
+    # Init a bool if the rejection should be skipped
+    Skip_rej_calc = False
+
+    # Check if the tagger variables are available
+    for tagger_var in tagger_comp_var:
+        if tagger_var not in avai_variables:
+            logger.warning(
+                f"Tagger probability {tagger_var} not in validation file"
+                f" {os.path.basename(file)}. Skipping ..."
+            )
+            Skip_rej_calc = True
+
+    # Init an empty dict so the loop while plotting will not break
+    if Skip_rej_calc:
+        recomm_rej_dict = {}
+
+    else:
+        # Calculate rejections
+        recomm_rej_dict, _ = GetRejection(
+            y_pred=df[tagger_comp_var].values,
+            y_true=y_true,
+            unique_identifier=unique_identifier,
+            class_labels=class_labels,
+            main_class=main_class,
+            frac_dict=recommended_frac_dict,
+            target_eff=WP,
+        )
 
     return recomm_rej_dict
 

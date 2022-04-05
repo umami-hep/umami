@@ -8,27 +8,32 @@ import h5py
 import tensorflow as tf
 import yaml
 from tensorflow.keras.callbacks import ModelCheckpoint  # pylint: disable=import-error
-from tensorflow.keras.models import load_model  # pylint: disable=import-error
 from tensorflow.keras.optimizers import Adam  # pylint: disable=import-error
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
-
-# from umami.institutes.utils import is_qsub_available, submit_zeuthen
 from umami.tools import yaml_loader
 
 
-def Umami_model(train_config=None, input_shape=None, njet_features=None):
+def Umami_model(
+    train_config: object,
+    input_shape: tuple,
+    njet_features: int,
+    continue_training: bool = False,
+):
     """Keras model definition of UMAMI tagger.
 
     Parameters
     ----------
-    train_config : object, optional
-        training config, by default None
-    input_shape : tuple, optional
-        dataset input shape, by default None
-    njet_features: int, optional
-        number of jet features, by default None
+    train_config : object
+        training config
+    input_shape : tuple
+        dataset input shape
+    njet_features: int
+        number of jet features
+    continue_training : bool, optional
+        Decide, if the training is continued using the latest
+        model file, by default False
 
     Returns
     -------
@@ -36,26 +41,19 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
         UMAMI with conditional attention keras model
     int
         number of epochs
+    int
+        Starting epoch number
     """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
 
-    if train_config.model_file is not None:
-        # Load DIPS model from file
-        logger.info(f"Loading model from: {train_config.model_file}")
-        custom_obj = {
-            "Sum": utf.Sum,
-            "Attention": utf.Attention,
-            "DeepSet": utf.DeepSet,
-            "AttentionPooling": utf.AttentionPooling,
-            "DenseNet": utf.DenseNet,
-            "ConditionalAttention": utf.ConditionalAttention,
-            "ConditionalDeepset": utf.ConditionalDeepSet,
-        }
+    # Check if a prepared model is used or not
+    umami, init_epoch, load_optimiser = utf.prepare_model(
+        train_config=train_config,
+        continue_training=continue_training,
+    )
 
-        umami = load_model(train_config.model_file, custom_obj, compile=False)
-
-    else:
+    if umami is None:
         logger.info("No modelfile provided! Initialize a new one!")
 
         umami = utf.Deepsets_model_umami(
@@ -80,20 +78,21 @@ def Umami_model(train_config=None, input_shape=None, njet_features=None):
             attention_softmax=False,
         )
 
+    if load_optimiser is False:
+        # Set optimier and loss
+        model_optimizer = Adam(learning_rate=NN_structure["lr"])
+        umami.compile(
+            loss="categorical_crossentropy",
+            loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
+            optimizer=model_optimizer,
+            metrics=["accuracy"],
+        )
+
     # Print Umami model summary when log level lower or equal INFO level
     if logger.level <= 20:
         umami.summary()
 
-    # Set optimier and loss
-    model_optimizer = Adam(learning_rate=NN_structure["lr"])
-    umami.compile(
-        loss="categorical_crossentropy",
-        loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
-        optimizer=model_optimizer,
-        metrics=["accuracy"],
-    )
-
-    return umami, NN_structure["epochs"]
+    return umami, NN_structure["epochs"], init_epoch
 
 
 def UmamiCondAtt(args, train_config, preprocess_config):
@@ -232,10 +231,14 @@ def UmamiCondAtt(args, train_config, preprocess_config):
             "a directory with TF Record Files. You should check this."
         )
 
-    umami, _ = Umami_model(
+    umami, _, init_epoch = Umami_model(
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
         njet_features=metadata["n_jet_features"],
+        continue_training=train_config.config["continue_training"]
+        if "continue_training" in train_config.config
+        and train_config.config["continue_training"] is not None
+        else False,
     )
 
     # Check if epochs is set via argparser or not
@@ -306,6 +309,7 @@ def UmamiCondAtt(args, train_config, preprocess_config):
         else metadata["n_jets"] / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
+        initial_epoch=init_epoch,
     )
 
     # Dump dict into json
