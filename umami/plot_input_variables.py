@@ -10,6 +10,7 @@ import yaml
 
 import umami.input_vars_tools as uit
 from umami.configuration import logger
+from umami.plotting.utils import translate_kwargs
 from umami.tools import yaml_loader
 
 
@@ -63,6 +64,7 @@ def plot_trks_variables(plot_config, plot_type):
     plot_type : str
         Plottype, like pdf or png
     """
+    plot_config["Eval_parameters"] = translate_kwargs(plot_config["Eval_parameters"])
     # Iterate over the different plots which are to be plotted
     for plot_name, plotting_config in plot_config.items():
         if plot_name == "Eval_parameters" or plot_name[0] == ".":
@@ -72,6 +74,9 @@ def plot_trks_variables(plot_config, plot_type):
             continue
 
         logger.info(f"Start {plot_name}...\n")
+        plotting_config["plot_settings"] = translate_kwargs(
+            plotting_config["plot_settings"]
+        )
         filepath_list = []
         labels_list = []
         tracks_list = []
@@ -110,8 +115,8 @@ def plot_trks_variables(plot_config, plot_type):
                     if plotting_config["folder_to_save"]
                     else "input_vars_trks/",
                     plot_type=plot_type,
-                    **plotting_config["plot_settings"],
                     track_origin=trk_origin,
+                    **plotting_config["plot_settings"],
                 )
 
             else:
@@ -127,8 +132,8 @@ def plot_trks_variables(plot_config, plot_type):
                     if plotting_config["folder_to_save"]
                     else "input_vars_trks/",
                     plot_type=plot_type,
-                    **plotting_config["plot_settings"],
                     track_origin=trk_origin,
+                    **plotting_config["plot_settings"],
                 )
 
 
@@ -142,6 +147,7 @@ def plot_jets_variables(plot_config, plot_type):
     plot_type : str
         Plottype, like pdf or png
     """
+    plot_config["Eval_parameters"] = translate_kwargs(plot_config["Eval_parameters"])
     # Iterate over the different plots which are to be plotted
     for plot_name, plotting_config in plot_config.items():
         if plot_name == "Eval_parameters" or plot_name[0] == ".":
@@ -151,6 +157,9 @@ def plot_jets_variables(plot_config, plot_type):
             continue
 
         logger.info(f"Start {plot_name}...\n")
+        plotting_config["plot_settings"] = translate_kwargs(
+            plotting_config["plot_settings"]
+        )
         filepath_list = []
         labels_list = []
 

@@ -129,7 +129,8 @@ nTracks:
       tracks_name: "tracks"
   plot_settings:
     <<: *default_plot_settings
-    ratio_cut: [0.5, 2]
+    ymin_ratio_1: 0.5
+    ymax_ratio_1: 2
   class_labels: ["bjets", "cjets", "ujets"]
 
 tracks_input_vars:
@@ -148,7 +149,8 @@ tracks_input_vars:
     <<: *default_plot_settings
     sorting_variable: "ptfrac"
     n_leading: [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    ratio_cut: [0.5, 1.5]
+    ymin_ratio_1: 0.5
+    ymax_ratio_1: 1.5
   binning:
     IP3D_signed_d0_significance: 100
     IP3D_signed_z0_significance: 100

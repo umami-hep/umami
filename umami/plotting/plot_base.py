@@ -55,7 +55,7 @@ class plot_object:
     title : str, optional
         Title of the plot, by default ""
     draw_errors : bool, optional
-        Binominal errors on the lines, by default True
+        Draw statistical uncertainty on the lines, by default True
     xmin : float, optional
         Minimum value of the x-axis, by default None
     xmax : float, optional
@@ -87,8 +87,8 @@ class plot_object:
         Used fontsize, by default 10
     n_ratio_panels : int, optional
         Amount of ratio panels between 0 and 2, by default 1
-    figsize : (float, float)
-        Tuple of figure size `(width, height)` in inches.
+    figsize : (float, float), optional
+        Tuple of figure size `(width, height)` in inches, by default (8, 6)
     dpi : int, optional
         dpi used for plotting, by default 400
     grid : bool, optional
@@ -110,7 +110,7 @@ class plot_object:
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,
         by default,
-        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, fc=0.018"
+        `$\\sqrt{s}=13$ TeV, PFlow Jets, \\n$t\\bar{t}$ Test Sample, $f_{c}=0.018$`
     atlas_fontsize : float, optional
         Fontsize of ATLAS label, by default 10
     atlas_vertical_offset : float, optional

@@ -17,6 +17,7 @@ plot_histo = histogram_plot(
     atlas_first_tag="Simulation, $\\sqrt{s}=13$ TeV",
     atlas_second_tag="$t\\bar{t}$ test sample, PFlow jets",
     atlas_brand=None,
+    draw_errors=False,
     # bins=np.linspace(0, 1, 30),  # you can also force a binning for the plot here
 )
 

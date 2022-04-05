@@ -9,92 +9,7 @@ import numpy as np
 import umami.data_tools as udt
 from umami.configuration import global_config, logger
 from umami.plotting import histogram, histogram_plot
-from umami.plotting.utils import translate_kwargs
 from umami.preprocessing_tools import GetVariableDict
-
-
-def check_kwargs_var_plots(kwargs: dict, **custom_default):
-    """
-    Validate the kwargs for plotting functions from **kwargs in function definition.
-
-    Parameters
-    ----------
-    kwargs: dict
-        kwargs dictionary passed to the plotting functions
-        - use_atlas_tag : bool
-            Define if ATLAS Tag is used or not.
-        - apply_atlas_style : bool
-            Apply ATLAS Style of the plot (for approval etc.).
-        - atlas_first_tag : str
-            Main tag. Mainly "Internal Simulation".
-        - atlas_second_tag : str
-            Lower tag in the ATLAS label with infos.
-        - y_scale : float
-            Y axis increase factor to fit the ATLAS label.
-        - figsize : list
-            List of the figure size. i.e [5, 6]
-        - logy : bool
-            Set y-axis log True or False.
-        - ylabel : str
-            Y-label.
-        - leg_fontsize : int
-            Legend font size.
-        - leg_ncol : int
-            Number of columns of the legend.
-        - leg_loc : str
-            Location of the legend (matplotlib conventions)
-        - bin_width_in_ylabel : bool
-            Option to specify the bin width in the ylabel, by default True
-        - plot_type: str
-            File format for the output, by default "pdf"
-        - transparent: bool
-            Option to make the background of the plot transparent, by default True
-        - norm: bool
-            Normalise histograms, by default True
-    **custom_default: dict
-        overwrites the default values defined in this function
-
-    Returns
-    -------
-    kwargs: dict
-        kwargs, replaced with custom default values if needed
-    """
-    # the following kwargs all plotting functions have in common
-    default_kwargs = {
-        "use_atlas_tag": True,
-        "apply_atlas_style": True,
-        "atlas_first_tag": "Internal Simulation",
-        "atlas_second_tag": "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets",
-        "y_scale": 1,
-        "figsize": (6.8, 5),
-        "logy": True,
-        "ylabel": "Number of Tracks",
-        "leg_fontsize": 10,
-        "leg_ncol": 1,
-        "leg_loc": "upper right",
-        "bin_width_in_ylabel": True,
-        "plot_type": "pdf",
-        "transparent": True,
-        "norm": True,
-    }
-
-    updated_kwargs = {}
-    for key, value in default_kwargs.items():
-        if key in kwargs.keys():
-            updated_kwargs[key] = kwargs[key]
-        elif key in custom_default.keys():  # pylint: disable=C0201
-            updated_kwargs[key] = custom_default[key]
-        else:
-            updated_kwargs[key] = value
-
-    # Add "Normalised" to ylabel in case it was forgotten
-    if (
-        updated_kwargs["norm"] is True
-        and "norm" not in updated_kwargs["ylabel"].lower()
-    ):
-        updated_kwargs["ylabel"] = "Normalised " + updated_kwargs["ylabel"]
-
-    return updated_kwargs
 
 
 def plot_n_tracks_per_jet(
@@ -104,7 +19,8 @@ def plot_n_tracks_per_jet(
     n_jets: int,
     class_labels: list,
     output_directory: str = "input_vars_trks",
-    ratio_cut: list = None,
+    plot_type: str = "pdf",
+    transparent: bool = True,
     track_origin: str = "All",
     **kwargs,
 ):
@@ -127,16 +43,26 @@ def plot_n_tracks_per_jet(
         List of classes that are to be plotted.
     output_directory : str
         Name of the output directory. Only the dir name not path!
-    ratio_cut : list
-        List of y-axis cuts for the ratio block.
-    track_origin : str
-        Track set that is to be used for plotting.
+    plot_type: str, optional
+        File format for the output, by default "pdf"
+    transparent: bool, optional
+        Option to make the background of the plot transparent, by default True
+    track_origin : str, optional
+        Track set that is to be used for plotting, by default "All"
     **kwargs: dict
-        additional arguments passed to `check_kwargs_var_plots`
+        Keyword arguments passed to the plot. You can use all arguments that are
+        supported by the `histogram_plot` class in the plotting API.
     """
+
     # check the kwargs
-    kwargs = translate_kwargs(kwargs)
-    kwargs = check_kwargs_var_plots(kwargs)
+    if "ylabel" not in kwargs:
+        kwargs["ylabel"] = "Number of Tracks"
+    if "norm" not in kwargs:
+        kwargs["norm"] = True
+    # Add "Normalised" to ylabel in case it was forgotten
+    if kwargs["norm"] and "norm" not in kwargs["ylabel"].lower():
+        kwargs["ylabel"] = "Normalised " + kwargs["ylabel"]
+
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
 
@@ -170,19 +96,8 @@ def plot_n_tracks_per_jet(
     # Initialise plot
     n_tracks_plot = histogram_plot(
         bins=np.arange(-0.5, 40.5, 1),
-        ymin_ratio_1=ratio_cut[0] if ratio_cut is not None else None,
-        ymax_ratio_1=ratio_cut[1] if ratio_cut is not None else None,
         n_ratio_panels=1 if len(datasets_filepaths) > 1 else 0,
-        norm=kwargs["norm"],
-        y_scale=kwargs["y_scale"],
-        ylabel=kwargs["ylabel"],
-        logy=kwargs["logy"],
-        figsize=kwargs["figsize"],
-        leg_ncol=kwargs["leg_ncol"],
-        leg_loc=kwargs["leg_loc"],
-        apply_atlas_style=kwargs["apply_atlas_style"],
-        atlas_second_tag=kwargs["atlas_second_tag"],
-        bin_width_in_ylabel=kwargs["bin_width_in_ylabel"],
+        **kwargs,
     )
     # Set xlabel
     n_tracks_plot.xlabel = (
@@ -224,7 +139,8 @@ def plot_n_tracks_per_jet(
 
     n_tracks_plot.draw()
     n_tracks_plot.savefig(
-        f"{output_directory}/nTracks_per_Jet_{track_origin}.{kwargs['plot_type']}"
+        f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}",
+        transparent=transparent,
     )
 
 
@@ -239,7 +155,8 @@ def plot_input_vars_trks(
     sorting_variable: str = "ptfrac",
     n_leading: list = None,
     output_directory: str = "input_vars_trks",
-    ratio_cut: list = None,
+    plot_type: str = "pdf",
+    transparent: bool = True,
     track_origin: str = "All",
     **kwargs,
 ):
@@ -270,23 +187,29 @@ def plot_input_vars_trks(
         n-th leading jet which is plotted. For all, = None.
     output_directory : str
         Name of the output directory. Only the dir name not path!
-    ratio_cut : list
-        List of y-axis cuts for the ratio block.
-    track_origin: str
-        Track set that is to be used for plotting.
+    plot_type: str, optional
+        File format for the output, by default "pdf"
+    transparent: bool, optional
+        Option to make the background of the plot transparent, by default True
+    track_origin : str, optional
+        Track set that is to be used for plotting, by default "All"
     **kwargs: dict
-        additional arguments passed to `check_kwargs_var_plots`
+        Keyword arguments passed to the plot. You can use all arguments that are
+        supported by the `histogram_plot` class in the plotting API.
 
     Raises
     ------
     ValueError
         If the type of the given binning is not supported.
     """
-    # TODO: move remove ratio_cut and replace with "ratio_ymin" and "ratio_ymax" in
-    # kwargs which are then handed to the histogram plot
     # check the kwargs
-    kwargs = translate_kwargs(kwargs)
-    kwargs = check_kwargs_var_plots(kwargs)
+    if "ylabel" not in kwargs:
+        kwargs["ylabel"] = "Number of Tracks"
+    if "norm" not in kwargs:
+        kwargs["norm"] = True
+    # Add "Normalised" to ylabel in case it was forgotten
+    if kwargs["norm"] and "norm" not in kwargs["ylabel"].lower():
+        kwargs["ylabel"] = "Normalised " + kwargs["ylabel"]
 
     # check to avoid dangerous default value (list)
     if n_leading is None:
@@ -432,18 +355,8 @@ def plot_input_vars_trks(
                 # Initialise plot for this variable
                 var_plot = histogram_plot(
                     bins=bins_dict[var],
-                    ymin_ratio_1=ratio_cut[0] if ratio_cut is not None else None,
-                    ymax_ratio_1=ratio_cut[1] if ratio_cut is not None else None,
                     n_ratio_panels=1 if len(datasets_filepaths) > 1 else 0,
-                    norm=kwargs["norm"],
-                    y_scale=kwargs["y_scale"],
-                    ylabel=kwargs["ylabel"],
-                    logy=kwargs["logy"],
-                    figsize=kwargs["figsize"],
-                    leg_ncol=kwargs["leg_ncol"],
-                    apply_atlas_style=kwargs["apply_atlas_style"],
-                    atlas_second_tag=kwargs["atlas_second_tag"],
-                    bin_width_in_ylabel=kwargs["bin_width_in_ylabel"],
+                    **kwargs,
                 )
 
                 if n_lead is None:
@@ -513,8 +426,8 @@ def plot_input_vars_trks(
 
                 var_plot.draw()
                 var_plot.savefig(
-                    f"{filedir}/{var}_{n_lead}_{track_origin}.{kwargs['plot_type']}",
-                    transparent=kwargs["transparent"],
+                    f"{filedir}/{var}_{n_lead}_{track_origin}.{plot_type}",
+                    transparent=transparent,
                 )
         logger.info(f"\n{80 * '-'}")
 
@@ -528,7 +441,8 @@ def plot_input_vars_jets(
     class_labels: list,
     special_param_jets: dict = None,
     output_directory: str = "input_vars_jets",
-    ratio_cut: list = None,
+    plot_type: str = "pdf",
+    transparent: bool = True,
     **kwargs,
 ):
     """
@@ -554,11 +468,13 @@ def plot_input_vars_jets(
         Dict with special x-axis cuts for the given variable.
     output_directory : str
         Name of the output directory. Only the dir name not path!
-    ratio_cut : list
-        List of y-axis cuts for the ratio block.
-
+    plot_type: str, optional
+        File format for the output, by default "pdf"
+    transparent: bool, optional
+        Option to make the background of the plot transparent, by default True
     **kwargs: dict
-        additional arguments passed to `check_kwargs_var_plots`
+        Keyword arguments passed to the plot. You can use all arguments that are
+        supported by the `histogram_plot` class in the plotting API.
 
     Raises
     ------
@@ -567,8 +483,13 @@ def plot_input_vars_jets(
     """
 
     # check the kwargs
-    kwargs = translate_kwargs(kwargs)
-    kwargs = check_kwargs_var_plots(kwargs, yAxisIncrease=10)
+    if "ylabel" not in kwargs:
+        kwargs["ylabel"] = "Number of Jets"
+    if "norm" not in kwargs:
+        kwargs["norm"] = True
+    # Add "Normalised" to ylabel in case it was forgotten
+    if kwargs["norm"] and "norm" not in kwargs["ylabel"].lower():
+        kwargs["ylabel"] = "Normalised " + kwargs["ylabel"]
 
     # Set the ylabel to jets
     if "ylabel" not in kwargs:
@@ -643,19 +564,8 @@ def plot_input_vars_jets(
             var_plot = histogram_plot(
                 bins=bins_dict[var],
                 xlabel=var,
-                ymin_ratio_1=ratio_cut[0] if ratio_cut is not None else None,
-                ymax_ratio_1=ratio_cut[1] if ratio_cut is not None else None,
                 n_ratio_panels=1 if len(datasets_filepaths) > 1 else 0,
-                norm=kwargs["norm"],
-                y_scale=kwargs["y_scale"],
-                ylabel=kwargs["ylabel"],
-                logy=kwargs["logy"],
-                figsize=kwargs["figsize"],
-                leg_ncol=kwargs["leg_ncol"],
-                leg_loc=kwargs["leg_loc"],
-                apply_atlas_style=kwargs["apply_atlas_style"],
-                atlas_second_tag=kwargs["atlas_second_tag"],
-                bin_width_in_ylabel=kwargs["bin_width_in_ylabel"],
+                **kwargs,
             )
             # setting range based on value from config file
             if special_param_jets is not None and var in special_param_jets:
@@ -697,9 +607,6 @@ def plot_input_vars_jets(
 
             # Draw and save the plot
             var_plot.draw()
-            var_plot.savefig(
-                f"{filedir}/{var}.{kwargs['plot_type']}",
-                transparent=kwargs["transparent"],
-            )
+            var_plot.savefig(f"{filedir}/{var}.{plot_type}", transparent=transparent)
 
     logger.info(f"\n{80 * '-'}")
