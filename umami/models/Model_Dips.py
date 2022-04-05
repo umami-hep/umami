@@ -16,29 +16,38 @@ from tensorflow.keras.layers import (  # pylint: disable=import-error
     Masking,
     TimeDistributed,
 )
-from tensorflow.keras.models import Model, load_model  # pylint: disable=import-error
+from tensorflow.keras.models import Model  # pylint: disable=import-error
 from tensorflow.keras.optimizers import Adam  # pylint: disable=import-error
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
 
 
-def Dips_model(train_config=None, input_shape=None):
+def Dips_model(
+    train_config: object,
+    input_shape: tuple,
+    continue_training: bool = False,
+):
     """Keras model definition of DIPS.
 
     Parameters
     ----------
-    train_config : object, optional
-        training config, by default None
-    input_shape : tuple, optional
-        dataset input shape, by default None
+    train_config : object
+        training config
+    input_shape : tuple
+        dataset input shape
+    continue_training : bool, optional
+        Decide, if the training is continued using the latest
+        model file, by default False
 
     Returns
     -------
     keras model
         Dips keras model
     int
-        number of epochs
+        Number of epochs
+    int
+        Starting epoch number
     """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
@@ -47,19 +56,15 @@ def Dips_model(train_config=None, input_shape=None):
     batch_norm = NN_structure["Batch_Normalisation"]
     dropout = NN_structure["dropout"]
     class_labels = NN_structure["class_labels"]
-    load_optimiser = (
-        NN_structure["load_optimiser"] if "load_optimiser" in NN_structure else True
+
+    # Check if a prepared model is used or not
+    dips, init_epoch, load_optimiser = utf.prepare_model(
+        train_config=train_config,
+        continue_training=continue_training,
     )
 
-    if train_config.model_file is not None:
-        # Load DIPS model from file
-        logger.info(f"Loading model from: {train_config.model_file}")
-        dips = load_model(
-            train_config.model_file, {"Sum": utf.Sum}, compile=load_optimiser
-        )
-
-    else:
-        logger.info("No modelfile provided! Initialize a new one!")
+    if dips is None:
+        logger.info("No modelfile provided! Initialising a new one!")
 
         # Set the track input
         trk_inputs = Input(shape=input_shape)
@@ -111,7 +116,7 @@ def Dips_model(train_config=None, input_shape=None):
         output = Dense(len(class_labels), activation="softmax", name="Jet_class")(F)
         dips = Model(inputs=trk_inputs, outputs=output)
 
-    if not load_optimiser or train_config.model_file is None:
+    if load_optimiser is False:
         # Set optimier and loss
         model_optimiser = Adam(learning_rate=NN_structure["lr"])
         dips.compile(
@@ -124,7 +129,7 @@ def Dips_model(train_config=None, input_shape=None):
     if logger.level <= 20:
         dips.summary()
 
-    return dips, NN_structure["epochs"]
+    return dips, NN_structure["epochs"], init_epoch
 
 
 def Dips(args, train_config, preprocess_config):
@@ -220,9 +225,13 @@ def Dips(args, train_config, preprocess_config):
         )
 
     # Init dips model
-    dips, epochs = Dips_model(
+    dips, epochs, init_epoch = Dips_model(
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
+        continue_training=train_config.config["continue_training"]
+        if "continue_training" in train_config.config
+        and train_config.config["continue_training"] is not None
+        else False,
     )
 
     # Check if epochs is set via argparser or not
@@ -294,6 +303,7 @@ def Dips(args, train_config, preprocess_config):
         else metadata["n_jets"] / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
+        initial_epoch=init_epoch,
     )
 
     # Dump dict into json

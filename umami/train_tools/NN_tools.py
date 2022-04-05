@@ -206,7 +206,10 @@ def get_parameters_from_validation_dict_name(dict_name: str) -> dict:
     return parameters
 
 
-def setup_output_directory(dir_name: str) -> None:
+def setup_output_directory(
+    dir_name: str,
+    clean_start: bool = True,
+) -> None:
     """
     Check the output directory path and init/clean it.
 
@@ -214,6 +217,8 @@ def setup_output_directory(dir_name: str) -> None:
     ----------
     dir_name : str
         Path of the output directory.
+    clean_start : bool
+        Decide, if the old model files are cleaned or not.
 
     Raises
     ------
@@ -222,12 +227,14 @@ def setup_output_directory(dir_name: str) -> None:
     """
 
     outdir = Path(dir_name)
-    if outdir.is_dir():
+    if outdir.is_dir() and clean_start:
         logger.info("Removing model*.h5 and *.json files.")
         for model_file in outdir.glob("model*.h5"):
             model_file.unlink()
         for model_file in outdir.glob("*.json"):
             model_file.unlink()
+    elif outdir.is_dir() and not clean_start:
+        logger.info("Continue training. Old model files will not be erased.")
     elif outdir.is_file():
         raise Exception(
             f"{dir_name} is the output directory name but it already exists as a file!"
@@ -387,6 +394,7 @@ class CallbackBase(Callback):
         target_beff: float = 0.77,
         frac_dict: dict = None,
         dict_file_name: str = "DictFile.json",
+        clean_start: bool = True,
     ):
         """Init the parameters needed for the callback
 
@@ -412,6 +420,9 @@ class CallbackBase(Callback):
         dict_file_name : str
             Name of the file where the dict with the results of the callback
             are saved.
+        clean_start : bool
+            Decide, if the directory where the output is saved will be cleaned
+            before the training starts, by default True
         """
         super().__init__()
 
@@ -430,12 +441,16 @@ class CallbackBase(Callback):
         )
         self.model_name = model_name
         self.dict_file_name = dict_file_name
+        self.clean_start = clean_start
 
         # Init a list for the result dicts for each epoch
         self.dict_list = []
 
         # Init the directory and clean it from previous training
-        setup_output_directory(self.model_name)
+        setup_output_directory(
+            dir_name=self.model_name,
+            clean_start=self.clean_start,
+        )
 
 
 class MyCallback(CallbackBase):

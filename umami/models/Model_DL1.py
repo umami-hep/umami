@@ -13,7 +13,7 @@ from tensorflow.keras.layers import (  # pylint: disable=import-error
     Dropout,
     Input,
 )
-from tensorflow.keras.models import Model, load_model  # pylint: disable=import-error
+from tensorflow.keras.models import Model  # pylint: disable=import-error
 from tensorflow.keras.optimizers import Adam  # pylint: disable=import-error
 
 import umami.tf_tools as utf
@@ -27,6 +27,7 @@ def DL1_model(
     train_config: object,
     input_shape: tuple,
     feature_connect_indices: list = None,
+    continue_training: bool = False,
 ):
     """
     Constructs or loads the DL1 model
@@ -40,11 +41,18 @@ def DL1_model(
         Size of the input: (nFeatures,).
     feature_connect_indices : list
         List with features that are feeded in another time.
+    continue_training : bool, optional
+        Decide, if the training is continued using the latest
+        model file, by default False
 
     Returns
     -------
-    model: keras tensorflow model.
-    NN_structure["epochs"]: number of epochs to be trained
+    model : keras model
+        Keras model.
+    NN_structure["epochs"] :
+        number of epochs to be trained
+    init_epoch : int
+        Starting epoch number
     """
 
     # Load NN Structure and training parameter from file
@@ -54,16 +62,14 @@ def DL1_model(
     batch_norm = NN_structure["Batch_Normalisation"]
     dropout = NN_structure["dropout"]
     class_labels = NN_structure["class_labels"]
-    load_optimiser = (
-        NN_structure["load_optimiser"] if "load_optimiser" in NN_structure else True
+
+    # Check if a prepared model is used or not
+    model, init_epoch, load_optimiser = utf.prepare_model(
+        train_config=train_config,
+        continue_training=continue_training,
     )
 
-    # Load model from file if defined
-    if train_config.model_file is not None:
-        logger.info(f"Loading model from: {train_config.model_file}")
-        model = load_model(train_config.model_file, compile=load_optimiser)
-
-    else:
+    if model is None:
         # Define input
         inputs = Input(shape=input_shape)
 
@@ -99,6 +105,7 @@ def DL1_model(
         )(x)
         model = Model(inputs=inputs, outputs=predictions)
 
+    if load_optimiser is False:
         # Compile model with given optimiser
         model_optimiser = Adam(learning_rate=NN_structure["lr"])
         model.compile(
@@ -111,7 +118,7 @@ def DL1_model(
     if logger.level <= 20:
         model.summary()
 
-    return model, NN_structure["epochs"]
+    return model, NN_structure["epochs"], init_epoch
 
 
 def TrainLargeFile(args, train_config, preprocess_config):
@@ -231,10 +238,14 @@ def TrainLargeFile(args, train_config, preprocess_config):
         )
 
     # Load model and epochs
-    model, epochs = DL1_model(
+    model, epochs, init_epoch = DL1_model(
         train_config=train_config,
         input_shape=(metadata["n_jet_features"],),
         feature_connect_indices=feature_connect_indices,
+        continue_training=train_config.config["continue_training"]
+        if "continue_training" in train_config.config
+        and train_config.config["continue_training"] is not None
+        else False,
     )
 
     # Check if epochs is set via argparser or not
@@ -305,6 +316,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
         else metadata["n_jets"] / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
+        initial_epoch=init_epoch,
     )
 
     # Dump dict into json

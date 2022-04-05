@@ -6,14 +6,17 @@ import os
 import h5py
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint  # pylint: disable=import-error
-from tensorflow.keras.models import load_model  # pylint: disable=import-error
 from tensorflow.keras.optimizers import Adam  # pylint: disable=import-error
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
 
 
-def Cads_model(train_config, input_shape):
+def Cads_model(
+    train_config: object,
+    input_shape: tuple,
+    continue_training: bool = False,
+):
     """Keras model definition of CADS.
 
     Parameters
@@ -22,6 +25,9 @@ def Cads_model(train_config, input_shape):
         training config
     input_shape : tuple
         dataset input shape
+    continue_training : bool, optional
+        Decide, if the training is continued using the latest
+        model file, by default False
 
     Returns
     -------
@@ -29,31 +35,19 @@ def Cads_model(train_config, input_shape):
         CADS keras model
     int
         Number of epochs
+    int
+        Starting epoch number
     """
     # Load NN Structure and training parameter from file
     NN_structure = train_config.NN_structure
-    load_optimiser = (
-        NN_structure["load_optimiser"] if "load_optimiser" in NN_structure else True
+
+    # Check if a prepared model is used or not
+    cads, init_epoch, load_optimiser = utf.prepare_model(
+        train_config=train_config,
+        continue_training=continue_training,
     )
 
-    if train_config.model_file is not None:
-        # Load CADS model from file
-        logger.info(f"Loading model from: {train_config.model_file}")
-        cads = load_model(
-            train_config.model_file,
-            {
-                "Sum": utf.Sum,
-                "Attention": utf.Attention,
-                "DeepSet": utf.DeepSet,
-                "AttentionPooling": utf.AttentionPooling,
-                "DenseNet": utf.DenseNet,
-                "ConditionalAttention": utf.ConditionalAttention,
-                "ConditionalDeepSet": utf.ConditionalDeepSet,
-            },
-            compile=load_optimiser,
-        )
-
-    else:
+    if cads is None:
         # Init a new cads/dips attention model
         cads = utf.Deepsets_model(
             repeat_input_shape=input_shape,
@@ -74,7 +68,7 @@ def Cads_model(train_config, input_shape):
             attention_softmax=False,
         )
 
-    if not load_optimiser or train_config.model_file is None:
+    if load_optimiser is False:
         # Set optimiser and loss
         model_optimiser = Adam(learning_rate=NN_structure["lr"])
         cads.compile(
@@ -87,7 +81,7 @@ def Cads_model(train_config, input_shape):
     if logger.level <= 20:
         cads.summary()
 
-    return cads, NN_structure["epochs"]
+    return cads, NN_structure["epochs"], init_epoch
 
 
 def Cads(args, train_config, preprocess_config):
@@ -204,9 +198,13 @@ def Cads(args, train_config, preprocess_config):
         )
 
     # Init CADS model
-    cads, epochs = Cads_model(
+    cads, epochs, init_epoch = Cads_model(
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
+        continue_training=train_config.config["continue_training"]
+        if "continue_training" in train_config.config
+        and train_config.config["continue_training"] is not None
+        else False,
     )
 
     # Check if epochs is set via argparser or not
@@ -307,6 +305,7 @@ def Cads(args, train_config, preprocess_config):
         else metadata["n_jets"] / NN_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
+        initial_epoch=init_epoch,
     )
 
     # Dump dict into json
