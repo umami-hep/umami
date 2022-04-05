@@ -90,16 +90,26 @@ Most of the plot settings are valid for all types of input variable plots
 (i.e. jet variables, track variables and the n_tracks plot).
 If a parameter is only valid for a certain type of plot, this is listed below.
 
+
+## Plot settings
+You have to specify some parameters for the plots themselves, like for example the
+`binning` of all the variables. *Note that the binning also indicates if a variable is 
+plotted or not.*
+
+You can use the following parameters. Note that some parameters are not supported for all types of plots.
+
 | Options | Plot Type | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|-----------|--------------------|-------------|
 | `binning` | All | `int`, `list` or empty | Necessary | Here starts the binning for each variable. If you give a `int`, there will be that many equal-width bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is number of bins. The so arranged numbers are bin edges not bins! If no value is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
-| `logy` | All | `bool` | Optional | Decide if the plots are plotted with logarithmic y axis or without. |
-| `use_atlas_tag` | All | `bool` | Optional | Decide if the ATLAS Tag is printed in the upper left corner of the plot or not. |
-| `atlas_first_tag` | All | `str` | Optional | The first line of text right behind the 'ATLAS'. |
-| `atlas_second_tag` | All | `str` | Optional | Second line (if its starts with `\n`) of text right below the 'ATLAS' and the AtlasTag. |
- | `y_scale` | All | `float` | Optional |Increase the y-axis by a given factor. Mainly used to fit in the ATLAS Tag without cutting the lines of the plot. |
-| `figsize` | All | `list` | Optional | Two element `list` that gives the shape of the plot. (First is width, second is height). |
-| `ratio_cut` | All | `list` | Optional | If you add more then two models to plot, the comparison function is used with a small ratio plot at the bottom. Two element `list` that gives the lower (first element) and upper (second element) y axis bound of the ratio plot below the main plot. |
 | `sorting_variable` | Track variables | `str` | Optional | Variable Name to sort after. |
 | `n_leading` | Track variables | `list` | Optional | `list` of the x leading tracks. If `None`, all tracks will be plotted. If `0` the leading tracks sorted after `sorting variable` will be plotted. You can add like `None`, `0` and `1` for example and it will plot all 3 of them, each in their own folders with according labeling. This must be a `list`! Even if there is only one option given. |
 | `track_origins` | Track variables and n_tracks plot | `list` | Optional | `list` that gives the desired track origins when plotting. |
+
+All remaining plot settings are parameters which are handed to the plotting API, 
+more specifically the `histogram_plot` class.
+Therefore, all parameters supported by the `histogram_plot` class can be specified there.
+
+### List of plotting API parameters
+
+§§§docs/ci_assets/docstring_input_var_plots_umami.plotting.histogram_plot.md§§§
+§§§docs/ci_assets/docstring_input_var_plots_umami.plotting.plot_object.md:3:§§§

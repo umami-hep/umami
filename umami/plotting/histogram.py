@@ -194,7 +194,6 @@ class histogram_plot(plot_base):
         if self.n_ratio_panels > 1:
             raise ValueError("Not more than one ratio panel supported.")
         self.initialise_figure(sub_plot_index=6)
-        self.plotting_done = False
 
     def add(self, curve: object, key: str = None, reference: bool = False):
         """Adding histogram object to figure.
@@ -221,7 +220,7 @@ class histogram_plot(plot_base):
 
         # Add key to histogram object
         curve.key = key
-        logger.info(f"Adding histogram {key}")
+        logger.debug(f"Adding histogram {key}")
 
         # Set linestyle
         if curve.linestyle is None:
@@ -291,7 +290,7 @@ class histogram_plot(plot_base):
                     "the bin edges. The range will be ignored."
                 )
         elif isinstance(self.bins, int):
-            logger.info(f"Calculating bin edges of {self.bins} equal-width bins")
+            logger.debug(f"Calculating bin edges of {self.bins} equal-width bins")
             _, self.bins = np.histogram(
                 np.hstack([elem.values for elem in self.plot_objects.values()]),
                 bins=self.bins,
@@ -327,13 +326,14 @@ class histogram_plot(plot_base):
             )
 
             # Plot histogram uncertainty
-            self.axis_top.hist(
-                x=elem.bin_edges[:-1],
-                bins=self.bins,
-                bottom=elem.band,
-                weights=elem.unc * 2,
-                **global_config.hist_err_style,
-            )
+            if self.draw_errors:
+                self.axis_top.hist(
+                    x=elem.bin_edges[:-1],
+                    bins=self.bins,
+                    bottom=elem.band,
+                    weights=elem.unc * 2,
+                    **global_config.hist_err_style,
+                )
 
             plt_handles.append(
                 mtp.lines.Line2D(
@@ -345,9 +345,12 @@ class histogram_plot(plot_base):
                 )
             )
 
-        plt_handles.append(
-            mtp.patches.Patch(label="stat. uncertainty", **global_config.hist_err_style)
-        )
+        if self.draw_errors:
+            plt_handles.append(
+                mtp.patches.Patch(
+                    label="stat. uncertainty", **global_config.hist_err_style
+                )
+            )
         self.plotting_done = True
         return plt_handles
 
@@ -428,16 +431,17 @@ class histogram_plot(plot_base):
             )
 
             # Plot the ratio uncertainty
-            self.axis_ratio_1.fill_between(
-                x=elem.bin_edges,
-                y1=ratio_unc_band_low,
-                y2=ratio_unc_band_high,
-                step="pre",
-                facecolor="none",
-                edgecolor=global_config.hist_err_style["edgecolor"],
-                linewidth=global_config.hist_err_style["linewidth"],
-                hatch=global_config.hist_err_style["hatch"],
-            )
+            if self.draw_errors:
+                self.axis_ratio_1.fill_between(
+                    x=elem.bin_edges,
+                    y1=ratio_unc_band_low,
+                    y2=ratio_unc_band_high,
+                    step="pre",
+                    facecolor="none",
+                    edgecolor=global_config.hist_err_style["edgecolor"],
+                    linewidth=global_config.hist_err_style["linewidth"],
+                    hatch=global_config.hist_err_style["hatch"],
+                )
 
     def add_bin_width_to_ylabel(self):
         """Adds the bin width to the ylabel of a histogram plot. If the bin with is

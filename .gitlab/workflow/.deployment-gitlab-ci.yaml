@@ -21,9 +21,11 @@
   dependencies:
     - sphinx-docs
     - test_examples
+    - convert_docstrings_to_md
   needs:
     - sphinx-docs
     - test_examples
+    - convert_docstrings_to_md
 
 pages:
   stage: pages
@@ -57,6 +59,7 @@ mr_docs_deploy:
   retry: 2
 
 sphinx-docs:
+  # TODO: move this to a separate stage
   # temporary to run it in the first step for MR
   stage: linting
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
@@ -77,4 +80,25 @@ sphinx-docs:
   artifacts:
     paths:
       - sphinx-docs
+    expire_in: 1 day
+
+convert_docstrings_to_md:
+  # this job runs a script which converts the parameters listed in numpy docstrings
+  # to a markdown table
+  # TODO: move this to a separate stage
+  stage: linting
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
+  before_script:
+    - . run_setup.sh
+  script:
+    - pip install npdoc-to-md==1.1
+    - mkdir docs/ci_assets
+    - cd docs/ci_assets
+    - python ../../.gitlab/workflow/docstring_to_md_table.py
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+  artifacts:
+    paths:
+      - docs/ci_assets
     expire_in: 1 day

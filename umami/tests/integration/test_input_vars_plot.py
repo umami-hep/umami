@@ -156,7 +156,7 @@ class TestInput_Vars_Plotting(unittest.TestCase):
         }
 
         # Change tracks params
-        self.config["tracks_input_vars"]["plot_settings"]["n_Leading"] = [
+        self.config["tracks_input_vars"]["plot_settings"]["n_leading"] = [
             None,
             0,
         ]

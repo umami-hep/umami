@@ -31,7 +31,8 @@ def translate_kwargs(kwargs):
         "ncol": "leg_ncol",
         "nJets": "n_jets",
         "normalise": "norm",
-        "Ratio_Cut": "ratio_cut",
+        "ratio_cut": ["ymin_ratio_1", "ymax_ratio_1"],
+        "Ratio_Cut": ["ymin_ratio_1", "ymax_ratio_1"],
         "SecondTag": "atlas_second_tag",
         "set_logy": "logy",
         "UseAtlasTag": "use_atlas_tag",
@@ -40,14 +41,21 @@ def translate_kwargs(kwargs):
     deprecated_args = ["yAxisAtlasTag"]
     for key, elem in mapping.items():
         if key in kwargs:
-            logger.debug(f"Mapping from old naming: {elem}: {kwargs[key]}")
-            if elem in kwargs:
-                logger.warning(
-                    "You specified two keyword arguments which mean the same: "
-                    f"{key}, {elem} --> using the new naming convention {elem}"
-                )
-            else:
-                kwargs[elem] = kwargs[key]
+            # if old naming is used, translate to new naming
+            logger.debug(f"Mapping keyword argument {key} -> {elem}")
+            if isinstance(elem, str):
+                # print warning if old AND new convention are used
+                if elem in kwargs:
+                    logger.warning(
+                        "You specified two keyword arguments which mean the same: "
+                        f"{key}, {elem} --> using the new naming convention {elem}"
+                    )
+                else:
+                    kwargs[elem] = kwargs[key]
+
+            elif isinstance(elem, list):
+                for i, key_new in enumerate(elem):
+                    kwargs[key_new] = kwargs[key][i]
             kwargs.pop(key)
 
     # Remove deprecated arguments from kwargs
