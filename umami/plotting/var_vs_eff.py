@@ -662,15 +662,12 @@ class var_vs_eff_plot(plot_base):
 
     def draw(
         self,
-        rlabel: str = "Ratio",
         labelpad: int = None,
     ):
         """Draw figure.
 
         Parameters
         ----------
-        rlabel : str, optional
-            label of ratio panel
         labelpad : int, optional
             Spacing in points from the axes bounding box including
             ticks and tick labels, by default "ratio"
@@ -691,7 +688,7 @@ class var_vs_eff_plot(plot_base):
         if self.n_ratio_panels > 0:
             self.set_ylabel(
                 self.axis_ratio_1,
-                rlabel,
+                self.ylabel_ratio_1,
                 align_right=False,
                 labelpad=labelpad,
             )

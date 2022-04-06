@@ -39,6 +39,7 @@ hist_rnnip_b = histogram(
 plot_histo = histogram_plot(
     n_ratio_panels=1,
     ylabel="Normalised number of jets",
+    ylabel_ratio_1="Ratio to DIPS",
     xlabel="$b$-jets discriminant",
     logy=False,
     leg_ncol=2,

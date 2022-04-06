@@ -81,6 +81,10 @@ class plot_object:
         Label of the x-axis, by default None
     ylabel : str, optional
         Label of the y-axis, by default None
+    ylabel_ratio_1 : str, optional
+        Label of the y-axis in the first ratio plot, by default "Ratio"
+    ylabel_ratio_2 : str, optional
+        Label of the y-axis in the second ratio plot, by default "Ratio"
     label_fontsize : int, optional
         Used fontsize in label, by default 12
     fontsize : int, optional
@@ -140,6 +144,8 @@ class plot_object:
     logy: bool = True
     xlabel: str = None
     ylabel: str = None
+    ylabel_ratio_1: str = "Ratio"
+    ylabel_ratio_2: str = "Ratio"
     label_fontsize: int = 12
     fontsize: int = 10
 
@@ -230,7 +236,6 @@ class plot_base(plot_object):
         self.axis_top = None
         self.axis_ratio_1 = None
         self.axis_ratio_2 = None
-        self.ratio_y_labels = {}
         self.fig = None
 
     def initialise_figure(self, sub_plot_index: int = 5):
@@ -570,4 +575,7 @@ class plot_base(plot_object):
             raise ValueError(
                 "Requested ratio panels and given ratio_panel do not match."
             )
-        self.ratio_y_labels[ratio_panel] = label
+        if ratio_panel == 1:
+            self.ylabel_ratio_1 = label
+        if ratio_panel == 2:
+            self.ylabel_ratio_2 = label

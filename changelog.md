@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding ylabel_ratio_1 and ylabel_ratio_2 to plot_base [!504](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/504)
 - Adding prepare_docs stage to CI [!503](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/503)
 - Extend flexibility in input var plotting functions [!501](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/501)
 - Adding continue_training option [!500](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/500)

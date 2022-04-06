@@ -240,13 +240,12 @@ class roc_output_TestCase(unittest.TestCase):
         plot.savefig(f"{self.actual_plots_dir}/{plotname}")
         # Uncomment line below to update expected image
         # plot.savefig(f"{self.expected_plots_dir}/{plotname}")
-        self.assertEqual(
-            None,
+        self.assertIsNone(
             compare_images(
                 f"{self.actual_plots_dir}/{plotname}",
                 f"{self.expected_plots_dir}/{plotname}",
                 tol=1,
-            ),
+            )
         )
 
     def test_output_four_curves_two_ratio(self):
@@ -305,11 +304,10 @@ class roc_output_TestCase(unittest.TestCase):
         plot.savefig(f"{self.actual_plots_dir}/{plotname}")
         # Uncomment line below to update expected image
         # plot.savefig(f"{self.expected_plots_dir}/{plotname}")
-        self.assertEqual(
-            None,
+        self.assertIsNone(
             compare_images(
                 f"{self.actual_plots_dir}/{plotname}",
                 f"{self.expected_plots_dir}/{plotname}",
                 tol=1,
-            ),
+            )
         )

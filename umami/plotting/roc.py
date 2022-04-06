@@ -527,15 +527,12 @@ class roc_plot(plot_base):
 
     def draw(
         self,
-        rlabel: str = None,
         labelpad: int = None,
     ):
         """Draw plotting
 
         Parameters
         ----------
-        rlabel : str or list, optional
-            label of ratio panels if only 1 ratio is requested
         labelpad : int, optional
             Spacing in points from the axes bounding box including
             ticks and tick labels, by default None
@@ -557,20 +554,16 @@ class roc_plot(plot_base):
             self.axis_top.grid()
 
         if self.n_ratio_panels > 0:
-            if rlabel is not None:
-                rlabel_1 = rlabel[0] if len(rlabel) > 0 else rlabel
-            else:
-                rlabel_1 = self.ratio_y_labels[1]
             self.set_ylabel(
                 self.axis_ratio_1,
-                rlabel_1,
+                self.ylabel_ratio_1,
                 align_right=False,
                 labelpad=labelpad,
             )
         if self.n_ratio_panels == 2:
             self.set_ylabel(
                 self.axis_ratio_2,
-                self.ratio_y_labels[2] if rlabel is None else rlabel[1],
+                self.ylabel_ratio_2,
                 align_right=False,
                 labelpad=labelpad,
             )
