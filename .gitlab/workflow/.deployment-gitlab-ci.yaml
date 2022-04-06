@@ -1,16 +1,15 @@
 # ----------------------------------------------------------------------------
-# deploying the gitlab pages
+# prepare, build and deploy the gitlab pages
 # ----------------------------------------------------------------------------
 
 .pages_template: &pages_template
   image: python:3.8-alpine
   script:
-    - ls docs/ci_assets
+    - ls docs/ci_assets  # list this folder to see in the logs if all the expected files are present
     - apk add --no-cache git subversion
     - pip install --upgrade pip setuptools wheel
     - pip install  mkdocs-material==${MATERIAL_VERSION}
     - cp changelog.md docs/setup/changelog.md
-    - python .gitlab/workflow/replace_placeholders_in_md.py --input "docs/**/*.md" --no_backup --exclude docs/setup/development/good_practices_docs.md
     - mkdocs build -d public
     - if [[ -f _redirects ]]; then cp _redirects public; fi;
     - mv sphinx-docs public/sphinx-docs
@@ -22,10 +21,12 @@
     - sphinx-docs
     - test_examples
     - convert_docstrings_to_md
+    - render_md_placeholders
   needs:
     - sphinx-docs
     - test_examples
     - convert_docstrings_to_md
+    - render_md_placeholders
 
 pages:
   stage: pages
@@ -59,9 +60,7 @@ mr_docs_deploy:
   retry: 2
 
 sphinx-docs:
-  # TODO: move this to a separate stage
-  # temporary to run it in the first step for MR
-  stage: linting
+  stage: prepare_docs
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   script:
     - pip install ipython
@@ -85,8 +84,7 @@ sphinx-docs:
 convert_docstrings_to_md:
   # this job runs a script which converts the parameters listed in numpy docstrings
   # to a markdown table
-  # TODO: move this to a separate stage
-  stage: linting
+  stage: prepare_docs
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   before_script:
     - . run_setup.sh
@@ -102,3 +100,21 @@ convert_docstrings_to_md:
     paths:
       - docs/ci_assets
     expire_in: 1 day
+
+render_md_placeholders:
+  # render the markdown placeholders (of the form §§§<filename>:start:end§§§)
+  stage: prepare_docs
+  image: python:3.8-alpine
+  script:
+    - python .gitlab/workflow/replace_placeholders_in_md.py --input "docs/**/*.md" --no_backup --exclude docs/setup/development/good_practices_docs.md
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+  artifacts:
+    paths:
+      - docs
+    expire_in: 1 day
+  dependencies:
+    - convert_docstrings_to_md
+  needs:
+    - convert_docstrings_to_md

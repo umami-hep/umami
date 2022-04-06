@@ -11,6 +11,7 @@ variables:
 stages:
   - check_mr
   - linting
+  - prepare_docs
   - image_build_umamibase
   - unit_test
   - integration_test_preprocessing
