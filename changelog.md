@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding prepare_docs stage to CI [!503](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/503)
 - Extend flexibility in input var plotting functions [!501](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/501)
 - Adding continue_training option [!500](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/500)
 - change default fc for evaluation of Dips and Cads in training configs [!499](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/499)
