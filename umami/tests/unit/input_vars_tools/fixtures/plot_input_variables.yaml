@@ -55,6 +55,8 @@ nTracks_Test:
     ymin_ratio_1: 0.5
     ymax_ratio_1: 2
     bin_width_in_ylabel: False
+    bins_range: [-0.5, 39.5]
+    bins: 40
   class_labels: ["bjets", "cjets", "ujets"]
 
 Tracks_Test:
