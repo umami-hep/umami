@@ -48,6 +48,9 @@ There are different track selections [defined in Athena](https://gitlab.cern.ch/
 * Standard: `tracks_ip3d_sd0sort`
 * Loose: `tracks_dipsLoose202102_sd0sort`
 
+!!! note 
+    The script `check_lwtnn-model.py` will look for the `tracks_name` parameter in your training config (and preprocessing config) which should match the [`output_name`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/configs/single-b-tag/EMPFlow.json#L38) of the tracks in your TDD config.
+
 
 ### Architecture and Weight File
 Splitting the model into architecture `arch_file` and weight file `hdf5_file` can be done via
@@ -67,7 +70,7 @@ git clone git@github.com:lwtnn/lwtnn.git
 python lwtnn/converters/kerasfunc2json.py architecture-lwtnn_model.json weights-lwtnn_model.h5 lwtnn_vars.json > FINAL-model.json
 ```
 
-To test if the created model is properly working you can use the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and add the created model to a config (e.g. [EMPFlow.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/configs/single-b-tag/EMPFlow.json)). This can exemplarily look like
+To test if the created model is properly working you can use the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and add the created model to a config (e.g. [EMPFlow.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/configs/single-b-tag/EMPFlow.json)). This can exemplarily look like
 ```json
 {
     "jet_collection": "AntiKt4EMPFlowJets_BTagging201903",
@@ -118,7 +121,7 @@ To test if the created model is properly working you can use the [training-datas
 
 To run the taggers within the dumper, we need the [r22 Branch](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/tree/r22) or we need to change the AnalysisBase version in the [setup.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/setup.sh#L21) to `asetup AnalysisBase,22.2.12,latest`.
 
-To run the dumper with the taggers on the grid, we need to add the path of the model file and the model itself to the job [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/grid/submit.sh). Here we need to add the model path like the configs model path to the script. Also we need to give `prun` the model file as an `--extFile`, due to its size. Also you need to avoid absolute paths in the [Config File](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/configs/single-b-tag/EMPFlow.json) or the grid job will fail. Add these paths to the [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/grid/submit.sh).
+To run the dumper with the taggers on the grid, we need to add the path of the model file and the model itself to the job [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/BTagTrainingPreprocessing/grid/grid-submit). Here we need to add the model path like the configs model path to the script. Also we need to give `prun` the model file as an `--extFile`, due to its size. Also you need to avoid absolute paths in the [Config File](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/configs/single-b-tag/EMPFlow.json) or the grid job will fail. Add these paths to the [submission file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/BTagTrainingPreprocessing/grid/grid-submit).
 
 This can look like this for example:
 ```
