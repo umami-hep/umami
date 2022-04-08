@@ -5,11 +5,53 @@
 import os
 
 import numpy as np
+from pandas import DataFrame
 
 import umami.data_tools as udt
 from umami.configuration import global_config, logger
 from umami.plotting import histogram, histogram_plot
+from umami.plotting.utils import translate_binning
 from umami.preprocessing_tools import GetVariableDict
+
+
+def check_kwargs_for_ylabel_and_n_ratio_panel(
+    kwargs: dict,
+    fallback_ylabel: str,
+    n_datasets: int,
+) -> dict:
+    """Helper function to check the following keyword arguments + using fallback
+    values if they are not set
+    - ylabel
+    - n_ratio_panels
+    - norm (set to "True" if not provided)
+
+    Parameters
+    ----------
+    kwargs : dict
+        Keyword arguments handed to the plotting function
+    fallback_ylabel : str
+        Fallback value for the ylabel
+    n_datasets : int
+        Number of datasets that are plotted
+
+    Returns
+    -------
+    kwargs
+        Updated keyword arguments
+    """
+
+    # check the kwargs
+    if "ylabel" not in kwargs:
+        kwargs["ylabel"] = fallback_ylabel
+    if "norm" not in kwargs:
+        kwargs["norm"] = True
+    # Add "Normalised" to ylabel in case it was forgotten
+    if kwargs["norm"] and "norm" not in kwargs["ylabel"].lower():
+        kwargs["ylabel"] = f"Normalised {kwargs['ylabel']}"
+    # Set number of ratio panels if not specified
+    if "n_ratio_panels" not in kwargs:
+        kwargs["n_ratio_panels"] = 1 if n_datasets > 1 else 0
+    return kwargs
 
 
 def plot_n_tracks_per_jet(
@@ -54,14 +96,11 @@ def plot_n_tracks_per_jet(
         supported by the `histogram_plot` class in the plotting API.
     """
 
-    # check the kwargs
-    if "ylabel" not in kwargs:
-        kwargs["ylabel"] = "Number of Tracks"
-    if "norm" not in kwargs:
-        kwargs["norm"] = True
-    # Add "Normalised" to ylabel in case it was forgotten
-    if kwargs["norm"] and "norm" not in kwargs["ylabel"].lower():
-        kwargs["ylabel"] = "Normalised " + kwargs["ylabel"]
+    kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(
+        kwargs,
+        fallback_ylabel="Number of Jets",
+        n_datasets=len(datasets_filepaths),
+    )
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
@@ -94,11 +133,7 @@ def plot_n_tracks_per_jet(
     logger.info(f"Track origin: {track_origin}\n")
 
     # Initialise plot
-    n_tracks_plot = histogram_plot(
-        bins=np.arange(-0.5, 40.5, 1),
-        n_ratio_panels=1 if len(datasets_filepaths) > 1 else 0,
-        **kwargs,
-    )
+    n_tracks_plot = histogram_plot(**kwargs)
     # Set xlabel
     n_tracks_plot.xlabel = (
         "Number of tracks per jet"
@@ -106,6 +141,8 @@ def plot_n_tracks_per_jet(
         else f"Number of tracks per jet ({track_origin})"
     )
 
+    # Store the means of the n_tracks distributions to print them at the end
+    n_tracks_means = {label: {} for label in datasets_labels}
     # Iterate over datasets
     for dataset_number, (label, linestyle) in enumerate(
         zip(datasets_labels, linestyles[: len(datasets_labels)])
@@ -126,6 +163,7 @@ def plot_n_tracks_per_jet(
         for flav_label, flavour in enumerate(class_labels):
 
             n_tracks_flavour = n_tracks[flavour_label_dict[label] == flav_label]
+            n_tracks_means[label].update({flavour: n_tracks_flavour.mean()})
 
             n_tracks_plot.add(
                 histogram(
@@ -142,6 +180,7 @@ def plot_n_tracks_per_jet(
         f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}",
         transparent=transparent,
     )
+    logger.info(f"Average number of tracks:\n{DataFrame.from_dict(n_tracks_means)}")
 
 
 def plot_input_vars_trks(
@@ -202,59 +241,21 @@ def plot_input_vars_trks(
     ValueError
         If the type of the given binning is not supported.
     """
-    # check the kwargs
-    if "ylabel" not in kwargs:
-        kwargs["ylabel"] = "Number of Tracks"
-    if "norm" not in kwargs:
-        kwargs["norm"] = True
-    # Add "Normalised" to ylabel in case it was forgotten
-    if kwargs["norm"] and "norm" not in kwargs["ylabel"].lower():
-        kwargs["ylabel"] = "Normalised " + kwargs["ylabel"]
+
+    kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(
+        kwargs,
+        fallback_ylabel="Number of Tracks",
+        n_datasets=len(datasets_filepaths),
+    )
 
     # check to avoid dangerous default value (list)
     if n_leading is None:
         n_leading = [None]
+
+    # Create dict that stores the binning for all the variables
     bins_dict = {}
-
-    # Load the given binning or set it
     for variable in binning:
-        if isinstance(binning[variable], list):
-            if variable.startswith("number"):
-                # TODO: change to |= in python 3.9
-                bins_dict.update(
-                    {
-                        variable: np.arange(
-                            binning[variable][0] - 0.5,
-                            binning[variable][1] - 0.5,
-                            binning[variable][2],
-                        )
-                    }
-                )
-
-            else:
-                # TODO: change to |= in python 3.9
-                bins_dict.update(
-                    {
-                        variable: np.arange(
-                            binning[variable][0],
-                            binning[variable][1],
-                            binning[variable][2],
-                        )
-                    }
-                )
-
-        # If int, set to the given numbers
-        elif isinstance(binning[variable], int):
-            # TODO: change to |= in python 3.9
-            bins_dict.update({variable: binning[variable]})
-
-        # If None, give default value
-        elif binning[variable] is None:
-            # TODO: change to |= in python 3.9
-            bins_dict.update({variable: int(100)})
-
-        else:
-            raise ValueError(f"Type {type(binning[variable])} is not supported!")
+        bins_dict.update({variable: translate_binning(binning[variable], variable)})
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
@@ -353,11 +354,7 @@ def plot_input_vars_trks(
                 logger.info(f"Plotting {var}...")
 
                 # Initialise plot for this variable
-                var_plot = histogram_plot(
-                    bins=bins_dict[var],
-                    n_ratio_panels=1 if len(datasets_filepaths) > 1 else 0,
-                    **kwargs,
-                )
+                var_plot = histogram_plot(bins=bins_dict[var], **kwargs)
 
                 if n_lead is None:
                     var_plot.xlabel = (
@@ -482,44 +479,16 @@ def plot_input_vars_jets(
         If the type of the given binning is not supported.
     """
 
-    # check the kwargs
-    if "ylabel" not in kwargs:
-        kwargs["ylabel"] = "Number of Jets"
-    if "norm" not in kwargs:
-        kwargs["norm"] = True
-    # Add "Normalised" to ylabel in case it was forgotten
-    if kwargs["norm"] and "norm" not in kwargs["ylabel"].lower():
-        kwargs["ylabel"] = "Normalised " + kwargs["ylabel"]
+    kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(
+        kwargs,
+        fallback_ylabel="Number of Jets",
+        n_datasets=len(datasets_filepaths),
+    )
 
-    # Set the ylabel to jets
-    if "ylabel" not in kwargs:
-        kwargs["ylabel"] = "Number of Jets"
-
+    # Create dict that stores the binning for all the variables
     bins_dict = {}
-
-    # Load the given binning or set it
     for variable in binning:
-        if isinstance(binning[variable], list):
-            bins_dict.update(
-                {
-                    variable: np.arange(
-                        binning[variable][0],
-                        binning[variable][1],
-                        binning[variable][2],
-                    )
-                }
-            )
-
-        # If int, set to the given numbers
-        elif isinstance(binning[variable], int):
-            bins_dict.update({variable: binning[variable]})
-
-        # If None, give default value
-        elif binning[variable] is None:
-            bins_dict.update({variable: int(100)})
-
-        else:
-            raise ValueError(f"Type {type(binning[variable])} is not supported!")
+        bins_dict.update({variable: translate_binning(binning[variable], variable)})
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
@@ -561,12 +530,7 @@ def plot_input_vars_jets(
         if var in bins_dict:
 
             # Initialise plot for this variable
-            var_plot = histogram_plot(
-                bins=bins_dict[var],
-                xlabel=var,
-                n_ratio_panels=1 if len(datasets_filepaths) > 1 else 0,
-                **kwargs,
-            )
+            var_plot = histogram_plot(bins=bins_dict[var], xlabel=var, **kwargs)
             # setting range based on value from config file
             if special_param_jets is not None and var in special_param_jets:
                 if (

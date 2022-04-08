@@ -69,6 +69,56 @@ def translate_kwargs(kwargs):
     return kwargs
 
 
+def translate_binning(
+    binning,
+    variable_name: str = None,
+):
+    """Helper function to translate binning used in some configs to an integer that
+    represents the number of bins or an array representing the bin edges
+
+    Parameters
+    ----------
+    binning : int, list or None
+        Binning
+    variable_name : str, optional
+        Name of the variable. If provided, and the name contains "number", the binning
+        will be created such that integer numbers are at the center of the bins,
+        by default None
+
+    Returns
+    -------
+    int or np.ndarray
+        Number of bins or array of bin edges
+
+    Raises
+    ------
+    ValueError
+        If unsupported type is provided
+    """
+    if isinstance(binning, list):
+        if len(binning) != 3:
+            raise ValueError(
+                "The list given for binning has to be of length 3, representing "
+                "[x_min, x_max, bin_width]"
+            )
+        bins = np.arange(binning[0], binning[1], binning[2])
+        if variable_name is not None:
+            if variable_name.startswith("number"):
+                bins = np.arange(binning[0] - 0.5, binning[1] - 0.5, binning[2])
+
+    # If int, set to the given numbers
+    elif isinstance(binning, int):
+        bins = binning
+
+    # If None, set number of bins to 100
+    elif binning is None:
+        bins = 100
+    else:
+        raise ValueError(f"Type {type(binning)} is not supported!")
+
+    return bins
+
+
 def set_xaxis_ticklabels_invisible(ax):
     """Helper function to set the ticklabels of the xaxis invisible
 
