@@ -2,6 +2,7 @@ It is recommended to use the Umami framework with a Docker image.
 
 You can either choose to use a fully build version where you are ready to run the code or a version where you are able to modify the code.
 
+If you are using lxplus or a local cluster with `cvmfs` access, the recommended way is to use the images unpacked on `cvmfs` as described [here](#singularity-images-on-cvmfs). This will just work out of the box.
 
 
 ## Docker container
