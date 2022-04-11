@@ -123,7 +123,7 @@ singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/alg
     singularity exec <folder_where_you_want_to_store_the_image>/umami_base_cpu.img bash
     ```
 
-???+ warning "Singularity cache" and temporary files
+???+ warning "Singularity cache and temporary files"
     By default, `singularity` will store the cache in your home directory, which will cause space issues.
     You can redirect the persistent cache to another folder via `export SINGULARITY_CACHEDIR=<alternative_folder>` which could be for instance the EOS/CERNBox area, instead of home on `lxplus`. You will still want to keep the 'temporary' location on (fast) local storage, this is controlled by `SINGULARITY_TMPDIR`.
     The easiest is to add to your `~/.bashrc` on `lxplus` the following lines
@@ -138,6 +138,36 @@ singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/alg
     ```
     In case you don't yet have `/eos/user` space, you can do that by connecting to https://cernbox.cern.ch
 
+
+### Singularity images on CVMFS
+
+It is also possible to use the `umami` and `umamibase-plus` images directly from `cvmfs`. If you have a good connection to `cvmfs` this will be very fast to use out of the box.
+
+The `umamibase-plus` images are located in the folder `/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/`. You can use the latest image e.g. via
+
+```bash
+singularity shell /cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest
+```
+
+??? info "Available tags"
+    To check which tags are available, you can have a look in the folder via
+    ```bash
+    ls /cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/
+    ```
+
+
+The `umami` images are located in `/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/`.
+An example usage of the `latest` image would be
+
+```bash
+singularity shell /cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami:latest
+```
+
+??? info "Available tags"
+    To check which tags are available, you can have a look in the folder via
+    ```bash
+    ls /cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/
+    ```
 
 
 
