@@ -72,51 +72,7 @@ python lwtnn/converters/kerasfunc2json.py architecture-lwtnn_model.json weights-
 
 To test if the created model is properly working you can use the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and add the created model to a config (e.g. [EMPFlow.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/configs/single-b-tag/EMPFlow.json)). This can exemplarily look like
 ```json
-{
-    "jet_collection": "AntiKt4EMPFlowJets_BTagging201903",
-    "jet_calibration_collection": "AntiKt4EMPFlow",
-    "jet_calib_file": "JES_data2017_2016_2015_Consolidated_PFlow_2018_Rel21.config",
-    "cal_seq": "JetArea_Residual_EtaJES_GSC_Smear",
-    "cal_area": "00-04-82",
-    "do_calibration": "true",
-    "run_augmenters": "false",
-    "vr_cuts": "false",
-    "jvt_cut": 0.5,
-    "pt_cut": 20000,
-    "n_tracks_to_save": 40,
-    "track_sort_order": "d0_significance",
-    "track_selection": {
-        "pt_minimum": 1000,
-        "d0_maximum": 1.0,
-        "z0_maximum": 1.5,
-        "si_hits_minimum": 7,
-        "si_holes_maximum": 2,
-        "pix_holes_maximum": 1
-    },
-    "dl2_configs": [
-        {
-            "nn_file_path": "DIPS-model.json",
-            "output_remapping": {
-                "DIPS_pu": "dips_pu",
-                "DIPS_pc": "dips_pc",
-                "DIPS_pb": "dips_pb"
-            }
-        }
-    ],
-    "variables": {
-        "btag": {
-            "file": "single-btag-variables.json",
-            "doubles": [
-                "dips_pu",
-                "dips_pc",
-                "dips_pb"
-                ]
-        },
-        "track": {
-            "file": "single-btag-track-variables.json"
-        }
-    }
-}
+§§§url="https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/raw/r22/configs/single-b-tag/EMPFlow.json"::§§§
 ```
 
 To run the taggers within the dumper, we need the [r22 Branch](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/tree/r22) or we need to change the AnalysisBase version in the [setup.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/master/setup.sh#L21) to `asetup AnalysisBase,22.2.12,latest`.

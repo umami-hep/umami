@@ -1,9 +1,12 @@
 """Script to replace placeholders in .md files with the content of the file that is
 specified in the placeholder."""
 import argparse
+import os
+import re
 from collections import Counter
 from glob import glob
 from shutil import copyfile
+from subprocess import run
 
 
 def GetParser():
@@ -165,6 +168,21 @@ def replace_placeholder_with_file_content(
                 # Extract filename, start line and end line fro placeholder which
                 # has to be specified like §§§<filename>:<start>:<end>§§§
                 placeholder = original_line.split("§§§")[1]
+
+                # Check if a url was specified. If yes, download the file
+                if placeholder.startswith("url="):
+                    url_search = re.search('url="(.*)"', placeholder)
+                    url = url_search.group(1)
+                    os.makedirs("downloads", exist_ok=True)
+                    tmp_filename = f"downloads/{url.split('/')[-1]}"
+                    print(f"Downloading file {url} -> {tmp_filename}")
+                    run(
+                        f"wget {url} -O {tmp_filename}",
+                        shell=True,
+                        check=True,
+                    )
+                    # replacement_file = tmp_filename
+                    placeholder = placeholder.replace(f'url="{url}"', tmp_filename)
 
                 # Check how many colons are in the placeholder
                 # Translate to python index + convert to start=0, end=-1 in case
