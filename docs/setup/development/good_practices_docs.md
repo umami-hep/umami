@@ -64,6 +64,18 @@ file `<filename>` from line `<start>` to line `<end>`.
 The file in the repository will no be changed, but before building the
 docs, a script will create a processed copy of the corresponding markdown file.
 
+**Using a URL instead of a file from the repository**
+
+If you want to link a file that is not present in the umami repo, but you have a URL
+to that exact file, you can use the following syntax:
+
+```md
+§§§url="<url>":<start>:<end>§§§
+```
+
+*Note that if you want to link the content of a file living in another gitlab 
+repository, you have to use the link pointing to the **raw** file content.*
+
 **Further examples**
 
 Below you can find different versions for inserting different parts of the file 
