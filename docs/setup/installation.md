@@ -123,18 +123,20 @@ singularity exec docker://gitlab-registry.cern.ch/atlas-flavor-tagging-tools/alg
     singularity exec <folder_where_you_want_to_store_the_image>/umami_base_cpu.img bash
     ```
 
-???+ warning "Singularity cache"
-    By default, `singularity` will store the cache in your home directory, which might cause space issues.
-    You can redirect the cache to another folder via `export SINGULARITY_CACHEDIR=<alternative_folder>` which could be for instance the afs work istead of home on `lxplus`.
-    The easiest is to add to your `~/.bashrc` on `lxplus` the following line
+???+ warning "Singularity cache" and temporary files
+    By default, `singularity` will store the cache in your home directory, which will cause space issues.
+    You can redirect the persistent cache to another folder via `export SINGULARITY_CACHEDIR=<alternative_folder>` which could be for instance the EOS/CERNBox area, instead of home on `lxplus`. You will still want to keep the 'temporary' location on (fast) local storage, this is controlled by `SINGULARITY_TMPDIR`.
+    The easiest is to add to your `~/.bashrc` on `lxplus` the following lines
     ```bash
-    export SINGULARITY_CACHEDIR=/afs/cern.ch/work/${USER:0:1}/${USER}/singularity
+    export SINGULARITY_CACHEDIR=/eos/user/${USER:0:1}/${USER}/singularity
+    export SINGULARITY_TMPDIR=/tmp/${USER}/singularity
+    mkdir -p "${SINGULARITY_TMPDIR}"
     ```
-    after having created the folder via
+    after having created the (persistent) cache folder via
     ```
-    mkdir /afs/cern.ch/work/${USER:0:1}/${USER}/singularity
+    mkdir /eos/user/${USER:0:1}/${USER}/singularity
     ```
-    in case you don't have the `/afs` work not enabled, you can do that in your CERN account management.
+    In case you don't yet have `/eos/user` space, you can do that by connecting to https://cernbox.cern.ch
 
 
 
