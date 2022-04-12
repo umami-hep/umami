@@ -133,14 +133,14 @@ For a better readablility it is often useful to declare the object type in a fun
 
 Instead of this function
 ```python
-def GetNumberOfEvents(nJets, avg_nJets_per_event=4.3):
-    return nJets * avg_nJets_per_event
+def get_number_of_events(n_jets, avg_n_jets_per_event=4.3):
+    return n_jets * avg_n_jets_per_event
 ```
 
 it would look like this
 ```python
-def GetNumberOfEvents(nJets: int, avg_nJets_per_event: float=4.3) -> float:
-    return nJets * avg_nJets_per_event
+def get_number_of_events(n_jets: int, avg_n_jets_per_event: float=4.3) -> float:
+    return n_jets * avg_n_jets_per_event
 ```
 
 
