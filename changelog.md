@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding pydash to requirements [!517](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/517)
 - Small refinements in input var plots [!505](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/505)
 - Adding ylabel_ratio_1 and ylabel_ratio_2 to plot_base [!504](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/504)
 - Adding prepare_docs stage to CI [!503](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/503)
