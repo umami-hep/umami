@@ -98,18 +98,26 @@ plot_bkg_rej = var_vs_eff_plot(
     ylabel="Light-flavour jets rejection",
     xlabel=r"$p_{T}$ [GeV]",
     logy=False,
+    atlas_second_tag=(
+        "$\\sqrt{s}=13$ TeV, PFlow Jets, \n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
+    ),
+    figsize=(6, 4.5),
 )
 plot_bkg_rej.add(rnnip_light, reference=True)
 plot_bkg_rej.add(dips_light)
 
 plot_bkg_rej.draw()
-plot_bkg_rej.savefig("pt_light_rej.pdf")
+plot_bkg_rej.savefig("pt_light_rej.png")
 
 plot_sig_eff = var_vs_eff_plot(
     mode="sig_eff",
-    ylabel="b-jets efficiency",
+    ylabel="$b$-jets efficiency",
     xlabel=r"$p_{T}$ [GeV]",
     logy=False,
+    atlas_second_tag=(
+        "$\\sqrt{s}=13$ TeV, PFlow Jets, \n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
+    ),
+    figsize=(6, 4.5),
 )
 plot_sig_eff.add(rnnip_light, reference=True)
 plot_sig_eff.add(dips_light)

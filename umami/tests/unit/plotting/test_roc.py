@@ -209,6 +209,10 @@ class roc_output_TestCase(unittest.TestCase):
             n_ratio_panels=1,
             ylabel="background rejection",
             xlabel="$b$-jets efficiency",
+            atlas_second_tag=(
+                "$\\sqrt{s}=13$ TeV, PFlow Jets,\n"
+                "$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
+            ),
             # logy=False,
         )
 
@@ -254,6 +258,10 @@ class roc_output_TestCase(unittest.TestCase):
             n_ratio_panels=2,
             ylabel="background rejection",
             xlabel="$b$-jets efficiency",
+            atlas_second_tag=(
+                "$\\sqrt{s}=13$ TeV, PFlow Jets,\n"
+                "$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
+            ),
         )
 
         # Add four roc curves

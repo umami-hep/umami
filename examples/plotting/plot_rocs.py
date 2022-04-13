@@ -74,7 +74,12 @@ dips_cjets_rej = calc_rej(discs_dips[is_b], discs_dips[is_c], sig_eff)
 # here the plotting of the roc starts
 logger.info("Plotting ROC curves.")
 plot_roc = roc_plot(
-    n_ratio_panels=2, ylabel="background rejection", xlabel="b-jets efficiency"
+    n_ratio_panels=2,
+    ylabel="background rejection",
+    xlabel="b-jets efficiency",
+    atlas_second_tag=(
+        "$\\sqrt{s}=13$ TeV, PFlow Jets, \n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
+    ),
 )
 plot_roc.add_roc(
     roc(
