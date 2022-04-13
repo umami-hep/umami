@@ -16,8 +16,7 @@ def GetParser():
     args: parse_args
     """
     parser = argparse.ArgumentParser(
-        description="""Options for DL1
-                                     create_vardict"""
+        description="""Options for DL1 create_vardict""",
     )
 
     parser.add_argument(
@@ -25,8 +24,7 @@ def GetParser():
         "--scale_dict",
         required=True,
         type=str,
-        help="""scale_dict file containing scaling and shifting
-                        values.""",
+        help="""scale_dict file containing scaling and shifting values.""",
     )
     parser.add_argument(
         "-v",
@@ -35,7 +33,12 @@ def GetParser():
         type=str,
         help="""Dictionary (json) with training variables.""",
     )
-    parser.add_argument("-o", "--output", type=str, required=True)
+    parser.add_argument(
+        "-o",
+        "--output",
+        default="lwtnn_vars.json",
+        type=str,
+    )
     parser.add_argument(
         "-t",
         "--tagger",
@@ -47,20 +50,22 @@ def GetParser():
         "-n",
         "--sequence_name",
         type=str,
-        default="tracks_ip3d_sd0sort",
         help="Track selection name.",
     )
     parser.add_argument(
         "--tracks_name",
         type=str,
-        default="tracks",
         help="Tracks dataset name in .h5 training/testing files.",
     )
 
     return parser.parse_args()
 
 
-def GetTrackVariables(scale_dict: dict, variable_config: dict, tracks_name: str):
+def GetTrackVariables(
+    scale_dict: dict,
+    variable_config: dict,
+    tracks_name: str,
+) -> list:
     """Retrieve track variable scaling factors.
 
     Parameters
@@ -82,14 +87,19 @@ def GetTrackVariables(scale_dict: dict, variable_config: dict, tracks_name: str)
     ValueError
         if variable associated to logNormVars but not defined for it.
     """
+
+    # Get track variables from variable config
     noNormVars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
     logNormVars = variable_config["track_train_variables"][tracks_name]["logNormVars"]
     jointNormVars = variable_config["track_train_variables"][tracks_name][
         "jointNormVars"
     ]
 
+    # Select correct track collection from scale dict
     track_dict = scale_dict[tracks_name]
     track_variables = []
+
+    # Iterate over the not-normalised variables
     for elem in noNormVars:
         v_dict = {}
         v_dict["name"] = elem
@@ -97,6 +107,7 @@ def GetTrackVariables(scale_dict: dict, variable_config: dict, tracks_name: str)
         v_dict["scale"] = 1.0
         track_variables.append(v_dict)
 
+    # Iterate over the log-normalised variables
     for elem in logNormVars:
         v_dict = {}
         if elem == "ptfrac":
@@ -111,16 +122,22 @@ def GetTrackVariables(scale_dict: dict, variable_config: dict, tracks_name: str)
         v_dict["scale"] = 1.0 / track_dict[elem]["scale"]
         track_variables.append(v_dict)
 
+    # Iterate over the joint-normalised variables
     for elem in jointNormVars:
         v_dict = {}
         v_dict["name"] = elem
         v_dict["offset"] = -1.0 * track_dict[elem]["shift"]
         v_dict["scale"] = 1.0 / track_dict[elem]["scale"]
         track_variables.append(v_dict)
+
+    # Return the track variables ready for the json.
     return track_variables
 
 
-def GetJetVariables(scale_dict: dict, variable_config: dict):
+def GetJetVariables(
+    scale_dict: dict,
+    variable_config: dict,
+) -> list:
     """Retrieve jet variable scaling factors.
 
     Parameters
@@ -135,6 +152,8 @@ def GetJetVariables(scale_dict: dict, variable_config: dict):
     list
         list with jet variables and scaling factors
     """
+
+    # Get the training jet variables
     jetVars = [
         item
         for sublist in variable_config["train_variables"].values()
@@ -143,9 +162,11 @@ def GetJetVariables(scale_dict: dict, variable_config: dict):
     jet_variables = []
     jet_dict = {}
 
+    # Iterate over the jet variables in the scale dict
     for elem in scale_dict["jets"]:
         jet_dict[elem["name"]] = elem
 
+    # Process the jet variables and add them to the list
     for elem in jetVars:
         v_dict = {}
         if jet_dict[elem]["default"] is not None:
@@ -159,6 +180,7 @@ def GetJetVariables(scale_dict: dict, variable_config: dict):
         v_dict["scale"] = 1.0 / jet_dict[elem]["scale"]
         jet_variables.append(v_dict)
 
+    # Return the jet variables ready for the json.
     return jet_variables
 
 
@@ -169,100 +191,174 @@ def __run():
 
     if "dips" in args.tagger.lower():
         logger.info("Starting processing DIPS variables.")
+
+        # Load the given scale dict
         with open(args.scale_dict, "r") as f:
             scale_dict = json.load(f)
 
+        # Get the track variables with scales ready for json
         track_variables = GetTrackVariables(
-            scale_dict, variable_config, args.tracks_name
+            scale_dict,
+            variable_config,
+            args.tracks_name,
         )
 
         logger.info(f"Found {len(track_variables)} variables")
         inputs = {}
-        # inputs["name"] = "b-tagging" # only for DL1
+
+        # Set the name of the track collection (for athena)
         inputs["name"] = args.sequence_name
+
+        # Get the track variables
         inputs["variables"] = track_variables
+
+        # Correctly shape the track variables
         inputs = [inputs]
 
+        # Create the lwtnn variable dict
         lwtnn_var_dict = {}
         lwtnn_var_dict["input_sequences"] = inputs
         lwtnn_var_dict["inputs"] = []
-        # lwtnn_var_dict["input_sequences"] = []
-        # lwtnn_var_dict["inputs"] = inputs
+
+        # Set the output
         lwtnn_var_dict["outputs"] = [
-            {"labels": ["pu", "pc", "pb"], "name": args.tagger}
+            {
+                "labels": ["pu", "pc", "pb"],
+                "name": args.tagger,
+            }
         ]
 
         logger.info(f"Saving {args.output}.")
-        with open(args.output, "w") as dl1_vars:
-            json.dump(lwtnn_var_dict, dl1_vars, indent=4)
+
+        # Save the lwtnn variable dict in json in correct format
+        with open(args.output, "w") as dips_vars:
+            json.dump(lwtnn_var_dict, dips_vars, indent=4)
 
     elif "dl1" in args.tagger.lower():
         logger.info("Starting processing DL1* variables.")
 
+        # Load the given scale dict
         with open(args.scale_dict, "r") as f:
             scale_dict = json.load(f)
 
-        jet_variables = GetJetVariables(scale_dict, variable_config)
+        # Get the jet variables with scales ready for json
+        jet_variables = GetJetVariables(
+            scale_dict,
+            variable_config,
+        )
 
         logger.info(f"Found {len(jet_variables)} jet variables")
+
+        # Define a dict for the jet inputs
         jet_inputs = {}
+
+        # Name the jet inputs correctly
         jet_inputs["name"] = "b-tagging"
+
+        # Save the variables in the dict
         jet_inputs["variables"] = jet_variables
         jet_inputs = [jet_inputs]
 
+        # Create the lwtnn variable dict
         lwtnn_var_dict = {}
         lwtnn_var_dict["input_sequences"] = []
         lwtnn_var_dict["inputs"] = jet_inputs
 
+        # Set the output
         if "tau" in args.tagger:
             logger.info("Detected tau output in tagger.")
             labels_tau = ["pu", "pc", "pb", "ptau"]
             logger.info(f"Using labels {labels_tau}")
-            lwtnn_var_dict["outputs"] = [{"labels": labels_tau, "name": args.tagger}]
+            lwtnn_var_dict["outputs"] = [
+                {
+                    "labels": labels_tau,
+                    "name": args.tagger,
+                }
+            ]
+
         else:
             lwtnn_var_dict["outputs"] = [
-                {"labels": ["pu", "pc", "pb"], "name": args.tagger}
+                {
+                    "labels": ["pu", "pc", "pb"],
+                    "name": args.tagger,
+                }
             ]
 
         logger.info(f"Saving {args.output}.")
+
+        # Save the lwtnn variable dict in json in correct format
         with open(args.output, "w") as dl1_vars:
             json.dump(lwtnn_var_dict, dl1_vars, indent=4)
 
     elif "umami" in args.tagger.lower():
         logger.info("Starting processing UMAMI variables.")
 
+        # Load the given scale dict
         with open(args.scale_dict, "r") as f:
             scale_dict = json.load(f)
 
-        jet_variables = GetJetVariables(scale_dict, variable_config)
+        # Get the jet variables with scales ready for json
+        jet_variables = GetJetVariables(
+            scale_dict,
+            variable_config,
+        )
+
+        # Get the track variables with scales ready for json
         track_variables = GetTrackVariables(
-            scale_dict, variable_config, args.tracks_name
+            scale_dict,
+            variable_config,
+            args.tracks_name,
         )
 
         logger.info(f"Found {len(track_variables)} track variables")
         logger.info(f"Found {len(jet_variables)} jet variables")
 
+        # Init track input dict
         track_inputs = {}
+
+        # Set the name of the track collection (for athena)
         track_inputs["name"] = args.sequence_name
+
+        # Get the track variables
         track_inputs["variables"] = track_variables
+
+        # Correctly shape the track variables
         track_inputs = [track_inputs]
 
+        # Init jet inputs dict with correct naming
         jet_inputs = {}
         jet_inputs["name"] = "b-tagging"
+
+        # Get the jet variables
         jet_inputs["variables"] = jet_variables
+
+        # Correctly shape the jet variables
         jet_inputs = [jet_inputs]
 
+        # Create the lwtnn variable dict
         lwtnn_var_dict = {}
+
+        # Set the track and jet inputs
         lwtnn_var_dict["input_sequences"] = track_inputs
         lwtnn_var_dict["inputs"] = jet_inputs
+
+        # Set the output
         lwtnn_var_dict["outputs"] = [
-            {"labels": ["pu", "pc", "pb"], "name": f"dips_{args.tagger}"},
-            {"labels": ["pu", "pc", "pb"], "name": args.tagger},
+            {
+                "labels": ["pu", "pc", "pb"],
+                "name": f"dips_{args.tagger}",
+            },
+            {
+                "labels": ["pu", "pc", "pb"],
+                "name": args.tagger,
+            },
         ]
 
         logger.info(f"Saving {args.output}.")
-        with open(args.output, "w") as dl1_vars:
-            json.dump(lwtnn_var_dict, dl1_vars, indent=4)
+
+        # Save the lwtnn variable dict in json in correct format
+        with open(args.output, "w") as umami_vars:
+            json.dump(lwtnn_var_dict, umami_vars, indent=4)
 
 
 if __name__ == "__main__":

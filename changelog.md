@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Update the LWTNN scripts [!512](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/512)
 - Adding pydash to requirements [!517](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/517)
 - (Plotting API) Change default value of atlas_second_tag [!514](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/514)
 - Small refinements in input var plots [!505](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/505)

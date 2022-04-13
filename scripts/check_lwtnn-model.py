@@ -4,13 +4,15 @@ import argparse
 import h5py
 import numpy as np
 import pandas as pd
+import yaml
 from tensorflow.keras.models import load_model  # pylint: disable=E0401
 from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=E0401
 
-import umami.preprocessing_tools as upt
 import umami.train_tools as utt
-from umami.configuration import logger
+from umami.configuration import global_config, logger
+from umami.helper_tools import get_class_label_ids
 from umami.tf_tools import Sum
+from umami.tools import yaml_loader
 
 
 def GetParser():
@@ -21,29 +23,8 @@ def GetParser():
     -------
     args: parse_args
     """
-    parser = argparse.ArgumentParser(description="""Options lwtnn check""")
-
-    parser.add_argument(
-        "-i",
-        "--input",
-        required=True,
-        type=str,
-        help="hdf5 input with taggers included for comparison.",
-    )
-    parser.add_argument(
-        "-s",
-        "--scale_dict",
-        type=str,
-        default=None,
-        help="""scale_dict file containing scaling and shifting
-                        values.""",
-    )
-    parser.add_argument(
-        "-v",
-        "--var_dict",
-        required=True,
-        type=str,
-        help="""Dictionary (yaml) with training variables.""",
+    parser = argparse.ArgumentParser(
+        description="""Options lwtnn check""",
     )
     parser.add_argument(
         "-o",
@@ -53,43 +34,74 @@ def GetParser():
         help="writes the jet scores into a file",
     )
     parser.add_argument(
-        "-t",
-        "--tagger",
-        type=str,
-        required=True,
-        help="tagger shortcut, corresponding to the name in the ntuples",
-    )
-    parser.add_argument(
-        "-m",
-        "--model",
-        type=str,
-        required=True,
-        help="Keras model for comparison.",
-    )
-
-    parser.add_argument(
-        "-n",
-        "--ntracks_max",
-        type=int,
-        default=np.inf,
-        help=(
-            "Maximum number of tracks per jet. Jets with ntracks > ntracks_max"
-            " are ignored in the evaluation."
-        ),
-    )
-
-    parser.add_argument(
         "-c",
         "--config",
         type=str,
         default=None,
-        help="Training Config yaml file.",
+        help="Config yaml file.",
     )
 
     return parser.parse_args()
 
 
-def load_model_umami(model_file: str, X_test_trk: np.ndarray, X_test_jet: np.ndarray):
+def prepareConfig(yaml_config: str) -> dict:
+    """
+    Load the config for checking the model
+    and return the values in a dict.
+
+    Parameters
+    ----------
+    yaml_config : str
+        Path to the yaml config file
+
+    Returns
+    -------
+    dict
+        All parameters needed for checking the lwtnn model.
+
+    Raises
+    ------
+    ValueError
+        If one of the needed options is not given or is None.
+    """
+
+    logger.info(f"Using config file {yaml_config}")
+    with open(yaml_config, "r") as conf:
+        config = yaml.load(conf, Loader=yaml_loader)
+
+    # Init a list of the needed inputs
+    needed_options = [
+        "input_file",
+        "scale_dict",
+        "var_dict",
+        "tagger",
+        "model_file",
+        "class_labels",
+    ]
+
+    # If tracks are used, assert that all needed track settings are present and set
+    if "dips" in config["tagger"].casefold() or "umami" in config["tagger"].casefold():
+        needed_options.append("ntracks_max")
+        needed_options.append("tracks_name")
+
+    # If no tracks are used, set placeholder values.
+    else:
+        config["ntracks_max"] = np.inf
+        config["tracks_name"] = None
+
+    # Assert that the needed variables are present and set.
+    for var in needed_options:
+        if not (var in config and config[var] is not None):
+            raise ValueError(f"Needed option {var} is not given or is None!")
+
+    return config
+
+
+def load_model_umami(
+    model_file: str,
+    X_test_trk: np.ndarray,
+    X_test_jet: np.ndarray,
+):
     """Load umami model
 
     Parameters
@@ -118,66 +130,82 @@ def load_model_umami(model_file: str, X_test_trk: np.ndarray, X_test_jet: np.nda
 
 
 # workaround to not use the full preprocessing config
-class config:
-    """Minimal implementation of preprocessing config."""
+class minimal_preprocessing_config:
+    """
+    Minimal implementation of preprocessing config. Sets a few
+    values which are needed here.
+    """
 
-    def __init__(self, preprocess_config: str):
-        """Initialise config class.
+    def __init__(
+        self,
+        scale_dict: str,
+        class_labels: list,
+        tracks_name: str = None,
+    ):
+        """
+        Initalise the minimal preprocessing config so the loading
+        of the files is done correctly
 
         Parameters
         ----------
-        preprocess_config : str
-            file name of preprocessing config
+        scale_dict : str
+            Path to the used scale dict.
+        class_labels : list
+            Class labels that where used in training the tagger.
+        tracks_name : str, optional
+            Track name inside the h5 files.
         """
-        self.dict_file = preprocess_config
-        self.preparation = {"class_labels": ["ujets", "cjets", "bjets"]}
-        self.tracks_name = "tracks"
+        self.dict_file = scale_dict
+        self.sampling = {"class_labels": class_labels}
+        self.tracks_name = tracks_name
 
 
 def main():
-    """Main function is called when executing the script.
-
-    Raises
-    ------
-    ValueError
-        if both --confing and --scale_dict options were given
-    ValueError
-        if neither either --config or --scale_dict is provided
     """
+    Main function is called when executing the script.
+    """
+
+    # Get the arguments
     args = GetParser()
-    logger.info(f"Opening input file {args.input}")
-    with h5py.File(args.input, "r") as file:
+
+    # Load the config file
+    eval_config = prepareConfig(args.config)
+    scale_dict = eval_config["scale_dict"]
+    class_labels = eval_config["class_labels"]
+    tracks_name = eval_config["tracks_name"]
+    tagger = eval_config["tagger"]
+    model_file = eval_config["model_file"]
+    input_file = eval_config["input_file"]
+    var_dict = eval_config["var_dict"]
+    ntracks_max = eval_config["ntracks_max"]
+
+    # Init the minimal preprocessing config for loading of the jets
+    preprocess_config = minimal_preprocessing_config(
+        scale_dict=scale_dict,
+        class_labels=class_labels,
+        tracks_name=tracks_name,
+    )
+
+    # Get the class ids for removing
+    class_ids = get_class_label_ids(class_labels)
+
+    logger.info(f"Evaluating {model_file}")
+
+    # Load the input file
+    with h5py.File(input_file, "r") as file:
         df = pd.DataFrame(file["jets"][:])
 
-    df.query("HadronConeExclTruthLabelID <= 5", inplace=True)
+    # Remove all jets which are not trained on
+    df.query(f"HadronConeExclTruthLabelID in {class_ids}", inplace=True)
 
-    if args.config is not None:
-        if args.scale_dict is not None:
-            raise ValueError(
-                "Both --confing and --scale_dict options were given, "
-                "only one of them needs to be used"
-            )
-        training_config = utt.Configuration(args.config)
-        preprocess_config = upt.Configuration(training_config.preprocess_config)
-        class_labels = training_config.NN_structure["class_labels"]
-        tracks_name = training_config.tracks_name
-    elif args.scale_dict is not None:
-        preprocess_config = config(args.scale_dict)
-        class_labels = preprocess_config.preparation["class_labels"]
-        tracks_name = preprocess_config.tracks_name
-    else:
-        raise ValueError(
-            "Missing option, either --config or --scale_dict "
-            "needs to be specified (only one of them)"
-        )
-
-    logger.info(f"Evaluating {args.model}")
-
+    # Init a pred_model
     pred_model = None
-    if "umami" in args.tagger.lower():
+
+    # Get prediction for umami
+    if "umami" in tagger.casefold():
         X_test_jet, X_test_trk, Y_test = utt.GetTestFile(
-            args.input,
-            args.var_dict,
+            input_file,
+            var_dict,
             preprocess_config,
             class_labels,
             tracks_name=tracks_name,
@@ -185,27 +213,35 @@ def main():
             exclude=None,
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")
-        pred_dips, pred_umami = load_model_umami(args.model, X_test_trk, X_test_jet)
-        pred_model = pred_dips if "dips" in args.tagger.lower() else pred_umami
 
-    elif "dips" in args.tagger.lower():
+        # Get the umami and dips predictions
+        pred_dips, pred_umami = load_model_umami(model_file, X_test_trk, X_test_jet)
+        pred_model = pred_dips if "dips" in tagger.casefold() else pred_umami
+
+    # Get prediction for dips
+    elif "dips" in tagger.casefold():
         X_test_trk, Y_test = utt.GetTestSampleTrks(
-            args.input,
-            args.var_dict,
+            input_file,
+            var_dict,
             preprocess_config,
             class_labels,
             tracks_name=tracks_name,
             nJets=int(10e6),
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")
+
+        # Load the model
         with CustomObjectScope({"Sum": Sum}):
-            model = load_model(args.model)
+            model = load_model(model_file)
+
+        # Predict the test sample with the loaded model
         pred_model = model.predict(X_test_trk, batch_size=5000, verbose=0)
 
-    elif "dl1" in args.tagger.lower():
+    # Get prediction for dl1
+    elif "dl1" in tagger.casefold():
         X_test_jet, Y_test = utt.GetTestSample(
-            args.input,
-            args.var_dict,
+            input_file,
+            var_dict,
             preprocess_config,
             class_labels,
             nJets=int(10e6),
@@ -213,28 +249,43 @@ def main():
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")
 
+        # Load the model
         with CustomObjectScope({"Sum": Sum}):
-            model = load_model(args.model)
+            model = load_model(model_file)
+
+        # Predict the test sample with the loaded model
         pred_model = model.predict(X_test_jet, batch_size=5000, verbose=0)
 
-    if "dips" in args.tagger.lower() or "umami" in args.tagger.lower():
+    if "dips" in tagger.casefold() or "umami" in tagger.casefold():
         trk_mask = np.sum(X_test_trk, axis=-1) != 0
         ntrks = trk_mask.sum(axis=1)
         df["ntrks"] = ntrks
+
     else:
         df["ntrks"] = -1 * np.ones(len(Y_test))
 
-    df["eval_pu"] = pred_model[:, :1]
-    df["eval_pc"] = pred_model[:, 1:2]
-    df["eval_pb"] = pred_model[:, 2:3]
+    for counter, key in enumerate(class_labels):
+        # Get the probability short form of the class
+        prob_key = global_config.flavour_categories[key]["prob_var_name"]
 
+        # Add the evaluation probabilites to the dict
+        df[f"eval_prob_{prob_key}"] = pred_model[:, counter]
+
+    # Add an index to the dataframe
     df["index"] = range(len(df))
 
+    # Add the truth to the dataframe
     df["y"] = np.argmax(Y_test, axis=1)
     logger.info(f"Jets: {len(df)}")
 
-    evaluated = "eval_pu"
-    df["diff"] = abs(df[evaluated] - df[f"{args.tagger}_pu"])
+    # Get the first class defined in class labels to calculate the difference
+    prob_key = global_config.flavour_categories[class_labels[0]]["prob_var_name"]
+    evaluated = f"eval_prob_{prob_key}"
+
+    # Calculate the difference between the lwtnn output and the keras model output
+    df["diff"] = abs(df[evaluated] - df[f"{tagger}_{prob_key}"])
+
+    # Define the difference regions
     sampleDiffs = np.array(
         [
             np.linspace(1e-6, 5e-6, 5),
@@ -245,9 +296,11 @@ def main():
             np.linspace(1e-1, 5e-1, 5),
         ]
     ).flatten()
+
+    # Iterate over the different difference regions
     for sampleDiff in sampleDiffs:
-        df_select = df.query(f"diff>{sampleDiff} and ntrks<{args.ntracks_max}")
-        diff = round(len(df_select) / len(df[df["ntrks"] < args.ntracks_max]) * 100, 2)
+        df_select = df.query(f"diff>{sampleDiff} and ntrks<{ntracks_max}")
+        diff = round(len(df_select) / len(df[df["ntrks"] < ntracks_max]) * 100, 2)
         print(f"Differences off {sampleDiff:.1e} {diff}%")
         if diff == 0:
             break
