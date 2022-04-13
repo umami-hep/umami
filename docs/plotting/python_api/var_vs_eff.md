@@ -7,8 +7,12 @@ To set up the inputs for the plots, have a look [here](./index.md).
 Then we can start the actual plotting part
 
 
-???+ example "pT vs eff plot"
+???+ example "pT vs efficiency and pT vs rejection plot"
+
+    ![pt_vs_eff](../../ci_assets/pt_light_rej.png)
+
     ![pt_vs_eff](../../ci_assets/pt_b_eff.png)
+
     ```py linenums="1"
     §§§examples/plotting/plot_pt_vs_eff.py§§§
     ```

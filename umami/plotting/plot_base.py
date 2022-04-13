@@ -108,13 +108,10 @@ class plot_object:
     use_atlas_tag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     atlas_first_tag : str, optional
-        First row of the ATLAS Tag (i.e. the first row is "ATLAS <atlas_first_tag>"),
+        First row of the ATLAS tag (i.e. the first row is "ATLAS <atlas_first_tag>"),
         by default "Internal Simulation"
     atlas_second_tag : str, optional
-        Second Row of the ATLAS Tag. No need to add WP or fc. It will
-        be added automatically,
-        by default,
-        `$\\sqrt{s}=13$ TeV, PFlow Jets, \\n$t\\bar{t}$ Test Sample, $f_{c}=0.018$`
+        Second row of the ATLAS tag, by default ""
     atlas_fontsize : float, optional
         Fontsize of ATLAS label, by default 10
     atlas_vertical_offset : float, optional
@@ -165,9 +162,7 @@ class plot_object:
     apply_atlas_style: bool = True
     use_atlas_tag: bool = True
     atlas_first_tag: str = "Internal Simulation"
-    atlas_second_tag: str = (
-        "$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
-    )
+    atlas_second_tag: str = ""
     atlas_fontsize: int = None
     atlas_vertical_offset: float = 5
     atlas_horizontal_offset: float = 8
