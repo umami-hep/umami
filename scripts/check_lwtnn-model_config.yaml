@@ -1,0 +1,23 @@
+# Input .h5 file from the dumper
+input_file: test.h5
+
+# Scale dict that was used to train the model and create the lwtnn model
+scale_dict: scale_dict.json
+
+# Variable dict that was used to train the model and create the lwtnn model
+var_dict: Variables.yaml
+
+# Name of the tagger inside the .h5 file
+tagger: <tagger-name-in-file>
+
+# Path to the keras model
+model_file: keras_model.h5
+
+# Class labels that were used training the models
+class_labels: ["ujets", "cjets", "bjets"]
+
+# Number of max tracks that are used. This is only used when checking a track based tagger.
+ntracks_max: 40
+
+# Name of the track collection inside the .h5 file. This is only used when checking a track based tagger.
+tracks_name: tracks_loose

@@ -18,8 +18,7 @@ def GetParser():
     args: parse_args
     """
     parser = argparse.ArgumentParser(
-        description="""Options for DL1
-                                     conv_model"""
+        description="""Options for DL1 conv_model""",
     )
 
     parser.add_argument(
@@ -29,7 +28,12 @@ def GetParser():
         type=str,
         help="""HDF5 keras model which should be converted.""",
     )
-    parser.add_argument("-o", "--output_base", type=str, required=True)
+    parser.add_argument(
+        "-o",
+        "--output_base",
+        default="lwtnn_model",
+        type=str,
+    )
 
     return parser.parse_args()
 
