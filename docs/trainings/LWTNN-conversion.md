@@ -87,7 +87,7 @@ An explanation how to run on the grid with the TDD can be found [here](https://t
 After having the hdf5 ntuples produced, the script [`check_lwtnn-model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn-model.py) can be used to compare the athena evaluation with the keras evaluation. The script requiries a short config files which can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/check_lwtnn-model_config.yaml). This looks like this:
 
 ```
-§§§examples/check_lwtnn-model_config.yaml§§§
+§§§scripts/check_lwtnn-model_config.yaml§§§
 ```
 
 You can simply run the script via
