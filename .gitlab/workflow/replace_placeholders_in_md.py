@@ -138,6 +138,8 @@ def replace_placeholder_with_file_content(
     ------
     ValueError
         If placeholder contains invalid number of colons. Valid numbers are 0, 1, 2
+    FileNotFoundError
+        If the file specified in a placeholder does not exist.
     """
 
     print(f"{90 * '-'}\nProcessing {input_file}")
@@ -159,7 +161,6 @@ def replace_placeholder_with_file_content(
 
     output_file_content = ""
     replaced_placeholders = []
-    skipped_placeholders = []
 
     with open(input_file, "r") as original_file:
         # Loop over lines in input file and search for lines containing "§§§"
@@ -216,15 +217,14 @@ def replace_placeholder_with_file_content(
                         for line in rep_content.readlines()[start:end]:
                             replacement += f"{indentation}{line}"
                         replaced_placeholders.append(replacement_file)
-                except FileNotFoundError:
-                    replacement = (
-                        f"FileNotFoundError: File '{replacement_file}' not found.\n "
-                        f"\nOriginal line in input file:\n\n{original_line}"
-                    )
-                    skipped_placeholders.append(replacement_file)
-
-                # Add to md file
-                output_file_content += replacement
+                    # Add to md file
+                    output_file_content += replacement
+                except FileNotFoundError as err:
+                    raise FileNotFoundError(
+                        "\x1b[1;33;40m"
+                        f"file: {input_file}, invalid placeholder: {original_line}"
+                        "\x1b[0m"
+                    ) from err
             else:
                 output_file_content += original_line
 
@@ -232,8 +232,6 @@ def replace_placeholder_with_file_content(
         md_file_new.write(output_file_content)
     print("SUMMARY:")
     print(f"Replaced placeholders: {replaced_placeholders}")
-    if len(skipped_placeholders) > 0:
-        print(f"\x1b[1;33;40mSkipped placeholders: {skipped_placeholders}\x1b[0m")
 
 
 def main():
