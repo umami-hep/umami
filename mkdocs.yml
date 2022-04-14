@@ -66,6 +66,8 @@ markdown_extensions:
     - pymdownx.smartsymbols
     - pymdownx.snippets
     - pymdownx.superfences
+    - toc:
+        permalink: "#"
 
 
 extra_javascript:

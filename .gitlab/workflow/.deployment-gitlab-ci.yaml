@@ -80,6 +80,8 @@ sphinx-docs:
     paths:
       - sphinx-docs
     expire_in: 1 day
+  needs:
+    - linter
 
 convert_docstrings_to_md:
   # this job runs a script which converts the parameters listed in numpy docstrings
@@ -100,6 +102,8 @@ convert_docstrings_to_md:
     paths:
       - docs/ci_assets
     expire_in: 1 day
+  needs:
+    - linter
 
 render_md_placeholders:
   # render the markdown placeholders (of the form §§§<filename>:start:end§§§)
