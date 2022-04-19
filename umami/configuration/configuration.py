@@ -18,18 +18,18 @@ class Configuration:
         self.yaml_config = (
             f"{pathlib.Path(__file__).parent.absolute()}/../configs/global_config.yaml"
         )
-        self.LoadConfigFile()
-        self.logger = self.SetLoggingLevel()
-        self.SetTFDebugLevel()
-        self.SetMPLPlottingBackend()
-        self.GetConfiguration()
+        self.load_config_file()
+        self.logger = self.set_logging_level()
+        self.set_tf_debug_level()
+        self.set_mpl_plotting_backend()
+        self.get_configuration()
 
-    def LoadConfigFile(self):
+    def load_config_file(self):
         """Load config file from disk."""
         with open(self.yaml_config, "r") as conf:
             self.config = yaml.load(conf, Loader=yaml.FullLoader)
 
-    def GetConfiguration(self):
+    def get_configuration(self):
         """Assigne configuration from file to class variables.
 
         Raises
@@ -53,7 +53,7 @@ class Configuration:
             else:
                 raise KeyError(f"You need to specify {item} in your config file!")
 
-    def SetMPLPlottingBackend(self):
+    def set_mpl_plotting_backend(self):
         """Setting the plotting backend of matplotlib."""
         self.logger.debug(
             f"Setting Matplotlib's backend to {self.config['MPLPlottingBackend']}"
@@ -61,13 +61,13 @@ class Configuration:
 
         matplotlib.use(self.config["MPLPlottingBackend"])
 
-    def SetTFDebugLevel(self):
+    def set_tf_debug_level(self):
         """Setting the Debug level of tensorflow.
         For reference see https://stackoverflow.com/questions/35869137/avoid-tensorflow-print-on-standard-error"""  # noqa # pylint: disable=C0301
         self.logger.debug(f"Setting TFDebugLevel to {self.config['TFDebugLevel']}")
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(self.config["TFDebugLevel"])
 
-    def SetLoggingLevel(self) -> object:
+    def set_logging_level(self) -> object:
         """Set DebugLevel for logging.
 
         Returns
@@ -92,11 +92,11 @@ class Configuration:
                 f"The 'DebugLevel' option {self.config['DebugLevel']} set in"
                 " the global config is not valid."
             )
-        ch = logging.StreamHandler()
-        ch.setLevel(log_levels[self.config["DebugLevel"]])
-        ch.setFormatter(CustomFormatter())
+        ch_handler = logging.StreamHandler()
+        ch_handler.setLevel(log_levels[self.config["DebugLevel"]])
+        ch_handler.setFormatter(CustomFormatter())
 
-        umami_logger.addHandler(ch)
+        umami_logger.addHandler(ch_handler)
         umami_logger.propagate = False
         return umami_logger
 

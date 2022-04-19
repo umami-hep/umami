@@ -8,6 +8,7 @@
   - test_plotting_umami_dl1
   - test_plotting_umami_umami
   - unittest_parallel
+  - test_examples
 
 test_coverage:
   stage: coverage_test_stage

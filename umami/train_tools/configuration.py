@@ -12,16 +12,16 @@ class Configuration:
     def __init__(self, yaml_config=None):
         super().__init__()
         self.yaml_config = yaml_config
-        self.LoadConfigFile()
-        self.GetConfiguration()
+        self.load_config_file()
+        self.get_configuration()
 
-    def LoadConfigFile(self):
+    def load_config_file(self):
         """ "Load config file from disk."""
         logger.info(f"Using train config file {self.yaml_config}")
         with open(self.yaml_config, "r") as conf:
             self.config = yaml.load(conf, Loader=yaml_loader)
 
-    def GetConfiguration(self):
+    def get_configuration(self):
         """Assigne configuration from file to class variables.
 
         Raises

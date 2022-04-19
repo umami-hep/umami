@@ -188,7 +188,7 @@ def plot_variable(
             else 50,
         )
 
-    except IndexError as Error:
+    except IndexError as error:
         if var_type.casefold() == "jets":
             array = np.nan_to_num(df[:, variable_index])
 
@@ -198,7 +198,7 @@ def plot_variable(
         else:
             raise TypeError(
                 f"Variable type {var_type} not supported! Only jets and tracks!"
-            ) from Error
+            ) from error
 
         _, bins = np.histogram(
             a=array,
@@ -221,7 +221,7 @@ def plot_variable(
         except AttributeError:
             flavour_jets = df[variable][labels[:, flav_counter] == 1]
 
-        except IndexError as Error:
+        except IndexError as error:
             if var_type.casefold() == "jets":
                 flavour_jets = df[:, variable_index][
                     labels[:, flav_counter] == 1
@@ -233,7 +233,7 @@ def plot_variable(
             else:
                 raise TypeError(
                     f"Variable type {var_type} not supported! Only jets and tracks!"
-                ) from Error
+                ) from error
 
         # Calculate bins
         hist_bins, weights, unc, band = hist_w_unc(
@@ -735,13 +735,13 @@ def generate_process_tag(
                 combined_sample = True
                 processes += f" + {label}"
             logger.info(f"Found the process '{process}' with the label '{label}'")
-        except KeyError as Error:
+        except KeyError as error:
             raise KeyError(
                 f"Plot label for the process {process} was not"
                 "found. Make sure your entries in the 'ntuples'"
                 "section are valid entries that have a matching entry"
                 "in the global config."
-            ) from Error
+            ) from error
     # Combine the string that contains the latex code for the processes
     # and the "sqrt(s)..." and "PFlow Jets" part
     if combined_sample is True:

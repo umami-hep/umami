@@ -13,7 +13,7 @@ from umami.preprocessing_tools import Configuration
 from umami.train_tools import RunPerformanceCheck
 
 
-def GetParser():
+def get_parser():
     """
     Argument parser for Preprocessing script.
 
@@ -197,7 +197,7 @@ def main(args, train_config, preprocess_config):
 
 
 if __name__ == "__main__":
-    parser_args = GetParser()
+    parser_args = get_parser()
 
     gpus = tf.config.experimental.list_physical_devices("GPU")
     for gpu in gpus:

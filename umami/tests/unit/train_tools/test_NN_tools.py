@@ -8,12 +8,10 @@ import numpy as np
 
 from umami.configuration import logger, set_log_level
 from umami.tools import replaceLineInFile
-from umami.train_tools.Configuration import Configuration
+from umami.train_tools.configuration import Configuration
 from umami.train_tools.NN_tools import (
     GetModelPath,
     GetTestFile,
-    GetTestSample,
-    GetTestSampleTrks,
     MyCallback,
     MyCallbackUmami,
     create_metadata_folder,
@@ -21,6 +19,8 @@ from umami.train_tools.NN_tools import (
     get_jet_feature_indices,
     get_jet_feature_position,
     get_parameters_from_validation_dict_name,
+    get_test_sample,
+    get_test_sample_trks,
     get_unique_identifiers,
     get_validation_dict_name,
     load_validation_data_dips,
@@ -224,7 +224,7 @@ class Configuration_TestCase(unittest.TestCase):
         config = Configuration(self.config_file)
         del config.config["model_name"]
         with self.assertRaises(KeyError):
-            config.GetConfiguration()
+            config.get_configuration()
 
     def test_double_label_value(self):
         config = Configuration(self.config_file)
@@ -236,7 +236,7 @@ class Configuration_TestCase(unittest.TestCase):
         ]
 
         with self.assertRaises(ValueError):
-            config.GetConfiguration()
+            config.get_configuration()
 
     def test_double_defined_b_jets(self):
         config = Configuration(self.config_file)
@@ -248,7 +248,7 @@ class Configuration_TestCase(unittest.TestCase):
         ]
 
         with self.assertRaises(ValueError):
-            config.GetConfiguration()
+            config.get_configuration()
 
     def test_double_defined_c_jets(self):
         config = Configuration(self.config_file)
@@ -260,7 +260,7 @@ class Configuration_TestCase(unittest.TestCase):
         ]
 
         with self.assertRaises(ValueError):
-            config.GetConfiguration()
+            config.get_configuration()
 
 
 class MyCallback_TestCase(unittest.TestCase):
@@ -449,8 +449,8 @@ class GetSamples_TestCase(unittest.TestCase):
         self.nTracks = 40
         self.config = {"exclude": self.exclude}
 
-    def test_GetTestSampleTrks(self):
-        X_trk, Y_trk = GetTestSampleTrks(
+    def test_get_test_sample_trks(self):
+        X_trk, Y_trk = get_test_sample_trks(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,
@@ -465,11 +465,11 @@ class GetSamples_TestCase(unittest.TestCase):
         )
         self.assertEqual(Y_trk.shape, (len(Y_trk), 3))
 
-    def test_GetTestSampleTrks_Different_class_labels(self):
+    def test_get_test_sample_trks_Different_class_labels(self):
         self.class_labels_given = ["ujets", "cjets", "bjets"]
 
         with self.assertRaises(AssertionError):
-            _, _ = GetTestSampleTrks(
+            _, _ = get_test_sample_trks(
                 input_file=self.validation_files["ttbar_r21_val"]["path"],
                 var_dict=self.var_dict,
                 preprocess_config=self,
@@ -478,10 +478,10 @@ class GetSamples_TestCase(unittest.TestCase):
                 nJets=self.nJets,
             )
 
-    def test_GetTestSampleTrks_Extended_Labeling(self):
+    def test_get_test_sample_trks_Extended_Labeling(self):
         self.sampling = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
 
-        X_trk, Y_trk = GetTestSampleTrks(
+        X_trk, Y_trk = get_test_sample_trks(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,
@@ -496,8 +496,8 @@ class GetSamples_TestCase(unittest.TestCase):
         )
         self.assertEqual(Y_trk.shape, (len(Y_trk), 4))
 
-    def test_GetTestSample(self):
-        X, Y = GetTestSample(
+    def test_get_test_sample(self):
+        X, Y = get_test_sample(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,
@@ -513,11 +513,11 @@ class GetSamples_TestCase(unittest.TestCase):
             ["absEta_btagJes", "JetFitter_isDefaults", "JetFitter_mass"],
         )
 
-    def test_GetTestSample_Different_class_labels(self):
+    def test_get_test_sample_Different_class_labels(self):
         self.class_labels_given = ["ujets", "cjets", "bjets"]
 
         with self.assertRaises(AssertionError):
-            _, _ = GetTestSample(
+            _, _ = get_test_sample(
                 input_file=self.validation_files["ttbar_r21_val"]["path"],
                 var_dict=self.var_dict,
                 preprocess_config=self,
@@ -526,10 +526,10 @@ class GetSamples_TestCase(unittest.TestCase):
                 exclude=self.exclude,
             )
 
-    def test_GetTestSample_Extended_Labeling(self):
+    def test_get_test_sample_Extended_Labeling(self):
         self.sampling = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
 
-        X, Y = GetTestSample(
+        X, Y = get_test_sample(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             preprocess_config=self,

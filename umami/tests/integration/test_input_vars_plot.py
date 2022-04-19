@@ -13,7 +13,7 @@ from umami.tools import yaml_loader
 set_log_level(logger, "DEBUG")
 
 
-def getConfiguration() -> object:
+def get_configuration() -> object:
     """
     Load yaml file with settings for integration test of the input vars plotting.
 
@@ -98,7 +98,7 @@ class TestInput_Vars_Plotting(unittest.TestCase):
     def setUp(self):
         """Download test files for input var plots."""
         # Get test configuration
-        self.data = getConfiguration()
+        self.data = get_configuration()
 
         test_dir = os.path.join(self.data["test_input_vars_plot"]["testdir"])
         logging.info(f"Creating test directory in {test_dir}")

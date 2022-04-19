@@ -1,6 +1,6 @@
 # flake8: noqa
 # pylint: skip-file
-from umami.configuration.Configuration import (
+from umami.configuration.configuration import (
     Configuration,
     global_config,
     logger,

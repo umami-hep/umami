@@ -66,8 +66,8 @@ def get_epoch_from_string(string):
         Epoch of the model file.
     """
 
-    m = re.search("model_epoch(.+?).h5", string)
-    return m.group(1)
+    epoch = re.search("model_epoch(.+?).h5", string)
+    return epoch.group(1)
 
 
 def get_validation_dict_name(WP: float, n_jets: int, dir_name: str) -> str:
@@ -662,7 +662,7 @@ def get_jet_feature_position(
     return position_list
 
 
-def GetTestSample(
+def get_test_sample(
     input_file: str,
     var_dict: str,
     preprocess_config: object,
@@ -822,7 +822,7 @@ def GetTestSample(
     return jets, labels
 
 
-def GetTestSampleTrks(
+def get_test_sample_trks(
     input_file: str,
     var_dict: str,
     preprocess_config: object,
@@ -1082,7 +1082,7 @@ def load_validation_data_dl1(
             else None
         )
 
-        (X_valid, Y_valid,) = GetTestSample(
+        (X_valid, Y_valid,) = get_test_sample(
             input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
@@ -1155,7 +1155,7 @@ def load_validation_data_dips(
             else None
         )
 
-        (X_valid, Y_valid,) = GetTestSampleTrks(
+        (X_valid, Y_valid,) = get_test_sample_trks(
             input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
@@ -1231,7 +1231,7 @@ def GetTestFile(
         Y values ready to be used in the NN's.
     """
 
-    X_trk, Y_trk = GetTestSampleTrks(
+    X_trk, Y_trk = get_test_sample_trks(
         input_file=input_file,
         var_dict=var_dict,
         preprocess_config=preprocess_config,
@@ -1242,7 +1242,7 @@ def GetTestFile(
         print_logger=False,
     )
 
-    X, Y = GetTestSample(
+    X, Y = get_test_sample(
         input_file=input_file,
         var_dict=var_dict,
         preprocess_config=preprocess_config,

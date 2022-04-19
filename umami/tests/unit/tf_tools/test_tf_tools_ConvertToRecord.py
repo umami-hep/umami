@@ -43,7 +43,7 @@ class ConvertTest(unittest.TestCase):
         )
 
     def test_save_parameters(self):
-        cv = Convert_to_Record.h5toTFRecordConverter(self.config)
+        cv = Convert_to_Record.h5_to_tf_record_converter(self.config)
         # create temporary directory where data should be saved
         record_dir = tempfile.TemporaryDirectory()
         cv.save_parameters(record_dir.name)
@@ -60,7 +60,7 @@ class ConvertTest(unittest.TestCase):
         self.assertEqual(parameters, parameters_saved)
 
     def test_save_parameters_nadd_vars(self):
-        cv = Convert_to_Record.h5toTFRecordConverter(self.config)
+        cv = Convert_to_Record.h5_to_tf_record_converter(self.config)
         # create temporary directory where data should be saved
         record_dir = tempfile.TemporaryDirectory()
         cv.n_add_vars = 4
@@ -79,6 +79,6 @@ class ConvertTest(unittest.TestCase):
         self.assertEqual(parameters, parameters_saved)
 
     def test_faulty_setup(self):
-        cv = Convert_to_Record.h5toTFRecordConverter(self.faulty_config)
+        cv = Convert_to_Record.h5_to_tf_record_converter(self.faulty_config)
         default_chunk_size = 5_000
         self.assertEqual(cv.chunk_size, default_chunk_size)

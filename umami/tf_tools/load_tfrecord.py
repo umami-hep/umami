@@ -33,7 +33,7 @@ def load_tfrecords_train_dataset(
         If no metadata file could be found in tfrecords directory.
     """
     # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
+    nn_structure = train_config.NN_structure
     tracks_name = train_config.tracks_name
 
     # Get the files in dir
@@ -58,7 +58,7 @@ def load_tfrecords_train_dataset(
 
     # Check if nfiles is given. Otherwise set to 5
     try:
-        nfiles = NN_structure["nfiles_tfrecord"]
+        nfiles = nn_structure["nfiles_tfrecord"]
 
     except KeyError:
         nfiles = 5
@@ -69,15 +69,15 @@ def load_tfrecords_train_dataset(
     # Get the tfrecords
     tfrecord_reader = TFRecordReader(
         path=train_config.train_file,
-        batch_size=NN_structure["batch_size"],
+        batch_size=nn_structure["batch_size"],
         nfiles=nfiles,
-        tagger_name=NN_structure["tagger"],
+        tagger_name=nn_structure["tagger"],
         tracks_name=tracks_name,
-        n_cond=NN_structure["N_Conditions"] if "N_Conditions" in NN_structure else None,
+        n_cond=nn_structure["N_Conditions"] if "N_Conditions" in nn_structure else None,
     )
 
     # Load the dataset from reader
-    train_dataset = tfrecord_reader.load_Dataset()
+    train_dataset = tfrecord_reader.load_dataset()
 
     # Get the metadata name
     metadata_name = (train_config.train_file + "/metadata.json").replace("//", "/")
@@ -135,7 +135,7 @@ class TFRecordReader:
         self.sample_weights = sample_weights
         self.n_cond = n_cond
 
-    def load_Dataset(self):
+    def load_dataset(self):
         """
         Load TFRecord and create Dataset for training
 
@@ -144,15 +144,15 @@ class TFRecordReader:
         tf_Dataset
         """
         data_files = tf.io.gfile.glob((self.path + "/*.tfrecord").replace("//", "/"))
-        Dataset_shards = tf.data.Dataset.from_tensor_slices([data_files])
-        Dataset_shards.shuffle(tf.cast(tf.shape(data_files)[0], tf.int64))
-        tf_Dataset = Dataset_shards.interleave(
+        dataset_shards = tf.data.Dataset.from_tensor_slices([data_files])
+        dataset_shards.shuffle(tf.cast(tf.shape(data_files)[0], tf.int64))
+        tf_dataset = dataset_shards.interleave(
             tf.data.TFRecordDataset,
             num_parallel_calls=tf.data.AUTOTUNE,
             cycle_length=self.nfiles,
         )
-        tf_Dataset = (
-            tf_Dataset.shuffle(self.batch_size * 10)
+        tf_dataset = (
+            tf_dataset.shuffle(self.batch_size * 10)
             .batch(self.batch_size)
             .map(
                 self.decode_fn,
@@ -161,7 +161,7 @@ class TFRecordReader:
             .repeat()
             .prefetch(3)
         )
-        return tf_Dataset
+        return tf_dataset
 
     def decode_fn(self, record_bytes):
         """
@@ -215,10 +215,10 @@ class TFRecordReader:
                     shape=shapes[f"shape_X_{self.tracks_name}_train"], dtype=tf.float32
                 )
 
-            except KeyError as Error:
+            except KeyError as error:
                 raise KeyError(
                     f"Track collection {self.tracks_name} not in metadata file!"
-                ) from Error
+                ) from error
 
         # Set label shape
         shapes["shape_Y"] = [metadata["n_dim"]]
@@ -235,10 +235,10 @@ class TFRecordReader:
                     shape=shapes["shape_Add_Vars"], dtype=tf.float32
                 )
 
-            except KeyError as Error:
+            except KeyError as error:
                 raise KeyError(
                     "No conditional information saved in tfrecords metadata file!"
-                ) from Error
+                ) from error
 
         # Get the parser
         parse_ex = tf.io.parse_example(record_bytes, features)  # pylint: disable=E1120

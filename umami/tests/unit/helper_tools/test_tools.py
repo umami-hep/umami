@@ -17,7 +17,7 @@ from umami.tools import (
     compare_leading_spaces,
     replaceLineInFile,
 )
-from umami.train_tools.Configuration import Configuration
+from umami.train_tools.configuration import Configuration
 
 set_log_level(logger, "DEBUG")
 

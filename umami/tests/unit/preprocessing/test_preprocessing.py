@@ -4,7 +4,7 @@ import unittest  # noqa
 from unittest import mock
 
 from umami.configuration import logger, set_log_level
-from umami.preprocessing import GetParser
+from umami.preprocessing import get_parser
 
 set_log_level(logger, "DEBUG")
 
@@ -35,7 +35,7 @@ class PreprocessingTestParser(unittest.TestCase):
         ),
     )
     def test_Parser(self, mock_args):
-        parser = GetParser()
+        parser = get_parser()
         self.assertEqual(parser.config_file, self.config_file)
         self.assertFalse(parser.tracks)
 

@@ -537,12 +537,12 @@ def GetRejection(
                 / (len(jets_dict[iter_main_class]) + 1e-10)
             )
 
-        except ZeroDivisionError as Error:
+        except ZeroDivisionError as error:
             raise ZeroDivisionError(
                 "Not enough jets for rejection calculation of class "
                 f"{iter_main_class} for {target_eff} efficiency!\n"
                 "Maybe loosen the eff_min to fix it or give more jets!"
-            ) from Error
+            ) from error
 
     return rej_dict, cutvalue
 

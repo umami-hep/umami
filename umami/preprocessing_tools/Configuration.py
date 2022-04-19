@@ -25,8 +25,8 @@ class Configuration:
         self.YAML = YAML(typ="safe", pure=True)
         self.yaml_config = yaml_config
         self.yaml_default_config = "configs/preprocessing_default_config.yaml"
-        self.LoadConfigFiles()
-        self.GetConfiguration()
+        self.load_config_files()
+        self.get_configuration()
         self.CheckTracksNames()
 
     @property
@@ -71,7 +71,7 @@ class Configuration:
         )
         return preprocess_parameters_path
 
-    def LoadConfigFiles(self) -> None:
+    def load_config_files(self) -> None:
         """Load config file from disk."""
         self.yaml_default_config = os.path.join(
             os.path.dirname(__file__), self.yaml_default_config
@@ -83,7 +83,7 @@ class Configuration:
         with open(self.yaml_config, "r") as conf:
             self.config = self.YAML.load(conf)
 
-    def GetConfiguration(self) -> None:
+    def get_configuration(self) -> None:
         """Assigne configuration from file to class variables.
 
         Raises

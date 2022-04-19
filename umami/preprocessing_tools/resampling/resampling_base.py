@@ -807,12 +807,12 @@ class ResamplingTools(Resampling):
         self.samples = {}
         try:
             samples = self.options["samples"]
-        except KeyError as Error:
+        except KeyError as error:
             raise KeyError(
                 "You chose the 'count' or 'probability_ratio' option "
                 "for the sampling but didn't provide the samples to use. "
                 "Please specify them in the configuration file!"
-            ) from Error
+            ) from error
 
         # list of sample classes, bjets, cjets, etc
         valid_class_categories = self.GetValidClassCategories(samples)

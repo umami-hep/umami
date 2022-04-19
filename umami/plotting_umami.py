@@ -23,7 +23,7 @@ import umami.evaluation_tools as uet
 from umami.configuration import logger
 
 
-def GetParser():
+def get_parser():
     """
     Argument parser for Preprocessing script.
 
@@ -132,7 +132,7 @@ def plot_probability_comparison(
     )
 
 
-def plot_ROC(
+def plot_roc(
     plot_name: str,
     plot_config: dict,
     eval_params: dict,
@@ -166,10 +166,10 @@ def plot_ROC(
     eval_epoch = int(eval_params["epoch"])
 
     if "nTest" not in plot_config["plot_settings"].keys():
-        nTest_provided = False
+        n_test_provided = False
         plot_config["plot_settings"]["nTest"] = []
     else:
-        nTest_provided = True
+        n_test_provided = True
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
@@ -200,7 +200,7 @@ def plot_ROC(
             colors.append(model_config["color"])
 
         # nTest is only needed to calculate binomial errors
-        if not nTest_provided and (
+        if not n_test_provided and (
             "binomialErrors" in plot_config["plot_settings"]
             and plot_config["plot_settings"]["binomialErrors"]
         ):
@@ -230,7 +230,7 @@ def plot_ROC(
     )
 
 
-def plot_ROC_Comparison(
+def plot_roc_Comparison(
     plot_name: str,
     plot_config: dict,
     eval_params: dict,
@@ -264,10 +264,10 @@ def plot_ROC_Comparison(
     eval_epoch = int(eval_params["epoch"])
 
     if "nTest" not in plot_config["plot_settings"].keys():
-        nTest_provided = False
+        n_test_provided = False
         plot_config["plot_settings"]["nTest"] = []
     else:
-        nTest_provided = True
+        n_test_provided = True
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
@@ -298,7 +298,7 @@ def plot_ROC_Comparison(
             colors.append(model_config["color"])
 
         # nTest is only needed to calculate binomial errors
-        if not nTest_provided and (
+        if not n_test_provided and (
             "binomialErrors" in plot_config["plot_settings"]
             and plot_config["plot_settings"]["binomialErrors"]
         ):
@@ -334,7 +334,7 @@ def plot_ROC_Comparison(
     )
 
 
-def plot_ROCvsVar(
+def plot_roc_vs_var(
     plot_name: str,
     plot_config: dict,
     eval_params: dict,
@@ -564,7 +564,7 @@ def plot_ROCvsVar(
     )
 
 
-def plot_ROCvsVar_comparison(
+def plot_roc_vs_var_comparison(
     plot_name: str,
     plot_config: dict,
     eval_params: dict,
@@ -1168,12 +1168,12 @@ def plot_saliency(
             eval_file_dir
             + f'/saliency_{eval_epoch}_{plot_config["data_set_name"]}.pkl',
             "rb",
-        ) as f:
-            maps_dict = pickle.load(f)
+        ) as pkl_file:
+            maps_dict = pickle.load(pkl_file)
 
     else:
-        with open(plot_config["evaluation_file"], "rb") as f:
-            maps_dict = pickle.load(f)
+        with open(plot_config["evaluation_file"], "rb") as pkl_file:
+            maps_dict = pickle.load(pkl_file)
 
     uet.plotSaliency(
         maps_dict=maps_dict,
@@ -1340,7 +1340,7 @@ def SetUpPlots(
             )
 
         elif plot_config["type"] == "ROC":
-            plot_ROC(
+            plot_roc(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
@@ -1349,7 +1349,7 @@ def SetUpPlots(
             )
 
         elif plot_config["type"] == "ROC_Comparison":
-            plot_ROC_Comparison(
+            plot_roc_Comparison(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
@@ -1417,7 +1417,7 @@ def SetUpPlots(
             )
 
         elif plot_config["type"] == "ROCvsVar":
-            plot_ROCvsVar(
+            plot_roc_vs_var(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
@@ -1425,7 +1425,7 @@ def SetUpPlots(
             )
 
         elif plot_config["type"] == "ROCvsVar_comparison":
-            plot_ROCvsVar_comparison(
+            plot_roc_vs_var_comparison(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
@@ -1482,5 +1482,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser_args = GetParser()
+    parser_args = get_parser()
     main(parser_args)

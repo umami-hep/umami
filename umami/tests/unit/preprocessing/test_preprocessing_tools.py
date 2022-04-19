@@ -34,7 +34,7 @@ class ConfigurationTestCase(unittest.TestCase):
         config = Configuration(self.config_file)
         del config.config["outfile_name"]
         with self.assertRaises(KeyError):
-            config.GetConfiguration()
+            config.get_configuration()
 
     # this functionality is still there but is not used for now
     # so will keep the test here in case this is used again
@@ -42,7 +42,7 @@ class ConfigurationTestCase(unittest.TestCase):
     #     config = Configuration(self.config_file)
     #     del config.config["outfile_name"]
     #     with self.assertWarns(Warning):
-    #         config.GetConfiguration()
+    #         config.get_configuration()
 
     def test_GetFileName_no_input(self):
         config = Configuration(self.config_file)

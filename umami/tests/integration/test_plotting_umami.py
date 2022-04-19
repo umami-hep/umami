@@ -19,7 +19,7 @@ from umami.tools import replaceLineInFile, yaml_loader
 set_log_level(logger, "DEBUG")
 
 
-def getConfiguration():
+def get_configuration():
     """
     Load yaml file with settings for integration test of dips training.
 
@@ -86,8 +86,8 @@ def runPlotting(config, tagger):
     try:
         run_plotting_umami.check_returncode()
 
-    except CalledProcessError as Error:
-        raise AssertionError(f"Test failed: plotting_umami.py for {tagger}.") from Error
+    except CalledProcessError as error:
+        raise AssertionError(f"Test failed: plotting_umami.py for {tagger}.") from error
 
     return True
 
@@ -101,7 +101,7 @@ class TestPlottingUmami(unittest.TestCase):
     def setUp(self):
         """Download test files for running the dips training."""
         # Get test configuration
-        self.data = getConfiguration()
+        self.data = get_configuration()
         self.model_name_dips = self.data["test_dips"]["model_name"]
         self.model_name_umami = self.data["test_umami"]["model_name"]
         self.model_name_dl1r = self.data["test_dl1r"]["model_name"]

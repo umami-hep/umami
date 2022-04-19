@@ -9,7 +9,7 @@ import tensorflow as tf
 import tqdm
 
 
-class h5toTFRecordConverter:
+class h5_to_tf_record_converter:
     """h5 converter to tf records."""
 
     def __init__(self, config):

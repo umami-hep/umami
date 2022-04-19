@@ -1,6 +1,6 @@
 # flake8: noqa
 # pylint: skip-file
-from umami.tf_tools.Convert_to_Record import h5toTFRecordConverter
+from umami.tf_tools.Convert_to_Record import h5_to_tf_record_converter
 from umami.tf_tools.generators import (
     cads_generator,
     dips_generator,
