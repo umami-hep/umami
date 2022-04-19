@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing bunch of invalid-name pylint errors [!522](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/522)
 - Adding error message if file in placeholder does not exist [!519](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/519)
 - Update the LWTNN scripts [!512](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/512)
 - Adding pydash to requirements [!517](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/517)

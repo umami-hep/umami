@@ -3,7 +3,7 @@ import re
 
 import yaml
 
-from umami.configuration.Configuration import logger
+from umami.configuration.configuration import logger
 
 # adding a custom yaml loader in order to be able to have nubers with
 # scientific notation

@@ -79,8 +79,8 @@ class PrepareSamples:
         samples = self.config.preparation["samples"]
         try:
             sample = samples[args.sample]
-        except KeyError as Error:
-            raise KeyError(f'sample "{args.sample}" not in config file!') from Error
+        except KeyError as error:
+            raise KeyError(f'sample "{args.sample}" not in config file!') from error
 
         self.sample_type = sample.get("type")
         self.sample_category = sample.get("category")
@@ -90,11 +90,11 @@ class PrepareSamples:
         else:
             try:
                 category_setup = global_config.flavour_categories[self.sample_category]
-            except KeyError as Error:
+            except KeyError as error:
                 raise KeyError(
                     f"Requested sample category {self.sample_category} not"
                     " defined in global config."
-                ) from Error
+                ) from error
 
             # retrieving the cuts for the category selection
             category_cuts = GetCategoryCuts(

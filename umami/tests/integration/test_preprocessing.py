@@ -17,7 +17,7 @@ from umami.tools import replaceLineInFile, yaml_loader
 set_log_level(logger, "DEBUG")
 
 
-def getConfiguration():
+def get_configuration():
     """
     Load yaml file with settings for integration test of preprocessing.
 
@@ -107,10 +107,10 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
         try:
             run_prepare.check_returncode()
 
-        except CalledProcessError as Error:
+        except CalledProcessError as error:
             raise AssertionError(
                 f"Test failed: preprocessing.py --prepare: {sample}"
-            ) from Error
+            ) from error
 
     logger.info("Test: running the resampling...")
     run_resampling = run(
@@ -127,8 +127,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     try:
         run_resampling.check_returncode()
 
-    except CalledProcessError as Error:
-        raise AssertionError("Test failed: preprocessing.py --resampling.") from Error
+    except CalledProcessError as error:
+        raise AssertionError("Test failed: preprocessing.py --resampling.") from error
 
     logger.info("Test: retrieving scaling and shifting factors...")
     run_scaling = run(
@@ -147,8 +147,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     try:
         run_scaling.check_returncode()
 
-    except CalledProcessError as Error:
-        raise AssertionError("Test failed: preprocessing.py --scaling.") from Error
+    except CalledProcessError as error:
+        raise AssertionError("Test failed: preprocessing.py --scaling.") from error
 
     logger.info("Test: applying shifting and scaling factors...")
     run_apply_scales = run(
@@ -164,8 +164,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
 
     try:
         run_apply_scales.check_returncode()
-    except CalledProcessError as Error:
-        raise AssertionError("Test failed: preprocessing.py --apply_scales.") from Error
+    except CalledProcessError as error:
+        raise AssertionError("Test failed: preprocessing.py --apply_scales.") from error
 
     logger.info("Test: shuffling the samples and writing the samples to disk...")
     run_write = run(
@@ -182,8 +182,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
     try:
         run_write.check_returncode()
 
-    except CalledProcessError as Error:
-        raise AssertionError("Test failed: preprocessing.py --write.") from Error
+    except CalledProcessError as error:
+        raise AssertionError("Test failed: preprocessing.py --write.") from error
 
     logger.info(
         "Test: shuffling the samples, writing the samples to disk and convert"
@@ -205,10 +205,10 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
         try:
             run_record.check_returncode()
 
-        except CalledProcessError as Error:
+        except CalledProcessError as error:
             raise AssertionError(
                 "Test failed: preprocessing.py --to_records."
-            ) from Error
+            ) from error
 
     tagger_path = f"./test_preprocessing_{tagger}/"
     if not os.path.isdir(tagger_path):
@@ -280,7 +280,7 @@ class TestPreprocessing(unittest.TestCase):
         preprocessing config file.
         """
         # Get test configuration
-        self.data = getConfiguration()
+        self.data = get_configuration()
 
         test_dir = os.path.join(self.data["test_preprocessing"]["testdir"])
         logger.info(f"Creating test directory in {test_dir}")

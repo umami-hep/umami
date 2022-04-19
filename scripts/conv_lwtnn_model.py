@@ -9,7 +9,7 @@ from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=E0401
 from umami.tf_tools import Sum
 
 
-def GetParser():
+def get_parser():
     """
     Argparse option for conv_model script.
 
@@ -39,7 +39,7 @@ def GetParser():
 
 
 def __run():
-    args = GetParser()
+    args = get_parser()
     with CustomObjectScope({"GlorotUniform": glorot_uniform(), "Sum": Sum}):
         model = load_model(args.model_file)
     # get the architecture as a json string

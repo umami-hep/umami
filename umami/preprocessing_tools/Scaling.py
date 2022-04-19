@@ -478,7 +478,7 @@ class Scaling:
     def GetScaleDict(
         self,
         input_file: str = None,
-        chunkSize: int = 1e5,
+        chunk_size: int = 1e5,
     ):
         """
         Calculates the scaling, shifting and default values and saves them to json.
@@ -487,7 +487,7 @@ class Scaling:
         ----------
         input_file : str, optional
             File which is used to calculate scaling/shifting, by default None
-        chunkSize : int, optional
+        chunk_size : int, optional
             Scale dict calculated using the given file, by default 1e5
         """
 
@@ -506,13 +506,13 @@ class Scaling:
         file_length = len(h5py.File(input_file, "r")["/jets"].fields(var_list[0])[:])
 
         # Get the number of chunks we need to load
-        n_chunks = int(np.ceil(file_length / chunkSize))
+        n_chunks = int(np.ceil(file_length / chunk_size))
 
         # Get the jets scaling generator
         jets_scaling_generator = self.get_scaling_generator(
             input_file=input_file,
             nJets=file_length,
-            chunkSize=chunkSize,
+            chunk_size=chunk_size,
         )
 
         # Loop over chunks
@@ -552,7 +552,7 @@ class Scaling:
                     input_file=input_file,
                     nJets=file_length,
                     tracks_name=tracks_name,
-                    chunkSize=chunkSize,
+                    chunk_size=chunk_size,
                 )
 
                 # Loop over chunks
@@ -598,7 +598,7 @@ class Scaling:
         self,
         input_file: str,
         nJets: int,
-        chunkSize: int = int(10000),
+        chunk_size: int = int(10000),
     ):
         """
         Set up a generator that loads the jets in chunks and calculates the mean/std.
@@ -609,7 +609,7 @@ class Scaling:
             File which is to be scaled.
         nJets : int
             Number of jets which are to be scaled.
-        chunkSize : int, optional
+        chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted per step,
             by default int(10000)
 
@@ -634,7 +634,7 @@ class Scaling:
             # Loop over indicies
             while start_ind < nJets:
                 # Calculate end index of the chunk
-                end_ind = int(start_ind + chunkSize)
+                end_ind = int(start_ind + chunk_size)
 
                 # Check if end index is bigger than Njets
                 end_ind = min(end_ind, nJets)
@@ -661,7 +661,7 @@ class Scaling:
                 jets.replace([np.inf, -np.inf], np.nan, inplace=True)
 
                 if "weight" not in jets:
-                    length = nJets if nJets < chunkSize else len(jets)
+                    length = nJets if nJets < chunk_size else len(jets)
                     jets["weight"] = np.ones(int(length))
 
                 # Iterate over the vars of the jets
@@ -698,7 +698,7 @@ class Scaling:
         input_file: str,
         nJets: int,
         tracks_name: str,
-        chunkSize: int = int(10000),
+        chunk_size: int = int(10000),
     ):
         """
         Set up a generator that loads the tracks in chunks and calculates the mean/std.
@@ -712,7 +712,7 @@ class Scaling:
             Number of jets which are to be scaled.
         tracks_name : str
             Name of the tracks
-        chunkSize : int, optional
+        chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted per step,
             by default int(10000)
 
@@ -743,7 +743,7 @@ class Scaling:
             # Loop over indicies
             while start_ind < nJets:
                 # Calculate end index of the chunk
-                end_ind = int(start_ind + chunkSize)
+                end_ind = int(start_ind + chunk_size)
 
                 # Check if end index is bigger than Njets
                 end_ind = min(end_ind, nJets)
@@ -797,7 +797,7 @@ class Scaling:
         jets_default_dict: dict,
         nJets: int,
         tracks_scale_dict: dict = None,
-        chunkSize: int = int(10000),
+        chunk_size: int = int(10000),
     ):
         """
         Set up a generator who applies the scaling/shifting for the given
@@ -817,7 +817,7 @@ class Scaling:
             Number of jets which are to be scaled.
         tracks_scale_dict : dict, optional
             Scale dict of the track variables., by default None
-        chunkSize : int, optional
+        chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted per step,
             by default int(10000)
 
@@ -842,11 +842,11 @@ class Scaling:
             start_ind = 0
             tupled_indices = []
             while start_ind < nJets:
-                end_ind = int(start_ind + chunkSize)
+                end_ind = int(start_ind + chunk_size)
                 end_ind = min(end_ind, nJets)
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
-                end_ind = int(start_ind + chunkSize)
+                end_ind = int(start_ind + chunk_size)
 
             for index_tuple in tupled_indices:
 
@@ -854,7 +854,7 @@ class Scaling:
                 jets = pd.DataFrame(f["/jets"][index_tuple[0] : index_tuple[1]])
                 labels = pd.DataFrame(f["/labels"][index_tuple[0] : index_tuple[1]])
                 if "weight" not in jets:
-                    length = nJets if nJets < chunkSize else len(jets)
+                    length = nJets if nJets < chunk_size else len(jets)
                     jets["weight"] = np.ones(int(length))
 
                 if "weight" not in jets_variables:
@@ -910,7 +910,7 @@ class Scaling:
     def ApplyScales(
         self,
         input_file: str = None,
-        chunkSize: int = 1e6,
+        chunk_size: int = 1e6,
     ):
         """
         Apply the scaling and shifting.
@@ -919,7 +919,7 @@ class Scaling:
         ----------
         input_file : str, optional
             File which is to be scaled., by default None
-        chunkSize : int, optional
+        chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted per step,
             by default 1e6
         """
@@ -939,7 +939,7 @@ class Scaling:
 
         file_length = len(h5py.File(input_file, "r")["/jets"][jets_variables[0]][:])
 
-        n_chunks = int(np.ceil(file_length / chunkSize))
+        n_chunks = int(np.ceil(file_length / chunk_size))
 
         # Get scale dict
         with open(self.scale_dict_path, "r") as infile:
@@ -968,7 +968,7 @@ class Scaling:
             jets_default_dict=jets_default_dict,
             nJets=file_length,
             tracks_scale_dict=tracks_scale_dict,
-            chunkSize=chunkSize,
+            chunk_size=chunk_size,
         )
 
         logger.info("Applying scaling and shifting.")

@@ -108,12 +108,12 @@ Since Python 3.6 the so-called f-strings were introduced providing a powerful sy
 
 A simple example
 ```python
-nJets = 2_300
+n_jets = 2_300
 jet_collection = "EMPFlow"
-info_text = f"We are using the {jet_collection} jet collection and have {nJets} available."
+info_text = f"We are using the {jet_collection} jet collection and have {n_jets} available."
 
 ## arbitrary operations
-info_text_event = f"We are using the {jet_collection} jet collection and have {nJets * 4} available."
+info_text_event = f"We are using the {jet_collection} jet collection and have {n_jets * 4} available."
 ```
 
 ### Integer division
@@ -122,10 +122,10 @@ In Python 3 a dedicated integer division was introduced.
 
 ```python
 # standard division -> returns by default a flaot (no rounding)
-nEvents = nJets / 4
+n_events = n_jets / 4
 
 # integer division -> rounds to integer precision
-nEvents = nJets // 4
+n_events = n_jets // 4
 ```
 
 ### Type declaration in functions

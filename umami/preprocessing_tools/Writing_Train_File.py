@@ -44,7 +44,7 @@ class TrainSampleWriter:
         input_file: str,
         index: list,
         nJets: int,
-        chunkSize: int = 100_000,
+        chunk_size: int = 100_000,
     ):
         """
         Set up a generator who loads the scaled file and save it in the format for
@@ -58,7 +58,7 @@ class TrainSampleWriter:
             List with the indicies.
         nJets : int
             Number of jets used.
-        chunkSize : int, optional
+        chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted
             per step, by default 100_000
 
@@ -84,12 +84,12 @@ class TrainSampleWriter:
 
             tupled_indices = []
             while start_ind < nJets:
-                end_ind = int(start_ind + chunkSize)
+                end_ind = int(start_ind + chunk_size)
                 end_ind = min(end_ind, nJets)
 
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
-                end_ind = int(start_ind + chunkSize)
+                end_ind = int(start_ind + chunk_size)
 
             for index_tuple in tupled_indices:
 
@@ -181,7 +181,7 @@ class TrainSampleWriter:
         self,
         input_file: str = None,
         output_file: str = None,
-        chunkSize: int = 100_000,
+        chunk_size: int = 100_000,
     ) -> None:
         """
         Write the training file.
@@ -194,7 +194,7 @@ class TrainSampleWriter:
         output_file : str, optional
             Name of the output file. Default is name from
             config + resampled_scaled_shuffled., by default None
-        chunkSize : int, optional
+        chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted per step,
             by default 100_000
         """
@@ -223,7 +223,7 @@ class TrainSampleWriter:
         n_jets = len(h5py.File(input_file, "r")["/jets"])
 
         # Get the number of chunks that need to be processed
-        n_chunks = int(np.ceil(n_jets / chunkSize))
+        n_chunks = int(np.ceil(n_jets / chunk_size))
 
         # Create an absolute index list for the file and shuffle it
         absolute_index = np.arange(n_jets)
@@ -233,7 +233,7 @@ class TrainSampleWriter:
             input_file=input_file,
             index=absolute_index,
             nJets=n_jets,
-            chunkSize=chunkSize,
+            chunk_size=chunk_size,
         )
 
         logger.info(f"Saving final train files to {out_file}")

@@ -24,7 +24,7 @@ from umami.preprocessing_tools import Configuration
 tf.compat.v1.disable_eager_execution()
 
 
-def GetParser():
+def get_parser():
     """
     Argument parser for the evaluation script.
 
@@ -169,13 +169,13 @@ def EvaluateModel(
     )
     try:
         assert isinstance(tagger_list, list)
-    except AssertionError as Error:
+    except AssertionError as error:
         raise ValueError(
             """
             Tagger given in Eval_parameters_validation
             is not a string or a list!
             """
-        ) from Error
+        ) from error
 
     # evaluate trained model file (for evaluate_trained_model: True in config)
     if Eval_model_bool:
@@ -351,8 +351,8 @@ def EvaluateModel(
         f"{train_config.model_name}/results/"
         f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
         "a",
-    ) as f:
-        f.attrs["N_test"] = len(jets)
+    ) as h5_file:
+        h5_file.attrs["N_test"] = len(jets)
 
     # Get the rejections, discs and f_* values for the taggers
     tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
@@ -385,8 +385,8 @@ def EvaluateModel(
         f"{train_config.model_name}/results/"
         f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
-    ) as f:
-        f.attrs["N_test"] = len(jets)
+    ) as h5_file:
+        h5_file.attrs["N_test"] = len(jets)
 
 
 def EvaluateModelDips(
@@ -510,7 +510,7 @@ def EvaluateModelDips(
 
     else:
         # Get the testfile with the needed configs
-        X, Y_test = utt.GetTestSampleTrks(
+        X, Y_test = utt.get_test_sample_trks(
             input_file=test_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
@@ -627,8 +627,8 @@ def EvaluateModelDips(
         f"{train_config.model_name}/results/"
         f"results{results_filename_extension}-rej_per_eff-{args.epoch}.h5",
         "a",
-    ) as f:
-        f.attrs["N_test"] = len(jets)
+    ) as h5_file:
+        h5_file.attrs["N_test"] = len(jets)
 
     # Get the rejections, discs and f_* values for the taggers
     tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
@@ -660,8 +660,8 @@ def EvaluateModelDips(
         f"{train_config.model_name}/results/"
         f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
-    ) as f:
-        f.attrs["N_test"] = len(jets)
+    ) as h5_file:
+        h5_file.attrs["N_test"] = len(jets)
 
     if (
         "Calculate_Saliency" in eval_params
@@ -788,7 +788,7 @@ def EvaluateModelDL1(
         exclude = train_config.config["exclude"]
 
     # Get the testfile with the needed configs
-    X_test, _ = utt.GetTestSample(
+    X_test, _ = utt.get_test_sample(
         input_file=test_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
@@ -916,8 +916,8 @@ def EvaluateModelDL1(
         f"{train_config.model_name}/results/"
         f"results{results_filename_extension}-rej_per_eff-{args.epoch}.h5",
         "a",
-    ) as f:
-        f.attrs["N_test"] = len(jets)
+    ) as h5_file:
+        h5_file.attrs["N_test"] = len(jets)
 
     # Get the rejections, discs and f_* values for the taggers
     tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
@@ -978,7 +978,7 @@ def EvaluateModelDL1(
 
 
 if __name__ == "__main__":
-    parser_args = GetParser()
+    parser_args = get_parser()
     training_config = utt.Configuration(parser_args.config_file)
 
     # Check for evaluation only (= evaluation of tagger scores in files) is used:

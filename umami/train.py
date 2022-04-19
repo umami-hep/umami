@@ -9,7 +9,7 @@ import umami.preprocessing_tools as upt
 import umami.train_tools as utt
 
 
-def GetParser():
+def get_parser():
     """
     Argument parser for the train executable.
 
@@ -49,7 +49,7 @@ def GetParser():
 
 if __name__ == "__main__":
     # Get the args from parser
-    args = GetParser()
+    args = get_parser()
 
     # Check if GPUs are available
     gpus = tf.config.experimental.list_physical_devices("GPU")

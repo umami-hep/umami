@@ -15,7 +15,7 @@ from umami.tf_tools import Sum
 from umami.tools import yaml_loader
 
 
-def GetParser():
+def get_parser():
     """
     Argparse option for create_vardict script.
 
@@ -166,7 +166,7 @@ def main():
     """
 
     # Get the arguments
-    args = GetParser()
+    args = get_parser()
 
     # Load the config file
     eval_config = prepareConfig(args.config)
@@ -220,7 +220,7 @@ def main():
 
     # Get prediction for dips
     elif "dips" in tagger.casefold():
-        X_test_trk, Y_test = utt.GetTestSampleTrks(
+        X_test_trk, Y_test = utt.get_test_sample_trks(
             input_file,
             var_dict,
             preprocess_config,
@@ -239,7 +239,7 @@ def main():
 
     # Get prediction for dl1
     elif "dl1" in tagger.casefold():
-        X_test_jet, Y_test = utt.GetTestSample(
+        X_test_jet, Y_test = utt.get_test_sample(
             input_file,
             var_dict,
             preprocess_config,

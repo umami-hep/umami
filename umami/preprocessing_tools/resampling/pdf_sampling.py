@@ -591,12 +591,12 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         try:
             samples = self.options["samples"]
 
-        except KeyError as Error:
+        except KeyError as error:
             raise KeyError(
                 "You chose the 'pdf' option for the sampling but didn't"
                 "provide the samples to use. Please specify them in the"
                 "configuration file!"
-            ) from Error
+            ) from error
 
         # saving a list of sample categories with associated IDs
         self.sample_categories = {

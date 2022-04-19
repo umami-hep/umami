@@ -450,8 +450,10 @@ test_examples:
   <<: *test_template
   stage: integration_test_plotting
   script:
-    - pytest -v umami/tests/integration/test_examples.py
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_examples.py -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_examples
   artifacts:
     paths:
       - docs/ci_assets
+      - coverage_files/
     expire_in: 1 day

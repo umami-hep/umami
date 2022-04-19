@@ -18,7 +18,7 @@ from umami.tools import replaceLineInFile, yaml_loader
 set_log_level(logger, "DEBUG")
 
 
-def getConfiguration():
+def get_configuration():
     """
     Load yaml file with settings for integration test of dips training.
 
@@ -74,7 +74,7 @@ def prepareConfig(
     """
 
     # Get test configuration
-    data = getConfiguration()
+    data = get_configuration()
 
     if tagger != "evaluate_comp_taggers":
         # For CADS, the files from the umami preprocessing are used.
@@ -271,8 +271,8 @@ def runTraining(config: dict, tagger: str) -> bool:
         try:
             run_train.check_returncode()
 
-        except CalledProcessError as Error:
-            raise AssertionError(f"Test failed: train.py for {tagger}.") from Error
+        except CalledProcessError as error:
+            raise AssertionError(f"Test failed: train.py for {tagger}.") from error
 
         logger.info(f"Test: running plotting_epoch_performance.py for {tagger}...")
 
@@ -302,10 +302,10 @@ def runTraining(config: dict, tagger: str) -> bool:
         try:
             run_plot_epoch.check_returncode()
 
-        except CalledProcessError as Error:
+        except CalledProcessError as error:
             raise AssertionError(
                 f"Test failed: plotting_epoch_performance.py for {tagger}."
-            ) from Error
+            ) from error
 
     logger.info(f"Test: running evaluate_model.py for {tagger}...")
     run_evaluate_model = run(
@@ -323,8 +323,8 @@ def runTraining(config: dict, tagger: str) -> bool:
     try:
         run_evaluate_model.check_returncode()
 
-    except CalledProcessError as Error:
-        raise AssertionError(f"Test failed: evaluate_model.py for {tagger}.") from Error
+    except CalledProcessError as error:
+        raise AssertionError(f"Test failed: evaluate_model.py for {tagger}.") from error
 
     return True
 
@@ -338,7 +338,7 @@ class TestTraining(unittest.TestCase):
     def setUp(self):
         """Download test files for running the dips training."""
         # Get test configuration
-        self.data = getConfiguration()
+        self.data = get_configuration()
 
         self.test_dir_path = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.test_dir = f"{self.test_dir_path.name}"

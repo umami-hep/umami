@@ -7,7 +7,7 @@ from umami.configuration import logger
 from umami.preprocessing_tools import GetVariableDict
 
 
-def GetParser():
+def get_parser():
     """
     Argparse option for create_vardict script.
 
@@ -186,7 +186,7 @@ def GetJetVariables(
 
 def __run():
     """main part of script generating json file"""
-    args = GetParser()
+    args = get_parser()
     variable_config = GetVariableDict(args.var_dict)
 
     if "dips" in args.tagger.lower():

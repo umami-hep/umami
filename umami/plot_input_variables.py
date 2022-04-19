@@ -14,7 +14,7 @@ from umami.plotting.utils import translate_kwargs
 from umami.tools import yaml_loader
 
 
-def GetParser():
+def get_parser():
     """
     Argument parser for Preprocessing script.
 
@@ -192,7 +192,7 @@ def plot_jets_variables(plot_config, plot_type):
 
 
 if __name__ == "__main__":
-    args = GetParser()
+    args = get_parser()
 
     if not (args.jets or args.tracks):
         raise Exception(

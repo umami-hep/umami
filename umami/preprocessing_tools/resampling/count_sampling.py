@@ -285,12 +285,12 @@ class ProbabilityRatioUnderSampling(UnderSampling):
 
         try:
             target_distribution = self.options["target_distribution"]
-        except KeyError as Error:
+        except KeyError as error:
             raise ValueError(
                 "Resampling method probabilty_ratio requires a target"
                 " distribution class in the options block of the configuration"
                 " file (i.e. bjets, cjets, ujets)."
-            ) from Error
+            ) from error
 
         self.ConcatenateSamples()
 

@@ -91,19 +91,19 @@ def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
                 found = re.search(r"mod_(\d+?)_([=!><]+)", op)
                 modulo = int(found.group(1))
                 op = found.group(2)
-            except AttributeError as Error:
+            except AttributeError as error:
                 raise RuntimeError(
                     "Incorrect use of modulo cut for sample:                  "
                     "   specify in config as mod_N_op                     with"
                     " N as an integer and                     op the operator"
                     " used for testing the condition."
-                ) from Error
-            except KeyError as Error:
+                ) from error
+            except KeyError as error:
                 raise RuntimeError(
                     "Incorrect use of modulo cut for sample:                 "
                     "    only supported operators 'op' in mod_N_op are:      "
                     f"               {list(inverted_ops.keys())}."
-                ) from Error
+                ) from error
             cut_rejection = inverted_ops[op]((jets[cut] % modulo), cond)
         else:
             if op in list(inverted_ops.keys()):  # pylint: disable=C0201:

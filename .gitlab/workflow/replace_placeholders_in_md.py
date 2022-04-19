@@ -9,7 +9,7 @@ from shutil import copyfile
 from subprocess import run
 
 
-def GetParser():
+def get_parser():
     """
     Argument parser for example code replacer
 
@@ -236,7 +236,7 @@ def replace_placeholder_with_file_content(
 
 def main():
     """Main function that is called when executing the script."""
-    args = GetParser()
+    args = get_parser()
     print(f"Replacing placeholders in the following files: {args.input}")
 
     # Process each input file with the replacement function

@@ -6,7 +6,7 @@ import umami.preprocessing_tools as upt
 from umami.configuration import logger
 
 
-def GetParser():
+def get_parser():
     """
     Argument parser for Preprocessing script.
 
@@ -104,7 +104,7 @@ def GetParser():
 
 
 if __name__ == "__main__":
-    args = GetParser()
+    args = get_parser()
     config = upt.Configuration(args.config_file)
 
     # Check for preparation
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     # Calculate the scale dicts of the previous resampled files
     elif args.scaling:
         Scaling = upt.Scaling(config)
-        Scaling.GetScaleDict(chunkSize=args.chunk_size)
+        Scaling.GetScaleDict(chunk_size=args.chunk_size)
 
     # Apply scaling of the previous calculated scale dicts
     elif args.apply_scales:
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     elif args.to_records:
         import umami.tf_tools as utft
 
-        Converter = utft.h5toTFRecordConverter(config)
+        Converter = utft.h5_to_tf_record_converter(config)
         Converter.write_tfrecord()
 
     # Give error when nothing is used
