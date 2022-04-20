@@ -326,6 +326,7 @@ def umami_tagger(args, train_config, preprocess_config):
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
         njet_features=metadata["n_jet_features"],
+        continue_training=train_config.continue_training,
     )
 
     # Check if epochs is set via argparser or not
@@ -369,6 +370,7 @@ def umami_tagger(args, train_config, preprocess_config):
             n_jets=n_jets_val,
             dir_name=train_config.model_name,
         ),
+        continue_training=train_config.continue_training,
     )
 
     # Append the callback

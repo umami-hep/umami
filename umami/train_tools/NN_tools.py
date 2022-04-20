@@ -208,7 +208,7 @@ def get_parameters_from_validation_dict_name(dict_name: str) -> dict:
 
 def setup_output_directory(
     dir_name: str,
-    clean_start: bool = True,
+    continue_training: bool = False,
 ) -> None:
     """
     Check the output directory path and init/clean it.
@@ -217,26 +217,28 @@ def setup_output_directory(
     ----------
     dir_name : str
         Path of the output directory.
-    clean_start : bool
-        Decide, if the old model files are cleaned or not.
+    continue_training : bool
+        Decide, if the training is continued (True) and the files in the
+        folder are not erased or a new training is started (False) and
+        the old model files and validation json files are erased.
 
     Raises
     ------
-    Exception
+    FileExistsError
         If the dir_name is an existing file.
     """
 
     outdir = Path(dir_name)
-    if outdir.is_dir() and clean_start:
+    if outdir.is_dir() and not continue_training:
         logger.info("Removing model*.h5 and *.json files.")
-        for model_file in outdir.glob("model*.h5"):
+        for model_file in outdir.glob("model_files/model_epoch*.h5"):
             model_file.unlink()
-        for model_file in outdir.glob("*.json"):
+        for model_file in outdir.glob("validation*.json"):
             model_file.unlink()
-    elif outdir.is_dir() and not clean_start:
+    elif outdir.is_dir() and continue_training:
         logger.info("Continue training. Old model files will not be erased.")
     elif outdir.is_file():
-        raise Exception(
+        raise FileExistsError(
             f"{dir_name} is the output directory name but it already exists as a file!"
         )
     else:
@@ -394,7 +396,7 @@ class CallbackBase(Callback):
         target_beff: float = 0.77,
         frac_dict: dict = None,
         dict_file_name: str = "DictFile.json",
-        clean_start: bool = True,
+        continue_training: bool = False,
     ):
         """Init the parameters needed for the callback
 
@@ -420,9 +422,9 @@ class CallbackBase(Callback):
         dict_file_name : str
             Name of the file where the dict with the results of the callback
             are saved.
-        clean_start : bool
-            Decide, if the directory where the output is saved will be cleaned
-            before the training starts, by default True
+        continue_training : bool, optional
+            Decide, if the this is a continuation of an already existing training
+            or not, by default False.
         """
         super().__init__()
 
@@ -441,15 +443,28 @@ class CallbackBase(Callback):
         )
         self.model_name = model_name
         self.dict_file_name = dict_file_name
-        self.clean_start = clean_start
+        self.continue_training = continue_training
 
         # Init a list for the result dicts for each epoch
-        self.dict_list = []
+        if self.continue_training:
+            try:
+                with open(self.dict_file_name, "r") as file:
+                    self.dict_list = json.loads(file.read())
+
+            except FileNotFoundError:
+                logger.warning(
+                    f"No validation file found named {self.dict_file_name}! "
+                    "Init a new one!"
+                )
+                self.dict_list = []
+
+        else:
+            self.dict_list = []
 
         # Init the directory and clean it from previous training
         setup_output_directory(
             dir_name=self.model_name,
-            clean_start=self.clean_start,
+            continue_training=self.continue_training,
         )
 
 
@@ -460,7 +475,7 @@ class MyCallback(CallbackBase):
     output (not like the umami tagger) is given.
     """
 
-    def on_epoch_end(self, epoch: int, logs: dict = None):
+    def on_epoch_end(self, epoch: int, logs: dict = None) -> None:
         """Get the needed metrics at epoch end and calculate rest.
 
         This method saves the training metrics at the end of the
@@ -517,7 +532,7 @@ class MyCallbackUmami(CallbackBase):
     two outputs of the tagger, we need special metrics etc.
     """
 
-    def on_epoch_end(self, epoch: int, logs: dict = None):
+    def on_epoch_end(self, epoch: int, logs: dict = None) -> None:
         """Get the needed metrics at epoch end and calculate rest.
 
         This method saves the training metrics at the end of the

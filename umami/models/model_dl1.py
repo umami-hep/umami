@@ -242,10 +242,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
         train_config=train_config,
         input_shape=(metadata["n_jet_features"],),
         feature_connect_indices=feature_connect_indices,
-        continue_training=train_config.config["continue_training"]
-        if "continue_training" in train_config.config
-        and train_config.config["continue_training"] is not None
-        else False,
+        continue_training=train_config.continue_training,
     )
 
     # Check if epochs is set via argparser or not
@@ -299,6 +296,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
             n_jets=n_jets_val,
             dir_name=train_config.model_name,
         ),
+        continue_training=train_config.continue_training,
     )
 
     # Append the callback
