@@ -26,7 +26,7 @@ import umami.train_tools as utt
 from umami.preprocessing_tools import GetVariableDict
 
 
-def Umami_model(
+def umami_model(
     train_config: object,
     input_shape: tuple,
     njet_features: int,
@@ -56,12 +56,12 @@ def Umami_model(
         Starting epoch number
     """
     # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
+    nn_structure = train_config.NN_structure
 
     # Set NN options
-    batch_norm = NN_structure["Batch_Normalisation"]
-    dropout = NN_structure["dropout"]
-    class_labels = NN_structure["class_labels"]
+    batch_norm = nn_structure["Batch_Normalisation"]
+    dropout = nn_structure["dropout"]
+    class_labels = nn_structure["class_labels"]
 
     # Check if a prepared model is used or not
     umami, init_epoch, load_optimiser = utf.prepare_model(
@@ -80,7 +80,7 @@ def Umami_model(
         tdd = masked_inputs
 
         # Define the TimeDistributed layers for the different tracks
-        for i, phi_nodes in enumerate(NN_structure["DIPS_ppm_units"]):
+        for i, phi_nodes in enumerate(nn_structure["DIPS_ppm_units"]):
 
             tdd = TimeDistributed(
                 Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
@@ -101,57 +101,57 @@ def Umami_model(
             )
 
         # This is where the magic happens... sum up the track features!
-        F = utf.Sum(name="Sum")(tdd)
+        f_net = utf.Sum(name="Sum")(tdd)
 
-        for j, (F_nodes, p) in enumerate(
+        for j, (f_nodes, drop_rate) in enumerate(
             zip(
-                NN_structure["DIPS_dense_units"],
-                [dropout] * len(NN_structure["DIPS_dense_units"][:-1]) + [0],
+                nn_structure["DIPS_dense_units"],
+                [dropout] * len(nn_structure["DIPS_dense_units"][:-1]) + [0],
             )
         ):
 
-            F = Dense(F_nodes, activation="linear", name=f"F{j}_Dense")(F)
+            f_net = Dense(f_nodes, activation="linear", name=f"F{j}_Dense")(f_net)
             if batch_norm:
-                F = BatchNormalization(name=f"F{j}_BatchNormalization")(F)
+                f_net = BatchNormalization(name=f"F{j}_BatchNormalization")(f_net)
             if dropout != 0:
-                F = Dropout(rate=p, name=f"F{j}_Dropout")(F)
-            F = Activation(activations.relu, name=f"F{j}_ReLU")(F)
+                f_net = Dropout(rate=drop_rate, name=f"F{j}_Dropout")(f_net)
+            f_net = Activation(activations.relu, name=f"F{j}_ReLU")(f_net)
 
-        dips_output = Dense(len(class_labels), activation="softmax", name="dips")(F)
+        dips_output = Dense(len(class_labels), activation="softmax", name="dips")(f_net)
 
         # Input layer
         jet_inputs = Input(shape=(njet_features,))
 
         # Adding the intermediate dense layers for DL1
-        x = jet_inputs
-        for unit in NN_structure["intermediate_units"]:
-            x = Dense(
+        x_net = jet_inputs
+        for unit in nn_structure["intermediate_units"]:
+            x_net = Dense(
                 units=unit,
                 activation="linear",
                 kernel_initializer="glorot_uniform",
-            )(x)
-            x = BatchNormalization()(x)
-            x = Activation("relu")(x)
+            )(x_net)
+            x_net = BatchNormalization()(x_net)
+            x_net = Activation("relu")(x_net)
 
         # Concatenate the inputs
-        x = Concatenate()([F, x])
+        x_net = Concatenate()([f_net, x_net])
 
         # Loop to initialise the hidden layers
-        for unit in NN_structure["DL1_units"]:
-            x = Dense(
+        for unit in nn_structure["DL1_units"]:
+            x_net = Dense(
                 units=unit,
                 activation="linear",
                 kernel_initializer="glorot_uniform",
-            )(x)
-            x = BatchNormalization()(x)
-            x = Activation("relu")(x)
+            )(x_net)
+            x_net = BatchNormalization()(x_net)
+            x_net = Activation("relu")(x_net)
 
         jet_output = Dense(
             units=len(class_labels),
             activation="softmax",
             kernel_initializer="glorot_uniform",
             name="umami",
-        )(x)
+        )(x_net)
 
         umami = Model(
             inputs=[trk_inputs, jet_inputs], outputs=[dips_output, jet_output]
@@ -159,10 +159,10 @@ def Umami_model(
 
     if load_optimiser is False:
         # Set optimier and loss
-        model_optimiser = Adam(learning_rate=NN_structure["lr"])
+        model_optimiser = Adam(learning_rate=nn_structure["lr"])
         umami.compile(
             loss="categorical_crossentropy",
-            loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
+            loss_weights={"dips": nn_structure["dips_loss_weight"], "umami": 1},
             optimizer=model_optimiser,
             metrics=["accuracy"],
         )
@@ -171,10 +171,10 @@ def Umami_model(
     if logger.level <= 20:
         umami.summary()
 
-    return umami, NN_structure["epochs"], init_epoch
+    return umami, nn_structure["epochs"], init_epoch
 
 
-def Umami(args, train_config, preprocess_config):
+def umami_tagger(args, train_config, preprocess_config):
     """Training handling of UMAMI tagger.
 
     Parameters
@@ -193,7 +193,7 @@ def Umami(args, train_config, preprocess_config):
     """
 
     # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
+    nn_structure = train_config.NN_structure
     val_params = train_config.Validation_metrics_settings
     eval_params = train_config.Eval_parameters_validation
 
@@ -204,7 +204,9 @@ def Umami(args, train_config, preprocess_config):
     tracks_name = train_config.tracks_name
 
     # Get needed variable from the train config
-    WP = float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
+    working_point = (
+        float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
+    )
     n_jets_val = (
         int(val_params["n_jets"])
         if "n_jets" in val_params
@@ -240,19 +242,21 @@ def Umami(args, train_config, preprocess_config):
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f:
-            metadata["n_jets"], metadata["n_trks"], metadata["n_trk_features"] = f[
-                f"X_{tracks_name}_train"
-            ].shape
-            _, metadata["n_dim"] = f["Y_train"].shape
-            _, metadata["n_jet_features"] = f["X_train"].shape
+        with h5py.File(train_config.train_file, "r") as h5_file:
+            (
+                metadata["n_jets"],
+                metadata["n_trks"],
+                metadata["n_trk_features"],
+            ) = h5_file[f"X_{tracks_name}_train"].shape
+            _, metadata["n_dim"] = h5_file["Y_train"].shape
+            _, metadata["n_jet_features"] = h5_file["X_train"].shape
             if exclude is not None:
                 metadata["n_jet_features"] -= len(exclude)
             logger.debug(
                 f"Input shape of jet training set: {metadata['n_jet_features']}"
             )
 
-        if NN_structure["use_sample_weights"]:
+        if nn_structure["use_sample_weights"]:
             tensor_types = (
                 {"input_1": tf.float32, "input_2": tf.float32},
                 tf.float32,
@@ -292,13 +296,13 @@ def Umami(args, train_config, preprocess_config):
                     X_Name="X_train",
                     X_trk_Name=f"X_{tracks_name}_train",
                     Y_Name="Y_train",
-                    n_jets=int(NN_structure["nJets_train"])
-                    if "nJets_train" in NN_structure
-                    and NN_structure["nJets_train"] is not None
+                    n_jets=int(nn_structure["nJets_train"])
+                    if "nJets_train" in nn_structure
+                    and nn_structure["nJets_train"] is not None
                     else metadata["n_jets"],
-                    batch_size=NN_structure["batch_size"],
+                    batch_size=nn_structure["batch_size"],
                     excluded_var=excluded_var,
-                    sample_weights=NN_structure["use_sample_weights"],
+                    sample_weights=nn_structure["use_sample_weights"],
                 ),
                 output_types=tensor_types,
                 output_shapes=tensor_shapes,
@@ -318,7 +322,7 @@ def Umami(args, train_config, preprocess_config):
             " directory with TF Record Files. You should check this."
         )
 
-    umami, _, init_epoch = Umami_model(
+    umami, _, init_epoch = umami_model(
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
         njet_features=metadata["n_jet_features"],
@@ -326,42 +330,42 @@ def Umami(args, train_config, preprocess_config):
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
-        nEpochs = NN_structure["epochs"]
+        n_epochs = nn_structure["epochs"]
 
     # If not, use epochs from config file
     else:
-        nEpochs = args.epochs
+        n_epochs = args.epochs
 
-    if "LRR" in NN_structure and NN_structure["LRR"] is True:
+    if "LRR" in nn_structure and nn_structure["LRR"] is True:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.GetLRReducer(**NN_structure)
+        reduce_lr = utf.GetLRReducer(**nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
 
     # Set ModelCheckpoint as callback
-    umami_mChkPt = ModelCheckpoint(
+    umami_model_checkpoint = ModelCheckpoint(
         f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=NN_structure["batch_size"],
+        validation_batch_size=nn_structure["batch_size"],
         save_weights_only=False,
     )
 
     # Append the callback
-    callbacks.append(umami_mChkPt)
+    callbacks.append(umami_model_checkpoint)
 
     # Init the Umami callback
     my_callback = utt.MyCallbackUmami(
         model_name=train_config.model_name,
-        class_labels=NN_structure["class_labels"],
-        main_class=NN_structure["main_class"],
+        class_labels=nn_structure["class_labels"],
+        main_class=nn_structure["main_class"],
         val_data_dict=val_data_dict,
-        target_beff=WP,
+        target_beff=working_point,
         frac_dict=eval_params["frac_values"],
         dict_file_name=utt.get_validation_dict_name(
-            WP=WP,
+            WP=working_point,
             n_jets=n_jets_val,
             dir_name=train_config.model_name,
         ),
@@ -374,7 +378,7 @@ def Umami(args, train_config, preprocess_config):
     logger.info("Start training")
     history = umami.fit(
         train_dataset,
-        epochs=nEpochs,
+        epochs=n_epochs,
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=(
         #     [
@@ -384,9 +388,9 @@ def Umami(args, train_config, preprocess_config):
         #     val_data_dict["Y_valid"],
         # ),
         callbacks=callbacks,
-        steps_per_epoch=int(NN_structure["nJets_train"]) / NN_structure["batch_size"]
-        if "nJets_train" in NN_structure and NN_structure["nJets_train"] is not None
-        else metadata["n_jets"] / NN_structure["batch_size"],
+        steps_per_epoch=int(nn_structure["nJets_train"]) / nn_structure["batch_size"]
+        if "nJets_train" in nn_structure and nn_structure["nJets_train"] is not None
+        else metadata["n_jets"] / nn_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
         initial_epoch=init_epoch,

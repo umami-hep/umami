@@ -10,10 +10,10 @@ import numpy as np
 
 from umami.configuration import logger, set_log_level
 from umami.metrics.metrics import (
-    CalcDiscValues,
-    GetRejection,
-    GetScore,
+    calc_disc_values,
     discriminant_output_shape,
+    get_rejection,
+    get_score,
 )
 
 set_log_level(logger, "DEBUG")
@@ -75,7 +75,7 @@ class CalcDiscValues_TestCase(unittest.TestCase):
 
     def test_CalcDiscValues(self):
         """Test CalcDiscValues for three classes and bjets (main)."""
-        disc_score = CalcDiscValues(
+        disc_score = calc_disc_values(
             jets_dict=self.jets_dict,
             index_dict=self.index_dict,
             main_class=self.main_class,
@@ -86,7 +86,7 @@ class CalcDiscValues_TestCase(unittest.TestCase):
 
     def test_CalcDiscValues_Rejection(self):
         """Test CalcDiscValues for three classes and cjets (not-main class)."""
-        disc_score = CalcDiscValues(
+        disc_score = calc_disc_values(
             jets_dict=self.jets_dict,
             index_dict=self.index_dict,
             main_class=self.main_class,
@@ -99,7 +99,7 @@ class CalcDiscValues_TestCase(unittest.TestCase):
     def test_CalcDiscValues_2Singal_Classes(self):
         """Test CalcDiscValues for three classes and cjets (not-main class)."""
 
-        disc_score = CalcDiscValues(
+        disc_score = calc_disc_values(
             jets_dict=self.jets_dict_4_Classes,
             index_dict=self.index_dict_4_Classes,
             main_class=self.main_class_4_Classes,
@@ -118,7 +118,7 @@ class CalcDiscValues_TestCase(unittest.TestCase):
         and calculation of scores for background class (not-main class).
         """
 
-        disc_score = CalcDiscValues(
+        disc_score = calc_disc_values(
             jets_dict=self.jets_dict_4_Classes,
             index_dict=self.index_dict_4_Classes,
             main_class=self.main_class_4_Classes,
@@ -166,7 +166,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_GetRejection(self):
         """Test GetRejection for three classes."""
 
-        rej_dict, _ = GetRejection(
+        rej_dict, _ = get_rejection(
             y_pred=self.y_pred,
             y_true=self.y_true,
             class_labels=self.class_labels,
@@ -180,7 +180,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_GetRejection_4_classes(self):
         """Test GetRejection for four classes."""
 
-        rej_dict, _ = GetRejection(
+        rej_dict, _ = get_rejection(
             y_pred=self.y_pred_tau,
             y_true=self.y_true_tau,
             class_labels=self.class_labels_tau,
@@ -201,7 +201,7 @@ class GetRejection_TestCase(unittest.TestCase):
         Also checking if incorrect shapes between y_* and class_labels.
         """
         with self.assertRaises(ValueError):
-            _, _ = GetRejection(
+            _, _ = get_rejection(
                 y_pred=self.y_pred,
                 y_true=self.y_true_tau,
                 class_labels=self.class_labels_tau,
@@ -211,7 +211,7 @@ class GetRejection_TestCase(unittest.TestCase):
             )
 
         with self.assertRaises(ValueError):
-            _, _ = GetRejection(
+            _, _ = get_rejection(
                 y_pred=self.y_pred_tau,
                 y_true=self.y_true_tau,
                 class_labels=self.class_labels,
@@ -254,7 +254,7 @@ class GetScore_TestCase(unittest.TestCase):
 
     def test_GetScore(self):
         """Test GetScore for three classes."""
-        disc_scores = GetScore(
+        disc_scores = get_score(
             y_pred=self.y_pred,
             class_labels=self.class_labels,
             main_class=self.main_class,
@@ -266,7 +266,7 @@ class GetScore_TestCase(unittest.TestCase):
 
     def test_GetScore4Classes(self):
         """Test GetScore for four classes."""
-        disc_scores = GetScore(
+        disc_scores = get_score(
             y_pred=self.y_pred_tau,
             class_labels=self.class_labels_tau,
             main_class=self.main_class,
@@ -279,7 +279,7 @@ class GetScore_TestCase(unittest.TestCase):
     def test_GetScore_wrong_shapes(self):
         """Test GetScore for incorrect shapes in y_pred and class_labels."""
         with self.assertRaises(AssertionError):
-            _ = GetScore(
+            _ = get_score(
                 y_pred=self.y_pred,
                 class_labels=self.class_labels_tau,
                 main_class=self.main_class,

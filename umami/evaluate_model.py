@@ -76,7 +76,7 @@ def get_parser():
     return parser.parse_args()
 
 
-def EvaluateModel(
+def evaluate_model(
     args: object,
     train_config: object,
     preprocess_config: object,
@@ -148,18 +148,18 @@ def EvaluateModel(
     tagger_names = []
     tagger_preds = []
 
-    # Set number of nJets for testing
-    nJets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
+    # Set number of n_jets for testing
+    n_jets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Check the config if the trained model is also to be evaluated
     try:
-        Eval_model_bool = train_config.evaluate_trained_model
+        eval_model_bool = train_config.evaluate_trained_model
     except AttributeError:
-        Eval_model_bool = True
+        eval_model_bool = True
 
     # Set epoch to use for evaluation of trained model or dummy value if
     # tagger scores from derivations should be used
-    epoch = args.epoch if Eval_model_bool else 0
+    epoch = args.epoch if eval_model_bool else 0
 
     # Test if multiple taggers are given or not
     tagger_list = (
@@ -178,7 +178,7 @@ def EvaluateModel(
         ) from error
 
     # evaluate trained model file (for evaluate_trained_model: True in config)
-    if Eval_model_bool:
+    if eval_model_bool:
         if epoch is None:
             raise ValueError("You need to give an epoch which is to be evaluated!")
 
@@ -196,45 +196,45 @@ def EvaluateModel(
         # Check which test files need to be loaded depending on the CADS version
         if tagger.casefold() == "umami_cond_att".casefold():
             # Load the test jets
-            X_test, X_test_trk, _ = utt.GetTestFile(
+            x_test, x_test_trk, _ = utt.GetTestFile(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
                 preprocess_config=preprocess_config,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
-                nJets=nJets,
+                nJets=n_jets,
                 exclude=exclude,
                 cut_vars_dict=var_cuts,
                 print_logger=False,
             )
 
             # Form the inputs for the network
-            X = [
-                X_test_trk,
-                X_test[
+            x_comb = [
+                x_test_trk,
+                x_test[
                     [
                         global_config.etavariable,
                         global_config.pTvariable,
                     ]
                 ],
-                X_test,
+                x_test,
             ]
 
         else:
             # Get the testfile with the needed configs
-            X_test, X_test_trk, _ = utt.GetTestFile(
+            x_test, x_test_trk, _ = utt.GetTestFile(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
                 preprocess_config=preprocess_config,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
-                nJets=nJets,
+                nJets=n_jets,
                 exclude=exclude,
                 cut_vars_dict=var_cuts,
             )
 
             # Form the inputs for the network
-            X = [X_test_trk, X_test]
+            x_comb = [x_test_trk, x_test]
 
         # Load the model for evaluation. Note: The Sum is needed here!
         with CustomObjectScope(
@@ -251,7 +251,7 @@ def EvaluateModel(
             model = load_model(model_file)
 
         # Predict the output of the model on the test jets
-        pred_dips, pred_umami = model.predict(X, batch_size=5000, verbose=0)
+        pred_dips, pred_umami = model.predict(x_comb, batch_size=5000, verbose=0)
 
         # Fill the tagger_names and tagger_preds
         tagger_names = ["dips", "umami"]
@@ -279,7 +279,7 @@ def EvaluateModel(
     jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
-        nJets=nJets,
+        nJets=n_jets,
         variables=variables,
         cut_vars_dict=var_cuts,
     )
@@ -389,7 +389,7 @@ def EvaluateModel(
         h5_file.attrs["N_test"] = len(jets)
 
 
-def EvaluateModelDips(
+def evaluate_model_dips(
     args: object,
     train_config: object,
     preprocess_config: object,
@@ -462,8 +462,8 @@ def EvaluateModelDips(
             " Please check if you defined them!"
         )
 
-    # Set number of nJets for testing
-    nJets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
+    # Set number of n_jets for testing
+    n_jets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Test if multiple taggers are given or not
     if isinstance(eval_params["tagger"], str):
@@ -490,13 +490,13 @@ def EvaluateModelDips(
     # Check which test files need to be loaded depending on the CADS version
     if tagger.casefold() == "CADS".casefold():
         # Load the test jets
-        X_test, X_test_trk, Y_test = utt.GetTestFile(
+        x_test, x_test_trk, y_test = utt.GetTestFile(
             input_file=test_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=class_labels,
             tracks_name=tracks_name,
-            nJets=nJets,
+            nJets=n_jets,
             cut_vars_dict=var_cuts,
             jet_variables=[
                 global_config.etavariable,
@@ -506,17 +506,17 @@ def EvaluateModelDips(
         )
 
         # Form the inputs for the network
-        X = [X_test_trk, X_test]
+        x_comb = [x_test_trk, x_test]
 
     else:
         # Get the testfile with the needed configs
-        X, Y_test = utt.get_test_sample_trks(
+        x_comb, y_test = utt.get_test_sample_trks(
             input_file=test_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=class_labels,
             tracks_name=tracks_name,
-            nJets=nJets,
+            nJets=n_jets,
             cut_vars_dict=var_cuts,
         )
 
@@ -537,7 +537,7 @@ def EvaluateModelDips(
 
     # Get predictions from trained model
     pred_dips = model.predict(
-        X,
+        x_comb,
         batch_size=train_config.NN_structure["batch_size"],
         verbose=0,
     )
@@ -564,7 +564,7 @@ def EvaluateModelDips(
     jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
-        nJets=nJets,
+        nJets=n_jets,
         variables=variables,
         cut_vars_dict=var_cuts,
     )
@@ -671,8 +671,8 @@ def EvaluateModelDips(
         saliency_map_dict = uet.GetSaliencyMapDict(
             model=model,
             model_pred=pred_dips,
-            X_test=X,
-            Y_test=Y_test,
+            X_test=x_comb,
+            Y_test=y_test,
             class_labels=class_labels,
             main_class=main_class,
             frac_dict=eval_params["frac_values"],
@@ -684,11 +684,11 @@ def EvaluateModelDips(
             f"{train_config.model_name}/results/saliency{results_filename_extension}"
             f"_{args.epoch}_{data_set_name}.pkl",
             "wb",
-        ) as f:
-            pickle.dump(saliency_map_dict, f)
+        ) as pkl_file:
+            pickle.dump(saliency_map_dict, pkl_file)
 
 
-def EvaluateModelDL1(
+def evaluate_model_dl1(
     args: object,
     train_config: object,
     preprocess_config: object,
@@ -761,7 +761,7 @@ def EvaluateModelDL1(
         raise ValueError("You need to give an epoch which is to be evaluated!")
 
     # Set number of nJets for testing
-    nJets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
+    n_jets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
 
     # Test if multiple taggers are given or not
     if isinstance(eval_params["tagger"], str):
@@ -788,12 +788,12 @@ def EvaluateModelDL1(
         exclude = train_config.config["exclude"]
 
     # Get the testfile with the needed configs
-    X_test, _ = utt.get_test_sample(
+    x_test, _ = utt.get_test_sample(
         input_file=test_file,
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
         class_labels=class_labels,
-        nJets=nJets,
+        nJets=n_jets,
         exclude=exclude,
         cut_vars_dict=var_cuts,
     )
@@ -802,8 +802,8 @@ def EvaluateModelDL1(
     model = load_model(model_file)
 
     # Predict the output of the model on the test jets
-    pred_DL1 = model.predict(
-        X_test,
+    pred_dl1 = model.predict(
+        x_test,
         batch_size=train_config.NN_structure["batch_size"],
         verbose=0,
     )
@@ -846,7 +846,7 @@ def EvaluateModelDL1(
     jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
-        nJets=nJets,
+        nJets=n_jets,
         variables=variables,
         cut_vars_dict=var_cuts,
     )
@@ -856,7 +856,7 @@ def EvaluateModelDL1(
     df_discs_dict = uet.GetScoresProbsDict(
         jets=jets,
         y_true=truth_internal_labels,
-        tagger_preds=[pred_DL1],
+        tagger_preds=[pred_dl1],
         tagger_names=["DL1"],
         tagger_list=tagger_list,
         class_labels=class_labels,
@@ -889,7 +889,7 @@ def EvaluateModelDL1(
     tagger_rej_dicts = uet.GetRejectionPerEfficiencyDict(
         jets=jets,
         y_true=truth_internal_labels,
-        tagger_preds=[pred_DL1],
+        tagger_preds=[pred_dl1],
         tagger_names=["DL1"],
         tagger_list=tagger_list,
         class_labels=class_labels,
@@ -923,7 +923,7 @@ def EvaluateModelDL1(
     tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
         jets=jets,
         y_true=truth_internal_labels,
-        tagger_preds=[pred_DL1],
+        tagger_preds=[pred_dl1],
         tagger_names=["DL1"],
         tagger_list=tagger_list,
         class_labels=class_labels,
@@ -950,14 +950,14 @@ def EvaluateModelDL1(
         f"{train_config.model_name}/results/"
         f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
-    ) as f:
-        f.attrs["N_test"] = len(jets)
+    ) as h5_file:
+        h5_file.attrs["N_test"] = len(jets)
 
     if args.shapley:
         logger.info("Explaining feature importance with SHAPley")
         FeatureImportance.ShapleyOneFlavor(
             model=model,
-            test_data=X_test,
+            test_data=x_test,
             model_output=eval_params["shapley"]["model_output"],
             feature_sets=eval_params["shapley"]["feature_sets"],
             plot_size=eval_params["shapley"]["plot_size"],
@@ -968,7 +968,7 @@ def EvaluateModelDL1(
         if eval_params["shapley"]["bool_all_flavor_plot"]:
             FeatureImportance.ShapleyAllFlavors(
                 model=model,
-                test_data=X_test,
+                test_data=x_test,
                 feature_sets=eval_params["shapley"]["feature_sets"],
                 averaged_sets=eval_params["shapley"]["averaged_sets"],
                 plot_size=eval_params["shapley"]["plot_size"],
@@ -986,7 +986,7 @@ if __name__ == "__main__":
     try:
         evaluate_trained_model = training_config.evaluate_trained_model
     except AttributeError:
-        evaluate_trained_model = True
+        evaluate_trained_model = True  # pylint: disable=invalid-name
 
     preprocessing_config = (
         Configuration(training_config.preprocess_config)
@@ -1005,7 +1005,7 @@ if __name__ == "__main__":
             logger.info(
                 "No tagger defined. Running evaluation without a freshly trained model!"
             )
-            tagger_name = None
+            tagger_name = None  # pylint: disable=invalid-name
 
     # TODO Change this in python 3.10
     if tagger_name == "dl1":
@@ -1014,7 +1014,7 @@ if __name__ == "__main__":
             test_file_identifier,
             test_file_config,
         ) in training_config.test_files.items():
-            EvaluateModelDL1(
+            evaluate_model_dl1(
                 args=parser_args,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
@@ -1029,7 +1029,7 @@ if __name__ == "__main__":
             test_file_identifier,
             test_file_config,
         ) in training_config.test_files.items():
-            EvaluateModelDips(
+            evaluate_model_dips(
                 args=parser_args,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
@@ -1051,7 +1051,7 @@ if __name__ == "__main__":
             test_file_identifier,
             test_file_config,
         ) in training_config.test_files.items():
-            EvaluateModel(
+            evaluate_model(
                 args=parser_args,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
