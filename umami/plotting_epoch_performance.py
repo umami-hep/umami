@@ -107,23 +107,25 @@ def main(args, train_config, preprocess_config):
     if args.format:
         train_config.Validation_metrics_settings["plot_datatype"] = args.format
 
-    # Check for nJets args
+    # Check for n_jets args
     if args.nJets is None:
-        nJets = (
+        n_jets = (
             int(val_params["n_jets"])
             if "n_jets" in val_params
             else int(eval_params["n_jets"])
         )
 
     else:
-        nJets = args.nJets
+        n_jets = args.nJets
 
     # Get the b eff
     if args.beff:
-        WP = args.beff
+        working_point = args.beff
 
     else:
-        WP = float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
+        working_point = (
+            float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
+        )
 
     # Get the tagger from args. If not given, use the one from train config
     if args.tagger:
@@ -146,19 +148,19 @@ def main(args, train_config, preprocess_config):
             output_file_name = utt.calc_validation_metrics(
                 train_config=train_config,
                 preprocess_config=preprocess_config,
-                target_beff=WP,
-                nJets=nJets,
+                target_beff=working_point,
+                nJets=n_jets,
                 tagger=tagger,
             )
-            beff = WP
+            beff = working_point
 
         else:
             output_file_name = utt.get_validation_dict_name(
-                WP=WP,
-                n_jets=nJets,
+                WP=working_point,
+                n_jets=n_jets,
                 dir_name=train_config.model_name,
             )
-            beff = WP
+            beff = working_point
 
         # Get the comparison tagger variables
         if val_params["taggers_from_file"]:

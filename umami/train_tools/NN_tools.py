@@ -1335,7 +1335,7 @@ def evaluate_model_umami(
         )
 
         # Get rejections for DIPS and UMAMI
-        rej_dict_dips, disc_cut_dips = umt.GetRejection(
+        rej_dict_dips, disc_cut_dips = umt.get_rejection(
             y_pred=y_pred_dips,
             y_true=data_dict[f"Y_valid_{val_file_identifier}"],
             class_labels=class_labels,
@@ -1345,7 +1345,7 @@ def evaluate_model_umami(
             unique_identifier=val_file_identifier,
             subtagger="dips",
         )
-        rej_dict_umami, disc_cut_umami = umt.GetRejection(
+        rej_dict_umami, disc_cut_umami = umt.get_rejection(
             y_pred=y_pred_umami,
             y_true=data_dict[f"Y_valid_{val_file_identifier}"],
             class_labels=class_labels,
@@ -1457,7 +1457,7 @@ def evaluate_model(
             verbose=0,
         )
 
-        rej_dict, disc_cut = umt.GetRejection(
+        rej_dict, disc_cut = umt.get_rejection(
             y_pred=y_pred_dips,
             y_true=data_dict[f"Y_valid_{val_file_identifier}"],
             unique_identifier=val_file_identifier,

@@ -8,7 +8,7 @@ import yaml
 from matplotlib.testing.compare import compare_images
 
 from umami.configuration import logger, set_log_level
-from umami.input_vars_tools.PlottingFunctions import (
+from umami.input_vars_tools.plotting_functions import (
     plot_input_vars_jets,
     plot_input_vars_trks,
     plot_n_tracks_per_jet,

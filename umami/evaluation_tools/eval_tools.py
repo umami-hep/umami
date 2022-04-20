@@ -204,7 +204,7 @@ def GetRejectionPerFractionDict(
                     continue
 
             # Calculate the rejections for the given tagger
-            rej_dict_tmp, _ = umt.GetRejection(
+            rej_dict_tmp, _ = umt.get_rejection(
                 y_pred=y_pred,
                 y_true=y_true,
                 class_labels=class_labels,
@@ -335,7 +335,7 @@ def GetRejectionPerEfficiencyDict(
                     skipped_taggers.append(tagger)
                     continue
 
-            rej_dict_tmp, disc_cut_dict_tmp = umt.GetRejection(
+            rej_dict_tmp, disc_cut_dict_tmp = umt.get_rejection(
                 y_pred=y_pred,
                 y_true=y_true,
                 class_labels=class_labels,
@@ -497,7 +497,7 @@ def GetScoresProbsDict(
 
         # Adding scores of the trained network
         try:
-            df_discs_dict[f"disc_{tagger}"] = umt.GetScore(
+            df_discs_dict[f"disc_{tagger}"] = umt.get_score(
                 y_pred=y_pred,
                 class_labels=class_labels_copy,
                 main_class=main_class,
@@ -560,7 +560,7 @@ def GetSaliencyMapDict(
 
     # Define the last node for the discriminant output
     disc = Lambda(
-        umt.GetScore,
+        umt.get_score,
         output_shape=umt.discriminant_output_shape,
         arguments={
             "class_labels": class_labels,
@@ -580,7 +580,7 @@ def GetSaliencyMapDict(
     nTrks = np.sum(boolMask, axis=-1)
 
     # Get score for the dips prediction
-    Disc_values = umt.GetScore(
+    Disc_values = umt.get_score(
         y_pred=model_pred,
         class_labels=class_labels,
         main_class=main_class,
@@ -681,7 +681,7 @@ def RecomputeScore(
     shaped_proba = np.transpose(shaped_proba)
 
     # Returns the score
-    return umt.GetScore(
+    return umt.get_score(
         shaped_proba,
         class_labels=model_class_labels,
         main_class=main_class,

@@ -1,5 +1,6 @@
 """Collection of plotting function for ftag performance plots."""
-# pylint: disable=consider-using-f-string
+# pylint: disable=consider-using-f-string, invalid-name
+# TODO: switch to new plotting API with pep8 conform naming
 from umami.configuration import global_config, logger  # isort:skip
 
 from collections import OrderedDict

@@ -236,10 +236,6 @@ def plot_input_vars_trks(
         Keyword arguments passed to the plot. You can use all arguments that are
         supported by the `histogram_plot` class in the plotting API.
 
-    Raises
-    ------
-    ValueError
-        If the type of the given binning is not supported.
     """
 
     kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(
@@ -291,36 +287,38 @@ def plot_input_vars_trks(
 
     # Loading track variables
     try:
-        trksVars = variable_config["tracks"]
+        trks_vars = variable_config["tracks"]
 
     except KeyError:
-        noNormVars = variable_config["track_train_variables"][datasets_track_names[0]][
-            "noNormVars"
-        ]
-        logNormVars = variable_config["track_train_variables"][datasets_track_names[0]][
-            "logNormVars"
-        ]
-        jointNormVars = variable_config["track_train_variables"][
+        no_norm_vars = variable_config["track_train_variables"][
+            datasets_track_names[0]
+        ]["noNormVars"]
+        log_norm_vars = variable_config["track_train_variables"][
+            datasets_track_names[0]
+        ]["logNormVars"]
+        joint_norm_vars = variable_config["track_train_variables"][
             datasets_track_names[0]
         ]["jointNormVars"]
-        trksVars = noNormVars + logNormVars + jointNormVars
+        trks_vars = no_norm_vars + log_norm_vars + joint_norm_vars
 
         # Check for variables in the other
         for counter, track_names in enumerate(datasets_track_names):
             if counter != 0:
-                noNormVars_tmp = variable_config["track_train_variables"][track_names][
-                    "noNormVars"
-                ]
-                logNormVars_tmp = variable_config["track_train_variables"][track_names][
-                    "logNormVars"
-                ]
-                jointNormVars_tmp = variable_config["track_train_variables"][
+                no_norm_vars_tmp = variable_config["track_train_variables"][
+                    track_names
+                ]["noNormVars"]
+                log_norm_vars_tmp = variable_config["track_train_variables"][
+                    track_names
+                ]["logNormVars"]
+                joint_norm_vars_tmp = variable_config["track_train_variables"][
                     track_names
                 ]["jointNormVars"]
-                trksVars_tmp = noNormVars_tmp + logNormVars_tmp + jointNormVars_tmp
+                trks_vars_tmp = (
+                    no_norm_vars_tmp + log_norm_vars_tmp + joint_norm_vars_tmp
+                )
 
-                for iter_var in trksVars_tmp:
-                    if iter_var not in trksVars:
+                for iter_var in trks_vars_tmp:
+                    if iter_var not in trks_vars:
                         logger.warning(
                             f"Variable {iter_var} of {datasets_labels[counter]} "
                             f"not in {datasets_labels[0]} track collection. "
@@ -349,7 +347,7 @@ def plot_input_vars_trks(
         logger.info(f"Track origin: {track_origin}\n")
 
         # Loop over variables
-        for var in trksVars:
+        for var in trks_vars:
             if var in bins_dict:
                 logger.info(f"Plotting {var}...")
 
@@ -472,11 +470,6 @@ def plot_input_vars_jets(
     **kwargs: dict
         Keyword arguments passed to the plot. You can use all arguments that are
         supported by the `histogram_plot` class in the plotting API.
-
-    Raises
-    ------
-    ValueError
-        If the type of the given binning is not supported.
     """
 
     kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(

@@ -230,7 +230,7 @@ def plot_roc(
     )
 
 
-def plot_roc_Comparison(
+def plot_roc_comparison(
     plot_name: str,
     plot_config: dict,
     eval_params: dict,
@@ -977,7 +977,7 @@ def score_comparison(
     )
 
 
-def plot_pT_vs_eff(
+def plot_pt_vs_eff(
     plot_name: str,
     plot_config: dict,
     eval_params: dict,
@@ -1265,7 +1265,7 @@ def plot_frac_contour(
     )
 
 
-def SetUpPlots(
+def set_up_plots(
     plotting_config: dict,
     plot_directory: str,
     eval_file_dir: str,
@@ -1349,7 +1349,7 @@ def SetUpPlots(
             )
 
         elif plot_config["type"] == "ROC_Comparison":
-            plot_roc_Comparison(
+            plot_roc_comparison(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
@@ -1408,7 +1408,7 @@ def SetUpPlots(
             )
 
         elif plot_config["type"] == "pT_vs_eff":
-            plot_pT_vs_eff(
+            plot_pt_vs_eff(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
@@ -1472,7 +1472,7 @@ def main(args):
     )
 
     # Start plotting
-    SetUpPlots(
+    set_up_plots(
         plotting_config,
         plot_directory,
         eval_file_dir,

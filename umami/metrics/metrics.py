@@ -20,7 +20,7 @@ except ModuleNotFoundError:
     pass
 
 
-def CalcDiscValues(
+def calc_disc_values(
     jets_dict: dict,
     index_dict: dict,
     main_class: str,
@@ -166,7 +166,7 @@ def CalcDiscValues(
     return disc_values
 
 
-def GetScore(
+def get_score(
     y_pred: np.ndarray,
     class_labels: list,
     main_class: str,
@@ -299,8 +299,8 @@ def discriminant_output_shape(input_shape: tuple) -> tuple:
 
 def get_gradients(
     model: object,
-    X: np.ndarray,
-    nJets: int,
+    arr: np.ndarray,
+    n_jets: int,
 ):
     """
     Calculating the gradients with respect to the input variables.
@@ -312,9 +312,9 @@ def get_gradients(
     ----------
     model : object
         Loaded keras model.
-    X : numpy.ndarray
+    arr : numpy.ndarray
         Track inputs of the jets.
-    nJets : int
+    n_jets : int
         Number of jets to be used.
 
     Returns
@@ -330,12 +330,12 @@ def get_gradients(
 
     # Pass in the cts and categorical inputs, as well as the learning phase
     # (0 for test mode)
-    gradients = compute_gradients([X[:nJets], 0])
+    gradients = compute_gradients([arr[:n_jets], 0])
 
     return gradients[0]
 
 
-def GetRejection(
+def get_rejection(
     y_pred: np.ndarray,
     y_true: np.ndarray,
     class_labels: list,
@@ -493,7 +493,7 @@ def GetRejection(
         index_dict.update({f"{class_label}": class_counter})
 
     # Calculate disc score for the main class
-    disc_scores = CalcDiscValues(
+    disc_scores = calc_disc_values(
         jets_dict=jets_dict,
         index_dict=index_dict,
         main_class=main_class,
@@ -524,7 +524,7 @@ def GetRejection(
             rej_dict[dict_key] = 1 / (
                 len(
                     jets_dict[iter_main_class][
-                        CalcDiscValues(
+                        calc_disc_values(
                             jets_dict=jets_dict,
                             index_dict=index_dict,
                             main_class=main_class,

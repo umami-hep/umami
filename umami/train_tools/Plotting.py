@@ -1,4 +1,6 @@
 """Plotting functions for NN training."""
+# pylint: disable=invalid-name
+# TODO: switch to new plotting API with pep8 conform naming
 import copy
 import os
 
@@ -10,7 +12,7 @@ from matplotlib.ticker import MaxNLocator
 
 from umami.configuration import global_config, logger
 from umami.data_tools import LoadJetsFromFile
-from umami.metrics import GetRejection
+from umami.metrics import get_rejection
 from umami.preprocessing_tools import GetBinaryLabels
 from umami.tools import applyATLASstyle, check_main_class_input, makeATLAStag
 
@@ -134,7 +136,7 @@ def CompTaggerRejectionDict(
 
     else:
         # Calculate rejections
-        recomm_rej_dict, _ = GetRejection(
+        recomm_rej_dict, _ = get_rejection(
             y_pred=df[tagger_comp_var].values,
             y_true=y_true,
             unique_identifier=unique_identifier,

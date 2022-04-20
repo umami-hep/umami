@@ -91,14 +91,14 @@ if __name__ == "__main__":
             )
 
         elif tagger_name.casefold() == "umami":
-            utm.Umami(
+            utm.umami_tagger(
                 args=args,
                 train_config=train_config,
                 preprocess_config=preprocess_config,
             )
 
         elif tagger_name.casefold() == "cads":
-            utm.Cads(
+            utm.cads_tagger(
                 args=args,
                 train_config=train_config,
                 preprocess_config=preprocess_config,

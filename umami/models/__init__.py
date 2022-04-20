@@ -1,7 +1,7 @@
 # flake8: noqa
 # pylint: skip-file
-from umami.models.Model_CADS import Cads
-from umami.models.Model_Dips import Dips
-from umami.models.Model_DL1 import TrainLargeFile
-from umami.models.Model_Umami import Umami
-from umami.models.Model_Umami_cond_att import UmamiCondAtt
+from umami.models.model_cads import cads_tagger
+from umami.models.model_dips import Dips
+from umami.models.model_dl1 import TrainLargeFile
+from umami.models.model_umami import umami_tagger
+from umami.models.model_umami_cond_att import UmamiCondAtt
