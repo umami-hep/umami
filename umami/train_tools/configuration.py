@@ -39,6 +39,7 @@ class Configuration:
             "model_name",
             "preprocess_config",
             "model_file",
+            "continue_training",
             "train_file",
             "validation_files",
             "var_dict",
@@ -94,6 +95,7 @@ class Configuration:
                     setattr(self, "tracks_key", f"X_{self.config[item]}_train")
                 else:
                     setattr(self, item, self.config[item])
+
             elif item == "tracks_name":
                 if "dl1" not in self.NN_structure["tagger"]:
                     setattr(self, item, "tracks")
@@ -101,6 +103,10 @@ class Configuration:
                     logger.warning(
                         'Using old version of tracks keys nomenclautre ("X_trk_train")'
                     )
+
+            elif item not in self.config and item == "continue_training":
+                setattr(self, item, False)
+
             else:
                 raise KeyError(f"You need to specify {item} in your config file!")
 

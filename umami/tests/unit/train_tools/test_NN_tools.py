@@ -78,20 +78,50 @@ class setup_output_directory_TestCase(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_test_dir = f"{self.tmp_dir.name}"
 
-    def test_setup_output_directory(self):
         # Create file inside the test dir
-        run(["touch", f"{self.tmp_test_dir}/" + "model.h5"])
+        os.makedirs(os.path.join(self.tmp_test_dir, "model_files"), exist_ok=True)
+        run(["touch", f"{self.tmp_test_dir}/model_files/model_epoch.h5"])
+
+    def test_setup_output_directory(self):
+        # Run test function
+        setup_output_directory(
+            dir_name=f"{self.tmp_test_dir}",
+            continue_training=False,
+        )
+
+        self.assertFalse(
+            os.path.isfile(f"{self.tmp_test_dir}/" + "model_files/model_epoch.h5")
+        )
+
+    def test_setup_output_directory_clean(self):
+        # Remove the complete dir
+        run(["rm", "-rfv", f"{self.tmp_test_dir}"])
 
         # Run test function
         setup_output_directory(f"{self.tmp_test_dir}")
 
-        self.assertFalse(os.path.isfile(f"{self.tmp_test_dir}/" + "model.h5"))
-
-    def test_setup_output_directory_clean(self):
-        run(["rm", "-rfv", f"{self.tmp_test_dir}"])
-        setup_output_directory(f"{self.tmp_test_dir}")
-
+        # Check that the function created the folder
         self.assertTrue(os.path.isdir(f"{self.tmp_test_dir}"))
+
+    def test_setup_output_directory_continue(self):
+        # Run test function
+        setup_output_directory(
+            dir_name=f"{self.tmp_test_dir}",
+            continue_training=True,
+        )
+
+        # Assert file is still there
+        self.assertTrue(
+            os.path.isfile(f"{self.tmp_test_dir}/" + "model_files/model_epoch.h5")
+        )
+
+    def test_setup_output_directory_error(self):
+        # Run function and test that error is thrown
+        with self.assertRaises(FileExistsError):
+            setup_output_directory(
+                dir_name=f"{self.tmp_test_dir}/model_files/model_epoch.h5",
+                continue_training=False,
+            )
 
 
 class dict_name_TestCase(unittest.TestCase):

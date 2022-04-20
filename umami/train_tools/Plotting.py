@@ -1315,7 +1315,16 @@ def RunPerformanceCheck(
         WP = Val_settings["WP"]
 
     # Get dict with training results from json
-    tagger_rej_dict = pd.read_json(dict_file_name)
+    try:
+        tagger_rej_dict = pd.read_json(dict_file_name)
+
+    except ValueError as read_json_error:
+        raise FileNotFoundError(
+            f"Validation results json {dict_file_name} could not be found! "
+            "Check your train config values (the name of the file loaded depends "
+            "on them). If you want to use a specific json file, use the -d option "
+            "of the plotting_epoch_performance script!"
+        ) from read_json_error
 
     # Check if history file exists
     if os.path.isfile(train_history_dict_file_name):
