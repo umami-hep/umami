@@ -1,8 +1,10 @@
 """Configuration module for NN trainings."""
+import pydash
 import yaml
 
 from umami.configuration import logger
 from umami.helper_tools import get_class_label_ids, get_class_label_variables
+from umami.plotting.utils import translate_kwargs
 from umami.tools import yaml_loader
 
 
@@ -12,11 +14,34 @@ class Configuration:
     def __init__(self, yaml_config=None):
         super().__init__()
         self.yaml_config = yaml_config
+        self.config = {}
         self.load_config_file()
         self.get_configuration()
 
+    @property
+    def plot_args(self):
+        """Plotting arguments for the training plots
+        Returns
+        -------
+        dict
+            Arguments for plotting API
+        """
+        # List of arguments are non-plotting arguments
+        omit_args = [
+            "n_jets",
+            "taggers_from_file",
+            "tagger_label",
+            "WP",
+        ]
+        if self.config is not None and "Validation_metrics_settings" in self.config:
+            plot_arguments = pydash.omit(
+                self.config["Validation_metrics_settings"], omit_args
+            )
+            return translate_kwargs(plot_arguments)
+        return {}
+
     def load_config_file(self):
-        """ "Load config file from disk."""
+        """Load config file from disk."""
         logger.info(f"Using train config file {self.yaml_config}")
         with open(self.yaml_config, "r") as conf:
             self.config = yaml.load(conf, Loader=yaml_loader)
@@ -59,10 +84,7 @@ class Configuration:
             "Validation_metrics_settings",
         ]
 
-        if (
-            "validation_file" in self.config.keys()
-            or "add_validation_file" in self.config.keys()
-        ):
+        if "validation_file" in self.config or "add_validation_file" in self.config:
             raise KeyError(
                 "You have specified the entries 'validation_file' and/or "
                 "'add_validation_file' in your training config. This structure is no "
@@ -70,7 +92,7 @@ class Configuration:
                 "'validation_files' section of the train config."
             )
 
-        if "evaluate_trained_model" in self.config.keys():
+        if "evaluate_trained_model" in self.config:
             if self.config["evaluate_trained_model"] is True:
                 iterate_list = config_train_items
 
@@ -80,7 +102,7 @@ class Configuration:
         else:
             iterate_list = config_train_items
 
-        if "Plotting_settings" in self.config.keys():
+        if "Plotting_settings" in self.config:
             raise KeyError(
                 """
                 You defined Plotting_settings. This option is deprecated. Please use

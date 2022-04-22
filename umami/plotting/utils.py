@@ -26,6 +26,7 @@ def translate_kwargs(kwargs):
         "legcols": "leg_ncol",
         "legFontSize": "leg_fontsize",
         "loc_legend": "leg_loc",
+        "legend_loc": "leg_loc",
         "Log": "logy",
         "n_Leading": "n_leading",
         "ncol": "leg_ncol",

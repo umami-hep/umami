@@ -4,8 +4,6 @@
 import copy
 import os
 
-import matplotlib as mtp
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
@@ -13,13 +11,15 @@ from matplotlib.ticker import MaxNLocator
 from umami.configuration import global_config, logger
 from umami.data_tools import LoadJetsFromFile
 from umami.metrics import get_rejection
+from umami.plotting import plot_base
 from umami.preprocessing_tools import GetBinaryLabels
-from umami.tools import applyATLASstyle, check_main_class_input, makeATLAStag
+from umami.tools import check_main_class_input
 
 
 def plot_validation_files(
     metric_identifier: str,
     df_results: dict,
+    ax,
     label_prefix: str = "",
     label_suffix: str = "",
     val_files: dict = None,
@@ -36,6 +36,9 @@ def plot_validation_files(
         Identifier for the metric you want to plot, e.g. "val_loss" or "disc_cut".
     df_results : dict
         Dict which contains the results of the training.
+    ax : matplotlib.axes.Axes
+        Axis you want to plot the curves on. If None, the currently active axis
+        is used. By default None
     label_prefix : str, optional
         This string is put at the beginning of the plot label for each line.
         For accuracy for example choose "validation accuracy - ", by default ""
@@ -46,14 +49,13 @@ def plot_validation_files(
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
     """
-
     if val_files is None:
         logger.warning(
             f"No validation files provided --> not plotting {metric_identifier}."
         )
     else:
         for val_file_identifier, val_file_config in val_files.items():
-            plt.plot(
+            ax.plot(
                 df_results["epoch"],
                 df_results[f"{metric_identifier}_{val_file_identifier}"],
                 label=f"{label_prefix}{val_file_config['label']}{label_suffix}",
@@ -154,16 +156,8 @@ def PlotDiscCutPerEpoch(
     plot_name: str,
     frac_class: str,
     val_files: dict = None,
-    trained_taggers: list = None,
     target_beff: float = 0.77,
     frac: float = 0.018,
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisAtlasTag: float = 0.9,
-    yAxisIncrease: float = 1.3,
-    ncol: int = 1,
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
 ):
@@ -182,36 +176,23 @@ def PlotDiscCutPerEpoch(
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
-    trained_taggers : list, optional
-        List of trained taggers, by default None
     target_beff : float, optional
         Working Point to use, by default 0.77
     frac : float, optional
         Fraction value for ATLAS Tag, by default 0.018
-    UseAtlasTag : bool, optional
-        Define if ATLAS Tag is used or not, by default True
-    ApplyATLASStyle : bool, optional
-        Apply ATLAS Style of the plot (for approval etc.), by default True
-    AtlasTag : str, optional
-        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
-    SecondTag : str, optional
-        Lower tag in the ATLAS label with infos,
-        by default "$sqrt{s}=13$ TeV, PFlow jets"
-    yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.9
-    yAxisIncrease : float, optional
-        Y axis increase factor to fit the ATLAS label, by default 1.3
-    ncol : int, optional
-        Number of columns in the legend, by default 1
     plot_datatype : str, optional
         Datatype of the plot, by default "pdf"
     **kwargs
-        Arbitrary keyword arguments.
+        Keyword arguments handed to the plotting API
     """
-
-    # Apply ATLAS style
-    if ApplyATLASStyle is True:
-        applyATLASstyle(mtp)
+    disc_cut_plot = plot_base(
+        xlabel="Epoch",
+        ylabel="$b$-tagging discriminant cut value",
+        n_ratio_panels=0,
+        logy=False,
+        **kwargs,
+    )
+    disc_cut_plot.initialise_figure()
 
     # loop over the validation files using the unique identifiers and plot the disc cut
     # value for each file
@@ -221,51 +202,21 @@ def PlotDiscCutPerEpoch(
         label_prefix="",
         label_suffix=" validation sample",
         val_files=val_files,
+        ax=disc_cut_plot.axis_top,
     )
 
-    if UseAtlasTag is True:
-        SecondTag = (
-            SecondTag
-            + f"\n{frac_class} fraction = {frac}"
-            + f"\nWP={int(target_beff * 100):02d}%"
-        )
-
-        makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-        )
-
-    plt.legend(loc="upper right")
-    ymin, ymax = plt.ylim()
-    plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
-    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
-    plt.ylabel(
-        r"$b$-Tagging discriminant Cut Value",
-        fontsize=12,
-        horizontalalignment="right",
-        y=1.0,
+    disc_cut_plot.atlas_second_tag += (
+        f"\n{frac_class} fraction = {frac}\nWP={int(target_beff * 100):02d}%"
     )
-    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
-    plt.cla()
-    plt.clf()
+    disc_cut_plot.initialise_plot()
+    disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
 
 
 def PlotDiscCutPerEpochUmami(
     df_results: dict,
     plot_name: str,
-    frac_class: str,
     val_files: dict = None,
     target_beff: float = 0.77,
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisAtlasTag: float = 0.9,
-    yAxisIncrease: float = 1.35,
-    ncol: int = 1,
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
 ):
@@ -278,39 +229,25 @@ def PlotDiscCutPerEpochUmami(
         Dict with the epochs and disc cuts.
     plot_name : str
         Path where the plots is saved + plot name.
-    frac_class : str
-        Define which fraction is shown in ATLAS Tag
     val_files: dict, optional
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
     target_beff : float, optional
         Working Point to use, by default 0.77
-    UseAtlasTag : bool, optional
-        Define if ATLAS Tag is used or not, by default True
-    ApplyATLASStyle : bool, optional
-        Apply ATLAS Style of the plot (for approval etc.), by default True
-    AtlasTag : str, optional
-        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
-    SecondTag : str, optional
-        Lower tag in the ATLAS label with infos,
-        by default "$sqrt{s}=13$ TeV, PFlow jets"
-    yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.9
-    yAxisIncrease : float, optional
-        Y axis increase factor to fit the ATLAS label, by default 1.35
-    ncol : int, optional
-        Number of columns in the legend, by default 1
     plot_datatype : str, optional
         Datatype of the plot, by default "pdf"
     **kwargs
-        Arbitrary keyword arguments.
+        Keyword arguments handed to the plotting API
     """
-
-    # Apply ATLAS style
-    if ApplyATLASStyle is True:
-        applyATLASstyle(mtp)
-
+    disc_cut_plot = plot_base(
+        xlabel="Epoch",
+        ylabel="$b$-tagging discriminant cut value",
+        n_ratio_panels=0,
+        logy=False,
+        **kwargs,
+    )
+    disc_cut_plot.initialise_figure()
     # loop over the validation files using the unique identifiers and plot the disc cut
     # value for each file
     plot_validation_files(
@@ -319,6 +256,7 @@ def PlotDiscCutPerEpochUmami(
         label_prefix="Umami - ",
         label_suffix=" validation sample",
         val_files=val_files,
+        ax=disc_cut_plot.axis_top,
     )
     plot_validation_files(
         metric_identifier="disc_cut_dips",
@@ -326,32 +264,11 @@ def PlotDiscCutPerEpochUmami(
         label_prefix="DIPS - ",
         label_suffix=" validation sample",
         val_files=val_files,
+        ax=disc_cut_plot.axis_top,
     )
-
-    if UseAtlasTag is True:
-        SecondTag = SecondTag + f"\nWP={int(target_beff * 100):02d}%"
-
-        makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-        )
-
-    plt.legend(loc="upper right")
-    ymin, ymax = plt.ylim()
-    plt.ylim(ymin=ymin, ymax=yAxisIncrease * ymax)
-    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
-    plt.ylabel(
-        r"$b$-Tagging discriminant Cut Value",
-        fontsize=12,
-        horizontalalignment="right",
-        y=1.0,
-    )
-    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
-    plt.cla()
-    plt.clf()
+    disc_cut_plot.atlas_second_tag += f"\nWP={int(target_beff * 100):02d}%"
+    disc_cut_plot.initialise_plot()
+    disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
 
 
 def PlotRejPerEpochComparison(
@@ -367,17 +284,8 @@ def PlotRejPerEpochComparison(
     taggers_from_file: dict = None,
     trained_taggers: list = None,
     target_beff: float = 0.77,
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisAtlasTag: float = 0.95,
-    yAxisIncrease: float = 1.1,
-    ncol: int = 1,
-    figsize: list = None,
-    legend_loc: str = "upper right",
     plot_datatype: str = "pdf",
-    legFontSize: int = 10,
+    leg_fontsize: int = 10,
     **kwargs,  # pylint: disable=unused-argument
 ):
     """Plotting the Rejections per Epoch for the trained tagger and the provided
@@ -412,39 +320,13 @@ def PlotRejPerEpochComparison(
         List of dicts with needed info about local available taggers, by default None
     target_beff : float, optional
         Target Working point., by default 0.77
-    UseAtlasTag : bool, optional
-        Bool to decide if you want the ATLAS tag, by default True
-    ApplyATLASStyle : bool, optional
-        Decide, if the ATLAS Plotting style is used, by default True
-    AtlasTag : str, optional
-        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
-    SecondTag : str, optional
-        Lower tag in the ATLAS label with infos,
-        by default "$sqrt{s}=13$ TeV, PFlow jets"
-    yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.95
-    yAxisIncrease : float, optional
-        Y axis increase factor to fit the ATLAS label, by default 1.1
-    ncol : int, optional
-        Number of columns in the legend., by default 1
-    figsize : list, optional
-        Size of the figure., by default None
-    legend_loc : str, optional
-        Position of the legend., by default "upper right"
     plot_datatype : str, optional
         Datatype of the plot., by default "pdf"
-    legFontSize : int, optional
+    leg_fontsize : int, optional
         Fontsize of the legend., by default 10
     **kwargs
-        Arbitrary keyword arguments.
+        Keyword arguments handed to the plotting API
     """
-    if figsize is None:
-        figsize = [8, 6]
-
-    # Apply ATLAS style
-    if ApplyATLASStyle is True:
-        applyATLASstyle(mtp)
-
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
@@ -465,12 +347,16 @@ def PlotRejPerEpochComparison(
         (0, (5, 10)),
     ]
 
-    # Set global plot configs
-    fig = plt.figure(figsize=figsize)
-    ax1 = fig.add_subplot()
-    ax1.set_xlabel("Epoch")
-    ax2 = ax1.twinx()
-    axes = [ax1, ax2]
+    rej_plot = plot_base(
+        n_ratio_panels=0,
+        logy=False,
+        **kwargs,
+    )
+    rej_plot.initialise_figure()
+
+    ax_left = rej_plot.axis_top
+    ax_right = ax_left.twinx()
+    axes = [ax_left, ax_right]
 
     # Define a list for the lines which are plotted
     lines = []
@@ -492,8 +378,10 @@ def PlotRejPerEpochComparison(
         counter_models += 1
 
         # Set y label
-        axes[counter].set_ylabel(
-            f'{flav_cat[iter_class]["legend_label"]} Rejection',
+        rej_plot.set_ylabel(
+            ax=axes[counter],
+            label=f'{flav_cat[iter_class]["legend_label"]} rejection',
+            align_right=False,
         )
 
         if comp_tagger_rej_dict is None:
@@ -554,18 +442,14 @@ def PlotRejPerEpochComparison(
                 # Set up the counter
                 counter_models += 1
 
-    ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
-
-    # Increase y limit for ATLAS Logo
-    ax1.set_ylim(top=ax1.get_ylim()[1] * yAxisIncrease)
-    ax2.set_ylim(top=ax2.get_ylim()[1] * yAxisIncrease)
+    ax_left.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     # Create the two legends for rejection and model
     line_list_rej = []
 
     # Get lines for each rejection
     for counter, iter_class in enumerate(class_labels_wo_main):
-        line = ax1.plot(
+        line = ax_left.plot(
             np.nan,
             np.nan,
             color="k",
@@ -575,16 +459,16 @@ def PlotRejPerEpochComparison(
         line_list_rej += line
 
     # Get the middle legend
-    legend1 = ax1.legend(
+    legend1 = ax_left.legend(
         handles=line_list_rej,
         labels=[tmp.get_label() for tmp in line_list_rej],
         loc="upper center",
-        fontsize=legFontSize,
-        ncol=ncol,
+        fontsize=leg_fontsize,
+        frameon=False,
     )
 
     # Add the second legend to plot
-    ax1.add_artist(legend1)
+    ax_left.add_artist(legend1)
 
     # Get the labels for the legends
     labels_list = []
@@ -595,29 +479,30 @@ def PlotRejPerEpochComparison(
             labels_list.append(line.get_label())
             lines_list.append(line)
 
-    if UseAtlasTag is True:
-        SecondTag = SecondTag + f"\nWP={int(target_beff * 100):02d}% "
-
-        makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag=AtlasTag,
-            second_tag=SecondTag + label_extension + " sample",
-            ymax=yAxisAtlasTag,
-        )
+    rej_plot.atlas_second_tag += (
+        f"\nWP={int(target_beff * 100):02d}% {label_extension} sample"
+    )
 
     # Define the legend
-    ax1.legend(
+    ax_left.legend(
         handles=lines_list,
         labels=labels_list,
-        loc=legend_loc,
-        fontsize=legFontSize,
-        ncol=ncol,
+        loc="upper right",
+        fontsize=leg_fontsize,
+        frameon=False,
     )
-    plt.tight_layout()
-    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
-    plt.cla()
-    plt.clf()
+    if "y_scale" not in kwargs:
+        kwargs["y_scale"] = 1.3
+    ax_right.set_ylim(top=ax_right.get_ylim()[1] * kwargs["y_scale"])
+
+    rej_plot.set_logy()
+    rej_plot.set_y_lim()
+    rej_plot.axis_top.set_xlabel("Epoch")
+    rej_plot.set_tick_params()
+    rej_plot.fig.tight_layout()
+    rej_plot.plotting_done = True
+    rej_plot.atlasify()
+    rej_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
 
 
 def PlotRejPerEpoch(
@@ -633,17 +518,7 @@ def PlotRejPerEpoch(
     taggers_from_file: dict = None,
     trained_taggers: list = None,
     target_beff: float = 0.77,
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisAtlasTag: float = 0.95,
-    yAxisIncrease: float = 1.1,
-    ncol: int = 1,
-    figsize: list = None,
-    legend_loc: str = "upper right",
     plot_datatype: str = "pdf",
-    legFontSize: int = 10,
     **kwargs,  # pylint: disable=unused-argument
 ):
     """Plotting the Rejections per Epoch for the trained tagger and the provided
@@ -676,38 +551,11 @@ def PlotRejPerEpoch(
         List of dicts with needed info about local available taggers, by default None
     target_beff : float, optional
         Target Working point., by default 0.77
-    UseAtlasTag : bool, optional
-        Bool to decide if you want the ATLAS tag, by default True
-    ApplyATLASStyle : bool, optional
-        Decide, if the ATLAS Plotting style is used, by default True
-    AtlasTag : str, optional
-        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
-    SecondTag : str, optional
-        Lower tag in the ATLAS label with infos,
-        by default "$sqrt{s}=13$ TeV, PFlow jets"
-    yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.95
-    yAxisIncrease : float, optional
-        Y axis increase factor to fit the ATLAS label, by default 1.1
-    ncol : int, optional
-        Number of columns in the legend., by default 1
-    figsize : list, optional
-        Size of the figure., by default None
-    legend_loc : str, optional
-        Position of the legend., by default "upper right"
     plot_datatype : str, optional
         Datatype of the plot., by default "pdf"
-    legFontSize : int, optional
-        Fontsize of the legend., by default 10
     **kwargs
-        Arbitrary keyword arguments.
+         Keyword arguments handed to the plotting API
     """
-    if figsize is None:
-        figsize = [8, 6]
-    # Apply ATLAS style
-    if ApplyATLASStyle is True:
-        applyATLASstyle(mtp)
-
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
@@ -722,17 +570,19 @@ def PlotRejPerEpoch(
     flav_cat = global_config.flavour_categories
 
     for _, iter_class in enumerate(class_labels_wo_main):
-        # Set global plot configs
-        fig = plt.figure(figsize=figsize)
-        axes = fig.add_subplot()
-        axes.set_xlabel("Epoch")
-        axes.set_ylabel(f'{flav_cat[iter_class]["legend_label"]} Rejection')
-
+        rej_plot = plot_base(
+            xlabel="Epoch",
+            ylabel=f'{flav_cat[iter_class]["legend_label"]} rejection',
+            n_ratio_panels=0,
+            logy=False,
+            **kwargs,
+        )
+        rej_plot.initialise_figure()
         # Init a linestyle counter
         counter_models = 0
 
         # Plot rejection
-        axes.plot(
+        rej_plot.axis_top.plot(
             df_results["epoch"],
             df_results[f"{iter_class}_{rej_string}"],
             linestyle="-",
@@ -749,7 +599,7 @@ def PlotRejPerEpoch(
         else:
             for _, comp_tagger in enumerate(comp_tagger_rej_dict):
                 try:
-                    axes.axhline(
+                    rej_plot.axis_top.axhline(
                         comp_tagger_rej_dict[comp_tagger][
                             f"{iter_class}_rej_{unique_identifier}"
                         ],
@@ -786,7 +636,7 @@ def PlotRejPerEpoch(
                 ):
                     continue
 
-                axes.plot(
+                rej_plot.axis_top.plot(
                     tt_rej_dict["epoch"],
                     tt_rej_dict[f"{iter_class}_{rej_string}"],
                     linestyle="-",
@@ -797,36 +647,15 @@ def PlotRejPerEpoch(
                 # Set up the counter
                 counter_models += 1
 
-        # Increase y limit for ATLAS Logo
-        axes.set_ylim(top=axes.get_ylim()[1] * yAxisIncrease)
-
-        if UseAtlasTag is True:
-            makeATLAStag(
-                ax=plt.gca(),
-                fig=plt.gcf(),
-                first_tag=AtlasTag,
-                second_tag=(
-                    SecondTag
-                    + f"\nWP={int(target_beff * 100):02d}% "
-                    + label_extension
-                    + " sample"
-                ),
-                ymax=yAxisAtlasTag,
-            )
-
-        # Define the legend
-        axes.legend(
-            loc=legend_loc,
-            fontsize=legFontSize,
-            ncol=ncol,
+        rej_plot.atlas_second_tag += (
+            f"\nWP={int(target_beff * 100):02d}% {label_extension} sample"
         )
-        plt.tight_layout()
-        plt.savefig(
-            plot_name + f"_{iter_class}_rejection.{plot_datatype}",
+
+        rej_plot.initialise_plot()
+        rej_plot.savefig(
+            f"{plot_name}_{iter_class}_rejection.{plot_datatype}",
             transparent=True,
         )
-        plt.cla()
-        plt.clf()
 
 
 def PlotLosses(
@@ -834,15 +663,7 @@ def PlotLosses(
     plot_name: str,
     train_history_dict: dict,
     val_files: dict = None,
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease: float = 1.2,
-    yAxisAtlasTag: float = 0.9,
     plot_datatype: str = "pdf",
-    ymin: float = None,
-    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
     """Plot the training loss and the validation losses per epoch.
@@ -859,36 +680,23 @@ def PlotLosses(
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
-    UseAtlasTag : bool, optional
-        Bool to decide if you want the ATLAS tag, by default True
-    ApplyATLASStyle : bool, optional
-        Decide, if the ATLAS Plotting style is used, by default True
-    AtlasTag : str, optional
-        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
-    SecondTag : str, optional
-        Lower tag in the ATLAS label with infos,
-        by default "$sqrt{s}=13$ TeV, PFlow jets"
-    yAxisIncrease : float, optional
-        Y axis increase factor to fit the ATLAS label, by default 1.2
-    yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.9
     plot_datatype : str, optional
         Datatype of the plot., by default "pdf"
-    ymin : float, optional
-        Manually set ymin. Overwrites yAxisIncrease, by default None
-    ymax : float, optional
-        Manually set ymax. Overwrites yAxisIncrease, by default None
     **kwargs
-        Arbitrary keyword arguments.
+        Keyword arguments handed to the plotting API
     """
-
-    # Apply ATLAS style
-    if ApplyATLASStyle is True:
-        applyATLASstyle(mtp)
+    loss_plot = plot_base(
+        xlabel="Epoch",
+        ylabel="Loss",
+        n_ratio_panels=0,
+        logy=False,
+        **kwargs,
+    )
+    loss_plot.initialise_figure()
 
     # plots training loss
     if "loss" in train_history_dict:
-        plt.plot(
+        loss_plot.axis_top.plot(
             df_results["epoch"],
             train_history_dict["loss"],
             label="training loss - hybrid sample",
@@ -902,33 +710,11 @@ def PlotLosses(
         label_prefix="validation loss - ",
         label_suffix=" sample",
         val_files=val_files,
+        ax=loss_plot.axis_top,
     )
 
-    if UseAtlasTag is True:
-        makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-        )
-
-    plt.legend(loc="upper right")
-    old_ymin, old_ymax = plt.ylim()
-    if ymin is not None:
-        plt.ylim(ymin=ymin, ymax=old_ymax)
-
-    if ymax is not None:
-        plt.ylim(ymin=old_ymin, ymax=ymax)
-
-    if ymin is None and ymax is None:
-        plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
-
-    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
-    plt.ylabel("Loss", fontsize=12, horizontalalignment="right", y=1.0)
-    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
-    plt.cla()
-    plt.clf()
+    loss_plot.initialise_plot()
+    loss_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
 
 
 def PlotAccuracies(
@@ -936,15 +722,7 @@ def PlotAccuracies(
     plot_name: str,
     train_history_dict: dict,
     val_files: dict = None,
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease: float = 1.2,
-    yAxisAtlasTag: float = 0.9,
     plot_datatype: str = "pdf",
-    ymin: float = None,
-    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
     """Plot the training and validation accuracies per epoch.
@@ -961,35 +739,22 @@ def PlotAccuracies(
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
-    UseAtlasTag : bool, optional
-        Bool to decide if you want the ATLAS tag, by default True
-    ApplyATLASStyle : bool, optional
-        Decide, if the ATLAS Plotting style is used, by default True
-    AtlasTag : str, optional
-        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
-    SecondTag : str, optional
-        Lower tag in the ATLAS label with infos,
-        by default "$sqrt{s}=13$ TeV, PFlow jets"
-    yAxisIncrease : float, optional
-        Y axis increase factor to fit the ATLAS label, by default 1.2
-    yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.9
     plot_datatype : str, optional
         Datatype of the plot., by default "pdf"
-    ymin : float, optional
-        Manually set ymin. Overwrites yAxisIncrease, by default None
-    ymax : float, optional
-        Manually set ymax. Overwrites yAxisIncrease, by default None
     **kwargs
-        Arbitrary keyword arguments.
-    """
 
-    # Apply ATLAS style
-    if ApplyATLASStyle is True:
-        applyATLASstyle(mtp)
+    """
+    acc_plot = plot_base(
+        xlabel="Epoch",
+        ylabel="Accuracy",
+        n_ratio_panels=0,
+        logy=False,
+        **kwargs,
+    )
+    acc_plot.initialise_figure()
 
     if "accuracy" in train_history_dict:
-        plt.plot(
+        acc_plot.axis_top.plot(
             df_results["epoch"],
             train_history_dict["accuracy"],
             label="training accuracy - hybrid sample",
@@ -1003,33 +768,10 @@ def PlotAccuracies(
         label_prefix="validation accuracy - ",
         label_suffix=" sample",
         val_files=val_files,
+        ax=acc_plot.axis_top,
     )
-
-    if UseAtlasTag is True:
-        makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-        )
-
-    plt.legend(loc="upper right")
-    old_ymin, old_ymax = plt.ylim()
-    if ymin is not None:
-        plt.ylim(ymin=ymin, ymax=old_ymax)
-
-    if ymax is not None:
-        plt.ylim(ymin=old_ymin, ymax=ymax)
-
-    if ymin is None and ymax is None:
-        plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
-
-    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
-    plt.ylabel("Accuracy", fontsize=12, horizontalalignment="right", y=1.0)
-    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
-    plt.cla()
-    plt.clf()
+    acc_plot.initialise_plot()
+    acc_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
 
 
 def PlotLossesUmami(
@@ -1037,15 +779,7 @@ def PlotLossesUmami(
     plot_name: str,
     train_history_dict: dict,
     val_files: dict = None,
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease: float = 1.4,
-    yAxisAtlasTag: float = 0.9,
     plot_datatype: str = "pdf",
-    ymin: float = None,
-    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
     """Plot the training loss and the validation losses per epoch for Umami model
@@ -1063,43 +797,30 @@ def PlotLossesUmami(
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
-    UseAtlasTag : bool, optional
-        Bool to decide if you want the ATLAS tag, by default True
-    ApplyATLASStyle : bool, optional
-        Decide, if the ATLAS Plotting style is used, by default True
-    AtlasTag : str, optional
-        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
-    SecondTag : str, optional
-        Lower tag in the ATLAS label with infos,
-        by default "$sqrt{s}=13$ TeV, PFlow jets"
-    yAxisIncrease : float, optional
-        Y axis increase factor to fit the ATLAS label, by default 1.4
-    yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.9
     plot_datatype : str, optional
         Datatype of the plot., by default "pdf"
-    ymin : float, optional
-        Manually set ymin. Overwrites yAxisIncrease, by default None
-    ymax : float, optional
-        Manually set ymax. Overwrites yAxisIncrease, by default None
     **kwargs
-        Arbitrary keyword arguments.
+        Keyword arguments handed to the plotting API
     """
-
-    # Apply ATLAS style
-    if ApplyATLASStyle is True:
-        applyATLASstyle(mtp)
+    loss_plot = plot_base(
+        xlabel="Epoch",
+        ylabel="Loss",
+        n_ratio_panels=0,
+        logy=False,
+        **kwargs,
+    )
+    loss_plot.initialise_figure()
 
     # Plot umami and dips training loss
     if "loss_umami" in train_history_dict:
-        plt.plot(
+        loss_plot.axis_top.plot(
             df_results["epoch"],
             train_history_dict["loss_umami"],
             label="training loss Umami - hybrid sample",
         )
 
     if "loss_dips" in train_history_dict:
-        plt.plot(
+        loss_plot.axis_top.plot(
             df_results["epoch"],
             train_history_dict["loss_dips"],
             label="training loss DIPS - hybrid sample",
@@ -1113,6 +834,7 @@ def PlotLossesUmami(
         label_prefix="validation loss Umami - ",
         label_suffix=" sample",
         val_files=val_files,
+        ax=loss_plot.axis_top,
     )
     plot_validation_files(
         metric_identifier="val_loss_dips",
@@ -1120,33 +842,10 @@ def PlotLossesUmami(
         label_prefix="validation loss DIPS - ",
         label_suffix=" sample",
         val_files=val_files,
+        ax=loss_plot.axis_top,
     )
-
-    plt.legend(loc="upper right")
-    old_ymin, old_ymax = plt.ylim()
-    if ymin is not None:
-        plt.ylim(ymin=ymin, ymax=old_ymax)
-
-    if ymax is not None:
-        plt.ylim(ymin=old_ymin, ymax=ymax)
-
-    if ymin is None and ymax is None:
-        plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
-
-    if UseAtlasTag is True:
-        makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-        )
-
-    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
-    plt.ylabel("Loss", fontsize=12, horizontalalignment="right", y=1.0)
-    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
-    plt.cla()
-    plt.clf()
+    loss_plot.initialise_plot()
+    loss_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
 
 
 def PlotAccuraciesUmami(
@@ -1154,15 +853,7 @@ def PlotAccuraciesUmami(
     plot_name: str,
     train_history_dict: dict,
     val_files: dict = None,
-    UseAtlasTag: bool = True,
-    ApplyATLASStyle: bool = True,
-    AtlasTag: str = "Internal Simulation",
-    SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow jets",
-    yAxisIncrease: float = 1.4,
-    yAxisAtlasTag: float = 0.9,
     plot_datatype: str = "pdf",
-    ymin: float = None,
-    ymax: float = None,
     **kwargs,  # pylint: disable=unused-argument
 ):
     """Plot the training and validation accuracies per epoch for Umami model
@@ -1180,43 +871,28 @@ def PlotAccuraciesUmami(
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
-    UseAtlasTag : bool, optional
-        Bool to decide if you want the ATLAS tag, by default True
-    ApplyATLASStyle : bool, optional
-        Decide, if the ATLAS Plotting style is used, by default True
-    AtlasTag : str, optional
-        Main tag. Mainly "Internal Simulation", by default "Internal Simulation"
-    SecondTag : str, optional
-        Lower tag in the ATLAS label with infos,
-        by default "$sqrt{s}=13$ TeV, PFlow jets"
-    yAxisIncrease : float, optional
-        Y axis increase factor to fit the ATLAS label, by default 1.4
-    yAxisAtlasTag : float, optional
-        Y axis position of the ATLAS label, by default 0.9
-    plot_datatype : str, optional
-        Datatype of the plot., by default "pdf"
-    ymin : float, optional
-        Manually set ymin. Overwrites yAxisIncrease, by default None
-    ymax : float, optional
-        Manually set ymax. Overwrites yAxisIncrease, by default None
     **kwargs
-        Arbitrary keyword arguments.
+        Keyword arguments handed to the plotting API
     """
-
-    # Apply ATLAS style
-    if ApplyATLASStyle is True:
-        applyATLASstyle(mtp)
+    acc_plot = plot_base(
+        xlabel="Epoch",
+        ylabel="Accuracy",
+        n_ratio_panels=0,
+        logy=False,
+        **kwargs,
+    )
+    acc_plot.initialise_figure()
 
     # Plot umami and dips training loss
     if "accuracy_umami" in train_history_dict:
-        plt.plot(
+        acc_plot.axis_top.plot(
             df_results["epoch"],
             train_history_dict["accuracy_umami"],
             label="training accuracy Umami - hybrid sample",
         )
 
     if "accuracy_dips" in train_history_dict:
-        plt.plot(
+        acc_plot.axis_top.plot(
             df_results["epoch"],
             train_history_dict["accuracy_dips"],
             label="training accuracy DIPS - hybrid sample",
@@ -1230,6 +906,7 @@ def PlotAccuraciesUmami(
         label_prefix="validation accuracy Umami - ",
         label_suffix=" sample",
         val_files=val_files,
+        ax=acc_plot.axis_top,
     )
     plot_validation_files(
         metric_identifier="val_acc_dips",
@@ -1237,33 +914,11 @@ def PlotAccuraciesUmami(
         label_prefix="validation accuracy DIPS - ",
         label_suffix=" sample",
         val_files=val_files,
+        ax=acc_plot.axis_top,
     )
 
-    plt.legend(loc="upper right")
-    old_ymin, old_ymax = plt.ylim()
-    if ymin is not None:
-        plt.ylim(ymin=ymin, ymax=old_ymax)
-
-    if ymax is not None:
-        plt.ylim(ymin=old_ymin, ymax=ymax)
-
-    if ymin is None and ymax is None:
-        plt.ylim(ymin=old_ymin, ymax=yAxisIncrease * old_ymax)
-
-    if UseAtlasTag is True:
-        makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-        )
-
-    plt.xlabel("Epoch", fontsize=12, horizontalalignment="right", x=1.0)
-    plt.ylabel("Accuracy", fontsize=12, horizontalalignment="right", y=1.0)
-    plt.savefig(plot_name + f".{plot_datatype}", transparent=True)
-    plt.cla()
-    plt.clf()
+    acc_plot.initialise_plot()
+    acc_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
 
 
 def RunPerformanceCheck(
@@ -1290,7 +945,7 @@ def RunPerformanceCheck(
         by default None
     train_history_dict_file_name : str, optional
         Path to the history file from the training, by default None
-    WP : float, optional
+    wp : float, optional
         Working point to evaluate, by default None
     """
 
@@ -1299,6 +954,8 @@ def RunPerformanceCheck(
     # Load parameters from train config
     Eval_parameters = train_config.Eval_parameters_validation
     Val_settings = train_config.Validation_metrics_settings
+    plot_args = train_config.plot_args
+    logger.warning(f"plot_args = {plot_args}")
     frac_dict = Eval_parameters["frac_values"]
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
@@ -1310,7 +967,7 @@ def RunPerformanceCheck(
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
-    # Get a WP
+    # Get a working point
     if WP is None:
         WP = Val_settings["WP"]
 
@@ -1397,10 +1054,8 @@ def RunPerformanceCheck(
                     PlotRejPerEpochComparison(
                         df_results=tagger_rej_dict,
                         tagger_label=subtagger,
-                        frac_dict=frac_dict,
                         comp_tagger_rej_dict=comp_tagger_rej_dict,
                         unique_identifier=val_file_identifier,
-                        comp_tagger_frac_dict=recommended_frac_dict,
                         plot_name=(
                             f"{plot_dir}/rej-plot_val_{subtagger}_{val_file_identifier}"
                         ),
@@ -1409,16 +1064,14 @@ def RunPerformanceCheck(
                         label_extension=val_file_config["label"],
                         rej_string=f"rej_{subtagger}_{val_file_identifier}",
                         target_beff=WP,
-                        **Val_settings,
+                        **plot_args,
                     )
 
                     PlotRejPerEpoch(
                         df_results=tagger_rej_dict,
                         tagger_label=subtagger,
-                        frac_dict=frac_dict,
-                        unique_identifier=val_file_identifier,
                         comp_tagger_rej_dict=comp_tagger_rej_dict,
-                        comp_tagger_frac_dict=recommended_frac_dict,
+                        unique_identifier=val_file_identifier,
                         plot_name=(
                             f"{plot_dir}/rej-plot_val_{subtagger}_{val_file_identifier}"
                         ),
@@ -1427,16 +1080,16 @@ def RunPerformanceCheck(
                         label_extension=val_file_config["label"],
                         rej_string=f"rej_{subtagger}_{val_file_identifier}",
                         target_beff=WP,
-                        **Val_settings,
+                        **plot_args,
                     )
 
         plot_name = f"{plot_dir}/disc-cut-plot"
         PlotDiscCutPerEpochUmami(
             df_results=tagger_rej_dict,
             plot_name=plot_name,
-            frac_class="cjets",
+            val_files=val_files,
             target_beff=WP,
-            **Val_settings,
+            **plot_args,
         )
 
         # Check if metrics are present
@@ -1447,7 +1100,7 @@ def RunPerformanceCheck(
                 plot_name,
                 train_history_dict=train_history_dict,
                 val_files=val_files,
-                **Val_settings,
+                **plot_args,
             )
             plot_name = f"{plot_dir}/accuracy-plot"
             PlotAccuraciesUmami(
@@ -1455,7 +1108,7 @@ def RunPerformanceCheck(
                 plot_name,
                 train_history_dict=train_history_dict,
                 val_files=val_files,
-                **Val_settings,
+                **plot_args,
             )
 
     else:
@@ -1471,9 +1124,8 @@ def RunPerformanceCheck(
             for val_file_identifier, val_file_config in val_files.items():
                 PlotRejPerEpochComparison(
                     df_results=tagger_rej_dict,
-                    frac_dict=frac_dict,
+                    tagger_label=Val_settings["tagger_label"],
                     comp_tagger_rej_dict=comp_tagger_rej_dict,
-                    comp_tagger_frac_dict=recommended_frac_dict,
                     unique_identifier=val_file_identifier,
                     plot_name=f"{plot_dir}/rej-plot_val_{val_file_identifier}",
                     class_labels=class_labels,
@@ -1481,15 +1133,13 @@ def RunPerformanceCheck(
                     label_extension=val_file_config["label"],
                     rej_string=f"rej_{val_file_identifier}",
                     target_beff=WP,
-                    **Val_settings,
+                    **plot_args,
                 )
         for val_file_identifier, val_file_config in val_files.items():
             # Plot rejections in one plot per rejection
             PlotRejPerEpoch(
                 df_results=tagger_rej_dict,
-                frac_dict=frac_dict,
                 comp_tagger_rej_dict=comp_tagger_rej_dict,
-                comp_tagger_frac_dict=recommended_frac_dict,
                 unique_identifier=val_file_identifier,
                 plot_name=f"{plot_dir}/rej-plot_val_{val_file_identifier}",
                 class_labels=class_labels,
@@ -1497,7 +1147,8 @@ def RunPerformanceCheck(
                 label_extension=val_file_config["label"],
                 rej_string=f"rej_{val_file_identifier}",
                 target_beff=WP,
-                **Val_settings,
+                tagger_label=Val_settings["tagger_label"],
+                **plot_args,
             )
 
         plot_name = f"{plot_dir}/disc-cut-plot"
@@ -1506,9 +1157,9 @@ def RunPerformanceCheck(
             plot_name=plot_name,
             val_files=val_files,
             target_beff=WP,
-            frac_class="cjets",
-            frac=frac_dict["cjets"],
-            **Val_settings,
+            frac_class=list(frac_dict.keys())[0],
+            frac=frac_dict[list(frac_dict.keys())[0]],
+            **plot_args,
         )
 
         # Check if metrics are present
@@ -1519,7 +1170,7 @@ def RunPerformanceCheck(
                 plot_name,
                 train_history_dict=train_history_dict,
                 val_files=val_files,
-                **Val_settings,
+                **plot_args,
             )
             plot_name = f"{plot_dir}/accuracy-plot"
             PlotAccuracies(
@@ -1527,5 +1178,5 @@ def RunPerformanceCheck(
                 plot_name,
                 train_history_dict=train_history_dict,
                 val_files=val_files,
-                **Val_settings,
+                **plot_args,
             )
