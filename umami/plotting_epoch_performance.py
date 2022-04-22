@@ -40,7 +40,7 @@ def get_parser():
     parser.add_argument(
         "--beff",
         type=float,
-        default=0.77,
+        default=None,
         help="b-eff working point",
     )
 
@@ -119,13 +119,12 @@ def main(args, train_config, preprocess_config):
         n_jets = args.nJets
 
     # Get the b eff
-    if args.beff:
-        working_point = args.beff
-
-    else:
+    if args.beff is None:
         working_point = (
             float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
         )
+    else:
+        working_point = args.beff
 
     # Get the tagger from args. If not given, use the one from train config
     if args.tagger:
