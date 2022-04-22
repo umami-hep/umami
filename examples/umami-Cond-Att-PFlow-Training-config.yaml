@@ -138,15 +138,12 @@ Validation_metrics_settings:
         rnnip: "Recomm. RNNIP"
         DL1r: "Recomm. DL1r"
 
-    # Enable/Disable atlas tag
-    UseAtlasTag: True
-
     # Working point used in the validation
     WP: 0.77
 
     # fc_value and WP_b are autmoatically added to the plot label
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+    atlas_first_tag: "Internal Simulation"
+    atlas_second_tag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
 
     # Set the datatype of the plots
     plot_datatype: "pdf"

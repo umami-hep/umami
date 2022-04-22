@@ -132,12 +132,10 @@ Validation_metrics_settings:
     # Working point used in the validation
     WP: 0.77
 
-    # Enable/Disable atlas tag
-    UseAtlasTag: True
-
+    # Plotting API parameters
     # fc_value and WP_b are autmoatically added to the plot label
-    AtlasTag: "Internal Simulation"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
+    atlas_first_tag: "Internal Simulation"
+    atlas_second_tag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
 
     # Set the datatype of the plots
     plot_datatype: "pdf"

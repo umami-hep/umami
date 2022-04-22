@@ -100,7 +100,7 @@ class plot_object:
     leg_fontsize : int, optional
         Fontsize of the legend, by default 10
     leg_loc : str, optional
-        Position of the legend in the plot, by default "best"
+        Position of the legend in the plot, by default "upper right"
     leg_ncol : int, optional
         Number of legend columns, by default 1
     apply_atlas_style : bool, optional
@@ -155,7 +155,7 @@ class plot_object:
 
     # legend settings
     leg_fontsize: int = None
-    leg_loc: str = "best"
+    leg_loc: str = "upper right"
     leg_ncol: int = 1
 
     # defining ATLAS style and tags
@@ -574,3 +574,16 @@ class plot_base(plot_object):
             self.ylabel_ratio_1 = label
         if ratio_panel == 2:
             self.ylabel_ratio_2 = label
+
+    def initialise_plot(self):
+        """Calls other methods which are usually used when plotting"""
+        self.set_title()
+        self.set_logy()
+        self.set_y_lim()
+        self.set_xlabel()
+        self.set_ylabel(self.axis_top)
+        self.set_tick_params()
+        self.fig.tight_layout()
+        self.plotting_done = True
+        if self.apply_atlas_style:
+            self.atlasify()

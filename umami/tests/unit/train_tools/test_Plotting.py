@@ -138,7 +138,10 @@ class GetRejection_TestCase(unittest.TestCase):
             label_extension=self.label_extension,
             rej_string="rej",
             plot_datatype="png",
-            legend_loc="upper right",
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
+            figsize=(7.7, 5),
+            y_scale=1.1,
+            label_fontsize=10,
         )
 
         self.assertEqual(
@@ -163,7 +166,9 @@ class GetRejection_TestCase(unittest.TestCase):
             label_extension=self.label_extension,
             rej_string="rej",
             plot_datatype="png",
-            legend_loc="upper right",
+            leg_loc="upper right",
+            figsize=(6, 4.5),
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
         )
 
         self.assertEqual(
@@ -191,6 +196,8 @@ class GetRejection_TestCase(unittest.TestCase):
             train_history_dict=self.train_history_dict,
             val_files=self.val_files,
             plot_datatype="png",
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
+            figsize=(6, 5),
         )
 
         self.assertEqual(
@@ -209,6 +216,9 @@ class GetRejection_TestCase(unittest.TestCase):
             train_history_dict=self.train_history_dict,
             val_files=self.val_files,
             plot_datatype="png",
+            figsize=(7, 5),
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
+            y_scale=1.2,
         )
 
         self.assertEqual(
@@ -227,6 +237,8 @@ class GetRejection_TestCase(unittest.TestCase):
             frac_class="cjets",
             val_files=self.val_files,
             plot_datatype="png",
+            figsize=(6, 4.5),
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
         )
 
         self.assertEqual(
@@ -242,9 +254,10 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotDiscCutPerEpochUmami(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpochUmami",
-            frac_class="cjets",
             val_files=self.val_files,
             plot_datatype="png",
+            figsize=(6.3, 4.5),
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
         )
 
         self.assertEqual(
@@ -263,6 +276,9 @@ class GetRejection_TestCase(unittest.TestCase):
             train_history_dict=self.train_history_dict,
             val_files=self.val_files,
             plot_datatype="png",
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
+            y_scale=1.4,
+            figsize=(6.5, 5),
         )
 
         self.assertEqual(
@@ -281,6 +297,9 @@ class GetRejection_TestCase(unittest.TestCase):
             train_history_dict=self.train_history_dict,
             val_files=self.val_files,
             plot_datatype="png",
+            figsize=(7, 5),
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
+            y_scale=1.4,
         )
 
         self.assertEqual(
