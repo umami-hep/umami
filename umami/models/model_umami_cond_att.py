@@ -157,7 +157,7 @@ def UmamiCondAtt(args, train_config, preprocess_config):
             _, metadata["n_dim"] = f["Y_train"].shape
             _, metadata["n_jet_features"] = f["X_train"].shape
             if exclude is not None:
-                metadata["n_jet_features"] -= len(exclude)
+                metadata["n_jet_features"] -= len(excluded_var)
             logger.debug(
                 f"Input shape of jet training set: {metadata['n_jet_features']}"
             )
