@@ -195,7 +195,7 @@ class TrainSampleWriter:
             Name of the output file. Default is name from
             config + resampled_scaled_shuffled., by default None
         chunk_size : int, optional
-            The number of jets which are loaded and scaled/shifted per step,
+            The number of jets which are loaded and written per step,
             by default 100_000
         """
 
@@ -273,55 +273,59 @@ class TrainSampleWriter:
                     if chunk_counter == 0:
                         h5file.create_dataset(
                             "X_train",
-                            compression=self.compression,
+                            compression=None,
                             dtype=self.precision,
                             shape=(n_jets, jets.shape[1]),
                         )
 
                         h5file.create_dataset(
                             "Y_train",
-                            compression=self.compression,
+                            compression=None,
                             dtype=np.uint8,
                             shape=(n_jets, labels.shape[1]),
                         )
 
                         h5file.create_dataset(
                             "flavour",
-                            compression=self.compression,
+                            compression=None,
                             dtype=np.uint8,
                             shape=(n_jets,),
                         )
 
                         h5file.create_dataset(
                             "weight",
-                            compression=self.compression,
+                            compression=None,
                             dtype=self.precision,
                             shape=(n_jets,),
                         )
 
-                        if self.bool_use_tracks is True:
-                            for i, tracks_name in enumerate(self.tracks_names):
+                    if chunk_counter == 0 and self.bool_use_tracks is True:
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            chunks = (
+                                (1,) + tracks[i].shape[1:] if self.compression else None
+                            )
+                            h5file.create_dataset(
+                                f"X_{tracks_name}_train",
+                                compression=self.compression,
+                                chunks=chunks,
+                                dtype=self.precision,
+                                shape=(
+                                    n_jets,
+                                    tracks[i].shape[1],
+                                    tracks[i].shape[2],
+                                ),
+                            )
+                            if track_labels[i] is not None:
                                 h5file.create_dataset(
-                                    f"X_{tracks_name}_train",
-                                    compression=self.compression,
-                                    dtype=self.precision,
+                                    f"Y_{tracks_name}_train",
+                                    compression=None,
+                                    dtype=np.int8,
                                     shape=(
                                         n_jets,
-                                        tracks[i].shape[1],
-                                        tracks[i].shape[2],
+                                        track_labels[i].shape[1],
+                                        track_labels[i].shape[2],
                                     ),
                                 )
-                                if track_labels[i] is not None:
-                                    h5file.create_dataset(
-                                        f"Y_{tracks_name}_train",
-                                        compression=self.compression,
-                                        dtype=np.int8,
-                                        shape=(
-                                            n_jets,
-                                            track_labels[i].shape[1],
-                                            track_labels[i].shape[2],
-                                        ),
-                                    )
 
                     # Jet inputs
                     h5file["X_train"][jet_idx:jet_idx_end] = jets

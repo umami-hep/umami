@@ -4,6 +4,8 @@
 
 ### Latest
 - Fix for the "exclude" funtionality [!528](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/528)
+
+- Improved compression settings during scaling and writing [!527](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/527)
 - (Plotting API) Update training plots to plotting API [!515](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/515)
 - Fix validation values json in continue_training [!516](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/516/)
 - Fixing bunch of invalid-name pylint errors [!522](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/522)

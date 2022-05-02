@@ -99,6 +99,11 @@ def apply_scaling_trks(
         The tracks scaled and shifted.
     trk_labels : np.ndarray
         The track labels, if defined in the variable config.
+
+    Raises
+    ------
+    ValueError
+        If scale is found to be 0 or inf for any track variable.
     """
 
     # Init a list for the variables
@@ -128,6 +133,8 @@ def apply_scaling_trks(
         if var in tracks_jointNormVars or var in tracks_logNormVars:
             shift = np.float32(scale_dict[var]["shift"])
             scale = np.float32(scale_dict[var]["scale"])
+            if scale == 0 or np.isinf(scale):
+                raise ValueError(f"Scale parameter for track var {var} is {scale}.")
             x = np.where(
                 track_mask,
                 x - shift,
@@ -833,6 +840,11 @@ class Scaling:
             Yielded track labels
         flavour : np.ndarray
             Yielded flavours
+
+        Raises
+        ------
+        ValueError
+            If scale is found to be 0 or inf for any jet variable.
         """
 
         # Open the file and load the jets
@@ -874,6 +886,11 @@ class Scaling:
                     if "isDefaults" in elem["name"] or "weight" in elem["name"]:
                         continue
 
+                    if elem["scale"] == 0 or np.isinf(elem["scale"]):
+                        raise ValueError(
+                            f"Scale parameter for jet var {elem['name']} is "
+                            f"{elem['scale']}."
+                        )
                     jets[elem["name"]] -= elem["shift"]
                     jets[elem["name"]] /= elem["scale"]
 
@@ -999,45 +1016,47 @@ class Scaling:
                         h5file.create_dataset(
                             "jets",
                             data=jets.to_records(index=False),
-                            compression=self.compression,
+                            compression="gzip",
                             maxshape=(None,),
                         )
                         h5file.create_dataset(
                             "labels",
                             data=labels,
-                            compression=self.compression,
+                            compression="gzip",
                             maxshape=(None, labels.shape[1]),
                         )
                         h5file.create_dataset(
                             "flavour",
                             data=flavour,
-                            compression=self.compression,
+                            compression="gzip",
                             maxshape=(None,),
                         )
 
-                        if self.bool_use_tracks is True:
-                            for i, tracks_name in enumerate(self.tracks_names):
+                    if chunk_counter == 0 and self.bool_use_tracks is True:
+                        for i, tracks_name in enumerate(self.tracks_names):
+                            h5file.create_dataset(
+                                tracks_name,
+                                data=tracks[i],
+                                compression="lzf",
+                                chunks=((100,) + tracks[i].shape[1:]),
+                                maxshape=(
+                                    None,
+                                    tracks[i].shape[1],
+                                    tracks[i].shape[2],
+                                ),
+                            )
+                            if track_labels[i] is not None:
                                 h5file.create_dataset(
-                                    tracks_name,
-                                    data=tracks[i],
-                                    compression=self.compression,
+                                    f"{tracks_name}_labels",
+                                    data=track_labels[i],
+                                    compression="lzf",
+                                    chunks=((100,) + track_labels[i].shape[1:]),
                                     maxshape=(
                                         None,
-                                        tracks[i].shape[1],
-                                        tracks[i].shape[2],
+                                        track_labels[i].shape[1],
+                                        track_labels[i].shape[2],
                                     ),
                                 )
-                                if track_labels[i] is not None:
-                                    h5file.create_dataset(
-                                        f"{tracks_name}_labels",
-                                        data=track_labels[i],
-                                        compression=self.compression,
-                                        maxshape=(
-                                            None,
-                                            track_labels[i].shape[1],
-                                            track_labels[i].shape[2],
-                                        ),
-                                    )
 
                     else:
                         # appending to existing dataset
