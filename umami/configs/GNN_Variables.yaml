@@ -1,12 +1,11 @@
 label: HadronConeExclTruthLabelID
 
-tracks_labels:
+tracks_labels: &tracks_labels
   - truthOriginLabel
   - truthVertexIndex
 
 tracks_loose_labels:
-  - truthOriginLabel
-  - truthVertexIndex
+  <<: *tracks_labels
 
 train_variables:
   JetKinematics:
@@ -39,10 +38,6 @@ train_variables:
     - numberOfPixelHoles
     - numberOfSCTHoles
     #- leptonID
-    #- AMVFWeightPV
-    #- ambiRank
-    #- chiSquaredOverNumberDoF
-
 
 track_train_variables:
   tracks:
@@ -50,6 +45,5 @@ track_train_variables:
 
   tracks_loose:
     <<: *tracks_variables
-
 
 custom_defaults_vars:
