@@ -143,8 +143,15 @@ def main(args, train_config, preprocess_config):
             beff = parameters["WP"]
 
         elif args.recalculate:
+            # Get the filename of the train metrics file
+            train_metrics_file_name, _ = utt.get_metrics_file_name(
+                working_point=working_point,
+                n_jets=n_jets,
+                dir_name=train_config.model_name,
+            )
+
             # Calculate the validation metrics and save them
-            output_file_name = utt.calc_validation_metrics(
+            val_metrics_file_name = utt.calc_validation_metrics(
                 train_config=train_config,
                 preprocess_config=preprocess_config,
                 target_beff=working_point,
@@ -154,8 +161,11 @@ def main(args, train_config, preprocess_config):
             beff = working_point
 
         else:
-            output_file_name = utt.get_validation_dict_name(
-                WP=working_point,
+            (
+                train_metrics_file_name,
+                val_metrics_file_name,
+            ) = utt.get_metrics_file_name(
+                working_point=working_point,
                 n_jets=n_jets,
                 dir_name=train_config.model_name,
             )
@@ -183,9 +193,9 @@ def main(args, train_config, preprocess_config):
             if "taggers_from_file" in val_params
             and val_params["taggers_from_file"] is not None
             else None,
-            dict_file_name=output_file_name,
-            train_history_dict_file_name=f"{train_config.model_name}/history.json",
-            WP=beff,
+            train_metrics_file_name=train_metrics_file_name,
+            val_metrics_file_name=val_metrics_file_name,
+            working_point=beff,
         )
 
     else:

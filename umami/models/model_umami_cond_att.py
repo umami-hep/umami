@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Keras model of the UMAMI with conditional attention tagger."""
 from umami.configuration import logger  # isort:skip
-import json
 import os
 
 import h5py
@@ -15,7 +14,7 @@ import umami.train_tools as utt
 from umami.tools import yaml_loader
 
 
-def Umami_model(
+def create_umami_cond_att_model(
     train_config: object,
     input_shape: tuple,
     njet_features: int,
@@ -231,7 +230,7 @@ def UmamiCondAtt(args, train_config, preprocess_config):
             "a directory with TF Record Files. You should check this."
         )
 
-    umami, _, init_epoch = Umami_model(
+    umami_cond_att_model, _, init_epoch = create_umami_cond_att_model(
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
         njet_features=metadata["n_jet_features"],
@@ -285,15 +284,8 @@ def UmamiCondAtt(args, train_config, preprocess_config):
         val_data_dict=val_data_dict,
         target_beff=WP,
         frac_dict=eval_params["frac_values"],
-        dict_file_name=utt.get_validation_dict_name(
-            WP=WP,
-            n_jets=n_jets_val,
-            dir_name=train_config.model_name,
-        ),
-        continue_training=train_config.config["continue_training"]
-        if "continue_training" in train_config.config
-        and train_config.config["continue_training"] is not None
-        else False,
+        n_jets=n_jets_val,
+        continue_training=train_config.continue_training,
     )
 
     # Append the callback
@@ -301,7 +293,7 @@ def UmamiCondAtt(args, train_config, preprocess_config):
 
     # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
     logger.info("Start training")
-    history = umami.fit(
+    umami_cond_att_model.fit(
         train_dataset,
         epochs=nEpochs,
         callbacks=callbacks,
@@ -312,13 +304,3 @@ def UmamiCondAtt(args, train_config, preprocess_config):
         workers=8,
         initial_epoch=init_epoch,
     )
-
-    # Dump dict into json
-    logger.info(f"Dumping history file to {train_config.model_name}/history.json")
-
-    # Make the history dict the same shape as the dict from the callbacks
-    hist_dict = utt.prepare_history_dict(history.history)
-
-    # Dump history file to json
-    with open(f"{train_config.model_name}/history.json", "w") as outfile:
-        json.dump(hist_dict, outfile, indent=4)

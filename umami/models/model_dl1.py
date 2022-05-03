@@ -1,6 +1,5 @@
 """Keras model of the DL1 tagger."""
 from umami.configuration import logger  # isort:skip
-import json
 import os
 
 import h5py
@@ -23,7 +22,7 @@ from umami.preprocessing_tools import GetVariableDict
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 
-def DL1_model(
+def create_dl1_model(
     train_config: object,
     input_shape: tuple,
     feature_connect_indices: list = None,
@@ -238,7 +237,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
         )
 
     # Load model and epochs
-    model, epochs, init_epoch = DL1_model(
+    dl1_model, epochs, init_epoch = create_dl1_model(
         train_config=train_config,
         input_shape=(metadata["n_jet_features"],),
         feature_connect_indices=feature_connect_indices,
@@ -291,11 +290,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
         val_data_dict=val_data_dict,
         target_beff=WP,
         frac_dict=eval_params["frac_values"],
-        dict_file_name=utt.get_validation_dict_name(
-            WP=WP,
-            n_jets=n_jets_val,
-            dir_name=train_config.model_name,
-        ),
+        n_jets=n_jets_val,
         continue_training=train_config.continue_training,
     )
 
@@ -303,7 +298,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     callbacks.append(my_callback)
 
     logger.info("Start training")
-    history = model.fit(
+    dl1_model.fit(
         x=train_dataset,
         epochs=nEpochs,
         # TODO: Add a representative validation dataset for training (shown in stdout)
@@ -316,15 +311,3 @@ def TrainLargeFile(args, train_config, preprocess_config):
         workers=8,
         initial_epoch=init_epoch,
     )
-
-    # Dump dict into json
-    logger.info(f"Dumping history file to {train_config.model_name}/history.json")
-
-    # Make the history dict the same shape as the dict from the callbacks
-    hist_dict = utt.prepare_history_dict(history.history)
-
-    # Dump history file to json
-    with open(f"{train_config.model_name}/history.json", "w") as outfile:
-        json.dump(hist_dict, outfile, indent=4)
-
-    logger.info(f"Models saved {train_config.model_name}")

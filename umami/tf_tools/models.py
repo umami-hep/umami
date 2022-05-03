@@ -308,14 +308,15 @@ def Deepsets_model(
         pooled = Concatenate()([condition_inputs, pooled])
 
     # Get the dense net which further processes the output of the deep sets
-
-    _, output = DenseNet(
-        classif_nodes,
-        classif_output,
+    output = DenseNet(
+        nodes=classif_nodes,
+        output_nodes=classif_output,
         activation=activation,
         batch_norm=classif_batch_norm,
+        class_output_only=True,
         name="DenseNet",
     )(pooled)
+
     # Check if conditional inputs are needed somewhere and build model
     if (
         condition_attention and (pooling == "attention")
@@ -516,8 +517,10 @@ def Deepsets_model_umami(
         classif_output,
         activation=activation,
         batch_norm=classif_batch_norm,
+        class_output_only=False,
         name="dips",
     )(pooled)
+
     # Check if conditional inputs are needed somewhere and build model
     jets_inputs = Input(shape=jet_input_shape)
 
@@ -533,11 +536,12 @@ def Deepsets_model_umami(
 
     umami_in = Concatenate()([sec_to_last, x])
 
-    _, umami_out = DenseNet(
+    umami_out = DenseNet(
         DL1_units,
         classif_output,
         activation=activation,
         batch_norm=classif_batch_norm,
+        class_output_only=True,
         name="umami",
     )(umami_in)
 

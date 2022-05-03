@@ -70,13 +70,17 @@ def get_epoch_from_string(string):
     return epoch.group(1)
 
 
-def get_validation_dict_name(WP: float, n_jets: int, dir_name: str) -> str:
+def get_metrics_file_name(
+    working_point: float,
+    n_jets: int,
+    dir_name: str,
+):
     """
     Get the validation dict name based on WP, number of jets and dir_name.
 
     Parameters
     ----------
-    WP : float
+    working_point : float
         Working point that was used to calculate validation dict.
     n_jets : int
         Number of jets that was used to calculate validation dict.
@@ -85,17 +89,27 @@ def get_validation_dict_name(WP: float, n_jets: int, dir_name: str) -> str:
 
     Returns
     -------
+    train_dict_path : str
+        Path of the training dict.
     validation_dict_path : str
         Path of the validation dict.
     """
 
-    # Get the path of the validation dict
-    validation_dict_path = os.path.join(
-        dir_name,
-        f"validation_WP{str(WP).replace('.','p')}_{int(n_jets)}jets_Dict.json",
-    )
+    # Get the path to the train metrics dict
+    train_dict_path = os.path.join(dir_name, "train_metrics_dict.json")
 
-    return validation_dict_path
+    if n_jets and n_jets > 0:
+        # Get the path of the validation dict
+        validation_dict_path = os.path.join(
+            dir_name,
+            f"validation_WP{str(working_point).replace('.','p')}_"
+            + f"{int(n_jets)}jets_Dict.json",
+        )
+
+    else:
+        validation_dict_path = None
+
+    return train_dict_path, validation_dict_path
 
 
 def GetModelPath(model_name: str, epoch: int) -> str:
@@ -123,41 +137,6 @@ def GetModelPath(model_name: str, epoch: int) -> str:
 
     # Return path
     return model_path
-
-
-def prepare_history_dict(hist_dict: dict) -> list:
-    """
-    Make the history dict from keras the same shape as the one from the callbacks.
-
-    Parameters
-    ----------
-    hist_dict : dict
-        Dict with the history inside.
-
-    Returns
-    -------
-    history_dict_list : list
-        Reshaped history dict as list. Same shape as the one from the callbacks
-    """
-
-    # Init a new list
-    history_dict_list = []
-
-    # Iterate over the epochs
-    for epoch_counter in range(len(hist_dict["loss"])):
-
-        # Init a temporary dict for the epoch
-        tmp_dict = {"epoch": epoch_counter}
-
-        # Add the metrics from this epoch to the dict
-        for metric in hist_dict:
-            tmp_dict[metric] = float(hist_dict[metric][epoch_counter])
-
-        # Append dict to list
-        history_dict_list.append(tmp_dict)
-
-    # Return dict
-    return history_dict_list
 
 
 def get_parameters_from_validation_dict_name(dict_name: str) -> dict:
@@ -194,9 +173,14 @@ def get_parameters_from_validation_dict_name(dict_name: str) -> dict:
     parameters["n_jets"] = int(sp[2].replace("jets", ""))
     parameters["dir_name"] = str(Path(dict_name).parent)
 
-    # Check if the values are correct extracted. Try to build the name
+    # Check if the values are correctly extracted. Try to build the name
     # from the parameters and check if they are identical.
-    if get_validation_dict_name(**parameters) != dict_name:
+    _, val_dict_name = get_metrics_file_name(
+        working_point=parameters["WP"],
+        n_jets=parameters["n_jets"],
+        dir_name=parameters["dir_name"],
+    )
+    if val_dict_name != dict_name:
         raise Exception(
             f"Can't infer parameters correctly for {dict_name}. Parameters:"
             f" {parameters}"
@@ -233,7 +217,7 @@ def setup_output_directory(
         logger.info("Removing model*.h5 and *.json files.")
         for model_file in outdir.glob("model_files/model_epoch*.h5"):
             model_file.unlink()
-        for model_file in outdir.glob("validation*.json"):
+        for model_file in outdir.glob("*.json"):
             model_file.unlink()
     elif outdir.is_dir() and continue_training:
         logger.info("Continue training. Old model files will not be erased.")
@@ -391,11 +375,11 @@ class CallbackBase(Callback):
         self,
         class_labels: list,
         main_class: str,
+        model_name: str,
+        n_jets: int = None,
         val_data_dict: dict = None,
-        model_name: str = "test",
         target_beff: float = 0.77,
         frac_dict: dict = None,
-        dict_file_name: str = "DictFile.json",
         continue_training: bool = False,
     ):
         """Init the parameters needed for the callback
@@ -407,21 +391,21 @@ class CallbackBase(Callback):
         main_class : str
             Name of the main class which is used. For b-tagging
             obviously `bjets`.
-        val_data_dict : dict
-            Dict with the loaded validation data. These are loaded
-            using the `load_validation_data_*` functions.
         model_name : str
             Name of the model used to evaluate. This is important
             for the path where the results are of the callback are saved.
+        n_jets : int, optional
+            Number of jets used in the validation. By default None
+        val_data_dict : dict, optional
+            Dict with the loaded validation data. These are loaded
+            using the `load_validation_data_*` functions. By default
+            None.
         target_beff : float
             Float value between 0 and 1 for which main class efficiency
             the rejections are calculated.
         frac_dict : dict
             Dict with the fraction values for the non-main classes. The
             values need to add up to 1.
-        dict_file_name : str
-            Name of the file where the dict with the results of the callback
-            are saved.
         continue_training : bool, optional
             Decide, if the this is a continuation of an already existing training
             or not, by default False.
@@ -431,6 +415,7 @@ class CallbackBase(Callback):
         # Add parameters to as attributes
         self.class_labels = class_labels
         self.main_class = main_class
+        self.n_jets = n_jets
         self.val_data_dict = val_data_dict
         self.target_beff = target_beff
         self.frac_dict = (
@@ -442,24 +427,49 @@ class CallbackBase(Callback):
             else frac_dict
         )
         self.model_name = model_name
-        self.dict_file_name = dict_file_name
         self.continue_training = continue_training
+
+        # Get the names for the train/val metrics files
+        (
+            self.train_metrics_file_name,
+            self.val_metrics_file_name,
+        ) = get_metrics_file_name(
+            working_point=self.target_beff,
+            n_jets=self.n_jets,
+            dir_name=self.model_name,
+        )
 
         # Init a list for the result dicts for each epoch
         if self.continue_training:
             try:
-                with open(self.dict_file_name, "r") as file:
-                    self.dict_list = json.loads(file.read())
+                with open(self.train_metrics_file_name, "r") as file:
+                    self.train_metrics_list = json.loads(file.read())
 
             except FileNotFoundError:
                 logger.warning(
-                    f"No validation file found named {self.dict_file_name}! "
-                    "Init a new one!"
+                    f"No train metrics file found named {self.train_metrics_file_name}!"
+                    " Init a new one!"
                 )
-                self.dict_list = []
+                self.train_metrics_list = []
+
+            if self.val_data_dict is not None and self.n_jets > 0:
+                try:
+                    with open(self.val_metrics_file_name, "r") as file:
+                        self.val_metrics_list = json.loads(file.read())
+
+                except FileNotFoundError:
+                    logger.warning(
+                        "No validation metrics file found named"
+                        f" {self.val_metrics_file_name}! Init a new one!"
+                    )
+                    self.val_metrics_list = []
+
+            else:
+                self.val_metrics_list = []
 
         else:
-            self.dict_list = []
+            self.train_metrics_list = []
+            self.val_metrics_list = []
 
         # Init the directory and clean it from previous training
         setup_output_directory(
@@ -475,7 +485,11 @@ class MyCallback(CallbackBase):
     output (not like the umami tagger) is given.
     """
 
-    def on_epoch_end(self, epoch: int, logs: dict = None) -> None:
+    def on_epoch_end(
+        self,
+        epoch: int,
+        logs: dict = None,
+    ) -> None:
         """Get the needed metrics at epoch end and calculate rest.
 
         This method saves the training metrics at the end of the
@@ -494,16 +508,23 @@ class MyCallback(CallbackBase):
         """
 
         # Define a dict with the epoch and the training metrics
-        dict_epoch = {
+        train_metrics_dict = {
             "epoch": epoch + 1,
             "learning_rate": logs["lr"].item(),
             "loss": logs["loss"],
             "accuracy": logs["accuracy"],
         }
 
+        # Append the dict to the list
+        self.train_metrics_list.append(train_metrics_dict)
+
+        # Dump the list in json file
+        with open(self.train_metrics_file_name, "w") as train_outfile:
+            json.dump(self.train_metrics_list, train_outfile, indent=4)
+
         # If val data is given, calculate validaton metrics and rejections
         if self.val_data_dict:
-            result_dict = evaluate_model(
+            val_metrics_dict = evaluate_model(
                 model=self.model,
                 data_dict=self.val_data_dict,
                 class_labels=self.class_labels,
@@ -512,17 +533,15 @@ class MyCallback(CallbackBase):
                 frac_dict=self.frac_dict,
             )
 
-            # Once we use python >=3.9
-            # (see https://www.python.org/dev/peps/pep-0584/#specification)
-            #  switch to the following: dict_epoch |= result_dict
-            dict_epoch = {**dict_epoch, **result_dict}
+            # Add the epoch to val_metrics dict
+            val_metrics_dict["epoch"] = epoch + 1
 
-        # Append the dict to the list
-        self.dict_list.append(dict_epoch)
+            # Append the dict to the list
+            self.val_metrics_list.append(val_metrics_dict)
 
-        # Dump the list in json file
-        with open(self.dict_file_name, "w") as outfile:
-            json.dump(self.dict_list, outfile, indent=4)
+            # Dump the list in json file
+            with open(self.val_metrics_file_name, "w") as val_outfile:
+                json.dump(self.val_metrics_list, val_outfile, indent=4)
 
 
 class MyCallbackUmami(CallbackBase):
@@ -551,7 +570,7 @@ class MyCallbackUmami(CallbackBase):
         """
 
         # Define a dict with the epoch and the training metrics
-        dict_epoch = {
+        train_metrics_dict = {
             "epoch": epoch + 1,
             "learning_rate": logs["lr"].item(),
             "loss": logs["loss"],
@@ -561,9 +580,16 @@ class MyCallbackUmami(CallbackBase):
             "accuracy_umami": logs["umami_accuracy"],
         }
 
+        # Append the dict to the list
+        self.train_metrics_list.append(train_metrics_dict)
+
+        # Dump the list in json file
+        with open(self.train_metrics_file_name, "w") as train_outfile:
+            json.dump(self.train_metrics_list, train_outfile, indent=4)
+
         # If val data is given, calculate validaton metrics and rejections
         if self.val_data_dict:
-            result_dict = evaluate_model_umami(
+            val_metrics_dict = evaluate_model_umami(
                 model=self.model,
                 data_dict=self.val_data_dict,
                 class_labels=self.class_labels,
@@ -572,17 +598,15 @@ class MyCallbackUmami(CallbackBase):
                 frac_dict=self.frac_dict,
             )
 
-            # Once we use python >=3.9
-            # (see https://www.python.org/dev/peps/pep-0584/#specification)
-            # switch to the following: dict_epoch |= result_dict
-            dict_epoch = {**dict_epoch, **result_dict}
+            # Add the epoch to val_metrics dict
+            val_metrics_dict["epoch"] = epoch + 1
 
-        # Append the dict to the list
-        self.dict_list.append(dict_epoch)
+            # Append the dict to the list
+            self.val_metrics_list.append(val_metrics_dict)
 
-        # Dump the list in json file
-        with open(self.dict_file_name, "w") as outfile:
-            json.dump(self.dict_list, outfile, indent=4)
+            # Dump the list in json file
+            with open(self.val_metrics_file_name, "w") as val_outfile:
+                json.dump(self.val_metrics_list, val_outfile, indent=4)
 
 
 def get_jet_feature_indices(variable_header: dict, exclude: list = None):
@@ -1570,14 +1594,15 @@ def calc_validation_metrics(
 
     # Open the json file and load the training out
     try:
-        with open(
-            get_validation_dict_name(
-                WP=Eval_parameters["WP"],
-                n_jets=Eval_parameters["n_jets"],
-                dir_name=train_config.model_name,
-            ),
-            "r",
-        ) as training_out_json:
+
+        # Get val dict file name
+        _, val_output_file_path = get_metrics_file_name(
+            working_point=Eval_parameters["WP"],
+            n_jets=Eval_parameters["n_jets"],
+            dir_name=train_config.model_name,
+        )
+
+        with open(val_output_file_path, "r") as training_out_json:
             training_output_list = json.load(training_out_json)
 
     except FileNotFoundError:
@@ -1753,13 +1778,15 @@ def calc_validation_metrics(
     results = sorted(results, key=lambda x: x["epoch"])
 
     # Get validation dict name
-    output_file_path = get_validation_dict_name(
-        target_beff, nJets, train_config.model_name
+    _, val_output_file_path = get_metrics_file_name(
+        working_point=target_beff,
+        n_jets=nJets,
+        dir_name=train_config.model_name,
     )
 
     # Dump dict into json
-    with open(output_file_path, "w") as outfile:
+    with open(val_output_file_path, "w") as outfile:
         json.dump(results, outfile, indent=4)
 
     # Return Validation dict name
-    return output_file_path
+    return val_output_file_path

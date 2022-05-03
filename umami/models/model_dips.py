@@ -1,6 +1,5 @@
 """Keras model of the DIPS tagger."""
 from umami.configuration import logger  # isort:skip
-import json
 import os
 
 import h5py
@@ -23,7 +22,7 @@ import umami.tf_tools as utf
 import umami.train_tools as utt
 
 
-def Dips_model(
+def create_dips_model(
     train_config: object,
     input_shape: tuple,
     continue_training: bool = False,
@@ -225,7 +224,7 @@ def Dips(args, train_config, preprocess_config):
         )
 
     # Init dips model
-    dips, epochs, init_epoch = Dips_model(
+    dips_model, epochs, init_epoch = create_dips_model(
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
         continue_training=train_config.continue_training,
@@ -278,11 +277,7 @@ def Dips(args, train_config, preprocess_config):
         val_data_dict=val_data_dict,
         target_beff=WP,
         frac_dict=eval_params["frac_values"],
-        dict_file_name=utt.get_validation_dict_name(
-            WP=WP,
-            n_jets=n_jets_val,
-            dir_name=train_config.model_name,
-        ),
+        n_jets=n_jets_val,
         continue_training=train_config.continue_training,
     )
 
@@ -290,7 +285,7 @@ def Dips(args, train_config, preprocess_config):
     callbacks.append(my_callback)
 
     logger.info("Start training")
-    history = dips.fit(
+    dips_model.fit(
         train_dataset,
         epochs=nEpochs,
         # TODO: Add a representative validation dataset for training (shown in stdout)
@@ -303,13 +298,3 @@ def Dips(args, train_config, preprocess_config):
         workers=8,
         initial_epoch=init_epoch,
     )
-
-    # Dump dict into json
-    logger.info(f"Dumping history file to {train_config.model_name}/history.json")
-
-    # Make the history dict the same shape as the dict from the callbacks
-    hist_dict = utt.prepare_history_dict(history.history)
-
-    # Dump history file to json
-    with open(f"{train_config.model_name}/history.json", "w") as outfile:
-        json.dump(hist_dict, outfile, indent=4)
