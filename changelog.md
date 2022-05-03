@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Add documentation and integration tests for importance sampling without replacement method [!502](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/502)
 - (Plotting API) Update training plots to plotting API [!515](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/515)
 - Fix validation values json in continue_training [!516](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/516/)
 - Fixing bunch of invalid-name pylint errors [!522](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/522)

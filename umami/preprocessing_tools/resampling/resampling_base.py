@@ -809,7 +809,7 @@ class ResamplingTools(Resampling):
             samples = self.options["samples"]
         except KeyError as error:
             raise KeyError(
-                "You chose the 'count' or 'probability_ratio' option "
+                "You chose the 'count', 'weight' or 'importance_no_replace' option "
                 "for the sampling but didn't provide the samples to use. "
                 "Please specify them in the configuration file!"
             ) from error

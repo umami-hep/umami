@@ -15,9 +15,9 @@ from umami.preprocessing_tools.Preparation import (
     GetPreparationSamplePath,
     PrepareSamples,
 )
-from umami.preprocessing_tools.resampling.count_sampling import (
-    ProbabilityRatioUnderSampling,
-    UnderSampling,
+from umami.preprocessing_tools.resampling.count_sampling import UnderSampling
+from umami.preprocessing_tools.resampling.importance_sampling_no_replace import (
+    UnderSamplingNoReplace,
 )
 from umami.preprocessing_tools.resampling.pdf_sampling import PDFSampling
 from umami.preprocessing_tools.resampling.proportional_sampling import UnderSamplingProp
