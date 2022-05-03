@@ -299,6 +299,7 @@ class test_DenseNet(tf.test.TestCase):
             output_nodes=self.output_nodes,
             activation=self.activation,
             batch_norm=self.batch_norm,
+            class_output_only=False,
         )
 
     def test_get_config(self):

@@ -13,14 +13,13 @@ from umami.train_tools.NN_tools import (
     get_epoch_from_string,
     get_jet_feature_indices,
     get_jet_feature_position,
+    get_metrics_file_name,
     get_parameters_from_validation_dict_name,
     get_test_sample,
     get_test_sample_trks,
-    get_validation_dict_name,
     load_validation_data_dips,
     load_validation_data_dl1,
     load_validation_data_umami,
-    prepare_history_dict,
     setup_output_directory,
 )
 from umami.train_tools.Plotting import (

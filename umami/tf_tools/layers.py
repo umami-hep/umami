@@ -20,6 +20,7 @@ class DenseNet(Layer):
         output_nodes: int = 1,
         activation: str = "relu",
         batch_norm: bool = False,
+        class_output_only: bool = True,
         **kwargs,
     ):
         """
@@ -35,6 +36,10 @@ class DenseNet(Layer):
             Activation which is used, by default "relu"
         batch_norm : bool, optional
             Use batch normalisation, by default False
+        class_output_only : bool, optional
+            Decide if only the classification output is returned
+            or also the output of the last layer before the
+            classification layer.
         **kwargs : dict
             Additional arguments passed.
         """
@@ -44,6 +49,7 @@ class DenseNet(Layer):
         self.output_nodes = output_nodes
         self.activation = activation
         self.batch_norm = batch_norm
+        self.class_output_only = class_output_only
 
         # Define the layer structure
         self.layers = []
@@ -81,13 +87,22 @@ class DenseNet(Layer):
         Returns
         -------
         output : object
-            Output of the network.
+            Output of the network. Depending on class_output_only,
+            either a tuple with the classification and last layer
+            output is returned () or only
+            the classification output (True)
         """
         out = self.layers[0](inputs)
         for layer in self.layers[1 : len(self.layers) - 1]:
             out = layer(out)
         out_last = self.layers[-1](out)
-        return out, out_last
+
+        # Return the class output or also the output of the last layer
+        # before the classification layer
+        if self.class_output_only:
+            return out_last
+
+        return (out, out_last)
 
     def get_config(self) -> dict:
         """
@@ -104,6 +119,7 @@ class DenseNet(Layer):
             "output_nodes": self.output_nodes,
             "activation": self.activation,
             "batch_norm": self.batch_norm,
+            "class_output_only": self.class_output_only,
         }
         base_config = super().get_config()
 

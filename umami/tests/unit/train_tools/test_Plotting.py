@@ -105,18 +105,6 @@ class GetRejection_TestCase(unittest.TestCase):
                 [np.arange(0, 10, 1) for x in range(len(list_of_keys))],
             )
         )
-        self.train_history_dict = {
-            key: self.df_results[key]
-            for key in [
-                "epoch",
-                "loss",
-                "accuracy",
-                "loss_umami",
-                "loss_dips",
-                "accuracy_umami",
-                "accuracy_dips",
-            ]
-        }
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.main_class = "bjets"
         self.comp_tagger_rej_dict = {
@@ -193,7 +181,6 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotLosses(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotLosses",
-            train_history_dict=self.train_history_dict,
             val_files=self.val_files,
             plot_datatype="png",
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
@@ -213,7 +200,6 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotAccuracies(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotAccuracies",
-            train_history_dict=self.train_history_dict,
             val_files=self.val_files,
             plot_datatype="png",
             figsize=(7, 5),
@@ -273,7 +259,6 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotLossesUmami(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotLossesUmami",
-            train_history_dict=self.train_history_dict,
             val_files=self.val_files,
             plot_datatype="png",
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
@@ -294,7 +279,6 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotAccuraciesUmami(
             df_results=self.df_results,
             plot_name=self.tmp_plot_dir + "PlotAccuraciesUmami",
-            train_history_dict=self.train_history_dict,
             val_files=self.val_files,
             plot_datatype="png",
             figsize=(7, 5),
@@ -348,7 +332,7 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
             tagger_comp_var=self.tagger_comp_var_rnnip,
             recommended_frac_dict=self.recommended_frac_dict,
             nJets=5000,
-            WP=self.WP,
+            working_point=self.WP,
             class_labels=self.class_labels,
             main_class=self.main_class,
         )
@@ -369,7 +353,7 @@ class CompTaggerRejectionDict_TestCase(unittest.TestCase):
             tagger_comp_var=self.tagger_comp_var_dl1r,
             recommended_frac_dict=self.recommended_frac_dict,
             nJets=5000,
-            WP=self.WP,
+            working_point=self.WP,
             class_labels=self.class_labels,
             main_class=self.main_class,
         )

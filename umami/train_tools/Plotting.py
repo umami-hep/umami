@@ -68,7 +68,7 @@ def CompTaggerRejectionDict(
     tagger_comp_var: list,
     recommended_frac_dict: dict,
     nJets: int,
-    WP: float,
+    working_point: float,
     class_labels: list,
     main_class: str,
     cut_vars_dict: dict = None,
@@ -89,7 +89,7 @@ def CompTaggerRejectionDict(
     nJets : int
         Number of jets to use for calculation of the comparison tagger
         rejections
-    WP : float
+    working_point : float
         Working point at which the rejections should be evaluated.
     class_labels : list
         List with the used class_labels.
@@ -145,7 +145,7 @@ def CompTaggerRejectionDict(
             class_labels=class_labels,
             main_class=main_class,
             frac_dict=recommended_frac_dict,
-            target_eff=WP,
+            target_eff=working_point,
         )
 
     return recomm_rej_dict
@@ -391,11 +391,11 @@ def PlotRejPerEpochComparison(
             for _, comp_tagger in enumerate(comp_tagger_rej_dict):
                 try:
                     tmp_line = axes[counter].axhline(
-                        comp_tagger_rej_dict[comp_tagger][
+                        y=comp_tagger_rej_dict[comp_tagger][
                             f"{iter_class}_rej_{unique_identifier}"
                         ],
-                        0,
-                        df_results["epoch"].max(),
+                        xmin=0,
+                        xmax=df_results["epoch"].max(),
                         color=f"C{counter_models}",
                         linestyle=linestyle_list[counter],
                         label=taggers_from_file[comp_tagger]
@@ -600,11 +600,11 @@ def PlotRejPerEpoch(
             for _, comp_tagger in enumerate(comp_tagger_rej_dict):
                 try:
                     rej_plot.axis_top.axhline(
-                        comp_tagger_rej_dict[comp_tagger][
+                        y=comp_tagger_rej_dict[comp_tagger][
                             f"{iter_class}_rej_{unique_identifier}"
                         ],
-                        0,
-                        df_results["epoch"].max(),
+                        xmin=0,
+                        xmax=df_results["epoch"].max(),
                         color=f"C{counter_models}",
                         linestyle="-",
                         label=taggers_from_file[comp_tagger]
@@ -661,7 +661,6 @@ def PlotRejPerEpoch(
 def PlotLosses(
     df_results: dict,
     plot_name: str,
-    train_history_dict: dict,
     val_files: dict = None,
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
@@ -674,8 +673,6 @@ def PlotLosses(
         Dict with the epochs and losses.
     plot_name : str
         Path where the plots is saved.
-    train_history_dict : dict
-        Dict that stores the results of the training.
     val_files: dict, optional
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
@@ -695,10 +692,10 @@ def PlotLosses(
     loss_plot.initialise_figure()
 
     # plots training loss
-    if "loss" in train_history_dict:
+    if "loss" in df_results:
         loss_plot.axis_top.plot(
             df_results["epoch"],
-            train_history_dict["loss"],
+            df_results["loss"],
             label="training loss - hybrid sample",
         )
 
@@ -720,7 +717,6 @@ def PlotLosses(
 def PlotAccuracies(
     df_results: dict,
     plot_name: str,
-    train_history_dict: dict,
     val_files: dict = None,
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
@@ -733,8 +729,6 @@ def PlotAccuracies(
         Dict with the epochs and accuracies.
     plot_name : str
         Path where the plots is saved.
-    train_history_dict : dict
-        Dict that stores the results of the training.
     val_files: dict, optional
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
@@ -753,10 +747,10 @@ def PlotAccuracies(
     )
     acc_plot.initialise_figure()
 
-    if "accuracy" in train_history_dict:
+    if "accuracy" in df_results:
         acc_plot.axis_top.plot(
             df_results["epoch"],
-            train_history_dict["accuracy"],
+            df_results["accuracy"],
             label="training accuracy - hybrid sample",
         )
 
@@ -777,7 +771,6 @@ def PlotAccuracies(
 def PlotLossesUmami(
     df_results: dict,
     plot_name: str,
-    train_history_dict: dict,
     val_files: dict = None,
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
@@ -791,8 +784,6 @@ def PlotLossesUmami(
         Dict with the epochs and losses.
     plot_name : str
         Path where the plots is saved.
-    train_history_dict : dict
-        Dict that stores the results of the training.
     val_files: dict, optional
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
@@ -812,17 +803,17 @@ def PlotLossesUmami(
     loss_plot.initialise_figure()
 
     # Plot umami and dips training loss
-    if "loss_umami" in train_history_dict:
+    if "loss_umami" in df_results:
         loss_plot.axis_top.plot(
             df_results["epoch"],
-            train_history_dict["loss_umami"],
+            df_results["loss_umami"],
             label="training loss Umami - hybrid sample",
         )
 
-    if "loss_dips" in train_history_dict:
+    if "loss_dips" in df_results:
         loss_plot.axis_top.plot(
             df_results["epoch"],
-            train_history_dict["loss_dips"],
+            df_results["loss_dips"],
             label="training loss DIPS - hybrid sample",
         )
 
@@ -851,7 +842,6 @@ def PlotLossesUmami(
 def PlotAccuraciesUmami(
     df_results: dict,
     plot_name: str,
-    train_history_dict: dict,
     val_files: dict = None,
     plot_datatype: str = "pdf",
     **kwargs,  # pylint: disable=unused-argument
@@ -865,8 +855,6 @@ def PlotAccuraciesUmami(
         Dict with the epochs and accuracies.
     plot_name : str
         Path where the plots is saved.
-    train_history_dict : dict
-        Dict that stores the results of the training.
     val_files: dict, optional
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
@@ -884,17 +872,17 @@ def PlotAccuraciesUmami(
     acc_plot.initialise_figure()
 
     # Plot umami and dips training loss
-    if "accuracy_umami" in train_history_dict:
+    if "accuracy_umami" in df_results:
         acc_plot.axis_top.plot(
             df_results["epoch"],
-            train_history_dict["accuracy_umami"],
+            df_results["accuracy_umami"],
             label="training accuracy Umami - hybrid sample",
         )
 
-    if "accuracy_dips" in train_history_dict:
+    if "accuracy_dips" in df_results:
         acc_plot.axis_top.plot(
             df_results["epoch"],
-            train_history_dict["accuracy_dips"],
+            df_results["accuracy_dips"],
             label="training accuracy DIPS - hybrid sample",
         )
 
@@ -925,9 +913,9 @@ def RunPerformanceCheck(
     train_config: object,
     tagger: str,
     tagger_comp_vars: dict = None,
-    dict_file_name: str = None,
-    train_history_dict_file_name: str = None,
-    WP: float = None,
+    train_metrics_file_name: str = None,
+    val_metrics_file_name: str = None,
+    working_point: float = None,
 ):
     """Loading the validation metrics from the trained model and calculate
     the metrics for the comparison taggers and plot them.
@@ -940,12 +928,11 @@ def RunPerformanceCheck(
         String name of the tagger used.
     tagger_comp_vars : dict, optional
         Dict of the tagger probability variables as lists, by default None
-    dict_file_name : str, optional
-        Path to the json file with the per epoch metrics of the trained tagger,
-        by default None
-    train_history_dict_file_name : str, optional
-        Path to the history file from the training, by default None
-    wp : float, optional
+    train_metrics_file_name : str, optional
+        Path to the json file with the per epoch train metrics, by default None
+    val_metrics_file_name : str, optional
+        Path to the json file with the per epoch validation metrics, by default None
+    working_point : float, optional
         Working point to evaluate, by default None
     """
 
@@ -968,35 +955,48 @@ def RunPerformanceCheck(
     main_class = check_main_class_input(main_class)
 
     # Get a working point
-    if WP is None:
-        WP = Val_settings["WP"]
+    if working_point is None:
+        working_point = Val_settings["WP"]
 
     # Get dict with training results from json
     try:
-        tagger_rej_dict = pd.read_json(dict_file_name)
+        train_metrics_dict = pd.read_json(train_metrics_file_name)
 
-    except ValueError as read_json_error:
-        raise FileNotFoundError(
-            f"Validation results json {dict_file_name} could not be found! "
+    except ValueError:
+        logger.warning(f"Train metrics json {train_metrics_file_name} not found!")
+        train_metrics_dict = None
+
+    # Get dict with validation results from json
+    try:
+        val_metrics_dict = pd.read_json(val_metrics_file_name)
+
+    except ValueError:
+        logger.warning(
+            f"Validation results json {val_metrics_file_name} could not be found! "
             "Check your train config values (the name of the file loaded depends "
             "on them). If you want to use a specific json file, use the -d option "
             "of the plotting_epoch_performance script!"
-        ) from read_json_error
+        )
+        val_metrics_dict = None
 
-    # Check if history file exists
-    if os.path.isfile(train_history_dict_file_name):
-        train_history_dict = pd.read_json(train_history_dict_file_name)
+    # Merge the train and val metrics dicts
+    if train_metrics_dict is not None and val_metrics_dict is not None:
 
-    elif "accuracy" in tagger_rej_dict:
-        logger.warning(
-            "Metrics history file not found! Extract metrics from validation file."
+        # Join the two dataframes in one
+        tagger_rej_dict = train_metrics_dict.join(
+            val_metrics_dict.set_index("epoch"), on="epoch"
         )
 
-        train_history_dict = tagger_rej_dict
+    elif train_metrics_dict is not None:
+        tagger_rej_dict = train_metrics_dict
+
+    elif val_metrics_dict is not None:
+        tagger_rej_dict = val_metrics_dict
 
     else:
-        logger.warning("Not training metrics found! Not plotting acc/loss!")
-        train_history_dict = None
+        raise ValueError(
+            "No train or validation metrics file could be loaded! Check files"
+        )
 
     if tagger_comp_vars is not None:
         # Dict
@@ -1022,7 +1022,7 @@ def RunPerformanceCheck(
                         cut_vars_dict=val_file_config["variable_cuts"]
                         if "variable_cuts" in val_file_config
                         else None,
-                        WP=WP,
+                        working_point=working_point,
                         class_labels=class_labels,
                         main_class=main_class,
                     )
@@ -1063,7 +1063,7 @@ def RunPerformanceCheck(
                         main_class=main_class,
                         label_extension=val_file_config["label"],
                         rej_string=f"rej_{subtagger}_{val_file_identifier}",
-                        target_beff=WP,
+                        target_beff=working_point,
                         **plot_args,
                     )
 
@@ -1079,7 +1079,7 @@ def RunPerformanceCheck(
                         main_class=main_class,
                         label_extension=val_file_config["label"],
                         rej_string=f"rej_{subtagger}_{val_file_identifier}",
-                        target_beff=WP,
+                        target_beff=working_point,
                         **plot_args,
                     )
 
@@ -1088,28 +1088,25 @@ def RunPerformanceCheck(
             df_results=tagger_rej_dict,
             plot_name=plot_name,
             val_files=val_files,
-            target_beff=WP,
+            target_beff=working_point,
             **plot_args,
         )
 
         # Check if metrics are present
-        if train_history_dict is not None:
-            plot_name = f"{plot_dir}/loss-plot"
-            PlotLossesUmami(
-                tagger_rej_dict,
-                plot_name,
-                train_history_dict=train_history_dict,
-                val_files=val_files,
-                **plot_args,
-            )
-            plot_name = f"{plot_dir}/accuracy-plot"
-            PlotAccuraciesUmami(
-                tagger_rej_dict,
-                plot_name,
-                train_history_dict=train_history_dict,
-                val_files=val_files,
-                **plot_args,
-            )
+        plot_name = f"{plot_dir}/loss-plot"
+        PlotLossesUmami(
+            tagger_rej_dict,
+            plot_name,
+            val_files=val_files,
+            **plot_args,
+        )
+        plot_name = f"{plot_dir}/accuracy-plot"
+        PlotAccuraciesUmami(
+            tagger_rej_dict,
+            plot_name,
+            val_files=val_files,
+            **plot_args,
+        )
 
     else:
         # If no freshly trained tagger label is given, give tagger
@@ -1132,7 +1129,7 @@ def RunPerformanceCheck(
                     main_class=main_class,
                     label_extension=val_file_config["label"],
                     rej_string=f"rej_{val_file_identifier}",
-                    target_beff=WP,
+                    target_beff=working_point,
                     **plot_args,
                 )
         for val_file_identifier, val_file_config in val_files.items():
@@ -1146,7 +1143,7 @@ def RunPerformanceCheck(
                 main_class=main_class,
                 label_extension=val_file_config["label"],
                 rej_string=f"rej_{val_file_identifier}",
-                target_beff=WP,
+                target_beff=working_point,
                 tagger_label=Val_settings["tagger_label"],
                 **plot_args,
             )
@@ -1156,27 +1153,24 @@ def RunPerformanceCheck(
             df_results=tagger_rej_dict,
             plot_name=plot_name,
             val_files=val_files,
-            target_beff=WP,
+            target_beff=working_point,
             frac_class=list(frac_dict.keys())[0],
             frac=frac_dict[list(frac_dict.keys())[0]],
             **plot_args,
         )
 
         # Check if metrics are present
-        if train_history_dict is not None:
-            plot_name = f"{plot_dir}/loss-plot"
-            PlotLosses(
-                tagger_rej_dict,
-                plot_name,
-                train_history_dict=train_history_dict,
-                val_files=val_files,
-                **plot_args,
-            )
-            plot_name = f"{plot_dir}/accuracy-plot"
-            PlotAccuracies(
-                tagger_rej_dict,
-                plot_name,
-                train_history_dict=train_history_dict,
-                val_files=val_files,
-                **plot_args,
-            )
+        plot_name = f"{plot_dir}/loss-plot"
+        PlotLosses(
+            tagger_rej_dict,
+            plot_name,
+            val_files=val_files,
+            **plot_args,
+        )
+        plot_name = f"{plot_dir}/accuracy-plot"
+        PlotAccuracies(
+            tagger_rej_dict,
+            plot_name,
+            val_files=val_files,
+            **plot_args,
+        )

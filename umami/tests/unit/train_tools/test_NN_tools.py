@@ -18,11 +18,11 @@ from umami.train_tools.NN_tools import (
     get_epoch_from_string,
     get_jet_feature_indices,
     get_jet_feature_position,
+    get_metrics_file_name,
     get_parameters_from_validation_dict_name,
     get_test_sample,
     get_test_sample_trks,
     get_unique_identifiers,
-    get_validation_dict_name,
     load_validation_data_dips,
     load_validation_data_umami,
     setup_output_directory,
@@ -132,12 +132,17 @@ class dict_name_TestCase(unittest.TestCase):
         self.n_jets = 300000
 
     def test_get_dict_name(self):
+        train_metrics_file_name, val_metrics_file_name = get_metrics_file_name(
+            working_point=self.WP,
+            n_jets=self.n_jets,
+            dir_name=self.dir_name,
+        )
         self.assertEqual(
-            get_validation_dict_name(
-                WP=self.WP,
-                n_jets=self.n_jets,
-                dir_name=self.dir_name,
-            ),
+            train_metrics_file_name,
+            self.dir_name + "/" + "train_metrics_dict.json",
+        )
+        self.assertEqual(
+            val_metrics_file_name,
             self.dir_name + "/" + self.dict_name,
         )
 
@@ -320,11 +325,7 @@ class MyCallback_TestCase(unittest.TestCase):
             val_data_dict=self.val_data_dict,
             target_beff=self.target_beff,
             frac_dict=self.frac_dict,
-            dict_file_name=get_validation_dict_name(
-                WP=self.target_beff,
-                n_jets=300,
-                dir_name=f"{self.test_dir.name}",
-            ),
+            n_jets=300,
         )
 
 
@@ -356,11 +357,7 @@ class MyCallbackUmami_TestCase(unittest.TestCase):
             val_data_dict=self.val_data_dict,
             target_beff=self.target_beff,
             frac_dict=self.frac_dict,
-            dict_file_name=get_validation_dict_name(
-                WP=self.target_beff,
-                n_jets=300,
-                dir_name=f"{self.test_dir.name}",
-            ),
+            n_jets=300,
         )
 
 
