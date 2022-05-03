@@ -249,7 +249,7 @@ sampling:
 
 ```
 
-In `sampling`, we can define the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
+In `sampling`, we can define the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf`, `importance_no_replace` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
 
 An important part are the `class_labels` which are defined here. You can define which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
 
@@ -389,7 +389,7 @@ Standard undersampling approach. Undersamples all flavours to the statistically 
 | `custom_njets_initial` | `dict` | Used jets per sample to ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples. |
 | `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`. |
 
-#### PDF Sampling
+#### Importance Sampling With Replacement (PDF Sampling)
 
 The PDF sampling method is based on the principles of importance sampling. If your sample's statistics are small and/or your lowest distribution is other than the target distribution (in case of b-tagging, this is the b-jet distribution), you can force the b-jet distribution shape on the other jet flavour distributions. This will ensure all the distributions have the target distribution shape and the same fractions for the two given resampling variables. To enforce the same shape and number of jets per `pT` and _η_ bin, the statistically higher flavours are undersampled and the statistically lower flavours are upsampled to the target flavour. An example for the reprocessing config file which uses the pdf sampling can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-taus.yaml). In this case, four different flavours are used.
 
@@ -436,6 +436,52 @@ First are the bins for the two resampling variables. You need to define a nested
 | `custom_njets_initial` | `None` | These values are used only in the `count` and `weighting` method. |
 | `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`. |
 | `max_upsampling_ratio` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a maximal ratio of upsampling. If there are not enough cjets and the `max_upsampling_ratio` is reached, the form of the distribution is applied but not the number. So there can be different numbers of jets per bin per class, but the shape of distributions will still be the same (if you normalise them). |
+
+#### Importance Sampling Without Replacement
+
+Method based on the principles of importance sampling. This method is similar to the count method but with the added flexibility of being able to take a target distribution which all the other distributions should fall under. The implementation also ensuring same fractions per flavor. The difference between this method and the PDF sampling method, is that examples/events are not repeated. You can force the b-jet distribution shape on the other jet flavour distributions by specifying the target distribution to be the b-jets. This will ensure all the distributions have the b-jets shape and same fractions for the two given resampling variables `pT` and _η_ . To enforce the same shape and number of jets per `pT` and _η_ bin, first the sampling probabilityies are calculated using `target / distribution_i`, where `distribution_i` is for each flavour, then the distributions are scaled up/down using the maximum sampling probability. The statistically higher flavours are undersampled and the statistically lower flavours are first scaled then downsampled to the target flavour.
+
+The options for the this method are similar to the ones from the `count` method.
+
+```yaml
+sampling:
+  # Downsampling method that gives same fractions and shape 
+  # distributions given a target distribution, here the b-jets
+  method: importance_no_replace
+  
+  options:
+    # Specify the target distribution
+    target_distribution: bjets
+    # jet variables used
+    sampling_variables:
+      - pt_btagJes:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          bins: bins: [0, 15e5, 250]
+
+      - absEta_btagJes:
+          bins: [0, 2.5, 9]
+
+    # Decide, which of the in preparation defined samples are used in the resampling.
+    samples:
+      ttbar:
+        - training_ttbar_bjets
+        - training_ttbar_cjets
+        - training_ttbar_ujets
+      zprime:
+        - training_zprime_bjets
+        - training_zprime_cjets
+        - training_zprime_ujets
+    
+    # Set to -1 or don't include this to use all the available jets
+    njets: -1
+```
+
+| Setting | Type | Explanation |
+| ------- | ---- | ----------- |
+| `sampling_variables` | `list` |  Needs exactly 2 variables. Sampling variables which are used for resampling. The example shows this for the `pt_btagJes` and `absEta_btagJes` variables. In case of the `pdf` method, you define a nested list (one sublist for each category (ttbar or zprime)) with the first and last bin edge and the number of bins to use (np.linespace arguments). |
+| `samples` | `dict` | Needs all the different samples for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above.|
+| `target_distribution` | `str` | Target distribution to be used for computing the sampling probabilities relative to. This ensures all the final resampled distributions have the same shape and fraction as the target distribution. Default is the `bjets`. |
 
 #### Weighting Sampling
 

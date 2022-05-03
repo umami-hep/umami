@@ -7,6 +7,7 @@
   - test_plotting_umami_dips
   - test_plotting_umami_dl1
   - test_plotting_umami_umami
+  - test_preprocessing_umami_importance_no_replace
   - unittest_parallel
   - test_examples
 

@@ -65,6 +65,19 @@ test_preprocessing_dl1r_count:
       - test_preprocessing_dl1r/
       - coverage_files/
 
+test_preprocessing_umami_importance_no_replace:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_umami_importance_no_replace" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_umami_importance_no_replace
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - plots/
+      - test_preprocessing_umami_importance_no_replace/
+      - coverage_files/
+
 test_preprocessing_umami_count:
   <<: *test_template
   stage: integration_test_preprocessing

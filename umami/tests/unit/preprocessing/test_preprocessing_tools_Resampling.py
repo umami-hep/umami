@@ -10,8 +10,8 @@ from umami.preprocessing_tools import (  # PDFSampling,
     CalculateBinning,
     Configuration,
     CorrectFractions,
-    ProbabilityRatioUnderSampling,
     UnderSampling,
+    UnderSamplingNoReplace,
 )
 
 set_log_level(logger, "DEBUG")
@@ -340,9 +340,9 @@ class PDFResamplingTestCase(unittest.TestCase):
     # TODO: adding tests for PDFSampling class
 
 
-class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
+class UnderSamplingNoReplaceTestCase(unittest.TestCase):
     """
-    Test the implementation of the ProbabilityRatioUnderSampling class.
+    Test the implementation of the UnderSamplingNoReplace class.
     """
 
     def setUp(self):
@@ -452,20 +452,20 @@ class ProbabilityRatioUnderSamplingTestCase(unittest.TestCase):
                     global_config.etavariable
                 ]
 
-    def test_CountNoSamplesDefined(self):
+    def test_no_samples_defined(self):
         del self.sampling_config["options"]["samples"]
-        us = ProbabilityRatioUnderSampling(self.config)
+        us = UnderSamplingNoReplace(self.config)
         with self.assertRaises(KeyError):
             us.InitialiseSamples()
 
-    def test_DifferentSamplesPerCategory(self):
+    def test_different_samples_per_category(self):
         del self.sampling_config["options"]["samples"]["zprime"][1]
-        us = ProbabilityRatioUnderSampling(self.config)
+        us = UnderSamplingNoReplace(self.config)
         with self.assertRaises(RuntimeError):
             us.InitialiseSamples()
 
-    def test_equal_length_hybrids(self):
-        us = ProbabilityRatioUnderSampling(self.config)
+    def test_equal_fractions(self):
+        us = UnderSamplingNoReplace(self.config)
         us.InitialiseSamples()
         indices = us.GetIndices()
         self.assertEqual(

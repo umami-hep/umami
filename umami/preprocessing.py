@@ -146,8 +146,8 @@ if __name__ == "__main__":
         elif config.sampling["method"] == "pdf":
             sampler = upt.PDFSampling(config, flavour=args.flavour)
 
-        elif config.sampling["method"] == "probability_ratio":
-            sampler = upt.ProbabilityRatioUnderSampling(config)
+        elif config.sampling["method"] == "importance_no_replace":
+            sampler = upt.UnderSamplingNoReplace(config)
 
         elif config.sampling["method"] == "weighting":
             sampler = upt.Weighting(config)

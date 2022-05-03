@@ -262,6 +262,21 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
             check=True,
         )
 
+    elif method == "importance_no_replace":
+        copyfile(
+            os.path.join(
+                tagger_path,
+                "preprocessing/",
+                "PFlow-Preprocessing_importance_no_replace.yaml",
+            ),
+            os.path.join(tagger_path, "preprocessing/", "PFlow-Preprocessing.yaml"),
+        )
+        run(
+            [f"rm -rfv {unused_configs}"],
+            shell=True,
+            check=True,
+        )
+
     else:
         raise KeyError(f"Method {method} is not supported by the integration test!")
 
@@ -449,6 +464,67 @@ class TestPreprocessing(unittest.TestCase):
             "    njets_to_plot: null",
         )
 
+        self.importance_no_replace_config = (
+            self.config[:].replace(".yaml", "") + "_importance_no_replace.yaml"
+        )
+        copyfile(self.config, self.importance_no_replace_config)
+
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "  method: count",
+            "  method: importance_no_replace",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "    weighting_target_flavour: 'bjets'",
+            "    target_distribution: 'bjets'",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "          bins: [[0, 600000, 351], [650000, 6000000, 84]]",
+            "          bins: [[0, 600000, 100], [600500, 6000000, 20]]",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "          bins: [0, 2.5, 10]",
+            "          bins: [0, 2.5, 2]",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "    custom_njets_initial:",
+            "",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "      training_ttbar_bjets: 5.5e6",
+            "",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "      training_ttbar_cjets: 11.5e6",
+            "",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "      training_ttbar_ujets: 13.5e6",
+            "",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "    fractions:",
+            "",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "      ttbar: 0.7",
+            "",
+        )
+        replaceLineInFile(
+            self.importance_no_replace_config,
+            "      zprime: 0.3",
+            "",
+        )
+
         logger.info("Downloading test data...")
         for file in self.data["test_preprocessing"]["files"]:
             path = os.path.join(
@@ -621,4 +697,20 @@ class TestPreprocessing(unittest.TestCase):
 
         self.assertTrue(
             runPreprocessing(self.weight_config, tagger="dl1r", method="weighting")
+        )
+
+    def test_preprocessing_umami_importance_no_replace(self):
+        """Integration test of preprocessing.py script using DL1r variables."""
+        replaceLineInFile(
+            self.config_paths,
+            ".var_file:",
+            f".var_file: &var_file {self.var_dict_umami}",
+        )
+
+        self.assertTrue(
+            runPreprocessing(
+                self.importance_no_replace_config,
+                tagger="umami",
+                method="importance_no_replace",
+            )
         )
