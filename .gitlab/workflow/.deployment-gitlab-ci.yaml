@@ -63,9 +63,8 @@ sphinx-docs:
   stage: prepare_docs
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   script:
-    - pip install ipython
     - pip install Sphinx
-    - pip install sphinx_rtd_theme
+    - pip install piccolo-theme==0.10.2
     - source run_setup.sh
     - cd docs/sphinx
     - mkdir source
