@@ -24,7 +24,7 @@ plot_histo = histogram_plot(
     bins=50,  # you can also define an integer number for the number of bins
     bins_range=(1.1, 4),  # only considered if bins is an integer
     norm=False,
-    atlas_first_tag="Internal Simulation",
+    atlas_first_tag="Simulation Internal",
     atlas_second_tag="Example plot for plotting python API",
     figsize=(6, 5),
 )

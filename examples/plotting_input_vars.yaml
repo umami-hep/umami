@@ -1,7 +1,7 @@
 .default_plot_settings: &default_plot_settings
     logy: True
     use_atlas_tag: True
-    atlas_first_tag: "Internal Simulation"
+    atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n30000 Jets"
     y_scale: 2
     figsize: [7, 5]

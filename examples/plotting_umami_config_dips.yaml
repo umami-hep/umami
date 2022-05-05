@@ -29,7 +29,7 @@ contour_fraction_ttbar:
   plot_settings:
     yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, WP = 77 %"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
@@ -45,7 +45,7 @@ scores_Dips_ttbar:
     nBins: 50 # Number of bins
     yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
@@ -70,7 +70,7 @@ scores_Dips_ttbar_comparison:
     yAxisIncrease: 1.4 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
     figsize: [8, 6] # [width, hight]
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
     Ratio_Cut: [0.5, 1.5]
@@ -93,7 +93,7 @@ Dips_pT_vs_beff:
     figsize: [7, 5]
     logy: False
     UseAtlasTag: True
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
     yAxisAtlasTag: 0.9
     yAxisIncrease: 1.3
@@ -114,7 +114,7 @@ Dips_light_flavour_ttbar:
     figsize: [7, 6] # [width, hight]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
@@ -138,7 +138,7 @@ Dips_Comparison_flavour_ttbar:
     figsize: [9, 9] # [width, hight]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
@@ -160,7 +160,7 @@ Dips_saliency_b_WP77_passed_ttbar:
     PassBool: True
     FlipAxis: True
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.925
 
@@ -176,7 +176,7 @@ Dips_prob_pb:
     nBins: 50
     yAxisIncrease: 10 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
@@ -200,7 +200,7 @@ Dips_prob_comparison_pb:
     yAxisIncrease: 1.5 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
     figsize: [8, 6] # [width, hight]
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
     Ratio_Cut: [0.5, 1.5]

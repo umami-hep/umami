@@ -93,7 +93,7 @@ def plot_variable(
     normed: bool = True,
     fileformat: str = "pdf",
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = "$\\sqrt{s}=13$ TeV, PFlow Jets",
     y_scale: float = 1.3,
     yAxisAtlasTag: float = 0.9,
@@ -139,7 +139,7 @@ def plot_variable(
     UseAtlasTag : bool, optional
         Use a ATLAS tag, by default True
     AtlasTag : str, optional
-        First line of ATLAS tag, by default "Internal Simulation"
+        First line of ATLAS tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second line of ATLAS tag, by default "$sqrt{s}=13$ TeV, PFlow Jets"
     y_scale : float, optional
@@ -680,7 +680,7 @@ def ResamplingPlots(
         makeATLAStag(
             ax=plt.gca(),
             fig=plt.gcf(),
-            first_tag="Internal Simulation",
+            first_tag="Simulation Internal",
             second_tag=second_tag,
             ymax=0.9,
         )

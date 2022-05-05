@@ -24,8 +24,8 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
 
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()
-        self.tmp_plot_dir = f"{self.tmp_dir.name}/"
-        self.control_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
+        self.actual_plots_dir = f"{self.tmp_dir.name}/"
+        self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
 
         # Load test preprocessing config file from current directory
         self.config_file = os.path.join(
@@ -100,7 +100,7 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
         # Produce the pT and eta plots
         upt.utils.ResamplingPlots(
             concat_samples=self.histo_dict,
-            plot_base_name=self.tmp_plot_dir,
+            plot_base_name=self.actual_plots_dir,
             hist_input=True,
             second_tag=upt.utils.generate_process_tag(
                 self.config.preparation["ntuples"].keys()
@@ -111,8 +111,8 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.control_plots_dir + "default_pT.png",
-                self.tmp_plot_dir + "pT.png",
+                self.expected_plots_dir + "default_pT.png",
+                self.actual_plots_dir + "pT.png",
                 tol=1,
             ),
         )
@@ -127,7 +127,7 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
             concat_samples=self.histo_dict,
             positions_x_y=[0, 1],
             variable_names=["pT", "eta"],
-            plot_base_name=self.tmp_plot_dir,
+            plot_base_name=self.actual_plots_dir,
             binning={
                 "pT": np.linspace(-2, 2, self.nbins_pT + 1),
                 "eta": np.linspace(-2, 2, self.nbins_eta + 1),
@@ -145,8 +145,8 @@ class PreprocessPlotting_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.control_plots_dir + "pT.png",
-                self.tmp_plot_dir + "pT.png",
+                self.expected_plots_dir + "pT.png",
+                self.actual_plots_dir + "pT.png",
                 tol=1,
             ),
         )
@@ -163,8 +163,8 @@ class preprocessing_plots_TestCase(unittest.TestCase):
 
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()
-        self.tmp_plot_dir = f"{self.tmp_dir.name}/"
-        self.control_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
+        self.actual_plots_dir = f"{self.tmp_dir.name}/"
+        self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
 
         run(
             [
@@ -175,7 +175,7 @@ class preprocessing_plots_TestCase(unittest.TestCase):
                     "ci_preprocessing_plotting.h5",
                 ),
                 "--directory-prefix",
-                self.tmp_plot_dir,
+                self.actual_plots_dir,
             ],
             check=True,
         )
@@ -183,7 +183,7 @@ class preprocessing_plots_TestCase(unittest.TestCase):
     def test_preprocessing_plots(self):
         upt.preprocessing_plots(
             sample=os.path.join(
-                self.tmp_plot_dir,
+                self.actual_plots_dir,
                 "ci_preprocessing_plotting.h5",
             ),
             var_dict={
@@ -202,7 +202,7 @@ class preprocessing_plots_TestCase(unittest.TestCase):
                 },
             },
             class_labels=["ujets", "cjets", "bjets"],
-            plots_dir=self.tmp_plot_dir,
+            plots_dir=self.actual_plots_dir,
             track_collection_list=["tracks", "tracks_loose"],
             fileformat="png",
         )
@@ -219,8 +219,8 @@ class preprocessing_plots_TestCase(unittest.TestCase):
             self.assertEqual(
                 None,
                 compare_images(
-                    self.control_plots_dir + f"{var}.png",
-                    self.tmp_plot_dir + f"{var}.png",
+                    self.expected_plots_dir + f"{var}.png",
+                    self.actual_plots_dir + f"{var}.png",
                     tol=1,
                 ),
             )

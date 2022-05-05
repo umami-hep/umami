@@ -22,7 +22,7 @@ contour_fraction_ttbar:
   plot_settings:
     yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, WP = 77 %"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
@@ -34,7 +34,7 @@ scores_DL1r: # Each item on this level defines one plot. The name of this key is
   main_class: "bjets" # Main class
   plot_settings:  # All options of the score plot can be changed here
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
@@ -62,7 +62,7 @@ DL1r_light_flavour:
     figsize: [7, 6] # [width, hight]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
     UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Internal Simulation"
+    AtlasTag: "Simulation Internal"
     SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
     yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
 
