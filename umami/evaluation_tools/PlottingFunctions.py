@@ -85,7 +85,7 @@ def plotEfficiencyVariable(
     plot_name: str,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     ThirdTag: str = "DL1r",
     yAxisIncrease: float = 1.4,
@@ -134,7 +134,7 @@ def plotEfficiencyVariable(
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,
@@ -355,7 +355,7 @@ def plotEfficiencyVariableComparison(
     plot_name: str,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     ThirdTag: str = "DL1r",
     yAxisIncrease: float = 1.3,
@@ -406,7 +406,7 @@ def plotEfficiencyVariableComparison(
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,
@@ -1267,7 +1267,7 @@ def plotSaliency(
     fontsize: int = 14,
     xlabel: str = "Tracks sorted by $s_{d0}$",
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets",
     yAxisAtlasTag: float = 0.925,
     FlipAxis: bool = False,
@@ -1299,7 +1299,7 @@ def plotSaliency(
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second Row of the ATLAS Tag, by default
         "$sqrt{s}$ = 13 TeV, $t bar{t}$ PFlow Jets"
@@ -1447,7 +1447,7 @@ def plot_score(
     main_class: str,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     WorkingPoints: list = None,
     nBins: int = 50,
@@ -1478,7 +1478,7 @@ def plot_score(
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,
@@ -1668,7 +1668,7 @@ def plot_score_comparison(
     plot_name: str,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     yAxisIncrease: float = 1.3,
     yAxisAtlasTag: float = 0.9,
@@ -1713,7 +1713,7 @@ def plot_score_comparison(
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,
@@ -2158,7 +2158,7 @@ def plot_prob(
     flavour: str,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     nBins: int = 50,
     logy: bool = False,
@@ -2194,7 +2194,7 @@ def plot_prob(
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,
@@ -2360,7 +2360,7 @@ def plot_prob_comparison(
     plot_name: str,
     ApplyAtlasStyle: bool = True,
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
     yAxisIncrease: float = 1.3,
     yAxisAtlasTag: float = 0.9,
@@ -2404,7 +2404,7 @@ def plot_prob_comparison(
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically,
@@ -2766,7 +2766,7 @@ def plotFractionContour(  # pylint: disable=W0102
     ApplyAtlasStyle: bool = True,
     transparent_bkg: bool = True,
     UseAtlasTag: bool = True,
-    AtlasTag: str = "Internal Simulation",
+    AtlasTag: str = "Simulation Internal",
     SecondTag: str = "\n$\\sqrt{s}=13$ TeV, PFlow,\n$t\\bar{t}$ Test Sample, WP = 77%",
     yAxisAtlasTag: float = 0.9,
     yAxisIncrease: float = 1.3,
@@ -2827,7 +2827,7 @@ def plotFractionContour(  # pylint: disable=W0102
     UseAtlasTag : bool, optional
         Use the ATLAS Tag in the plots, by default True
     AtlasTag : str, optional
-        First row of the ATLAS Tag, by default "Internal Simulation"
+        First row of the ATLAS Tag, by default "Simulation Internal"
     SecondTag : str, optional
         Second Row of the ATLAS Tag. No need to add WP or fc. It will
         be added automatically, by default,

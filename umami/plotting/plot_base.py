@@ -109,7 +109,7 @@ class plot_object:
         Use the ATLAS Tag in the plots, by default True
     atlas_first_tag : str, optional
         First row of the ATLAS tag (i.e. the first row is "ATLAS <atlas_first_tag>"),
-        by default "Internal Simulation"
+        by default "Simulation Internal"
     atlas_second_tag : str, optional
         Second row of the ATLAS tag, by default ""
     atlas_fontsize : float, optional
@@ -161,7 +161,7 @@ class plot_object:
     # defining ATLAS style and tags
     apply_atlas_style: bool = True
     use_atlas_tag: bool = True
-    atlas_first_tag: str = "Internal Simulation"
+    atlas_first_tag: str = "Simulation Internal"
     atlas_second_tag: str = ""
     atlas_fontsize: int = None
     atlas_vertical_offset: float = 5

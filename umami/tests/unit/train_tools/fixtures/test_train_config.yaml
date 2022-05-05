@@ -56,7 +56,7 @@ Validation_metrics_settings:
 
     # Plotting API parameters
     # fc_value and WP_b are autmoatically added to the plot label
-    atlas_first_tag: "Internal Simulation"
+    atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
 
     # Set the datatype of the plots

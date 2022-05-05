@@ -33,8 +33,8 @@ class GetRejection_TestCase(unittest.TestCase):
         plt.close("all")
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()
-        self.tmp_plot_dir = f"{self.tmp_dir.name}/"
-        self.Control_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
+        self.actual_plots_dir = f"{self.tmp_dir.name}/"
+        self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
         list_of_keys = [
             "epoch",
             "loss",
@@ -120,7 +120,7 @@ class GetRejection_TestCase(unittest.TestCase):
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
             taggers_from_file={"rnnip": "Recomm. RNNIP"},
             unique_identifier="ttbar_r21_val",
-            plot_name=self.tmp_plot_dir + "PlotRejPerEpochComparison",
+            plot_name=self.actual_plots_dir + "PlotRejPerEpochComparison",
             class_labels=self.class_labels,
             main_class=self.main_class,
             label_extension=self.label_extension,
@@ -135,8 +135,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotRejPerEpochComparison.png",
-                self.tmp_plot_dir + "PlotRejPerEpochComparison.png",
+                self.expected_plots_dir + "PlotRejPerEpochComparison.png",
+                self.actual_plots_dir + "PlotRejPerEpochComparison.png",
                 tol=1,
             ),
         )
@@ -146,7 +146,7 @@ class GetRejection_TestCase(unittest.TestCase):
             df_results=self.df_results,
             tagger_label="dips",
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
-            plot_name=self.tmp_plot_dir + "PlotRejPerEpoch",
+            plot_name=self.actual_plots_dir + "PlotRejPerEpoch",
             taggers_from_file={"rnnip": "Recomm. RNNIP"},
             unique_identifier="ttbar_r21_val",
             class_labels=self.class_labels,
@@ -162,8 +162,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotRejPerEpoch_cjets_rejection.png",
-                self.tmp_plot_dir + "PlotRejPerEpoch_cjets_rejection.png",
+                self.expected_plots_dir + "PlotRejPerEpoch_cjets_rejection.png",
+                self.actual_plots_dir + "PlotRejPerEpoch_cjets_rejection.png",
                 tol=1,
             ),
         )
@@ -171,8 +171,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotRejPerEpoch_ujets_rejection.png",
-                self.tmp_plot_dir + "PlotRejPerEpoch_ujets_rejection.png",
+                self.expected_plots_dir + "PlotRejPerEpoch_ujets_rejection.png",
+                self.actual_plots_dir + "PlotRejPerEpoch_ujets_rejection.png",
                 tol=1,
             ),
         )
@@ -180,7 +180,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_PlotLosses(self):
         PlotLosses(
             df_results=self.df_results,
-            plot_name=self.tmp_plot_dir + "PlotLosses",
+            plot_name=self.actual_plots_dir + "PlotLosses",
             val_files=self.val_files,
             plot_datatype="png",
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
@@ -190,8 +190,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotLosses.png",
-                self.tmp_plot_dir + "PlotLosses.png",
+                self.expected_plots_dir + "PlotLosses.png",
+                self.actual_plots_dir + "PlotLosses.png",
                 tol=1,
             ),
         )
@@ -199,7 +199,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_PlotAccuracies(self):
         PlotAccuracies(
             df_results=self.df_results,
-            plot_name=self.tmp_plot_dir + "PlotAccuracies",
+            plot_name=self.actual_plots_dir + "PlotAccuracies",
             val_files=self.val_files,
             plot_datatype="png",
             figsize=(7, 5),
@@ -210,8 +210,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotAccuracies.png",
-                self.tmp_plot_dir + "PlotAccuracies.png",
+                self.expected_plots_dir + "PlotAccuracies.png",
+                self.actual_plots_dir + "PlotAccuracies.png",
                 tol=1,
             ),
         )
@@ -219,7 +219,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_PlotDiscCutPerEpoch(self):
         PlotDiscCutPerEpoch(
             df_results=self.df_results,
-            plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpoch",
+            plot_name=self.actual_plots_dir + "PlotDiscCutPerEpoch",
             frac_class="cjets",
             val_files=self.val_files,
             plot_datatype="png",
@@ -230,8 +230,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotDiscCutPerEpoch.png",
-                self.tmp_plot_dir + "PlotDiscCutPerEpoch.png",
+                self.expected_plots_dir + "PlotDiscCutPerEpoch.png",
+                self.actual_plots_dir + "PlotDiscCutPerEpoch.png",
                 tol=1,
             ),
         )
@@ -239,7 +239,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_PlotDiscCutPerEpochUmami(self):
         PlotDiscCutPerEpochUmami(
             df_results=self.df_results,
-            plot_name=self.tmp_plot_dir + "PlotDiscCutPerEpochUmami",
+            plot_name=self.actual_plots_dir + "PlotDiscCutPerEpochUmami",
             val_files=self.val_files,
             plot_datatype="png",
             figsize=(6.3, 4.5),
@@ -249,8 +249,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotDiscCutPerEpochUmami.png",
-                self.tmp_plot_dir + "PlotDiscCutPerEpochUmami.png",
+                self.expected_plots_dir + "PlotDiscCutPerEpochUmami.png",
+                self.actual_plots_dir + "PlotDiscCutPerEpochUmami.png",
                 tol=1,
             ),
         )
@@ -258,7 +258,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_PlotLossesUmami(self):
         PlotLossesUmami(
             df_results=self.df_results,
-            plot_name=self.tmp_plot_dir + "PlotLossesUmami",
+            plot_name=self.actual_plots_dir + "PlotLossesUmami",
             val_files=self.val_files,
             plot_datatype="png",
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
@@ -269,8 +269,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotLossesUmami.png",
-                self.tmp_plot_dir + "PlotLossesUmami.png",
+                self.expected_plots_dir + "PlotLossesUmami.png",
+                self.actual_plots_dir + "PlotLossesUmami.png",
                 tol=1,
             ),
         )
@@ -278,7 +278,7 @@ class GetRejection_TestCase(unittest.TestCase):
     def test_PlotAccuraciesUmami(self):
         PlotAccuraciesUmami(
             df_results=self.df_results,
-            plot_name=self.tmp_plot_dir + "PlotAccuraciesUmami",
+            plot_name=self.actual_plots_dir + "PlotAccuraciesUmami",
             val_files=self.val_files,
             plot_datatype="png",
             figsize=(7, 5),
@@ -289,8 +289,8 @@ class GetRejection_TestCase(unittest.TestCase):
         self.assertEqual(
             None,
             compare_images(
-                self.Control_plots_dir + "PlotAccuraciesUmami.png",
-                self.tmp_plot_dir + "PlotAccuraciesUmami.png",
+                self.expected_plots_dir + "PlotAccuraciesUmami.png",
+                self.actual_plots_dir + "PlotAccuraciesUmami.png",
                 tol=1,
             ),
         )
