@@ -11,13 +11,10 @@ from matplotlib.testing.compare import compare_images
 from umami.configuration import logger, set_log_level
 from umami.evaluation_tools.PlottingFunctions import (
     plot_prob,
-    plot_prob_comparison,
     plot_pt_dependence,
     plot_score,
-    plot_score_comparison,
     plotFractionContour,
     plotROCRatio,
-    plotROCRatioComparison,
     plotSaliency,
 )
 
@@ -79,11 +76,16 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
         plot_score(
-            df_results=df_results_ttbar,
-            plot_name=self.actual_plots_dir + "plot_score.png",
-            tagger_name="dips",
-            class_labels=self.class_labels,
+            df_list=[df_results_ttbar],
+            model_labels=["DIPS"],
+            tagger_list=["dips"],
+            class_labels_list=[
+                self.class_labels,
+            ],
             main_class=self.main_class,
+            plot_name=self.actual_plots_dir + "plot_score.png",
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+            ylabel="Normalised number of jets",
         )
 
         self.assertIsNone(
@@ -102,7 +104,7 @@ class plot_score_TestCase(unittest.TestCase):
 
         self.model_labels = ["DIPS ttbar", "DIPS ttbar 2"]
 
-        plot_score_comparison(
+        plot_score(
             df_list=[df_results_ttbar, df_results_ttbar],
             model_labels=self.model_labels,
             tagger_list=["dips", "dips"],
@@ -112,9 +114,10 @@ class plot_score_TestCase(unittest.TestCase):
             ],
             main_class=self.main_class,
             plot_name=self.actual_plots_dir + "plot_score_comparison.png",
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+            ylabel="Normalised number of jets",
         )
-        print(self.expected_plots_dir + "plot_score_comparison.png")
-        print(self.actual_plots_dir + "plot_score_comparison.png")
+
         self.assertIsNone(
             compare_images(
                 self.expected_plots_dir + "plot_score_comparison.png",
@@ -139,6 +142,7 @@ class plot_score_TestCase(unittest.TestCase):
             labels=["RNNIP ttbar", "DIPS ttbar"],
             plot_name=self.actual_plots_dir + "ROC_Test.png",
             nTest=[100000, 100000],
+            WorkingPoints=[0.60, 0.70, 0.77, 0.85],
             main_class="bjets",
             atlas_second_tag=(
                 "$\\sqrt{s}=13$ TeV, PFlow Jets,\n"
@@ -160,7 +164,7 @@ class plot_score_TestCase(unittest.TestCase):
             "ttbar",
         )
 
-        plotROCRatioComparison(
+        plotROCRatio(
             df_results_list=[
                 df_results_eff_rej_ttbar,
                 df_results_eff_rej_ttbar,
@@ -246,11 +250,14 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
         plot_prob(
-            df_results=df_results_ttbar,
-            plot_name=self.actual_plots_dir + "plot_prob.png",
-            tagger_name="dips",
-            class_labels=self.class_labels,
+            df_list=[df_results_ttbar],
+            model_labels=["DIPS"],
+            tagger_list=["dips"],
+            class_labels_list=[self.class_labels],
             flavour="bjets",
+            plot_name=self.actual_plots_dir + "plot_prob.png",
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+            ylabel="Normalised number of jets",
         )
 
         self.assertIsNone(
@@ -267,13 +274,15 @@ class plot_score_TestCase(unittest.TestCase):
             "ttbar",
         )
 
-        plot_prob_comparison(
+        plot_prob(
             df_list=[df_results_ttbar, df_results_ttbar],
             model_labels=["DIPS ttbar", "DIPS ttbar 2"],
             tagger_list=["dips", "dips"],
             class_labels_list=[self.class_labels, self.class_labels],
             flavour="bjets",
             plot_name=self.actual_plots_dir + "plot_prob_comparison.png",
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+            ylabel="Normalised number of jets",
         )
 
         self.assertIsNone(

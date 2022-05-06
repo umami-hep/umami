@@ -18,12 +18,12 @@ def get_good_colours():
     return ["#AA3377", "#228833", "#4477AA", "#CCBB44", "#EE6677", "#BBBBBB"]
 
 
-def applyATLASstyle(mtp):
+def applyATLASstyle(mpl):
     """Adapting matplotlib style to resemble ATLAS style recommendations.
 
     Parameters
     ----------
-    mtp : matplotlib
+    mpl : matplotlib
         matplotlib library
     """
     font_dir = os.path.abspath(__file__).replace("PyATLASstyle.py", "fonts/")
@@ -34,23 +34,23 @@ def applyATLASstyle(mtp):
     font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
     for f in font_files:
         font_manager.FontManager.addfont(font_manager.fontManager, path=f)
-    mtp.rcParams["font.size"] = 10
-    mtp.rcParams["legend.frameon"] = False
-    mtp.rcParams["legend.fontsize"] = 10
-    mtp.rcParams["lines.antialiased"] = False
-    mtp.rcParams["lines.linewidth"] = 2.5
-    mtp.rcParams["xtick.direction"] = "in"
-    mtp.rcParams["xtick.top"] = True
-    mtp.rcParams["xtick.minor.visible"] = True
-    mtp.rcParams["xtick.major.size"] = 10
-    mtp.rcParams["xtick.minor.size"] = 5
-    mtp.rcParams["ytick.direction"] = "in"
-    mtp.rcParams["ytick.right"] = True
-    mtp.rcParams["ytick.minor.visible"] = True
-    mtp.rcParams["ytick.major.size"] = 10
-    mtp.rcParams["ytick.minor.size"] = 5
-    mtp.rcParams["axes.unicode_minus"] = False
-    mtp.rcParams["pdf.fonttype"] = 3
+    mpl.rcParams["font.size"] = 10
+    mpl.rcParams["legend.frameon"] = False
+    mpl.rcParams["legend.fontsize"] = 10
+    mpl.rcParams["lines.antialiased"] = False
+    mpl.rcParams["lines.linewidth"] = 2.5
+    mpl.rcParams["xtick.direction"] = "in"
+    mpl.rcParams["xtick.top"] = True
+    mpl.rcParams["xtick.minor.visible"] = True
+    mpl.rcParams["xtick.major.size"] = 10
+    mpl.rcParams["xtick.minor.size"] = 5
+    mpl.rcParams["ytick.direction"] = "in"
+    mpl.rcParams["ytick.right"] = True
+    mpl.rcParams["ytick.minor.visible"] = True
+    mpl.rcParams["ytick.major.size"] = 10
+    mpl.rcParams["ytick.minor.size"] = 5
+    mpl.rcParams["axes.unicode_minus"] = False
+    mpl.rcParams["pdf.fonttype"] = 3
 
 
 def makeATLAStag(

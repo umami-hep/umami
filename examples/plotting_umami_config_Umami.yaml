@@ -27,31 +27,32 @@ contour_fraction_ttbar:
       label: "Umami"
       data_set_name: "ttbar_r21"
   plot_settings:
-    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Simulation Internal"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample, WP = 77 %"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+    y_scale: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly atlas_first_tag)
+    use_atlas_tag: True # Enable/Disable atlas_first_tag
+    atlas_first_tag: "Simulation Internal"
+    atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample, WP = 77 %"
 
 # Dips, ttbar
 scores_Umami_ttbar:
   type: "scores"
-  data_set_name: "ttbar_r21" # data set to use. This is the dict entry name of the file you want to plot in the train config
-  tagger_name: "umami" # Name of the tagger: Example: dips_pb -> Name of tagger: dips
-  class_labels: ["ujets", "cjets", "bjets"] # Classes which are used
-  main_class: "bjets" # Main class
+  main_class: "bjets"
+  models_to_plot:
+    umami_r21:
+      data_set_name: "ttbar_r21"
+      tagger_name: "umami"
+      class_labels: ["ujets", "cjets", "bjets"]
+      label: "$t\\bar{t}$"
   plot_settings:
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
-    nBins: 50 # Number of bins
-    yAxisIncrease: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Simulation Internal"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+    working_points: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
+    bins: 50 # Number of bins
+    y_scale: 1.3 # Increasing of the y axis so the plots dont collide with labels (mainly atlas_first_tag)
+    use_atlas_tag: True # Enable/Disable atlas_first_tag
+    atlas_first_tag: "Simulation Internal"
+    atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample"
 
 # Umami, ttbar
 scores_Umami_ttbar_comparison:
-  type: "scores_comparison"
+  type: "scores"
   main_class: "bjets"
   models_to_plot:
     umami_r21:
@@ -65,14 +66,13 @@ scores_Umami_ttbar_comparison:
       class_labels: ["ujets", "cjets", "bjets"]
       label: "$t\\bar{t} 2$"
   plot_settings:
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
-    nBins: 50 # Number of bins
-    yAxisIncrease: 1.4 # Increasing of the y axis so the plots dont collide with labels (mainly AtlasTag)
+    working_points: [0.60, 0.70, 0.77, 0.85] # Set Working Point Lines in plot
+    bins: 50 # Number of bins
+    y_scale: 1.4 # Increasing of the y axis so the plots dont collide with labels (mainly atlas_first_tag)
     figsize: [8, 6] # [width, hight]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Simulation Internal"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+    use_atlas_tag: True # Enable/Disable atlas_first_tag
+    atlas_first_tag: "Simulation Internal"
+    atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets"
     Ratio_Cut: [0.5, 1.5]
 
 confusion_matrix_Umami_ttbar:
@@ -99,53 +99,53 @@ beff_scan_tagger_umami:
     ymax: 1000000
     figsize: [7, 6] # [width, hight]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Simulation Internal"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+    use_atlas_tag: True # Enable/Disable atlas_first_tag
+    atlas_first_tag: "Simulation Internal"
+    atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
 
 Umami_prob_pb:
   type: "probability"
-  data_set_name: "ttbar_r21"
-  tagger_name: "umami"
-  class_labels: ["ujets", "cjets", "bjets"]
-  prob_class: "bjets"
-  plot_settings:
-    logy: True
-    nBins: 50
-    yAxisIncrease: 10
-    UseAtlasTag: True
-    AtlasTag: "Simulation Internal"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
-
-Umami_prob_comparison_pb:
-  type: "probability_comparison"
   prob_class: "bjets"
   models_to_plot:
-    umami_r22:
+    umami:
       data_set_name: "ttbar_r21"
       label: "UMAMI"
       tagger_name: "umami"
       class_labels: ["ujets", "cjets", "bjets"]
+  plot_settings:
+    logy: True
+    bins: 50
+    y_scale: 1.3
+    use_atlas_tag: True
+    atlas_first_tag: "Simulation Internal"
+    atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ test sample"
+
+Umami_prob_comparison_pb:
+  type: "probability"
+  prob_class: "bjets"
+  models_to_plot:
     umami_r21:
+      data_set_name: "ttbar_r21"
+      label: "UMAMI"
+      tagger_name: "umami"
+      class_labels: ["ujets", "cjets", "bjets"]
+    umami_r22:
       data_set_name: "ttbar_r21"
       label: "Umami DIPS"
       tagger_name: "dips"
       class_labels: ["ujets", "cjets", "bjets"]
   plot_settings:
-    nBins: 50
+    bins: 50
     logy: False
-    yAxisIncrease: 100
+    y_scale: 1.3
     figsize: [8, 6]
-    UseAtlasTag: True
-    AtlasTag: "Simulation Internal"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets"
-    yAxisAtlasTag: 0.9
+    use_atlas_tag: True
+    atlas_first_tag: "Simulation Internal"
+    atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets"
 
 # Scanning b-eff, comparing Umami and DL1r, ttbar
 beff_scan_tagger_compare_umami:
-  type: "ROC_Comparison"
+  type: "ROC"
   models_to_plot:
     dips_ttbar_urej:
       data_set_name: "ttbar_r21"
@@ -173,7 +173,6 @@ beff_scan_tagger_compare_umami:
     ymax: 1000000
     figsize: [9, 9] # [width, hight]
     WorkingPoints: [0.60, 0.70, 0.77, 0.85]
-    UseAtlasTag: True # Enable/Disable AtlasTag
-    AtlasTag: "Simulation Internal"
-    SecondTag: "\n$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
-    yAxisAtlasTag: 0.9 # y axis value (1 is top) for atlas tag
+    use_atlas_tag: True # Enable/Disable atlas_first_tag
+    atlas_first_tag: "Simulation Internal"
+    atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"

@@ -1,5 +1,5 @@
 """ROC curve functions."""
-import matplotlib as mtp
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import pchip
@@ -424,48 +424,6 @@ class roc_plot(plot_base):
                     zorder=1,
                 )
 
-    def draw_wps(self, wps: list, same_height: bool = False, colour: str = "red"):
-        """Drawing working points in plot
-
-        Parameters
-        ----------
-        wps : list
-            list of working points to draw
-        same_height : bool, optional
-            working point lines on same height, by default False
-        colour : str, optional
-            colour of the vertical line, by default "red"
-        """
-        for wp in wps:
-            # Set y-point of the WP lines/text
-            ytext = 0.65 if same_height else 1.25 - wp
-
-            self.axis_top.axvline(
-                x=wp,
-                ymax=ytext,
-                color=colour,
-                linestyle="dashed",
-                linewidth=1.0,
-            )
-
-            # Set the number above the line
-            self.axis_top.text(
-                x=wp - 0.005,
-                y=ytext + 0.005,
-                s=f"{int(wp * 100)}%",
-                transform=self.axis_top.get_xaxis_text1_transform(0)[0],
-                fontsize=10,
-            )
-
-            if self.n_ratio_panels > 0:
-                self.axis_ratio_1.axvline(
-                    x=wp, color=colour, linestyle="dashed", linewidth=1.0
-                )
-            if self.n_ratio_panels == 2:
-                self.axis_ratio_2.axvline(
-                    x=wp, color=colour, linestyle="dashed", linewidth=1.0
-                )
-
     def make_split_legend(self, handles):
         """Draw legend for the case of 2 ratios, splitting up legend into models and
         rejection class.
@@ -487,7 +445,7 @@ class roc_plot(plot_base):
         line_list_rej = []
         for elem in [self.ratio_axes[1], self.ratio_axes[2]]:
             line_list_rej.append(
-                mtp.lines.Line2D(
+                mpl.lines.Line2D(
                     [],
                     [],
                     color="k",
@@ -587,7 +545,7 @@ class roc_plot(plot_base):
 
         self.tight_layout()
 
-    def plot_roc(self, **kwargs):
+    def plot_roc(self, **kwargs) -> mpl.lines.Line2D:
         """Plotting roc curves
 
         Parameters

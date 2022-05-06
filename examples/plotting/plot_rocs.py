@@ -78,7 +78,7 @@ plot_roc = roc_plot(
     ylabel="background rejection",
     xlabel="b-jets efficiency",
     atlas_second_tag=(
-        "$\\sqrt{s}=13$ TeV, PFlow Jets, \n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
+        "$\\sqrt{s}=13$ TeV, PFlow jets, \n$t\\bar{t}$ test sample, $f_{c}=0.018$"
     ),
 )
 plot_roc.add_roc(
