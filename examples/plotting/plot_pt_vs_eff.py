@@ -99,7 +99,7 @@ plot_bkg_rej = var_vs_eff_plot(
     xlabel=r"$p_{T}$ [GeV]",
     logy=False,
     atlas_second_tag=(
-        "$\\sqrt{s}=13$ TeV, PFlow Jets, \n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
+        "$\\sqrt{s}=13$ TeV, PFlow jets, \n$t\\bar{t}$ test sample, $f_{c}=0.018$"
     ),
     figsize=(6, 4.5),
 )
@@ -115,7 +115,7 @@ plot_sig_eff = var_vs_eff_plot(
     xlabel=r"$p_{T}$ [GeV]",
     logy=False,
     atlas_second_tag=(
-        "$\\sqrt{s}=13$ TeV, PFlow Jets, \n$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
+        "$\\sqrt{s}=13$ TeV, PFlow jets, \n$t\\bar{t}$ test sample, $f_{c}=0.018$"
     ),
     figsize=(6, 4.5),
 )

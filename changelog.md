@@ -3,8 +3,9 @@
 
 
 ### Latest
-- Fix for the "exclude" funtionality [!528](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/528)
 
+- Adding Plotting API to PlottingFunctions in the eval tools [!532](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/532)
+- Fix for the "exclude" funtionality [!528](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/528)
 - Adding metrics to Callback functions + Fixing model summary issue [!526](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/526)
 - Improved compression settings during scaling and writing [!527](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/527)
 - Add documentation and integration tests for importance sampling without replacement method [!502](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/502)

@@ -1,5 +1,5 @@
 """Histogram plot functions."""
-import matplotlib as mtp
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 
@@ -69,7 +69,9 @@ class histogram(plot_line_object):
         self.band = None
         self.key = None
 
-        self.label_addition = kwargs["label"] if "label" in kwargs else ""
+        self.label_addition = (
+            kwargs["label"] if "label" in kwargs and kwargs["label"] is not None else ""
+        )
         # If flavour was specified, extract configuration from global config
         if self.flavour is not None:
             self.colour = global_config.flavour_categories[self.flavour]["colour"]
@@ -336,7 +338,7 @@ class histogram_plot(plot_base):
                 )
 
             plt_handles.append(
-                mtp.lines.Line2D(
+                mpl.lines.Line2D(
                     [],
                     [],
                     color=elem.colour,
@@ -347,7 +349,7 @@ class histogram_plot(plot_base):
 
         if self.draw_errors:
             plt_handles.append(
-                mtp.patches.Patch(
+                mpl.patches.Patch(
                     label="stat. uncertainty", **global_config.hist_err_style
                 )
             )

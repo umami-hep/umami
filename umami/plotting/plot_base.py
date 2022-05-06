@@ -276,6 +276,72 @@ class plot_base(plot_object):
         if self.n_ratio_panels >= 2:
             set_xaxis_ticklabels_invisible(self.axis_ratio_1)
 
+    def draw_vlines(
+        self,
+        vlines_xvalues: list,
+        vlines_label_list: list = None,
+        vlines_line_height_list: list = None,
+        same_height: bool = False,
+        colour: str = "#920000",
+        fontsize: int = 10,
+    ):
+        """Drawing working points in plot
+
+        Parameters
+        ----------
+        vlines_xvalues : list
+            List of working points x values to draw
+        vlines_label_list : list, optional
+            List with labels for the vertical lines. Must be the same
+            order as the vlines_xvalues. If None, the xvalues * 100 will be
+            used as labels. By default None
+        vlines_line_height_list : list, optional
+            List with the y height of the vertical lines in percent of the
+            upper plot (0 is bottom, 1 is top). Must be the same
+            order as the vlines_xvalues and the labels. By default None
+        same_height : bool, optional
+            working point lines on same height, by default False
+        colour : str, optional
+            colour of the vertical line, by default "#920000"
+        fontsize : int, optional
+            Fontsize of the vertical line text. By default 10.
+        """
+        for vline_counter, vline in enumerate(vlines_xvalues):
+            # Set y-point of the WP lines/text
+            if vlines_line_height_list is None:
+                ytext = 0.65 if same_height else 0.65 - vline_counter * 0.07
+
+            else:
+                ytext = vlines_line_height_list[vline_counter]
+
+            self.axis_top.axvline(
+                x=vline,
+                ymax=ytext,
+                color=colour,
+                linestyle="dashed",
+                linewidth=1.0,
+            )
+
+            # Set the number above the line
+            self.axis_top.text(
+                x=vline - 0.005,
+                y=ytext + 0.005,
+                s=f"{int(vline * 100)}%"
+                if vlines_label_list is None
+                else f"{vlines_label_list[vline_counter]}",
+                transform=self.axis_top.get_xaxis_text1_transform(0)[0],
+                fontsize=fontsize,
+            )
+
+            if self.n_ratio_panels > 0:
+                self.axis_ratio_1.axvline(
+                    x=vline, color=colour, linestyle="dashed", linewidth=1.0
+                )
+            if self.n_ratio_panels == 2:
+                self.axis_ratio_2.axvline(
+                    x=vline, color=colour, linestyle="dashed", linewidth=1.0
+                )
+
     def set_title(self, title: str = None, **kwargs):
         """Set title of top panel.
 

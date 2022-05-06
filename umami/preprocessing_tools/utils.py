@@ -2,7 +2,7 @@
 import os
 
 import h5py
-import matplotlib as mtp
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -174,7 +174,7 @@ def plot_variable(
         figsize = [11.69 * 0.8, 8.27 * 0.8]
 
     # Set ATLAS plot style
-    applyATLASstyle(mtp)
+    applyATLASstyle(mpl)
 
     # Give a debug logger
     logger.debug(f"Plotting variable {variable}...")
@@ -588,7 +588,7 @@ def ResamplingPlots(
             "abseta": np.linspace(0, 2.5, 26),
         }
 
-    applyATLASstyle(mtp)
+    applyATLASstyle(mpl)
 
     for varname, varpos in zip(variable_names, positions_x_y):
         # Loop over flavours

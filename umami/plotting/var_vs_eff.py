@@ -1,5 +1,5 @@
 """Efficiency plots vs. specific variable."""
-import matplotlib as mtp
+import matplotlib as mpl
 import numpy as np
 
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
@@ -578,7 +578,7 @@ class var_vs_eff_plot(plot_base):
                 edgecolor="none",
             )
             plt_handles.append(
-                mtp.lines.Line2D(
+                mpl.lines.Line2D(
                     [], [], color=elem.colour, label=elem.label, linestyle="-"
                 )
             )

@@ -266,3 +266,122 @@ class histogram_plot_TestCase(unittest.TestCase):
                 tol=1,
             )
         )
+
+    def test_draw_vlines_histogram(self):
+        """Test the drawing of vertical lines in the histogram."""
+        hist_plot = histogram_plot(
+            bins=20,
+            bins_range=(0, 4),
+            atlas_brand="",
+            atlas_first_tag="Simulation, $\\sqrt{s}=13$ TeV",
+            atlas_second_tag="",
+            figsize=(5, 4),
+            ylabel="Number of jets",
+        )
+        hist_plot.add(self.hist_1, reference=True)
+        hist_plot.draw_vlines(
+            vlines_xvalues=[1, 2, 3],
+        )
+        hist_plot.draw()
+
+        plotname = "test_draw_vlines_histogram.png"
+        hist_plot.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # hist_plot.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertIsNone(
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            )
+        )
+
+    def test_draw_vlines_histogram_custom_labels(self):
+        """Test the drawing of vertical lines in the histogram."""
+        hist_plot = histogram_plot(
+            bins=20,
+            bins_range=(0, 4),
+            atlas_brand="",
+            atlas_first_tag="Simulation, $\\sqrt{s}=13$ TeV",
+            atlas_second_tag="",
+            figsize=(5, 4),
+            ylabel="Number of jets",
+        )
+        hist_plot.add(self.hist_1, reference=True)
+        hist_plot.draw_vlines(
+            vlines_xvalues=[1, 2, 3],
+            vlines_label_list=["One", "Two", "Three"],
+        )
+        hist_plot.draw()
+
+        plotname = "test_draw_vlines_histogram_custom_labels.png"
+        hist_plot.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # hist_plot.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertIsNone(
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            )
+        )
+
+    def test_draw_vlines_histogram_same_height(self):
+        """Test the drawing of vertical lines in the histogram."""
+        hist_plot = histogram_plot(
+            bins=20,
+            bins_range=(0, 4),
+            atlas_brand="",
+            atlas_first_tag="Simulation, $\\sqrt{s}=13$ TeV",
+            atlas_second_tag="",
+            figsize=(5, 4),
+            ylabel="Number of jets",
+        )
+        hist_plot.add(self.hist_1, reference=True)
+        hist_plot.draw_vlines(
+            vlines_xvalues=[1, 2, 3],
+            same_height=True,
+        )
+        hist_plot.draw()
+
+        plotname = "test_draw_vlines_histogram_same_height.png"
+        hist_plot.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # hist_plot.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertIsNone(
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            )
+        )
+
+    def test_draw_vlines_histogram_custom_yheight(self):
+        """Test the drawing of vertical lines in the histogram."""
+        hist_plot = histogram_plot(
+            bins=20,
+            bins_range=(0, 4),
+            atlas_brand="",
+            atlas_first_tag="Simulation, $\\sqrt{s}=13$ TeV",
+            atlas_second_tag="",
+            figsize=(5, 4),
+            ylabel="Number of jets",
+        )
+        hist_plot.add(self.hist_1, reference=True)
+        hist_plot.draw_vlines(
+            vlines_xvalues=[1, 2, 3],
+            vlines_line_height_list=[0.7, 0.6, 0.5],
+        )
+        hist_plot.draw()
+
+        plotname = "test_draw_vlines_histogram_custom_yheight.png"
+        hist_plot.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # hist_plot.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertIsNone(
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            )
+        )
