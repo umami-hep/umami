@@ -319,8 +319,10 @@ def Deepsets_model(
 
     # Check if conditional inputs are needed somewhere and build model
     if (
-        condition_attention and (pooling == "attention")
-    ) or condition_classifier is True:
+        (condition_attention and (pooling == "attention"))
+        or condition_classifier
+        or condition_sets
+    ):
         deepsets = Model(inputs=[repeat_inputs, condition_inputs], outputs=output)
 
     # Else build "normal" deep sets model
@@ -546,8 +548,10 @@ def Deepsets_model_umami(
     )(umami_in)
 
     if (
-        condition_attention and (pooling == "attention")
-    ) or condition_classifier is True:
+        (condition_attention and (pooling == "attention"))
+        or condition_classifier
+        or condition_sets
+    ):
         deepsets = Model(
             inputs=[trk_inputs, condition_inputs, jets_inputs],
             outputs=[dips_output, umami_out],
