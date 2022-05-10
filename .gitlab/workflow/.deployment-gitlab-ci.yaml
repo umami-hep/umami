@@ -64,7 +64,7 @@ sphinx-docs:
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   script:
     - pip install Sphinx
-    - pip install piccolo-theme==0.10.2
+    - pip install pydata-sphinx-theme
     - source run_setup.sh
     - cd docs/sphinx
     - mkdir source
