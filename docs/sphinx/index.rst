@@ -6,10 +6,12 @@
 Welcome to umami's documentation!
 =================================
 
+.. table of contents in the header of the site
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :hidden:
 
+   Home <self>
    modules
 
 
