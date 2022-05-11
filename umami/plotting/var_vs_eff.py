@@ -692,7 +692,7 @@ class var_vs_eff_plot(plot_base):
                 align_right=False,
                 labelpad=labelpad,
             )
-        self.make_legend(plt_handles)
+        self.make_legend(plt_handles, ax=self.axis_top)
         self.tight_layout()
         self.plotting_done = True
         if self.apply_atlas_style is True:

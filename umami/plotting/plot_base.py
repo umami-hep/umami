@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 import atlasify
-from matplotlib import gridspec
+from matplotlib import axis, gridspec
 from matplotlib.figure import Figure
 
 from umami.configuration import logger
@@ -91,6 +91,9 @@ class plot_object:
         Used fontsize, by default 10
     n_ratio_panels : int, optional
         Amount of ratio panels between 0 and 2, by default 1
+    vertical_split: bool
+        Set to False if you would like to split the figure horizonally. If set to
+        True the figure is split vertically (e.g for pie chart). By default False.
     figsize : (float, float), optional
         Tuple of figure size `(width, height)` in inches, by default (8, 6)
     dpi : int, optional
@@ -147,6 +150,7 @@ class plot_object:
     fontsize: int = 10
 
     n_ratio_panels: int = 1
+    vertical_split: bool = False
 
     figsize: tuple = None
     dpi: int = 400
@@ -231,6 +235,7 @@ class plot_base(plot_object):
         self.axis_top = None
         self.axis_ratio_1 = None
         self.axis_ratio_2 = None
+        self.axis_leg = None
         self.fig = None
 
     def initialise_figure(self, sub_plot_index: int = 5):
@@ -245,36 +250,60 @@ class plot_base(plot_object):
             panels are, by default 5
         """
         # TODO: switch to cases syntax in python 3.10
-        if self.n_ratio_panels == 0:
-            # no ratio panel
+
+        if self.vertical_split:
+            # split figure vertically instead of horizonally
+            if self.n_ratio_panels <= 1:
+                logger.warning(
+                    f"You set the number of ratio panels to {self.n_ratio_panels}"
+                    "but also set the vertical splitting to True. Therefore no ratio"
+                    "panels are created."
+                )
             self.fig = Figure(figsize=(8, 6) if self.figsize is None else self.figsize)
-            self.axis_top = self.fig.gca()
-        elif self.n_ratio_panels == 1:
-            # 1 ratio panel
-            self.fig = Figure(
-                figsize=(9.352, 6.616) if self.figsize is None else self.figsize
-            )
+            gs = gridspec.GridSpec(1, 11, figure=self.fig)
+            self.axis_top = self.fig.add_subplot(gs[0, :9])
+            self.axis_leg = self.fig.add_subplot(gs[0, 9:])
 
-            gs = gridspec.GridSpec(8, 1, figure=self.fig)
-            self.axis_top = self.fig.add_subplot(gs[:sub_plot_index, 0])
-            self.axis_ratio_1 = self.fig.add_subplot(
-                gs[sub_plot_index:, 0], sharex=self.axis_top
-            )
+        else:
+            if self.n_ratio_panels == 0:
+                # no ratio panel
+                self.fig = Figure(
+                    figsize=(8, 6) if self.figsize is None else self.figsize
+                )
+                self.axis_top = self.fig.gca()
 
-        elif self.n_ratio_panels == 2:
-            # 2 ratio panels
-            self.fig = Figure(figsize=(8, 8) if self.figsize is None else self.figsize)
+            elif self.n_ratio_panels == 1:
+                # 1 ratio panel
+                self.fig = Figure(
+                    figsize=(9.352, 6.616) if self.figsize is None else self.figsize
+                )
 
-            # Define the grid of the subplots
-            gs = gridspec.GridSpec(11, 1, figure=self.fig)
-            self.axis_top = self.fig.add_subplot(gs[:5, 0])
-            self.axis_ratio_1 = self.fig.add_subplot(gs[5:8, 0], sharex=self.axis_top)
-            self.axis_ratio_2 = self.fig.add_subplot(gs[8:, 0], sharex=self.axis_top)
+                gs = gridspec.GridSpec(8, 1, figure=self.fig)
+                self.axis_top = self.fig.add_subplot(gs[:sub_plot_index, 0])
+                self.axis_ratio_1 = self.fig.add_subplot(
+                    gs[sub_plot_index:, 0], sharex=self.axis_top
+                )
 
-        if self.n_ratio_panels >= 1:
-            set_xaxis_ticklabels_invisible(self.axis_top)
-        if self.n_ratio_panels >= 2:
-            set_xaxis_ticklabels_invisible(self.axis_ratio_1)
+            elif self.n_ratio_panels == 2:
+                # 2 ratio panels
+                self.fig = Figure(
+                    figsize=(8, 8) if self.figsize is None else self.figsize
+                )
+
+                # Define the grid of the subplots
+                gs = gridspec.GridSpec(11, 1, figure=self.fig)
+                self.axis_top = self.fig.add_subplot(gs[:5, 0])
+                self.axis_ratio_1 = self.fig.add_subplot(
+                    gs[5:8, 0], sharex=self.axis_top
+                )
+                self.axis_ratio_2 = self.fig.add_subplot(
+                    gs[8:, 0], sharex=self.axis_top
+                )
+
+            if self.n_ratio_panels >= 1:
+                set_xaxis_ticklabels_invisible(self.axis_top)
+            if self.n_ratio_panels >= 2:
+                set_xaxis_ticklabels_invisible(self.axis_ratio_1)
 
     def draw_vlines(
         self,
@@ -580,6 +609,8 @@ class plot_base(plot_object):
                 atlasify.atlasify(atlas=False, axes=self.axis_ratio_1, enlarge=1)
             if self.n_ratio_panels == 2:
                 atlasify.atlasify(atlas=False, axes=self.axis_ratio_2, enlarge=1)
+            if self.vertical_split:
+                atlasify.atlasify(atlas=False, axes=self.axis_leg, enlarge=1)
             if force:
                 if self.apply_atlas_style is False:
                     logger.warning(
@@ -592,20 +623,22 @@ class plot_base(plot_object):
                         " False."
                     )
 
-    def make_legend(self, handles: list, labels: list = None, **kwargs):
+    def make_legend(self, handles: list, ax: axis, labels: list = None, **kwargs):
         """Drawing legend on axis.
 
         Parameters
         ----------
         handles :  list
             list of matplotlib.lines.Line2D object returned when plotting
+        ax : axis
+            matplotlib.axis object where the legend should be plotted
         labels : list, optional
             plot labels. If None, the labels are extracted from the `handles`.
             By default None
         **kwargs : kwargs
             kwargs which can be passed to matplotlib axis
         """
-        self.axis_top.legend(
+        ax.legend(
             handles=handles,
             labels=[handle.get_label() for handle in handles]
             if labels is None

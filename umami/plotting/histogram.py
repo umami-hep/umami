@@ -7,6 +7,7 @@ import umami.tools.PyATLASstyle.PyATLASstyle as pas
 from umami.configuration import global_config, logger
 from umami.helper_tools import hist_ratio, hist_w_unc
 from umami.plotting.plot_base import plot_base, plot_line_object
+from umami.plotting.utils import get_good_pie_colours
 
 
 class histogram(plot_line_object):
@@ -144,6 +145,10 @@ class histogram_plot(plot_base):
         self,
         bins=40,
         bins_range: tuple = None,
+        discrete_vals: list = None,
+        plot_pie: bool = False,
+        pie_colours: list = None,
+        pie_labels: list = None,
         norm: bool = True,
         logy: bool = False,
         bin_width_in_ylabel: bool = False,
@@ -163,6 +168,18 @@ class histogram_plot(plot_base):
             specified and bins is an integer, equal-width bins from bins_range[0] to
             bins_range[1] are used for the histogram (like in numpy.histogram).
             By default None
+        discrete_vals : list, optional
+            List of values if a variable only has discrete values. If discrete_vals is
+            specified only the bins containing these values are plotted. If a pie chart
+            is plotted, discrete_vals is obligatory. By default None.
+        plot_pie : bool, optional
+            Set to True if you would like to plot a pie chart instead of a histogram
+        pie_colours : list or str, optional
+            List of colours used for a pie chart or string providing the colour scheme.
+            Possible colour schemes are 'red', 'blue', 'green' or 'yellow',
+            by default None
+        pie_labels : list, optional
+            List of labels used for a pie chart, by default None
         norm : bool, optional
             Specify if the histograms are normalised, this means that histograms are
             divided by the total numer of counts. Therefore, the sum of the bin counts
@@ -186,6 +203,10 @@ class histogram_plot(plot_base):
         self.logy = logy
         self.bins = bins
         self.bins_range = bins_range
+        self.discrete_vals = discrete_vals
+        self.plot_pie = plot_pie
+        self.pie_colours = pie_colours
+        self.pie_labels = pie_labels
         self.bin_width_in_ylabel = bin_width_in_ylabel
         self.norm = norm
         self.plot_objects = {}
@@ -304,19 +325,25 @@ class histogram_plot(plot_base):
             )
 
         # Loop over all plot objects and plot them
+        bins = self.bins
         for key in self.add_order:
             elem = self.plot_objects[key]
 
             elem.bin_edges, elem.hist, elem.unc, elem.band = hist_w_unc(
                 elem.values,
                 bins=self.bins,
+                bins_range=self.bins_range,
                 normed=self.norm,
             )
 
+            if self.discrete_vals is not None:
+                # bins are recalculated for the discrete values
+                bins = self.get_discrete_values(elem)
+
             # Plot histogram
             self.axis_top.hist(
-                x=elem.bin_edges[:-1],
-                bins=elem.bin_edges,
+                x=bins[:-1],
+                bins=bins,
                 weights=elem.hist,
                 histtype=elem.histtype,
                 color=elem.colour,
@@ -330,8 +357,8 @@ class histogram_plot(plot_base):
             # Plot histogram uncertainty
             if self.draw_errors:
                 self.axis_top.hist(
-                    x=elem.bin_edges[:-1],
-                    bins=self.bins,
+                    x=bins[:-1],
+                    bins=bins,
                     bottom=elem.band,
                     weights=elem.unc * 2,
                     **global_config.hist_err_style,
@@ -353,8 +380,168 @@ class histogram_plot(plot_base):
                     label="stat. uncertainty", **global_config.hist_err_style
                 )
             )
+
+        if self.discrete_vals is not None:
+            self.bins = bins
+
         self.plotting_done = True
         return plt_handles
+
+    def plot_pie_chart(self):
+        """Plotting Pie chart. Only variables with defined discrete values
+        can be plotted. Only non-zero values are plotted.
+
+        Returns
+        -------
+        Patch
+            matplotlib Patch object
+
+        Raises
+        ------
+        ValueError
+            If plot_pie is set to True but not the vertical_split
+        ValueError
+            If no discrete values of the variable are provided
+        ValueError
+            If specified bins type is not supported.
+        """
+        if self.vertical_split is False:
+            raise ValueError(
+                'To plot a pie chart "vertical_split" must be set to True.'
+            )
+
+        if self.discrete_vals is None:
+            raise ValueError("To plot a donut diagram define discrete values")
+
+        # Calculate bins of stacked histograms to ensure all histograms fit in plot
+        if isinstance(self.bins, (np.ndarray, list)):
+            logger.debug("Using bin edges defined in plot instance.")
+            if self.bins_range is not None:
+                logger.warning(
+                    "You defined a range for the histogram, but also an array with "
+                    "the bin edges. The range will be ignored."
+                )
+        elif isinstance(self.bins, int):
+            logger.debug(f"Calculating bin edges of {self.bins} equal-width bins")
+            _, self.bins = np.histogram(
+                np.hstack([elem.values for elem in self.plot_objects.values()]),
+                bins=self.bins,
+                range=self.bins_range,
+            )
+        else:
+            raise ValueError(
+                "Unsupported type for bins. Supported types: int, numpy.array, list"
+            )
+
+        if len(self.plot_objects) > 1:
+            logger.warning(
+                "More than one histogram object was added but a pie chart should "
+                "plotted. Only the first object is plotted. If you would like to "
+                "plot multiple pie charts, create separate histogram_plot objects."
+            )
+
+        plt_handles = []
+        elem = list(self.plot_objects.values())[0]
+
+        elem.bin_edges, elem.hist, elem.unc, elem.band = hist_w_unc(
+            elem.values,
+            bins=self.bins,
+            bins_range=self.bins_range,
+            normed=self.norm,
+        )
+
+        # recalculated bins are not needed for pie charts
+        _ = self.get_discrete_values(elem)
+
+        indice = [i for i in range(len(elem.hist)) if elem.hist[i] != 0]
+        elem.hist = elem.hist[indice]
+        self.discrete_vals = np.array(self.discrete_vals)[indice]
+        self.pie_labels = np.array(self.pie_labels)[indice]
+        if not isinstance(self.pie_colours, list):
+            self.pie_colours = get_good_pie_colours(colour_scheme=self.pie_colours)
+
+        # make sure to have enough colours to represent every discrete value.
+        # If the number of values is larger than the number of colours,
+        # the same colours are repeated.
+        if len(elem.hist) > len(self.pie_colours):
+            logger.warning(
+                "The number of non-zero histogram entries is larger than the "
+                "number of available colours for the pie chart. Colours will be"
+                "repeated."
+            )
+
+        self.pie_colours = (
+            self.pie_colours * (len(elem.hist) // len(self.pie_colours) + 1)
+        )[: len(elem.hist)]
+
+        self.axis_top.pie(
+            x=elem.hist, labels=None, colors=self.pie_colours, autopct="%1.1f%%"
+        )
+
+        self.axis_leg.axis("off")
+
+        for pie_label, pie_colour in zip(self.pie_labels, self.pie_colours):
+            plt_handles.append(
+                mpl.patches.Patch(
+                    label=pie_label, linestyle=elem.linestyle, color=pie_colour
+                )
+            )
+
+        self.plotting_done = True
+        return plt_handles
+
+    def get_discrete_values(self, elem: object):
+        """Get discrete values of a variable and adjust the
+        bins accordingly
+
+        Parameters
+        ----------
+        elem : histogram class
+            Histogram we want to calculate the bins containing discrete values for
+
+        Returns
+        -------
+        bins : recalculated bins including only the discrete values
+
+        Raises
+        ------
+        ValueError
+            If the bin width is larger than 1 such that potentially not
+            all discrete values are in a seperate bin
+        ValueError
+            If the number of bins is set to 1 such that no values can be
+            distinguished
+        """
+
+        if len(elem.bin_edges) > 1:
+            if abs(elem.bin_edges[1] - elem.bin_edges[0]) <= 1:
+                indice = []
+                for i in range(len(elem.bin_edges) - 1):
+                    # Only keep this bin edge if one of the discrete
+                    # values is withing this and the next bin edge
+                    for discrete_val in self.discrete_vals:
+                        if elem.bin_edges[i] <= discrete_val < elem.bin_edges[i + 1]:
+                            indice.append(i)
+                elem.hist = elem.hist[indice]
+                elem.unc = elem.unc[indice]
+                elem.band = elem.band[indice]
+                bins = np.linspace(
+                    0, len(self.discrete_vals), len(self.discrete_vals) + 1
+                )
+                self.axis_top.set_xticks(bins[:-1] + 0.5)
+                self.axis_top.set_xticklabels(self.discrete_vals, rotation=33)
+            else:
+                raise ValueError(
+                    "Bin width is larger than 1. Choose a binning with a bin"
+                    " width<= 1 to plot only discrete values."
+                )
+        else:
+            raise ValueError(
+                "Choose a binning with more than one bin in order to plot"
+                "only discrete values."
+            )
+
+        return bins
 
     def get_reference_histo(self, histo):
         """Get reference histogram from list of references
@@ -476,32 +663,44 @@ class histogram_plot(plot_base):
         labelpad : int, optional
             Spacing in points from the axes bounding box including
             ticks and tick labels, by default "ratio"
+
         """
-        plt_handles = self.plot()
-        if self.n_ratio_panels > 0:
-            self.plot_ratios()
-        self.set_xlim(
-            self.bins[0] if self.xmin is None else self.xmin,
-            self.bins[-1] if self.xmax is None else self.xmax,
-        )
-        self.make_legend(plt_handles)
+        if self.plot_pie:
+            plt_handles = self.plot_pie_chart()
+        else:
+            plt_handles = self.plot()
 
-        self.set_title()
-        self.set_logy()
-        self.set_y_lim()
-        self.set_xlabel()
-        self.set_tick_params()
-        self.set_ylabel(self.axis_top)
-        if self.bin_width_in_ylabel is True:
-            self.add_bin_width_to_ylabel()
+        if not self.plot_pie:
+            if self.n_ratio_panels > 0:
+                self.plot_ratios()
 
-        if self.n_ratio_panels > 0:
-            self.set_ylabel(
-                self.axis_ratio_1,
-                self.ylabel_ratio_1,
-                align_right=False,
-                labelpad=labelpad,
+            self.set_xlim(
+                self.bins[0] if self.xmin is None else self.xmin,
+                self.bins[-1] if self.xmax is None else self.xmax,
             )
+            self.set_logy()
+            self.set_y_lim()
+            self.set_xlabel()
+            self.set_tick_params()
+            self.set_ylabel(self.axis_top)
+
+            if self.n_ratio_panels > 0:
+                self.set_ylabel(
+                    self.axis_ratio_1,
+                    self.ylabel_ratio_1,
+                    align_right=False,
+                    labelpad=labelpad,
+                )
+
+            if self.bin_width_in_ylabel is True:
+                self.add_bin_width_to_ylabel()
+
+            legend_axis = self.axis_top
+        else:
+            legend_axis = self.axis_leg
+
+        self.make_legend(plt_handles, ax=legend_axis)
+        self.set_title()
         self.fig.tight_layout()
 
         if self.apply_atlas_style:

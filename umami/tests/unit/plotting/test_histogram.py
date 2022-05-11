@@ -100,7 +100,10 @@ class histogram_plot_TestCase(unittest.TestCase):
         self.hist_2 = histogram(
             np.random.normal(size=2 * n_random), label=f"N={2*n_random:_}"
         )
-
+        self.discrete_vals = [0, 4, 5, 15]
+        self.hist_discrvals = histogram(
+            np.random.choice(self.discrete_vals, size=n_random), label=f"N={n_random:_}"
+        )
         # Set up directories for comparison plots
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.actual_plots_dir = f"{self.tmp_dir.name}/"
@@ -375,6 +378,31 @@ class histogram_plot_TestCase(unittest.TestCase):
         hist_plot.draw()
 
         plotname = "test_draw_vlines_histogram_custom_yheight.png"
+        hist_plot.savefig(f"{self.actual_plots_dir}/{plotname}")
+        # Uncomment line below to update expected image
+        # hist_plot.savefig(f"{self.expected_plots_dir}/{plotname}")
+        self.assertIsNone(
+            compare_images(
+                f"{self.actual_plots_dir}/{plotname}",
+                f"{self.expected_plots_dir}/{plotname}",
+                tol=1,
+            )
+        )
+
+    def test_histogram_with_discrete_values(self):
+        """Test the plotting of a histogram with discrete values."""
+        hist_plot = histogram_plot(
+            bins=16,
+            bins_range=(0, 16),
+            atlas_first_tag="Simulation, $\\sqrt{s}=13$ TeV",
+            ylabel="Normalised number of jets",
+            n_ratio_panels=0,
+            discrete_vals=self.discrete_vals,
+        )
+        hist_plot.add(self.hist_discrvals)
+        hist_plot.draw()
+
+        plotname = "test_histogram_with_discrete_values.png"
         hist_plot.savefig(f"{self.actual_plots_dir}/{plotname}")
         # Uncomment line below to update expected image
         # hist_plot.savefig(f"{self.expected_plots_dir}/{plotname}")
