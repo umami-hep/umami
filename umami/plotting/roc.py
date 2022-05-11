@@ -527,7 +527,7 @@ class roc_plot(plot_base):
             )
 
         if self.n_ratio_panels < 2:
-            self.make_legend(plt_handles)
+            self.make_legend(plt_handles, ax=self.axis_top)
         else:
             if not self.leg_rej_labels:
                 self.leg_rej_labels[self.ratio_axes[1]] = self.ratio_axes[1]
