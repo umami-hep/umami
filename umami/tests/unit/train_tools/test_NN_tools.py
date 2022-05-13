@@ -255,6 +255,55 @@ class Configuration_TestCase(unittest.TestCase):
             os.path.dirname(__file__), "fixtures/test_train_config.yaml"
         )
 
+    def test_no_val_no_eval_batch_size(self):
+        config = Configuration(self.config_file)
+
+        self.assertEqual(
+            config.NN_structure["batch_size"],
+            config.Validation_metrics_settings["val_batch_size"],
+        )
+
+        self.assertEqual(
+            config.Validation_metrics_settings["val_batch_size"],
+            config.Eval_parameters_validation["eval_batch_size"],
+        )
+
+    def test_no_val_batch_size(self):
+        config = Configuration(self.config_file)
+        config.Eval_parameters_validation["eval_batch_size"] = 50
+
+        self.assertEqual(
+            config.NN_structure["batch_size"],
+            config.Validation_metrics_settings["val_batch_size"],
+        )
+
+        self.assertNotEqual(
+            config.Validation_metrics_settings["val_batch_size"],
+            config.Eval_parameters_validation["eval_batch_size"],
+        )
+
+    def test_no_eval_batch_size(self):
+        config = Configuration(self.config_file)
+        config.Validation_metrics_settings["val_batch_size"] = 50
+
+        self.assertEqual(
+            config.NN_structure["batch_size"],
+            config.Eval_parameters_validation["eval_batch_size"],
+        )
+
+        self.assertNotEqual(
+            config.Validation_metrics_settings["val_batch_size"],
+            config.Eval_parameters_validation["eval_batch_size"],
+        )
+
+    def test_no_batch_size(self):
+        config = Configuration(self.config_file)
+        del config.config["NN_structure"]["batch_size"]
+        del config.config["Validation_metrics_settings"]["val_batch_size"]
+        del config.config["Eval_parameters_validation"]["eval_batch_size"]
+        with self.assertRaises(ValueError):
+            config.get_configuration()
+
     def test_missing_key_error(self):
         config = Configuration(self.config_file)
         del config.config["model_name"]

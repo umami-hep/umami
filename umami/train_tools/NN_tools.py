@@ -381,6 +381,7 @@ class CallbackBase(Callback):
         target_beff: float = 0.77,
         frac_dict: dict = None,
         continue_training: bool = False,
+        batch_size: int = 15_000,
     ):
         """Init the parameters needed for the callback
 
@@ -409,6 +410,8 @@ class CallbackBase(Callback):
         continue_training : bool, optional
             Decide, if the this is a continuation of an already existing training
             or not, by default False.
+        batch_size : int, optional
+            Set the batch size used for validation.
         """
         super().__init__()
 
@@ -428,6 +431,7 @@ class CallbackBase(Callback):
         )
         self.model_name = model_name
         self.continue_training = continue_training
+        self.batch_size = batch_size
 
         # Get the names for the train/val metrics files
         (
@@ -531,6 +535,7 @@ class MyCallback(CallbackBase):
                 main_class=self.main_class,
                 target_beff=self.target_beff,
                 frac_dict=self.frac_dict,
+                batch_size=self.batch_size,
             )
 
             # Add the epoch to val_metrics dict
@@ -596,6 +601,7 @@ class MyCallbackUmami(CallbackBase):
                 main_class=self.main_class,
                 target_beff=self.target_beff,
                 frac_dict=self.frac_dict,
+                batch_size=self.batch_size,
             )
 
             # Add the epoch to val_metrics dict
@@ -1305,6 +1311,7 @@ def evaluate_model_umami(
     main_class: str,
     frac_dict: dict,
     target_beff: float = 0.77,
+    batch_size: int = 15_000,
 ) -> dict:
     """
     Evaluate the UMAMI model on the data provided.
@@ -1319,11 +1326,15 @@ def evaluate_model_umami(
         List of classes used for training of the model.
     main_class : str
         Main class which is to be tagged.
-    target_beff : float
-        Working Point which is to be used for evaluation.
     frac_dict : dict
         Dict with the fractions of the non-main classes.
         Sum needs to be one!
+    target_beff : float, optional
+        Working Point which is to be used for evaluation.
+        By default 0.77
+    batch_size : int, optional
+        Number of jets used for validation. By default
+        15_000
 
     Returns
     -------
@@ -1358,7 +1369,7 @@ def evaluate_model_umami(
         (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
             x,
             data_dict[f"Y_valid_{val_file_identifier}"],
-            batch_size=15_000,
+            batch_size=batch_size,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -1367,7 +1378,7 @@ def evaluate_model_umami(
         # Evaluate with the model for predictions
         y_pred_dips, y_pred_umami = model.predict(
             x,
-            batch_size=15_000,
+            batch_size=batch_size,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -1424,6 +1435,7 @@ def evaluate_model(
     main_class: str,
     target_beff: float = 0.77,
     frac_dict: dict = None,
+    batch_size: int = 15_000,
 ) -> dict:
     """
     Evaluate the DIPS/DL1 model on the data provided.
@@ -1443,6 +1455,9 @@ def evaluate_model(
     frac_dict : dict
         Dict with the fractions of the non-main classes.
         Sum needs to be one!
+    batch_size : int, optional
+        Number of jets used for validation. By default
+        15_000
 
     Returns
     -------
@@ -1482,7 +1497,7 @@ def evaluate_model(
         loss, accuracy = model.evaluate(
             x=x,
             y=data_dict[f"Y_valid_{val_file_identifier}"],
-            batch_size=15_000,
+            batch_size=batch_size,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -1490,7 +1505,7 @@ def evaluate_model(
 
         y_pred_dips = model.predict(
             x=x,
-            batch_size=15_000,
+            batch_size=batch_size,
             use_multiprocessing=True,
             workers=8,
             verbose=0,
@@ -1565,6 +1580,7 @@ def calc_validation_metrics(
 
     # Get evaluation parameters and NN structure from train config
     Eval_parameters = train_config.Eval_parameters_validation
+    val_params = train_config.Validation_metrics_settings
     NN_structure = train_config.NN_structure
     Second_model_string = (
         "dips_model_" if model_string == "model_epoch" else "model_epoch"
@@ -1696,6 +1712,7 @@ def calc_validation_metrics(
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
                 frac_dict=Eval_parameters["frac_values"],
+                batch_size=val_params["val_batch_size"],
             )
 
             # Delete model
@@ -1713,6 +1730,7 @@ def calc_validation_metrics(
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
                 frac_dict=Eval_parameters["frac_values"],
+                batch_size=val_params["val_batch_size"],
             )
 
             # Delete model
@@ -1731,6 +1749,7 @@ def calc_validation_metrics(
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
                 frac_dict=Eval_parameters["frac_values"],
+                batch_size=val_params["val_batch_size"],
             )
 
             # Delete model
@@ -1759,6 +1778,7 @@ def calc_validation_metrics(
                 main_class=NN_structure["main_class"],
                 target_beff=target_beff,
                 frac_dict=Eval_parameters["frac_values"],
+                batch_size=val_params["val_batch_size"],
             )
 
             # Delete model

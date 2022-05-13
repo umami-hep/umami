@@ -29,6 +29,8 @@ class Configuration:
         # List of arguments are non-plotting arguments
         omit_args = [
             "n_jets",
+            "val_batch_size",
+            "eval_batch_size",
             "taggers_from_file",
             "tagger_label",
             "WP",
@@ -67,21 +69,21 @@ class Configuration:
             "continue_training",
             "train_file",
             "validation_files",
+            "test_files",
             "var_dict",
             "NN_structure",
-            "tracks_name",
-            "Eval_parameters_validation",
             "Validation_metrics_settings",
-            "test_files",
+            "Eval_parameters_validation",
+            "tracks_name",
         ]
         config_evaluation_items = [
             "model_name",
             "test_files",
             "evaluate_trained_model",
             "NN_structure",
-            "tracks_name",
-            "Eval_parameters_validation",
             "Validation_metrics_settings",
+            "Eval_parameters_validation",
+            "tracks_name",
         ]
 
         if "validation_file" in self.config or "add_validation_file" in self.config:
@@ -113,13 +115,68 @@ class Configuration:
         for item in iterate_list:
             if item in self.config:
                 if item == "tracks_name":
-                    setattr(self, item, self.config[item])
                     setattr(self, "tracks_key", f"X_{self.config[item]}_train")
-                else:
-                    setattr(self, item, self.config[item])
+
+                elif item in (
+                    "Validation_metrics_settings",
+                    "Eval_parameters_validation",
+                ):
+                    batch_param = (
+                        "val_batch_size"
+                        if item.startswith("Val")
+                        else "eval_batch_size"
+                    )
+
+                    try:
+                        if (self.config[item] is not None) and (
+                            batch_param not in self.config[item]
+                            or self.config[item][batch_param] is None
+                        ):
+                            if batch_param == "eval_batch_size":
+                                try:
+                                    self.config[item][batch_param] = int(
+                                        self.config["Validation_metrics_settings"][
+                                            "val_batch_size"
+                                        ]
+                                    )
+
+                                    logger.warning(
+                                        "No eval_batch_size was defined. Using "
+                                        "val_batch_size for evaluation!"
+                                    )
+
+                                except KeyError:
+                                    self.config[item][batch_param] = int(
+                                        self.config["NN_structure"]["batch_size"]
+                                    )
+
+                                    logger.warning(
+                                        "Neither eval_batch_size nor "
+                                        "val_batch_size was defined. Using "
+                                        "training batch_size for "
+                                        "validation/evaluation!"
+                                    )
+
+                            else:
+                                self.config[item][batch_param] = int(
+                                    self.config["NN_structure"]["batch_size"]
+                                )
+
+                                logger.warning(
+                                    "No val_batch_size was defined. Using "
+                                    "training batch_size for validation!"
+                                )
+
+                    except KeyError as Error:
+                        raise ValueError(
+                            f"Neither batch_size in NN_structure nor {batch_param} "
+                            f"in {item} was given!"
+                        ) from Error
+
+                setattr(self, item, self.config[item])
 
             elif item == "tracks_name":
-                if "dl1" not in self.NN_structure["tagger"]:
+                if "dl1" not in self.config["NN_structure"]["tagger"]:
                     setattr(self, item, "tracks")
                     setattr(self, "tracks_key", "X_trk_train")
                     logger.warning(
@@ -133,9 +190,9 @@ class Configuration:
                 raise KeyError(f"You need to specify {item} in your config file!")
 
         # Define a security to check if label_value is used twice
-        class_ids = get_class_label_ids(self.NN_structure["class_labels"])
+        class_ids = get_class_label_ids(self.config["NN_structure"]["class_labels"])
         class_label_vars, _ = get_class_label_variables(
-            self.NN_structure["class_labels"]
+            self.config["NN_structure"]["class_labels"]
         )
         if len(class_ids) != len(set(class_ids)):
             raise ValueError("label_value is used twice in the used classes!")
