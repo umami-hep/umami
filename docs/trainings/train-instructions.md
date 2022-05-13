@@ -93,6 +93,7 @@ Here are all important settings defined for the validation process (Validation w
 | `AtlasTag` | All | `str` | Optional | Main ATLAS tag which is right to "ATLAS" |
 | `SecondTag` | All | `str` | Optional | Second line below the ATLAS tag |
 | `plot_datatype` | All | `str` | Necessary | Datatype of the plots that are produced using the [plotting_epoch_performance.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_epoch_performance.py) script. |
+| `val_batch_size` | All | `int` | Optional | Number of jets used per batch for the validation of the training. If not given, the batch size from `NN_structure` is used. |
 
 ### Eval_parameters_validation
 
@@ -119,6 +120,7 @@ Here are all important settings defined for the evaluation process (evaluating v
 | `bool_all_flavor_plot` | DL1r, DL1d | `bool` | Optional | You can also choose if you want to plot the magnitude of feature importance for all output nodes (flavors) in another plot. This will give you a bar plot of the mean SHAP value magnitudes. |
 | `averaged_sets` | DL1r, DL1d | `int` | Optional | As this takes much longer you can average the feature_sets to a smaller set, 50 is a good choice for DL1r. |
 | `plot_size` | DL1r, DL1d | `list` | Optional | Figure size of the SHAPley plot. This is a list with `[width, height]` |
+| `eval_batch_size` | All | `int` | Optional | Number of jets used per batch for the evaluation of the training. If not given, the batch size from `NN_structure` is used. |
 
 ## Training
 Before starting the training, you need to set some paths for the umami package to find all the tools. How to set this all up is explained [here](https://umami-docs.web.cern.ch/installation/).

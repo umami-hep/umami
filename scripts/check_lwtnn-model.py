@@ -89,6 +89,15 @@ def prepareConfig(yaml_config: str) -> dict:
         config["ntracks_max"] = np.inf
         config["tracks_name"] = None
 
+    # Check for batch size
+    if "batch_size" not in config or config["batch_size"] is None:
+        config["batch_size"] = 5000
+        logger.warning("No batch size for evaluation was given. Using default 5000.")
+
+    elif isinstance(config["batch_size"], float):
+        config["batch_size"] = int(config["batch_size"])
+        logger.warning("Batch size was given as float. Converted it to int.")
+
     # Assert that the needed variables are present and set.
     for var in needed_options:
         if not (var in config and config[var] is not None):
@@ -101,6 +110,7 @@ def load_model_umami(
     model_file: str,
     X_test_trk: np.ndarray,
     X_test_jet: np.ndarray,
+    batch_size: int = 5000,
 ):
     """Load umami model
 
@@ -112,6 +122,9 @@ def load_model_umami(
         test array for tracks
     X_test_jet : np.ndarray
         test array for jets
+    batch_size : int, optional
+        Number of jets used per batch for
+        evaluation. By default 5000.
 
     Returns
     -------
@@ -123,7 +136,9 @@ def load_model_umami(
     with CustomObjectScope({"Sum": Sum}):
         model = load_model(model_file)
     pred_dips, pred_umami = model.predict(
-        [X_test_trk, X_test_jet], batch_size=5000, verbose=0
+        [X_test_trk, X_test_jet],
+        batch_size=batch_size,
+        verbose=0,
     )
 
     return pred_dips, pred_umami
@@ -178,6 +193,7 @@ def main():
     input_file = eval_config["input_file"]
     var_dict = eval_config["var_dict"]
     ntracks_max = eval_config["ntracks_max"]
+    batch_size = eval_config["batch_size"]
 
     # Init the minimal preprocessing config for loading of the jets
     preprocess_config = minimal_preprocessing_config(
@@ -215,7 +231,12 @@ def main():
         logger.info(f"Evaluated jets: {len(Y_test)}")
 
         # Get the umami and dips predictions
-        pred_dips, pred_umami = load_model_umami(model_file, X_test_trk, X_test_jet)
+        pred_dips, pred_umami = load_model_umami(
+            model_file,
+            X_test_trk,
+            X_test_jet,
+            batch_size=batch_size,
+        )
         pred_model = pred_dips if "dips" in tagger.casefold() else pred_umami
 
     # Get prediction for dips
@@ -235,7 +256,11 @@ def main():
             model = load_model(model_file)
 
         # Predict the test sample with the loaded model
-        pred_model = model.predict(X_test_trk, batch_size=5000, verbose=0)
+        pred_model = model.predict(
+            X_test_trk,
+            batch_size=batch_size,
+            verbose=0,
+        )
 
     # Get prediction for dl1
     elif "dl1" in tagger.casefold():
@@ -254,7 +279,11 @@ def main():
             model = load_model(model_file)
 
         # Predict the test sample with the loaded model
-        pred_model = model.predict(X_test_jet, batch_size=5000, verbose=0)
+        pred_model = model.predict(
+            X_test_jet,
+            batch_size=batch_size,
+            verbose=0,
+        )
 
     if "dips" in tagger.casefold() or "umami" in tagger.casefold():
         trk_mask = np.sum(X_test_trk, axis=-1) != 0

@@ -283,6 +283,7 @@ def cads_tagger(args, train_config, preprocess_config):
         frac_dict=eval_params["frac_values"],
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
+        batch_size=val_params["val_batch_size"],
     )
 
     # Append the callback

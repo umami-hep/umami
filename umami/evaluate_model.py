@@ -251,7 +251,11 @@ def evaluate_model(
             model = load_model(model_file)
 
         # Predict the output of the model on the test jets
-        pred_dips, pred_umami = model.predict(x_comb, batch_size=5000, verbose=0)
+        pred_dips, pred_umami = model.predict(
+            x_comb,
+            batch_size=eval_params["eval_batch_size"],
+            verbose=0,
+        )
 
         # Fill the tagger_names and tagger_preds
         tagger_names = ["dips", "umami"]
@@ -538,7 +542,7 @@ def evaluate_model_dips(
     # Get predictions from trained model
     pred_dips = model.predict(
         x_comb,
-        batch_size=train_config.NN_structure["batch_size"],
+        batch_size=eval_params["eval_batch_size"],
         verbose=0,
     )
 
@@ -804,7 +808,7 @@ def evaluate_model_dl1(
     # Predict the output of the model on the test jets
     pred_dl1 = model.predict(
         x_test,
-        batch_size=train_config.NN_structure["batch_size"],
+        batch_size=eval_params["eval_batch_size"],
         verbose=0,
     )
 

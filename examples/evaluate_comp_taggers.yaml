@@ -55,6 +55,9 @@ Eval_parameters_validation:
     # Number of jets used for validation
     n_jets: 3e5
 
+    # Number of jets per batch used for evaluation
+    eval_batch_size: 15_000
+
     # Define taggers that are used for comparison in evaluate_model
     # This can be a list or a string for only one tagger
     tagger: ["rnnip", "DL1r"]
