@@ -10,8 +10,7 @@ from umami.configuration import logger
 from umami.preprocessing_tools.resampling.resampling_base import ResamplingTools
 from umami.preprocessing_tools.utils import (
     GetVariableDict,
-    ResamplingPlots,
-    generate_process_tag,
+    plot_resampling_variables,
     preprocessing_plots,
 )
 
@@ -61,32 +60,6 @@ class Weighting(ResamplingTools):
         with open(save_name, "wb") as file:
             pickle.dump(weights_dict, file)
         logger.info(f"Saved flavour weights to: {save_name}")
-
-    def Plotting(self):
-        """Plot weighting results."""
-
-        # Check if the directory for the plots exists
-        plot_dir_path = os.path.join(
-            self.resampled_path,
-            "plots/",
-        )
-        os.makedirs(plot_dir_path, exist_ok=True)
-
-        plot_name_raw = self.config.GetFileName(
-            extension="",
-            option="pt_eta_raw_",
-            custom_path=plot_dir_path,
-        )
-        ResamplingPlots(
-            concat_samples=self.concat_samples,
-            positions_x_y=[0, 1],
-            variable_names=["pT", "abseta"],
-            plot_base_name=plot_name_raw,
-            binning={"pT": 200, "abseta": 20},
-            Log=True,
-            use_weights=False,
-            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
-        )
 
     def GetIndices(self):
         """
@@ -145,15 +118,33 @@ class Weighting(ResamplingTools):
         # calculate ratios between 2d (pt,eta) bin distributions of different
         # flavours
         self.GetFlavourWeights()
-        logger.info("Making Plots")
-        # Plots raw pt and eta
-        self.Plotting()
         # write out indices.h5 to use preprocessing chain
         self.GetIndices()
+
+        # Make the resampling plots for the resampling variables before resampling
+        plot_resampling_variables(
+            concat_samples=self.concat_samples,
+            var_positions=[0, 1],
+            variable_names=[self.var_x, self.var_y],
+            sample_categories=list(self.config.preparation["ntuples"].keys()),
+            output_dir=os.path.join(
+                self.resampled_path,
+                "plots/resampling/",
+            ),
+            bins_dict={
+                self.var_x: 200,
+                self.var_y: 20,
+            },
+            atlas_second_tag=self.config.plot_sample_label,
+            logy=True,
+            ylabel="Normalised number of jets",
+        )
+
         self.WriteFile(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
         if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+            logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.GetFileName(option="resampled"),
                 var_dict=GetVariableDict(self.config.var_file),
@@ -168,4 +159,7 @@ class Weighting(ResamplingTools):
                 and self.options["save_tracks"] is True
                 else None,
                 nJets=self.options["njets_to_plot"],
+                atlas_second_tag=self.config.plot_sample_label,
+                logy=True,
+                ylabel="Normalised number of jets",
             )

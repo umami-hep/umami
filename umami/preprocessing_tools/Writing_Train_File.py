@@ -367,6 +367,7 @@ class TrainSampleWriter:
             "njets_to_plot" in self.config.sampling["options"]
             and self.config.sampling["options"]["njets_to_plot"]
         ):
+            logger.info("Plotting prepared training dataset distributions...")
             preprocessing_plots(
                 sample=self.config.GetFileName(option="resampled_scaled_shuffled"),
                 var_dict=self.variable_config,
@@ -381,6 +382,9 @@ class TrainSampleWriter:
                 and self.config.sampling["options"]["save_tracks"] is True
                 else None,
                 nJets=self.config.sampling["options"]["njets_to_plot"],
+                atlas_second_tag=self.config.plot_sample_label,
+                logy=True,
+                ylabel="Normalised number of jets",
             )
 
     def calculateWeights(

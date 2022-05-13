@@ -793,10 +793,19 @@ class Resampling:
 class ResamplingTools(Resampling):
     """Helper class for resampling."""
 
-    def InitialiseSamples(self) -> None:
+    def InitialiseSamples(
+        self,
+        n_jets: int = None,
+    ) -> None:
         """
         At this point the arrays of the 2 variables are loaded which are used
         for the sampling and saved into class variables.
+
+        Parameters
+        ----------
+        n_jets : int, optional
+            If the custom_njets_initial are not set, use this value to decide
+            how much jets are loaded from each sample. By default None
 
         Raises
         ------
@@ -835,9 +844,12 @@ class ResamplingTools(Resampling):
                     f"Loading sampling variables from {preparation_sample_path}"
                 )
                 with h5py.File(preparation_sample_path, "r") as f:
-                    nJets_initial = None
-                    if "custom_njets_initial" in self.options and sample in list(
-                        self.options["custom_njets_initial"]
+
+                    # Check for custom initial jets
+                    if (
+                        "custom_njets_initial" in self.options
+                        and self.options["custom_njets_initial"] is not None
+                        and sample in list(self.options["custom_njets_initial"])
                     ):
                         nJets_initial = int(
                             self.options["custom_njets_initial"][sample]
@@ -846,6 +858,14 @@ class ResamplingTools(Resampling):
                             f"Using custom_njets_initial for {sample} of "
                             f"{nJets_initial} from config"
                         )
+
+                    # Check if the parameter is given in init (for pdf sampling)
+                    elif n_jets is not None:
+                        nJets_initial = n_jets
+
+                    else:
+                        nJets_initial = None
+
                     jets_x = np.asarray(f["jets"].fields(self.var_x)[:nJets_initial])
                     jets_y = np.asarray(f["jets"].fields(self.var_y)[:nJets_initial])
                 logger.info(

@@ -9,8 +9,7 @@ from umami.configuration import logger
 from umami.preprocessing_tools.resampling.resampling_base import ResamplingTools
 from umami.preprocessing_tools.utils import (
     GetVariableDict,
-    ResamplingPlots,
-    generate_process_tag,
+    plot_resampling_variables,
     preprocessing_plots,
 )
 
@@ -265,57 +264,31 @@ class UnderSamplingNoReplace(ResamplingTools):
         self.InitialiseSamples()
         self.GetIndices()
 
-        logger.info("Plotting distributions before undersampling.")
-
-        # Check if the directory for the plots exists
-        plot_dir_path = os.path.join(
-            self.resampled_path,
-            "plots/",
-        )
-        os.makedirs(plot_dir_path, exist_ok=True)
-
-        plot_name_clean = self.config.GetFileName(
-            extension="",
-            option="pt_eta-wider_bin_",
-            custom_path=plot_dir_path,
-        )
-        ResamplingPlots(
+        # Make the resampling plots for the resampling variables before resampling
+        plot_resampling_variables(
             concat_samples=self.concat_samples,
-            positions_x_y=[0, 1],
-            variable_names=["pT", "abseta"],
-            plot_base_name=plot_name_clean,
-            normalised=False,
-            binning={"pT": 200, "abseta": 20},
-            Log=True,
-            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
-        )
-
-        logger.info("Plotting distributions after undersampling.")
-        plot_name_clean = self.config.GetFileName(
-            extension="",
-            option="downsampled-pt_eta-wider_bins_",
-            custom_path=plot_dir_path,
-        )
-        ResamplingPlots(
-            concat_samples=self.x_y_after_sampling,
-            positions_x_y=[0, 1],
-            variable_names=["pT", "abseta"],
-            plot_base_name=plot_name_clean,
-            binning={
-                "pT": 200,
-                "abseta": 20,
+            var_positions=[0, 1],
+            variable_names=[self.var_x, self.var_y],
+            sample_categories=list(self.config.preparation["ntuples"].keys()),
+            output_dir=os.path.join(
+                self.resampled_path,
+                "plots/resampling/",
+            ),
+            bins_dict={
+                self.var_x: 200,
+                self.var_y: 20,
             },
-            Log=True,
-            after_sampling=True,
-            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
+            atlas_second_tag=self.config.plot_sample_label,
+            logy=True,
+            ylabel="Normalised number of jets",
         )
-        logger.info(f"Saving plots as {plot_name_clean}(pT|abseta).pdf")
 
         # Write file to disk
         self.WriteFile(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
         if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+            logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.GetFileName(option="resampled"),
                 var_dict=GetVariableDict(self.config.var_file),
@@ -330,4 +303,7 @@ class UnderSamplingNoReplace(ResamplingTools):
                 and self.options["save_tracks"] is True
                 else None,
                 nJets=self.options["njets_to_plot"],
+                atlas_second_tag=self.config.plot_sample_label,
+                logy=True,
+                ylabel="Normalised number of jets",
             )

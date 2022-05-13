@@ -2,6 +2,7 @@
 # set to true if extended flavour labelling is used in preprocessing
 outfile_name: Null
 plot_name: Null
+plot_sample_label: "$\\sqrt{s}=13$ TeV, PFlow jets"
 dict_file: Null
 var_file: Null
 compression: Null

@@ -13,145 +13,6 @@ from umami.configuration import logger, set_log_level
 set_log_level(logger, "DEBUG")
 
 
-class PreprocessPlotting_TestCase(unittest.TestCase):
-    def setUp(self):
-        """
-        Create a default dataset for testing.
-        """
-        # reset matplotlib parameters
-        plt.rcdefaults()
-        plt.close("all")
-
-        # Create a temporary directory
-        self.tmp_dir = tempfile.TemporaryDirectory()
-        self.actual_plots_dir = f"{self.tmp_dir.name}/"
-        self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
-
-        # Load test preprocessing config file from current directory
-        self.config_file = os.path.join(
-            os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
-        )
-        self.config = upt.Configuration(self.config_file)
-
-        # Set random seed for reproducibility
-        np.random.seed(1)
-
-        # Number of bins in the two variables (eta and pT usually)
-        self.nbins_pT = 199
-        self.nbins_eta = 25
-
-        # Intialise some random data
-        self.histo_dict = {
-            "ujets": np.abs(
-                np.random.normal(loc=1, size=(self.nbins_pT, self.nbins_eta))
-            ),
-            "cjets": np.abs(
-                np.random.normal(loc=1, size=(self.nbins_pT, self.nbins_eta))
-            ),
-            "bjets": np.abs(
-                np.random.normal(loc=1, size=(self.nbins_pT, self.nbins_eta))
-            ),
-        }
-
-    def test_generate_process_tag(self):
-        """
-        Test the function which creates the second tag for plots (including
-        the used processes (like ttbar, Z', Z+jets, ...)
-        """
-        expected_label_ttbar_only = r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets"
-        expected_label_ttbar_zprime = (
-            r"$\sqrt{s}$ = 13 TeV, Combined $t\bar{t}$ + $Z'$ PFlow Jets"
-        )
-        expected_label_ttbar_zprime_zjets = (
-            r"$\sqrt{s}$ = 13 TeV, Combined $t\bar{t}$ + $Z'$ + $Z$+jets PFlow Jets"
-        )
-
-        dict_ttbar_zprime = {"ttbar": "_", "zprime": "_"}
-        dict_ttbar_zprime_zjets = {"ttbar": "_", "zprime": "_", "zjets": "_"}
-        dict_nothing = {"not_in_dict": "_"}
-
-        # Test the case where we have only one entry preparation.ntuples
-        # in the preprocessing config.
-        # This test is done using the test config.
-        self.assertEqual(
-            expected_label_ttbar_only,
-            upt.utils.generate_process_tag(self.config.preparation["ntuples"].keys()),
-        )
-        # Test the case with two processes (using a dict defined above)
-        self.assertEqual(
-            expected_label_ttbar_zprime,
-            upt.utils.generate_process_tag(dict_ttbar_zprime.keys()),
-        )
-        # Test the case with three processes (using a dict defined above)
-        self.assertEqual(
-            expected_label_ttbar_zprime_zjets,
-            upt.utils.generate_process_tag(dict_ttbar_zprime_zjets.keys()),
-        )
-
-        # Test the case with a key which is not in the global_config
-        self.assertRaises(KeyError, upt.utils.generate_process_tag, dict_nothing.keys())
-
-    def test_resampling_plot_default(self):
-        """
-        Testing the ResamplingPlots function with default parameters
-        """
-
-        # TODO: This is not the default value, write unit test for hist_input=False
-        # Produce the pT and eta plots
-        upt.utils.ResamplingPlots(
-            concat_samples=self.histo_dict,
-            plot_base_name=self.actual_plots_dir,
-            hist_input=True,
-            second_tag=upt.utils.generate_process_tag(
-                self.config.preparation["ntuples"].keys()
-            ),
-            fileformat="png",
-        )
-
-        self.assertEqual(
-            None,
-            compare_images(
-                self.expected_plots_dir + "default_pT.png",
-                self.actual_plots_dir + "pT.png",
-                tol=1,
-            ),
-        )
-
-    def test_resampling_plot(self):
-        """
-        Testing the ResamplingPlots function given specific parameters
-        """
-
-        # Produce the pT and eta plots
-        upt.utils.ResamplingPlots(
-            concat_samples=self.histo_dict,
-            positions_x_y=[0, 1],
-            variable_names=["pT", "eta"],
-            plot_base_name=self.actual_plots_dir,
-            binning={
-                "pT": np.linspace(-2, 2, self.nbins_pT + 1),
-                "eta": np.linspace(-2, 2, self.nbins_eta + 1),
-            },
-            Log=False,
-            after_sampling=True,
-            normalised=True,
-            hist_input=True,
-            second_tag=upt.utils.generate_process_tag(
-                self.config.preparation["ntuples"].keys()
-            ),
-            fileformat="png",
-        )
-
-        self.assertEqual(
-            None,
-            compare_images(
-                self.expected_plots_dir + "pT.png",
-                self.actual_plots_dir + "pT.png",
-                tol=1,
-            ),
-        )
-
-
 class preprocessing_plots_TestCase(unittest.TestCase):
     def setUp(self):
         """
@@ -205,6 +66,11 @@ class preprocessing_plots_TestCase(unittest.TestCase):
             plots_dir=self.actual_plots_dir,
             track_collection_list=["tracks", "tracks_loose"],
             fileformat="png",
+            atlas_second_tag=(
+                "$\\sqrt{s}=13$ TeV, PFlow jets,\nResampled $t\\bar{t}$ training sample"
+            ),
+            logy=True,
+            ylabel="Normalised number of jets",
         )
 
         # Check plots
@@ -223,4 +89,101 @@ class preprocessing_plots_TestCase(unittest.TestCase):
                     self.actual_plots_dir + f"{var}.png",
                     tol=1,
                 ),
+            )
+
+
+class plot_resampling_variables_TestCase(unittest.TestCase):
+    def setUp(self):
+        """
+        Get dataset for testing.
+        """
+        # reset matplotlib parameters
+        plt.rcdefaults()
+        plt.close("all")
+
+        # Create a temporary directory
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.actual_plots_dir = f"{self.tmp_dir.name}/"
+        self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
+
+        # Create dummy data
+        self.concat_samples = {
+            "bjets": {
+                "jets": np.c_[
+                    np.linspace(1000, 10000, 3000),
+                    np.linspace(0, 2.5, 3000),
+                    np.arange(0, 3000, 1),
+                    np.hstack((np.zeros(1500), np.ones(1500))),
+                    np.hstack((np.zeros(1500), np.ones(1500))),
+                ]
+            },
+            "cjets": {
+                "jets": np.c_[
+                    np.linspace(1000, 10000, 2000),
+                    np.linspace(0, 2.5, 2000),
+                    np.arange(0, 2000, 1),
+                    np.hstack((np.zeros(1000), np.ones(1000))),
+                    np.hstack((np.zeros(1000), np.ones(1000))),
+                ]
+            },
+            "ujets": {
+                "jets": np.c_[
+                    np.linspace(1000, 10000, 1000),
+                    np.linspace(0, 2.5, 1000),
+                    np.arange(0, 1000, 1),
+                    np.hstack((np.zeros(500), np.ones(500))),
+                    np.hstack((np.zeros(500), np.ones(500))),
+                ]
+            },
+        }
+
+        self.variables = ["pT", "eta"]
+
+    def test_plot_resampling_variables(self):
+        """Test the plot_resampling_variables"""
+
+        upt.plot_resampling_variables(
+            concat_samples=self.concat_samples,
+            var_positions=[0, 1],
+            variable_names=self.variables,
+            sample_categories=["ttbar", "zprime"],
+            output_dir=self.actual_plots_dir,
+            bins_dict={
+                "pT": 200,
+                "eta": 20,
+            },
+            fileformat="png",
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
+            logy=False,
+            ylabel="Normalised number of jets",
+        )
+
+        for var in self.variables:
+            self.assertEqual(
+                None,
+                compare_images(
+                    self.expected_plots_dir + f"{var}_before_resampling.png",
+                    self.actual_plots_dir + f"{var}_before_resampling.png",
+                    tol=1,
+                ),
+            )
+
+    def test_plot_resampling_variables_wrong_binning(self):
+        """Test the plot_resampling_variables wrong binning error"""
+
+        with self.assertRaises(ValueError):
+            upt.plot_resampling_variables(
+                concat_samples=self.concat_samples,
+                var_positions=[0, 1],
+                variable_names=self.variables,
+                sample_categories=["ttbar", "zprime"],
+                output_dir=self.actual_plots_dir,
+                bins_dict={
+                    "pT": [1, 2],
+                    "eta": 20,
+                },
+                fileformat="png",
+                atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
+                logy=False,
+                ylabel="Normalised number of jets",
             )
