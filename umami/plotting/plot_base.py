@@ -589,7 +589,7 @@ class plot_base(plot_object):
             return
 
         if self.apply_atlas_style or force:
-            logger.info("Initialise ATLAS style using atlasify.")
+            logger.debug("Initialise ATLAS style using atlasify.")
             if use_tag is True:
                 atlasify.atlasify(
                     atlas=self.atlas_first_tag,

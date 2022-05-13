@@ -1110,6 +1110,7 @@ class Scaling:
             "njets_to_plot" in self.config.sampling["options"]
             and self.config.sampling["options"]["njets_to_plot"]
         ):
+            logger.info("Plotting resampled and scaled distributions...")
             preprocessing_plots(
                 sample=self.config.GetFileName(option="resampled_scaled"),
                 var_dict=self.variable_config,
@@ -1124,4 +1125,7 @@ class Scaling:
                 and self.config.sampling["options"]["save_tracks"] is True
                 else None,
                 nJets=self.config.sampling["options"]["njets_to_plot"],
+                atlas_second_tag=self.config.plot_sample_label,
+                logy=True,
+                ylabel="Normalised number of jets",
             )

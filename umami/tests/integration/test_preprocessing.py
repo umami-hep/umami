@@ -339,6 +339,7 @@ class TestPreprocessing(unittest.TestCase):
         )
         self.scale_dict = os.path.join(test_dir, "PFlow-scale_dict.json")
         self.output = os.path.join(test_dir, "PFlow-hybrid_70-test.h5")
+        self.indices = os.path.join(test_dir, "indices.h5")
 
         logger.info(
             f"Preparing config file based on {config_source} in {self.config}..."
@@ -378,7 +379,7 @@ class TestPreprocessing(unittest.TestCase):
         replaceLineInFile(
             self.config_paths,
             ".intermediate_index_file:",
-            ".intermediate_index_file: &intermediate_index_file indices.h5",
+            f".intermediate_index_file: &intermediate_index_file {self.indices}",
         )
         replaceLineInFile(
             self.config,

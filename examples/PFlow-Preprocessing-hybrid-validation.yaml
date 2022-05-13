@@ -108,3 +108,6 @@ sampling:
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name_validation
 plot_name: PFlow_ext-hybrid-validation
+
+# Label for the distribution plots of the resampling
+plot_sample_label: "$\\sqrt{s}=13$ TeV, PFlow jets"

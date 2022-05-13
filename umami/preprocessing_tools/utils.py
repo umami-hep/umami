@@ -2,16 +2,15 @@
 import os
 
 import h5py
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yaml
 from sklearn.preprocessing import LabelBinarizer
 
 from umami.configuration import global_config, logger
-from umami.helper_tools import hist_w_unc
-from umami.tools import applyATLASstyle, makeATLAStag, yaml_loader
+from umami.plotting import histogram, histogram_plot
+from umami.plotting.utils import translate_kwargs
+from umami.tools import yaml_loader
 
 
 def GetVariableDict(yaml_file: str) -> dict:
@@ -88,22 +87,9 @@ def plot_variable(
     var_type: str,
     class_labels: list,
     output_dir: str,
-    binning: dict = None,
-    figsize: list = None,
-    normed: bool = True,
     fileformat: str = "pdf",
-    UseAtlasTag: bool = True,
-    AtlasTag: str = "Simulation Internal",
-    SecondTag: str = "$\\sqrt{s}=13$ TeV, PFlow Jets",
-    y_scale: float = 1.3,
-    yAxisAtlasTag: float = 0.9,
-    leg_loc: str = "upper right",
-    label_fontsize: int = 12,
-    leg_fontsize: int = 10,
-    leg_ncol: int = 1,
-    logy: bool = True,
-    **kwargs,  # pylint: disable=unused-argument
-):
+    **kwargs,
+) -> None:
     """
     Plot a given variable.
 
@@ -127,35 +113,8 @@ def plot_variable(
         List with the flavours used (ORDER IMPORTANT).
     output_dir : str
         Directory where the plot is saved.
-    binning : dict, optional
-        Dict with the variables as keys and binning as item,
-        by default None
-    figsize : list, optional
-        List with the size of the figure, by default None
-    normed : bool, optional
-        Normalise the flavours, by default True
     fileformat : str, optional
         Fileformat of the plots, by default "pdf"
-    UseAtlasTag : bool, optional
-        Use a ATLAS tag, by default True
-    AtlasTag : str, optional
-        First line of ATLAS tag, by default "Simulation Internal"
-    SecondTag : str, optional
-        Second line of ATLAS tag, by default "$sqrt{s}=13$ TeV, PFlow Jets"
-    y_scale : float, optional
-        Increase the y-axis to fit the ATALS tag in, by default 1.3
-    yAxisAtlasTag : float, optional
-        Relative y axis position of the ATLAS Tag, by default 0.9
-    leg_loc : str, optional
-        Position of the legend in the plot, by default "upper right"
-    label_fontsize : int, optional
-        Fontsize of the axis labels, by default 12
-    leg_fontsize : int, optional
-        Fontsize of the legend, by default 10
-    leg_ncol : int, optional
-        Number of columns in the legend, by default 1
-    logy : bool, optional
-        Plot a logarithmic y-axis, by default True
     **kwargs : kwargs
         kwargs from `plot_object`
 
@@ -165,62 +124,34 @@ def plot_variable(
         If the given variable type is not supported.
     """
 
-    # Check if binning is given. If not, init an empty dict
-    if not binning:
-        binning = {}
+    # Remove all ratio panels
+    kwargs["n_ratio_panels"] = 0
 
-    # Check if figsize is given. If not, init default size
-    if not figsize:
-        figsize = [11.69 * 0.8, 8.27 * 0.8]
-
-    # Set ATLAS plot style
-    applyATLASstyle(mpl)
+    # Translate the kwargs
+    kwargs = translate_kwargs(kwargs)
 
     # Give a debug logger
     logger.debug(f"Plotting variable {variable}...")
 
-    # Get the binning
-    try:
-        _, bins = np.histogram(
-            a=np.nan_to_num(df[variable]),
-            bins=binning[variable]
-            if variable in binning and binning is not None
-            else 50,
-        )
+    # Init the histogram plot object
+    histo_plot = histogram_plot(**kwargs)
 
-    except IndexError as error:
-        if var_type.casefold() == "jets":
-            array = np.nan_to_num(df[:, variable_index])
-
-        elif var_type.casefold() == "tracks":
-            array = np.nan_to_num(df[:, :, variable_index])
-
-        else:
-            raise TypeError(
-                f"Variable type {var_type} not supported! Only jets and tracks!"
-            ) from error
-
-        _, bins = np.histogram(
-            a=array,
-            bins=binning[variable]
-            if variable in binning and binning is not None
-            else 50,
-        )
-
-    # Init a new figure
-    fig = plt.figure(figsize=(figsize[0], figsize[1]))
-    ax = fig.subplots()
+    # Set the x-label
+    if histo_plot.xlabel is None:
+        histo_plot.xlabel = variable
 
     # Loop over the flavours
     for flav_counter, flavour in enumerate(class_labels):
 
-        # Get all jets with the correct flavour
+        # This is the case if a pandas Dataframe is given
         try:
-            flavour_jets = df[variable][labels[:, flav_counter] == 1].values
+            flavour_jets = df[variable][labels[:, flav_counter] == 1].values.flatten()
 
+        # This is the case when a numpy ndarray is given
         except AttributeError:
-            flavour_jets = df[variable][labels[:, flav_counter] == 1]
+            flavour_jets = df[variable][labels[:, flav_counter] == 1].flatten()
 
+        # This is the case if the training set is already converted to X_train etc.
         except IndexError as error:
             if var_type.casefold() == "jets":
                 flavour_jets = df[:, variable_index][
@@ -228,113 +159,165 @@ def plot_variable(
                 ].flatten()
 
             elif var_type.casefold() == "tracks":
-                flavour_jets = df[:, :, variable_index][labels[:, flav_counter] == 1]
+                flavour_jets = df[:, :, variable_index][
+                    labels[:, flav_counter] == 1
+                ].flatten()
 
             else:
                 raise TypeError(
                     f"Variable type {var_type} not supported! Only jets and tracks!"
                 ) from error
 
-        # Calculate bins
-        hist_bins, weights, unc, band = hist_w_unc(
-            a=flavour_jets,
-            bins=bins,
-            normed=normed,
+        # Add the flavour to the histogram
+        histo_plot.add(
+            histogram(
+                values=np.nan_to_num(flavour_jets),
+                flavour=flavour,
+            ),
+            reference=False,
         )
 
-        # Plot the bins
-        ax.hist(
-            x=hist_bins[:-1],
-            bins=hist_bins,
-            weights=weights,
-            histtype="step",
-            linewidth=1.0,
-            color=global_config.flavour_categories[flavour]["colour"],
-            stacked=False,
-            fill=False,
-            label=global_config.flavour_categories[flavour]["legend_label"],
-        )
-
-        # Plot uncertainty
-        ax.hist(
-            x=hist_bins[:-1],
-            bins=hist_bins,
-            bottom=band,
-            weights=unc * 2,
-            label="stat. unc." if flavour == class_labels[-1] else None,
-            **global_config.hist_err_style,
-        )
-
-    # Set xlabel
-    ax.set_xlabel(
-        variable,
-        fontsize=label_fontsize,
-        horizontalalignment="right",
-        x=1.0,
-    )
-
-    if normed:
-        ax.set_ylabel(
-            "Normalised Number of Jets",
-            fontsize=label_fontsize,
-            horizontalalignment="right",
-            y=1.0,
-        )
-
-    else:
-        ax.set_ylabel(
-            "Number of Jets",
-            fontsize=label_fontsize,
-            horizontalalignment="right",
-            y=1.0,
-        )
-
-    # Set logscale for y axis
-    if logy is True:
-        ax.set_yscale("log")
-
-        # Increase ymax so atlas tag don't cut plot
-        ymin, ymax = ax.get_ylim()
-        ax.set_ylim(
-            ymin,
-            ymax * np.log(ymax / ymin) * 10 * y_scale,
-        )
-
-    else:
-
-        # Increase ymax so atlas tag don't cut plot
-        ymin, ymax = ax.get_ylim()
-        ax.set_ylim(bottom=ymin, top=y_scale * ymax)
-
-    # ATLAS tag
-    if UseAtlasTag is True:
-        makeATLAStag(
-            ax=ax,
-            fig=fig,
-            first_tag=AtlasTag,
-            second_tag=SecondTag,
-            ymax=yAxisAtlasTag,
-        )
-
-    # Set legend
-    ax.legend(
-        loc=leg_loc,
-        ncol=leg_ncol,
-        fontsize=leg_fontsize,
-    )
-
-    # Set the tight layout
-    plt.tight_layout()
-
-    # Save figure and clean it.
-    plt.savefig(
-        os.path.join(
+    # Draw and save the plot
+    histo_plot.draw()
+    histo_plot.savefig(
+        plot_name=os.path.join(
             output_dir,
             f"{variable}.{fileformat}",
-        )
+        ),
+        **kwargs,
     )
-    plt.close()
-    plt.clf()
+
+
+def plot_resampling_variables(
+    concat_samples: dict,
+    var_positions: list,
+    variable_names: list,
+    sample_categories: list,
+    output_dir: str,
+    bins_dict: dict,
+    sample_id_position: int = 3,
+    fileformat: str = "pdf",
+    **kwargs,
+) -> None:
+    """
+    Plot the variables which are used for resampling before the resampling
+    starts.
+
+    Parameters
+    ----------
+    concat_samples : dict
+        Dict with the format given in the Undersampling class by the class object
+        `concat_samples`.
+    var_positions : list
+        The position where the variables are stored in the sub-dict `jets`.
+    variable_names : list
+        The name of the 2 variables which will be plotted.
+    sample_categories : list
+        List with the names of the sample categories (e.g. ["ttbar", "zprime"]).
+    output_dir : str
+        Name of the output directory where the plots will be saved.
+    bins_dict : dict
+        Dict with the binning for the resampling variables. First key must be the
+        variable name with a tuple of 3 int which gives the lower limit, upper limit
+        and the number of bins to use.
+    sample_id_position : int, optional
+        Position in the numpy.ndarray of the concat_samples where the sample
+        id is stored. By default 3
+    fileformat : str, optional
+        Format of the plot file, by default "pdf".
+    **kwargs : kwargs
+        kwargs from `plot_object`
+
+    Raises
+    ------
+    ValueError
+        If unsupported binning is provided.
+    """
+
+    # Check if output directory exists
+    os.makedirs(
+        output_dir,
+        exist_ok=True,
+    )
+
+    # Defining two linestyles for the resampling variables
+    linestyles = ["-", "--"]
+
+    # Translate the kwargs to new naming scheme
+    kwargs = translate_kwargs(kwargs)
+
+    # Deactivate the ratio panel
+    kwargs["n_ratio_panels"] = 0
+
+    # Loop over the variables which are used for resampling
+    for var, varpos in zip(variable_names, var_positions):
+
+        if isinstance(bins_dict[var], int):
+            bins = bins_dict[var]
+            bins_range = None
+
+        elif isinstance(bins_dict[var], (list, tuple)) and len(bins_dict[var]) == 3:
+            bins = bins_dict[var][2]
+            bins_range = (
+                bins_dict[var]["bins_range"][0],
+                bins_dict[var]["bins_range"][1],
+            )
+
+        else:
+            raise ValueError(
+                "Provided binning for plot_resampling_variables is "
+                "neither a list with three entries nor an int!"
+            )
+
+        # Init a new histogram
+        histo_plot = histogram_plot(
+            bins=bins,
+            bins_range=bins_range,
+            **kwargs,
+        )
+
+        # Set the x-label
+        if histo_plot.xlabel is None:
+            histo_plot.xlabel = f"{var}"
+
+        # Check if the variable is pT (which is in the files in MeV)
+        # and set the scale value to make it GeV in the plots
+        if var in ["pT", "pt_btagJes"] or var == global_config.pTvariable:
+            scale_val = 1e3
+            histo_plot.xlabel += " [GeV]"
+
+        else:
+            scale_val = 1
+
+        # Loop over the different flavours
+        for flavour in concat_samples:
+
+            # Loop over sample ids (ttbar and zprime for example)
+            for sample_id in np.unique(
+                concat_samples[flavour]["jets"][:, sample_id_position]
+            ).astype("int"):
+                # Add the histogram for the flavour
+                histo_plot.add(
+                    histogram(
+                        values=concat_samples[flavour]["jets"][:, varpos] / scale_val,
+                        flavour=flavour,
+                        label=sample_categories[sample_id]
+                        if sample_categories
+                        else None,
+                        linestyle=linestyles[sample_id],
+                    ),
+                    reference=False,
+                )
+
+        # Draw and save the plot
+        histo_plot.draw()
+        histo_plot.savefig(
+            plot_name=os.path.join(
+                output_dir,
+                f"{var}_before_resampling.{fileformat}",
+            ),
+            **kwargs,
+        )
 
 
 def preprocessing_plots(
@@ -346,9 +329,8 @@ def preprocessing_plots(
     jet_collection: str = "jets",
     track_collection_list: list = None,
     nJets: int = 3e4,
-    figsize: list = None,
     seed: int = 42,
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """
     Plotting the different track and jet variables after
@@ -375,8 +357,6 @@ def preprocessing_plots(
         plotted, by default None
     nJets : int, optional
         Number of jets to plot, by default int(3e4)
-    figsize : list, optional
-        List with the size of the figure, by default None
     seed : int, optional
         Random seed for the selection of the jets, by default 42
     **kwargs : kwargs
@@ -393,6 +373,7 @@ def preprocessing_plots(
     with h5py.File(sample, "r") as f:
         try:
             nJets_infile = len(f["/jets"])
+
         except KeyError:
             nJets_infile = len(f["/X_train"])
 
@@ -527,228 +508,3 @@ def preprocessing_plots(
                     output_dir=os.path.join(plots_dir, track_collection),
                     **kwargs,
                 )
-
-
-def ResamplingPlots(
-    concat_samples: dict,
-    positions_x_y: list = None,
-    variable_names: list = None,
-    plot_base_name: str = "plots/resampling-plot",
-    binning: dict = None,
-    Log: bool = True,
-    after_sampling: bool = False,
-    normalised: bool = False,
-    use_weights: bool = False,
-    hist_input: bool = False,
-    second_tag: str = "",
-    fileformat: str = "pdf",
-):
-    """
-    Plots pt and eta distribution as nice plots for presentation.
-
-    Parameters
-    ----------
-    concat_samples : dict
-        dict with the format given in the Undersampling class by the class object
-        `concat_samples` or the `x_y_after_sampling` depending on the `after_sampling`
-        option
-    positions_x_y :  list
-        The position where the variables are stored the sub-dict `jets`
-    variable_names : list
-        The name of the 2 variables which will be plotted
-    plot_base_name : str
-        Folder and name of the plot w/o extension, this will be appened as well as
-        the variable name
-    binning : dict
-        dict of the bin_edges used for plotting
-    Log : bool
-        boolean indicating if plot is in log scale or not (default True)
-    after_sampling: bool
-        If False (default) using the syntax of `concat_samples`
-    normalised: bool
-        Normalises the integral of the histogram to 1 (default False)
-    use_weights: bool
-        If True, the weights are used for the histogram (default False)
-    hist_input: bool
-        If True the concat_samples is a dictionary of histograms and binning is
-        already the full axes (default False)
-    second_tag: str
-        Second tag which is inserted below the ATLAS tag (using the makeATLAStag
-        function)
-    fileformat : str
-        Fileending of the plot. Default is "pdf"
-    """
-    if positions_x_y is None:
-        positions_x_y = [0, 1]
-    if variable_names is None:
-        variable_names = ["pT", "abseta"]
-    if binning is None:
-        binning = {
-            "pT": np.linspace(10000, 2000000, 200),
-            "abseta": np.linspace(0, 2.5, 26),
-        }
-
-    applyATLASstyle(mpl)
-
-    for varname, varpos in zip(variable_names, positions_x_y):
-        # Loop over flavours
-        plt.figure()
-        for flav in concat_samples:
-            if normalised:
-                norm_factor = (
-                    len(concat_samples[flav])
-                    if after_sampling
-                    else len(concat_samples[flav]["jets"])
-                )
-            else:
-                norm_factor = 1.0
-
-            scale_val = 1
-
-            if varname in ["pT", "pt_btagJes"] or varname == global_config.pTvariable:
-                scale_val = 1e3
-
-            if hist_input:
-                # Working directly on the x-D array
-                direction_sum = tuple(  # pylint: disable=R1728
-                    [i for i in positions_x_y if i != varpos]
-                )
-                counts = np.sum(concat_samples[flav], axis=direction_sum)
-                Bins = binning[varname] / scale_val
-
-            else:
-                # Calculate Binning and counts for plotting
-                counts, Bins = np.histogram(
-                    concat_samples[flav][:, varpos] / scale_val
-                    if after_sampling
-                    else concat_samples[flav]["jets"][:, varpos] / scale_val,
-                    bins=binning[varname],
-                    weights=concat_samples[flav]["weight"] if use_weights else None,
-                )
-
-            # Calculate the bin centers
-            bincentres = [(Bins[i] + Bins[i + 1]) / 2.0 for i in range(len(Bins) - 1)]
-            # Calculate poisson uncertainties and lower bands
-            unc = np.sqrt(counts) / norm_factor
-            band_lower = counts / norm_factor - unc
-
-            plt.hist(
-                x=Bins[:-1],
-                bins=Bins,
-                weights=(counts / norm_factor),
-                histtype="step",
-                linewidth=1.0,
-                color=global_config.flavour_categories[flav]["colour"],
-                stacked=False,
-                fill=False,
-                label=global_config.flavour_categories[flav]["legend_label"],
-            )
-
-            plt.hist(
-                x=bincentres,
-                bins=Bins,
-                bottom=band_lower,
-                weights=unc * 2,
-                **global_config.hist_err_style,
-            )
-
-        if Log is True:
-            plt.yscale("log")
-            ymin, ymax = plt.ylim()
-
-            if varname == "pT":
-                plt.ylim(ymin=ymin, ymax=100 * ymax)
-
-            else:
-                plt.ylim(ymin=ymin, ymax=10 * ymax)
-
-        elif Log is False:
-            ymin, ymax = plt.ylim()
-            plt.ylim(ymin=ymin, ymax=1.2 * ymax)
-
-        if varname == global_config.pTvariable:
-            plt.xlabel(r"$p_T$ in GeV")
-
-        elif varname == global_config.etavariable:
-            plt.xlabel(r"$\eta$")
-        else:
-            plt.xlabel(varname)
-
-        plt.ylabel(r"Number of Jets")
-        plt.legend(loc="upper right")
-
-        makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag="Simulation Internal",
-            second_tag=second_tag,
-            ymax=0.9,
-        )
-
-        plt.tight_layout()
-        if not os.path.exists(os.path.abspath("./plots")):
-            os.makedirs(os.path.abspath("./plots"))
-
-        plt.savefig(f"{plot_base_name}{varname}.{fileformat}")
-        plt.close()
-        plt.clf()
-
-
-def generate_process_tag(
-    preparation_ntuples_keys: list,
-) -> str:
-    """
-    Builds a tag that contains the used processes (e.g. Z' and ttbar)
-    which can then be used for plots.
-
-    Parameters
-    ----------
-    preparation_ntuples_keys : dict_keys
-        Dict keys from the preparation.ntuples section of the preprocessing
-        config
-
-    Returns
-    -------
-    second_tag_for_plot : str
-        String which is used as 'second_tag' parameter  by the makeATLAStag
-        function.
-
-    Raises
-    ------
-    KeyError
-        If the plot label for the process was not found.
-    """
-
-    # Loop over the keys in the "preparation.ntuples" section of the
-    # preprocessing config. For each process, try to extract the
-    # corresponding plot label from the global config and add it to
-    # the string that is inserted as "second_tag" in the plot
-    processes = ""
-    combined_sample = False
-    logger.info("Looking for different processes in preprocessing config.")
-    for process in preparation_ntuples_keys:
-        try:
-            label = global_config.process_labels[process]["label"]
-            if processes == "":
-                processes += f"{label}"
-            else:
-                combined_sample = True
-                processes += f" + {label}"
-            logger.info(f"Found the process '{process}' with the label '{label}'")
-        except KeyError as error:
-            raise KeyError(
-                f"Plot label for the process {process} was not"
-                "found. Make sure your entries in the 'ntuples'"
-                "section are valid entries that have a matching entry"
-                "in the global config."
-            ) from error
-    # Combine the string that contains the latex code for the processes
-    # and the "sqrt(s)..." and "PFlow Jets" part
-    if combined_sample is True:
-        second_tag_for_plot = r"$\sqrt{s}$ = 13 TeV, Combined " + processes
-    else:
-        second_tag_for_plot = r"$\sqrt{s}$ = 13 TeV, " + processes
-
-    second_tag_for_plot += " PFlow Jets"
-
-    return second_tag_for_plot

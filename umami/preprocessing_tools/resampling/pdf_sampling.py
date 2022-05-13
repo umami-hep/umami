@@ -16,19 +16,18 @@ from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
 from umami.preprocessing_tools.resampling.resampling_base import (
     CorrectFractions,
     JsonNumpyEncoder,
-    Resampling,
+    ResamplingTools,
     SamplingGenerator,
     read_dataframe_repetition,
 )
 from umami.preprocessing_tools.utils import (
     GetVariableDict,
-    ResamplingPlots,
-    generate_process_tag,
+    plot_resampling_variables,
     preprocessing_plots,
 )
 
 
-class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
+class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
     """
     An importance sampling approach using ratios between distributions to sample
     and a target as importance weights.
@@ -2305,178 +2304,49 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
         for _, item in sample_dict.items():
             item.close()
 
-    def Make_plots(
-        self,
-        binning: list = None,
-        chunk_size: int = 1e4,
-        iterator: bool = True,
-    ):
-        """
-        Produce plots of the variables used in resampling
-        (before and after preprocessing).
-
-        Parameters
-        ----------
-        binning : list, optional
-            List of the binnings to use, by default None
-        chunk_size : int, optional
-            Loading chunk size, by default 1e4
-        iterator : bool, optional
-            Use iterator, by default True
-        """
-
-        if binning is None:
-            binning = [200, 20]
-
-        ranges = self.limit["extreme_ranges"]
-
-        logger.info("Making plots of variables before sampling.")
-        histo_before_dict = {}
-        for sample_id, sample in enumerate(
-            self.options["samples"][list(self.sample_categories.keys())[0]]
-        ):
-            for cat_ind, sample_category in enumerate(self.options["samples"]):
-                logger.info(f"Loading jets from {sample}.")
-                if sample_id == 0 and cat_ind == 0:
-                    reading_dict = self.File_to_histogram(
-                        sample_category=sample_category,
-                        category_ind=cat_ind,
-                        sample_id=sample_id,
-                        iterator=iterator,
-                        chunk_size=chunk_size,
-                        bins=binning,
-                        hist_range=ranges,
-                    )
-                    binx, biny = reading_dict["xbins"], reading_dict["ybins"]
-                else:
-                    reading_dict = self.File_to_histogram(
-                        sample_category=sample_category,
-                        category_ind=cat_ind,
-                        sample_id=sample_id,
-                        iterator=iterator,
-                        chunk_size=chunk_size,
-                        bins=(binx, biny),
-                        hist_range=ranges,
-                    )
-                flavour_name = reading_dict["category"]
-                if cat_ind == 0:
-                    histo_before_dict[flavour_name] = reading_dict["hist"]
-                else:
-                    histo_before_dict[flavour_name] = np.add(
-                        histo_before_dict[flavour_name], reading_dict["hist"]
-                    )
-        logger.info("Plotting.")
-
-        # Check if the directory for the plots exists
-        plot_dir_path = os.path.join(
-            self.resampled_path,
-            "plots/",
-        )
-        os.makedirs(plot_dir_path, exist_ok=True)
-
-        plot_name_clean = self.config.GetFileName(
-            extension="",
-            option="pt_eta-before_sampling_",
-            custom_path=plot_dir_path,
-        )
-
-        ResamplingPlots(
-            concat_samples=histo_before_dict,
-            positions_x_y=[0, 1],
-            variable_names=[self.var_x, self.var_y],
-            plot_base_name=plot_name_clean,
-            binning={self.var_x: binx, self.var_y: biny},
-            Log=True,
-            hist_input=True,
-            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
-        )
-
-        logger.info("Making plots of variables after sampling.")
-        histo_after_dict = {}
-        for sample_id, sample in enumerate(
-            self.options["samples"][list(self.sample_categories.keys())[0]]
-        ):
-            for cat_ind, sample_category in enumerate(self.options["samples"]):
-                load_name = os.path.join(
-                    self.resampled_path,
-                    "PDF_sampling",
-                    self.options["samples"][sample_category][sample_id]
-                    + "_selected.h5",
-                )
-                with h5py.File(load_name, "r") as f:
-                    flavour_name = self.sample_file_map[sample_category][sample_id][
-                        1
-                    ].get("category")
-                    logger.info(
-                        f"Loading {len(f['jets'])} jets for {flavour_name}"
-                        f" from {load_name}."
-                    )
-                    total_size_file = len(f["jets"])
-                    load_per_iteration = chunk_size
-                    number_of_chunks = round(total_size_file / load_per_iteration + 0.5)
-                    start_ind = 0
-                    chunk_number = 0
-                    pbar = tqdm(total=np.sum(total_size_file))
-                    while chunk_number < number_of_chunks:
-                        end_ind = int(start_ind + load_per_iteration)
-                        if chunk_number == number_of_chunks - 1:
-                            end_ind = int(total_size_file)
-                        jets = f["jets"][start_ind:end_ind]
-                        jets_x = np.asarray(jets[self.var_x])
-                        jets_y = np.asarray(jets[self.var_y])
-                        if chunk_number == 0:
-                            thehist, binx, biny = np.histogram2d(
-                                jets_x,
-                                jets_y,
-                                bins=(binx, biny),
-                            )
-                        else:
-                            newhist, _, _ = np.histogram2d(
-                                jets_x,
-                                jets_y,
-                                bins=(binx, biny),
-                            )
-                            thehist += newhist
-                        pbar.update(jets.size)
-                        chunk_number += 1
-                        start_ind = end_ind
-                    pbar.close()
-                if cat_ind == 0:
-                    histo_after_dict[flavour_name] = thehist
-                else:
-                    histo_after_dict[flavour_name] = np.add(
-                        histo_after_dict[flavour_name], thehist
-                    )
-        logger.info("Plotting.")
-        plot_name_clean = self.config.GetFileName(
-            extension="",
-            option="pt_eta-after_sampling_",
-            custom_path=plot_dir_path,
-        )
-
-        ResamplingPlots(
-            concat_samples=histo_after_dict,
-            positions_x_y=[0, 1],
-            variable_names=[self.var_x, self.var_y],
-            plot_base_name=plot_name_clean,
-            binning={self.var_x: binx, self.var_y: biny},
-            Log=True,
-            hist_input=True,
-            second_tag=generate_process_tag(self.config.preparation["ntuples"].keys()),
-        )
-
     def Run(self):
         """Run function for PDF sampling class."""
+        # Get the samples before resampling for plotting
+
+        if self.do_plotting:
+            # Get the samples from the files and concatenate them for plotting
+            self.InitialiseSamples(n_jets=int(1e6))
+            self.ConcatenateSamples()
+
+            # Make the resampling plots for the resampling variables before resampling
+            plot_resampling_variables(
+                concat_samples=self.concat_samples,
+                var_positions=[0, 1],
+                variable_names=[self.var_x, self.var_y],
+                sample_categories=list(self.config.preparation["ntuples"].keys()),
+                output_dir=os.path.join(
+                    self.resampled_path,
+                    "plots/resampling/",
+                ),
+                bins_dict={
+                    self.var_x: 200,
+                    self.var_y: 20,
+                },
+                atlas_second_tag=self.config.plot_sample_label,
+                logy=True,
+                ylabel="Normalised number of jets",
+            )
+
+        logger.info("Starting PDFsampling...")
+
+        # Get the samples for pdf sampling
         self.Initialise_Flavour_Samples()
-        logger.info("Starting PDFsampling.")
+
         # Whether to use iterator approach or in-memory (one file at a time).
         iterator = True
 
         # Retrieve the PDF between target and all distribution
         if self.do_target:
             self.Generate_Target_PDF(iterator=iterator)
+
         else:
             logger.warning("Skipping target computation (not in list to execute).")
+
         for sample_id, sample in enumerate(
             self.options["samples"][list(self.sample_categories.keys())[0]]
         ):
@@ -2515,9 +2385,6 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                     chunk_size=1e4,
                 )
 
-        if self.do_plotting:
-            self.Make_plots(iterator=iterator)
-
         # Now that everything is saved, load each file and concatenate them into a
         # single large file
         if self.do_combination:
@@ -2525,6 +2392,7 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
 
             # Plot the variables from the output file of the resampling process
             if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+                logger.info("Plotting resampled distributions...")
                 preprocessing_plots(
                     sample=self.config.GetFileName(option="resampled"),
                     var_dict=GetVariableDict(self.config.var_file),
@@ -2539,6 +2407,9 @@ class PDFSampling(Resampling):  # pylint: disable=too-many-public-methods
                     and self.options["save_tracks"] is True
                     else None,
                     nJets=self.options["njets_to_plot"],
+                    atlas_second_tag=self.config.plot_sample_label,
+                    logy=True,
+                    ylabel="Normalised number of jets",
                 )
 
         else:

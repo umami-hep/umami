@@ -2,7 +2,6 @@
 import copy
 import os
 import shutil
-import warnings
 
 import yaml
 
@@ -121,8 +120,8 @@ class Configuration:
             elif self.default_config[elem] is None:
                 raise KeyError(f"You need to specify {elem} in yourconfig file!")
             else:
-                warnings.warn(
-                    f"setting {elem} to default value {self.default_config[elem]}"
+                logger.warning(
+                    f"Setting {elem} to default value {self.default_config[elem]}"
                 )
                 setattr(self, elem, self.default_config[elem])
 
