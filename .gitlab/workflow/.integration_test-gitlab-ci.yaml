@@ -49,7 +49,7 @@ test_preprocessing_dips_count:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_dips/
+      - test_preprocessing_dips_base_count/
       - coverage_files/
 
 test_preprocessing_dl1r_count:
@@ -62,7 +62,7 @@ test_preprocessing_dl1r_count:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_dl1r/
+      - test_preprocessing_dl1r_base_count/
       - coverage_files/
 
 test_preprocessing_umami_importance_no_replace:
@@ -75,7 +75,7 @@ test_preprocessing_umami_importance_no_replace:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_umami_importance_no_replace/
+      - test_preprocessing_umami_importance_base_no_replace/
       - coverage_files/
 
 test_preprocessing_umami_count:
@@ -88,7 +88,7 @@ test_preprocessing_umami_count:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_umami/
+      - test_preprocessing_umami_base_count/
       - coverage_files/
 
 test_preprocessing_dips_pdf:
@@ -101,7 +101,7 @@ test_preprocessing_dips_pdf:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_dips_pdf/
+      - test_preprocessing_dips_base_pdf/
       - coverage_files/
 
 test_preprocessing_dips_four_classes_pdf:
@@ -114,7 +114,7 @@ test_preprocessing_dips_four_classes_pdf:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_dips/
+      - test_preprocessing_dips_four_classes_pdf/
       - coverage_files/
 
 test_preprocessing_dl1r_pdf:
@@ -127,7 +127,7 @@ test_preprocessing_dl1r_pdf:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_dl1r_pdf/
+      - test_preprocessing_dl1r_base_pdf/
       - coverage_files/
 
 test_preprocessing_umami_pdf:
@@ -140,7 +140,7 @@ test_preprocessing_umami_pdf:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_umami_pdf/
+      - test_preprocessing_umami_base_pdf/
       - coverage_files/
 
 test_preprocessing_dips_weighting:
@@ -153,7 +153,7 @@ test_preprocessing_dips_weighting:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_dips_weighting/
+      - test_preprocessing_dips_base_weighting/
       - coverage_files/
 
 test_preprocessing_dl1r_weighting:
@@ -166,7 +166,7 @@ test_preprocessing_dl1r_weighting:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_dl1r_weighting/
+      - test_preprocessing_dl1r_base_weighting/
       - coverage_files/
 
 test_preprocessing_umami_weighting:
@@ -179,7 +179,7 @@ test_preprocessing_umami_weighting:
     <<: *artifact_template
     paths:
       - plots/
-      - test_preprocessing_umami_weighting/
+      - test_preprocessing_umami_base_weighting/
       - coverage_files/
 
 test_train_dips:
@@ -199,7 +199,7 @@ test_train_dips:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_dips_model/
+      - test_train_dips/
       - coverage_files/
 
 test_train_dips_four_classes:
@@ -215,7 +215,7 @@ test_train_dips_four_classes:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_dips_model_four_classes/
+      - test_train_dips_four_classes/
       - coverage_files/
 
 test_train_tfrecords_dips:
@@ -235,7 +235,7 @@ test_train_tfrecords_dips:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_dips_model_tfrecords/
+      - test_train_dips_tfrecords/
       - coverage_files/
 
 test_train_cads:
@@ -255,7 +255,7 @@ test_train_cads:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_cads_model/
+      - test_train_cads/
       - coverage_files/
 
 test_train_tfrecords_cads:
@@ -275,7 +275,7 @@ test_train_tfrecords_cads:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_cads_model_tfrecords/
+      - test_train_cads_tfrecords/
       - coverage_files/
 
 test_train_dl1r:
@@ -295,7 +295,7 @@ test_train_dl1r:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_dl1r_model/
+      - test_train_dl1r/
       - coverage_files/
 
 test_train_umami:
@@ -315,7 +315,7 @@ test_train_umami:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_umami_model/
+      - test_train_umami/
       - coverage_files/
 
 test_train_tfrecords_umami:
@@ -335,7 +335,7 @@ test_train_tfrecords_umami:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_umami_model_tfrecords/
+      - test_train_umami_tfrecords/
       - coverage_files/
 
 test_train_cond_att_umami:
@@ -355,7 +355,7 @@ test_train_cond_att_umami:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_umami_cond_att_model/
+      - test_train_umami_cond_att/
       - coverage_files/
 
 test_train_tfrecords_cond_att_umami:
@@ -375,7 +375,7 @@ test_train_tfrecords_cond_att_umami:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_umami_cond_att_model_tfrecords/
+      - test_train_umami_cond_att_tfrecords/
       - coverage_files/
 
 test_evaluate_tagger_in_files:
@@ -387,7 +387,7 @@ test_evaluate_tagger_in_files:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_evaluate_comp_taggers_model/
+      - test_evaluate_comp_taggers/
       - coverage_files/
 
 test_plot_input_vars:
@@ -401,8 +401,8 @@ test_plot_input_vars:
   artifacts:
     <<: *artifact_template
     paths:
-      - input_vars_jets/
-      - input_vars_trks/
+      - jets_input_vars/
+      - tracks_input_vars/
       - coverage_files/
 
 test_plotting_umami_dips:
@@ -420,7 +420,7 @@ test_plotting_umami_dips:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_dips_model/
+      - test_train_dips/
       - coverage_files/
 
 test_plotting_umami_dl1:
@@ -436,7 +436,7 @@ test_plotting_umami_dl1:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_dl1r_model/
+      - test_train_dl1r/
       - coverage_files/
 
 test_plotting_umami_umami:
@@ -454,7 +454,7 @@ test_plotting_umami_umami:
   artifacts:
     <<: *artifact_template
     paths:
-      - test_umami_model/
+      - test_train_umami/
       - coverage_files/
 
 test_examples:
