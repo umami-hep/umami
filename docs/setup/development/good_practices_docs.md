@@ -61,8 +61,11 @@ documentation you are writing.
 
 This will replace the original line in the markdown file  with the content of the 
 file `<filename>` from line `<start>` to line `<end>`. 
+The `<filename>` has to be *relative* to the root of the umami repository. 
+
 The file in the repository will no be changed, but before building the
-docs, a script will create a processed copy of the corresponding markdown file.
+docs, the tool [`librep`](https://github.com/umami-hep/librep) will create a 
+rendered copy of the corresponding markdown file.
 
 **Using a URL instead of a file from the repository**
 
