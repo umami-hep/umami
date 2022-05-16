@@ -105,11 +105,14 @@ convert_docstrings_to_md:
     - linter
 
 render_md_placeholders:
-  # render the markdown placeholders (of the form §§§<filename>:start:end§§§)
+  # render the placeholders (of the form §§§<filename>:start:end§§§)
+  # we use the tool librep here. In case of any troubles with librep itself, submit
+  # an issue here: https://github.com/umami-hep/librep
   stage: prepare_docs
   image: python:3.8-alpine
   script:
-    - python .gitlab/workflow/replace_placeholders_in_md.py --input "docs/**/*.md" --no_backup --exclude docs/setup/development/good_practices_docs.md
+    - pip install librep==0.0.5
+    - librep --ref_dir $PWD --input "docs/**/*.md" --no_backup --exclude docs/setup/development/good_practices_docs.md
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
