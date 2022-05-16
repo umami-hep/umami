@@ -42,7 +42,12 @@ def get_configuration():
     return conf_setup
 
 
-def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
+def runPreprocessing(
+    config: dict,
+    tagger: str,
+    method: str,
+    string_id: str,
+) -> bool:
     """
     Call all steps of the preprocessing for a certain configuration and variable dict
     input.
@@ -57,6 +62,8 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
         The difference is in saving tracks or not.
     method : str
         Define which sampling method is used.
+    string_id : str
+        Unique identifier to further specify which preprocessing was done.
 
     Raises
     ------
@@ -210,7 +217,7 @@ def runPreprocessing(config: dict, tagger: str, method: str) -> bool:
                 "Test failed: preprocessing.py --to_records."
             ) from error
 
-    tagger_path = f"./test_preprocessing_{tagger}/"
+    tagger_path = f"./test_preprocessing_{tagger}_{string_id}_{method}/"
     if not os.path.isdir(tagger_path):
         run(["mkdir", tagger_path], check=True)
 
@@ -561,7 +568,14 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_umami}",
         )
 
-        self.assertTrue(runPreprocessing(self.config, tagger="umami", method="count"))
+        self.assertTrue(
+            runPreprocessing(
+                self.config,
+                tagger="umami",
+                method="count",
+                string_id="base",
+            )
+        )
 
     def test_preprocessing_dips_count(self):
         """Integration test of preprocessing.py script using DIPS variables."""
@@ -570,7 +584,14 @@ class TestPreprocessing(unittest.TestCase):
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dips}",
         )
-        self.assertTrue(runPreprocessing(self.config, tagger="dips", method="count"))
+        self.assertTrue(
+            runPreprocessing(
+                self.config,
+                tagger="dips",
+                method="count",
+                string_id="base",
+            )
+        )
 
     def test_preprocessing_dl1r_count(self):
         """Integration test of preprocessing.py script using DL1r variables."""
@@ -590,7 +611,14 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_dl1r}",
         )
 
-        self.assertTrue(runPreprocessing(self.config, tagger="dl1r", method="count"))
+        self.assertTrue(
+            runPreprocessing(
+                self.config,
+                tagger="dl1r",
+                method="count",
+                string_id="base",
+            )
+        )
 
     def test_preprocessing_umami_pdf(self):
         """Integration test of preprocessing.py script using Umami variables."""
@@ -600,7 +628,14 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_umami}",
         )
 
-        self.assertTrue(runPreprocessing(self.pdf_config, tagger="umami", method="pdf"))
+        self.assertTrue(
+            runPreprocessing(
+                self.pdf_config,
+                tagger="umami",
+                method="pdf",
+                string_id="base",
+            )
+        )
 
     def test_preprocessing_dips_pdf(self):
         """Integration test of preprocessing.py script using DIPS variables."""
@@ -610,7 +645,14 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_dips}",
         )
 
-        self.assertTrue(runPreprocessing(self.pdf_config, tagger="dips", method="pdf"))
+        self.assertTrue(
+            runPreprocessing(
+                self.pdf_config,
+                tagger="dips",
+                method="pdf",
+                string_id="base",
+            )
+        )
 
     def test_preprocessing_dips_four_classes_pdf(self):
         """Integration test of preprocessing.py script using DIPS variables and four
@@ -633,7 +675,14 @@ class TestPreprocessing(unittest.TestCase):
             "  class_labels: [ujets, cjets, bjets, taujets]",
         )
 
-        self.assertTrue(runPreprocessing(self.pdf_config, tagger="dips", method="pdf"))
+        self.assertTrue(
+            runPreprocessing(
+                self.pdf_config,
+                tagger="dips",
+                method="pdf",
+                string_id="four_classes",
+            )
+        )
 
     def test_preprocessing_dl1r_pdf(self):
         """Integration test of preprocessing.py script using DL1r variables."""
@@ -653,7 +702,14 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_dl1r}",
         )
 
-        self.assertTrue(runPreprocessing(self.pdf_config, tagger="dl1r", method="pdf"))
+        self.assertTrue(
+            runPreprocessing(
+                self.pdf_config,
+                tagger="dl1r",
+                method="pdf",
+                string_id="base",
+            )
+        )
 
     def test_preprocessing_umami_weighting(self):
         """Integration test of preprocessing.py script using Umami variables."""
@@ -664,7 +720,12 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(self.weight_config, tagger="umami", method="weighting")
+            runPreprocessing(
+                self.weight_config,
+                tagger="umami",
+                method="weighting",
+                string_id="base",
+            )
         )
 
     def test_preprocessing_dips_weighting(self):
@@ -675,7 +736,12 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_dips}",
         )
         self.assertTrue(
-            runPreprocessing(self.weight_config, tagger="dips", method="weighting")
+            runPreprocessing(
+                self.weight_config,
+                tagger="dips",
+                method="weighting",
+                string_id="base",
+            )
         )
 
     def test_preprocessing_dl1r_weighting(self):
@@ -697,7 +763,12 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(self.weight_config, tagger="dl1r", method="weighting")
+            runPreprocessing(
+                self.weight_config,
+                tagger="dl1r",
+                method="weighting",
+                string_id="base",
+            )
         )
 
     def test_preprocessing_umami_importance_no_replace(self):
@@ -713,5 +784,6 @@ class TestPreprocessing(unittest.TestCase):
                 self.importance_no_replace_config,
                 tagger="umami",
                 method="importance_no_replace",
+                string_id="base",
             )
         )

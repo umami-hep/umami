@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fix integration test artifacts [!538](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/538)
 - Apply Plotting API to preprocessing plots[!534](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/534)
 - Adding fix for batch size in validation/evaluation [!535](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/535)
 - Adding Plotting API to PlottingFunctions in the eval tools [!532](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/532)

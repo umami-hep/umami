@@ -14,7 +14,18 @@ test_preprocessing:
 
 test_dips:
     data_subfolder: 'preprocessing'
-    model_name: 'test_dips_model'
+    model_name: 'test_train_dips'
+    config: 'examples/Dips-PFlow-Training-config.yaml'
+    preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
+    plotting_config: 'examples/plotting_umami_config_dips.yaml'
+    testdir: '/tmp/umami/dips'
+    files:
+        - ci_ttbar_testing.h5
+        - ci_zpext_testing.h5
+
+test_dips_four_classes:
+    data_subfolder: 'preprocessing'
+    model_name: 'test_train_dips_four_classes'
     config: 'examples/Dips-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
@@ -25,7 +36,7 @@ test_dips:
 
 test_cads:
     data_subfolder: 'preprocessing'
-    model_name: 'test_cads_model'
+    model_name: 'test_train_cads'
     config: 'examples/CADS-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
@@ -36,7 +47,7 @@ test_cads:
 
 test_dl1r:
     data_subfolder: 'preprocessing'
-    model_name: 'test_dl1r_model'
+    model_name: 'test_train_dl1r'
     config: 'examples/DL1r-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_DL1r.yaml'
@@ -47,7 +58,7 @@ test_dl1r:
 
 test_umami:
     data_subfolder: 'preprocessing'
-    model_name: 'test_umami_model'
+    model_name: 'test_train_umami'
     config: 'examples/umami-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_Umami.yaml'
@@ -58,7 +69,7 @@ test_umami:
 
 test_umami_cond_att:
     data_subfolder: 'preprocessing'
-    model_name: 'test_umami_cond_att_model'
+    model_name: 'test_train_umami_cond_att'
     config: 'examples/umami-Cond-Att-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_Umami.yaml'
@@ -69,7 +80,7 @@ test_umami_cond_att:
 
 test_evaluate_comp_taggers:
     data_subfolder: 'preprocessing'
-    model_name: 'test_evaluate_comp_taggers_model'
+    model_name: 'test_evaluate_comp_taggers'
     config: 'examples/evaluate_comp_taggers.yaml'
     testdir: '/tmp/umami/evaluate_comp_taggers'
     files:

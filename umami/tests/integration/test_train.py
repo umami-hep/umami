@@ -46,6 +46,7 @@ def get_configuration():
 def prepareConfig(
     tagger: str,
     test_dir: str,
+    var_file_from: str = None,
     preprocess_files_from: str = None,
     four_classes_case: bool = False,
     useTFRecords: bool = False,
@@ -59,6 +60,10 @@ def prepareConfig(
         Name of the tagger for which the config is to be prepared.
     test_dir : str
         Path to the test directory where the config file is to be saved.
+    var_file_from : str, optional
+        Name of the tagger from which the variable file is used. Possible
+        options are dips, umami, dl1r. If None is given, the value of
+        tagger is used. By default None
     preprocess_files_from : str
         Name of the preprocessing files that should be used. If not given,
         the preprocessing files from the tagger will be tried to use.
@@ -85,6 +90,12 @@ def prepareConfig(
         else:
             preprocess_files = preprocess_files_from
 
+        if var_file_from is None:
+            var_file = tagger
+
+        else:
+            var_file = var_file_from
+
         # config files, will be copied to test dir
         preprocessing_config_source = os.path.join(
             f"./test_preprocessing_{preprocess_files}/preprocessing/",
@@ -103,9 +114,7 @@ def prepareConfig(
 
         var_dict_source = os.path.join(
             f"./test_preprocessing_{preprocess_files}/preprocessing/",
-            os.path.basename(
-                data["test_preprocessing"][f"var_dict_{preprocess_files}"]
-            ),
+            os.path.basename(data["test_preprocessing"][f"var_dict_{var_file}"]),
         )
         var_dict = os.path.join(test_dir, os.path.basename(var_dict_source))
 
@@ -360,7 +369,7 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="dips",
             test_dir=self.test_dir,
-            preprocess_files_from="dips",
+            preprocess_files_from="dips_base_count",
         )
 
         self.assertTrue(runTraining(config=config, tagger="DIPS"))
@@ -369,10 +378,11 @@ class TestTraining(unittest.TestCase):
         """Integration test of train.py for DIPS script with four classes."""
 
         config = prepareConfig(
-            tagger="dips",
+            tagger="dips_four_classes",
             test_dir=self.test_dir,
-            preprocess_files_from="dips",
+            preprocess_files_from="dips_four_classes_pdf",
             four_classes_case=True,
+            var_file_from="dips",
         )
 
         self.assertTrue(runTraining(config=config, tagger="DIPS"))
@@ -383,7 +393,8 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="cads",
             test_dir=self.test_dir,
-            preprocess_files_from="umami",
+            preprocess_files_from="umami_base_count",
+            var_file_from="umami",
         )
 
         self.assertTrue(runTraining(config=config, tagger="CADS"))
@@ -394,7 +405,7 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="dl1r",
             test_dir=self.test_dir,
-            preprocess_files_from="dl1r",
+            preprocess_files_from="dl1r_base_count",
         )
 
         self.assertTrue(runTraining(config=config, tagger="DL1r"))
@@ -405,7 +416,7 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="umami",
             test_dir=self.test_dir,
-            preprocess_files_from="umami",
+            preprocess_files_from="umami_base_count",
         )
 
         self.assertTrue(runTraining(config=config, tagger="UMAMI"))
@@ -416,7 +427,8 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="umami_cond_att",
             test_dir=self.test_dir,
-            preprocess_files_from="umami",
+            preprocess_files_from="umami_base_count",
+            var_file_from="umami",
         )
 
         self.assertTrue(runTraining(config=config, tagger="UMAMI Cond Att"))
@@ -427,7 +439,7 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="dips",
             test_dir=self.test_dir,
-            preprocess_files_from="dips",
+            preprocess_files_from="dips_base_count",
             useTFRecords=True,
         )
 
@@ -439,8 +451,9 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="cads",
             test_dir=self.test_dir,
-            preprocess_files_from="umami",
+            preprocess_files_from="umami_base_count",
             useTFRecords=True,
+            var_file_from="umami",
         )
 
         self.assertTrue(runTraining(config=config, tagger="CADS"))
@@ -451,7 +464,7 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="umami",
             test_dir=self.test_dir,
-            preprocess_files_from="umami",
+            preprocess_files_from="umami_base_count",
             useTFRecords=True,
         )
 
@@ -463,8 +476,9 @@ class TestTraining(unittest.TestCase):
         config = prepareConfig(
             tagger="umami_cond_att",
             test_dir=self.test_dir,
-            preprocess_files_from="umami",
+            preprocess_files_from="umami_base_count",
             useTFRecords=True,
+            var_file_from="umami",
         )
 
         self.assertTrue(runTraining(config=config, tagger="UMAMI Cond Att"))
