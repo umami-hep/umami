@@ -67,7 +67,8 @@ def plot_trks_variables(plot_config, plot_type):
     plot_config["Eval_parameters"] = translate_kwargs(plot_config["Eval_parameters"])
     # Iterate over the different plots which are to be plotted
     for plot_name, plotting_config in plot_config.items():
-        if plot_name == "Eval_parameters" or plot_name[0] == ".":
+        # Skip general "Eval_parameters" and yaml anchors (have to start with a dot)
+        if plot_name == "Eval_parameters" or plot_name.startswith("."):
             continue
 
         if plotting_config["variables"] == "jets":
@@ -150,7 +151,8 @@ def plot_jets_variables(plot_config, plot_type):
     plot_config["Eval_parameters"] = translate_kwargs(plot_config["Eval_parameters"])
     # Iterate over the different plots which are to be plotted
     for plot_name, plotting_config in plot_config.items():
-        if plot_name == "Eval_parameters" or plot_name[0] == ".":
+        # Skip general "Eval_parameters" and yaml anchors (have to start with a dot)
+        if plot_name == "Eval_parameters" or plot_name.startswith("."):
             continue
 
         if plotting_config["variables"] == "tracks":
