@@ -61,7 +61,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test"]
 
         # Change type in plotting_config to string to produce error
-        plotting_config["binning"]["IP2D_bu"] = "test"
+        plotting_config["binning"]["SV1_NGTinSvx"] = "test"
 
         with self.assertRaises(ValueError):
             plot_input_vars_jets(
@@ -99,16 +99,20 @@ class JetPlotting_TestCase(unittest.TestCase):
 
         self.assertIsNone(
             compare_images(
-                self.expected_plots_dir + "jets_input_vars/" + "IP2D_bu.png",
-                self.actual_plots_dir + "jets_input_vars/" + "IP2D_bu.png",
+                self.expected_plots_dir + "jets_input_vars/" + "SV1_NGTinSvx.png",
+                self.actual_plots_dir + "jets_input_vars/" + "SV1_NGTinSvx.png",
                 tol=1,
             ),
         )
 
         self.assertIsNone(
             compare_images(
-                self.expected_plots_dir + "jets_input_vars/" + "IP2D_cu.png",
-                self.actual_plots_dir + "jets_input_vars/" + "IP2D_cu.png",
+                self.expected_plots_dir
+                + "jets_input_vars/"
+                + "JetFitterSecondaryVertex_nTracks.png",
+                self.actual_plots_dir
+                + "jets_input_vars/"
+                + "JetFitterSecondaryVertex_nTracks.png",
                 tol=1,
             ),
         )
@@ -119,7 +123,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test"]
 
         # Change type in plotting_config to string to produce error
-        plotting_config["binning"]["IP2D_bu"] = "test"
+        plotting_config["binning"]["SV1_NGTinSvx"] = "test"
 
         with self.assertRaises(ValueError):
             plot_input_vars_jets(
@@ -155,16 +159,20 @@ class JetPlotting_TestCase(unittest.TestCase):
 
         self.assertIsNone(
             compare_images(
-                self.expected_plots_dir + "comp/" + "IP2D_bu.png",
-                self.actual_plots_dir + "comp/" + "IP2D_bu.png",
+                self.expected_plots_dir + "comp/" + "SV1_NGTinSvx.png",
+                self.actual_plots_dir + "comp/" + "SV1_NGTinSvx.png",
                 tol=1,
             ),
         )
 
         self.assertIsNone(
             compare_images(
-                self.expected_plots_dir + "comp/" + "IP2D_cu.png",
-                self.actual_plots_dir + "comp/" + "IP2D_cu.png",
+                self.expected_plots_dir
+                + "comp/"
+                + "JetFitterSecondaryVertex_nTracks.png",
+                self.actual_plots_dir
+                + "comp/"
+                + "JetFitterSecondaryVertex_nTracks.png",
                 tol=1,
             ),
         )

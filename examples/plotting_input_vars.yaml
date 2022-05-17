@@ -27,24 +27,6 @@ jets_input_vars:
     <<: *default_plot_settings
   class_labels: ["bjets", "cjets", "ujets"]
   special_param_jets:
-    IP2D_cu:
-      lim_left: -30
-      lim_right: 30
-    IP2D_bu:
-      lim_left: -30
-      lim_right: 30
-    IP2D_bc:
-      lim_left: -30
-      lim_right: 30
-    IP3D_cu:
-      lim_left: -30
-      lim_right: 30
-    IP3D_bu:
-      lim_left: -30
-      lim_right: 30
-    IP3D_bc:
-      lim_left: -30
-      lim_right: 30
     SV1_NGTinSvx:
       lim_left: 0
       lim_right: 19
@@ -64,14 +46,6 @@ jets_input_vars:
       lim_left: 0
       lim_right: 200
   binning:
-    IP2D_cu: 100
-    IP2D_bu: 100
-    IP2D_bc: 100
-    IP2D_isDefaults: 2
-    IP3D_cu: 100
-    IP3D_bu: 100
-    IP3D_bc: 100
-    IP3D_isDefaults: 2
     JetFitter_mass: 100
     JetFitter_energyFraction: 100
     JetFitter_significance3d: 100

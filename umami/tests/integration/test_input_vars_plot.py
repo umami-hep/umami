@@ -141,18 +141,18 @@ class TestInput_Vars_Plotting(unittest.TestCase):
 
         # Change jets input vars params
         self.config["jets_input_vars"]["special_param_jets"] = {
-            "IP2D_cu": {
-                "lim_left": -30,
-                "lim_right": 30,
+            "SV1_NGTinSvx": {
+                "lim_left": 0,
+                "lim_right": 19,
             },
-            "IP2D_bu": {
-                "lim_left": -30,
-                "lim_right": 30,
+            "JetFitterSecondaryVertex_nTracks": {
+                "lim_left": 0,
+                "lim_right": 17,
             },
         }
         self.config["jets_input_vars"]["binning"] = {
-            "IP2D_cu": 5,
-            "IP2D_bu": None,
+            "SV1_NGTinSvx": 5,
+            "JetFitterSecondaryVertex_nTracks": None,
         }
 
         # Change tracks params

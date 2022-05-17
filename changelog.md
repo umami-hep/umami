@@ -5,6 +5,7 @@
 ### Latest
 
 - Fix epoch bug in continue_training[!543](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/543) 
+- Remove IPxD from default configs [!544](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/544)
 
 ### [v0.8](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.8)
 

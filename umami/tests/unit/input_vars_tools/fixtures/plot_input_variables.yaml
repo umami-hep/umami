@@ -27,15 +27,15 @@ jets_input_vars:
     <<: *default_plot_settings
     ylabel: "Normalised number of jets"
   special_param_jets:
-    IP2D_cu:
-      lim_left: -30
-      lim_right: 30
-    IP2D_bu:
-      lim_left: -30
-      lim_right: 30
+    SV1_NGTinSvx:
+      lim_left: 0
+      lim_right: 19
+    JetFitterSecondaryVertex_nTracks:
+      lim_left: 0
+      lim_right: 17
   binning:
-    IP2D_cu: 5
-    IP2D_bu:
+    SV1_NGTinSvx: 5
+    JetFitterSecondaryVertex_nTracks: Null
   class_labels: ["bjets", "cjets", "ujets", "taujets"]
 
 nTracks_Test:
