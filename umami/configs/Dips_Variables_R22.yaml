@@ -34,16 +34,6 @@ train_variables:
     - SV1_Lxy
     - SV1_L3d
     - SV1_correctSignificance3d # previously SV1_significance3d
-  IP2D:
-    - IP2D_isDefaults
-    - IP2D_bu
-    - IP2D_bc
-    - IP2D_cu
-  IP3D:
-    - IP3D_isDefaults
-    - IP3D_bu
-    - IP3D_bc
-    - IP3D_cu
 
 custom_defaults_vars:
   JetFitter_energyFraction: 0

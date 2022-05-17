@@ -121,54 +121,6 @@
             "default": 29.745424073276666
         },
         {
-            "name": "IP2D_bu",
-            "shift": 0.10376364874350298,
-            "scale": 5.120098401504246,
-            "default": 0.10376364876178952
-        },
-        {
-            "name": "IP2D_isDefaults",
-            "shift": 0.0,
-            "scale": 1.0,
-            "default": null
-        },
-        {
-            "name": "IP2D_bc",
-            "shift": -1.1313243011247207,
-            "scale": 2.669094948573187,
-            "default": -1.1313243013006167
-        },
-        {
-            "name": "IP2D_cu",
-            "shift": 1.2270190056164823,
-            "scale": 2.7509497962346336,
-            "default": 1.2270190066922222
-        },
-        {
-            "name": "IP3D_bu",
-            "shift": 0.29018567162469616,
-            "scale": 5.756068332614096,
-            "default": 0.29018567171354126
-        },
-        {
-            "name": "IP3D_isDefaults",
-            "shift": 0.0,
-            "scale": 1.0,
-            "default": null
-        },
-        {
-            "name": "IP3D_bc",
-            "shift": -1.1836643273520444,
-            "scale": 3.1251304171003995,
-            "default": -1.1836643274134322
-        },
-        {
-            "name": "IP3D_cu",
-            "shift": 1.4710096929626102,
-            "scale": 3.070299812699034,
-            "default": 1.4710096924613627
-        },
-        {
             "name": "JetFitterSecondaryVertex_nTracks",
             "shift": 1.2270644231637038,
             "scale": 1.2717503585733172,

@@ -4,6 +4,8 @@
 
 ### Latest
 
+- Remove IPxD from default configs [!544](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/544)
+
 ### [v0.8](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.8)
 
 - Fix integration test artifacts [!538](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/538)
