@@ -79,11 +79,11 @@ def prepare_model(
     # Init the init_epoch
     init_epoch = 0
 
-    if train_config.model_file is not None:
+    if train_config.model_file is not None and continue_training is False:
         logger.info(f"Loading model from: {train_config.model_file}")
         model_file = train_config.model_file
 
-    elif continue_training:
+    elif continue_training is True:
         # Get the lastest epoch available
         model_file_name = sorted(
             os.listdir(os.path.join(train_config.model_name, "model_files")),

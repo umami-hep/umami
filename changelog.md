@@ -4,6 +4,8 @@
 
 ### Latest
 
+- Fix epoch bug in continue_training[!543](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/543) 
+
 ### [v0.8](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.8)
 
 - Fix integration test artifacts [!538](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/538)
