@@ -20,6 +20,7 @@
   retry: 2
   # We need to define an empty array for the dependecies to NOT include any artifacts from previous jobs
   dependencies: []
+  needs: []
 
 .requirement_changes: &requirement_changes
   changes:
