@@ -1,7 +1,7 @@
 """Posts the urls in MRs for temporary docs and coverage reports."""
 import os
 
-import gitlab
+import gitlab  # pylint: disable=import-error
 
 # connecting to the CERN gitlab API
 gl = gitlab.Gitlab(

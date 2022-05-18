@@ -1,7 +1,7 @@
 """Checks repository in master and updates ToDo issue."""
 import os
 
-import gitlab
+import gitlab  # pylint: disable=import-error
 from pylint import epylint as lint
 
 

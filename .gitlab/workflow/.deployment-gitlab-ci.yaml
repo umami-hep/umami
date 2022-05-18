@@ -85,8 +85,18 @@ sphinx-docs:
 convert_docstrings_to_md:
   # this job runs a script which converts the parameters listed in numpy docstrings
   # to a markdown table
-  stage: prepare_docs
+  stage: builds
   image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
+  dependencies:
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
+  needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
   before_script:
     - . run_setup.sh
   script:
@@ -101,14 +111,12 @@ convert_docstrings_to_md:
     paths:
       - docs/ci_assets
     expire_in: 1 day
-  needs:
-    - linter
 
 render_md_placeholders:
   # render the placeholders (of the form §§§<filename>:start:end§§§)
   # we use the tool librep here. In case of any troubles with librep itself, submit
   # an issue here: https://github.com/umami-hep/librep
-  stage: prepare_docs
+  stage: builds
   image: python:3.8-alpine
   script:
     - pip install librep==0.0.5

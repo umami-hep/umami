@@ -183,9 +183,14 @@ test_preprocessing_umami_weighting:
       - coverage_files/
 
 test_train_dips:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_dips_count
     - test_preprocessing_dips_pdf
     - test_preprocessing_dips_weighting
@@ -193,6 +198,9 @@ test_train_dips:
     - test_preprocessing_dips_count
     - test_preprocessing_dips_pdf
     - test_preprocessing_dips_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_dips_no_attention"
     - cp .coverage ./coverage_files/.coverage.test_train_dips
@@ -203,12 +211,20 @@ test_train_dips:
       - coverage_files/
 
 test_train_dips_four_classes:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_dips_four_classes_pdf
   dependencies:
     - test_preprocessing_dips_four_classes_pdf
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_dips_four_classes"
     - cp .coverage ./coverage_files/.coverage.test_train_dips_four_classes
@@ -219,9 +235,14 @@ test_train_dips_four_classes:
       - coverage_files/
 
 test_train_tfrecords_dips:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_dips_count
     - test_preprocessing_dips_pdf
     - test_preprocessing_dips_weighting
@@ -229,6 +250,9 @@ test_train_tfrecords_dips:
     - test_preprocessing_dips_count
     - test_preprocessing_dips_pdf
     - test_preprocessing_dips_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_tfrecords_dips"
     - cp .coverage ./coverage_files/.coverage.test_train_tfrecords_dips
@@ -239,9 +263,14 @@ test_train_tfrecords_dips:
       - coverage_files/
 
 test_train_cads:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
@@ -249,6 +278,9 @@ test_train_cads:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_cads"
     - cp .coverage ./coverage_files/.coverage.test_train_cads
@@ -259,9 +291,14 @@ test_train_cads:
       - coverage_files/
 
 test_train_tfrecords_cads:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
@@ -269,6 +306,9 @@ test_train_tfrecords_cads:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_tfrecords_cads"
     - cp .coverage ./coverage_files/.coverage.test_train_tfrecords_cads
@@ -279,16 +319,24 @@ test_train_tfrecords_cads:
       - coverage_files/
 
 test_train_dl1r:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
     - test_preprocessing_dl1r_count
     - test_preprocessing_dl1r_pdf
     - test_preprocessing_dl1r_weighting
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
   dependencies:
     - test_preprocessing_dl1r_count
     - test_preprocessing_dl1r_pdf
     - test_preprocessing_dl1r_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_dl1r"
     - cp .coverage ./coverage_files/.coverage.test_train_dl1r
@@ -299,9 +347,14 @@ test_train_dl1r:
       - coverage_files/
 
 test_train_umami:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
@@ -309,6 +362,9 @@ test_train_umami:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_umami"
     - cp .coverage ./coverage_files/.coverage.test_train_umami
@@ -319,9 +375,14 @@ test_train_umami:
       - coverage_files/
 
 test_train_tfrecords_umami:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
@@ -329,6 +390,9 @@ test_train_tfrecords_umami:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_tfrecords_umami"
     - cp .coverage ./coverage_files/.coverage.test_train_tfrecords_umami
@@ -339,9 +403,14 @@ test_train_tfrecords_umami:
       - coverage_files/
 
 test_train_cond_att_umami:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
@@ -349,6 +418,9 @@ test_train_cond_att_umami:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_cond_att_umami"
     - cp .coverage ./coverage_files/.coverage.test_train_cond_att_umami
@@ -359,9 +431,14 @@ test_train_cond_att_umami:
       - coverage_files/
 
 test_train_tfrecords_cond_att_umami:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
@@ -369,6 +446,9 @@ test_train_tfrecords_cond_att_umami:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_train_tfrecords_cond_att_umami"
     - cp .coverage ./coverage_files/.coverage.test_train_tfrecords_cond_att_umami
@@ -379,7 +459,7 @@ test_train_tfrecords_cond_att_umami:
       - coverage_files/
 
 test_evaluate_tagger_in_files:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_tagger
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_train.py -v -s --junitxml=report.xml -k "test_evaluate_tagger_in_files"
@@ -391,10 +471,8 @@ test_evaluate_tagger_in_files:
       - coverage_files/
 
 test_plot_input_vars:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_plotting
-  needs: *dependencies_from_train_stage
-  dependencies: *dependencies_from_train_stage
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_input_vars_plot.py -v -s --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_input_vars_plot
@@ -406,14 +484,22 @@ test_plot_input_vars:
       - coverage_files/
 
 test_plotting_umami_dips:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_plotting
   needs:
     - test_train_dips
     - test_train_tfrecords_dips
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
   dependencies:
     - test_train_dips
     - test_train_tfrecords_dips
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -s -k "test_plotting_umami_dips" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_dips
@@ -424,12 +510,20 @@ test_plotting_umami_dips:
       - coverage_files/
 
 test_plotting_umami_dl1:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_plotting
   needs:
     - test_train_dl1r
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
   dependencies:
     - test_train_dl1r
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -s -k "test_plotting_umami_dl1r" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_dl1r
@@ -440,14 +534,22 @@ test_plotting_umami_dl1:
       - coverage_files/
 
 test_plotting_umami_umami:
-  <<: *test_template
+  extends: .test_template
   stage: integration_test_plotting
   needs:
     - test_train_umami
     - test_train_tfrecords_umami
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
+    - linter
   dependencies:
     - test_train_umami
     - test_train_tfrecords_umami
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+    - linter
   script:
     - pytest --cov=./ --cov-report= ./umami/tests/integration/test_plotting_umami.py -v -s -k "test_plotting_umami_umami" --junitxml=report.xml
     - cp .coverage ./coverage_files/.coverage.test_plotting_umami_umami

@@ -254,7 +254,7 @@ def LoadTrksFromFile(
 
     Returns
     -------
-    all_trks : pandas.DataFrame
+    all_trks : numpy.ndarray
         The tracks of the jets as numpy ndarray
     all_labels : numpy.ndarray
         The internal class label for each jet. Corresponds with the
