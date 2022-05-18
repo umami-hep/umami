@@ -28,7 +28,8 @@
   stage: linting
   # using the latest umamibase image here - in case this breaks we can use
   # a freshly CI built one - would require to move backwards in CI chain then
-  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest
+  # image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest
+  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/temporary_images:540-base
   before_script:
     - pip install pylint==2.12.2
   script:

@@ -64,6 +64,7 @@ class preprocessing_plots_TestCase(unittest.TestCase):
             },
             class_labels=["ujets", "cjets", "bjets"],
             plots_dir=self.actual_plots_dir,
+            # plots_dir=self.expected_plots_dir,
             track_collection_list=["tracks", "tracks_loose"],
             fileformat="png",
             atlas_second_tag=(
@@ -148,6 +149,7 @@ class plot_resampling_variables_TestCase(unittest.TestCase):
             variable_names=self.variables,
             sample_categories=["ttbar", "zprime"],
             output_dir=self.actual_plots_dir,
+            # output_dir=self.expected_plots_dir,
             bins_dict={
                 "pT": 200,
                 "eta": 20,

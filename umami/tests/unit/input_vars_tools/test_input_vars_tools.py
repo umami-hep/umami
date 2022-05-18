@@ -91,6 +91,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
             output_directory=f"{self.actual_plots_dir}"
+            # output_directory=f"{self.expected_plots_dir}"
             + plotting_config["folder_to_save"],
             plot_type="png",
             special_param_jets=plotting_config["special_param_jets"],
@@ -152,6 +153,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
             output_directory=os.path.join(self.actual_plots_dir, "comp/"),
+            # output_directory=os.path.join(self.expected_plots_dir, "comp/"),
             plot_type="png",
             special_param_jets=plotting_config["special_param_jets"],
             **plotting_config["plot_settings"],
@@ -215,6 +217,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
             output_directory=f"{self.actual_plots_dir}",
+            # output_directory=f"{self.expected_plots_dir}",
             plot_type="png",
             **plotting_config["plot_settings"],
         )
@@ -321,6 +324,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
             output_directory=os.path.join(self.actual_plots_dir, "comp_no_norm/"),
+            # output_directory=os.path.join(self.expected_plots_dir, "comp_no_norm/"),
             plot_type="png",
             **plotting_config["plot_settings"],
         )
@@ -352,6 +356,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
             output_directory=os.path.join(self.actual_plots_dir, "comp/"),
+            # output_directory=os.path.join(self.expected_plots_dir, "comp/"),
             plot_type="png",
             **plotting_config["plot_settings"],
         )
@@ -433,6 +438,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             class_labels=plotting_config["class_labels"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             output_directory=f"{self.actual_plots_dir}",
+            # output_directory=f"{self.expected_plots_dir}",
             plot_type="png",
             **plotting_config["plot_settings"],
         )

@@ -171,6 +171,7 @@ def plot_pt_dependence(
     plot_pt = var_vs_eff_plot(
         mode=mode,
         ylabel=y_label,
+        n_ratio_panels=1,
         **kwargs,
     )
     # Redefine Second Tag with inclusive or fixed tag
@@ -203,7 +204,7 @@ def plot_pt_dependence(
                 x_var_bkg=jetPts[is_bkg] if mode == "bkg_rej" else None,
                 disc_bkg=disc[is_bkg] if mode == "bkg_rej" else None,
                 bins=bin_edges,
-                wp=working_point,
+                working_point=working_point,
                 disc_cut=disc_cut,
                 fixed_eff_bin=fixed_eff_bin,
                 label=model_label,

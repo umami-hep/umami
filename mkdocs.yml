@@ -48,10 +48,6 @@ nav:
         - Evaluate Taggers in Samples: plotting/WO_trained_model.md
         - Python API:
             - Overview: plotting/python_api/index.md
-            - ROC plots: plotting/python_api/rocs.md
-            - Variable vs efficiency plots: plotting/python_api/var_vs_eff.md
-            - Histogram plots: plotting/python_api/histograms.md
-            - Dummy data: plotting/python_api/dummy_data.md
             - Input Correlation plots: plotting/python_api/input_correlations.md
 
 plugins:

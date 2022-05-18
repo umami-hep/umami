@@ -1,7 +1,7 @@
 """Checks a gitlab MR and add labels to it."""
 import os
 
-import gitlab
+import gitlab  # pylint: disable=import-error
 import yaml
 
 

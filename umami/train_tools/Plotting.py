@@ -379,7 +379,7 @@ def PlotRejPerEpochComparison(
 
         # Set y label
         rej_plot.set_ylabel(
-            ax=axes[counter],
+            ax_mpl=axes[counter],
             label=f'{flav_cat[iter_class]["legend_label"]} rejection',
             align_right=False,
         )

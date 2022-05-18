@@ -121,6 +121,7 @@ class GetRejection_TestCase(unittest.TestCase):
             taggers_from_file={"rnnip": "Recomm. RNNIP"},
             unique_identifier="ttbar_r21_val",
             plot_name=self.actual_plots_dir + "PlotRejPerEpochComparison",
+            # plot_name=self.expected_plots_dir + "PlotRejPerEpochComparison",
             class_labels=self.class_labels,
             main_class=self.main_class,
             label_extension=self.label_extension,
@@ -147,6 +148,7 @@ class GetRejection_TestCase(unittest.TestCase):
             tagger_label="dips",
             comp_tagger_rej_dict=self.comp_tagger_rej_dict,
             plot_name=self.actual_plots_dir + "PlotRejPerEpoch",
+            # plot_name=self.expected_plots_dir + "PlotRejPerEpoch",
             taggers_from_file={"rnnip": "Recomm. RNNIP"},
             unique_identifier="ttbar_r21_val",
             class_labels=self.class_labels,
@@ -181,6 +183,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotLosses(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "PlotLosses",
+            # plot_name=self.expected_plots_dir + "PlotLosses",
             val_files=self.val_files,
             plot_datatype="png",
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
@@ -200,6 +203,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotAccuracies(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "PlotAccuracies",
+            # plot_name=self.expected_plots_dir + "PlotAccuracies",
             val_files=self.val_files,
             plot_datatype="png",
             figsize=(7, 5),
@@ -220,6 +224,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotDiscCutPerEpoch(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "PlotDiscCutPerEpoch",
+            # plot_name=self.expected_plots_dir + "PlotDiscCutPerEpoch",
             frac_class="cjets",
             val_files=self.val_files,
             plot_datatype="png",
@@ -240,6 +245,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotDiscCutPerEpochUmami(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "PlotDiscCutPerEpochUmami",
+            # plot_name=self.expected_plots_dir + "PlotDiscCutPerEpochUmami",
             val_files=self.val_files,
             plot_datatype="png",
             figsize=(6.3, 4.5),
@@ -259,6 +265,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotLossesUmami(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "PlotLossesUmami",
+            # plot_name=self.expected_plots_dir + "PlotLossesUmami",
             val_files=self.val_files,
             plot_datatype="png",
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
@@ -279,6 +286,7 @@ class GetRejection_TestCase(unittest.TestCase):
         PlotAccuraciesUmami(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "PlotAccuraciesUmami",
+            # plot_name=self.expected_plots_dir + "PlotAccuraciesUmami",
             val_files=self.val_files,
             plot_datatype="png",
             figsize=(7, 5),
