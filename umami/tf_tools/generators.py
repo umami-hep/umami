@@ -154,6 +154,11 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
                 self.x_trk_in_mem = f[self.X_trk_Name][
                     self.step_size * part : self.step_size * (part + 1)
                 ]
+                if self.sample_weights and self.weight_in_mem is None:
+                    # load weights
+                    self.weight_in_mem = f["weight"][
+                        self.step_size * part : self.step_size * (part + 1)
+                    ]
 
             # Load truth labels
             self.y_in_mem = f[self.Y_Name][
