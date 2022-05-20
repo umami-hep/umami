@@ -1,8 +1,13 @@
+import os
+import tempfile
+import unittest
+from subprocess import run
+
 import numpy as np
 import tensorflow as tf
 
 from umami.configuration import logger, set_log_level
-from umami.tf_tools import Attention, DeepSet, DenseNet
+from umami.tf_tools import Attention, DeepSet, DenseNet, prepare_model
 
 set_log_level(logger, "DEBUG")
 
@@ -326,3 +331,117 @@ class test_DenseNet(tf.test.TestCase):
 
         # Test output
         np.testing.assert_almost_equal(expected_output, out)
+
+
+class TestPrepareModel(unittest.TestCase):
+    """Test the prepare_model function."""
+
+    def setUp(self) -> None:
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_test_dir = f"{self.tmp_dir.name}/"
+
+        self.model_name = self.tmp_test_dir + "Test_prepare_model"
+        self.model_file = None
+        self.NN_structure = {"load_optimiser": False}
+
+        os.makedirs(
+            os.path.join(
+                self.tmp_test_dir,
+                self.model_name,
+                "model_files",
+            )
+        )
+
+        run(
+            [
+                "wget",
+                "https://umami-ci-provider.web.cern.ch/umami/test_model_file.h5",
+                "--directory-prefix",
+                self.tmp_test_dir,
+            ]
+        )
+
+        run(
+            [
+                "cp",
+                os.path.join(self.tmp_test_dir, "test_model_file.h5"),
+                os.path.join(
+                    self.model_name,
+                    "model_files",
+                    "model_epoch001.h5",
+                ),
+            ]
+        )
+
+    def test_init_fresh_model(self):
+        """Test fresh model init."""
+        model, init_epoch, load_optimiser = prepare_model(train_config=self)
+
+        with self.subTest("Check Model"):
+            self.assertIsNone(model)
+
+        with self.subTest("Check init_epoch"):
+            self.assertEqual(init_epoch, 0)
+
+        with self.subTest("Check load_optimiser"):
+            self.assertFalse(load_optimiser)
+
+    def test_init_fresh_model_no_load_optimiser_given(self):
+        """Test fresh model init with no load_optimiser given."""
+        self.NN_structure = {}
+
+        model, init_epoch, load_optimiser = prepare_model(train_config=self)
+
+        with self.subTest("Check Model"):
+            self.assertIsNone(model)
+
+        with self.subTest("Check init_epoch"):
+            self.assertEqual(init_epoch, 0)
+
+        with self.subTest("Check load_optimiser"):
+            self.assertFalse(load_optimiser)
+
+    def test_load_optimiser_ValueError(self):
+        """Test load optimiser error."""
+        self.NN_structure = {"load_optimiser": True}
+
+        with self.assertRaises(ValueError):
+            _, _, _ = prepare_model(train_config=self)
+
+    def test_load_model_without_continue_training(self):
+        """Test loading of a model without continuation."""
+        self.model_file = os.path.join(
+            self.tmp_test_dir,
+            "test_model_file.h5",
+        )
+
+        model, init_epoch, load_optimiser = prepare_model(train_config=self)
+
+        with self.subTest("Check Model"):
+            self.assertTrue(isinstance(model, object))
+
+        with self.subTest("Check init_epoch"):
+            self.assertEqual(init_epoch, 0)
+
+        with self.subTest("Check load_optimiser"):
+            self.assertFalse(load_optimiser)
+
+    def test_load_model_with_continue_training(self):
+        """Test loading of a model without continuation."""
+        model, init_epoch, load_optimiser = prepare_model(
+            train_config=self,
+            continue_training=True,
+        )
+
+        with self.subTest("Check Model"):
+            self.assertTrue(isinstance(model, object))
+
+        with self.subTest("Check init_epoch"):
+            # The init_epoch value of keras is 0. If you start a new training
+            # the new epoch will be init_epoch + 1. If you already have a training
+            # the init_epoch must be the value of the last epoch saved, which is
+            # in this test case the epoch 1.
+            self.assertEqual(init_epoch, 1)
+
+        with self.subTest("Check load_optimiser"):
+            self.assertTrue(load_optimiser)
