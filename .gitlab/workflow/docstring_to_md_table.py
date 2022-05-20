@@ -2,9 +2,8 @@
 These .md files can then be used in the documentation."""
 import re
 
+import puma
 from npdoc_to_md import render_md_from_obj_docstring  # pylint: disable=import-error
-
-import umami.plotting
 
 
 def generate_parameters_table(
@@ -79,15 +78,22 @@ def main():
     """Main function which is called when the script is executed"""
     # define here the objects of which you want the parameters as markdown table
     objects_to_render = {
-        "umami.plotting.plot_object": {
-            "obj": umami.plotting.plot_object,
-            "filename": "docstring_input_var_plots_umami.plotting.plot_object.md",
-            "exclude": ["logy", "plotting_done", "n_ratio_panels"],
+        "puma.PlotObject": {
+            "obj": puma.PlotObject,
+            "filename": "docstring_puma_PlotObject.md",
+            "exclude": ["logy", "plotting_done"],
+            # Excluded because:
+            # logy -> has different default (False) in Histogram plot
+            # plotting_done -> attribute that should not be modified by the user
         },
-        "umami.plotting.histogram_plot": {
-            "obj": umami.plotting.histogram_plot.__init__,
-            "filename": "docstring_input_var_plots_umami.plotting.histogram_plot.md",
+        "puma.HistogramPlot": {
+            "obj": puma.HistogramPlot.__init__,
+            "filename": "docstring_puma_HistogramPlot.md",
             "exclude": ["bins", "bins_range", "**kwargs"],
+            # Excluded because:
+            # bins -> are handled differently (defined in the input var plot config)
+            # bins_range -> same here
+            # **kwargs -> we specifically put the **kwargs from PlotObject in the docs
         },
     }
     for name, config in objects_to_render.items():

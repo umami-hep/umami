@@ -11,16 +11,9 @@ import numpy as np
 from mlxtend.evaluate import confusion_matrix
 from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from puma import Histogram, HistogramPlot, Roc, RocPlot, VarVsEff, VarVsEffPlot
 
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
-from umami.plotting import (
-    histogram,
-    histogram_plot,
-    roc,
-    roc_plot,
-    var_vs_eff,
-    var_vs_eff_plot,
-)
 from umami.plotting.utils import translate_kwargs
 from umami.tools import applyATLASstyle
 
@@ -88,7 +81,7 @@ def plot_pt_dependence(
     linewidth : float, optional
         Define the linewidth of the plotted lines, by default 1.6
     **kwargs : kwargs
-        kwargs for `var_vs_eff_plot` function
+        kwargs for `VarVsEffPlot` function
 
     Raises
     ------
@@ -168,7 +161,7 @@ def plot_pt_dependence(
         mode = "sig_eff"
         y_label = f'{flav_cat[flavour]["legend_label"]} efficiency'
 
-    plot_pt = var_vs_eff_plot(
+    plot_pt = VarVsEffPlot(
         mode=mode,
         ylabel=y_label,
         n_ratio_panels=1,
@@ -198,7 +191,7 @@ def plot_pt_dependence(
         )
         disc = df_results[f"disc_{tagger}"]
         plot_pt.add(
-            var_vs_eff(
+            VarVsEff(
                 x_var_sig=jetPts[is_signal],
                 disc_sig=disc[is_signal],
                 x_var_bkg=jetPts[is_bkg] if mode == "bkg_rej" else None,
@@ -296,7 +289,7 @@ def plotROCRatio(
         List of bools indicating which roc used as reference for ratio calculation,
         by default None
     **kwargs : kwargs
-        kwargs passed to roc_plot
+        kwargs passed to RocPlot
 
     Raises
     ------
@@ -306,7 +299,7 @@ def plotROCRatio(
         if lists don't have the same length
     """
 
-    # Check for number of provided rocs
+    # Check for number of provided Rocs
     n_rocs = len(df_results_list)
 
     # maintain backwards compatibility
@@ -433,7 +426,7 @@ def plotROCRatio(
     ):
         raise ValueError("Passed lists do not have same length.")
 
-    plot_roc = roc_plot(
+    plot_roc = RocPlot(
         n_ratio_panels=n_ratio_panels,
         ylabel=ylabel,
         xlabel=f'{flav_cat[main_class]["legend_label"]} efficiency',
@@ -478,7 +471,7 @@ def plotROCRatio(
         n_test,
         reference_ratio,
     ):
-        roc_curve = roc(
+        roc_curve = Roc(
             df_results[df_eff_key],
             df_results[f"{tagger}_{rej_class}_rej"],
             n_test=nte,
@@ -724,7 +717,7 @@ def plot_score(
         Decide, if all working points lines have the same height or
         not, by default True
     **kwargs : kwargs
-        kwargs for `histogram_plot` function
+        kwargs for `HistogramPlot` function
     """
 
     # Set number of ratio panels if not specified
@@ -744,8 +737,8 @@ def plot_score(
     # Get index dict
     index_dict = {f"{flavour}": i for i, flavour in enumerate(class_labels_list[0])}
 
-    # Init the histogram plot object
-    score_plot = histogram_plot(**kwargs)
+    # Init the Histogram plot object
+    score_plot = HistogramPlot(**kwargs)
 
     # Set the xlabel
     if score_plot.xlabel is None:
@@ -790,7 +783,7 @@ def plot_score(
 
         for iter_flavour in class_labels:
             score_plot.add(
-                histogram(
+                Histogram(
                     values=df_results.query(f"labels=={index_dict[iter_flavour]}")[
                         f"disc_{tagger}"
                     ],
@@ -835,7 +828,7 @@ def plot_prob(
     plot_name : str
         Path, Name and format of the resulting plot file.
     **kwargs : kwargs
-        kwargs for `var_vs_eff_plot` function
+        kwargs for `VarVsEffPlot` function
     """
 
     # Set number of ratio panels if not specified
@@ -856,7 +849,7 @@ def plot_prob(
     index_dict = {f"{iter_flav}": i for i, iter_flav in enumerate(class_labels_list[0])}
 
     # Init the histogram plot object
-    prob_plot = histogram_plot(**kwargs)
+    prob_plot = HistogramPlot(**kwargs)
 
     # Set the xlabel
     if prob_plot.xlabel is None:
@@ -882,7 +875,7 @@ def plot_prob(
 
         for iter_flavour in class_labels:
             prob_plot.add(
-                histogram(
+                Histogram(
                     values=df_results.query(f"labels=={index_dict[iter_flavour]}")[
                         f'{tagger}_{flav_cat[flavour]["prob_var_name"]}'
                     ],

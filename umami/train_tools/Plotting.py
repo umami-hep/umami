@@ -7,11 +7,11 @@ import os
 import numpy as np
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
+from puma import PlotBase
 
 from umami.configuration import global_config, logger
 from umami.data_tools import LoadJetsFromFile
 from umami.metrics import get_rejection
-from umami.plotting import plot_base
 from umami.preprocessing_tools import GetBinaryLabels
 from umami.tools import check_main_class_input
 
@@ -185,7 +185,7 @@ def PlotDiscCutPerEpoch(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    disc_cut_plot = plot_base(
+    disc_cut_plot = PlotBase(
         xlabel="Epoch",
         ylabel="$b$-tagging discriminant cut value",
         n_ratio_panels=0,
@@ -240,7 +240,7 @@ def PlotDiscCutPerEpochUmami(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    disc_cut_plot = plot_base(
+    disc_cut_plot = PlotBase(
         xlabel="Epoch",
         ylabel="$b$-tagging discriminant cut value",
         n_ratio_panels=0,
@@ -347,7 +347,7 @@ def PlotRejPerEpochComparison(
         (0, (5, 10)),
     ]
 
-    rej_plot = plot_base(
+    rej_plot = PlotBase(
         n_ratio_panels=0,
         logy=False,
         **kwargs,
@@ -570,7 +570,7 @@ def PlotRejPerEpoch(
     flav_cat = global_config.flavour_categories
 
     for _, iter_class in enumerate(class_labels_wo_main):
-        rej_plot = plot_base(
+        rej_plot = PlotBase(
             xlabel="Epoch",
             ylabel=f'{flav_cat[iter_class]["legend_label"]} rejection',
             n_ratio_panels=0,
@@ -682,7 +682,7 @@ def PlotLosses(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    loss_plot = plot_base(
+    loss_plot = PlotBase(
         xlabel="Epoch",
         ylabel="Loss",
         n_ratio_panels=0,
@@ -738,7 +738,7 @@ def PlotAccuracies(
     **kwargs
 
     """
-    acc_plot = plot_base(
+    acc_plot = PlotBase(
         xlabel="Epoch",
         ylabel="Accuracy",
         n_ratio_panels=0,
@@ -793,7 +793,7 @@ def PlotLossesUmami(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    loss_plot = plot_base(
+    loss_plot = PlotBase(
         xlabel="Epoch",
         ylabel="Loss",
         n_ratio_panels=0,
@@ -862,7 +862,7 @@ def PlotAccuraciesUmami(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    acc_plot = plot_base(
+    acc_plot = PlotBase(
         xlabel="Epoch",
         ylabel="Accuracy",
         n_ratio_panels=0,
