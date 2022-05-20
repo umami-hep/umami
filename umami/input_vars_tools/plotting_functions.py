@@ -6,10 +6,10 @@ import os
 
 import numpy as np
 from pandas import DataFrame
+from puma import Histogram, HistogramPlot
 
 import umami.data_tools as udt
 from umami.configuration import global_config, logger
-from umami.plotting import histogram, histogram_plot
 from umami.plotting.utils import translate_binning
 from umami.preprocessing_tools import GetVariableDict
 
@@ -93,7 +93,7 @@ def plot_n_tracks_per_jet(
         Track set that is to be used for plotting, by default "All"
     **kwargs: dict
         Keyword arguments passed to the plot. You can use all arguments that are
-        supported by the `histogram_plot` class in the plotting API.
+        supported by the `HistogramPlot` class in the plotting API.
     """
 
     kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(
@@ -133,7 +133,7 @@ def plot_n_tracks_per_jet(
     logger.info(f"Track origin: {track_origin}\n")
 
     # Initialise plot
-    n_tracks_plot = histogram_plot(**kwargs)
+    n_tracks_plot = HistogramPlot(**kwargs)
     # Set xlabel
     n_tracks_plot.xlabel = (
         "Number of tracks per jet"
@@ -166,7 +166,7 @@ def plot_n_tracks_per_jet(
             n_tracks_means[label].update({flavour: n_tracks_flavour.mean()})
 
             n_tracks_plot.add(
-                histogram(
+                Histogram(
                     values=n_tracks_flavour,
                     flavour=flavour,
                     label=label,
@@ -234,7 +234,7 @@ def plot_input_vars_trks(
         Track set that is to be used for plotting, by default "All"
     **kwargs: dict
         Keyword arguments passed to the plot. You can use all arguments that are
-        supported by the `histogram_plot` class in the plotting API.
+        supported by the `HistogramPlot` class in the plotting API.
 
     """
 
@@ -352,7 +352,7 @@ def plot_input_vars_trks(
                 logger.info(f"Plotting {var}...")
 
                 # Initialise plot for this variable
-                var_plot = histogram_plot(bins=bins_dict[var], **kwargs)
+                var_plot = HistogramPlot(bins=bins_dict[var], **kwargs)
 
                 if n_lead is None:
                     var_plot.xlabel = (
@@ -410,7 +410,7 @@ def plot_input_vars_trks(
 
                         # Add histogram to plot
                         var_plot.add(
-                            histogram(
+                            Histogram(
                                 values=track_values,
                                 flavour=flavour,
                                 label=label,
@@ -469,7 +469,7 @@ def plot_input_vars_jets(
         Option to make the background of the plot transparent, by default True
     **kwargs: dict
         Keyword arguments passed to the plot. You can use all arguments that are
-        supported by the `histogram_plot` class in the plotting API.
+        supported by the `HistogramPlot` class in the plotting API.
     """
 
     kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(
@@ -523,7 +523,7 @@ def plot_input_vars_jets(
         if var in bins_dict:
 
             # Initialise plot for this variable
-            var_plot = histogram_plot(bins=bins_dict[var], xlabel=var, **kwargs)
+            var_plot = HistogramPlot(bins=bins_dict[var], xlabel=var, **kwargs)
             # setting range based on value from config file
             if special_param_jets is not None and var in special_param_jets:
                 if (
@@ -553,7 +553,7 @@ def plot_input_vars_jets(
 
                     # Add histogram to plot
                     var_plot.add(
-                        histogram(
+                        Histogram(
                             values=jets_flavour,
                             flavour=flavour,
                             label=label,

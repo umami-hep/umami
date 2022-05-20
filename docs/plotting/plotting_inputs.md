@@ -105,11 +105,15 @@ You can use the following parameters. Note that some parameters are not supporte
 | `n_leading` | Track variables | `list` | Optional | `list` of the x leading tracks. If `None`, all tracks will be plotted. If `0` the leading tracks sorted after `sorting variable` will be plotted. You can add like `None`, `0` and `1` for example and it will plot all 3 of them, each in their own folders with according labeling. This must be a `list`! Even if there is only one option given. |
 | `track_origins` | Track variables and n_tracks plot | `list` | Optional | `list` that gives the desired track origins when plotting. |
 
-All remaining plot settings are parameters which are handed to the plotting API, 
-more specifically the `histogram_plot` class.
-Therefore, all parameters supported by the `histogram_plot` class can be specified there.
+All remaining plot settings are parameters which are handed to `puma` (Plotting
+UMami API) more specifically the `HistogramPlot` class.
+Therefore, all parameters supported by the `HistogramPlot` class can be specified there.
 
-### List of plotting API parameters
+[`puma` documentation](https://umami-hep.github.io/puma/)
 
-§§§docs/ci_assets/docstring_input_var_plots_umami.plotting.histogram_plot.md§§§
-§§§docs/ci_assets/docstring_input_var_plots_umami.plotting.plot_object.md:3:§§§
+### List of `puma` parameters
+
+§§§docs/ci_assets/docstring_puma_HistogramPlot.md§§§
+<!-- in the docstring for the PlotObject class, start at line 3, since we don't want
+the header to be included (column names of the md-table -->
+§§§docs/ci_assets/docstring_puma_PlotObject.md:3:§§§

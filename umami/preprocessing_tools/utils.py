@@ -5,10 +5,10 @@ import h5py
 import numpy as np
 import pandas as pd
 import yaml
+from puma import Histogram, HistogramPlot
 from sklearn.preprocessing import LabelBinarizer
 
 from umami.configuration import global_config, logger
-from umami.plotting import histogram, histogram_plot
 from umami.plotting.utils import translate_kwargs
 from umami.tools import yaml_loader
 
@@ -134,7 +134,7 @@ def plot_variable(
     logger.debug(f"Plotting variable {variable}...")
 
     # Init the histogram plot object
-    histo_plot = histogram_plot(**kwargs)
+    histo_plot = HistogramPlot(**kwargs)
 
     # Set the x-label
     if histo_plot.xlabel is None:
@@ -170,7 +170,7 @@ def plot_variable(
 
         # Add the flavour to the histogram
         histo_plot.add(
-            histogram(
+            Histogram(
                 values=np.nan_to_num(flavour_jets),
                 flavour=flavour,
             ),
@@ -270,7 +270,7 @@ def plot_resampling_variables(
             )
 
         # Init a new histogram
-        histo_plot = histogram_plot(
+        histo_plot = HistogramPlot(
             bins=bins,
             bins_range=bins_range,
             **kwargs,
@@ -298,7 +298,7 @@ def plot_resampling_variables(
             ).astype("int"):
                 # Add the histogram for the flavour
                 histo_plot.add(
-                    histogram(
+                    Histogram(
                         values=concat_samples[flavour]["jets"][:, varpos] / scale_val,
                         flavour=flavour,
                         label=sample_categories[sample_id]

@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 
-from umami.metrics import calc_rej
+from puma.metrics import calc_rej
 ```
 
 ???+ example "Reading `.h5` file"
