@@ -942,7 +942,6 @@ def RunPerformanceCheck(
     Eval_parameters = train_config.Eval_parameters_validation
     Val_settings = train_config.Validation_metrics_settings
     plot_args = train_config.plot_args
-    logger.warning(f"plot_args = {plot_args}")
     frac_dict = Eval_parameters["frac_values"]
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
@@ -950,6 +949,9 @@ def RunPerformanceCheck(
     # Load the unique identifiers of the validation files and the corresponding plot
     # labels. These are used several times in this function
     val_files = train_config.validation_files
+
+    # Printing the given plot args for debugging
+    logger.debug(f"plot_args = {plot_args}")
 
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)

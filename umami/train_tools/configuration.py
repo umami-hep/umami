@@ -32,6 +32,7 @@ class Configuration:
             "val_batch_size",
             "eval_batch_size",
             "taggers_from_file",
+            "trained_taggers",
             "tagger_label",
             "WP",
         ]
