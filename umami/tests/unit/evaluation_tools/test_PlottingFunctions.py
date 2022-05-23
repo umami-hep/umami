@@ -145,7 +145,7 @@ class plot_score_TestCase(unittest.TestCase):
             # plot_name=self.expected_plots_dir + "ROC_Test.png",
             plot_name=self.actual_plots_dir + "ROC_Test.png",
             nTest=[100000, 100000],
-            WorkingPoints=[0.60, 0.70, 0.77, 0.85],
+            working_points=[0.60, 0.70, 0.77, 0.85],
             main_class="bjets",
             atlas_second_tag=(
                 "$\\sqrt{s}=13$ TeV, PFlow Jets,\n"
@@ -180,7 +180,7 @@ class plot_score_TestCase(unittest.TestCase):
             # plot_name=self.expected_plots_dir + "ROC_Comparison_Test.png",
             plot_name=self.actual_plots_dir + "ROC_Comparison_Test.png",
             nTest=[100000, 100000, 100000, 100000],
-            WorkingPoints=[0.60, 0.70, 0.77, 0.85],
+            working_points=[0.60, 0.70, 0.77, 0.85],
             reference_ratio=[True, False, True, False],
             atlas_second_tag=(
                 "$\\sqrt{s}=13$ TeV, PFlow Jets,\n"
@@ -311,8 +311,6 @@ class plot_score_TestCase(unittest.TestCase):
             df_results_list=[df_results_ttbar, df_results_ttbar],
             tagger_list=["dips", "rnnip"],
             label_list=["DIPS", "RNNIP"],
-            colour_list=["b", "r"],
-            linestyle_list=["--", "--"],
             rejections_to_plot=["ujets", "cjets"],
             marked_points_list=[
                 {"cjets": 0.1, "ujets": 0.9},
@@ -320,6 +318,7 @@ class plot_score_TestCase(unittest.TestCase):
             ],
             plot_name=self.actual_plots_dir + "plotFractionContour.png",
             rejections_to_fix_list=[None, None],
+            atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
         )
 
         self.assertIsNone(

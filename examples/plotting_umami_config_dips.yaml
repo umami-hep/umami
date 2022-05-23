@@ -110,7 +110,7 @@ Dips_light_flavour_ttbar:
     xmin: 0.5
     ymax: 1000000
     figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    working_points: [0.60, 0.70, 0.77, 0.85]
     use_atlas_tag: True # Enable/Disable atlas_first_tag
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ validation sample, fc=0.018"
@@ -133,7 +133,7 @@ Dips_Comparison_flavour_ttbar:
     xmin: 0.5
     ymax: 1000000
     figsize: [9, 9] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    working_points: [0.60, 0.70, 0.77, 0.85]
     use_atlas_tag: True # Enable/Disable atlas_first_tag
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ validation sample, fc=0.018"

@@ -2,55 +2,6 @@
 Implementation of ATLAS style conventions.
 Adapted from https://github.com/rateixei/PyATLASstyle
 """
-import os
-
-from matplotlib import font_manager
-
-
-def get_good_colours():
-    """List of colours adequate for plotting
-
-    Returns
-    -------
-    list
-        list with colours
-    """
-    return ["#AA3377", "#228833", "#4477AA", "#CCBB44", "#EE6677", "#BBBBBB"]
-
-
-def applyATLASstyle(mpl):
-    """Adapting matplotlib style to resemble ATLAS style recommendations.
-
-    Parameters
-    ----------
-    mpl : matplotlib
-        matplotlib library
-    """
-    font_dir = os.path.abspath(__file__).replace("PyATLASstyle.py", "fonts/")
-    font_dirs = [
-        font_dir,
-    ]
-
-    font_files = font_manager.findSystemFonts(fontpaths=font_dirs)
-    for f in font_files:
-        font_manager.FontManager.addfont(font_manager.fontManager, path=f)
-    mpl.rcParams["font.size"] = 10
-    mpl.rcParams["legend.frameon"] = False
-    mpl.rcParams["legend.fontsize"] = 10
-    mpl.rcParams["lines.antialiased"] = False
-    mpl.rcParams["lines.linewidth"] = 2.5
-    mpl.rcParams["xtick.direction"] = "in"
-    mpl.rcParams["xtick.top"] = True
-    mpl.rcParams["xtick.minor.visible"] = True
-    mpl.rcParams["xtick.major.size"] = 10
-    mpl.rcParams["xtick.minor.size"] = 5
-    mpl.rcParams["ytick.direction"] = "in"
-    mpl.rcParams["ytick.right"] = True
-    mpl.rcParams["ytick.minor.visible"] = True
-    mpl.rcParams["ytick.major.size"] = 10
-    mpl.rcParams["ytick.minor.size"] = 5
-    mpl.rcParams["axes.unicode_minus"] = False
-    mpl.rcParams["pdf.fonttype"] = 3
 
 
 def makeATLAStag(

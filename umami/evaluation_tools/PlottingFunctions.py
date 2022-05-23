@@ -5,17 +5,24 @@ from umami.configuration import global_config, logger  # isort:skip
 
 from collections import OrderedDict
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from mlxtend.evaluate import confusion_matrix
 from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from puma import Histogram, HistogramPlot, Roc, RocPlot, VarVsEff, VarVsEffPlot
+from puma import (
+    FractionScan,
+    FractionScanPlot,
+    Histogram,
+    HistogramPlot,
+    Roc,
+    RocPlot,
+    VarVsEff,
+    VarVsEffPlot,
+)
 
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
 from umami.plotting.utils import translate_kwargs
-from umami.tools import applyATLASstyle
 
 
 def plot_pt_dependence(
@@ -233,7 +240,7 @@ def plotROCRatio(
     df_eff_key: str = "effs",
     draw_errors: bool = True,
     labelpad: int = None,
-    WorkingPoints: list = None,
+    working_points: list = None,
     same_height_WP: bool = True,
     linestyles: list = None,
     colours: list = None,
@@ -269,7 +276,7 @@ def plotROCRatio(
     labelpad : int, optional
         Spacing in points from the axes bounding box including
         ticks and tick labels, by default None
-    WorkingPoints : list, optional
+    working_points : list, optional
         List of working points which are to be plotted as
         vertical lines in the plot, by default None
     same_height_WP : bool, optional
@@ -445,9 +452,9 @@ def plotROCRatio(
             label=f'{flav_cat[flav_list[1]]["legend_label"]} ratio',
         )
 
-    if WorkingPoints is not None:
+    if working_points is not None:
         plot_roc.draw_vlines(
-            vlines_xvalues=WorkingPoints,
+            vlines_xvalues=working_points,
             same_height=same_height_WP,
         )
 
@@ -960,36 +967,17 @@ def plot_confusion(
     plt.close()
 
 
-def plotFractionContour(  # pylint: disable=W0102
+def plotFractionContour(
     df_results_list: list,
     tagger_list: list,
     label_list: list,
-    colour_list: list,
-    linestyle_list: list,
     rejections_to_plot: list,
     plot_name: str,
     rejections_to_fix_list: list,
-    marked_points_list: list,
-    apply_atlas_style: bool = True,
-    transparent_bkg: bool = True,
-    use_atlas_tag: bool = True,
-    atlas_first_tag: str = "Simulation Internal",
-    atlas_second_tag: str = "$\\sqrt{s}=13$ TeV, PFlow,\n$t\\bar{t}$ Test Sample",
-    yAxisAtlasTag: float = 0.9,
-    y_scale: float = 1.3,
-    figsize: list = [11.69 * 0.8, 8.27 * 0.8],
-    leg_ncol: int = 1,
-    fontsize: int = 10,
-    leg_fontsize: int = 10,
-    leg_loc: str = "best",
-    xlim: list = None,
-    ylim: list = None,
-    grid: bool = True,
-    title: str = "",
-    xcolour: str = "black",
-    ycolour: str = "black",
-    dpi: int = 400,
-    **kwargs,  # pylint: disable=unused-argument
+    marked_points_list: list = None,
+    colour_list: list = None,
+    linestyle_list: list = None,
+    **kwargs,
 ):
     """Plot contour plots for the given taggers for two rejections.
     The rejections are calulated with different fractions. If more
@@ -1005,12 +993,6 @@ def plotFractionContour(  # pylint: disable=W0102
         List of the models/taggers that are to be plotted.
     label_list : list
         List with the labels for the given taggers.
-    colour_list : list
-        List with colours for the given taggers. If an empty list is given,
-        the colours will be set automatically.
-    linestyle_list : list
-        List with linestyles for the given taggers. If an empty list is given,
-        the linestyles will be set automatically.
     rejections_to_plot : list
         List with two elements. The elements are the names for the two
         rejections that are plotted against each other. For example,
@@ -1023,57 +1005,16 @@ def plotFractionContour(  # pylint: disable=W0102
         value. The dict entry key is the name of the rejection, for
         example "bbjets", and the entry is the value that it is set to,
         for example 0.2.
-    marked_points_list : list
+    marked_points_list : list, optional
         List with marker dicts for each model provided. The dict contains
         the information needed to plot the marker, like the fraction values,
-        which colour is used etc.
-    apply_atlas_style : bool, optional
-        Apply ATLAS style for matplotlib, by default True
-    transparent_bkg : bool, optional
-        if plot is saved with transparent background, by default True
-    use_atlas_tag : bool, optional
-        Use the ATLAS Tag in the plots, by default True
-    atlas_first_tag : str, optional
-        First row of the ATLAS Tag, by default "Simulation Internal"
-    atlas_second_tag : str, optional
-        Second Row of the ATLAS Tag. No need to add WP or fc. It will
-        be added automatically, by default,
-        "$sqrt{s}=13$ TeV, PFlow Jets, $t bar{t}$ Test Sample, WP = 77"
-    yAxisAtlasTag : float, optional
-        y position where the ATLAS logo is placed in parts of the full y axis
-        (0 is bottom, 1 is tom). By default 0.9
-    y_scale : float, optional
-        Increasing the y axis to fit the ATLAS Tag, by default 1.3
-    figsize : list, optional
-        List with the figure size, first entry is the width, second is the
-        height. By default [11.69 * 0.8, 8.27 * 0.8]
-    leg_ncol : int, optional
-        Number of legend columns, by default 1
-    fontsize : int, optional
-        Fontsize of the axis labels, by default 10
-    leg_fontsize : int, optional
-        Fontsize of the legend, by default 10
-    leg_loc : str, optional
-        Position of the legend in the plot, by default "best"
-    xlim : list, optional
-        List with two elements, lower and upper limit for the x-axis,
-        by default None
-    ylim : list, optional
-        List with two elements, lower and upper limit for the y-axis,
-        by default None
-    grid : bool, optional
-        Decide, if a grid is plotted or not, by default True
-    title : str, optional
-        Title of the plot, by default ""
-    xcolour : str, optional
-        Color of the x-axis, by default "black"
-    ycolour : str, optional
-        Color of the y-axis, by default "black"
-    dpi : int, optional
-        Sets a DPI value for the plot that is produced (mainly for png),
-        by default 400
-    **kwargs
-        Arbitrary keyword arguments.
+        which colour is used etc, by default None
+    colour_list : list, optional
+        List with colours for the given taggers, by default None
+    linestyle_list : list, optional
+        List with linestyles for the given taggers, by default None
+    **kwargs : kwargs
+        kwargs for `fraction_scan_plot` function
 
     Raises
     ------
@@ -1082,24 +1023,18 @@ def plotFractionContour(  # pylint: disable=W0102
         the same.
     """
 
-    # Apply the ATLAS Style with the bars on the axes
-    if apply_atlas_style is True:
-        applyATLASstyle(mpl)
+    # Translate the old keywords
+    kwargs = translate_kwargs(kwargs)
 
-    # Get a full colour list
-    if len(colour_list) == 0:
-        colour_list_tmp = []
+    # Make a list of None to be able to loop over it
+    if marked_points_list is None:
+        marked_points_list = [None] * len(df_results_list)
 
-        # Create new colour list
-        for i in range(len(df_results_list)):
-            colour_list_tmp.append(f"C{i}")
+    if colour_list is None:
+        colour_list = [None] * len(df_results_list)
 
-        # Set the tmp colour list as the real one
-        colour_list = colour_list_tmp
-
-    # Get a full colour list
-    if len(linestyle_list) == 0:
-        linestyle_list = ["--" for i in range(len(df_results_list))]
+    if linestyle_list is None:
+        linestyle_list = [None] * len(df_results_list)
 
     # Get global config for flavours
     flav_cat = global_config.flavour_categories
@@ -1114,8 +1049,8 @@ def plotFractionContour(  # pylint: disable=W0102
     # Remove all doubled items
     fraction_list = list(dict.fromkeys(fraction_list))
 
-    # Set figure size
-    plt.figure(figsize=(figsize[0], figsize[1]))
+    # Init the fraction scan plot
+    frac_plot = FractionScanPlot(**kwargs)
 
     # Ensure that for each model, a tagger name and a label is provided and vice versa
     # TODO Change in Python 3.10 to strict=True in the zip() function which will ensure
@@ -1197,16 +1132,18 @@ def plotFractionContour(  # pylint: disable=W0102
                         plot_point_y = dict_values[f"{rejections_to_plot[1]}_rej"]
 
         # Plot the contour
-        plt.plot(
-            df[rejections_to_plot[0]],
-            df[rejections_to_plot[1]],
-            label=label,
-            color=colour,
-            linestyle=linestyle,
+        frac_plot.add(
+            FractionScan(
+                x_values=df[rejections_to_plot[0]],
+                y_values=df[rejections_to_plot[1]],
+                label=label,
+                colour=colour,
+                linestyle=linestyle,
+            )
         )
 
         if marked_point_dict:
-            # Build the correct for the point
+            # Build the correct marker for the point
             frac_label_x = flav_cat[rejections_to_plot[0]]["prob_var_name"]
             frac_x_value = marked_point_dict[f"{rejections_to_plot[0]}"]
             frac_label_y = flav_cat[rejections_to_plot[1]]["prob_var_name"]
@@ -1217,87 +1154,47 @@ def plotFractionContour(  # pylint: disable=W0102
                 rf" $f_{{{frac_label_y}}} = {frac_y_value}$"
             )
 
-            # Plot the marker
-            plt.plot(
-                plot_point_x,
-                plot_point_y,
-                color=marked_point_dict["colour"]
-                if "colour" in marked_point_dict
-                and marked_point_dict["colour"] is not None
-                else colour,
-                marker=marked_point_dict["marker_style"]
-                if "marker_style" in marked_point_dict
-                and marked_point_dict["marker_style"] is not None
-                else "x",
-                label=marked_point_dict["marker_label"]
-                if "marker_label" in marked_point_dict
-                and marked_point_dict["marker_label"] is not None
-                else point_label,
-                markersize=marked_point_dict["markersize"]
-                if "markersize" in marked_point_dict
-                and marked_point_dict["markersize"] is not None
-                else 15,
-                markeredgewidth=marked_point_dict["markeredgewidth"]
-                if "markeredgewidth" in marked_point_dict
-                and marked_point_dict["markeredgewidth"] is not None
-                else 2,
+            # Add the marker for the contour
+            frac_plot.add(
+                FractionScan(
+                    x_values=plot_point_x,
+                    y_values=plot_point_y,
+                    colour=marked_point_dict["colour"]
+                    if "colour" in marked_point_dict
+                    and marked_point_dict["colour"] is not None
+                    else None,
+                    marker=marked_point_dict["marker_style"]
+                    if "marker_style" in marked_point_dict
+                    and marked_point_dict["marker_style"] is not None
+                    else None,
+                    label=marked_point_dict["marker_label"]
+                    if "marker_label" in marked_point_dict
+                    and marked_point_dict["marker_label"] is not None
+                    else point_label,
+                    markersize=marked_point_dict["markersize"]
+                    if "markersize" in marked_point_dict
+                    and marked_point_dict["markersize"] is not None
+                    else None,
+                    markeredgewidth=marked_point_dict["markeredgewidth"]
+                    if "markeredgewidth" in marked_point_dict
+                    and marked_point_dict["markeredgewidth"] is not None
+                    else None,
+                ),
+                is_marker=True,
             )
 
-    # Set x and y label
-    plt.xlabel(
-        flav_cat[rejections_to_plot[0]]["legend_label"] + " rejection",
-        fontsize=fontsize,
-        horizontalalignment="right",
-        x=1.0,
-        color=ycolour,
-    )
-    plt.ylabel(
-        flav_cat[rejections_to_plot[1]]["legend_label"] + " rejection",
-        fontsize=fontsize,
-        horizontalalignment="right",
-        y=1.0,
-        color=xcolour,
-    )
-
-    # Set limits if defined
-    if xlim:
-        plt.xlim(bottom=xlim[0], top=xlim[1])
-
-    if ylim:
-        plt.xlim(bottom=ylim[0], top=ylim[1])
-
-    # Increase y limit for ATLAS tag
-    y_min, y_max = plt.ylim()
-    plt.ylim(bottom=y_min, top=y_max * y_scale)
-
-    # Check to use a meshgrid
-    if grid is True:
-        plt.grid()
-
-    # Set title of the plot
-    plt.title(title)
-
-    # Define ATLAS tag
-    if use_atlas_tag is True:
-        pas.makeATLAStag(
-            ax=plt.gca(),
-            fig=plt.gcf(),
-            first_tag=atlas_first_tag,
-            second_tag=atlas_second_tag,
-            ymax=yAxisAtlasTag,
+    # Set the xlabel
+    if frac_plot.xlabel is None:
+        frac_plot.xlabel = (
+            flav_cat[rejections_to_plot[0]]["legend_label"].capitalize() + " rejection"
         )
 
-    # Set legend
-    plt.legend(
-        loc=leg_loc,
-        prop={"size": leg_fontsize},
-        ncol=leg_ncol,
-    )
+    # Set the ylabel
+    if frac_plot.ylabel is None:
+        frac_plot.ylabel = (
+            flav_cat[rejections_to_plot[1]]["legend_label"].capitalize() + " rejection"
+        )
 
-    # Set tight layout
-    plt.tight_layout()
-
-    # Save plot
-    plt.savefig(plot_name, transparent=transparent_bkg, dpi=dpi)
-    plt.close()
-    plt.clf()
+    # Draw and save the plot
+    frac_plot.draw()
+    frac_plot.savefig(plot_name, transparent=True)

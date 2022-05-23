@@ -114,6 +114,6 @@ Therefore, all parameters supported by the `HistogramPlot` class can be specifie
 ### List of `puma` parameters
 
 §§§docs/ci_assets/docstring_puma_HistogramPlot.md§§§
+§§§docs/ci_assets/docstring_puma_PlotObject.md:3:§§§
 <!-- in the docstring for the PlotObject class, start at line 3, since we don't want
 the header to be included (column names of the md-table -->
-§§§docs/ci_assets/docstring_puma_PlotObject.md:3:§§§
