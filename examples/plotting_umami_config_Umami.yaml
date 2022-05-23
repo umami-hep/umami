@@ -98,7 +98,7 @@ beff_scan_tagger_umami:
     xmin: 0.5
     ymax: 1000000
     figsize: [7, 6] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    working_points: [0.60, 0.70, 0.77, 0.85]
     use_atlas_tag: True # Enable/Disable atlas_first_tag
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"
@@ -172,7 +172,7 @@ beff_scan_tagger_compare_umami:
     xmin: 0.5
     ymax: 1000000
     figsize: [9, 9] # [width, hight]
-    WorkingPoints: [0.60, 0.70, 0.77, 0.85]
+    working_points: [0.60, 0.70, 0.77, 0.85]
     use_atlas_tag: True # Enable/Disable atlas_first_tag
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets,\n$t\\bar{t}$ Validation Sample, fc=0.018"

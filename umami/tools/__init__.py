@@ -1,6 +1,6 @@
 # flake8: noqa
 # pylint: skip-file
-from umami.tools.PyATLASstyle.PyATLASstyle import applyATLASstyle, makeATLAStag
+from umami.tools.PyATLASstyle.PyATLASstyle import makeATLAStag
 from umami.tools.tools import (
     atoi,
     check_main_class_input,
