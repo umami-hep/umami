@@ -495,7 +495,7 @@ def PlotRejPerEpochComparison(
         kwargs["y_scale"] = 1.3
     ax_right.set_ylim(top=ax_right.get_ylim()[1] * kwargs["y_scale"])
 
-    rej_plot.set_logy()
+    rej_plot.set_log()
     rej_plot.set_y_lim()
     rej_plot.axis_top.set_xlabel("Epoch")
     rej_plot.set_tick_params()
