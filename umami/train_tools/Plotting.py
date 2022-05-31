@@ -159,7 +159,7 @@ def PlotDiscCutPerEpoch(
     target_beff: float = 0.77,
     frac: float = 0.018,
     plot_datatype: str = "pdf",
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """Plot the discriminant cut value for a specific working point
     over all epochs.
@@ -218,7 +218,7 @@ def PlotDiscCutPerEpochUmami(
     val_files: dict = None,
     target_beff: float = 0.77,
     plot_datatype: str = "pdf",
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """Plot the discriminant cut value for a specific working point over all epochs.
     DIPS and Umami are both shown.
@@ -282,11 +282,11 @@ def PlotRejPerEpochComparison(
     label_extension: str,
     rej_string: str,
     taggers_from_file: dict = None,
-    trained_taggers: list = None,
+    trained_taggers: dict = None,
     target_beff: float = 0.77,
     plot_datatype: str = "pdf",
     leg_fontsize: int = 10,
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """Plotting the Rejections per Epoch for the trained tagger and the provided
     comparison taggers.
@@ -365,30 +365,11 @@ def PlotRejPerEpochComparison(
         # Init a linestyle counter
         counter_models = 0
 
-        # Plot rejection
-        lines = lines + axes[counter].plot(
-            df_results["epoch"],
-            df_results[f"{iter_class}_{rej_string}"],
-            linestyle=linestyle_list[counter],
-            color=f"C{counter_models}",
-            label=tagger_label,
-        )
-
-        # Set up the counter
-        counter_models += 1
-
-        # Set y label
-        rej_plot.set_ylabel(
-            ax_mpl=axes[counter],
-            label=f'{flav_cat[iter_class]["legend_label"]} rejection',
-            align_right=False,
-        )
-
         if comp_tagger_rej_dict is None:
             logger.info("No comparison tagger defined. Not plotting those!")
 
         else:
-            for _, comp_tagger in enumerate(comp_tagger_rej_dict):
+            for comp_tagger in comp_tagger_rej_dict:
                 try:
                     tmp_line = axes[counter].axhline(
                         y=comp_tagger_rej_dict[comp_tagger][
@@ -420,7 +401,7 @@ def PlotRejPerEpochComparison(
                 logger.debug("No local taggers defined. Not plotting those!")
 
         else:
-            for _, tt in enumerate(trained_taggers):
+            for tt in trained_taggers:
                 try:
                     # Get the needed rejection info from json
                     tt_rej_dict = pd.read_json(trained_taggers[tt]["path"])
@@ -441,6 +422,25 @@ def PlotRejPerEpochComparison(
 
                 # Set up the counter
                 counter_models += 1
+
+        # Plot rejection
+        lines = lines + axes[counter].plot(
+            df_results["epoch"],
+            df_results[f"{iter_class}_{rej_string}"],
+            linestyle=linestyle_list[counter],
+            color=f"C{counter_models}",
+            label=tagger_label,
+        )
+
+        # Set up the counter
+        counter_models += 1
+
+        # Set y label
+        rej_plot.set_ylabel(
+            ax_mpl=axes[counter],
+            label=f'{flav_cat[iter_class]["legend_label"]} rejection',
+            align_right=False,
+        )
 
     ax_left.xaxis.set_major_locator(MaxNLocator(integer=True))
 
@@ -516,10 +516,10 @@ def PlotRejPerEpoch(
     label_extension: str,
     rej_string: str,
     taggers_from_file: dict = None,
-    trained_taggers: list = None,
+    trained_taggers: dict = None,
     target_beff: float = 0.77,
     plot_datatype: str = "pdf",
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """Plotting the Rejections per Epoch for the trained tagger and the provided
     comparison taggers in separate plots. One per rejection.
@@ -581,18 +581,6 @@ def PlotRejPerEpoch(
         # Init a linestyle counter
         counter_models = 0
 
-        # Plot rejection
-        rej_plot.axis_top.plot(
-            df_results["epoch"],
-            df_results[f"{iter_class}_{rej_string}"],
-            linestyle="-",
-            color=f"C{counter_models}",
-            label=tagger_label,
-        )
-
-        # Set up the counter
-        counter_models += 1
-
         if comp_tagger_rej_dict is None:
             logger.info("No comparison tagger defined. Not plotting those!")
 
@@ -625,7 +613,7 @@ def PlotRejPerEpoch(
             logger.debug("No local taggers defined. Not plotting those!")
 
         else:
-            for _, tt in enumerate(trained_taggers):
+            for tt in trained_taggers:
                 try:
                     # Get the needed rejection info from json
                     tt_rej_dict = pd.read_json(trained_taggers[tt]["path"])
@@ -647,6 +635,18 @@ def PlotRejPerEpoch(
                 # Set up the counter
                 counter_models += 1
 
+        # Plot rejection
+        rej_plot.axis_top.plot(
+            df_results["epoch"],
+            df_results[f"{iter_class}_{rej_string}"],
+            linestyle="-",
+            color=f"C{counter_models}",
+            label=tagger_label,
+        )
+
+        # Set up the counter
+        counter_models += 1
+
         rej_plot.atlas_second_tag += (
             f"\nWP={int(target_beff * 100):02d}% {label_extension} sample"
         )
@@ -663,7 +663,7 @@ def PlotLosses(
     plot_name: str,
     val_files: dict = None,
     plot_datatype: str = "pdf",
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """Plot the training loss and the validation losses per epoch.
 
@@ -719,7 +719,7 @@ def PlotAccuracies(
     plot_name: str,
     val_files: dict = None,
     plot_datatype: str = "pdf",
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """Plot the training and validation accuracies per epoch.
 
@@ -773,7 +773,7 @@ def PlotLossesUmami(
     plot_name: str,
     val_files: dict = None,
     plot_datatype: str = "pdf",
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """Plot the training loss and the validation losses per epoch for Umami model
     (with DIPS and Umami losses).
@@ -844,7 +844,7 @@ def PlotAccuraciesUmami(
     plot_name: str,
     val_files: dict = None,
     plot_datatype: str = "pdf",
-    **kwargs,  # pylint: disable=unused-argument
+    **kwargs,
 ):
     """Plot the training and validation accuracies per epoch for Umami model
     (with DIPS and Umami accuracies).
@@ -1066,6 +1066,8 @@ def RunPerformanceCheck(
                         label_extension=val_file_config["label"],
                         rej_string=f"rej_{subtagger}_{val_file_identifier}",
                         target_beff=working_point,
+                        taggers_from_file=Val_settings["taggers_from_file"],
+                        trained_taggers=Val_settings["trained_taggers"],
                         **plot_args,
                     )
 
@@ -1082,6 +1084,8 @@ def RunPerformanceCheck(
                         label_extension=val_file_config["label"],
                         rej_string=f"rej_{subtagger}_{val_file_identifier}",
                         target_beff=working_point,
+                        taggers_from_file=Val_settings["taggers_from_file"],
+                        trained_taggers=Val_settings["trained_taggers"],
                         **plot_args,
                     )
 
@@ -1132,8 +1136,11 @@ def RunPerformanceCheck(
                     label_extension=val_file_config["label"],
                     rej_string=f"rej_{val_file_identifier}",
                     target_beff=working_point,
+                    taggers_from_file=Val_settings["taggers_from_file"],
+                    trained_taggers=Val_settings["trained_taggers"],
                     **plot_args,
                 )
+
         for val_file_identifier, val_file_config in val_files.items():
             # Plot rejections in one plot per rejection
             PlotRejPerEpoch(
@@ -1147,6 +1154,8 @@ def RunPerformanceCheck(
                 rej_string=f"rej_{val_file_identifier}",
                 target_beff=working_point,
                 tagger_label=Val_settings["tagger_label"],
+                taggers_from_file=Val_settings["taggers_from_file"],
+                trained_taggers=Val_settings["trained_taggers"],
                 **plot_args,
             )
 

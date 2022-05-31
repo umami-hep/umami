@@ -94,7 +94,7 @@ beff_scan_tagger_umami:
       tagger_name: "umami"
       rejection_class: "cjets"
   plot_settings:
-    binomialErrors: True
+    draw_errors: True
     xmin: 0.5
     ymax: 1000000
     figsize: [7, 6] # [width, hight]
@@ -168,7 +168,7 @@ beff_scan_tagger_compare_umami:
       tagger_name: "umami"
       rejection_class: "cjets"
   plot_settings:
-    binomialErrors: True
+    draw_errors: True
     xmin: 0.5
     ymax: 1000000
     figsize: [9, 9] # [width, hight]

@@ -37,7 +37,7 @@ def plot_pt_dependence(
     disc_cut: float = None,
     fixed_eff_bin: bool = False,
     bin_edges: list = None,
-    wp_line: bool = False,
+    working_point_line: bool = False,
     grid: bool = False,
     colours: list = None,
     alpha: float = 0.8,
@@ -75,7 +75,7 @@ def plot_pt_dependence(
     bin_edges : list, optional
         As the name says, the edges of the bins used. Will be set
         automatically, if None. By default None.
-    wp_line : bool, optional
+    working_point_line : bool, optional
         Print a WP line in the upper plot, by default False.
     grid : bool, optional
         Use a grid in the plots, by default False
@@ -95,24 +95,6 @@ def plot_pt_dependence(
     ValueError
         If deprecated options are given.
     """
-    if "colors" in kwargs:
-        colours = kwargs["colors"]
-        kwargs.pop("colors")
-    if "WP" in kwargs:
-        working_point = kwargs["WP"]
-        kwargs.pop("WP")
-    if "Disc_Cut_Value" in kwargs:
-        disc_cut = kwargs["Disc_Cut_Value"]
-        kwargs.pop("Disc_Cut_Value")
-    if "Fixed_WP_Bin" in kwargs:
-        fixed_eff_bin = kwargs["Fixed_WP_Bin"]
-        kwargs.pop("Fixed_WP_Bin")
-    if "Grid" in kwargs:
-        grid = kwargs["Grid"]
-        kwargs.pop("Grid")
-    if "WP_Line" in kwargs:
-        wp_line = kwargs["WP_Line"]
-        kwargs.pop("WP_Line")
 
     # Translate the kwargs to new naming scheme
     kwargs = translate_kwargs(kwargs)
@@ -220,12 +202,12 @@ def plot_pt_dependence(
     if grid is True:
         plot_pt.set_grid()
     # Set WP Line
-    if wp_line is True:
+    if working_point_line is True:
         plot_pt.draw_hline(working_point)
         if main_class != flavour:
             logger.warning(
-                "You set `wp_line` to True but you are not looking at the singal "
-                "efficiency. It will probably not be visible on your plot."
+                "You set `working_point_line` to True but you are not looking at the"
+                " singal efficiency. It will probably not be visible on your plot."
             )
     plot_pt.savefig(plot_name, transparent=trans)
 
@@ -309,22 +291,6 @@ def plotROCRatio(
     # Check for number of provided Rocs
     n_rocs = len(df_results_list)
 
-    # maintain backwards compatibility
-    if "nTest" in kwargs:
-        if n_test is None:
-            n_test = kwargs["nTest"]
-        kwargs.pop("nTest")
-    if "colors" in kwargs:
-        if colours is None:
-            colours = kwargs["colors"]
-            # remnant of old implementation passing empty list as default
-            if kwargs["colors"] == []:
-                colours = None
-        kwargs.pop("colors")
-    if "binomialErrors" in kwargs:
-        if draw_errors is None:
-            draw_errors = kwargs["binomialErrors"]
-        kwargs.pop("binomialErrors")
     if "ratio_id" in kwargs:
         if reference_ratio is None and kwargs["ratio_id"] is not None:
             # if old keyword is used the syntax was also different
@@ -409,6 +375,7 @@ def plotROCRatio(
 
         elif isinstance(n_test, (int, float)):
             n_test = [n_test] * len(df_results_list)
+
         elif isinstance(n_test, list):
             if len(n_test) != len(df_results_list):
                 raise ValueError(

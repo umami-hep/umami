@@ -57,7 +57,7 @@ DL1r_light_flavour:
       tagger_name: "DL1"
       rejection_class: "cjets"
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
-    binomialErrors: True
+    draw_errors: True
     xmin: 0.5
     ymax: 1000000
     figsize: [7, 6] # [width, hight]

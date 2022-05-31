@@ -87,9 +87,9 @@ Dips_pT_vs_beff:
     flavour: "cjets"
     class_labels: ["ujets", "cjets", "bjets"]
     main_class: "bjets"
-    WP: 0.77
-    WP_Line: True
-    Fixed_WP_Bin: False
+    working_point: 0.77
+    working_point_line: True
+    fixed_eff_bin: False
     figsize: [7, 5]
     logy: False
     use_atlas_tag: True
@@ -106,7 +106,7 @@ Dips_light_flavour_ttbar:
       tagger_name: "dips"
       rejection_class: "cjets"
   plot_settings:
-    binomialErrors: True
+    draw_errors: True
     xmin: 0.5
     ymax: 1000000
     figsize: [7, 6] # [width, hight]
@@ -129,7 +129,7 @@ Dips_Comparison_flavour_ttbar:
       tagger_name: "dips"
       rejection_class: "cjets"
   plot_settings:
-    binomialErrors: True
+    draw_errors: True
     xmin: 0.5
     ymax: 1000000
     figsize: [9, 9] # [width, hight]

@@ -144,7 +144,7 @@ class plot_score_TestCase(unittest.TestCase):
             labels=["RNNIP ttbar", "DIPS ttbar"],
             # plot_name=self.expected_plots_dir + "ROC_Test.png",
             plot_name=self.actual_plots_dir + "ROC_Test.png",
-            nTest=[100000, 100000],
+            n_test=[100_000, 100_000],
             working_points=[0.60, 0.70, 0.77, 0.85],
             main_class="bjets",
             atlas_second_tag=(
@@ -179,7 +179,7 @@ class plot_score_TestCase(unittest.TestCase):
             labels=["RNNIP", "DIPS", "RNNIP", "DIPS"],
             # plot_name=self.expected_plots_dir + "ROC_Comparison_Test.png",
             plot_name=self.actual_plots_dir + "ROC_Comparison_Test.png",
-            nTest=[100000, 100000, 100000, 100000],
+            n_test=[100_000, 100_000, 100_000, 100_000],
             working_points=[0.60, 0.70, 0.77, 0.85],
             reference_ratio=[True, False, True, False],
             atlas_second_tag=(

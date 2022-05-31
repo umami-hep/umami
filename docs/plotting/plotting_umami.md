@@ -95,7 +95,7 @@ Plotting the ROC Curves of the rejection rates against the b-tagging efficiency.
 | `label` | `str` | Necessary | Legend label of the model. |
 | `tagger_name` | `str` | Necessary | Name of the tagger which is to be plotted. |
 | `rejection_class` | `str` | Necessary | Class which the main flavour is plotted against. |
-| `binomialErrors` | `bool` | Optional | Plot binomial errors to plot. |
+| `draw_errors` | `bool` | Optional | Plot binomial errors to plot. |
 | `xmin` | `float` | Optional | Set the minimum b efficiency in the plot (which is the xmin limit). |
 | `ymax` | `float` | Optional | The maximum y axis. |
 | `working_points` | `list` | Optional | The specified WPs are calculated and at the calculated b-tagging discriminant there will be a vertical line with a small label on top which prints the WP. |
@@ -124,8 +124,8 @@ Plot the b efficiency/c-rejection/light-rejection against the pT. For example:
 | `flavour` | `str` | Necessary | Flavour class rejection which is to be plotted. |
 | `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
 | `main_class` | `str` | Class which is to be tagged. |
-| `WP` | `float` | Necessary | Float of the working point that will be used. |
-| `WP_line` | `float` | Optional | Print a horizontal line at this value efficiency. |
+| `working_point` | `float` | Necessary | Float of the working point that will be used. |
+| `working_point_line` | `float` | Optional | Print a horizontal line at this value efficiency. |
 | `fixed_eff_bin` | `bool` | Optional | Calculate the WP cut on the discriminant per bin. |
 
 #### Fraction Contour Plot
