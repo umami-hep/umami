@@ -8,16 +8,16 @@ In the following, the possible configration parameters are listed with a brief d
 Here you can define the number of jets that are used and also the variable dict, where all the variables that are available are saved.
 
 ??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
-    ```yaml linenums="1", hl_lines="9-14"
-    §§§examples/plotting_input_vars.yaml§§§
+    ```yaml
+    §§§examples/plotting_input_vars.yaml:9:14§§§
     ```
 
 #### Number of Tracks per Jet
 The number of tracks per jet can be plotted for all different files. This can be given like this:
 
 ??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
-    ```yaml linenums="1", hl_lines="117-133"
-    §§§examples/plotting_input_vars.yaml§§§
+    ```yaml
+    §§§examples/plotting_input_vars.yaml:91:108§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -37,8 +37,8 @@ The number of tracks per jet can be plotted for all different files. This can be
 To plot the track input variables, the following options are used.
 
 ??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
-    ```yaml linenums="1", hl_lines="135-168"
-    §§§examples/plotting_input_vars.yaml§§§
+    ```yaml
+    §§§examples/plotting_input_vars.yaml:110:144§§§
     ```
 
 
@@ -59,8 +59,8 @@ To plot the track input variables, the following options are used.
 To plot the jet input variables, the following options are used.
 
 ??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
-    ```yaml linenums="1", hl_lines="16-115"
-    §§§examples/plotting_input_vars.yaml§§§
+    ```yaml
+    §§§examples/plotting_input_vars.yaml:16:89§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -82,8 +82,8 @@ In order to define some settings you want to apply to all plots, use yaml anchor
 as shown here:
 
 ??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
-    ```yaml linenums="1", hl_lines="1-7"
-    §§§examples/plotting_input_vars.yaml§§§
+    ```yaml
+    §§§examples/plotting_input_vars.yaml:1:7§§§
     ```
 
 Most of the plot settings are valid for all types of input variable plots 
