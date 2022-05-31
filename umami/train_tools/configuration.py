@@ -1,4 +1,6 @@
 """Configuration module for NN trainings."""
+import os
+
 import pydash
 import yaml
 
@@ -15,6 +17,7 @@ class Configuration:
         super().__init__()
         self.yaml_config = yaml_config
         self.config = {}
+        self.yaml_default_config = "configs/default_train_config.yaml"
         self.load_config_file()
         self.get_configuration()
 
@@ -45,9 +48,26 @@ class Configuration:
 
     def load_config_file(self):
         """Load config file from disk."""
+        self.yaml_default_config = os.path.join(
+            os.path.dirname(__file__), self.yaml_default_config
+        )
+        with open(self.yaml_default_config, "r") as conf:
+            self.default_config = yaml.load(conf, Loader=yaml_loader)
+
         logger.info(f"Using train config file {self.yaml_config}")
         with open(self.yaml_config, "r") as conf:
             self.config = yaml.load(conf, Loader=yaml_loader)
+
+        # Check if values in default config are defined in loaded config
+        # If not, set default values
+        for elem in self.default_config:
+            if elem not in self.config or self.config[elem] is None:
+                self.config[elem] = self.default_config[elem]
+
+            if isinstance(self.default_config[elem], dict):
+                for item in self.default_config[elem]:
+                    if item not in self.config[elem]:
+                        self.config[elem][item] = self.default_config[elem][item]
 
     def get_configuration(self):
         """Assigne configuration from file to class variables.
@@ -98,12 +118,15 @@ class Configuration:
         if "evaluate_trained_model" in self.config:
             if self.config["evaluate_trained_model"] is True:
                 iterate_list = config_train_items
+                bool_evaluate_trained_model = True
 
             elif self.config["evaluate_trained_model"] is False:
                 iterate_list = config_evaluation_items
+                bool_evaluate_trained_model = False
 
         else:
             iterate_list = config_train_items
+            bool_evaluate_trained_model = True
 
         if "Plotting_settings" in self.config:
             raise KeyError(
@@ -118,61 +141,63 @@ class Configuration:
                 if item == "tracks_name":
                     setattr(self, "tracks_key", f"X_{self.config[item]}_train")
 
-                elif item in (
-                    "Validation_metrics_settings",
-                    "Eval_parameters_validation",
-                ):
-                    batch_param = (
-                        "val_batch_size"
-                        if item.startswith("Val")
-                        else "eval_batch_size"
-                    )
-
+                elif item == "Validation_metrics_settings":
                     try:
-                        if (self.config[item] is not None) and (
-                            batch_param not in self.config[item]
-                            or self.config[item][batch_param] is None
+                        if (
+                            self.config["Validation_metrics_settings"]["val_batch_size"]
+                            is None
+                            and self.config["Eval_parameters_validation"][
+                                "eval_batch_size"
+                            ]
+                            is None
                         ):
-                            if batch_param == "eval_batch_size":
-                                try:
-                                    self.config[item][batch_param] = int(
-                                        self.config["Validation_metrics_settings"][
-                                            "val_batch_size"
-                                        ]
-                                    )
+                            logger.warning(
+                                "Neither eval_batch_size nor "
+                                "val_batch_size was defined. Using "
+                                "training batch_size for "
+                                "validation/evaluation!"
+                            )
 
-                                    logger.warning(
-                                        "No eval_batch_size was defined. Using "
-                                        "val_batch_size for evaluation!"
-                                    )
+                            self.config["Validation_metrics_settings"][
+                                "val_batch_size"
+                            ] = int(self.config["NN_structure"]["batch_size"])
+                            self.config["Eval_parameters_validation"][
+                                "eval_batch_size"
+                            ] = int(self.config["NN_structure"]["batch_size"])
 
-                                except KeyError:
-                                    self.config[item][batch_param] = int(
-                                        self.config["NN_structure"]["batch_size"]
-                                    )
+                        elif (
+                            self.config["Validation_metrics_settings"]["val_batch_size"]
+                            is None
+                        ):
+                            logger.warning(
+                                "No val_batch_size defined. Using training batch size"
+                                " for validation"
+                            )
 
-                                    logger.warning(
-                                        "Neither eval_batch_size nor "
-                                        "val_batch_size was defined. Using "
-                                        "training batch_size for "
-                                        "validation/evaluation!"
-                                    )
+                            self.config["Validation_metrics_settings"][
+                                "val_batch_size"
+                            ] = int(self.config["NN_structure"]["batch_size"])
 
-                            else:
-                                self.config[item][batch_param] = int(
-                                    self.config["NN_structure"]["batch_size"]
-                                )
+                        elif (
+                            self.config["Eval_parameters_validation"]["eval_batch_size"]
+                            is None
+                        ):
+                            logger.warning(
+                                "No eval_batch_size defined. Using validation batch"
+                                " size for evaluation."
+                            )
 
-                                logger.warning(
-                                    "No val_batch_size was defined. Using "
-                                    "training batch_size for validation!"
-                                )
+                            self.config["Eval_parameters_validation"][
+                                "eval_batch_size"
+                            ] = int(
+                                self.config["Validation_metrics_settings"][
+                                    "val_batch_size"
+                                ]
+                            )
 
                     except KeyError as Error:
-                        raise ValueError(
-                            f"Neither batch_size in NN_structure nor {batch_param} "
-                            f"in {item} was given!"
-                        ) from Error
+                        if bool_evaluate_trained_model:
+                            raise ValueError("No batch size given!") from Error
 
                 setattr(self, item, self.config[item])
 

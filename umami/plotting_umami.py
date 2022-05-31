@@ -159,14 +159,18 @@ def plot_roc(
     rej_class_list = []
     labels = []
     linestyles = []
-    colors = []
+    colours = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
 
-    if "nTest" not in plot_config["plot_settings"].keys():
+    if (
+        "n_test" not in plot_config["plot_settings"]
+        or plot_config["plot_settings"]["n_test"] is None
+    ):
         n_test_provided = False
-        plot_config["plot_settings"]["nTest"] = []
+        plot_config["plot_settings"]["n_test"] = []
+
     else:
         n_test_provided = True
 
@@ -195,24 +199,28 @@ def plot_roc(
         if "linestyle" in model_config:
             linestyles.append(model_config["linestyle"])
 
-        if "color" in model_config:
-            colors.append(model_config["color"])
+        if "colour" in model_config:
+            colours.append(model_config["colour"])
 
-        # nTest is only needed to calculate binomial errors
+        # n_test is only needed to calculate binomial errors
         if not n_test_provided and (
-            "binomialErrors" in plot_config["plot_settings"]
-            and plot_config["plot_settings"]["binomialErrors"]
+            "draw_errors" in plot_config["plot_settings"]
+            and plot_config["plot_settings"]["draw_errors"]
         ):
             with h5py.File(
                 eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
             ) as h5_file:
-                plot_config["plot_settings"]["nTest"].append(h5_file.attrs["N_test"])
+                plot_config["plot_settings"]["n_test"].append(h5_file.attrs["N_test"])
+
         else:
-            plot_config["plot_settings"]["nTest"] = None
+            plot_config["plot_settings"]["n_test"] = None
 
     # Get the right ratio id for correct ratio calculation
     ratio_dict = {}
     ratio_id = []
+
+    if len(colours) == 0:
+        colours = None
 
     for i, which_a in enumerate(rej_class_list):
         if which_a not in ratio_dict:
@@ -230,7 +238,7 @@ def plot_roc(
         plot_name=plot_name,
         ratio_id=ratio_id,
         linestyles=linestyles,
-        colors=colors,
+        colours=colours,
         **plot_config["plot_settings"],
     )
 
