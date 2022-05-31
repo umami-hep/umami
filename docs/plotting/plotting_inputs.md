@@ -1,5 +1,18 @@
 # Plotting Input Variables
 The input variables for different files can also be plotted using the `plot_input_variables.py` script. Its also steered by a yaml file. An example for such a file can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml). The structure is close to the one from `plotting_umami` but still a little bit different.
+To start the plotting of the input variables, you need to run the following command
+
+```bash
+plot_input_vars.py -c <path/to/config> --tracks
+```
+
+or
+
+```bash
+plot_input_vars.py -c <path/to/config> --jets
+```
+
+which will plot either all plots defined using jet- or track variables. You can also give the `-f` or `--format` option where you can decide on a format for the plots. The default is `pdf`.
 
 ### Yaml File
 In the following, the possible configration parameters are listed with a brief description. 
@@ -7,7 +20,7 @@ In the following, the possible configration parameters are listed with a brief d
 #### Variable dict and number of jets
 Here you can define the number of jets that are used and also the variable dict, where all the variables that are available are saved.
 
-??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
+??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
     §§§examples/plotting_input_vars.yaml:9:14§§§
     ```
@@ -15,7 +28,7 @@ Here you can define the number of jets that are used and also the variable dict,
 #### Number of Tracks per Jet
 The number of tracks per jet can be plotted for all different files. This can be given like this:
 
-??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
+??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
     §§§examples/plotting_input_vars.yaml:91:108§§§
     ```
@@ -36,7 +49,7 @@ The number of tracks per jet can be plotted for all different files. This can be
 #### Input Variables Tracks
 To plot the track input variables, the following options are used.
 
-??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
+??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
     §§§examples/plotting_input_vars.yaml:110:144§§§
     ```
@@ -58,7 +71,7 @@ To plot the track input variables, the following options are used.
 #### Input Variables Jets
 To plot the jet input variables, the following options are used.
 
-??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
+??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
     §§§examples/plotting_input_vars.yaml:16:89§§§
     ```
@@ -81,7 +94,7 @@ The `plot_settings` section is similar for all three cases described above.
 In order to define some settings you want to apply to all plots, use yaml anchors
 as shown here:
 
-??? example "Click to see corresponding code highlighted in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
+??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
     §§§examples/plotting_input_vars.yaml:1:7§§§
     ```
