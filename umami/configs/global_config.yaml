@@ -58,6 +58,60 @@ flavour_categories:
     colour: ""
     legend_label: $cc$-jets
     prob_var_name: "pcc"
+  upjets:
+    label_var: PartonTruthLabelID
+    label_value: 1
+    colour: ""
+    legend_label: $u$-jets
+    prob_var_name: "pup"
+  djets:
+    label_var: PartonTruthLabelID
+    label_value: 2
+    colour: ""
+    legend_label: $d$-jets
+    prob_var_name: "pd"
+  sjets:
+    label_var: PartonTruthLabelID
+    label_value: 3
+    colour: ""
+    legend_label: $s$-jets
+    prob_var_name: "ps"
+  gluonjets:
+    label_var: PartonTruthLabelID
+    label_value: 21
+    colour: ""
+    legend_label: gluon-jets
+    prob_var_name: "pg"
+  lightwogluons:
+    label_var: PartonTruthLabelID
+    label_value: [1,2,3]
+    colour: ""
+    legend_label: light-jets w/o gluons
+    prob_var_name: "plwog"
+  hadrbdecay:
+    label_var: LeptonDecayLabel
+    label_value: 0
+    colour: ""
+    legend_label: hadronic $b$-hadron decay
+    prob_var_name: "phadrb"
+  singleebdecay:
+    label_var: LeptonDecayLabel
+    label_value: 1
+    colour: ""
+    legend_label: $e$'s in $b$- or $c$-hadron decay
+    prob_var_name: "pe"
+  singlemubdecay:
+    label_var: LeptonDecayLabel
+    label_value: 2
+    colour: ""
+    legend_label: $\\mu$'s in $b$- or $c$-hadron decay
+    prob_var_name: "pmu"
+  singletaubdecay:
+    label_var: LeptonDecayLabel
+    label_value: 3
+    colour: ""
+    legend_label: \u03C4's in $b$- or $c$-hadron decay # \u03C4: unicode for small tau
+    prob_var_name: "ptau"
 
 # plot style definitions
 hist_err_style:
