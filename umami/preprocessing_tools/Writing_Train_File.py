@@ -9,7 +9,8 @@ from numpy.lib.recfunctions import repack_fields, structured_to_unstructured
 from scipy.stats import binned_statistic_2d
 
 from umami.configuration import logger
-from umami.preprocessing_tools import GetVariableDict, preprocessing_plots
+from umami.plotting_tools import preprocessing_plots
+from umami.preprocessing_tools import GetVariableDict
 
 
 class TrainSampleWriter:

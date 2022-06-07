@@ -12,7 +12,7 @@ from puma import PlotBase
 from umami.configuration import global_config, logger
 from umami.data_tools import LoadJetsFromFile
 from umami.metrics import get_rejection
-from umami.preprocessing_tools import GetBinaryLabels
+from umami.preprocessing_tools.utils import GetBinaryLabels
 from umami.tools import check_main_class_input
 
 
@@ -62,7 +62,7 @@ def plot_validation_files(
             )
 
 
-def CompTaggerRejectionDict(
+def get_comp_tagger_rej_dict(
     file: str,
     unique_identifier: str,
     tagger_comp_var: list,
@@ -151,7 +151,7 @@ def CompTaggerRejectionDict(
     return recomm_rej_dict
 
 
-def PlotDiscCutPerEpoch(
+def plot_disc_cut_per_epoch(
     df_results: dict,
     plot_name: str,
     frac_class: str,
@@ -212,7 +212,7 @@ def PlotDiscCutPerEpoch(
     disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
 
 
-def PlotDiscCutPerEpochUmami(
+def plot_disc_cut_per_epoch_umami(
     df_results: dict,
     plot_name: str,
     val_files: dict = None,
@@ -271,7 +271,7 @@ def PlotDiscCutPerEpochUmami(
     disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
 
 
-def PlotRejPerEpochComparison(
+def plot_rej_per_epoch_comp(
     df_results: dict,
     tagger_label: str,
     comp_tagger_rej_dict: dict,
@@ -505,7 +505,7 @@ def PlotRejPerEpochComparison(
     rej_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
 
 
-def PlotRejPerEpoch(
+def plot_rej_per_epoch(
     df_results: dict,
     tagger_label: str,
     comp_tagger_rej_dict: dict,
@@ -658,7 +658,7 @@ def PlotRejPerEpoch(
         )
 
 
-def PlotLosses(
+def plot_losses(
     df_results: dict,
     plot_name: str,
     val_files: dict = None,
@@ -714,7 +714,7 @@ def PlotLosses(
     loss_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
 
 
-def PlotAccuracies(
+def plot_accuracies(
     df_results: dict,
     plot_name: str,
     val_files: dict = None,
@@ -735,7 +735,8 @@ def PlotAccuracies(
         by default None
     plot_datatype : str, optional
         Datatype of the plot., by default "pdf"
-    **kwargs
+    **kwargs : kwargs
+        kwargs for `PlotBase` function
 
     """
     acc_plot = PlotBase(
@@ -768,7 +769,7 @@ def PlotAccuracies(
     acc_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
 
 
-def PlotLossesUmami(
+def plot_losses_umami(
     df_results: dict,
     plot_name: str,
     val_files: dict = None,
@@ -839,7 +840,7 @@ def PlotLossesUmami(
     loss_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
 
 
-def PlotAccuraciesUmami(
+def plot_accuracies_umami(
     df_results: dict,
     plot_name: str,
     val_files: dict = None,
@@ -859,8 +860,10 @@ def PlotAccuraciesUmami(
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
-    **kwargs
-        Keyword arguments handed to the plotting API
+    plot_datatype : str, optional
+        Datatype of the plot., by default "pdf"
+    **kwargs : kwargs
+        kwargs for `PlotBase` function
     """
     acc_plot = PlotBase(
         xlabel="Epoch",
@@ -909,7 +912,7 @@ def PlotAccuraciesUmami(
     acc_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
 
 
-def RunPerformanceCheck(
+def run_validation_check(
     train_config: object,
     tagger: str,
     tagger_comp_vars: dict = None,
@@ -934,6 +937,11 @@ def RunPerformanceCheck(
         Path to the json file with the per epoch validation metrics, by default None
     working_point : float, optional
         Working point to evaluate, by default None
+
+    Raises
+    ------
+    ValueError
+        When no training metrics json could be found.
     """
 
     logger.info(f"Running performance check for {tagger}.")
@@ -1015,7 +1023,7 @@ def RunPerformanceCheck(
             comp_tagger_rej_dict[f"{comp_tagger}"] = {}
             for val_file_identifier, val_file_config in val_files.items():
                 comp_tagger_rej_dict[f"{comp_tagger}"].update(
-                    CompTaggerRejectionDict(
+                    get_comp_tagger_rej_dict(
                         file=val_file_config["path"],
                         unique_identifier=val_file_identifier,
                         tagger_comp_var=tagger_comp_vars[comp_tagger],
@@ -1053,7 +1061,7 @@ def RunPerformanceCheck(
             if n_rej == 2:
                 for val_file_identifier, val_file_config in val_files.items():
                     # Plot comparsion for the comparison taggers
-                    PlotRejPerEpochComparison(
+                    plot_rej_per_epoch_comp(
                         df_results=tagger_rej_dict,
                         tagger_label=subtagger,
                         comp_tagger_rej_dict=comp_tagger_rej_dict,
@@ -1071,7 +1079,7 @@ def RunPerformanceCheck(
                         **plot_args,
                     )
 
-                    PlotRejPerEpoch(
+                    plot_rej_per_epoch(
                         df_results=tagger_rej_dict,
                         tagger_label=subtagger,
                         comp_tagger_rej_dict=comp_tagger_rej_dict,
@@ -1090,7 +1098,7 @@ def RunPerformanceCheck(
                     )
 
         plot_name = f"{plot_dir}/disc-cut-plot"
-        PlotDiscCutPerEpochUmami(
+        plot_disc_cut_per_epoch_umami(
             df_results=tagger_rej_dict,
             plot_name=plot_name,
             val_files=val_files,
@@ -1100,14 +1108,14 @@ def RunPerformanceCheck(
 
         # Check if metrics are present
         plot_name = f"{plot_dir}/loss-plot"
-        PlotLossesUmami(
+        plot_losses_umami(
             tagger_rej_dict,
             plot_name,
             val_files=val_files,
             **plot_args,
         )
         plot_name = f"{plot_dir}/accuracy-plot"
-        PlotAccuraciesUmami(
+        plot_accuracies_umami(
             tagger_rej_dict,
             plot_name,
             val_files=val_files,
@@ -1125,7 +1133,7 @@ def RunPerformanceCheck(
             # Plot comparsion for the comparison taggers
             # Loop over validation files
             for val_file_identifier, val_file_config in val_files.items():
-                PlotRejPerEpochComparison(
+                plot_rej_per_epoch_comp(
                     df_results=tagger_rej_dict,
                     tagger_label=Val_settings["tagger_label"],
                     comp_tagger_rej_dict=comp_tagger_rej_dict,
@@ -1143,7 +1151,7 @@ def RunPerformanceCheck(
 
         for val_file_identifier, val_file_config in val_files.items():
             # Plot rejections in one plot per rejection
-            PlotRejPerEpoch(
+            plot_rej_per_epoch(
                 df_results=tagger_rej_dict,
                 comp_tagger_rej_dict=comp_tagger_rej_dict,
                 unique_identifier=val_file_identifier,
@@ -1160,7 +1168,7 @@ def RunPerformanceCheck(
             )
 
         plot_name = f"{plot_dir}/disc-cut-plot"
-        PlotDiscCutPerEpoch(
+        plot_disc_cut_per_epoch(
             df_results=tagger_rej_dict,
             plot_name=plot_name,
             val_files=val_files,
@@ -1172,14 +1180,14 @@ def RunPerformanceCheck(
 
         # Check if metrics are present
         plot_name = f"{plot_dir}/loss-plot"
-        PlotLosses(
+        plot_losses(
             tagger_rej_dict,
             plot_name,
             val_files=val_files,
             **plot_args,
         )
         plot_name = f"{plot_dir}/accuracy-plot"
-        PlotAccuracies(
+        plot_accuracies(
             tagger_rej_dict,
             plot_name,
             val_files=val_files,

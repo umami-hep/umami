@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 
 from umami.configuration import logger
-
-from .utils import GetVariableDict, preprocessing_plots
+from umami.plotting_tools import preprocessing_plots
+from umami.preprocessing_tools.utils import GetVariableDict
 
 
 def Gen_default_dict(scale_dict: dict) -> dict:

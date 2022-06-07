@@ -12,6 +12,7 @@ from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
 
 from umami.configuration import logger
+from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
 from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
 from umami.preprocessing_tools.resampling.resampling_base import (
     CorrectFractions,
@@ -20,11 +21,7 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     SamplingGenerator,
     read_dataframe_repetition,
 )
-from umami.preprocessing_tools.utils import (
-    GetVariableDict,
-    plot_resampling_variables,
-    preprocessing_plots,
-)
+from umami.preprocessing_tools.utils import GetVariableDict
 
 
 class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods

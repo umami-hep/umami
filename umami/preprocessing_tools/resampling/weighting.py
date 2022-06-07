@@ -7,12 +7,9 @@ import h5py
 import numpy as np
 
 from umami.configuration import logger
+from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
 from umami.preprocessing_tools.resampling.resampling_base import ResamplingTools
-from umami.preprocessing_tools.utils import (
-    GetVariableDict,
-    plot_resampling_variables,
-    preprocessing_plots,
-)
+from umami.preprocessing_tools.utils import GetVariableDict
 
 
 class Weighting(ResamplingTools):

@@ -7,8 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.testing.compare import compare_images
 
-import umami.preprocessing_tools as upt
 from umami.configuration import logger, set_log_level
+from umami.plotting_tools.preprocessing_plotting_functions import (
+    plot_resampling_variables,
+    preprocessing_plots,
+)
 
 set_log_level(logger, "DEBUG")
 
@@ -42,7 +45,7 @@ class preprocessing_plots_TestCase(unittest.TestCase):
         )
 
     def test_preprocessing_plots(self):
-        upt.preprocessing_plots(
+        preprocessing_plots(
             sample=os.path.join(
                 self.actual_plots_dir,
                 "ci_preprocessing_plotting.h5",
@@ -143,7 +146,7 @@ class plot_resampling_variables_TestCase(unittest.TestCase):
     def test_plot_resampling_variables(self):
         """Test the plot_resampling_variables"""
 
-        upt.plot_resampling_variables(
+        plot_resampling_variables(
             concat_samples=self.concat_samples,
             var_positions=[0, 1],
             variable_names=self.variables,
@@ -174,7 +177,7 @@ class plot_resampling_variables_TestCase(unittest.TestCase):
         """Test the plot_resampling_variables wrong binning error"""
 
         with self.assertRaises(ValueError):
-            upt.plot_resampling_variables(
+            plot_resampling_variables(
                 concat_samples=self.concat_samples,
                 var_positions=[0, 1],
                 variable_names=self.variables,

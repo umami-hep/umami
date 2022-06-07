@@ -22,7 +22,7 @@ from puma import (
 )
 
 import umami.tools.PyATLASstyle.PyATLASstyle as pas
-from umami.plotting.utils import translate_kwargs
+from umami.plotting_tools.utils import translate_kwargs
 
 
 def plot_pt_dependence(
@@ -212,7 +212,7 @@ def plot_pt_dependence(
     plot_pt.savefig(plot_name, transparent=trans)
 
 
-def plotROCRatio(
+def plot_roc(
     df_results_list: list,
     tagger_list: list,
     rej_class_list: list,
@@ -400,27 +400,27 @@ def plotROCRatio(
     ):
         raise ValueError("Passed lists do not have same length.")
 
-    plot_roc = RocPlot(
+    roc_plot = RocPlot(
         n_ratio_panels=n_ratio_panels,
         ylabel=ylabel,
         xlabel=f'{flav_cat[main_class]["legend_label"]} efficiency',
         **kwargs,
     )
-    plot_roc.set_ratio_class(
+    roc_plot.set_ratio_class(
         ratio_panel=1,
         rej_class=flav_list[0],
         label=f'{flav_cat[flav_list[0]]["legend_label"]} ratio',
     )
 
     if n_ratio_panels > 1:
-        plot_roc.set_ratio_class(
+        roc_plot.set_ratio_class(
             ratio_panel=2,
             rej_class=flav_list[1],
             label=f'{flav_cat[flav_list[1]]["legend_label"]} ratio',
         )
 
     if working_points is not None:
-        plot_roc.draw_vlines(
+        roc_plot.draw_vlines(
             vlines_xvalues=working_points,
             same_height=same_height_WP,
         )
@@ -455,25 +455,25 @@ def plotROCRatio(
             colour=colour,
             linestyle=linestyle,
         )
-        plot_roc.add_roc(roc_curve, reference=ratio_ref)
+        roc_plot.add_roc(roc_curve, reference=ratio_ref)
 
-    plot_roc.set_leg_rej_labels(
+    roc_plot.set_leg_rej_labels(
         flav_list[0],
         label=f'{flav_cat[flav_list[0]]["legend_label"]} rejection',
     )
 
     if n_ratio_panels > 1:
-        plot_roc.set_leg_rej_labels(
+        roc_plot.set_leg_rej_labels(
             flav_list[1],
             label=f'{flav_cat[flav_list[1]]["legend_label"]} rejection',
         )
 
     # Draw and save the plot
-    plot_roc.draw(labelpad=labelpad)
-    plot_roc.savefig(plot_name)
+    roc_plot.draw(labelpad=labelpad)
+    roc_plot.savefig(plot_name)
 
 
-def plotSaliency(
+def plot_saliency(
     maps_dict: dict,
     plot_name: str,
     title: str,
@@ -865,7 +865,7 @@ def plot_prob(
     prob_plot.savefig(plot_name, transparent=True)
 
 
-def plot_confusion(
+def plot_confusion_matrix(
     df_results: dict,
     tagger_name: str,
     class_labels: list,
@@ -934,7 +934,7 @@ def plot_confusion(
     plt.close()
 
 
-def plotFractionContour(
+def plot_fraction_contour(
     df_results_list: list,
     tagger_list: list,
     label_list: list,
