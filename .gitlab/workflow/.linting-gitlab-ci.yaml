@@ -22,7 +22,7 @@
   script:
     - pip install darglint
     - darglint --list-errors
-    - find . -name "*.py" ! -name *PlottingFunctions.py ! -name *Plotting.py ! -name *conf.py  | xargs -n 1 -P 8 -t darglint
+    - find . -name "*.py" ! -name *conf.py  | xargs -n 1 -P 8 -t darglint
 
 .pylint_template: &pylint_template
   stage: linting

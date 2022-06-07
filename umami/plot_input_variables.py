@@ -10,7 +10,7 @@ import yaml
 
 import umami.input_vars_tools as uit
 from umami.configuration import logger
-from umami.plotting.utils import translate_kwargs
+from umami.plotting_tools.utils import translate_kwargs
 from umami.tools import yaml_loader
 
 

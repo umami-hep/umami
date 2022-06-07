@@ -6,7 +6,7 @@ import yaml
 
 from umami.configuration import logger
 from umami.helper_tools import get_class_label_ids, get_class_label_variables
-from umami.plotting.utils import translate_kwargs
+from umami.plotting_tools.utils import translate_kwargs
 from umami.tools import yaml_loader
 
 

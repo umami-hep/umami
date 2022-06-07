@@ -9,13 +9,13 @@ import pandas as pd
 from matplotlib.testing.compare import compare_images
 
 from umami.configuration import logger, set_log_level
-from umami.evaluation_tools.PlottingFunctions import (
+from umami.plotting_tools.eval_plotting_functions import (
+    plot_fraction_contour,
     plot_prob,
     plot_pt_dependence,
+    plot_roc,
+    plot_saliency,
     plot_score,
-    plotFractionContour,
-    plotROCRatio,
-    plotSaliency,
 )
 
 set_log_level(logger, "DEBUG")
@@ -128,13 +128,13 @@ class plot_score_TestCase(unittest.TestCase):
             )
         )
 
-    def test_plotROCRatio(self):
+    def test_plot_roc(self):
         df_results_eff_rej_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-rej_per_eff-1_new.h5",
             "ttbar",
         )
 
-        plotROCRatio(
+        plot_roc(
             df_results_list=[
                 df_results_eff_rej_ttbar,
                 df_results_eff_rej_ttbar,
@@ -161,13 +161,13 @@ class plot_score_TestCase(unittest.TestCase):
             )
         )
 
-    def test_plotROCRatioComparison(self):
+    def test_plot_rocComparison(self):
         df_results_eff_rej_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-rej_per_eff-1_new.h5",
             "ttbar",
         )
 
-        plotROCRatio(
+        plot_roc(
             df_results_list=[
                 df_results_eff_rej_ttbar,
                 df_results_eff_rej_ttbar,
@@ -229,21 +229,21 @@ class plot_score_TestCase(unittest.TestCase):
             )
         )
 
-    def test_plotSaliency(self):
+    def test_plot_saliency(self):
         with open(self.actual_plots_dir + "saliency_1_ttbar_new.pkl", "rb") as f:
             maps_dict = pickle.load(f)
 
-        plotSaliency(
+        plot_saliency(
             maps_dict=maps_dict,
-            plot_name=self.actual_plots_dir + "plotSaliency.png",
+            plot_name=self.actual_plots_dir + "plot_saliency.png",
             title="Test Saliency",
         )
         # TODO: what happens here?
         # self.assertEqual(
         #     None,
         #     compare_images(
-        #         self.plots_dir + "plotSaliency.png",
-        #         self.tmp_plot_dir + "plotSaliency.png",
+        #         self.plots_dir + "plot_saliency.png",
+        #         self.tmp_plot_dir + "plot_saliency.png",
         #         tol=1,
         #     ),
         # )
@@ -300,14 +300,14 @@ class plot_score_TestCase(unittest.TestCase):
             )
         )
 
-    def test_plotFractionContour(self):
-        """Test the plotFractionContour function."""
+    def test_plot_fraction_contour(self):
+        """Test the plot_fraction_contour function."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-rej_per_fractions-1.h5",
             "ttbar_r21",
         )
 
-        plotFractionContour(
+        plot_fraction_contour(
             df_results_list=[df_results_ttbar, df_results_ttbar],
             tagger_list=["dips", "rnnip"],
             label_list=["DIPS", "RNNIP"],
@@ -316,15 +316,15 @@ class plot_score_TestCase(unittest.TestCase):
                 {"cjets": 0.1, "ujets": 0.9},
                 {"cjets": 0.1, "ujets": 0.9},
             ],
-            plot_name=self.actual_plots_dir + "plotFractionContour.png",
+            plot_name=self.actual_plots_dir + "plot_fraction_contour.png",
             rejections_to_fix_list=[None, None],
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
         )
 
         self.assertIsNone(
             compare_images(
-                self.expected_plots_dir + "plotFractionContour.png",
-                self.actual_plots_dir + "plotFractionContour.png",
+                self.expected_plots_dir + "plot_fraction_contour.png",
+                self.actual_plots_dir + "plot_fraction_contour.png",
                 tol=1,
             )
         )

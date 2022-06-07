@@ -36,6 +36,7 @@
           - helper_tools
           - input_vars_tools
           - metrics
+          - plotting_tools
           - preprocessing
           - tf_tools
           - train_tools

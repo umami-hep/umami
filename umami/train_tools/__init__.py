@@ -22,15 +22,3 @@ from umami.train_tools.NN_tools import (
     load_validation_data_umami,
     setup_output_directory,
 )
-from umami.train_tools.Plotting import (
-    CompTaggerRejectionDict,
-    PlotAccuracies,
-    PlotAccuraciesUmami,
-    PlotDiscCutPerEpoch,
-    PlotDiscCutPerEpochUmami,
-    PlotLosses,
-    PlotLossesUmami,
-    PlotRejPerEpoch,
-    PlotRejPerEpochComparison,
-    RunPerformanceCheck,
-)

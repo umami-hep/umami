@@ -10,7 +10,7 @@ from puma import Histogram, HistogramPlot
 
 import umami.data_tools as udt
 from umami.configuration import global_config, logger
-from umami.plotting.utils import translate_binning
+from umami.plotting_tools.utils import translate_binning
 from umami.preprocessing_tools import GetVariableDict
 
 

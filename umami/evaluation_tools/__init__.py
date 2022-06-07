@@ -7,12 +7,3 @@ from umami.evaluation_tools.eval_tools import (
     GetScoresProbsDict,
     RecomputeScore,
 )
-from umami.evaluation_tools.PlottingFunctions import (
-    plot_confusion,
-    plot_prob,
-    plot_pt_dependence,
-    plot_score,
-    plotFractionContour,
-    plotROCRatio,
-    plotSaliency,
-)

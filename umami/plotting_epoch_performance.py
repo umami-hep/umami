@@ -9,8 +9,8 @@ import tensorflow as tf
 
 import umami.train_tools as utt
 from umami.helper_tools import get_class_prob_var_names
+from umami.plotting_tools import run_validation_check
 from umami.preprocessing_tools import Configuration
-from umami.train_tools import RunPerformanceCheck
 
 
 def get_parser():
@@ -180,7 +180,7 @@ def main(args, train_config, preprocess_config):
             )
 
         # Run the Performance check with the values from the dict and plot them
-        RunPerformanceCheck(
+        run_validation_check(
             train_config=train_config,
             tagger=tagger,
             tagger_comp_vars={

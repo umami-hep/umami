@@ -18,7 +18,7 @@ import yaml
 from tqdm import tqdm
 from yaml.loader import FullLoader
 
-import umami.evaluation_tools as uet
+import umami.plotting_tools as uet
 from umami.configuration import logger
 
 
@@ -230,7 +230,7 @@ def plot_roc(
         else:
             ratio_id.append(ratio_dict[which_a])
 
-    uet.plotROCRatio(
+    uet.plot_roc(
         df_results_list=df_results_list,
         tagger_list=tagger_list,
         rej_class_list=rej_class_list,
@@ -278,7 +278,7 @@ def plot_confusion_matrix(
             plot_config["evaluation_file"], plot_config["data_set_name"]
         )
 
-    uet.plot_confusion(
+    uet.plot_confusion_matrix(
         df_results=df_results,
         tagger_name=plot_config["tagger_name"],
         class_labels=plot_config["class_labels"],
@@ -456,7 +456,7 @@ def plot_saliency(
         with open(plot_config["evaluation_file"], "rb") as pkl_file:
             maps_dict = pickle.load(pkl_file)
 
-    uet.plotSaliency(
+    uet.plot_saliency(
         maps_dict=maps_dict,
         plot_name=plot_name,
         **plot_config["plot_settings"],
@@ -532,7 +532,7 @@ def plot_frac_contour(
         linestyles.append(model_config["linestyle"])
         colours.append(model_config["colour"])
 
-    uet.plotFractionContour(
+    uet.plot_fraction_contour(
         df_results_list=df_results_list,
         tagger_list=tagger_list,
         label_list=labels,
