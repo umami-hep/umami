@@ -63,6 +63,7 @@ def runPlotInputVars(config: str) -> bool:
             "-c",
             f"{config}",
             "--tracks",
+            "--verbose",
         ],
         check=True,
     )
@@ -80,6 +81,7 @@ def runPlotInputVars(config: str) -> bool:
             "-c",
             f"{config}",
             "--jets",
+            "--verbose",
         ],
         check=True,
     )

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Execution script for training model evaluations."""
 
-from umami.configuration import global_config, logger  # isort:skip
+from umami.configuration import global_config, logger, set_log_level  # isort:skip
 import argparse
 import os
 import pickle
@@ -56,6 +56,13 @@ def get_parser():
         "--tagger",
         action="store_true",
         help="Decide, which tagger was used and is to be evaluated.",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Set verbose level to debug for the logger.",
     )
 
     parser.add_argument(
@@ -982,8 +989,13 @@ def evaluate_model_dl1(
 
 
 if __name__ == "__main__":
-    parser_args = get_parser()
-    training_config = utt.Configuration(parser_args.config_file)
+    arg_parser = get_parser()
+
+    # Set logger level
+    if arg_parser.verbose:
+        set_log_level(logger, "DEBUG")
+
+    training_config = utt.Configuration(arg_parser.config_file)
 
     # Check for evaluation only (= evaluation of tagger scores in files) is used:
     # if nothing is specified, assume that freshly trained tagger is evaluated
@@ -998,9 +1010,9 @@ if __name__ == "__main__":
         else training_config
     )
 
-    # Get the tagger from args. If not given, use the one from train config
-    if parser_args.tagger:
-        tagger_name = parser_args.tagger
+    # Get the tagger from arg_parser. If not given, use the one from train config
+    if arg_parser.tagger:
+        tagger_name = arg_parser.tagger
     else:
         try:
             tagger_name = training_config.NN_structure["tagger"]
@@ -1019,7 +1031,7 @@ if __name__ == "__main__":
             test_file_config,
         ) in training_config.test_files.items():
             evaluate_model_dl1(
-                args=parser_args,
+                args=arg_parser,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
                 test_file=test_file_config["path"],
@@ -1034,7 +1046,7 @@ if __name__ == "__main__":
             test_file_config,
         ) in training_config.test_files.items():
             evaluate_model_dips(
-                args=parser_args,
+                args=arg_parser,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
                 test_file=test_file_config["path"],
@@ -1056,7 +1068,7 @@ if __name__ == "__main__":
             test_file_config,
         ) in training_config.test_files.items():
             evaluate_model(
-                args=parser_args,
+                args=arg_parser,
                 train_config=training_config,
                 preprocess_config=preprocessing_config,
                 test_file=test_file_config["path"],

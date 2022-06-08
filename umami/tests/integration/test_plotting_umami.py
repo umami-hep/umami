@@ -79,6 +79,7 @@ def runPlotting(config, tagger):
             "-f",
             "pdf",
             "-p",
+            "--verbose",
         ],
         check=True,
     )

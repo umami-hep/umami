@@ -3,7 +3,7 @@
 import argparse
 
 import umami.preprocessing_tools as upt
-from umami.configuration import logger
+from umami.configuration import logger, set_log_level
 
 
 def get_parser():
@@ -90,6 +90,13 @@ def get_parser():
     )
 
     parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Set verbose level to debug for the logger.",
+    )
+
+    parser.add_argument(
         "--flavour",
         nargs="+",
         default=None,
@@ -105,6 +112,12 @@ def get_parser():
 
 if __name__ == "__main__":
     args = get_parser()
+
+    # Set logger level
+    if args.verbose:
+        set_log_level(logger, "DEBUG")
+
+    # Load preprocess config file
     config = upt.Configuration(args.config_file)
 
     # Check for preparation

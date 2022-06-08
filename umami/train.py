@@ -7,6 +7,7 @@ import tensorflow as tf
 import umami.models as utm
 import umami.preprocessing_tools as upt
 import umami.train_tools as utt
+from umami.configuration import logger, set_log_level
 
 
 def get_parser():
@@ -43,6 +44,13 @@ def get_parser():
         help="Only prepare the metadata folder and the model directory.",
     )
 
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Set verbose level to debug for the logger.",
+    )
+
     parse_args = parser.parse_args()
     return parse_args
 
@@ -50,6 +58,10 @@ def get_parser():
 if __name__ == "__main__":
     # Get the args from parser
     args = get_parser()
+
+    # Set logger level
+    if args.verbose:
+        set_log_level(logger, "DEBUG")
 
     # Check if GPUs are available
     gpus = tf.config.experimental.list_physical_devices("GPU")

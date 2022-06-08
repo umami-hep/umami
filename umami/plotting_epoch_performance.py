@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 """Execution script for epoch performance plotting."""
-from umami.configuration import (  # isort:skip # noqa # pylint: disable=unused-import
-    global_config,
-)
+from umami.configuration import logger, set_log_level  # isort:skip
+
 import argparse
 
 import tensorflow as tf
@@ -77,6 +76,13 @@ def get_parser():
         type=str,
         help="""Model type which is used.
         You can either use 'dips', 'cads', 'dl1' or 'umami'.""",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Set verbose level to debug for the logger.",
     )
 
     return parser.parse_args()
@@ -208,12 +214,16 @@ def main(args, train_config, preprocess_config):
 
 
 if __name__ == "__main__":
-    parser_args = get_parser()
+    arg_parser = get_parser()
+
+    # Set logger level
+    if arg_parser.verbose:
+        set_log_level(logger, "DEBUG")
 
     gpus = tf.config.experimental.list_physical_devices("GPU")
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
 
-    training_config = utt.Configuration(parser_args.config_file)
+    training_config = utt.Configuration(arg_parser.config_file)
     preprocessing_config = Configuration(training_config.preprocess_config)
-    main(parser_args, training_config, preprocessing_config)
+    main(arg_parser, training_config, preprocessing_config)

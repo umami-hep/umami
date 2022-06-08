@@ -107,6 +107,7 @@ def runPreprocessing(
                 "--sample",
                 f"{sample}",
                 "--prepare",
+                "--verbose",
             ],
             check=True,
         )
@@ -127,6 +128,7 @@ def runPreprocessing(
             "-c",
             f"{config}",
             "--resampling",
+            "--verbose",
         ],
         check=True,
     )
@@ -147,6 +149,7 @@ def runPreprocessing(
             "--scaling",
             "--chunk_size",
             "1000",
+            "--verbose",
         ],
         check=True,
     )
@@ -165,6 +168,7 @@ def runPreprocessing(
             "-c",
             f"{config}",
             "--apply_scales",
+            "--verbose",
         ],
         check=True,
     )
@@ -182,6 +186,7 @@ def runPreprocessing(
             "-c",
             f"{config}",
             "--write",
+            "--verbose",
         ],
         check=True,
     )
@@ -205,6 +210,7 @@ def runPreprocessing(
                 "-c",
                 f"{config}",
                 "--to_records",
+                "--verbose",
             ],
             check=True,
         )

@@ -19,7 +19,7 @@ from tqdm import tqdm
 from yaml.loader import FullLoader
 
 import umami.plotting_tools as uet
-from umami.configuration import logger
+from umami.configuration import logger, set_log_level
 
 
 def get_parser():
@@ -61,6 +61,13 @@ def get_parser():
         "--print_plotnames",
         action="store_true",
         help="Print the model names of the plots to the terminal.",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Set verbose level to debug for the logger.",
     )
 
     return parser.parse_args()
@@ -547,9 +554,9 @@ def plot_frac_contour(
 
 
 def set_up_plots(
-    plotting_config: dict,
-    plot_directory: str,
-    eval_file_dir: str,
+    plot_config_dict: dict,
+    plot_dir: str,
+    eval_file_path: str,
     file_format: str,
     print_model: bool,
 ) -> None:
@@ -557,11 +564,11 @@ def set_up_plots(
 
     Parameters
     ----------
-    plotting_config : dict
+    plot_config_dict : dict
         Dict with the plot settings.
-    plot_directory : str
+    plot_dir : str
         Path to the output directory of the plots.
-    eval_file_dir : str
+    eval_file_path : str
         Path to the directory where the result files are saved.
     file_format : str
         String of the file format.
@@ -575,20 +582,20 @@ def set_up_plots(
     """
 
     # Extract the eval parameters
-    eval_params = plotting_config["Eval_parameters"]
+    eval_params = plot_config_dict["Eval_parameters"]
 
     # Extract the print epoch bool
     if (
-        "epoch_to_name" not in plotting_config["Eval_parameters"]
-        or plotting_config["Eval_parameters"]["epoch_to_name"] is None
+        "epoch_to_name" not in plot_config_dict["Eval_parameters"]
+        or plot_config_dict["Eval_parameters"]["epoch_to_name"] is None
     ):
         epoch_to_name = True
 
     else:
-        epoch_to_name = plotting_config["Eval_parameters"]["epoch_to_name"]
+        epoch_to_name = plot_config_dict["Eval_parameters"]["epoch_to_name"]
 
     # Iterate over the different plots which are to be plotted
-    for plot_name, plot_config in tqdm(plotting_config.items()):
+    for plot_name, plot_config in tqdm(plot_config_dict.items()):
 
         # Skip general "Eval_parameters" and yaml anchors (have to start with a dot)
         if plot_name == "Eval_parameters" or plot_name.startswith("."):
@@ -600,13 +607,13 @@ def set_up_plots(
 
         if epoch_to_name is True:
             save_plot_to = os.path.join(
-                plot_directory,
+                plot_dir,
                 f"{plot_name}_{int(eval_params['epoch'])}.{file_format}",
             )
 
         else:
             save_plot_to = os.path.join(
-                plot_directory,
+                plot_dir,
                 f"{plot_name}.{file_format}",
             )
 
@@ -616,7 +623,7 @@ def set_up_plots(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
-                eval_file_dir=eval_file_dir,
+                eval_file_dir=eval_file_path,
                 print_model=print_model,
             )
 
@@ -625,7 +632,7 @@ def set_up_plots(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
-                eval_file_dir=eval_file_dir,
+                eval_file_dir=eval_file_path,
                 print_model=print_model,
             )
 
@@ -634,7 +641,7 @@ def set_up_plots(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
-                eval_file_dir=eval_file_dir,
+                eval_file_dir=eval_file_path,
             )
 
         elif plot_config["type"] == "scores":
@@ -642,7 +649,7 @@ def set_up_plots(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
-                eval_file_dir=eval_file_dir,
+                eval_file_dir=eval_file_path,
                 print_model=print_model,
             )
 
@@ -651,7 +658,7 @@ def set_up_plots(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
-                eval_file_dir=eval_file_dir,
+                eval_file_dir=eval_file_path,
             )
 
         elif plot_config["type"] == "probability":
@@ -659,7 +666,7 @@ def set_up_plots(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
-                eval_file_dir=eval_file_dir,
+                eval_file_dir=eval_file_path,
                 print_model=print_model,
             )
 
@@ -668,7 +675,7 @@ def set_up_plots(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,
-                eval_file_dir=eval_file_dir,
+                eval_file_dir=eval_file_path,
                 print_model=print_model,
             )
 
@@ -682,14 +689,13 @@ def set_up_plots(
             )
 
 
-def main(args):
-    """Execute plotting.
+if __name__ == "__main__":
+    args = get_parser()
 
-    Parameters
-    ----------
-    args : parser.args
-        Arguments from command line parser
-    """
+    # Set logger level
+    if args.verbose:
+        set_log_level(logger, "DEBUG")
+
     # Open and load the config files used in the eval process
     with open(args.config_file) as yaml_config:
         plotting_config = yaml.load(yaml_config, Loader=FullLoader)
@@ -704,7 +710,7 @@ def main(args):
     os.makedirs(plot_directory, exist_ok=True)
 
     # Define the path to the results from the model defined in train_config
-    eval_file_dir = os.path.join(
+    eval_file_directory = os.path.join(
         plotting_config["Eval_parameters"]["Path_to_models_dir"],
         plotting_config["Eval_parameters"]["model_name"],
         "results",
@@ -712,14 +718,9 @@ def main(args):
 
     # Start plotting
     set_up_plots(
-        plotting_config,
-        plot_directory,
-        eval_file_dir,
-        args.format,
-        args.print_plotnames,
+        plot_config_dict=plotting_config,
+        plot_dir=plot_directory,
+        eval_file_path=eval_file_directory,
+        file_format=args.format,
+        print_model=args.print_plotnames,
     )
-
-
-if __name__ == "__main__":
-    parser_args = get_parser()
-    main(parser_args)

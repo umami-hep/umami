@@ -9,7 +9,7 @@ import argparse
 import yaml
 
 import umami.input_vars_tools as uit
-from umami.configuration import logger
+from umami.configuration import logger, set_log_level
 from umami.plotting_tools.utils import translate_kwargs
 from umami.tools import yaml_loader
 
@@ -38,6 +38,13 @@ def get_parser():
         type=str,
         help="File type",
         default="pdf",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Set verbose level to debug for the logger.",
     )
 
     parser.add_argument(
@@ -195,6 +202,10 @@ def plot_jets_variables(plot_config, plot_type):
 
 if __name__ == "__main__":
     args = get_parser()
+
+    # Set logger level
+    if args.verbose:
+        set_log_level(logger, "DEBUG")
 
     if not (args.jets or args.tracks):
         raise Exception(
