@@ -186,7 +186,8 @@ def LoadJetsFromFile(
                 )
 
             # Remove all unused jets
-            jets = jets.drop(indices_toremove)
+            if len(indices_toremove) != 0:
+                jets = jets.drop(indices_toremove)
 
             # If not the first file processed, append to the global one
             if j == 0 and infile_counter == 0:
@@ -389,30 +390,33 @@ def LoadTrksFromFile(
                     )
                 )
 
-            # Remove unused jets from labels
-            labels = labels.drop(indices_toremove)
-            Umami_labels = labels["Umami_labels"].values
-
-            # Load tracks and delete unused classes
-            trks = np.delete(
-                arr=np.asarray(
-                    h5py.File(file, "r")[f"/{tracks_name}"][
-                        infile_counter * chunk_size : (infile_counter + 1) * chunk_size
-                    ]
-                ),
-                obj=indices_toremove,
-                axis=0,
+            # Load tracks
+            trks = np.asarray(
+                h5py.File(file, "r")[f"/{tracks_name}"][
+                    infile_counter * chunk_size : (infile_counter + 1) * chunk_size
+                ]
             )
+
+            if len(indices_toremove) != 0:
+                # Remove unused jets from labels
+                labels = labels.drop(indices_toremove)
+
+                # Delete unused classes and cutted tracks
+                trks = np.delete(
+                    arr=trks,
+                    obj=indices_toremove,
+                    axis=0,
+                )
 
             # If not the first file processed, append to the global one
             if j == 0 and infile_counter == 0:
                 all_trks = trks
-                all_labels = Umami_labels
+                all_labels = labels["Umami_labels"].values
 
             # if the first file processed, set as global one
             else:
                 all_trks = np.append(all_trks, trks, axis=0)
-                all_labels = np.append(all_labels, Umami_labels)
+                all_labels = np.append(all_labels, labels["Umami_labels"].values)
 
             # Adding the loaded jets to counter
             nJets_counter += len(trks)
