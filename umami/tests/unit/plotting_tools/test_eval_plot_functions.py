@@ -161,7 +161,7 @@ class plot_score_TestCase(unittest.TestCase):
             )
         )
 
-    def test_plot_rocComparison(self):
+    def test_plot_roc_comparison(self):
         df_results_eff_rej_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-rej_per_eff-1_new.h5",
             "ttbar",

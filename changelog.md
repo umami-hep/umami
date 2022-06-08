@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing ylabel issue in ROC plots [!555](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/555)
 - Moving Plotting Files in one folder [!554](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/554)
 - Adding classes to global config (light-flavour jets split by quark flavour/gluons, leptonic b-hadron decays) to define extended tagger output [!553](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/553)
 - Fixing issues with trained_taggers and taggers_from_file in plotting_epoch_performance.py [!549](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/549)
