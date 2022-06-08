@@ -292,6 +292,7 @@ def runTraining(config: dict, tagger: str) -> bool:
                     "umami/plotting_epoch_performance.py",
                     "-c",
                     f"{config}",
+                    "--verbose",
                 ],
                 check=True,
             )
@@ -304,6 +305,7 @@ def runTraining(config: dict, tagger: str) -> bool:
                     "-c",
                     f"{config}",
                     "--recalculate",
+                    "--verbose",
                 ],
                 check=True,
             )
@@ -325,6 +327,7 @@ def runTraining(config: dict, tagger: str) -> bool:
             f"{config}",
             "-e",
             "1",
+            "--verbose",
         ],
         check=True,
     )
