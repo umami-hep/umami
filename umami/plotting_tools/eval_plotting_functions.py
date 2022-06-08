@@ -334,7 +334,7 @@ def plot_roc(
     if len(flav_list) == 1:
         # Set number of ratio panels
         n_ratio_panels = 1
-        ylabel = (f'{flav_cat[rej_class_list[0]]["legend_label"]} Rejection',)
+        ylabel = f'{flav_cat[rej_class_list[0]]["legend_label"]} Rejection'
 
     elif len(flav_list) == 2:
         n_ratio_panels = 2
@@ -402,21 +402,21 @@ def plot_roc(
 
     roc_plot = RocPlot(
         n_ratio_panels=n_ratio_panels,
-        ylabel=ylabel,
-        xlabel=f'{flav_cat[main_class]["legend_label"]} efficiency',
+        ylabel=ylabel.capitalize(),
+        xlabel=f'{flav_cat[main_class]["legend_label"]} efficiency'.capitalize(),
         **kwargs,
     )
     roc_plot.set_ratio_class(
         ratio_panel=1,
         rej_class=flav_list[0],
-        label=f'{flav_cat[flav_list[0]]["legend_label"]} ratio',
+        label=f'{flav_cat[flav_list[0]]["legend_label"]} ratio'.capitalize(),
     )
 
     if n_ratio_panels > 1:
         roc_plot.set_ratio_class(
             ratio_panel=2,
             rej_class=flav_list[1],
-            label=f'{flav_cat[flav_list[1]]["legend_label"]} ratio',
+            label=f'{flav_cat[flav_list[1]]["legend_label"]} ratio'.capitalize(),
         )
 
     if working_points is not None:

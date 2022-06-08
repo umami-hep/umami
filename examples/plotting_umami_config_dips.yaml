@@ -104,7 +104,7 @@ Dips_light_flavour_ttbar:
       data_set_name: "ttbar_r21"
       label: "DIPS"
       tagger_name: "dips"
-      rejection_class: "cjets"
+      rejection_class: "ujets"
   plot_settings:
     draw_errors: True
     xmin: 0.5
