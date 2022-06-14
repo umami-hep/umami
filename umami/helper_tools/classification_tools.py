@@ -35,7 +35,14 @@ def get_class_label_ids(class_labels: list) -> list:
             )
 
     # Flatten the list if needed and return it
-    return id_list.tolist()
+    id_list = id_list.tolist()
+
+    # If only one flavour is given, an int would be returned. This is prevented
+    # with this check (so that all loops work properly)
+    if isinstance(id_list, int):
+        id_list = [id_list]
+
+    return id_list
 
 
 def get_class_label_variables(class_labels: list):
