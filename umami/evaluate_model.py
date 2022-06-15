@@ -200,7 +200,8 @@ def evaluate_model(
         if "exclude" in train_config.config:
             exclude = train_config.config["exclude"]
 
-        # Check which test files need to be loaded depending on the CADS version
+        # Check which test files need to be loaded depending on the umami version
+        logger.info("Start loading %s test file", data_set_name)
         if tagger.casefold() == "umami_cond_att".casefold():
             # Load the test jets
             x_test, x_test_trk, _ = utt.GetTestFile(
@@ -499,6 +500,7 @@ def evaluate_model_dips(
     logger.info(f"Evaluating {model_file}")
 
     # Check which test files need to be loaded depending on the CADS version
+    logger.info("Start loading %s test file", data_set_name)
     if tagger.casefold() == "CADS".casefold():
         # Load the test jets
         x_test, x_test_trk, y_test = utt.GetTestFile(
@@ -585,11 +587,11 @@ def evaluate_model_dips(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dips],
-        tagger_names=["dips"],
+        tagger_names=[f"{tagger.casefold()}"],
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={"dips": eval_params["frac_values"]},
+        frac_values={f"{tagger.casefold()}": eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
     )
 
@@ -799,6 +801,7 @@ def evaluate_model_dl1(
         exclude = train_config.config["exclude"]
 
     # Get the testfile with the needed configs
+    logger.info("Start loading %s test file", data_set_name)
     x_test, _ = utt.get_test_sample(
         input_file=test_file,
         var_dict=train_config.var_dict,
