@@ -107,23 +107,6 @@ class TestPlottingUmami(unittest.TestCase):
         self.model_name_umami = self.data["test_umami"]["model_name"]
         self.model_name_dl1r = self.data["test_dl1r"]["model_name"]
 
-        test_dir_dips = os.path.join(self.data["test_dips"]["testdir"])
-        test_dir_umami = os.path.join(self.data["test_umami"]["testdir"])
-        test_dir_dl1r = os.path.join(self.data["test_dl1r"]["testdir"])
-
-        # clean up, hopefully this causes no "uh oh...""
-        if test_dir_dips.startswith("/tmp"):
-            run(["rm", "-rf", test_dir_dips], check=True)
-        run(["mkdir", "-p", test_dir_dips], check=True)
-
-        if test_dir_umami.startswith("/tmp"):
-            run(["rm", "-rf", test_dir_umami], check=True)
-        run(["mkdir", "-p", test_dir_umami], check=True)
-
-        if test_dir_dl1r.startswith("/tmp"):
-            run(["rm", "-rf", test_dir_dl1r], check=True)
-        run(["mkdir", "-p", test_dir_dl1r], check=True)
-
         # config files, will be copied to test dir
         self.config_source_dips = os.path.join(
             os.getcwd(), "examples/plotting_umami_config_dips.yaml"

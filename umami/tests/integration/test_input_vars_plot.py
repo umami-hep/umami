@@ -1,6 +1,6 @@
 """Integration tests for variable plotting."""
-import logging
 import os
+import tempfile
 import unittest
 from shutil import copyfile
 from subprocess import CalledProcessError, run
@@ -55,7 +55,7 @@ def runPlotInputVars(config: str) -> bool:
 
     isSuccess = True
 
-    logging.info("Test: running plot_input_vars.py tracks...")
+    logger.info("Test: running plot_input_vars.py tracks...")
     run_plot_input_vars_trks = run(
         [
             "python",
@@ -70,10 +70,10 @@ def runPlotInputVars(config: str) -> bool:
     try:
         run_plot_input_vars_trks.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: plot_input_variables.py.")
+        logger.info("Test failed: plot_input_variables.py.")
         isSuccess = False
 
-    logging.info("Test: running plot_input_vars.py jets...")
+    logger.info("Test: running plot_input_vars.py jets...")
     run_plot_input_vars_jets = run(
         [
             "python",
@@ -88,7 +88,7 @@ def runPlotInputVars(config: str) -> bool:
     try:
         run_plot_input_vars_jets.check_returncode()
     except CalledProcessError:
-        logging.info("Test failed: plot_input_variables.py.")
+        logger.info("Test failed: plot_input_variables.py.")
         isSuccess = False
 
     return isSuccess
@@ -102,20 +102,15 @@ class TestInput_Vars_Plotting(unittest.TestCase):
         # Get test configuration
         self.data = get_configuration()
 
-        test_dir = os.path.join(self.data["test_input_vars_plot"]["testdir"])
-        logging.info(f"Creating test directory in {test_dir}")
-
-        # clean up, hopefully this causes no "uh oh...""
-        # TODO: switch to shutil copy in python
-        if test_dir.startswith("/tmp"):
-            run(["rm", "-rf", test_dir], check=True)
-        run(["mkdir", "-p", test_dir], check=True)
+        self.test_dir_path = tempfile.TemporaryDirectory()  # pylint: disable=R1732
+        self.test_dir = f"{self.test_dir_path.name}/"
+        logger.info("Creating test directory in %s", self.test_dir)
 
         # input files, will be downloaded to test dir
-        logging.info("Retrieving files from preprocessing...")
-        self.test_file_r21 = os.path.join(test_dir, "plot_input_vars_r21_check.h5")
-        self.test_file_r22 = os.path.join(test_dir, "plot_input_vars_r22_check.h5")
-        self.config_path = os.path.join(test_dir, "config.yaml")
+        logger.info("Retrieving files from preprocessing...")
+        self.test_file_r21 = os.path.join(self.test_dir, "plot_input_vars_r21_check.h5")
+        self.test_file_r22 = os.path.join(self.test_dir, "plot_input_vars_r22_check.h5")
+        self.config_path = os.path.join(self.test_dir, "config.yaml")
 
         copyfile("examples/plotting_input_vars.yaml", self.config_path)
 
@@ -131,11 +126,11 @@ class TestInput_Vars_Plotting(unittest.TestCase):
             if plot != "Eval_parameters" and plot[0] != ".":
                 self.config[plot]["Datasets_to_plot"]["R21"][
                     "files"
-                ] = f"{test_dir}plot_input_vars_r21_check.h5"
+                ] = f"{self.test_dir}plot_input_vars_r21_check.h5"
                 self.config[plot]["Datasets_to_plot"]["R21"]["label"] = "R21 Test"
                 self.config[plot]["Datasets_to_plot"]["R22"][
                     "files"
-                ] = f"{test_dir}plot_input_vars_r22_check.h5"
+                ] = f"{self.test_dir}plot_input_vars_r22_check.h5"
                 self.config[plot]["Datasets_to_plot"]["R22"]["label"] = "R22 Test"
                 self.config[plot]["plot_settings"][
                     "SecondTag"
@@ -172,15 +167,15 @@ class TestInput_Vars_Plotting(unittest.TestCase):
         with open(self.config_path, "w") as conf:
             yaml.dump(self.config, conf, default_flow_style=False)
 
-        logging.info("Downloading test data...")
+        logger.info("Downloading test data...")
         for file in self.data["test_input_vars_plot"]["files"]:
             path = os.path.join(
                 self.data["data_url"],
                 self.data["test_input_vars_plot"]["data_subfolder"],
                 file,
             )
-            logging.info(f"Retrieving file from path {path}")
-            run(["wget", path, "--directory-prefix", test_dir], check=True)
+            logger.info("Retrieving file from path %s", path)
+            run(["wget", path, "--directory-prefix", self.test_dir], check=True)
 
     def test_plot_input_vars(self):
         """Integration test of plot_input_vars.py script."""
