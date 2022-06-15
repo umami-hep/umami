@@ -98,11 +98,11 @@ def prepareConfig(
 
         # config files, will be copied to test dir
         preprocessing_config_source = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            f"./test_preprocessing_{preprocess_files}/",
             os.path.basename(data["test_preprocessing"]["config"]),
         )
         preprocessing_config_paths_source = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            f"./test_preprocessing_{preprocess_files}/",
             os.path.basename(data["test_preprocessing"]["config_paths"]),
         )
         preprocessing_config = os.path.join(
@@ -113,7 +113,7 @@ def prepareConfig(
         )
 
         var_dict_source = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            f"./test_preprocessing_{preprocess_files}/",
             os.path.basename(data["test_preprocessing"][f"var_dict_{var_file}"]),
         )
         var_dict = os.path.join(test_dir, os.path.basename(var_dict_source))
@@ -122,11 +122,11 @@ def prepareConfig(
         logger.info("Retrieving files from preprocessing...")
 
         train_file = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            f"./test_preprocessing_{preprocess_files}/",
             "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
         )
         scale_dict = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            f"./test_preprocessing_{preprocess_files}/",
             "PFlow-scale_dict.json",
         )
 
@@ -232,7 +232,7 @@ def prepareConfig(
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/preprocessing/",
+            f"./test_preprocessing_{preprocess_files}/",
             "PFlow-hybrid_70-test-resampled_scaled_shuffled",
         )
         config_file["model_name"] = data[f"test_{tagger}"]["model_name"] + "_tfrecords"

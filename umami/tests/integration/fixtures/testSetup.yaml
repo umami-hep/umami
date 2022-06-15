@@ -7,7 +7,6 @@ test_preprocessing:
     var_dict_dl1r: 'umami/configs/DL1r_Variables_R22.yaml'
     var_dict_dips: 'umami/configs/Dips_Variables_R22.yaml'
     var_dict_umami: 'umami/configs/Umami_Variables_R22.yaml'
-    testdir: '/tmp/umami/preprocessing'
     files:
         - ci_ttbar_basefile.h5
         - ci_zpext_basefile.h5
@@ -18,7 +17,6 @@ test_dips:
     config: 'examples/Dips-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
-    testdir: '/tmp/umami/dips'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
@@ -29,7 +27,6 @@ test_dips_four_classes:
     config: 'examples/Dips-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
-    testdir: '/tmp/umami/dips'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
@@ -40,7 +37,6 @@ test_cads:
     config: 'examples/CADS-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
-    testdir: '/tmp/umami/cads'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
@@ -51,7 +47,6 @@ test_dl1r:
     config: 'examples/DL1r-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_DL1r.yaml'
-    testdir: '/tmp/umami/dl1r'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
@@ -62,7 +57,6 @@ test_umami:
     config: 'examples/umami-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_Umami.yaml'
-    testdir: '/tmp/umami/umami'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
@@ -73,7 +67,6 @@ test_umami_cond_att:
     config: 'examples/umami-Cond-Att-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_Umami.yaml'
-    testdir: '/tmp/umami/umami_cond_att'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
@@ -82,14 +75,12 @@ test_evaluate_comp_taggers:
     data_subfolder: 'preprocessing'
     model_name: 'test_evaluate_comp_taggers'
     config: 'examples/evaluate_comp_taggers.yaml'
-    testdir: '/tmp/umami/evaluate_comp_taggers'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5
 
 test_input_vars_plot:
     data_subfolder: 'plot_input_vars'
-    testdir: /tmp/umami/plot_input_vars/
     files:
         - plot_input_vars_r21_check.h5
         - plot_input_vars_r22_check.h5

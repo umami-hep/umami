@@ -5,6 +5,7 @@ This script integration tests the preprocessing methods.
 """
 
 import os
+import tempfile
 import unittest
 from shutil import copyfile
 from subprocess import CalledProcessError, run
@@ -47,6 +48,7 @@ def runPreprocessing(
     tagger: str,
     method: str,
     string_id: str,
+    test_dir: str,
 ) -> bool:
     """
     Call all steps of the preprocessing for a certain configuration and variable dict
@@ -64,6 +66,8 @@ def runPreprocessing(
         Define which sampling method is used.
     string_id : str
         Unique identifier to further specify which preprocessing was done.
+    test_dir : str
+        Path to the directory where all the files are downloaded to etc.
 
     Raises
     ------
@@ -224,23 +228,30 @@ def runPreprocessing(
             ) from error
 
     tagger_path = f"./test_preprocessing_{tagger}_{string_id}_{method}/"
-    if not os.path.isdir(tagger_path):
-        run(["mkdir", tagger_path], check=True)
 
-    run(
-        [
-            "cp",
-            "-r",
-            "/tmp/umami/preprocessing/",
-            tagger_path,
-        ],
-        check=True,
-    )
+    if os.path.isdir(tagger_path):
+        run(
+            [
+                "cp",
+                "-rf",
+                f"{test_dir}/",
+                tagger_path,
+            ],
+            check=True,
+        )
+
+    else:
+        run(
+            [
+                "mv",
+                f"{test_dir}/",
+                tagger_path,
+            ],
+            check=True,
+        )
 
     # Get the path of the not needed configs
-    unused_configs = os.path.join(
-        tagger_path, "preprocessing/", "PFlow-Preprocessing_*.yaml"
-    )
+    unused_configs = os.path.join(tagger_path, "PFlow-Preprocessing_*.yaml")
 
     # Rename the needed config to PFlow-Preprocessing.yaml and erase the unused
     # TODO change in python 3.10
@@ -253,8 +264,8 @@ def runPreprocessing(
 
     elif method == "pdf":
         copyfile(
-            os.path.join(tagger_path, "preprocessing/", "PFlow-Preprocessing_pdf.yaml"),
-            os.path.join(tagger_path, "preprocessing/", "PFlow-Preprocessing.yaml"),
+            os.path.join(tagger_path, "PFlow-Preprocessing_pdf.yaml"),
+            os.path.join(tagger_path, "PFlow-Preprocessing.yaml"),
         )
         run(
             [f"rm -rfv {unused_configs}"],
@@ -264,10 +275,8 @@ def runPreprocessing(
 
     elif method == "weighting":
         copyfile(
-            os.path.join(
-                tagger_path, "preprocessing/", "PFlow-Preprocessing_weighting.yaml"
-            ),
-            os.path.join(tagger_path, "preprocessing/", "PFlow-Preprocessing.yaml"),
+            os.path.join(tagger_path, "PFlow-Preprocessing_weighting.yaml"),
+            os.path.join(tagger_path, "PFlow-Preprocessing.yaml"),
         )
         run(
             [f"rm -rfv {unused_configs}"],
@@ -279,10 +288,9 @@ def runPreprocessing(
         copyfile(
             os.path.join(
                 tagger_path,
-                "preprocessing/",
                 "PFlow-Preprocessing_importance_no_replace.yaml",
             ),
-            os.path.join(tagger_path, "preprocessing/", "PFlow-Preprocessing.yaml"),
+            os.path.join(tagger_path, "PFlow-Preprocessing.yaml"),
         )
         run(
             [f"rm -rfv {unused_configs}"],
@@ -310,16 +318,13 @@ class TestPreprocessing(unittest.TestCase):
         # Get test configuration
         self.data = get_configuration()
 
-        test_dir = os.path.join(self.data["test_preprocessing"]["testdir"])
-        logger.info(f"Creating test directory in {test_dir}")
-        # clean up, hopefully this causes no "uh oh...""
-        if test_dir.startswith("/tmp"):
-            run(["rm", "-rf", test_dir], check=True)
-        run(["mkdir", "-p", test_dir], check=True)
+        self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
+        self.test_dir = f"{self.tmp_dir.name}"
+        logger.info("Creating test directory in %s", self.test_dir)
 
         # Make filepaths for basefiles
-        run(["mkdir", "-p", os.path.join(test_dir, "ttbar")], check=True)
-        run(["mkdir", "-p", os.path.join(test_dir, "zpext")], check=True)
+        run(["mkdir", "-p", os.path.join(self.test_dir, "ttbar")], check=True)
+        run(["mkdir", "-p", os.path.join(self.test_dir, "zpext")], check=True)
 
         # inputs for test will be located in test_dir
         config_source = os.path.join(
@@ -337,22 +342,22 @@ class TestPreprocessing(unittest.TestCase):
         var_dict_dl1r_source = os.path.join(
             os.getcwd(), self.data["test_preprocessing"]["var_dict_dl1r"]
         )
-        self.config = os.path.join(test_dir, os.path.basename(config_source))
+        self.config = os.path.join(self.test_dir, os.path.basename(config_source))
         self.config_paths = os.path.join(
-            test_dir, os.path.basename(config_paths_source)
+            self.test_dir, os.path.basename(config_paths_source)
         )
         self.var_dict_umami = os.path.join(
-            test_dir, os.path.basename(var_dict_umami_source)
+            self.test_dir, os.path.basename(var_dict_umami_source)
         )
         self.var_dict_dips = os.path.join(
-            test_dir, os.path.basename(var_dict_dips_source)
+            self.test_dir, os.path.basename(var_dict_dips_source)
         )
         self.var_dict_dl1r = os.path.join(
-            test_dir, os.path.basename(var_dict_dl1r_source)
+            self.test_dir, os.path.basename(var_dict_dl1r_source)
         )
-        self.scale_dict = os.path.join(test_dir, "PFlow-scale_dict.json")
-        self.output = os.path.join(test_dir, "PFlow-hybrid_70-test.h5")
-        self.indices = os.path.join(test_dir, "indices.h5")
+        self.scale_dict = os.path.join(self.test_dir, "PFlow-scale_dict.json")
+        self.output = os.path.join(self.test_dir, "PFlow-hybrid_70-test.h5")
+        self.indices = os.path.join(self.test_dir, "indices.h5")
 
         logger.info(
             f"Preparing config file based on {config_source} in {self.config}..."
@@ -367,17 +372,17 @@ class TestPreprocessing(unittest.TestCase):
         replaceLineInFile(
             self.config_paths,
             "ntuple_path:",
-            f"ntuple_path: &ntuple_path {test_dir}",
+            f"ntuple_path: &ntuple_path {self.test_dir}",
         )
         replaceLineInFile(
             self.config_paths,
             "sample_path:",
-            f"sample_path: &sample_path {test_dir}",
+            f"sample_path: &sample_path {self.test_dir}",
         )
         replaceLineInFile(
             self.config_paths,
             "file_path:",
-            f"file_path: &file_path {test_dir}",
+            f"file_path: &file_path {self.test_dir}",
         )
         replaceLineInFile(
             self.config_paths,
@@ -546,22 +551,22 @@ class TestPreprocessing(unittest.TestCase):
                 self.data["test_preprocessing"]["data_subfolder"],
                 file,
             )
-            logger.info(f"Retrieving file from path {path}")
-            run(["wget", path, "--directory-prefix", test_dir], check=True)
+            logger.info("Retrieving file from path %s", path)
+            run(["wget", path, "--directory-prefix", self.test_dir], check=True)
 
         run(
             [
                 "mv",
-                os.path.join(test_dir, "ci_ttbar_basefile.h5"),
-                os.path.join(test_dir, "ttbar", "ci_ttbar_basefile.h5"),
+                os.path.join(self.test_dir, "ci_ttbar_basefile.h5"),
+                os.path.join(self.test_dir, "ttbar", "ci_ttbar_basefile.h5"),
             ],
             check=True,
         )
         run(
             [
                 "mv",
-                os.path.join(test_dir, "ci_zpext_basefile.h5"),
-                os.path.join(test_dir, "zpext", "ci_zpext_basefile.h5"),
+                os.path.join(self.test_dir, "ci_zpext_basefile.h5"),
+                os.path.join(self.test_dir, "zpext", "ci_zpext_basefile.h5"),
             ],
             check=True,
         )
@@ -580,6 +585,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="umami",
                 method="count",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -596,6 +602,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="dips",
                 method="count",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -623,6 +630,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="dl1r",
                 method="count",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -640,6 +648,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="umami",
                 method="pdf",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -657,6 +666,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="dips",
                 method="pdf",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -687,6 +697,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="dips",
                 method="pdf",
                 string_id="four_classes",
+                test_dir=self.test_dir,
             )
         )
 
@@ -714,6 +725,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="dl1r",
                 method="pdf",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -731,6 +743,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="umami",
                 method="weighting",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -747,6 +760,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="dips",
                 method="weighting",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -774,6 +788,7 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="dl1r",
                 method="weighting",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )
 
@@ -791,5 +806,6 @@ class TestPreprocessing(unittest.TestCase):
                 tagger="umami",
                 method="importance_no_replace",
                 string_id="base",
+                test_dir=self.test_dir,
             )
         )

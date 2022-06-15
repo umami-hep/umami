@@ -5,6 +5,7 @@
 ### Latest
 
 - Fixing generation of class ids for only one class [!563](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/563)
+- Removing hardcoded tmp directories in the integration tests [!562](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/562)
 - Fixing issue with the PDFSampling shuffling + Fixing small issue with the loaders [!558](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/558)
 - Fixing ylabel issue in ROC plots [!555](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/555)
 - Adding verbose option to executable scripts [!557](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/557)
