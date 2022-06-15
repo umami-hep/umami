@@ -23,6 +23,7 @@ def plot_validation_files(
     label_prefix: str = "",
     label_suffix: str = "",
     val_files: dict = None,
+    **kwargs,
 ):
     """Helper function which loops over the validation files and plots the chosen
     metric for each epoch. Meant to be called in other plotting functions.
@@ -48,12 +49,25 @@ def plot_validation_files(
         Dict that contains the configuration of all the validation files listed in the
         train config. If None, nothing happens and a warning is printed to the logs,
         by default None
+    **kwargs
+        Keyword arguments handed to the plotting API
     """
+    # Check for xmin and xmax
+    if "xmin" not in kwargs:
+        kwargs["xmin"] = 0
+
+    if "xmax" not in kwargs:
+        kwargs["xmax"] = df_results["epoch"].max()
+
     if val_files is None:
         logger.warning(
             f"No validation files provided --> not plotting {metric_identifier}."
         )
+
     else:
+        # Set xlim
+        ax.set_xlim(left=kwargs["xmin"], right=kwargs["xmax"])
+
         for val_file_identifier, val_file_config in val_files.items():
             ax.plot(
                 df_results["epoch"],
@@ -203,6 +217,7 @@ def plot_disc_cut_per_epoch(
         label_suffix=" validation sample",
         val_files=val_files,
         ax=disc_cut_plot.axis_top,
+        **kwargs,
     )
 
     disc_cut_plot.atlas_second_tag += (
@@ -257,6 +272,7 @@ def plot_disc_cut_per_epoch_umami(
         label_suffix=" validation sample",
         val_files=val_files,
         ax=disc_cut_plot.axis_top,
+        **kwargs,
     )
     plot_validation_files(
         metric_identifier="disc_cut_dips",
@@ -327,6 +343,13 @@ def plot_rej_per_epoch_comp(
     **kwargs
         Keyword arguments handed to the plotting API
     """
+    # Check for xmin and xmax
+    if "xmin" not in kwargs:
+        kwargs["xmin"] = 0
+
+    if "xmax" not in kwargs:
+        kwargs["xmax"] = df_results["epoch"].max()
+
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
@@ -355,6 +378,7 @@ def plot_rej_per_epoch_comp(
     rej_plot.initialise_figure()
 
     ax_left = rej_plot.axis_top
+    ax_left.set_xlim(left=kwargs["xmin"], right=kwargs["xmax"])
     ax_right = ax_left.twinx()
     axes = [ax_left, ax_right]
 
@@ -556,6 +580,13 @@ def plot_rej_per_epoch(
     **kwargs
          Keyword arguments handed to the plotting API
     """
+    # Check for xmin and xmax
+    if "xmin" not in kwargs:
+        kwargs["xmin"] = 0
+
+    if "xmax" not in kwargs:
+        kwargs["xmax"] = df_results["epoch"].max()
+
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
@@ -578,6 +609,8 @@ def plot_rej_per_epoch(
             **kwargs,
         )
         rej_plot.initialise_figure()
+        rej_plot.axis_top.set_xlim(left=kwargs["xmin"], right=kwargs["xmax"])
+
         # Init a linestyle counter
         counter_models = 0
 
@@ -708,6 +741,7 @@ def plot_losses(
         label_suffix=" sample",
         val_files=val_files,
         ax=loss_plot.axis_top,
+        **kwargs,
     )
 
     loss_plot.initialise_plot()
@@ -764,6 +798,7 @@ def plot_accuracies(
         label_suffix=" sample",
         val_files=val_files,
         ax=acc_plot.axis_top,
+        **kwargs,
     )
     acc_plot.initialise_plot()
     acc_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
@@ -827,6 +862,7 @@ def plot_losses_umami(
         label_suffix=" sample",
         val_files=val_files,
         ax=loss_plot.axis_top,
+        **kwargs,
     )
     plot_validation_files(
         metric_identifier="val_loss_dips",
@@ -835,6 +871,7 @@ def plot_losses_umami(
         label_suffix=" sample",
         val_files=val_files,
         ax=loss_plot.axis_top,
+        **kwargs,
     )
     loss_plot.initialise_plot()
     loss_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
@@ -898,6 +935,7 @@ def plot_accuracies_umami(
         label_suffix=" sample",
         val_files=val_files,
         ax=acc_plot.axis_top,
+        **kwargs,
     )
     plot_validation_files(
         metric_identifier="val_acc_dips",
@@ -906,6 +944,7 @@ def plot_accuracies_umami(
         label_suffix=" sample",
         val_files=val_files,
         ax=acc_plot.axis_top,
+        **kwargs,
     )
 
     acc_plot.initialise_plot()

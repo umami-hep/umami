@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing x range in metrics plots + correct tagger name in results files [!560](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/560)
 - Fixing issue with the PDFSampling shuffling + Fixing small issue with the loaders [!558](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/558)
 - Fixing ylabel issue in ROC plots [!555](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/555)
 - Adding verbose option to executable scripts [!557](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/557)
