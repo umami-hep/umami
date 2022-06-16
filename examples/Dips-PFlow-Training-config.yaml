@@ -145,4 +145,4 @@ Eval_parameters_validation:
     WP: 0.77
 
     # Decide, if the Saliency maps are calculated or not.
-    Calculate_Saliency: True
+    calculate_saliency: True

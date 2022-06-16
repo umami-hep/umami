@@ -1,8 +1,5 @@
 """Collection of plotting function for ftag performance plots."""
 # pylint: disable=consider-using-f-string, invalid-name
-# TODO: switch to new plotting API with pep8 conform naming
-from umami.configuration import global_config, logger  # isort:skip
-
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
@@ -15,13 +12,14 @@ from puma import (
     FractionScanPlot,
     Histogram,
     HistogramPlot,
+    PlotBase,
     Roc,
     RocPlot,
     VarVsEff,
     VarVsEffPlot,
 )
 
-import umami.tools.PyATLASstyle.PyATLASstyle as pas
+from umami.configuration import global_config, logger
 from umami.plotting_tools.utils import translate_kwargs
 
 
@@ -476,19 +474,12 @@ def plot_roc(
 def plot_saliency(
     maps_dict: dict,
     plot_name: str,
-    title: str,
-    target_beff: float = 0.77,
-    jet_flavour: str = "bjets",
-    PassBool: bool = True,
-    nFixedTrks: int = 8,
-    fontsize: int = 14,
-    xlabel: str = "Tracks sorted by $s_{d0}$",
-    use_atlas_tag: bool = True,
-    atlas_first_tag: str = "Simulation Internal",
-    atlas_second_tag: str = r"$\sqrt{s}$ = 13 TeV, $t\bar{t}$ PFlow Jets",
-    yAxisAtlasTag: float = 0.925,
-    FlipAxis: bool = False,
-    dpi: int = 400,
+    target_eff: float,
+    jet_flavour: str,
+    PassBool: bool,
+    nFixedTrks: int,
+    cmap: str = "PiYG",
+    **kwargs,
 ):
     """Plot the saliency map given in maps_dict.
 
@@ -498,9 +489,7 @@ def plot_saliency(
         Dict with the saliency values inside
     plot_name : str
         Path, Name and format of the resulting plot file.
-    title : str
-        Title of the plot
-    target_beff : float, optional
+    target_eff : float, optional
         Working point to use, by default 0.77
     jet_flavour : str, optional
         Class which is to be plotted, by default "bjets"
@@ -509,151 +498,93 @@ def plot_saliency(
         the working point cut, by default True
     nFixedTrks : int, optional
         Decide, how many tracks the jets need to have, by default 8
-    fontsize : int, optional
-        Fontsize to use in the title, legend, etc, by default 14
-    xlabel : str, optional
-        x-label, by default "Tracks sorted by {d0}$"
-    use_atlas_tag : bool, optional
-        Use the ATLAS Tag in the plots, by default True
-    atlas_first_tag : str, optional
-        First row of the ATLAS Tag, by default "Simulation Internal"
-    atlas_second_tag : str, optional
-        Second Row of the ATLAS Tag, by default
-        "$sqrt{s}$ = 13 TeV, $t bar{t}$ PFlow Jets"
-    yAxisAtlasTag : float, optional
-        y position of the ATLAS Tag, by default 0.925
-    FlipAxis : bool, optional
-        Decide, if the x- and y-axis are switched, by default False
-    dpi : int, optional
-        Sets a DPI value for the plot that is produced (mainly for png),
-        by default 400
+    cmap : str, optional
+        Colour map to use for the saliency map. By defaulkt PiYG
+    **kwargs
+        Keyword arguments handed to the plotting API
+
+    Raises
+    ------
+    ValueError
+        If the number of variables in the given dict is not the same
+        as the number of variables used to calculate the saliency map.
     """
+    # Get list of variables used for saliency maps
+    variable_list = maps_dict["Variables_list"]
 
-    # Transform to percent
-    target_beff = 100 * target_beff
+    # Load gradient map from file
+    gradient_map = maps_dict[f"{int(target_eff * 100)}_{jet_flavour}_{PassBool}"][
+        :, :nFixedTrks
+    ]
 
-    # Little Workaround
-    atlas_first_tag = " " + atlas_first_tag
-
-    gradient_map = maps_dict[f"{int(target_beff)}_{jet_flavour}_{PassBool}"]
-
-    colorScale = np.max(np.abs(gradient_map))
-    cmaps = {
-        "ujets": "RdBu",
-        "cjets": "PuOr",
-        "bjets": "PiYG",
-    }
-
-    nFeatures = gradient_map.shape[0]
-
-    if FlipAxis is True:
-        fig = plt.figure(figsize=(0.7 * nFeatures, 0.7 * nFixedTrks))
-        gradient_map = np.swapaxes(gradient_map, 0, 1)
-
-        plt.yticks(
-            np.arange(nFixedTrks),
-            np.arange(1, nFixedTrks + 1),
-            fontsize=fontsize,
-        )
-
-        plt.ylabel(xlabel, fontsize=fontsize)
-        plt.ylim(-0.5, nFixedTrks - 0.5)
-
-        # ylabels. Order must be the same as in the Vardict
-        xticklabels = [
-            "$s_{d0}$",
-            "$s_{z0}$",
-            "PIX1 hits",
-            "IBL hits",
-            "shared IBL hits",
-            "split IBL hits",
-            "shared pixel hits",
-            "split pixel hits",
-            "shared SCT hits",
-            "log" + r" $p_T^{frac}$",
-            "log" + r" $\mathrm{\Delta} R$",
-            "nPixHits",
-            "nSCTHits",
-            "$d_0$",
-            r"$z_0 \sin \theta$",
-        ]
-
-        plt.xticks(
-            np.arange(nFeatures),
-            xticklabels[:nFeatures],
-            rotation=45,
-            fontsize=fontsize,
-        )
-
-    else:
-        fig = plt.figure(figsize=(0.7 * nFixedTrks, 0.7 * nFeatures))
-
-        plt.xticks(
-            np.arange(nFixedTrks),
-            np.arange(1, nFixedTrks + 1),
-            fontsize=fontsize,
-        )
-
-        plt.xlabel(xlabel, fontsize=fontsize)
-        plt.xlim(-0.5, nFixedTrks - 0.5)
-
-        # ylabels. Order must be the same as in the Vardict
-        yticklabels = [
-            "$s_{d0}$",
-            "$s_{z0}$",
-            "PIX1 hits",
-            "IBL hits",
-            "shared IBL hits",
-            "split IBL hits",
-            "shared pixel hits",
-            "split pixel hits",
-            "shared SCT hits",
-            "log" + r" $p_T^{frac}$",
-            "log" + r" $\mathrm{\Delta} R$",
-            "nPixHits",
-            "nSCTHits",
-            "$d_0$",
-            r"$z_0 \sin \theta$",
-        ]
-
-        plt.yticks(np.arange(nFeatures), yticklabels[:nFeatures], fontsize=fontsize)
-
-    im = plt.imshow(
-        gradient_map,
-        cmap=cmaps[jet_flavour],
-        origin="lower",
-        vmin=-colorScale,
-        vmax=colorScale,
+    # Check kwargs for fontsize
+    kwargs["fontsize"] = (
+        kwargs["fontsize"]
+        if "fontsize" in kwargs and kwargs["fontsize"] is not None
+        else 12
     )
 
-    plt.title(title, fontsize=fontsize)
+    # Check kwargs for figsize
+    kwargs["figsize"] = (
+        kwargs["figsize"]
+        if "figsize" in kwargs and kwargs["figsize"] is not None
+        else (0.9 * nFixedTrks, 0.5 * len(variable_list))
+    )
 
-    ax = plt.gca()
+    # Set log of x and y axis to False
+    kwargs["logx"] = False
+    kwargs["logy"] = False
 
-    if use_atlas_tag is True:
-        pas.makeATLAStag(
-            ax,
-            fig,
-            first_tag=atlas_first_tag,
-            second_tag=atlas_second_tag,
-            ymax=yAxisAtlasTag,
+    # Check that the number of variables are similar in the map and the var_dict
+    if len(variable_list) != gradient_map.shape[0]:
+        raise ValueError(
+            "Number of variables in variable list and in gradient dict are "
+            "not the same!"
         )
 
+    # Define the colour scales and maps for the flavours
+    colour_scale = np.max(np.abs(gradient_map))
+
+    # Init the saliency plot
+    saliency_plot = PlotBase(**kwargs)
+    saliency_plot.initialise_figure()
+
+    # Set x- and y-ticks
+    saliency_plot.axis_top.set_xticks(
+        ticks=np.arange(nFixedTrks),
+        labels=np.arange(1, nFixedTrks + 1),
+        fontsize=kwargs["fontsize"],
+    )
+    saliency_plot.axis_top.set_yticks(
+        ticks=np.arange(len(variable_list)),
+        labels=variable_list,
+        fontsize=kwargs["fontsize"],
+    )
+
+    # Plot saliency
+    im = saliency_plot.axis_top.imshow(
+        X=gradient_map,
+        cmap=cmap,
+        origin="lower",
+        vmin=-colour_scale,
+        vmax=colour_scale,
+    )
+
     # Plot colorbar and set size to graph size
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
-    colorbar = plt.colorbar(im, cax=cax)
+    divider = make_axes_locatable(saliency_plot.axis_top)
+    cax = divider.append_axes("right", size=f"{int(100/nFixedTrks)}%", pad=0.05)
+    colorbar = saliency_plot.fig.colorbar(im, cax=cax)
     colorbar.ax.set_title(
         r"$\frac{\mathrm{\partial} D_{b}}{\mathrm{\partial} x_{ik}}$",
-        size=1.6 * fontsize,
+        size=1.6 * kwargs["fontsize"],
     )
 
     # Set the fontsize of the colorbar yticks
     for t in colorbar.ax.get_yticklabels():
-        t.set_fontsize(fontsize)
+        t.set_fontsize(kwargs["fontsize"])
 
-    # Save the figure
-    plt.savefig(plot_name, transparent=True, bbox_inches="tight", dpi=dpi)
+    saliency_plot.initialise_plot()
+    saliency_plot.savefig(plot_name)
 
 
 def plot_score(

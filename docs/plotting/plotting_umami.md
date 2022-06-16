@@ -128,6 +128,22 @@ Plot the b efficiency/c-rejection/light-rejection against the pT. For example:
 | `working_point_line` | `float` | Optional | Print a horizontal line at this value efficiency. |
 | `fixed_eff_bin` | `bool` | Optional | Calculate the WP cut on the discriminant per bin. |
 
+#### Saliency Plots
+To evaluate the impact of the track variables to the final b-tagging discriminant can't be found using SHAPley. To make the impact visible (for each track of the jet), so-called Saliency maps are used. These maps are calculated when evaluating the model you have trained (if it is activated). A lot of different options can be set. An example is given here:
+
+```yaml
+§§§examples/plotting_umami_config_dips.yaml:149:160§§§
+```
+
+| Options | Data Type | Necessary/Optional | Explanation |
+|---------|-----------|--------------------|-------------|
+| `type` | `str` | Necessary | This gives the type of plot function used. Must be `"saliency"` here. |
+| `data_set_name` | `str` | Necessary | Name of the dataset that is used. This is the name of the test_file which you want to use. |
+| `target_eff` | `float` | Necessary | Efficiency of the target flavour you want to use (Which WP you want to use). The value is given between 0 and 1. |
+| `jet_flavour` | `str` | Necessary | Name of flavour you want to plot. |
+| `PassBool` | `str` | Necessary | Decide if the jets need to pass the working point discriminant cut or not. `False` would give you, for example, truth b-jets which does not pass the working point discriminant cut and are therefore not tagged a b-jets. |
+| `nFixedTrks` | `int` | Necessary | The saliency maps can only be calculated for jets with a fixed number of tracks. This number of tracks can be set with this parameter. For example, if this value is `8`, than only jets which have exactly 8 tracks are used for the saliency maps. This value needs to be set in the train config when you run the evaluation! If you run the evaluation with, for example `5`, you can't plot the saliency map for `8`. |
+
 #### Fraction Contour Plot
 Plot two rejections against each other for a given working point with different fraction values.
 

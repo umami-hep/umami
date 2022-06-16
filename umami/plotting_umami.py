@@ -466,6 +466,10 @@ def plot_saliency(
     uet.plot_saliency(
         maps_dict=maps_dict,
         plot_name=plot_name,
+        target_eff=plot_config["target_eff"],
+        jet_flavour=plot_config["jet_flavour"],
+        PassBool=plot_config["PassBool"],
+        nFixedTrks=plot_config["nFixedTrks"],
         **plot_config["plot_settings"],
     )
 

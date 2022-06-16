@@ -297,7 +297,7 @@ def evaluate_model(
     )
 
     # Get the discriminant values and probabilities of each tagger for each jet
-    df_discs_dict = uet.GetScoresProbsDict(
+    df_discs_dict = uet.get_scores_probs_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=tagger_preds,
@@ -329,7 +329,7 @@ def evaluate_model(
     )
 
     # Get the rejections, discs and effs of the taggers
-    tagger_rej_dicts = uet.GetRejectionPerEfficiencyDict(
+    tagger_rej_dicts = uet.get_rej_per_eff_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=tagger_preds,
@@ -367,7 +367,7 @@ def evaluate_model(
         h5_file.attrs["N_test"] = len(jets)
 
     # Get the rejections, discs and f_* values for the taggers
-    tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
+    tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=tagger_preds,
@@ -583,7 +583,7 @@ def evaluate_model_dips(
     )
 
     # Get the discriminant values and probabilities of each tagger for each jet
-    df_discs_dict = uet.GetScoresProbsDict(
+    df_discs_dict = uet.get_scores_probs_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dips],
@@ -610,7 +610,7 @@ def evaluate_model_dips(
     )
 
     # Get the rejections, discs and effs of the taggers
-    tagger_rej_dicts = uet.GetRejectionPerEfficiencyDict(
+    tagger_rej_dicts = uet.get_rej_per_eff_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dips],
@@ -644,7 +644,7 @@ def evaluate_model_dips(
         h5_file.attrs["N_test"] = len(jets)
 
     # Get the rejections, discs and f_* values for the taggers
-    tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
+    tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dips],
@@ -677,11 +677,11 @@ def evaluate_model_dips(
         h5_file.attrs["N_test"] = len(jets)
 
     if (
-        "Calculate_Saliency" in eval_params
-        and eval_params["Calculate_Saliency"] is True
+        "calculate_saliency" in eval_params
+        and eval_params["calculate_saliency"] is True
     ):
         # Get the saliency map dict
-        saliency_map_dict = uet.GetSaliencyMapDict(
+        saliency_map_dict = uet.get_saliency_map_dict(
             model=model,
             model_pred=pred_dips,
             X_test=x_comb,
@@ -689,6 +689,14 @@ def evaluate_model_dips(
             class_labels=class_labels,
             main_class=main_class,
             frac_dict=eval_params["frac_values"],
+            var_dict_path=train_config.var_dict,
+            tracks_name=tracks_name,
+            nTracks=eval_params["saliency_ntrks"]
+            if "saliency_ntrks" in eval_params
+            else None,
+            effs=eval_params["saliency_effs"]
+            if "saliency_effs" in eval_params
+            else None,
         )
 
         # Create results dir and pickle file
@@ -867,7 +875,7 @@ def evaluate_model_dl1(
 
     # Get the discriminant values and probabilities of each tagger
     # for each jet
-    df_discs_dict = uet.GetScoresProbsDict(
+    df_discs_dict = uet.get_scores_probs_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dl1],
@@ -900,7 +908,7 @@ def evaluate_model_dl1(
     )
 
     # Get the rejections, discs and effs of the taggers
-    tagger_rej_dicts = uet.GetRejectionPerEfficiencyDict(
+    tagger_rej_dicts = uet.get_rej_per_eff_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dl1],
@@ -934,7 +942,7 @@ def evaluate_model_dl1(
         h5_file.attrs["N_test"] = len(jets)
 
     # Get the rejections, discs and f_* values for the taggers
-    tagger_fraction_rej_dict = uet.GetRejectionPerFractionDict(
+    tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dl1],
