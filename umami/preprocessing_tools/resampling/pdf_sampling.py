@@ -12,6 +12,7 @@ from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
 
 from umami.configuration import logger
+from umami.data_tools import compare_h5_files_variables
 from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
 from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
 from umami.preprocessing_tools.resampling.resampling_base import (
@@ -2100,6 +2101,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         sample_start_ind = {}
         sample_end_ind = {}
 
+        # Init a list for the sample paths
+        sample_paths = []
+
         # Loop over the different flavour types (like bjets, cjets etc.)
         for sample_id, _ in enumerate(
             self.options["samples"][list(self.sample_categories.keys())[0]]
@@ -2116,6 +2120,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     self.options["samples"][sample_category][sample_id]
                     + "_selected.h5",
                 )
+
+                # Add the path of the file to the sample_paths list
+                sample_paths.append(load_name)
 
                 # Add the h5 file to dict to loop over it
                 sample_dict[f"{sample_category}_{sample_id}"] = h5py.File(
@@ -2138,6 +2145,26 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     for sample_category in self.options["samples"]
                 ]
             )
+
+        # Check if all jets, tracks have the same variables
+        common_vars = {}
+        for dataset in ["jets"] + self.tracks_names if self.save_tracks else ["jets"]:
+            common_vars_i, diff_vars = compare_h5_files_variables(
+                *sample_paths, key=dataset
+            )
+            common_vars[dataset] = common_vars_i
+            logger.debug(f"Common vars in {dataset}: {common_vars_i}")
+            logger.debug(f"Diff vars in {dataset}: {diff_vars}")
+            if diff_vars:
+                logger.warning(
+                    f"The {dataset} in your specified samples don't have the same "
+                    f" variables. The following variables are different: {diff_vars}"
+                )
+                logger.warning(
+                    "All variables which are not present in all samples are "
+                    "padded in the files where they are not present! Please "
+                    "check that you are not training with them!"
+                )
 
         # Set the counter for the chunks
         chunk_number = 0
@@ -2190,13 +2217,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         ]
 
                 else:
-                    jets = np.hstack(
-                        (
+                    jets = np.lib.recfunctions.stack_arrays(
+                        [
                             jets,
                             df["jets"][
                                 sample_start_ind[dict_key] : sample_end_ind[dict_key]
                             ],
-                        )
+                        ]
                     )
                     labels = np.vstack(
                         (
