@@ -1,10 +1,10 @@
 import os
-import pickle
 import tempfile
 import unittest
 from subprocess import run
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from matplotlib.testing.compare import compare_images
 
@@ -43,7 +43,6 @@ class plot_score_TestCase(unittest.TestCase):
         self.data_url = "https://umami-ci-provider.web.cern.ch/eval_files/"
         self.results_url = self.data_url + "results-1_new.h5"
         self.rej_url = self.data_url + "results-rej_per_eff-1_new.h5"
-        self.saliency_url = self.data_url + "saliency_1_ttbar_new.pkl"
         self.frac_url = self.data_url + "results-rej_per_fractions-1.h5"
         self.dips_df_key = "dips_ujets_rej"
         self.rnnip_df_key = "rnnip_ujets_rej"
@@ -52,14 +51,6 @@ class plot_score_TestCase(unittest.TestCase):
 
         run(["wget", self.results_url, "--directory-prefix", self.actual_plots_dir])
         run(["wget", self.rej_url, "--directory-prefix", self.actual_plots_dir])
-        run(
-            [
-                "wget",
-                self.saliency_url,
-                "--directory-prefix",
-                self.actual_plots_dir,
-            ]
-        )
         run(
             [
                 "wget",
@@ -230,23 +221,30 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plot_saliency(self):
-        with open(self.actual_plots_dir + "saliency_1_ttbar_new.pkl", "rb") as f:
-            maps_dict = pickle.load(f)
+        rng = np.random.default_rng(42)
+        maps_dict = {
+            "Variables_list": [f"p{i}" for i in range(15)],
+            "77_bjets_True": rng.integers(1, 5, size=(15, 8)),
+        }
 
         plot_saliency(
             maps_dict=maps_dict,
             plot_name=self.actual_plots_dir + "plot_saliency.png",
+            target_eff=0.77,
+            jet_flavour="bjets",
+            PassBool=True,
+            nFixedTrks=8,
             title="Test Saliency",
         )
-        # TODO: what happens here?
-        # self.assertEqual(
-        #     None,
-        #     compare_images(
-        #         self.plots_dir + "plot_saliency.png",
-        #         self.tmp_plot_dir + "plot_saliency.png",
-        #         tol=1,
-        #     ),
-        # )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.expected_plots_dir + "plot_saliency.png",
+                self.actual_plots_dir + "plot_saliency.png",
+                tol=1,
+            ),
+        )
 
     def test_plot_prob(self):
         df_results_ttbar = pd.read_hdf(

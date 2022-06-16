@@ -13,6 +13,7 @@ from tensorflow.keras.layers import Lambda  # pylint: disable=import-error
 from tensorflow.keras.models import Model  # pylint: disable=import-error
 
 import umami.metrics as umt
+from umami.preprocessing_tools import GetVariableDict
 from umami.tools import check_main_class_input
 
 
@@ -86,7 +87,7 @@ def calculate_fraction_dict(
     return dict_list
 
 
-def GetRejectionPerFractionDict(
+def get_rej_per_frac_dict(
     jets,
     y_true: np.ndarray,
     tagger_preds: list,
@@ -232,7 +233,7 @@ def GetRejectionPerFractionDict(
     return tagger_rej_dict
 
 
-def GetRejectionPerEfficiencyDict(
+def get_rej_per_eff_dict(
     jets,
     y_true,
     tagger_preds: list,
@@ -377,7 +378,7 @@ def GetRejectionPerEfficiencyDict(
     return {**tagger_disc_cut_dicts, **tagger_rej_dicts}
 
 
-def GetScoresProbsDict(
+def get_scores_probs_dict(
     jets,
     y_true,
     tagger_preds: list,
@@ -515,14 +516,18 @@ def GetScoresProbsDict(
     return df_discs_dict
 
 
-def GetSaliencyMapDict(
+def get_saliency_map_dict(
     model: object,
-    model_pred,
-    X_test,
-    Y_test,
+    model_pred: np.ndarray,
+    X_test: np.ndarray,
+    Y_test: np.ndarray,
     class_labels: list,
     main_class: str,
     frac_dict: dict,
+    var_dict_path: str,
+    tracks_name: str,
+    nTracks: int = None,
+    effs: list = None,
     nJets: int = int(10e4),
 ) -> dict:
     """
@@ -544,16 +549,52 @@ def GetSaliencyMapDict(
         The main discriminant class. For b-tagging obviously "bjets".
     frac_dict : dict
         Dict with the fraction values for the tagger.
-    nJets : int
+    var_dict_path : str
+        Path to the variable dict which was used for training the tagger
+        (to retrieve the inputs).
+    tracks_name : str
+        Name of the tracks which are used in the training.
+    nTracks : int
+        Number of tracks each jet needs to have. Saliency maps can
+        only be calculated for a fixed number of tracks per jet.
+        Only jets with this amount of tracks are used for calculation.
+    effs : list, optional
+        List with the efficiencies which are tested.
+        If None is given, the default WPs of 60, 70, 77 and 85
+        are tested. By default None.
+    nJets : int, optional
         Number of jets to use to calculate the saliency maps.
+        By default 10e4
 
     Returns
     -------
     Map_dict : dict
         Dict with the saliency values
+
+    Raises
+    ------
+    ValueError
+        If given efficiencies are neither a list nor a int.
     """
 
     logger.info("Calculate gradients for inputs")
+
+    # Check if default nTracks must be used
+    if nTracks is None:
+        nTracks = 8
+
+    # Check effs for None
+    if effs is None:
+        effs = [60, 70, 77, 85]
+
+    elif isinstance(effs, int):
+        effs = [effs]
+
+    elif not isinstance(effs, list):
+        raise ValueError(
+            "Efficiencies for saliency calculation must be a list "
+            f"or an int! Given type: {type(effs)}"
+        )
 
     # Cut off last layer of the model for saliency maps
     cutted_model = model.layers[-1].output
@@ -587,14 +628,23 @@ def GetSaliencyMapDict(
         frac_dict=frac_dict,
     )
 
+    # Load the variable dict
+    var_dict = GetVariableDict(var_dict_path)
+
+    # Extract track variables from the dict
+    trk_variables_dict = var_dict["track_train_variables"][tracks_name]
+
+    # Flatten the track variables in one list
+    trk_variables_list = [i for j in trk_variables_dict for i in trk_variables_dict[j]]
+
     # Init small dict
-    map_dict = {}
+    map_dict = {"Variables_list": trk_variables_list}
 
     # Get spartial class id
     class_indices = list(range(len(class_labels)))
 
     # Iterate over different beff, jet flavours and passed options
-    for target_beff in [60, 70, 77, 85]:
+    for target_beff in effs:
         for (jet_flavour, class_index) in zip(class_labels, class_indices):
             for PassBool in [True, False]:
 
@@ -604,15 +654,15 @@ def GetSaliencyMapDict(
                 # Get the cutvalue for the specific WP
                 cutvalue = np.percentile(Disc_values_flavour, (100 - target_beff))
 
+                # Check for correct flavour and number of tracks
+                mask = Y_test[:, class_index].astype(bool)
+                mask = mask & (nTrks == nTracks)
+
                 # Set PassBool masking
-                if PassBool is True:
-                    mask = Y_test[:, class_index].astype(bool)
-                    mask = mask & (nTrks == 8)
+                if PassBool:
                     mask = mask & (Disc_values > cutvalue)
 
-                elif PassBool is False:
-                    mask = Y_test[:, class_index].astype(bool)
-                    mask = mask & (nTrks == 8)
+                else:
                     mask = mask & (Disc_values < cutvalue)
 
                 # Get gradient map
@@ -631,7 +681,7 @@ def GetSaliencyMapDict(
     return map_dict
 
 
-def RecomputeScore(
+def recompute_score(
     df,
     model_tagger: str,
     main_class: str,

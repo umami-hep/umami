@@ -112,7 +112,7 @@ Here are all important settings defined for the evaluation process (evaluating v
 | `frac_step` | All | `float` | Optional | Step size of the fraction value scan. Please keep in mind that the fractions given to the background classes need to add up to one! All combinations that do not add up to one are ignored. If you choose a combination `frac_min`, `frac_max` or `frac_step` where the fractions of the brackground classes do not add up to one, you will get an error while running `evaluate_model.py` |
 | `frac_min` | All | `float` | Optional | Minimal fraction value which is set for a background class in the fraction scan. |
 | `frac_max` | All | `float` | Optional | Maximal fraction value which is set for a background class in the fraction scan. |
-| `Calculate_Saliency` | DIPS | `bool` | Optional | Decide, if the saliency maps are calculated or not. This takes a lot of time and resources! |
+| `calculate_saliency` | DIPS | `bool` | Optional | Decide, if the saliency maps are calculated or not. This takes a lot of time and resources! |
 | `add_variables_eval` | DL1r, DL1d | `list` | Optional | A list to add available variables to the evaluation files. |
 | `shapley` | DL1r, DL1d | `dict` | Optional | `dict` with the options for the feature importance explanation with SHAPley |
 | `feature_sets` | DL1r, DL1d | `int` | Optional | Over how many full sets of features it should calculate over. Corresponds to the dots in the beeswarm plot. 200 takes like 10-15 min for DL1r on a 32 core-cpu. |

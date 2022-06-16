@@ -149,12 +149,12 @@ confusion_matrix_Dips_ttbar:
 Dips_saliency_b_WP77_passed_ttbar:
   type: "saliency"
   data_set_name: "ttbar_r21"
+  target_eff: 0.77
+  jet_flavour: "bjets"
+  PassBool: True
+  nFixedTrks: 8
   plot_settings:
     title: "Saliency map for $b$ jets from \n $t\\bar{t}$ who passed WP = 77% \n with exactly 8 tracks"
-    target_beff: 0.77
-    jet_flavour: "cjets"
-    PassBool: True
-    FlipAxis: True
     use_atlas_tag: True # Enable/Disable atlas_first_tag
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets"
