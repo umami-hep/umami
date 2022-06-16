@@ -229,6 +229,7 @@ def prepareConfig(
         ]
         config_file["Validation_metrics_settings"]["taggers_from_file"] = None
         config_file["Eval_parameters_validation"]["tagger"] = None
+        config_file["Eval_parameters_validation"]["Calculate_Saliency"] = False
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
