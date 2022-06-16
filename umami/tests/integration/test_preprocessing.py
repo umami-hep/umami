@@ -49,6 +49,7 @@ def runPreprocessing(
     method: str,
     string_id: str,
     test_dir: str,
+    flavours_to_process: list = None,
 ) -> bool:
     """
     Call all steps of the preprocessing for a certain configuration and variable dict
@@ -68,6 +69,9 @@ def runPreprocessing(
         Unique identifier to further specify which preprocessing was done.
     test_dir : str
         Path to the directory where all the files are downloaded to etc.
+    flavours_to_process : list, optional
+        List with the flavours that are to be processed. By default
+        None
 
     Raises
     ------
@@ -92,16 +96,22 @@ def runPreprocessing(
         Preprocessing succeeded or not.
     """
 
+    # Check if default needs to be set
+    if flavours_to_process is None:
+        flavours_to_process = ["ujets", "cjets", "bjets"]
+
     logger.info(f"Starting integration test of the {method} method.")
     logger.info("Test: running the prepare...")
-    for sample in [
-        "training_ttbar_bjets",
-        "training_ttbar_cjets",
-        "training_ttbar_ujets",
-        "training_zprime_bjets",
-        "training_zprime_cjets",
-        "training_zprime_ujets",
-    ]:
+
+    # Generate list of samples
+    sample_list = [
+        f"training_{sample_type}_{flavour}"
+        for sample_type in ["ttbar", "zprime"]
+        for flavour in flavours_to_process
+    ]
+
+    # Prepare all samples in sample_list
+    for sample in sample_list:
         run_prepare = run(
             [
                 "python",
@@ -687,8 +697,20 @@ class TestPreprocessing(unittest.TestCase):
 
         replaceLineInFile(
             self.pdf_config,
-            "  class_labels: [ujets, cjets, bjets]",
+            "  class_labels:",
             "  class_labels: [ujets, cjets, bjets, taujets]",
+        )
+
+        replaceLineInFile(
+            self.pdf_config,
+            "        - training_ttbar_ujets",
+            "        - training_ttbar_ujets\n        - training_ttbar_taujets",
+        )
+
+        replaceLineInFile(
+            self.pdf_config,
+            "        - training_zprime_ujets",
+            "        - training_zprime_ujets\n        - training_zprime_taujets",
         )
 
         self.assertTrue(
@@ -698,6 +720,7 @@ class TestPreprocessing(unittest.TestCase):
                 method="pdf",
                 string_id="four_classes",
                 test_dir=self.test_dir,
+                flavours_to_process=["ujets", "cjets", "bjets", "taujets"],
             )
         )
 
