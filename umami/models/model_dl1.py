@@ -139,7 +139,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     """
 
     # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
+    nn_structure = train_config.NN_structure
     val_params = train_config.Validation_metrics_settings
     eval_params = train_config.Eval_parameters_validation
 
@@ -172,8 +172,8 @@ def TrainLargeFile(args, train_config, preprocess_config):
 
     # Get variables to bring back in last layer
     feature_connect_indices = None
-    if "repeat_end" in NN_structure and NN_structure["repeat_end"] is not None:
-        repeat_end = NN_structure["repeat_end"]
+    if "repeat_end" in nn_structure and nn_structure["repeat_end"] is not None:
+        repeat_end = nn_structure["repeat_end"]
         logger.info(f"Repeating the following variables in the last layer {repeat_end}")
         feature_connect_indices = utt.get_jet_feature_position(repeat_end, variables)
 
@@ -189,7 +189,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
                 metadata["n_jet_features"] -= len(excluded_var)
             logger.debug(f"Input shape of training set: {metadata['n_jet_features']}")
 
-        if NN_structure["use_sample_weights"]:
+        if nn_structure["use_sample_weights"]:
             tensor_types = (tf.float32, tf.float32, tf.float32)
             tensor_shapes = (
                 tf.TensorShape([None, metadata["n_jet_features"]]),
@@ -210,13 +210,13 @@ def TrainLargeFile(args, train_config, preprocess_config):
                     train_file_path=train_config.train_file,
                     X_Name="X_train",
                     Y_Name="Y_train",
-                    n_jets=int(NN_structure["nJets_train"])
-                    if "nJets_train" in NN_structure
-                    and NN_structure["nJets_train"] is not None
+                    n_jets=int(nn_structure["nJets_train"])
+                    if "nJets_train" in nn_structure
+                    and nn_structure["nJets_train"] is not None
                     else metadata["n_jets"],
-                    batch_size=NN_structure["batch_size"],
+                    batch_size=nn_structure["batch_size"],
                     excluded_var=excluded_var,
-                    sample_weights=NN_structure["use_sample_weights"],
+                    sample_weights=nn_structure["use_sample_weights"],
                 ),
                 tensor_types,
                 tensor_shapes,
@@ -258,16 +258,16 @@ def TrainLargeFile(args, train_config, preprocess_config):
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=NN_structure["batch_size"],
+        validation_batch_size=nn_structure["batch_size"],
         save_weights_only=False,
     )
 
     # Append the callback
     callbacks.append(dl1_mChkPt)
 
-    if "LRR" in NN_structure and NN_structure["LRR"] is True:
+    if "LRR" in nn_structure and nn_structure["LRR"] is True:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.GetLRReducer(**NN_structure)
+        reduce_lr = utf.GetLRReducer(**nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -285,14 +285,15 @@ def TrainLargeFile(args, train_config, preprocess_config):
     # to json file.
     my_callback = utt.MyCallback(
         model_name=train_config.model_name,
-        class_labels=NN_structure["class_labels"],
-        main_class=NN_structure["main_class"],
+        class_labels=nn_structure["class_labels"],
+        main_class=nn_structure["main_class"],
         val_data_dict=val_data_dict,
         target_beff=WP,
         frac_dict=eval_params["frac_values"],
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
         batch_size=val_params["val_batch_size"],
+        use_lrr=nn_structure["LRR"] if "LRR" in nn_structure else False,
     )
 
     # Append the callback
@@ -305,9 +306,9 @@ def TrainLargeFile(args, train_config, preprocess_config):
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=callbacks,
-        steps_per_epoch=int(NN_structure["nJets_train"]) / NN_structure["batch_size"]
-        if "nJets_train" in NN_structure and NN_structure["nJets_train"] is not None
-        else metadata["n_jets"] / NN_structure["batch_size"],
+        steps_per_epoch=int(nn_structure["nJets_train"]) / nn_structure["batch_size"]
+        if "nJets_train" in nn_structure and nn_structure["nJets_train"] is not None
+        else metadata["n_jets"] / nn_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
         initial_epoch=init_epoch,

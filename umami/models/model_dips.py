@@ -149,7 +149,7 @@ def Dips(args, train_config, preprocess_config):
         If input is neither a h5 nor a directory.
     """
     # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
+    nn_structure = train_config.NN_structure
     val_params = train_config.Validation_metrics_settings
     eval_params = train_config.Eval_parameters_validation
     tracks_name = train_config.tracks_name
@@ -176,7 +176,7 @@ def Dips(args, train_config, preprocess_config):
             ].shape
             _, metadata["n_dim"] = f["Y_train"].shape
 
-        if NN_structure["use_sample_weights"]:
+        if nn_structure["use_sample_weights"]:
             tensor_types = (tf.float32, tf.float32, tf.float32)
             tensor_shapes = (
                 tf.TensorShape([None, metadata["n_trks"], metadata["n_trk_features"]]),
@@ -198,12 +198,12 @@ def Dips(args, train_config, preprocess_config):
                     train_file_path=train_config.train_file,
                     X_trk_Name=f"X_{tracks_name}_train",
                     Y_Name="Y_train",
-                    n_jets=int(NN_structure["nJets_train"])
-                    if "nJets_train" in NN_structure
-                    and NN_structure["nJets_train"] is not None
+                    n_jets=int(nn_structure["nJets_train"])
+                    if "nJets_train" in nn_structure
+                    and nn_structure["nJets_train"] is not None
                     else metadata["n_jets"],
-                    batch_size=NN_structure["batch_size"],
-                    sample_weights=NN_structure["use_sample_weights"],
+                    batch_size=nn_structure["batch_size"],
+                    sample_weights=nn_structure["use_sample_weights"],
                 ),
                 tensor_types,
                 tensor_shapes,
@@ -244,16 +244,16 @@ def Dips(args, train_config, preprocess_config):
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=NN_structure["batch_size"],
+        validation_batch_size=nn_structure["batch_size"],
         save_weights_only=False,
     )
 
     # Append the callback
     callbacks.append(dips_mChkPt)
 
-    if "LRR" in NN_structure and NN_structure["LRR"] is True:
+    if "LRR" in nn_structure and nn_structure["LRR"] is True:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.GetLRReducer(**NN_structure)
+        reduce_lr = utf.GetLRReducer(**nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -272,14 +272,15 @@ def Dips(args, train_config, preprocess_config):
     # to json file.
     my_callback = utt.MyCallback(
         model_name=train_config.model_name,
-        class_labels=NN_structure["class_labels"],
-        main_class=NN_structure["main_class"],
+        class_labels=nn_structure["class_labels"],
+        main_class=nn_structure["main_class"],
         val_data_dict=val_data_dict,
         target_beff=WP,
         frac_dict=eval_params["frac_values"],
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
         batch_size=val_params["val_batch_size"],
+        use_lrr=nn_structure["LRR"] if "LRR" in nn_structure else False,
     )
 
     # Append the callback
@@ -292,9 +293,9 @@ def Dips(args, train_config, preprocess_config):
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=callbacks,
-        steps_per_epoch=int(NN_structure["nJets_train"]) / NN_structure["batch_size"]
-        if "nJets_train" in NN_structure and NN_structure["nJets_train"] is not None
-        else metadata["n_jets"] / NN_structure["batch_size"],
+        steps_per_epoch=int(nn_structure["nJets_train"]) / nn_structure["batch_size"]
+        if "nJets_train" in nn_structure and nn_structure["nJets_train"] is not None
+        else metadata["n_jets"] / nn_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,
         initial_epoch=init_epoch,
