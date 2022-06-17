@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing Callback error when LRR is not used [!567](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/567)
 - Fixing stacking issue for the jet variables in the PDFSampling [!565](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/565)
 - Fixing problem with 4 classes integration test [!564](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/564)
 - Rework saliency plots to use puma [!556](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/556)

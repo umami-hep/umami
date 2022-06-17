@@ -375,6 +375,7 @@ class MyCallback_TestCase(unittest.TestCase):
             target_beff=self.target_beff,
             frac_dict=self.frac_dict,
             n_jets=300,
+            use_lrr=False,
         )
 
 
@@ -407,6 +408,7 @@ class MyCallbackUmami_TestCase(unittest.TestCase):
             target_beff=self.target_beff,
             frac_dict=self.frac_dict,
             n_jets=300,
+            use_lrr=False,
         )
 
 

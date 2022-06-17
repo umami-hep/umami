@@ -376,6 +376,7 @@ class CallbackBase(Callback):
         class_labels: list,
         main_class: str,
         model_name: str,
+        use_lrr: bool,
         n_jets: int = None,
         val_data_dict: dict = None,
         target_beff: float = 0.77,
@@ -407,6 +408,8 @@ class CallbackBase(Callback):
         frac_dict : dict
             Dict with the fraction values for the non-main classes. The
             values need to add up to 1.
+        use_lrr : bool
+            Info if a learning rate reducer is used in the training.
         continue_training : bool, optional
             Decide, if the this is a continuation of an already existing training
             or not, by default False.
@@ -432,6 +435,7 @@ class CallbackBase(Callback):
         self.model_name = model_name
         self.continue_training = continue_training
         self.batch_size = batch_size
+        self.use_lrr = use_lrr
 
         # Get the names for the train/val metrics files
         (
@@ -514,10 +518,13 @@ class MyCallback(CallbackBase):
         # Define a dict with the epoch and the training metrics
         train_metrics_dict = {
             "epoch": epoch + 1,
-            "learning_rate": logs["lr"].item(),
             "loss": logs["loss"],
             "accuracy": logs["accuracy"],
         }
+
+        # Write out learning rate if a LRR is used
+        if self.use_lrr:
+            train_metrics_dict["learning_rate"] = logs["lr"].item()
 
         # Append the dict to the list
         self.train_metrics_list.append(train_metrics_dict)
@@ -577,13 +584,16 @@ class MyCallbackUmami(CallbackBase):
         # Define a dict with the epoch and the training metrics
         train_metrics_dict = {
             "epoch": epoch + 1,
-            "learning_rate": logs["lr"].item(),
             "loss": logs["loss"],
             "loss_dips": logs["dips_loss"],
             "loss_umami": logs["umami_loss"],
             "accuracy_dips": logs["dips_accuracy"],
             "accuracy_umami": logs["umami_accuracy"],
         }
+
+        # Write out learning rate if a LRR is used
+        if self.use_lrr:
+            train_metrics_dict["learning_rate"] = logs["lr"].item()
 
         # Append the dict to the list
         self.train_metrics_list.append(train_metrics_dict)

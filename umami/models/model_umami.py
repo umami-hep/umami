@@ -367,6 +367,7 @@ def umami_tagger(args, train_config, preprocess_config):
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
         batch_size=val_params["val_batch_size"],
+        use_lrr=nn_structure["LRR"] if "LRR" in nn_structure else False,
     )
 
     # Append the callback
