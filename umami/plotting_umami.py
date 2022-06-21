@@ -160,6 +160,12 @@ def plot_roc(
         Path to the results directory of the model.
     print_model : bool
         Print the models which are plotted while plotting.
+
+    Raises
+    ------
+    AttributeError
+        If the needed njets per class used to calculate the
+        rejections is not in the rej_per_epoch results file.
     """
     df_results_list = []
     tagger_list = []
@@ -167,19 +173,10 @@ def plot_roc(
     labels = []
     linestyles = []
     colours = []
+    njets_test = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
-
-    if (
-        "n_test" not in plot_config["plot_settings"]
-        or plot_config["plot_settings"]["n_test"] is None
-    ):
-        n_test_provided = False
-        plot_config["plot_settings"]["n_test"] = []
-
-    else:
-        n_test_provided = True
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
@@ -210,17 +207,27 @@ def plot_roc(
             colours.append(model_config["colour"])
 
         # n_test is only needed to calculate binomial errors
-        if not n_test_provided and (
+        if (
             "draw_errors" in plot_config["plot_settings"]
-            and plot_config["plot_settings"]["draw_errors"]
+            and plot_config["plot_settings"]["draw_errors"] is False
         ):
-            with h5py.File(
-                eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
-            ) as h5_file:
-                plot_config["plot_settings"]["n_test"].append(h5_file.attrs["N_test"])
+            njets_test.append(None)
 
         else:
-            plot_config["plot_settings"]["n_test"] = None
+            try:
+                with h5py.File(
+                    eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
+                ) as h5_file:
+                    njets_test.append(
+                        h5_file.attrs[f"njets_{model_config['rejection_class']}"]
+                    )
+
+            except KeyError as error:
+                raise AttributeError(
+                    "You set draw_errors to True but the needed number of jets per "
+                    "class used to calculate the rejections is not in the results "
+                    "file! Please re-run the evaluation to add this values correctly!"
+                ) from error
 
     # Get the right ratio id for correct ratio calculation
     ratio_dict = {}
@@ -246,6 +253,7 @@ def plot_roc(
         ratio_id=ratio_id,
         linestyles=linestyles,
         colours=colours,
+        n_test=njets_test,
         **plot_config["plot_settings"],
     )
 

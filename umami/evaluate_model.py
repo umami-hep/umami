@@ -364,7 +364,11 @@ def evaluate_model(
         f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
         "a",
     ) as h5_file:
-        h5_file.attrs["N_test"] = len(jets)
+        # Put the number of jets per class in the dict for unc calculation
+        for flav_counter, flavour in enumerate(class_labels):
+            h5_file.attrs[f"njets_{flavour}"] = len(
+                truth_internal_labels[truth_internal_labels == flav_counter]
+            )
 
     # Get the rejections, discs and f_* values for the taggers
     tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
@@ -398,7 +402,11 @@ def evaluate_model(
         f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as h5_file:
-        h5_file.attrs["N_test"] = len(jets)
+        # Put the number of jets per class in the dict for unc calculation
+        for flav_counter, flavour in enumerate(class_labels):
+            h5_file.attrs[f"njets_{flavour}"] = len(
+                truth_internal_labels[truth_internal_labels == flav_counter]
+            )
 
 
 def evaluate_model_dips(
@@ -641,7 +649,11 @@ def evaluate_model_dips(
         f"results{results_filename_extension}-rej_per_eff-{args.epoch}.h5",
         "a",
     ) as h5_file:
-        h5_file.attrs["N_test"] = len(jets)
+        # Put the number of jets per class in the dict for unc calculation
+        for flav_counter, flavour in enumerate(class_labels):
+            h5_file.attrs[f"njets_{flavour}"] = len(
+                truth_internal_labels[truth_internal_labels == flav_counter]
+            )
 
     # Get the rejections, discs and f_* values for the taggers
     tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
@@ -674,7 +686,11 @@ def evaluate_model_dips(
         f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as h5_file:
-        h5_file.attrs["N_test"] = len(jets)
+        # Put the number of jets per class in the dict for unc calculation
+        for flav_counter, flavour in enumerate(class_labels):
+            h5_file.attrs[f"njets_{flavour}"] = len(
+                truth_internal_labels[truth_internal_labels == flav_counter]
+            )
 
     if (
         "calculate_saliency" in eval_params
@@ -939,7 +955,11 @@ def evaluate_model_dl1(
         f"results{results_filename_extension}-rej_per_eff-{args.epoch}.h5",
         "a",
     ) as h5_file:
-        h5_file.attrs["N_test"] = len(jets)
+        # Put the number of jets per class in the dict for unc calculation
+        for flav_counter, flavour in enumerate(class_labels):
+            h5_file.attrs[f"njets_{flavour}"] = len(
+                truth_internal_labels[truth_internal_labels == flav_counter]
+            )
 
     # Get the rejections, discs and f_* values for the taggers
     tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
@@ -973,7 +993,11 @@ def evaluate_model_dl1(
         f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
         "a",
     ) as h5_file:
-        h5_file.attrs["N_test"] = len(jets)
+        # Put the number of jets per class in the dict for unc calculation
+        for flav_counter, flavour in enumerate(class_labels):
+            h5_file.attrs[f"njets_{flavour}"] = len(
+                truth_internal_labels[truth_internal_labels == flav_counter]
+            )
 
     if args.shapley:
         logger.info("Explaining feature importance with SHAPley")
