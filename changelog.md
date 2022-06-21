@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing uncertainty calculation for the ROC curves [!566](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/566)
 
 ### [v0.9](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.9)
 

@@ -224,7 +224,7 @@ def plot_roc(
     same_height_WP: bool = True,
     linestyles: list = None,
     colours: list = None,
-    n_test=None,
+    n_test: list = None,
     reference_ratio: list = None,
     **kwargs,
 ):
@@ -266,8 +266,8 @@ def plot_roc(
         List of linestyles to use for the given models, by default None
     colours : list, optional
         List of linecolors to use for the given models, by default None
-    n_test : [type], optional
-        A list of the same length as class_rejections, with the number of
+    n_test : list, optional
+        A list of the same length as rej_class_list, with the number of
         events used to calculate the background efficiencies.
         We need this To calculate the binomial errors on the background
         rejection, using the formula given by
@@ -362,17 +362,12 @@ def plot_roc(
     if draw_errors is True:
         # Check if n_test is provided in all samples
         if n_test is None:
-            n_test_in_file = ["N_test" in df_results for df_results in df_results_list]
-
-            if not all(n_test_in_file):
-                logger.error(
-                    "Requested binomialErrors, but not all models have n_test. "
-                    "Will NOT plot rej errors."
-                )
-                draw_errors = False
-
-        elif isinstance(n_test, (int, float)):
-            n_test = [n_test] * len(df_results_list)
+            logger.error(
+                "Requested binomialErrors, but no number of jets used for "
+                "rejection calculation are given! "
+                "Will NOT plot rej errors."
+            )
+            draw_errors = False
 
         elif isinstance(n_test, list):
             if len(n_test) != len(df_results_list):
