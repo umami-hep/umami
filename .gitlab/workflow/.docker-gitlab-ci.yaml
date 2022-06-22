@@ -20,7 +20,6 @@
   retry: 2
   # We need to define an empty array for the dependecies to NOT include any artifacts from previous jobs
   dependencies: []
-  needs: []
 
 .requirement_changes: &requirement_changes
   changes:
@@ -59,6 +58,7 @@ build_umamibase_cpu:
     BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG'
     DOCKER_FILE: docker/umamibase/Dockerfile
     IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:latest'
+  needs: []
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       <<: *requirement_changes
@@ -73,6 +73,7 @@ build_umamibase_gpu:
     BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG-gpu'
     DOCKER_FILE: docker/umamibase/Dockerfile
     IMAGE_DESTINATION: '${REGISTY_PATH}/umamibase:latest-gpu'
+  needs: []
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       <<: *requirement_changes
@@ -177,6 +178,7 @@ build_umamibase_cpu_MR:
     BASE: 'BASE_IMAGE=tensorflow/tensorflow:$TFTAG'
     DOCKER_FILE: docker/umamibase/Dockerfile
     IMAGE_DESTINATION: '${REGISTY_PATH}/temporary_images:${CI_MERGE_REQUEST_IID}-base'
+  needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
       <<: *requirement_changes
