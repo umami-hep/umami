@@ -169,6 +169,7 @@ def plot_n_tracks_per_jet(
                 Histogram(
                     values=n_tracks_flavour,
                     flavour=flavour,
+                    ratio_group=flavour,
                     label=label,
                     linestyle=linestyle,
                 ),
@@ -413,6 +414,7 @@ def plot_input_vars_trks(
                             Histogram(
                                 values=track_values,
                                 flavour=flavour,
+                                ratio_group=flavour,
                                 label=label,
                                 linestyle=linestyle,
                             ),
@@ -556,6 +558,7 @@ def plot_input_vars_jets(
                         Histogram(
                             values=jets_flavour,
                             flavour=flavour,
+                            ratio_group=flavour,
                             label=label,
                             linestyle=linestyle,
                         ),
