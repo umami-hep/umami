@@ -79,6 +79,10 @@ class Configuration:
         KeyError
             deprecation error for Plotting_settings
         ValueError
+            if dips_attention tagger is used and conditional info is wanted
+        ValueError
+            if cads tagger is used without conditional info
+        ValueError
             if label_value is used twice in the used classes
         ValueError
             if label definitions are mixed
@@ -140,6 +144,36 @@ class Configuration:
             if item in self.config:
                 if item == "tracks_name":
                     setattr(self, "tracks_key", f"X_{self.config[item]}_train")
+
+                elif item == "NN_structure" and bool_evaluate_trained_model is True:
+                    if (self.config["NN_structure"]["tagger"] == "dips_attention") and (
+                        "N_Conditions" in self.config["NN_structure"]
+                        and (
+                            self.config["NN_structure"]["N_Conditions"] != 0
+                            or self.config["NN_structure"]["N_Conditions"] is not None
+                        )
+                    ):
+                        raise ValueError(
+                            """
+                            You are trying to train dips_attention with conditional
+                            information. Please switch the tagger to "cads"!
+                            """
+                        )
+
+                    if (self.config["NN_structure"]["tagger"] == "cads") and (
+                        "N_Conditions" in self.config["NN_structure"]
+                        and (
+                            self.config["NN_structure"]["N_Conditions"] == 0
+                            or self.config["NN_structure"]["N_Conditions"] is None
+                        )
+                    ):
+                        raise ValueError(
+                            """
+                            You are trying to train CADS without conditional
+                            information. If you want to use just the attention part,
+                            please switch the tagger to "dips_attention"!
+                            """
+                        )
 
                 elif item == "Validation_metrics_settings":
                     try:

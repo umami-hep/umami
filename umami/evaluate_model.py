@@ -509,7 +509,7 @@ def evaluate_model_dips(
 
     # Check which test files need to be loaded depending on the CADS version
     logger.info("Start loading %s test file", data_set_name)
-    if tagger.casefold() == "CADS".casefold():
+    if tagger.casefold() == "cads":
         # Load the test jets
         x_test, x_test_trk, y_test = utt.GetTestFile(
             input_file=test_file,
@@ -595,11 +595,11 @@ def evaluate_model_dips(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dips],
-        tagger_names=[f"{tagger.casefold()}"],
+        tagger_names=[tagger.casefold()],
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={f"{tagger.casefold()}": eval_params["frac_values"]},
+        frac_values={tagger.casefold(): eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
     )
 
@@ -622,11 +622,11 @@ def evaluate_model_dips(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dips],
-        tagger_names=["dips"],
+        tagger_names=[tagger.casefold()],
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={"dips": eval_params["frac_values"]},
+        frac_values={tagger.casefold(): eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
         eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
         eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
@@ -660,7 +660,7 @@ def evaluate_model_dips(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dips],
-        tagger_names=["dips"],
+        tagger_names=[tagger.casefold()],
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
@@ -1074,7 +1074,7 @@ if __name__ == "__main__":
                 test_file_entry=test_file_identifier,
             )
 
-    elif tagger_name.casefold() in ("dips", "cads"):
+    elif tagger_name.casefold() in ("dips", "dips_attention", "cads"):
         logger.info("Start evaluating DIPS with test files...")
         for (
             test_file_identifier,

@@ -5,6 +5,7 @@
 ### Latest
 
 - Switch to latest puma version (v0.1.3) [!572](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/572)
+- Splitting CADS and DIPS Attention [!569](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/569)
 - Fixing docker image builds [!571](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/571)
 - Fixing uncertainty calculation for the ROC curves [!566](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/566)
 

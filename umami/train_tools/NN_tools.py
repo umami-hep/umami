@@ -1658,7 +1658,7 @@ def calc_validation_metrics(
             convert_to_tensor=False,
         )
 
-    elif tagger.casefold() == "dips":
+    elif tagger.casefold() in ("dips", "dips_attention"):
         data_dict = load_validation_data_dips(
             train_config=train_config,
             preprocess_config=preprocess_config,
@@ -1765,7 +1765,7 @@ def calc_validation_metrics(
             # Delete model
             del dips
 
-        elif tagger.casefold() == "cads":
+        elif tagger.casefold() in ("cads", "dips_attention"):
             # Load DIPS Conditional Attention model
             with CustomObjectScope(
                 {

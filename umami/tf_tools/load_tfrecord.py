@@ -205,7 +205,13 @@ class TFRecordReader:
             )
 
         # Set track shape
-        if self.tagger_name.casefold() in ("dips", "umami", "umami_cond_att", "cads"):
+        if self.tagger_name.casefold() in (
+            "dips",
+            "dips_attention",
+            "cads",
+            "umami",
+            "umami_cond_att",
+        ):
             try:
                 shapes[f"shape_X_{self.tracks_name}_train"] = [
                     metadata["n_trks"][self.tracks_name],
@@ -247,7 +253,7 @@ class TFRecordReader:
         if self.tagger_name.casefold() == "dl1":
             input_dir = {"input_1": parse_ex["X_jets"]}
 
-        elif self.tagger_name.casefold() in ("dips", "cads"):
+        elif self.tagger_name.casefold() in ("dips", "dips_attention", "cads"):
             input_dir = {
                 "input_1": parse_ex[f"X_{self.tracks_name}_train"],
             }
