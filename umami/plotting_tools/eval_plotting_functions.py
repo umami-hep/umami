@@ -688,6 +688,7 @@ def plot_score(
                         f"disc_{tagger}"
                     ],
                     flavour=iter_flavour,
+                    ratio_group=iter_flavour,
                     label=model_label if len(model_labels) > 1 else None,
                     linestyle=linestyle,
                 ),
@@ -780,6 +781,7 @@ def plot_prob(
                         f'{tagger}_{flav_cat[flavour]["prob_var_name"]}'
                     ],
                     flavour=iter_flavour,
+                    ratio_group=iter_flavour,
                     label=model_label if len(model_labels) > 1 else None,
                     linestyle=linestyle,
                 ),
