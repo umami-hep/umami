@@ -109,7 +109,7 @@ if __name__ == "__main__":
                 preprocess_config=preprocess_config,
             )
 
-        elif tagger_name.casefold() == "cads":
+        elif tagger_name.casefold() in ("cads", "dips_attention"):
             utm.cads_tagger(
                 args=args,
                 train_config=train_config,
@@ -127,6 +127,7 @@ if __name__ == "__main__":
             raise ValueError(
                 f"""
                 Tagger {tagger_name} is not supported! Possible taggers are
-                dips, dl1, umami and cads!
+                'dips', 'dips_attention', 'cads', 'dl1',
+                'umami' or 'umami_cond_att'.
                 """
             )

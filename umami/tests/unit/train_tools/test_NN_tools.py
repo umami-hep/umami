@@ -346,6 +346,22 @@ class Configuration_TestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             config.get_configuration()
 
+    def test_cads_without_cond_info(self):
+        config = Configuration(self.config_file)
+        config.NN_structure["N_Conditions"] = 0
+        config.NN_structure["tagger"] = "cads"
+
+        with self.assertRaises(ValueError):
+            config.get_configuration()
+
+    def test_dips_att_with_cond_info(self):
+        config = Configuration(self.config_file)
+        config.NN_structure["N_Conditions"] = 2
+        config.NN_structure["tagger"] = "dips_attention"
+
+        with self.assertRaises(ValueError):
+            config.get_configuration()
+
 
 class MyCallback_TestCase(unittest.TestCase):
     """
