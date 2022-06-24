@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from umami.configuration import logger
-from umami.data_tools.Cuts import GetSampleCuts
+from umami.data_tools.Cuts import get_sample_cuts
 from umami.helper_tools import get_class_label_ids, get_class_label_variables
 from umami.tools import natural_keys
 
@@ -176,7 +176,7 @@ def LoadJetsFromFile(
 
             if cut_vars_dict:
                 # Apply cuts and get a list of which jets to remove
-                indices_toremove_cuts = GetSampleCuts(jets=jets, cuts=cut_vars_dict)
+                indices_toremove_cuts = get_sample_cuts(jets=jets, cuts=cut_vars_dict)
 
                 # Combine the indicies to remove lists
                 indices_toremove = np.asarray(
@@ -381,7 +381,7 @@ def LoadTrksFromFile(
 
             if cut_vars_dict:
                 # Apply cuts and get a list of which jets to remove
-                indices_toremove_cuts = GetSampleCuts(jets=labels, cuts=cut_vars_dict)
+                indices_toremove_cuts = get_sample_cuts(jets=labels, cuts=cut_vars_dict)
 
                 # Combine the indicies to remove lists
                 indices_toremove = np.asarray(

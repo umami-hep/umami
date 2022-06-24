@@ -428,6 +428,11 @@ First are the bins for the two resampling variables. You need to define a nested
     max_upsampling_ratio:
       training_ttbar_cjets: 5
       training_zprime_cjets: 5
+
+    # For PDF sampling, this scales the total number of training jets in the training dataset by
+    # given factor, i.e. a factor of 1 has no effect
+    sampling_fraction:
+      training_ttbar_cjets: 1
 ```
 
 | Setting | Type | Explanation |
@@ -436,6 +441,7 @@ First are the bins for the two resampling variables. You need to define a nested
 | `custom_njets_initial` | `None` | These values are used only in the `count` and `weighting` method. |
 | `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`. |
 | `max_upsampling_ratio` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a maximal ratio of upsampling. If there are not enough cjets and the `max_upsampling_ratio` is reached, the form of the distribution is applied but not the number. So there can be different numbers of jets per bin per class, but the shape of distributions will still be the same (if you normalise them). |
+|`sampling_fraction` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a factor to scale the number of jets for this sample in the final training dataset compared to the number of jets defined in `njets`. This can be useful if subclasses of u-, c- and/or b-jets are used for training but the overall ratio for u-,c- and b-jet should still be 1:1:1|
 
 #### Importance Sampling Without Replacement
 

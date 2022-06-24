@@ -605,6 +605,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         self.sample_map = {elem: {} for elem in list(samples.keys())}
         self.sample_file_map = {}
         self.max_upsampling = {}
+        self.sampling_fraction = {}
 
         sample_id = 0
         for sample_category in self.sample_categories:
@@ -629,6 +630,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         max_upsampling,
                         num_available,
                     )
+                if (
+                    "sampling_fraction" in self.options
+                    and self.options["sampling_fraction"] is not None
+                    and sample in list(self.options["sampling_fraction"])
+                ):
+                    self.sampling_fraction[sample] = self.options["sampling_fraction"][
+                        sample
+                    ]
 
     def CheckSampleConsistency(self, samples: dict) -> None:
         """
@@ -1172,7 +1181,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             target_data = json.load(load_file)
 
         # Load number to sample
-        number_to_sample = target_data["number_to_sample"][sample_name]
+        number_to_sample = int(target_data["number_to_sample"][sample_name])
 
         # First pass over data to get sum of weights
         # Assuming chunk size is large enough to avoid the loop
@@ -1216,7 +1225,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Init a progress bar
         pbar = tqdm(total=number_to_sample)
 
-        # Loop over the chunks until now chunks can be loaded anymore
+        # Loop over the chunks until no chunks can be loaded anymore
         while load_chunk:
 
             # Try to get chunk from generator
@@ -1845,6 +1854,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     f"For {flavour_name}, demanding"
                     f" {target_data['target_number'][sample_category]} jets."
                 )
+        if any(
+            flavour_name in self.sampling_fraction for flavour_name in flavour_names
+        ):
+            self.number_to_sample[flavour_name] = int(
+                self.number_to_sample[flavour_name]
+                * self.sampling_fraction[flavour_name]
+            )
 
         # Save the number to sample to json
         target_data["number_to_sample"] = self.number_to_sample

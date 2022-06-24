@@ -8,7 +8,7 @@ import numpy as np
 from umami.configuration import logger
 
 
-def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
+def get_sample_cuts(jets: np.ndarray, cuts: list) -> np.ndarray:
     """
     Given an array of jets and a list of cuts, the function provides a list of
     indices which are removed by applying the cuts.
@@ -80,39 +80,44 @@ def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
             )
         cut = cut[0]
         properties = cut_entry[cut]
-        op = properties["operator"]
+        cut_op = properties["operator"]
         cond = properties["condition"]
         NaNCheck = properties.get("NaNcheck", False)
         # modulo operation: assume structure mod_[N]_[operator]
         # - [N] denoting "modulo N "
         # - [operator] denoting operator used for comparison to condition
-        if "mod_" in op:
+        if "mod_" in cut_op:
             try:
-                found = re.search(r"mod_(\d+?)_([=!><]+)", op)
+                found = re.search(r"mod_(\d+?)_([=!><]+)", cut_op)
                 modulo = int(found.group(1))
-                op = found.group(2)
+                cut_op = found.group(2)
             except AttributeError as error:
                 raise RuntimeError(
                     "Incorrect use of modulo cut for sample:                  "
                     "   specify in config as mod_N_op                     with"
-                    " N as an integer and                     op the operator"
+                    " N as an integer and                     cut_op the operator"
                     " used for testing the condition."
                 ) from error
             except KeyError as error:
                 raise RuntimeError(
                     "Incorrect use of modulo cut for sample:                 "
-                    "    only supported operators 'op' in mod_N_op are:      "
+                    "    only supported operators 'cut_op' in mod_N_op are:      "
                     f"               {list(inverted_ops.keys())}."
                 ) from error
-            cut_rejection = inverted_ops[op]((jets[cut] % modulo), cond)
+            cut_rejection = inverted_ops[cut_op]((jets[cut] % modulo), cond)
         else:
-            if op in list(inverted_ops.keys()):  # pylint: disable=C0201:
+            if cut_op in list(inverted_ops.keys()):  # pylint: disable=C0201:
                 if isinstance(cond, list):
-                    indices = [inverted_ops[op](jets[cut], cond_i) for cond_i in cond]
-                    cut_rejection = reduce(operator.and_, indices)
+                    indices = [
+                        inverted_ops[cut_op](jets[cut], cond_i) for cond_i in cond
+                    ]
+                    if cut_op == "!=":
+                        cut_rejection = reduce(operator.or_, indices)
+                    else:
+                        cut_rejection = reduce(operator.and_, indices)
                 else:
                     cond = float(cond)
-                    cut_rejection = inverted_ops[op](jets[cut], cond)
+                    cut_rejection = inverted_ops[cut_op](jets[cut], cond)
                     if NaNCheck:
                         cut_rejection = cut_rejection & (jets[cut] == jets[cut])
             else:
@@ -129,7 +134,7 @@ def GetSampleCuts(jets: np.ndarray, cuts: list) -> np.ndarray:
     return indices_to_remove
 
 
-def GetCategoryCuts(label_var: str, label_value: float) -> list:
+def get_category_cuts(label_var: str, label_value: float, cut_op: str = "==") -> list:
     """
     This function returns the cut object for the categories used in the
     preprocessing.
@@ -140,7 +145,10 @@ def GetCategoryCuts(label_var: str, label_value: float) -> list:
         Name of the variable.
     label_value : float, int, list
         Value for the cut of the variable.
-
+    cut_op : str, optional
+        operator for the cut. Possible values:
+        "==", "!=", ">", ">=", "<", "<=" or None.
+        default is "==".
     Returns
     -------
     list
@@ -153,11 +161,12 @@ def GetCategoryCuts(label_var: str, label_value: float) -> list:
     """
 
     cut_object = []
+
     if isinstance(label_value, (float, int, list)):
         cut_object.append(
             {
                 label_var: {
-                    "operator": "==",
+                    "operator": "==" if cut_op is None else cut_op,
                     "condition": label_value,
                 }
             }

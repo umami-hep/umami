@@ -4,14 +4,14 @@ import numpy as np
 import pandas as pd
 
 from umami.configuration import logger, set_log_level
-from umami.data_tools import GetCategoryCuts, GetSampleCuts
+from umami.data_tools import get_category_cuts, get_sample_cuts
 
 set_log_level(logger, "DEBUG")
 
 
 class GetSampleCutsTestCase(unittest.TestCase):
     """
-    Test the implementation of the GetSampleCuts function.
+    Test the implementation of the get_sample_cuts function.
     """
 
     def setUp(self):
@@ -69,7 +69,7 @@ class GetSampleCutsTestCase(unittest.TestCase):
         self.pass_ttbar = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
 
     def test_cuts_passing_ttbar(self):
-        indices_to_remove = GetSampleCuts(
+        indices_to_remove = get_sample_cuts(
             self.jets.to_records(index=False),
             self.cuts,
         )
@@ -78,7 +78,7 @@ class GetSampleCutsTestCase(unittest.TestCase):
         self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
 
     def test_cuts_passing_ttbar_extended_labelling(self):
-        indices_to_remove = GetSampleCuts(
+        indices_to_remove = get_sample_cuts(
             self.jets.to_records(index=False),
             self.extended_cuts,
         )
@@ -88,21 +88,21 @@ class GetSampleCutsTestCase(unittest.TestCase):
 
     def test_cuts_wrong_format(self):
         with self.assertRaises(KeyError):
-            GetSampleCuts(
+            get_sample_cuts(
                 self.jets.to_records(index=False),
                 self.wrong_format_cuts,
             )
 
     def test_cuts_wrong_modulo(self):
         with self.assertRaises(RuntimeError):
-            GetSampleCuts(
+            get_sample_cuts(
                 self.jets.to_records(index=False),
                 self.wrong_modulo_cuts,
             )
 
     def test_cuts_wrong_operator(self):
         with self.assertRaises(KeyError):
-            GetSampleCuts(
+            get_sample_cuts(
                 self.jets.to_records(index=False),
                 self.wrong_operator_cuts,
             )
@@ -110,7 +110,7 @@ class GetSampleCutsTestCase(unittest.TestCase):
 
 class GetCategoryCutsTestCase(unittest.TestCase):
     """
-    Test the implementation of the GetCategoryCuts function.
+    Test the implementation of the get_category_cuts function.
     """
 
     def setUp(self) -> None:
@@ -120,10 +120,10 @@ class GetCategoryCutsTestCase(unittest.TestCase):
     def test_WrongTypeProvided(self):
         self.label_value = "5"
         with self.assertRaises(ValueError):
-            GetCategoryCuts(self.label_var, self.label_value)
+            get_category_cuts(self.label_var, self.label_value)
 
     def test_IntegerCase(self):
-        cuts = GetCategoryCuts(self.label_var, self.label_value)
+        cuts = get_category_cuts(self.label_var, self.label_value)
         expected_cuts = [
             {self.label_var: {"operator": "==", "condition": self.label_value}}
         ]
@@ -131,7 +131,7 @@ class GetCategoryCutsTestCase(unittest.TestCase):
 
     def test_FloatCase(self):
         self.label_value = 5.0
-        cuts = GetCategoryCuts(self.label_var, self.label_value)
+        cuts = get_category_cuts(self.label_var, self.label_value)
         expected_cuts = [
             {self.label_var: {"operator": "==", "condition": self.label_value}}
         ]
@@ -139,7 +139,7 @@ class GetCategoryCutsTestCase(unittest.TestCase):
 
     def test_ListCase(self):
         self.label_value = [5, 55]
-        cuts = GetCategoryCuts(self.label_var, self.label_value)
+        cuts = get_category_cuts(self.label_var, self.label_value)
         expected_cuts = [
             {self.label_var: {"operator": "==", "condition": self.label_value}}
         ]
