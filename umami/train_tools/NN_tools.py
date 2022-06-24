@@ -1,5 +1,6 @@
 """Helper functions for training tools."""
 from umami.configuration import global_config, logger  # isort:skip
+import gc
 import json
 import os
 import re
@@ -9,6 +10,7 @@ from shutil import copyfile
 
 import numpy as np
 import tensorflow as tf
+import tensorflow.keras.backend as K  # pylint: disable=import-error
 from tensorflow.keras.callbacks import Callback  # pylint: disable=import-error
 from tensorflow.keras.models import load_model  # pylint: disable=import-error
 from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-error
@@ -555,6 +557,10 @@ class MyCallback(CallbackBase):
             with open(self.val_metrics_file_name, "w") as val_outfile:
                 json.dump(self.val_metrics_list, val_outfile, indent=4)
 
+        # Cleaning up the memory used by evaluate_model
+        gc.collect()
+        K.clear_session()
+
 
 class MyCallbackUmami(CallbackBase):
     """Callback class for the umami tagger
@@ -623,6 +629,10 @@ class MyCallbackUmami(CallbackBase):
             # Dump the list in json file
             with open(self.val_metrics_file_name, "w") as val_outfile:
                 json.dump(self.val_metrics_list, val_outfile, indent=4)
+
+        # Cleaning up the memory used by evaluate_model
+        gc.collect()
+        K.clear_session()
 
 
 def get_jet_feature_indices(variable_header: dict, exclude: list = None):

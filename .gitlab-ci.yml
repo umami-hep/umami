@@ -1,7 +1,7 @@
 # Tag of TensorFlow base image
 # https://pypi.org/project/tensorflow/#history
 variables:
-  TFTAG: 2.9.0
+  TFTAG: 2.9.1
   TORCHTAG: 1.11.0-cuda11.3-cudnn8-runtime
   MATERIAL_VERSION: '8.2.7'
   IMAGE_TYPE: umamibase:latest
