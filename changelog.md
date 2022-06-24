@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing memory leak in Callback functions + New TF version 2.9.1 [!573](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/573)
 - Switch to latest puma version (v0.1.3) [!572](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/572)
 - Splitting CADS and DIPS Attention [!569](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/569)
 - Fixing docker image builds [!571](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/571)
