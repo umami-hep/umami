@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 
 from umami.configuration import global_config, logger
-from umami.data_tools import GetCategoryCuts, GetSampleCuts
+from umami.data_tools import get_category_cuts, get_sample_cuts
 
 
 def GetPreparationSamplePath(sample):
@@ -97,8 +97,10 @@ class PrepareSamples:
                 ) from error
 
             # retrieving the cuts for the category selection
-            category_cuts = GetCategoryCuts(
-                category_setup["label_var"], category_setup["label_value"]
+            category_cuts = get_category_cuts(
+                category_setup.get("label_var"),
+                category_setup.get("label_value"),
+                category_setup.get("operator"),
             )
             self.cuts = cuts + category_cuts
         self.n_jets_to_get = int(sample.get("n_jets", 0))
@@ -186,7 +188,7 @@ class PrepareSamples:
                 for batch in batches:
                     # load jets in batches
                     jets = data_set["jets"][batch[0] : batch[1]]
-                    indices_to_remove = GetSampleCuts(jets, self.cuts)
+                    indices_to_remove = get_sample_cuts(jets, self.cuts)
                     jets = np.delete(jets, indices_to_remove)
                     # if tracks should be saved, also load them in batches
                     # TODO: update when changing to python 3.9
