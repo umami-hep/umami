@@ -13,6 +13,7 @@ stages:
   - linting
   - prepare_docs
   - image_build_umamibase
+  - pylint_stage
   - unit_test
   - integration_test_preprocessing
   - integration_test_tagger

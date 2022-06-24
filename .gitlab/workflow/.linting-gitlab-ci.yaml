@@ -25,19 +25,22 @@
     - find . -name "*.py" ! -name *conf.py  | xargs -n 1 -P 8 -t darglint
 
 .pylint_template: &pylint_template
-  stage: linting
-  # using the latest umamibase image here - in case this breaks we can use
-  # a freshly CI built one - would require to move backwards in CI chain then
-  # image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase-plus:latest
-  image: gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/temporary_images:540-base
-  before_script:
-    - pip install pylint==2.12.2
+  stage: pylint_stage
+  image: '${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami/$IMAGE_TYPE'
   script:
     - pylint -j2 ./umami
     - source ./run_setup.sh
     - pylint -j2 ./examples
     - pylint -j2 .gitlab/workflow/*.py
     - pylint -j2 ./scripts/
+  dependencies:
+    - build_umamibase_cpu_MR
+    - build_umamibase_cpu
+  needs:
+    - job: build_umamibase_cpu_MR
+      optional: true
+    - job: build_umamibase_cpu
+      optional: true
 
 
 .black_check_template: &black_check_template
