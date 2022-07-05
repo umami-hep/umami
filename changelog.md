@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing CI syntax of `cobertura` [!577](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/577)
 - Fixing image issue in pylint [!574](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/574)
 - Fixing memory leak in Callback functions + New TF version 2.9.1 [!573](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/573)
 - Add option `sampling_fraction` in preprocessing config to use a different number of jets for each class. Defined as fraction of events compared to target class, add option to define operator in global config [!561](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/561)
