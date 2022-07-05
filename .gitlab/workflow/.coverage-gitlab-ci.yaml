@@ -31,7 +31,9 @@ test_coverage:
     paths:
       - coverage_files/
     reports:
-      cobertura: coverage_files/coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage_files/coverage.xml
   retry: 2
   needs: *coverage_dependencies
   dependencies: *coverage_dependencies
