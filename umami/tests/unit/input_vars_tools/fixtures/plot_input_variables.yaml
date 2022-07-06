@@ -8,6 +8,7 @@
     norm: True
     bin_width_in_ylabel: True
     leg_loc: "upper right"
+    transparent: False
 
 Eval_parameters:
   n_jets: 3e3

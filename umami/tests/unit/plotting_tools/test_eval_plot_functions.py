@@ -109,6 +109,8 @@ class plot_score_TestCase(unittest.TestCase):
             plot_name=self.actual_plots_dir + "plot_score_comparison.png",
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
             ylabel="Normalised number of jets",
+            figsize=(6, 5),
+            y_scale=1.5,
         )
 
         self.assertIsNone(
@@ -142,6 +144,8 @@ class plot_score_TestCase(unittest.TestCase):
                 "$\\sqrt{s}=13$ TeV, PFlow Jets,\n"
                 "$t\\bar{t}$ Test Sample, $f_{c}=0.018$"
             ),
+            figsize=(5.5, 5),
+            y_scale=1.6,
         )
 
         self.assertIsNone(
@@ -288,6 +292,8 @@ class plot_score_TestCase(unittest.TestCase):
             plot_name=self.actual_plots_dir + "plot_prob_comparison.png",
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
             ylabel="Normalised number of jets",
+            figsize=(6, 5),
+            y_scale=1.5,
         )
 
         self.assertIsNone(
@@ -317,6 +323,7 @@ class plot_score_TestCase(unittest.TestCase):
             plot_name=self.actual_plots_dir + "plot_fraction_contour.png",
             rejections_to_fix_list=[None, None],
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
+            figsize=(5.5, 4),
         )
 
         self.assertIsNone(
