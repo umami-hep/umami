@@ -113,26 +113,26 @@ class UnderSamplingNoReplace(ResamplingTools):
 
         # check if more jets are available as requested in the config file
         # we assume that all classes have the same number of jets now
-        njets_requested = self.options.get("njets", None)
-        if njets_requested == -1 or njets_requested is None:
+        n_jets_requested = self.options.get("n_jets", None)
+        if n_jets_requested == -1 or n_jets_requested is None:
             logger.info("Maximising number of jets to target distribution.")
         else:
-            logger.info(f"Requesting {njets_requested} in total.")
-            njets_per_class = njets_requested // len(self.class_categories)
-            if len(indices_to_keep[target_distribution]) >= njets_per_class:
+            logger.info(f"Requesting {n_jets_requested} in total.")
+            n_jets_per_class = n_jets_requested // len(self.class_categories)
+            if len(indices_to_keep[target_distribution]) >= n_jets_per_class:
                 for class_category in self.class_categories:
                     indices_to_keep[class_category] = rng.choice(
                         indices_to_keep[class_category],
-                        size=int(njets_per_class)
-                        if njets_per_class <= len(indices_to_keep[class_category])
+                        size=int(n_jets_per_class)
+                        if n_jets_per_class <= len(indices_to_keep[class_category])
                         else len(indices_to_keep[class_category]),
                         replace=False,
                     )
             else:
-                njets_per_class = len(indices_to_keep[target_distribution])
-                size_total = njets_per_class * len(self.class_categories)
+                n_jets_per_class = len(indices_to_keep[target_distribution])
+                size_total = n_jets_per_class * len(self.class_categories)
                 logger.warning(
-                    f"You asked for {njets_requested:.0f} jets, however, "
+                    f"You asked for {n_jets_requested:.0f} jets, however, "
                     f"only {size_total} are available."
                 )
 
@@ -284,7 +284,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         self.WriteFile(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
-        if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+        if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.GetFileName(option="resampled"),
@@ -299,7 +299,7 @@ class UnderSamplingNoReplace(ResamplingTools):
                 and "save_tracks" in self.options
                 and self.options["save_tracks"] is True
                 else None,
-                nJets=self.options["njets_to_plot"],
+                n_jets=self.options["n_jets_to_plot"],
                 atlas_second_tag=self.config.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",

@@ -54,7 +54,7 @@ def main():
     jets, _ = utt.LoadJetsFromFile(
         args.input_file_path,
         class_labels=class_labels,
-        nJets=int(args.n_jets),
+        n_jets=int(args.n_jets),
         variables=variables,
     )
 

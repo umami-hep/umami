@@ -8,7 +8,7 @@
 
 Eval_parameters:
   # Number of jets which are used
-  nJets: 3e4
+  n_jets: 3e4
 
   # Path to variable dict
   var_dict: <path_palce_holder>/umami/umami/configs/Dips_Variables.yaml

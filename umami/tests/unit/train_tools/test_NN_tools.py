@@ -538,7 +538,7 @@ class GetSamples_TestCase(unittest.TestCase):
         )
 
         self.exclude = ["pt_btagJes"]
-        self.nJets = 1000
+        self.n_jets = 1000
         self.length_track_variables = 5
         self.nTracks = 40
         self.config = {"exclude": self.exclude}
@@ -550,7 +550,7 @@ class GetSamples_TestCase(unittest.TestCase):
             preprocess_config=self,
             class_labels=self.class_labels,
             tracks_name=self.tracks_name,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
         )
         self.assertEqual(len(X_trk), len(Y_trk))
         self.assertEqual(
@@ -569,7 +569,7 @@ class GetSamples_TestCase(unittest.TestCase):
                 preprocess_config=self,
                 class_labels=self.class_labels_given,
                 tracks_name=self.tracks_name,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
             )
 
     def test_get_test_sample_trks_Extended_Labeling(self):
@@ -581,7 +581,7 @@ class GetSamples_TestCase(unittest.TestCase):
             preprocess_config=self,
             class_labels=self.class_labels_extended,
             tracks_name=self.tracks_name,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
         )
         self.assertEqual(len(X_trk), len(Y_trk))
         self.assertEqual(
@@ -596,7 +596,7 @@ class GetSamples_TestCase(unittest.TestCase):
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
             exclude=self.exclude,
         )
         self.assertEqual(len(X), len(Y))
@@ -616,7 +616,7 @@ class GetSamples_TestCase(unittest.TestCase):
                 var_dict=self.var_dict,
                 preprocess_config=self,
                 class_labels=self.class_labels_given,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
                 exclude=self.exclude,
             )
 
@@ -628,7 +628,7 @@ class GetSamples_TestCase(unittest.TestCase):
             var_dict=self.var_dict,
             preprocess_config=self,
             class_labels=self.class_labels_extended,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
             exclude=self.exclude,
         )
         self.assertEqual(len(X), len(Y))
@@ -646,7 +646,7 @@ class GetSamples_TestCase(unittest.TestCase):
             preprocess_config=self,
             class_labels=self.class_labels,
             tracks_name=self.tracks_name,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
             exclude=self.exclude,
         )
         self.assertEqual(X_valid.shape, (len(X_valid), 3))
@@ -658,7 +658,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_load_validation_data_umami(self):
 
-        val_data_dict = load_validation_data_umami(self, self, self.nJets)
+        val_data_dict = load_validation_data_umami(self, self, self.n_jets)
 
         self.assertEqual(
             list(val_data_dict.keys()),
@@ -674,7 +674,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_load_validation_data_dips(self):
 
-        val_data_dict = load_validation_data_dips(self, self, self.nJets)
+        val_data_dict = load_validation_data_dips(self, self, self.n_jets)
 
         self.assertEqual(
             list(val_data_dict.keys()),
@@ -688,7 +688,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_load_validation_data_umami_no_var_cuts(self):
 
-        val_data_dict = load_validation_data_umami(self, self, self.nJets)
+        val_data_dict = load_validation_data_umami(self, self, self.n_jets)
 
         self.assertEqual(
             list(val_data_dict.keys()),
@@ -704,7 +704,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_load_validation_data_dips_no_var_cuts(self):
 
-        val_data_dict = load_validation_data_dips(self, self, self.nJets)
+        val_data_dict = load_validation_data_dips(self, self, self.n_jets)
 
         self.assertEqual(
             list(val_data_dict.keys()),

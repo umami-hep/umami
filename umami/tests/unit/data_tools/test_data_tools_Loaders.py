@@ -14,7 +14,7 @@ class Load_Files_TestCase(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_test_dir = f"{self.tmp_dir.name}"
         self.class_labels = ["bjets", "cjets", "ujets"]
-        self.nJets = 3000
+        self.n_jets = 3000
 
         run(
             [
@@ -33,7 +33,7 @@ class Load_Files_TestCase(unittest.TestCase):
                 "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
         )
 
         self.assertEqual(len(jets), len(labels))
@@ -45,7 +45,7 @@ class Load_Files_TestCase(unittest.TestCase):
                     "test_to_fail*.h5",
                 ),
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
             )
 
         for operator in ["<=", "==", ">=", "<", ">"]:
@@ -55,7 +55,7 @@ class Load_Files_TestCase(unittest.TestCase):
                     "ci_ttbar_testing.h5",
                 ),
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
                 cut_vars_dict=[
                     {
                         f"{global_config.pTvariable}": {
@@ -75,7 +75,7 @@ class Load_Files_TestCase(unittest.TestCase):
                     "ci_ttbar_testing.h5",
                 ),
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
                 cut_vars_dict=[
                     {
                         f"{global_config.pTvariable}": {
@@ -92,7 +92,7 @@ class Load_Files_TestCase(unittest.TestCase):
                 "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
             chunk_size=1000,
         )
 
@@ -104,7 +104,7 @@ class Load_Files_TestCase(unittest.TestCase):
                 "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
             variables=[
                 "dipsLoose20210729_pu",
                 "dipsLoose20210729_pb",
@@ -127,14 +127,14 @@ class Load_Files_TestCase(unittest.TestCase):
             jets, labels = LoadJetsFromFile(
                 filepath=666,
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
             )
 
         with self.assertRaises(RuntimeError):
             jets, labels = LoadJetsFromFile(
                 filepath="",
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
             )
 
     def test_LoadTrksFromFile(self):
@@ -144,7 +144,7 @@ class Load_Files_TestCase(unittest.TestCase):
                 "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
         )
 
         self.assertEqual(len(trks), len(labels))
@@ -156,7 +156,7 @@ class Load_Files_TestCase(unittest.TestCase):
                     "test_to_fail*.h5",
                 ),
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
             )
 
         for operator in ["<=", "==", ">=", "<", ">"]:
@@ -166,7 +166,7 @@ class Load_Files_TestCase(unittest.TestCase):
                     "ci_ttbar_testing.h5",
                 ),
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
                 cut_vars_dict=[
                     {
                         f"{global_config.pTvariable}": {
@@ -186,7 +186,7 @@ class Load_Files_TestCase(unittest.TestCase):
                     "ci_ttbar_testing.h5",
                 ),
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
                 cut_vars_dict=[
                     {
                         f"{global_config.pTvariable}": {
@@ -203,7 +203,7 @@ class Load_Files_TestCase(unittest.TestCase):
                 "ci_ttbar_testing.h5",
             ),
             class_labels=self.class_labels,
-            nJets=self.nJets,
+            n_jets=self.n_jets,
             chunk_size=1000,
         )
 
@@ -213,12 +213,12 @@ class Load_Files_TestCase(unittest.TestCase):
             trks, labels = LoadTrksFromFile(
                 filepath=666,
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
             )
 
         with self.assertRaises(RuntimeError):
             trks, labels = LoadTrksFromFile(
                 filepath="",
                 class_labels=self.class_labels,
-                nJets=self.nJets,
+                n_jets=self.n_jets,
             )

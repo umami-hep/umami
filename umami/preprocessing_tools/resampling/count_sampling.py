@@ -118,9 +118,9 @@ class UnderSampling(ResamplingTools):
         # check if more jets are available as requested in the config file
         # we assume that all classes have the same number of jets now
         if len(indices_to_keep[reference_class_category]) > self.options[
-            "njets"
+            "n_jets"
         ] // len(self.class_categories):
-            size_per_class = self.options["njets"] // len(self.class_categories)
+            size_per_class = self.options["n_jets"] // len(self.class_categories)
             for class_category in self.class_categories:
                 indices_to_keep[class_category] = rng.choice(
                     indices_to_keep[class_category],
@@ -135,7 +135,7 @@ class UnderSampling(ResamplingTools):
                 self.class_categories
             )
             logger.warning(
-                f"You asked for {self.options['njets']:.0f} jets, however, "
+                f"You asked for {self.options['n_jets']:.0f} jets, however, "
                 f"only {size_total} are available."
             )
 
@@ -201,7 +201,7 @@ class UnderSampling(ResamplingTools):
         self.WriteFile(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
-        if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+        if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.GetFileName(option="resampled"),
@@ -216,7 +216,7 @@ class UnderSampling(ResamplingTools):
                 and "save_tracks" in self.options
                 and self.options["save_tracks"] is True
                 else None,
-                nJets=self.options["njets_to_plot"],
+                n_jets=self.options["n_jets_to_plot"],
                 atlas_second_tag=self.config.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",

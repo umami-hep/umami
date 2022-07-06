@@ -73,7 +73,7 @@ NN_structure:
 
     # Number of jets used for training
     # To use all: Fill nothing
-    nJets_train:
+    n_jets_train:
 
     # Dropout rate for the DIPS block. If = 0, dropout is disabled
     dropout: 0

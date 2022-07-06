@@ -225,7 +225,7 @@ def main():
             preprocess_config,
             class_labels,
             tracks_name=tracks_name,
-            nJets=int(10e6),
+            n_jets=int(10e6),
             exclude=None,
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")
@@ -247,7 +247,7 @@ def main():
             preprocess_config,
             class_labels,
             tracks_name=tracks_name,
-            nJets=int(10e6),
+            n_jets=int(10e6),
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")
 
@@ -269,7 +269,7 @@ def main():
             var_dict,
             preprocess_config,
             class_labels,
-            nJets=int(10e6),
+            n_jets=int(10e6),
             exclude=None,
         )
         logger.info(f"Evaluated jets: {len(Y_test)}")

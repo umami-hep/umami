@@ -116,7 +116,7 @@ def plot_n_tracks_per_jet(
         loaded_trks, loaded_flavour_labels = udt.LoadTrksFromFile(
             filepath=filepath,
             class_labels=class_labels,
-            nJets=n_jets,
+            n_jets=n_jets,
             tracks_name=tracks_name,
             print_logger=True,
         )
@@ -272,7 +272,7 @@ def plot_input_vars_trks(
         trks, flavour_labels = udt.LoadTrksFromFile(
             filepath=filepath,
             class_labels=class_labels,
-            nJets=n_jets,
+            n_jets=n_jets,
             tracks_name=tracks_name,
             print_logger=False,
         )
@@ -498,7 +498,7 @@ def plot_input_vars_jets(
         jets, flavour_labels = udt.LoadJetsFromFile(
             filepath=filepath,
             class_labels=class_labels,
-            nJets=n_jets,
+            n_jets=n_jets,
             print_logger=False,
         )
 

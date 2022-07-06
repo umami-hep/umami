@@ -76,7 +76,7 @@ flavour_categories:
     colour: "#00bfaf"
     legend_label: $s$-jets
     prob_var_name: "ps"
-  gluonjets:
+  gluon_jets:
     label_var: PartonTruthLabelID
     label_value: 21
     colour: "#7b4e24"

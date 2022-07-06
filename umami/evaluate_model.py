@@ -66,7 +66,7 @@ def get_parser():
     )
 
     parser.add_argument(
-        "--nJets",
+        "--n_jets",
         type=int,
         help="""Number of jets used for the testing. This will overwrite the value which
         is provided in the training config file. If no value is provided either in the
@@ -156,7 +156,7 @@ def evaluate_model(
     tagger_preds = []
 
     # Set number of n_jets for testing
-    n_jets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
+    n_jets = int(eval_params["n_jets"]) if not args.n_jets else args.n_jets
 
     # Check the config if the trained model is also to be evaluated
     try:
@@ -210,7 +210,7 @@ def evaluate_model(
                 preprocess_config=preprocess_config,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
-                nJets=n_jets,
+                n_jets=n_jets,
                 exclude=exclude,
                 cut_vars_dict=var_cuts,
                 print_logger=False,
@@ -236,7 +236,7 @@ def evaluate_model(
                 preprocess_config=preprocess_config,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
-                nJets=n_jets,
+                n_jets=n_jets,
                 exclude=exclude,
                 cut_vars_dict=var_cuts,
             )
@@ -291,7 +291,7 @@ def evaluate_model(
     jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
-        nJets=n_jets,
+        n_jets=n_jets,
         variables=variables,
         cut_vars_dict=var_cuts,
     )
@@ -366,7 +366,7 @@ def evaluate_model(
     ) as h5_file:
         # Put the number of jets per class in the dict for unc calculation
         for flav_counter, flavour in enumerate(class_labels):
-            h5_file.attrs[f"njets_{flavour}"] = len(
+            h5_file.attrs[f"n_jets_{flavour}"] = len(
                 truth_internal_labels[truth_internal_labels == flav_counter]
             )
 
@@ -404,7 +404,7 @@ def evaluate_model(
     ) as h5_file:
         # Put the number of jets per class in the dict for unc calculation
         for flav_counter, flavour in enumerate(class_labels):
-            h5_file.attrs[f"njets_{flavour}"] = len(
+            h5_file.attrs[f"n_jets_{flavour}"] = len(
                 truth_internal_labels[truth_internal_labels == flav_counter]
             )
 
@@ -483,7 +483,7 @@ def evaluate_model_dips(
         )
 
     # Set number of n_jets for testing
-    n_jets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
+    n_jets = int(eval_params["n_jets"]) if not args.n_jets else args.n_jets
 
     # Test if multiple taggers are given or not
     if isinstance(eval_params["tagger"], str):
@@ -517,7 +517,7 @@ def evaluate_model_dips(
             preprocess_config=preprocess_config,
             class_labels=class_labels,
             tracks_name=tracks_name,
-            nJets=n_jets,
+            n_jets=n_jets,
             cut_vars_dict=var_cuts,
             jet_variables=[
                 global_config.etavariable,
@@ -537,7 +537,7 @@ def evaluate_model_dips(
             preprocess_config=preprocess_config,
             class_labels=class_labels,
             tracks_name=tracks_name,
-            nJets=n_jets,
+            n_jets=n_jets,
             cut_vars_dict=var_cuts,
         )
 
@@ -585,7 +585,7 @@ def evaluate_model_dips(
     jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
-        nJets=n_jets,
+        n_jets=n_jets,
         variables=variables,
         cut_vars_dict=var_cuts,
     )
@@ -651,7 +651,7 @@ def evaluate_model_dips(
     ) as h5_file:
         # Put the number of jets per class in the dict for unc calculation
         for flav_counter, flavour in enumerate(class_labels):
-            h5_file.attrs[f"njets_{flavour}"] = len(
+            h5_file.attrs[f"n_jets_{flavour}"] = len(
                 truth_internal_labels[truth_internal_labels == flav_counter]
             )
 
@@ -688,7 +688,7 @@ def evaluate_model_dips(
     ) as h5_file:
         # Put the number of jets per class in the dict for unc calculation
         for flav_counter, flavour in enumerate(class_labels):
-            h5_file.attrs[f"njets_{flavour}"] = len(
+            h5_file.attrs[f"n_jets_{flavour}"] = len(
                 truth_internal_labels[truth_internal_labels == flav_counter]
             )
 
@@ -800,8 +800,8 @@ def evaluate_model_dl1(
     if args.epoch is None:
         raise ValueError("You need to give an epoch which is to be evaluated!")
 
-    # Set number of nJets for testing
-    n_jets = int(eval_params["n_jets"]) if not args.nJets else args.nJets
+    # Set number of n_jets for testing
+    n_jets = int(eval_params["n_jets"]) if not args.n_jets else args.n_jets
 
     # Test if multiple taggers are given or not
     if isinstance(eval_params["tagger"], str):
@@ -834,7 +834,7 @@ def evaluate_model_dl1(
         var_dict=train_config.var_dict,
         preprocess_config=preprocess_config,
         class_labels=class_labels,
-        nJets=n_jets,
+        n_jets=n_jets,
         exclude=exclude,
         cut_vars_dict=var_cuts,
     )
@@ -887,7 +887,7 @@ def evaluate_model_dl1(
     jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
         class_labels=class_labels,
-        nJets=n_jets,
+        n_jets=n_jets,
         variables=variables,
         cut_vars_dict=var_cuts,
     )
@@ -960,7 +960,7 @@ def evaluate_model_dl1(
     ) as h5_file:
         # Put the number of jets per class in the dict for unc calculation
         for flav_counter, flavour in enumerate(class_labels):
-            h5_file.attrs[f"njets_{flavour}"] = len(
+            h5_file.attrs[f"n_jets_{flavour}"] = len(
                 truth_internal_labels[truth_internal_labels == flav_counter]
             )
 
@@ -998,7 +998,7 @@ def evaluate_model_dl1(
     ) as h5_file:
         # Put the number of jets per class in the dict for unc calculation
         for flav_counter, flavour in enumerate(class_labels):
-            h5_file.attrs[f"njets_{flavour}"] = len(
+            h5_file.attrs[f"n_jets_{flavour}"] = len(
                 truth_internal_labels[truth_internal_labels == flav_counter]
             )
 

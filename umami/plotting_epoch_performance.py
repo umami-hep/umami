@@ -31,7 +31,7 @@ def get_parser():
     )
 
     parser.add_argument(
-        "--nJets",
+        "--n_jets",
         type=int,
         help="Number of validation jets used",
     )
@@ -116,7 +116,7 @@ def main(args, train_config, preprocess_config):
         train_config.Validation_metrics_settings["plot_datatype"] = args.format
 
     # Check for n_jets args
-    if args.nJets is None:
+    if args.n_jets is None:
         n_jets = (
             int(val_params["n_jets"])
             if "n_jets" in val_params
@@ -124,7 +124,7 @@ def main(args, train_config, preprocess_config):
         )
 
     else:
-        n_jets = args.nJets
+        n_jets = args.n_jets
 
     # Get the b eff
     if args.beff is None:
@@ -170,7 +170,7 @@ def main(args, train_config, preprocess_config):
                 train_config=train_config,
                 preprocess_config=preprocess_config,
                 target_beff=working_point,
-                nJets=n_jets,
+                n_jets=n_jets,
                 tagger=tagger,
             )
             beff = working_point

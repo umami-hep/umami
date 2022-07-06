@@ -15,7 +15,7 @@ from umami.tools import natural_keys
 def LoadJetsFromFile(
     filepath: str,
     class_labels: list,
-    nJets: int,
+    n_jets: int,
     variables: list = None,
     cut_vars_dict: dict = None,
     print_logger: bool = True,
@@ -30,7 +30,7 @@ def LoadJetsFromFile(
         Path to the .h5 file with the jets.
     class_labels : list
         List of class labels which are used.
-    nJets : int
+    n_jets : int
         Number of jets to load.
     variables : list
         Variables which are loaded.
@@ -57,12 +57,12 @@ def LoadJetsFromFile(
         If no files could be found in filepath
     """
 
-    # Make sure the nJets argument is an integer
-    nJets = int(nJets)
+    # Make sure the n_jets argument is an integer
+    n_jets = int(n_jets)
     chunk_size = int(chunk_size)
 
-    # Check if the chunk size is smaller than nJets, if yes change it
-    chunk_size = chunk_size if chunk_size >= nJets else nJets
+    # Check if the chunk size is smaller than n_jets, if yes change it
+    chunk_size = chunk_size if chunk_size >= n_jets else n_jets
 
     if isinstance(filepath, str):
         # Get the paths of the files as a iterable list
@@ -118,16 +118,16 @@ def LoadJetsFromFile(
         variables_list = list(set(variables_list))
 
     # Init a counter for the number of loaded jets
-    nJets_counter = 0
+    n_jets_counter = 0
 
     for j, file in enumerate(sorted(filepaths, key=natural_keys)):
 
         # Get the number of available jets in the file
-        nJets_infile = len(h5py.File(file, "r")["/jets"])
+        n_jets_infile = len(h5py.File(file, "r")["/jets"])
 
         # Check how many times we need to iterate over the file
         # to get all jets
-        n_chunks = int(np.ceil(nJets_infile / chunk_size))
+        n_chunks = int(np.ceil(n_jets_infile / chunk_size))
 
         # Iterate over the file
         for infile_counter in range(n_chunks):
@@ -200,34 +200,34 @@ def LoadJetsFromFile(
                 all_labels = np.append(all_labels, jets["Umami_labels"].values)
 
             # Adding the loaded jets to counter
-            nJets_counter += len(jets)
+            n_jets_counter += len(jets)
 
             # Break the loop inside the file if enough jets are loaded
-            if nJets_counter >= nJets:
+            if n_jets_counter >= n_jets:
                 break
 
         # Break the loop over the files if enough jets are loaded
-        if nJets_counter >= nJets:
+        if n_jets_counter >= n_jets:
             break
 
     if print_logger:
         # Check if enough jets are loaded
-        if nJets_counter < nJets:
+        if n_jets_counter < n_jets:
             logger.warning(
-                f"Requested {nJets} but only {nJets_counter} could be loaded!"
+                f"Requested {n_jets} but only {n_jets_counter} could be loaded!"
             )
 
         else:
-            logger.info(f"Loaded {nJets} jets!")
+            logger.info(f"Loaded {n_jets} jets!")
 
     # Return the jets and internal labels
-    return all_jets[:nJets], all_labels[:nJets]
+    return all_jets[:n_jets], all_labels[:n_jets]
 
 
 def LoadTrksFromFile(
     filepath: str,
     class_labels: list,
-    nJets: int,
+    n_jets: int,
     tracks_name: str = "tracks",
     cut_vars_dict: dict = None,
     print_logger: bool = True,
@@ -242,7 +242,7 @@ def LoadTrksFromFile(
         Path to the .h5 file with the jets.
     class_labels : list
         List of class labels which are used.
-    nJets : int
+    n_jets : int
         Number of jets to load.
     tracks_name : str
         Name of the tracks collection to load
@@ -269,12 +269,12 @@ def LoadTrksFromFile(
         If no files could be found in filepath
     """
 
-    # Make sure the nJets argument is an integer
-    nJets = int(nJets)
+    # Make sure the n_jets argument is an integer
+    n_jets = int(n_jets)
     chunk_size = int(chunk_size)
 
-    # Check if the chunk size is small than nJets, if yes change it
-    chunk_size = chunk_size if chunk_size >= nJets else nJets
+    # Check if the chunk size is small than n_jets, if yes change it
+    chunk_size = chunk_size if chunk_size >= n_jets else n_jets
 
     if isinstance(filepath, str):
         # Get the paths of the files as a iterable list
@@ -313,17 +313,17 @@ def LoadTrksFromFile(
         jet_vars_to_load = list(set(jet_vars_to_load))
 
     # Init a counter for the number of loaded jets
-    nJets_counter = 0
+    n_jets_counter = 0
 
     # Iterate over the files
     for j, file in enumerate(sorted(filepaths, key=natural_keys)):
 
         # Get the number of available jets in the file
-        nJets_infile = len(h5py.File(file, "r")["/jets"])
+        n_jets_infile = len(h5py.File(file, "r")["/jets"])
 
         # Check how many times we need to iterate over the file
         # to get all jets
-        n_chunks = int(np.ceil(nJets_infile / chunk_size))
+        n_chunks = int(np.ceil(n_jets_infile / chunk_size))
 
         # Iterate over the file
         for infile_counter in range(n_chunks):
@@ -419,25 +419,25 @@ def LoadTrksFromFile(
                 all_labels = np.append(all_labels, labels["Umami_labels"].values)
 
             # Adding the loaded jets to counter
-            nJets_counter += len(trks)
+            n_jets_counter += len(trks)
 
             # Break the loop inside the file if enough jets are loaded
-            if nJets_counter >= nJets:
+            if n_jets_counter >= n_jets:
                 break
 
         # Break the loop over the files if enough jets are loaded
-        if nJets_counter >= nJets:
+        if n_jets_counter >= n_jets:
             break
 
     if print_logger:
         # Check if enough jets are loaded
-        if nJets_counter < nJets:
+        if n_jets_counter < n_jets:
             logger.warning(
-                f"Requested {nJets} but only {nJets_counter} could be loaded!"
+                f"Requested {n_jets} but only {n_jets_counter} could be loaded!"
             )
 
         else:
-            logger.info(f"Loaded {nJets} jets!")
+            logger.info(f"Loaded {n_jets} jets!")
 
     # Return Trks and labels
-    return all_trks[:nJets], all_labels[:nJets]
+    return all_trks[:n_jets], all_labels[:n_jets]

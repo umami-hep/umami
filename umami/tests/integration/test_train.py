@@ -169,7 +169,7 @@ def prepareConfig(
         config_file["var_dict"] = f"{var_dict}"
         config_file["NN_structure"]["batch_size"] = 50
         config_file["NN_structure"]["epochs"] = 2
-        config_file["NN_structure"]["nJets_train"] = 100
+        config_file["NN_structure"]["n_jets_train"] = 100
 
         # Add some validation files for testing
         config_file.update(

@@ -60,7 +60,7 @@ Here all important information about the tagger you want to train are defined.
 | `lr` | All | `float` | Necessary | Learning rate which is used for training. |
 | `batch_size` | All | `int` | Necessary | Batch size which is used for training. |
 | `epochs` | All | `int` | Necessary | Number of epochs of the training. |
-| `nJets_train` | All | `int` | Necessary | Number of jets used for training. Leave empty to use all. |
+| `n_jets_train` | All | `int` | Necessary | Number of jets used for training. Leave empty to use all. |
 | `dropout` | All | `float` | Necessary | Dropout factor used in the _ϕ_ network. If 0, dropout is not used. |
 | `class_labels` | All | `list` | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
 | `main_class` | All | `str` or `list` of `str` | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. This can either be one single class (`str`) or multiple classes (`list` of `str`). |

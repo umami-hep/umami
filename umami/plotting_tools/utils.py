@@ -29,7 +29,6 @@ def translate_kwargs(kwargs):
         "Log": "logy",
         "n_Leading": "n_leading",
         "ncol": "leg_ncol",
-        "nJets": "n_jets",
         "normalise": "norm",
         "ratio_cut": ["ymin_ratio_1", "ymax_ratio_1"],
         "Ratio_Cut": ["ymin_ratio_1", "ymax_ratio_1"],
