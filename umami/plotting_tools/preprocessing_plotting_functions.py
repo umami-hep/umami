@@ -240,8 +240,7 @@ def plot_resampling_variables(
             plot_name=os.path.join(
                 output_dir,
                 f"{var}_before_resampling.{fileformat}",
-            ),
-            **kwargs,
+            )
         )
 
 

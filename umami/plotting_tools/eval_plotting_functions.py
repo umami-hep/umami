@@ -8,10 +8,10 @@ from mlxtend.evaluate import confusion_matrix
 from mlxtend.plotting import plot_confusion_matrix as mlxtend_plot_cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from puma import (
-    FractionScan,
-    FractionScanPlot,
     Histogram,
     HistogramPlot,
+    Line2D,
+    Line2DPlot,
     PlotBase,
     Roc,
     RocPlot,
@@ -945,7 +945,7 @@ def plot_fraction_contour(
     fraction_list = list(dict.fromkeys(fraction_list))
 
     # Init the fraction scan plot
-    frac_plot = FractionScanPlot(**kwargs)
+    frac_plot = Line2DPlot(**kwargs)
 
     # Ensure that for each model, a tagger name and a label is provided and vice versa
     # TODO Change in Python 3.10 to strict=True in the zip() function which will ensure
@@ -1028,7 +1028,7 @@ def plot_fraction_contour(
 
         # Plot the contour
         frac_plot.add(
-            FractionScan(
+            Line2D(
                 x_values=df[rejections_to_plot[0]],
                 y_values=df[rejections_to_plot[1]],
                 label=label,
@@ -1051,7 +1051,7 @@ def plot_fraction_contour(
 
             # Add the marker for the contour
             frac_plot.add(
-                FractionScan(
+                Line2D(
                     x_values=plot_point_x,
                     y_values=plot_point_y,
                     colour=marked_point_dict["colour"]

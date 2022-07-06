@@ -161,6 +161,8 @@ class plot_resampling_variables_TestCase(unittest.TestCase):
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
             logy=False,
             ylabel="Normalised number of jets",
+            figsize=(6, 3.5),
+            y_scale=2.2,
         )
 
         for var in self.variables:
