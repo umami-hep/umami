@@ -32,12 +32,14 @@ class ConvertTest(unittest.TestCase):
         x_train = np.ones(shape=(3, 41))
         x_trks_train = np.ones(shape=(3, 40, 5))
         y_train = np.ones(shape=(3, 3))
+        y_trks_train = np.ones(shape=(3, 40, 9))
         # save dummy data to temporary file
         self.tfh5 = tempfile.NamedTemporaryFile(suffix="-resampled_scaled_shuffled.h5")
         with h5py.File(self.tfh5, "w") as out_file:
             out_file.create_dataset("X_train", data=x_train)
             out_file.create_dataset(f"X_{tracks_name}_train", data=x_trks_train)
             out_file.create_dataset("Y_train", data=y_train)
+            out_file.create_dataset(f"Y_{tracks_name}_train", data=y_trks_train)
         self.config.outfile_name = self.tfh5.name.replace(
             "-resampled_scaled_shuffled.h5", ".h5"
         )
@@ -53,6 +55,9 @@ class ConvertTest(unittest.TestCase):
             "n_dim": 3,
             "n_trks": {"tracks": 40},
             "n_trk_features": {"tracks": 5},
+            "n_add_vars": None,
+            "n_trks_classes": {"tracks": 9},
+            "n_trks_labels": {"tracks": 40},
         }
         metadata_file = os.path.join(record_dir.name, "metadata.json")
         with open(metadata_file, "r") as metadata:
@@ -72,6 +77,8 @@ class ConvertTest(unittest.TestCase):
             "n_trks": {"tracks": 40},
             "n_trk_features": {"tracks": 5},
             "n_add_vars": 4,
+            "n_trks_classes": {"tracks": 9},
+            "n_trks_labels": {"tracks": 40},
         }
         metadata_file = os.path.join(record_dir.name, "metadata.json")
         with open(metadata_file, "r") as metadata:

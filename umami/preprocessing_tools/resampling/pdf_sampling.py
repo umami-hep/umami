@@ -1353,7 +1353,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             chunk_size=chunk_sizes,
             label=self.class_labels_map[preparation_sample["category"]],
             label_classes=list(range(len(self.class_labels_map))),
-            use_tracks=self.save_tracks,
+            save_tracks=self.save_tracks,
             tracks_names=self.tracks_names,
             seed=42,
             duplicate=True,
@@ -1381,8 +1381,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             try:
                 if self.save_tracks:
                     jets, tracks, labels = next(generators)
+
                 else:
                     jets, labels = next(generators)
+
             except StopIteration:
                 break
 
@@ -1521,9 +1523,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Get the label classes
         label_classes = list(range(len(self.class_labels_map)))
 
-        # Check if tracks are used
-        use_tracks = self.save_tracks
-
         # Set duplicate to True for resampling
         duplicate = True
 
@@ -1565,21 +1564,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             # Open the input file and read the jets and tracks
             # in a fancy way which allows double index loading
             with h5py.File(in_file, "r") as file_df:
-                if use_tracks:
-                    jets, tracks = read_dataframe_repetition(
-                        file_df,
-                        loading_indices=indices,
-                        duplicate=duplicate,
-                        use_tracks=use_tracks,
-                        tracks_names=self.tracks_names,
-                    )
-                else:
-                    jets = read_dataframe_repetition(
-                        file_df,
-                        loading_indices=indices,
-                        duplicate=duplicate,
-                        use_tracks=use_tracks,
-                    )
+                jets, tracks = read_dataframe_repetition(
+                    file_df=file_df,
+                    loading_indices=indices,
+                    duplicate=duplicate,
+                    save_tracks=self.save_tracks,
+                    tracks_names=self.tracks_names,
+                )
 
             # Update the progress bar
             pbar.update(jets.size)

@@ -47,7 +47,7 @@ def GetVariableDict(yaml_file: str) -> dict:
     return out_dict
 
 
-def GetBinaryLabels(
+def binarise_jet_labels(
     df: pd.DataFrame,
     column: str = "label",
 ) -> np.ndarray:

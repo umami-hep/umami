@@ -113,6 +113,8 @@ sampling:
     # can change after applying resampling in the hybrid sample creation
     save_tracks: False
     tracks_name: "tracks"
+    save_track_labels: True
+    track_truth_variables: ["truthOriginLabel", "truthVertexIndex"]
     njets: 5.5e6
     intermediate_index_file: indices.h5
     # outputfiles are split into 5

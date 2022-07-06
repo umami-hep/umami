@@ -39,6 +39,12 @@ class h5_to_tf_record_converter:
             else None
         )
 
+        self.save_track_labels = (
+            config.sampling["options"]["save_track_labels"]
+            if "save_track_labels" in config.sampling["options"]
+            else False
+        )
+
         self.n_add_vars = (
             config.convert_to_tfrecord["N_add_vars"]
             if "N_add_vars" in config.convert_to_tfrecord
@@ -56,8 +62,10 @@ class h5_to_tf_record_converter:
             Training jets
         X_trks : array_like
             Training tracks
-        Y : array_like
-            Training labels
+        Y_jets : array_like
+            Training jet labels
+        Y_trks : array_like
+            Training track labels
         Weights : array_like
             Training weights
         X_Add_Vars : array_like
@@ -92,7 +100,7 @@ class h5_to_tf_record_converter:
                 X_jets = hFile["X_train"][start:end]
 
                 # Get the labels
-                Y = hFile["Y_train"][start:end]
+                Y_jets = hFile["Y_train"][start:end]
 
                 # Get the weights
                 Weights = hFile["weight"][start:end]
@@ -104,6 +112,19 @@ class h5_to_tf_record_converter:
                         for track_name in self.tracks_name
                     }
 
+                    if self.save_track_labels:
+                        Y_trks = {
+                            track_name: hFile[f"Y_{track_name}_train"][start:end]
+                            for track_name in self.tracks_name
+                        }
+
+                    else:
+                        Y_trks = None
+
+                else:
+                    X_trks = None
+                    Y_trks = None
+
                 # Check if conditional jet parameters are used or not
                 if self.n_add_vars is not None:
                     X_Add_Vars = hFile["X_train"][start:end, : self.n_add_vars]
@@ -112,7 +133,7 @@ class h5_to_tf_record_converter:
                     X_Add_Vars = None
 
                 # Yield the chunk
-                yield X_jets, X_trks, Y, Weights, X_Add_Vars
+                yield X_jets, X_trks, Y_jets, Y_trks, Weights, X_Add_Vars
 
     def save_parameters(self, record_dir):
         """
@@ -149,9 +170,32 @@ class h5_to_tf_record_converter:
                     for track_name in self.tracks_name
                 }
 
+                if self.save_track_labels:
+                    data["n_trks_labels"] = {
+                        track_name: len(h5file[f"Y_{track_name}_train"][0])
+                        for track_name in self.tracks_name
+                    }
+                    data["n_trks_classes"] = {
+                        track_name: len(h5file[f"Y_{track_name}_train"][0][0])
+                        for track_name in self.tracks_name
+                    }
+
+                else:
+                    data["n_trks_labels"] = None
+                    data["n_trks_classes"] = None
+
+            else:
+                data["n_trks"] = None
+                data["n_trk_features"] = None
+                data["n_trks_labels"] = None
+                data["n_trks_classes"] = None
+
             # Get the dimensional values of the conditional variables
             if self.n_add_vars is not None:
                 data["n_add_vars"] = self.n_add_vars
+
+            else:
+                data["n_add_vars"] = None
 
         # Get filepath for the metadata file
         metadata_filename = record_dir + "/metadata.json"
@@ -175,7 +219,14 @@ class h5_to_tf_record_converter:
         n = 0
 
         # Iterate over chunks
-        for X_jets, X_trks, Y, Weights, X_Add_Vars in self.load_h5File_Train():
+        for (
+            X_jets,
+            X_trks,
+            Y_jets,
+            Y_trks,
+            Weights,
+            X_Add_Vars,
+        ) in self.load_h5File_Train():
             n += 1
 
             # Get filename of the chunk
@@ -200,8 +251,8 @@ class h5_to_tf_record_converter:
                     )
 
                     # Add labels
-                    record_bytes.features.feature["Y"].int64_list.value.extend(
-                        Y[iterator]
+                    record_bytes.features.feature["Y_jets"].int64_list.value.extend(
+                        Y_jets[iterator]
                     )
 
                     # Add weights
@@ -215,6 +266,12 @@ class h5_to_tf_record_converter:
                             record_bytes.features.feature[
                                 f"X_{key}_train"
                             ].float_list.value.extend(item[iterator].reshape(-1))
+
+                        if self.save_track_labels:
+                            for key, item in Y_trks.items():
+                                record_bytes.features.feature[
+                                    f"Y_{key}_train"
+                                ].int64_list.value.extend(item[iterator].reshape(-1))
 
                     # Add conditional variables if used
                     if self.n_add_vars is not None:

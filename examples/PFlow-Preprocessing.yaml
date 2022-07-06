@@ -236,6 +236,12 @@ sampling: &sampling
     # Name(s) of the track collection(s) to use.
     tracks_names: ["tracks"]
 
+    # Bool, if track labels are processed
+    save_track_labels: True
+
+    # String with the name of the track truth variable
+    track_truth_variables: ["truthOriginLabel", "truthVertexIndex"]
+
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
 

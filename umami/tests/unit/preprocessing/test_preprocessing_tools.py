@@ -9,9 +9,9 @@ import pandas as pd
 from umami.configuration import global_config, logger, set_log_level
 from umami.preprocessing_tools import (
     Configuration,
-    GetBinaryLabels,
     GetVariableDict,
     PrepareSamples,
+    binarise_jet_labels,
 )
 
 set_log_level(logger, "DEBUG")
@@ -121,10 +121,10 @@ class GetBinaryLabelsTestCase(unittest.TestCase):
     def testZeroLength(self):
         df_0 = pd.DataFrame({"label": []})
         with self.assertRaises(ValueError):
-            GetBinaryLabels(df_0)
+            binarise_jet_labels(df_0)
 
     def testShape(self):
-        y_categ = GetBinaryLabels(self.df, "label")
+        y_categ = binarise_jet_labels(self.df, "label")
         self.assertEqual(y_categ.shape, (len(self.y), 4))
 
 

@@ -52,55 +52,7 @@ This line specifies where the ntuples (which are used) are stored and where to s
 
 #### Cut Templates
 ```yaml
-# Defining anchor with outlier cuts that are used over and over again
-.outlier_cuts: &outlier_cuts
-  - JetFitterSecondaryVertex_mass:
-      operator: <
-      condition: 25000
-      NaNcheck: True
-  - JetFitterSecondaryVertex_energy:
-      operator: <
-      condition: 1e8
-      NaNcheck: True
-  - JetFitter_deltaR:
-      operator: <
-      condition: 0.6
-      NaNcheck: True
-
-# Defining yaml anchors to be used later, avoiding duplication
-.cuts_template_ttbar_train: &cuts_template_ttbar_train
-  cuts:
-    - eventNumber:
-        operator: mod_6_<=
-        condition: 3
-    - pt_btagJes:
-        operator: "<="
-        condition: 2.5e5
-    - *outlier_cuts
-
-.cuts_template_zprime_train: &cuts_template_zprime_train
-  cuts:
-    - eventNumber:
-        operator: mod_6_<=
-        condition: 3
-    - pt_btagJes:
-        operator: ">="
-        condition: 2.5e5
-    - *outlier_cuts
-
-.cuts_template_validation: &cuts_template_validation
-  cuts:
-    - eventNumber:
-        operator: mod_6_==
-        condition: 4
-    - *outlier_cuts
-
-.cuts_template_test: &cuts_template_test
-  cuts:
-    - eventNumber:
-        operator: mod_6_==
-        condition: 5
-    - *outlier_cuts
+§§§examples/plotting_input_vars.yaml:4:52§§§
 ```
 
 The cuts defined in this section are templates for the cuts of the different flavour for ttbar/zprime. We also split the ttbar/zprime in train/validation/test to ensure no jet is used twice. `ttbar_train` and `zprime_train` are the jets which are used for training while validation/test are the templates for validation and test.
@@ -126,112 +78,9 @@ Another cut which can be applied is the `pt_btagJes`, which is a cut on the jet 
 
 #### File- and Flavour Preparation
 ```yaml
-preparation:
-  batchsize: 50000
-
-  ntuples:
-    ttbar:
-      path: *ntuple_path
-      file_pattern: user.alfroch.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
-
-    zprime:
-      path: *ntuple_path
-      file_pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
-
-  samples:
-    training_ttbar_bjets:
-      type: ttbar
-      category: bjets
-      n_jets: 10e6
-      <<: *cuts_template_ttbar_train
-      f_output:
-        path: *sample_path
-        file: bjets_training_ttbar_PFlow.h5
-
-    training_ttbar_cjets:
-      type: ttbar
-      category: cjets
-      # Number of c jets available in MC16d
-      n_jets: 12745953
-      <<: *cuts_template_ttbar_train
-      f_output:
-        path: *sample_path
-        file: cjets_training_ttbar_PFlow.h5
-
-    training_ttbar_ujets:
-      type: ttbar
-      category: ujets
-      n_jets: 20e6
-      <<: *cuts_template_ttbar_train
-      f_output:
-        path: *sample_path
-        file: ujets_training_ttbar_PFlow.h5
-
-    training_zprime_bjets:
-      type: zprime
-      category: bjets
-      n_jets: 10e6
-      <<: *cuts_template_zprime_train
-      f_output:
-        path: *sample_path
-        file: bjets_training_zprime_PFlow.h5
-
-    training_zprime_cjets:
-      type: zprime
-      category: cjets
-      # Number of c jets available in MC16d
-      n_jets: 10e6
-      <<: *cuts_template_zprime_train
-      f_output:
-        path: *sample_path
-        file: cjets_training_zprime_PFlow.h5
-
-    training_zprime_ujets:
-      type: zprime
-      category: ujets
-      n_jets: 10e6
-      <<: *cuts_template_zprime_train
-      f_output:
-        path: *sample_path
-        file: ujets_training_zprime_PFlow.h5
-
-    validation_ttbar:
-      type: ttbar
-      category: inclusive
-      n_jets: 4e6
-      <<: *cuts_template_validation
-      f_output:
-        path: *sample_path
-        file: inclusive_validation_ttbar_PFlow.h5
-
-    testing_ttbar:
-      type: ttbar
-      category: inclusive
-      n_jets: 4e6
-      <<: *cuts_template_test
-      f_output:
-        path: *sample_path
-        file: inclusive_testing_ttbar_PFlow.h5
-
-    validation_zprime:
-      type: zprime
-      category: inclusive
-      n_jets: 4e6
-      <<: *cuts_template_validation
-      f_output:
-        path: *sample_path
-        file: inclusive_validation_zprime_PFlow.h5
-
-    testing_zprime:
-      type: zprime
-      category: inclusive
-      n_jets: 4e6
-      <<: *cuts_template_test
-      f_output:
-        path: *sample_path
-        file: inclusive_testing_zprime_PFlow.h5
+§§§examples/plotting_input_vars.yaml:54:177§§§
 ```
-In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolut path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.
+In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolute path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.
 
 The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. Also you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
@@ -239,14 +88,7 @@ In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Sin
 #### Sampling
 
 ```yaml
-sampling:
-  # Classes which are used in the resampling. Order is important.
-  # The order needs to be the same as in the training config!
-  class_labels: [ujets, cjets, bjets]
-
-  # Decide, which resampling method is used.
-  method: count
-
+§§§examples/plotting_input_vars.yaml:179:186§§§
 ```
 
 In `sampling`, we can define the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf`, `importance_no_replace` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
@@ -256,31 +98,7 @@ An important part are the `class_labels` which are defined here. You can define 
 For an explanation of the resampling function specific `options`, have a look in the section of the resampling method you want to use. The general `options` are explained in the following:
 
 ```yaml
-    # Fractions of ttbar/zprime jets in final training set. This needs to add up to one.
-    fractions:
-      ttbar: 0.7
-      zprime: 0.3
-
-    # number of training jets
-    # For PDF sampling: the number of target jets per class!
-    #                   So if you set njets=1_000_000 and you have 3 output classes
-    #                   you will end up with 3_000_000 jets
-    # For other sampling methods: total number of jets after resampling
-    # If set to -1: max out to target numbers (limited by fractions ratio)
-    njets: 25e6
-
-    # Bool, if track information (for DIPS etc.) are saved.
-    save_tracks: True
-
-    # Name(s) of the track collection(s) to use.
-    tracks_names: ["tracks"]
-
-    # this stores the indices per sample into an intermediate file
-    intermediate_index_file: *intermediate_index_file
-
-    # How many jets you want to use for the plotting of the results
-    # Give null (the yaml None) if you don't want to plot them
-    njets_to_plot: 3e4
+§§§examples/plotting_input_vars.yaml:220:257§§§
 ```
 
 | Setting | Type | Explanation |
@@ -289,13 +107,19 @@ For an explanation of the resampling function specific `options`, have a look in
 | `njets`  | `int` |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class, while for other methods it is the total number of jets after resampling. |
 | `save_tracks` | `bool` | Define if tracks are processed or not. These are not needed to train DL1r/DL1d |
 | `tracks_names` | `list` of `str` | Name of the tracks (in the .h5 files coming from the dumper) which are processed. Multiple tracks datasets can be preprocessed simultaneously when two `str` are given in the list. |
+| `save_track_labels` | `bool` | If this value is `True`, the track variables in `track_truth_variables` will be processed as labels without scaling. The will be saved in an extra group in the final training file. The name will be `Y_<track_name>_train`. `<track_name>` is here the name of the track collection. |
+| `track_truth_variables` | `str` or `list` | Track variables that will be handled as truth labels. Multiple can be given in a `list` of `str` or just one in a single string. |
 | `intermediate_index_file` | `str` | For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). |
 | `njets_to_plot` | `int` | Number of jets which are used for plotting the variables of the jets/tracks after each preprocessing step (resampling, scaling, shuffling/writing). If `null` is given, the plotting is skipped. |
 
 
-**Note**: `nJets` are the number of jets you want to have in your final training file for the `count` and `weighting` method. For the `pdf` method, this is the number of jets per flavour in the training file!
+**Note**: `njets` are the number of jets you want to have in your final training file for the `count` and `weighting` method. For the `pdf` method, this is the number of jets per flavour in the training file!
 
 ### General settings
+
+```yaml
+§§§examples/plotting_input_vars.yaml:259:281§§§
+```
 
 | Setting | Explanation |
 | ------- | ----------- |
@@ -307,29 +131,6 @@ For an explanation of the resampling function specific `options`, have a look in
 | `precision` | The precision of the final output file. The values are saved with the given precision to save space. |
 | `convert_to_tfrecord` | Options for the conversion to tfrecords. Possible options to define are the `chunk_size` which gives the number of samples saved per file and the number of additional variables to be saved in tf records `N_Add_Vars`.|
 
-```yaml
-# Name of the output file from the preprocessing
-outfile_name: *outfile_name
-plot_name: PFlow_ext-hybrid
-
-# Variable dict which is used for scaling and shifting
-var_file: *var_file
-
-# Dictfile for the scaling and shifting (json)
-dict_file: *dict_file
-
-# compression for final output files (null/gzip)
-compression: null
-
-# save final output files with specified precision
-precision: float16
-
-# Options for the conversion to tfrecords
-convert_to_tfrecord:
-  chunk_size: 5000
-  N_add_vars: null
-
-```
 In the last part, the path to the variable dict `var_file` and the scale dict `dict_file` is defined. Those values are set in the `parameters` file. For example, the training variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
 
 Also the `outfile_name` is defined (which is also included in `parameters`). The `plot_name` here defines the names of the control plots which are produced in the preprocessing.
@@ -338,49 +139,19 @@ If you want to save the samples as TFRecord files you can specify under `convert
 
 ??? info "TF records"
 
-    TF records are the Tensorflow's own file format to store datasets. Especially when working with large datasets this format can be useful. In TF records the data is saved as a sequence of binary strings. This has the advatage that reading the data is significatly faster than from a .h5 file. In addition the data can be saved in multiple files instead of one big file containing all data. This way the reading procedure can be parallised which speeds up the whole training.
+    TF records are the Tensorflow's own file format to store datasets. Especially when working with large datasets this format can be useful. In TF records the data is saved as a sequence of binary strings. This has the advantage that reading the data is significantly faster than from a .h5 file. In addition the data can be saved in multiple files instead of one big file containing all data. This way the reading procedure can be parallelized which speeds up the whole training.
     Besides of this, since TF records are the Tensorflow's own file format, it is optimised for the usage with Tensorflow. For example, the dataset is not stored completely in memory but automatically loaded in batches as soon as needed.
 
 ### Sampling Methods
 
-Different sampling methods can be used in Umami to produce the training sets. They are all working on the principle of 2D resampling. Due to differences in the number of jets in different `pT` and _η_ regions, the tagging of the jets is not independent of those regions. To ensure a kinematic indepedent tagging of the jets, the resampling methods sample the different flavours so that in the given pT and _η_ bins, the same amount of jets per flavour are present. The technique how this is done are specific to the method. In their respective section, this will be explained more in detail.
+Different sampling methods can be used in Umami to produce the training sets. They are all working on the principle of 2D resampling. Due to differences in the number of jets in different `pT` and _η_ regions, the tagging of the jets is not independent of those regions. To ensure a kinematic independent tagging of the jets, the resampling methods sample the different flavours so that in the given pT and _η_ bins, the same amount of jets per flavour are present. The technique how this is done are specific to the method. In their respective section, this will be explained more in detail.
 
 #### Count Sampling
 
 Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used.
 
 ```yaml
-  options:
-    sampling_variables:
-      - pt_btagJes:
-          # bins take either a list containing the np.linspace arguments
-          # or a list of them
-          # For PDF sampling: must be the np.linspace arguments.
-          #   - list of list, one list for each category (in samples)
-          #   - define the region of each category.
-          bins: [[0, 600000, 351], [650000, 6000000, 84]]
-
-      - absEta_btagJes:
-          # For PDF sampling: same structure as in pt_btagJes.
-          bins: [0, 2.5, 10]
-
-    # Decide, which of the in preparation defined samples are used in the resampling.
-    samples:
-      ttbar:
-        - training_ttbar_bjets
-        - training_ttbar_cjets
-        - training_ttbar_ujets
-      zprime:
-        - training_zprime_bjets
-        - training_zprime_cjets
-        - training_zprime_ujets
-
-    custom_njets_initial:
-      # these are empiric values ensuring a smooth hybrid sample.
-      # These values are retrieved for a hybrid ttbar + zprime sample for the count method!
-      training_ttbar_bjets: 5.5e6
-      training_ttbar_cjets: 11.5e6
-      training_ttbar_ujets: 13.5e6
+§§§examples/plotting_input_vars.yaml:188:218§§§
 ```
 
 | Setting | Type | Explanation |
