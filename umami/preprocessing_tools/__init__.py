@@ -30,10 +30,10 @@ from umami.preprocessing_tools.resampling.resampling_base import (
 )
 from umami.preprocessing_tools.resampling.weighting import Weighting
 from umami.preprocessing_tools.Scaling import (
-    Gen_default_dict,
     Scaling,
     apply_scaling_trks,
+    generate_default_dict,
     get_track_mask,
 )
-from umami.preprocessing_tools.utils import GetBinaryLabels, GetVariableDict
+from umami.preprocessing_tools.utils import GetVariableDict, binarise_jet_labels
 from umami.preprocessing_tools.Writing_Train_File import TrainSampleWriter

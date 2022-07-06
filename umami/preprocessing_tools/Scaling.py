@@ -12,7 +12,7 @@ from umami.plotting_tools import preprocessing_plots
 from umami.preprocessing_tools.utils import GetVariableDict
 
 
-def Gen_default_dict(scale_dict: dict) -> dict:
+def generate_default_dict(scale_dict: dict) -> dict:
     """
     Generates default value dictionary from scale/shift dictionary.
 
@@ -37,7 +37,7 @@ def Gen_default_dict(scale_dict: dict) -> dict:
 
 
 def get_track_mask(tracks: np.ndarray) -> np.ndarray:
-    """_summary_
+    """Return the mask for the tracks
 
     Parameters
     ----------
@@ -78,6 +78,8 @@ def apply_scaling_trks(
     variable_config: dict,
     scale_dict: dict,
     tracks_name: str,
+    save_track_labels: bool = False,
+    track_label_variables: list = None,
 ):
     """
     Apply the scaling/shifting to the tracks.
@@ -92,6 +94,11 @@ def apply_scaling_trks(
         Loaded scale dict.
     tracks_name : str
         Name of the tracks.
+    save_track_labels : bool
+        Save the track labels
+    track_label_variables : list
+        List of the track label variables which are
+        to be saved.
 
     Returns
     -------
@@ -148,12 +155,12 @@ def apply_scaling_trks(
         var_arr_list.append(np.nan_to_num(x))
 
         # track vertex and origin labels
-        if f"{tracks_name}_labels" in variable_config:
-            trkLabels = variable_config[f"{tracks_name}_labels"]
+        if save_track_labels:
             trk_labels = np.stack(
-                [np.nan_to_num(trks[v]) for v in trkLabels],
+                [np.nan_to_num(trks[v]) for v in track_label_variables],
                 axis=-1,
             )
+
         else:
             trk_labels = None
 
@@ -178,11 +185,44 @@ class Scaling:
         ----------
         config : object
             Loaded config file for the preprocessing.
+
+        Raises
+        ------
+        ValueError
+            If the given track label variables are not a list
+            nor a string
         """
 
         self.config = config
         self.scale_dict_path = config.dict_file
-        self.bool_use_tracks = config.sampling["options"]["save_tracks"]
+        self.save_tracks = (
+            self.config.sampling["options"]["save_tracks"]
+            if "save_tracks" in self.config.sampling["options"].keys()
+            else False
+        )
+        self.save_track_labels = (
+            self.config.sampling["options"]["save_track_labels"]
+            if "save_track_labels" in self.config.sampling["options"].keys()
+            else False
+        )
+        self.track_label_variables = (
+            self.config.sampling["options"]["track_truth_variables"]
+            if "track_truth_variables" in self.config.sampling["options"].keys()
+            else None
+        )
+
+        if self.save_track_labels:
+            if isinstance(self.track_label_variables, str):
+                self.track_label_variables = [self.track_label_variables]
+
+            elif not isinstance(self.track_label_variables, list):
+                raise ValueError(
+                    """
+                    Given track truth label variables are not a list nor a
+                    single string!
+                    """
+                )
+
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
         self.compression = self.config.compression
 
@@ -482,7 +522,7 @@ class Scaling:
             "default": default,
         }
 
-    def GetScaleDict(
+    def get_scale_dict(
         self,
         input_file: str = None,
         chunk_size: int = 1e5,
@@ -516,7 +556,7 @@ class Scaling:
         n_chunks = int(np.ceil(file_length / chunk_size))
 
         # Get the jets scaling generator
-        jets_scaling_generator = self.get_scaling_generator(
+        jets_scaling_generator = self.get_scaling_dict_generator(
             input_file=input_file,
             nJets=file_length,
             chunk_size=chunk_size,
@@ -549,7 +589,7 @@ class Scaling:
         scale_dict_trk = {}
 
         # Check if tracks are used or not
-        if self.bool_use_tracks is True:
+        if self.save_tracks is True:
 
             # Loop over all tracks selections
             for tracks_name in self.tracks_names:
@@ -601,7 +641,7 @@ class Scaling:
             json.dump(scale_dict, outfile, indent=4)
         logger.info(f"Saved scale dictionary as {self.scale_dict_path}")
 
-    def get_scaling_generator(
+    def get_scaling_dict_generator(
         self,
         input_file: str,
         nJets: int,
@@ -894,10 +934,10 @@ class Scaling:
                     jets[elem["name"]] -= elem["shift"]
                     jets[elem["name"]] /= elem["scale"]
 
-                if self.bool_use_tracks is False:
+                if self.save_tracks is False:
                     yield jets, labels, flavour
 
-                elif self.bool_use_tracks is True:
+                elif self.save_tracks is True:
                     tracks, tracks_labels = [], []
                     # Loop on each track selection
                     for tracks_name in self.tracks_names:
@@ -915,16 +955,22 @@ class Scaling:
                             variable_config=self.variable_config,
                             scale_dict=trk_scale_dict,
                             tracks_name=tracks_name,
+                            save_track_labels=self.save_track_labels,
+                            track_label_variables=self.track_label_variables,
                         )
                         tracks.append(trks)
                         tracks_labels.append(trk_labels)
 
                     # Yield jets, labels and tracks
-                    yield jets, tracks, labels, tracks_labels, flavour
+                    yield (
+                        jets,
+                        tracks,
+                        labels,
+                        tracks_labels,
+                        flavour,
+                    )
 
-            # TODO: Add plotting
-
-    def ApplyScales(
+    def apply_scales(
         self,
         input_file: str = None,
         chunk_size: int = 1e6,
@@ -963,10 +1009,10 @@ class Scaling:
             jets_scale_dict = json.load(infile)["jets"]
 
         # Define Scale dict with default values
-        jets_default_dict = Gen_default_dict(jets_scale_dict)
+        jets_default_dict = generate_default_dict(jets_scale_dict)
 
         # Check if tracks are used
-        if self.bool_use_tracks:
+        if self.save_tracks:
             tracks_scale_dict = {}
             # Get the scale dict for tracks
             with open(self.scale_dict_path, "r") as infile:
@@ -1000,7 +1046,7 @@ class Scaling:
                 )
                 try:
                     # Load jets from file
-                    if self.bool_use_tracks is False:
+                    if self.save_tracks is False:
                         jets, labels, flavour = next(scale_generator)
 
                     else:
@@ -1032,7 +1078,7 @@ class Scaling:
                             maxshape=(None,),
                         )
 
-                    if chunk_counter == 0 and self.bool_use_tracks is True:
+                    if chunk_counter == 0 and self.save_tracks is True:
                         for i, tracks_name in enumerate(self.tracks_names):
                             h5file.create_dataset(
                                 tracks_name,
@@ -1045,7 +1091,7 @@ class Scaling:
                                     tracks[i].shape[2],
                                 ),
                             )
-                            if track_labels[i] is not None:
+                            if self.save_track_labels:
                                 h5file.create_dataset(
                                     f"{tracks_name}_labels",
                                     data=track_labels[i],
@@ -1080,7 +1126,7 @@ class Scaling:
                         )
                         h5file["flavour"][-flavour.shape[0] :] = flavour
 
-                        if self.bool_use_tracks is True:
+                        if self.save_tracks is True:
                             for i, tracks_name in enumerate(self.tracks_names):
                                 h5file[tracks_name].resize(
                                     (h5file[tracks_name].shape[0] + tracks[i].shape[0]),
@@ -1088,7 +1134,7 @@ class Scaling:
                                 )
                                 h5file[tracks_name][-tracks[i].shape[0] :] = tracks[i]
 
-                                if track_labels[i] is not None:
+                                if self.save_track_labels:
                                     h5file[f"{tracks_name}_labels"].resize(
                                         (
                                             h5file[f"{tracks_name}_labels"].shape[0]

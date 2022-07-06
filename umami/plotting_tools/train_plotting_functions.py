@@ -12,7 +12,7 @@ from puma import PlotBase
 from umami.configuration import global_config, logger
 from umami.data_tools import LoadJetsFromFile
 from umami.metrics import get_rejection
-from umami.preprocessing_tools.utils import GetBinaryLabels
+from umami.preprocessing_tools.utils import binarise_jet_labels
 from umami.tools import check_main_class_input
 
 
@@ -129,7 +129,7 @@ def get_comp_tagger_rej_dict(
     )
 
     # Binarize the labels
-    y_true = GetBinaryLabels(labels)
+    y_true = binarise_jet_labels(labels)
 
     # Get a list with all per-jets variables loaded
     avai_variables = list(df.keys())

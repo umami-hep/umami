@@ -73,6 +73,9 @@ def load_tfrecords_train_dataset(
         nfiles=nfiles,
         tagger_name=nn_structure["tagger"],
         tracks_name=tracks_name,
+        use_track_labels=nn_structure["attention_aux_task"]
+        if "attention_aux_task" in nn_structure
+        else False,
         n_cond=nn_structure["N_Conditions"] if "N_Conditions" in nn_structure else None,
     )
 
@@ -87,6 +90,8 @@ def load_tfrecords_train_dataset(
         metadata = json.load(metadata_file)
         metadata["n_trks"] = metadata["n_trks"][tracks_name]
         metadata["n_trk_features"] = metadata["n_trk_features"][tracks_name]
+        metadata["n_trks_labels"] = metadata["n_trks_labels"][tracks_name]
+        metadata["n_trks_classes"] = metadata["n_trks_classes"][tracks_name]
 
     return train_dataset, metadata
 
@@ -101,6 +106,7 @@ class TFRecordReader:
         nfiles: int,
         tagger_name: str,
         tracks_name: str = None,
+        use_track_labels: bool = False,
         sample_weights: bool = False,
         n_cond: int = None,
     ):
@@ -120,6 +126,9 @@ class TFRecordReader:
         tracks_name : str, optional
             Name of the track collection that is loaded,
             by default None
+        use_track_labels : bool, optional
+            Decide if you want to use track labels, by default
+            False.
         sample_weights : bool, optional
             decide wether or not the sample weights should
             be returned, by default False
@@ -132,6 +141,7 @@ class TFRecordReader:
         self.nfiles = nfiles
         self.tagger_name = tagger_name
         self.tracks_name = tracks_name
+        self.use_track_labels = use_track_labels
         self.sample_weights = sample_weights
         self.n_cond = n_cond
 
@@ -221,14 +231,26 @@ class TFRecordReader:
                     shape=shapes[f"shape_X_{self.tracks_name}_train"], dtype=tf.float32
                 )
 
+                if self.use_track_labels:
+                    shapes[f"shape_Y_{self.tracks_name}_train"] = [
+                        metadata["n_trks_labels"][self.tracks_name],
+                        metadata["n_trks_classes"][self.tracks_name],
+                    ]
+                    features[f"Y_{self.tracks_name}_train"] = tf.io.FixedLenFeature(
+                        shape=shapes[f"shape_Y_{self.tracks_name}_train"],
+                        dtype=tf.int64,
+                    )
+
             except KeyError as error:
                 raise KeyError(
                     f"Track collection {self.tracks_name} not in metadata file!"
                 ) from error
 
         # Set label shape
-        shapes["shape_Y"] = [metadata["n_dim"]]
-        features["Y"] = tf.io.FixedLenFeature(shape=shapes["shape_Y"], dtype=tf.int64)
+        shapes["shape_Y_jets"] = [metadata["n_dim"]]
+        features["Y_jets"] = tf.io.FixedLenFeature(
+            shape=shapes["shape_Y_jets"], dtype=tf.int64
+        )
 
         # Set weights shape
         features["Weights"] = tf.io.FixedLenFeature(shape=[1], dtype=tf.float32)
@@ -278,7 +300,22 @@ class TFRecordReader:
         else:
             raise ValueError(f"Tagger '{self.tagger_name}' is not supported!")
 
-        if self.sample_weights:
-            return input_dir, parse_ex["Y"], parse_ex["Weights"]
+        if self.use_track_labels:
+            if self.sample_weights:
+                return (
+                    input_dir,
+                    parse_ex["Y_jets"],
+                    parse_ex[f"Y_{self.tracks_name}_train"],
+                    parse_ex["Weights"],
+                )
 
-        return input_dir, parse_ex["Y"]
+            return (
+                input_dir,
+                parse_ex["Y_jets"],
+                parse_ex[f"Y_{self.tracks_name}_train"],
+            )
+
+        if self.sample_weights:
+            return input_dir, parse_ex["Y_jets"], parse_ex["Weights"]
+
+        return input_dir, parse_ex["Y_jets"]

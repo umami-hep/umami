@@ -33,7 +33,16 @@ class TrainSampleWriter:
         """
 
         self.config = config
-        self.bool_use_tracks = config.sampling["options"]["save_tracks"]
+        self.save_tracks = (
+            self.config.sampling["options"]["save_tracks"]
+            if "save_tracks" in self.config.sampling["options"].keys()
+            else False
+        )
+        self.save_track_labels = (
+            self.config.sampling["options"]["save_track_labels"]
+            if "save_track_labels" in self.config.sampling["options"].keys()
+            else False
+        )
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
         self.compression = compression
         self.precision = config.config["precision"]
@@ -112,10 +121,10 @@ class TrainSampleWriter:
                 labels = labels[rng_index]
                 flavour = flavour[rng_index]
 
-                if self.bool_use_tracks is False:
+                if self.save_tracks is False:
                     yield jets, labels, flavour
 
-                elif self.bool_use_tracks is True:
+                elif self.save_tracks is True:
                     tracks, track_labels = [], []
 
                     # Loop over track selections
@@ -129,15 +138,18 @@ class TrainSampleWriter:
                             dtype=self.precision,
                         )
                         trks = trks[rng_index]
-                        if f"{tracks_name}_labels" in f.keys():
+
+                        if self.save_track_labels:
                             trk_labels = np.asarray(
                                 h5py.File(input_file, "r")[f"/{tracks_name}_labels"][
                                     indices_selected
                                 ]
                             )
                             trk_labels = trk_labels[rng_index]
+
                         else:
                             trk_labels = None
+
                         tracks.append(trks)
                         track_labels.append(trk_labels)
 
@@ -251,13 +263,17 @@ class TrainSampleWriter:
                 logger.info(f"Writing chunk {chunk_counter+1} of {n_chunks+1}.")
                 try:
                     # Load jets from file
-                    if self.bool_use_tracks is False:
+                    if self.save_tracks is False:
                         jets, labels, flavour = next(load_generator)
 
                     else:
-                        (jets, tracks, labels, track_labels, flavour) = next(
-                            load_generator
-                        )
+                        (
+                            jets,
+                            tracks,
+                            labels,
+                            track_labels,
+                            flavour,
+                        ) = next(load_generator)
 
                     # final absolute jet index of this chunk
                     jet_idx_end = jet_idx + len(jets)
@@ -300,11 +316,12 @@ class TrainSampleWriter:
                             shape=(n_jets,),
                         )
 
-                    if chunk_counter == 0 and self.bool_use_tracks is True:
+                    if chunk_counter == 0 and self.save_tracks is True:
                         for i, tracks_name in enumerate(self.tracks_names):
                             chunks = (
                                 (1,) + tracks[i].shape[1:] if self.compression else None
                             )
+
                             h5file.create_dataset(
                                 f"X_{tracks_name}_train",
                                 compression=self.compression,
@@ -316,7 +333,8 @@ class TrainSampleWriter:
                                     tracks[i].shape[2],
                                 ),
                             )
-                            if track_labels[i] is not None:
+
+                            if self.save_track_labels:
                                 h5file.create_dataset(
                                     f"Y_{tracks_name}_train",
                                     compression=None,
@@ -341,7 +359,7 @@ class TrainSampleWriter:
                     h5file["weight"][jet_idx:jet_idx_end] = weights
 
                     # Appending tracks if used
-                    if self.bool_use_tracks is True:
+                    if self.save_tracks is True:
 
                         # Loop over tracks selections
                         for i, tracks_name in enumerate(self.tracks_names):
@@ -350,7 +368,7 @@ class TrainSampleWriter:
                                 jet_idx:jet_idx_end
                             ] = tracks[i]
 
-                            if track_labels[i] is not None:
+                            if self.save_track_labels:
                                 # Track labels
                                 h5file[f"Y_{tracks_name}_train"][
                                     jet_idx:jet_idx_end

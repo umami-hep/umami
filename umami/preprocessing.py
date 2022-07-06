@@ -175,7 +175,7 @@ if __name__ == "__main__":
     # Calculate the scale dicts of the previous resampled files
     elif args.scaling:
         Scaling = upt.Scaling(config)
-        Scaling.GetScaleDict(chunk_size=args.chunk_size)
+        Scaling.get_scale_dict(chunk_size=args.chunk_size)
 
     # Apply scaling of the previous calculated scale dicts
     elif args.apply_scales:
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         config.copy_to_out_dir("scaling")
 
         Scaling = upt.Scaling(config)
-        Scaling.ApplyScales()
+        Scaling.apply_scales()
 
     # Check for final writing to disk in train format
     elif args.write:

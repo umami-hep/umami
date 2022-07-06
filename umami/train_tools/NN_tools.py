@@ -20,10 +20,10 @@ import umami.tf_tools as utf
 from umami.data_tools import LoadJetsFromFile, LoadTrksFromFile
 from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import (
-    Gen_default_dict,
-    GetBinaryLabels,
     GetVariableDict,
     apply_scaling_trks,
+    binarise_jet_labels,
+    generate_default_dict,
 )
 from umami.tools import natural_keys, replaceLineInFile
 
@@ -833,7 +833,7 @@ def get_test_sample(
     )
 
     # Binarize Labels
-    labels = GetBinaryLabels(Umami_labels)
+    labels = binarise_jet_labels(Umami_labels)
 
     # Check if jet_variables is defined
     if jet_variables:
@@ -854,7 +854,7 @@ def get_test_sample(
     jets = jets.replace([np.inf, -np.inf], np.nan)
 
     logger.info("Replacing default values.")
-    default_dict = Gen_default_dict(scale_dict)
+    default_dict = generate_default_dict(scale_dict)
     jets = jets.fillna(default_dict)
 
     logger.info("Applying scaling and shifting.")
@@ -984,7 +984,7 @@ def get_test_sample_trks(
     )
 
     # Binarize the labels
-    binary_labels = GetBinaryLabels(labels)
+    binary_labels = binarise_jet_labels(labels)
 
     # Apply scaling to the tracks
     trks, _ = apply_scaling_trks(
