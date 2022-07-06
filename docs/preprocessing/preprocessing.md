@@ -48,11 +48,11 @@ Note that this file is formatted according to [`yaml`](https://en.wikipedia.org/
 parameters: !include Preprocessing-parameters.yaml
 ```
 
-This line specifies where the ntuples (which are used) are stored and where to save the output of the preprocessing. You can find the file [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-settings-Freiburg.yaml).
+This line specifies where the ntuples (which are used) are stored and where to save the output of the preprocessing. You can find the file [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml).
 
 #### Cut Templates
 ```yaml
-§§§examples/plotting_input_vars.yaml:4:52§§§
+§§§examples/PFlow-Preprocessing.yaml:3:52§§§
 ```
 
 The cuts defined in this section are templates for the cuts of the different flavour for ttbar/zprime. We also split the ttbar/zprime in train/validation/test to ensure no jet is used twice. `ttbar_train` and `zprime_train` are the jets which are used for training while validation/test are the templates for validation and test.
@@ -78,33 +78,33 @@ Another cut which can be applied is the `pt_btagJes`, which is a cut on the jet 
 
 #### File- and Flavour Preparation
 ```yaml
-§§§examples/plotting_input_vars.yaml:54:177§§§
+§§§examples/PFlow-Preprocessing.yaml:54:177§§§
 ```
 In the `Preparation`, the size of the batches which are be loaded from the ntuples is defined in `batchsize`. The exact path of the ntuples are defined in `ntuples`. You define there where the ttbar and zprime ntuples are saved and which files to use (You can use wildcards here!). The `file_pattern` defines the files while `path` defines the absolute path to the folder where they are saved. `*ntuple_path` is the path to the ntuples defined in the `parameters` file.
 
-The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. Also you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
+The last part is the exact splitting of the flavours. In `samples`, you define for each of ttbar/zprime and training/validation/testing the flavours you want to use. You need to give a type (ttbar/zprime), a category (flavour or `inclusive`) and the number of jets you want for this specific flavour. This number should be as high as possible! This is just the number of jets for this flavour which are extraced from the `.h5` files coming from the dumper. This extracted jets are written into the `file` you define at the end of each sample. The resampling algorithm uses theses samples to get the jets to build the final training sample, but it only uses as much as needed! Only for the validation and testing files we suggest to use something around `4e6` (otherwise the loading later on takes quite some time).
+Next you need to apply the template cuts we defined already. The `f_output` defines where the output files is saved. `path` defines the folder, `file` defines the name.
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
 
 #### Sampling
-
 ```yaml
-§§§examples/plotting_input_vars.yaml:179:186§§§
+§§§examples/PFlow-Preprocessing.yaml:179:185§§§
 ```
 
-In `sampling`, we can define the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf`, `importance_no_replace` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
+In `sampling`, we can define now the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf`, `importance_no_replace` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
 
-An important part are the `class_labels` which are defined here. You can define which flavours are used in the preprocessing. The name of the available flavours can be find [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
+An important part are the `class_labels` which are defined here. You can define which flavours are used in the preprocessing. The name of the available flavours can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/global_config.yaml). Add the names of those to the list to add them to the preprocessing. **PLEASE KEEP THE ORDERING CONSTANT! THIS IS VERY IMPORTANT**. This list must be the same as the one in the train config!
 
 For an explanation of the resampling function specific `options`, have a look in the section of the resampling method you want to use. The general `options` are explained in the following:
 
 ```yaml
-§§§examples/plotting_input_vars.yaml:220:257§§§
+§§§examples/PFlow-Preprocessing.yaml:220:251§§§
 ```
 
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `fractions` | `dict` | Gives the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! |
-| `njets`  | `int` |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class, while for other methods it is the total number of jets after resampling. |
+| `njets`  | `int` |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class in the final training sample, while for other methods it is the total number of jets after resampling. For the `pdf` method, setting this value to `-1` maximises the number of jets in the training sample. |
 | `save_tracks` | `bool` | Define if tracks are processed or not. These are not needed to train DL1r/DL1d |
 | `tracks_names` | `list` of `str` | Name of the tracks (in the .h5 files coming from the dumper) which are processed. Multiple tracks datasets can be preprocessed simultaneously when two `str` are given in the list. |
 | `save_track_labels` | `bool` | If this value is `True`, the track variables in `track_truth_variables` will be processed as labels without scaling. The will be saved in an extra group in the final training file. The name will be `Y_<track_name>_train`. `<track_name>` is here the name of the track collection. |
@@ -130,6 +130,10 @@ For an explanation of the resampling function specific `options`, have a look in
 | `compression` | Decide, which compression is used for the final training sample. Due to slow loading times, this should be `null`. Possible options are for example `gzip`. |
 | `precision` | The precision of the final output file. The values are saved with the given precision to save space. |
 | `convert_to_tfrecord` | Options for the conversion to tfrecords. Possible options to define are the `chunk_size` which gives the number of samples saved per file and the number of additional variables to be saved in tf records `N_Add_Vars`.|
+
+```yaml
+§§§examples/PFlow-Preprocessing.yaml:246:268§§§
+```
 
 In the last part, the path to the variable dict `var_file` and the scale dict `dict_file` is defined. Those values are set in the `parameters` file. For example, the training variables for DL1r are defined in [DL1r_Variables.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/configs/DL1r_Variables.yaml).
 

@@ -160,22 +160,24 @@ This will write out plots for the non-main flavour rejections, accuracy and loss
 plotting_epoch_performance.py -c <path>/<to>/<train>/<config> --dict <path>/<to>/<validation>/<json>
 ```
 
-where the argument given after `--dict` is the path to the validation json you want to plot. The validation json mentioned here will be produced by the `MyCallback` function which is running on each epoch end. As a result, a json file will be filled with different metrics. The validation json is updated after each epoch. The file will be stored in the `umami/umami/MODELNAME/` folder.
+where the argument given after `--dict` is the path to the validation json you want to plot. The validation json mentioned here will be produced by the `MyCallback` function which is running on each epoch end if the `n_jets` in `Validation_metrics_settings` is bigger than 0. As a result, a json file will be filled with different metrics. The validation json is updated after each epoch. The file will be stored in the `umami/umami/MODELNAME/` folder.
 
-If you want to recalculate this dict (with more jets for example), you can run:
+If you have memory issues while training, you can turn off the instant validation via Callback by setting the `n_jets` value in `Validation_metrics_settings` to zero. After the training, you now need to recalculate these values. Therefore, change the `n_jets` value in `Validation_metrics_settings` back to e.g. `3e5` and run the following command:
 
 ```bash
 plotting_epoch_performance.py -c <path>/<to>/<train>/<config> --recalculate
 ```
 
-This will recalculate the  the performance measurements, like the rejection performances, using the working point, the `frac_values` and the number of validation jets defined in the train config. This can take a long time without a GPU, because each saved model is loaded and evaluated with the validation files. We strongly advice you to only do that if you changed the validation files!
+This will recalculate the performance measurements, like the rejection performances, using the working point, the `frac_values` and the number of validation jets defined in the train config. This can take a long time without a GPU, because each saved model is loaded and evaluated with the validation files. We strongly advice you to only do that if you changed the validation files or you ran with `n_jets = 0` while training!  
 
 ## Evaluating the results
-After the training is over, the different epochs can be evaluated with ROC plots, output scores, saliency maps and confusion matrices etc. using the build-in scripts. Before plotting these, a model needs to be evaluated using the [evaluate_model.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py).
+After the training is over, the different epochs can be evaluated with ROC plots, output scores, saliency maps and confusion matrices etc. using the build-in scripts. Before you can plot the different plots, the epoch you decided to use for further evaluation needs to be evaluated using the test samples given in the train config. This evaluation step is performed using the [evaluate_model.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py) script. The script can be invoked by running the following command:
 
 ```bash
 evaluate_model.py -c <path>/<to>/<train>/<config> -e 5
 ```
 
 The `-e` options (here `5`) allows to set the training epoch which should be evaluated.
-It will produce .h5 and .pkl files with the evaluations which will be saved in the model folder in an extra folder called `results/`. After, the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script can be used to plot the results. For an explanation, look in the [plotting_umami documentation](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting_umami.md).
+It will produce .h5 and .pkl files with the results of the evaluation in a new folder named `results`. To steer the evalution and to have comparison taggers available, have a look a the variables defined in the `Eval_parameters_validation` section of the train config.
+
+After the evaluation has finished, you can run the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py) script to plot the different plots already mentioned. For an explanation how to run the [plotting_umami.py](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/plotting_umami.py), please have a look in the [plotting_umami documentation](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting_umami.md).

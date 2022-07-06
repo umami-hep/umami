@@ -732,6 +732,7 @@ def evaluate_model_dl1(
     test_file: str,
     data_set_name: str,
     test_file_entry: str,
+    tagger: str,
 ):
     """
     Evaluate the various DL1* models.
@@ -752,6 +753,8 @@ def evaluate_model_dl1(
     test_file_entry : str
         Name of the test files that are currently used for the SHAPley
         files.
+    tagger : str
+        Name of the tagger that is to be evaluated.
 
     Raises
     ------
@@ -895,11 +898,11 @@ def evaluate_model_dl1(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dl1],
-        tagger_names=["DL1"],
+        tagger_names=[tagger.casefold()],
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={"DL1": eval_params["frac_values"]},
+        frac_values={tagger.casefold(): eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
     )
 
@@ -928,11 +931,11 @@ def evaluate_model_dl1(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dl1],
-        tagger_names=["DL1"],
+        tagger_names=[tagger.casefold()],
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
-        frac_values={"DL1": eval_params["frac_values"]},
+        frac_values={tagger.casefold(): eval_params["frac_values"]},
         frac_values_comp=frac_values_comp,
         eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
         eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
@@ -966,7 +969,7 @@ def evaluate_model_dl1(
         jets=jets,
         y_true=truth_internal_labels,
         tagger_preds=[pred_dl1],
-        tagger_names=["DL1"],
+        tagger_names=[tagger.casefold()],
         tagger_list=tagger_list,
         class_labels=class_labels,
         main_class=main_class,
@@ -1059,7 +1062,7 @@ if __name__ == "__main__":
             tagger_name = None  # pylint: disable=invalid-name
 
     # TODO Change this in python 3.10
-    if tagger_name == "dl1":
+    if tagger_name.casefold() == "dl1":
         logger.info("Start evaluating DL1 with test files...")
         for (
             test_file_identifier,
@@ -1072,6 +1075,7 @@ if __name__ == "__main__":
                 test_file=test_file_config["path"],
                 data_set_name=test_file_identifier,
                 test_file_entry=test_file_identifier,
+                tagger=tagger_name,
             )
 
     elif tagger_name.casefold() in ("dips", "dips_attention", "cads"):
