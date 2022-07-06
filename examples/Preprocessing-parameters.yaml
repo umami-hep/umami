@@ -2,7 +2,7 @@
 ntuple_path: &ntuple_path <path_palce_holder>/ntuples/
 
 # Path where the hybrid samples will be saved
-sample_path: &sample_path <path_palce_holder>/hybrids/
+sample_path: &sample_path <path_palce_holder>/prepared_samples/
 
 # Path where the merged and ready-to-train samples are saved
 file_path: &file_path <path_palce_holder>/preprocessed/

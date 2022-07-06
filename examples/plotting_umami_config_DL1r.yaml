@@ -11,7 +11,7 @@ contour_fraction_ttbar:
   rejections: ["ujets", "cjets"]
   models_to_plot:
     dl1r:
-      tagger_name: "DL1"
+      tagger_name: "dl1"
       colour: "b"
       linestyle: "--"
       label: "DL1r"
@@ -31,7 +31,7 @@ scores_DL1r: # Each item on this level defines one plot. The name of this key is
   models_to_plot:
     DL1r:
       data_set_name: "ttbar_r21"
-      tagger_name: "DL1"
+      tagger_name: "dl1"
       class_labels: ["ujets", "cjets", "bjets"]
       label: "$t\\bar{t}$"
   plot_settings:  # All options of the score plot can be changed here
@@ -42,7 +42,7 @@ scores_DL1r: # Each item on this level defines one plot. The name of this key is
 confusion_matrix_DL1r:
   type: "confusion_matrix"
   data_set_name: "ttbar_r21"
-  tagger_name: "DL1"
+  tagger_name: "dl1"
   class_labels: ["ujets", "cjets", "bjets"]
   plot_settings:
     colorbar: True
@@ -54,7 +54,7 @@ DL1r_light_flavour:
     DL1r: # The name here has no impact on anything.
       data_set_name: "ttbar_r21"
       label: "DL1r"
-      tagger_name: "DL1"
+      tagger_name: "dl1"
       rejection_class: "cjets"
   plot_settings: # These settings are given to the umami.evaluation_tools.plotROCRatio() function by unpacking them.
     draw_errors: True
