@@ -53,7 +53,7 @@ class TrainSampleWriter:
         self,
         input_file: str,
         index: list,
-        nJets: int,
+        n_jets: int,
         chunk_size: int = 100_000,
     ):
         """
@@ -66,7 +66,7 @@ class TrainSampleWriter:
             File which is to be scaled.
         index : list
             List with the indicies.
-        nJets : int
+        n_jets : int
             Number of jets used.
         chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted
@@ -93,9 +93,9 @@ class TrainSampleWriter:
             start_ind = 0
 
             tupled_indices = []
-            while start_ind < nJets:
+            while start_ind < n_jets:
                 end_ind = int(start_ind + chunk_size)
-                end_ind = min(end_ind, nJets)
+                end_ind = min(end_ind, n_jets)
 
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
@@ -158,7 +158,7 @@ class TrainSampleWriter:
     def better_shuffling(
         self,
         thearray: np.ndarray,
-        nJets: int,
+        n_jets: int,
         slice_size: int = int(1e4),
     ) -> np.ndarray:
         """
@@ -168,7 +168,7 @@ class TrainSampleWriter:
         ----------
         thearray : np.ndarray
             Input array with the values to shuffle.
-        nJets : int
+        n_jets : int
             Number of jets in the array
         slice_size : int, optional
             How much values are shuffeld at one, by default int(1e4)
@@ -179,7 +179,7 @@ class TrainSampleWriter:
             Shuffeld input array.
         """
 
-        missing = slice_size - nJets % slice_size
+        missing = slice_size - n_jets % slice_size
         adding = np.asarray([np.nan] * missing)
         thearray = np.concatenate([thearray, adding])
         thearray = thearray.reshape((-1, slice_size))
@@ -245,7 +245,7 @@ class TrainSampleWriter:
         load_generator = self.load_generator(
             input_file=input_file,
             index=absolute_index,
-            nJets=n_jets,
+            n_jets=n_jets,
             chunk_size=chunk_size,
         )
 
@@ -383,8 +383,8 @@ class TrainSampleWriter:
 
         # Plot the variables from the output file of the resampling process
         if (
-            "njets_to_plot" in self.config.sampling["options"]
-            and self.config.sampling["options"]["njets_to_plot"]
+            "n_jets_to_plot" in self.config.sampling["options"]
+            and self.config.sampling["options"]["n_jets_to_plot"]
         ):
             logger.info("Plotting prepared training dataset distributions...")
             preprocessing_plots(
@@ -400,7 +400,7 @@ class TrainSampleWriter:
                 and "save_tracks" in self.config.sampling["options"]
                 and self.config.sampling["options"]["save_tracks"] is True
                 else None,
-                nJets=self.config.sampling["options"]["njets_to_plot"],
+                n_jets=self.config.sampling["options"]["n_jets_to_plot"],
                 atlas_second_tag=self.config.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
@@ -432,7 +432,7 @@ class TrainSampleWriter:
             Containing values of jet variables
         labels : np.ndarray
             Binarized truth value of flavor for jet with shape
-            (nJets x (nFlavor x 1))
+            (n_jets x (nFlavor x 1))
         """
         # scale to original values for binning
         with open(self.config.dict_file, "r") as infile:

@@ -528,7 +528,7 @@ def get_saliency_map_dict(
     tracks_name: str,
     nTracks: int = None,
     effs: list = None,
-    nJets: int = int(10e4),
+    n_jets: int = int(10e4),
 ) -> dict:
     """
     Calculating the saliency maps dict.
@@ -562,7 +562,7 @@ def get_saliency_map_dict(
         List with the efficiencies which are tested.
         If None is given, the default WPs of 60, 70, 77 and 85
         are tested. By default None.
-    nJets : int, optional
+    n_jets : int, optional
         Number of jets to use to calculate the saliency maps.
         By default 10e4
 
@@ -666,7 +666,7 @@ def get_saliency_map_dict(
                     mask = mask & (Disc_values < cutvalue)
 
                 # Get gradient map
-                gradient_map = umt.get_gradients(model, X_test[mask], nJets)
+                gradient_map = umt.get_gradients(model, X_test[mask], n_jets)
 
                 # Turn gradient map for plotting
                 gradient_map = np.swapaxes(gradient_map, 1, 2)

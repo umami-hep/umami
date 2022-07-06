@@ -153,7 +153,7 @@ and then it can be used e.g. via
 ```python
 logger.info(f"Loading config file {config_file}.")
 logger.debug(f"Using variable {variable} in training.")
-logger.warning(f"Not enough jets available in sample, using only {njets}")
+logger.warning(f"Not enough jets available in sample, using only {n_jets}")
 ```
 All logging levels are defined in the following table
 

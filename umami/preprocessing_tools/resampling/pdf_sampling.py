@@ -190,7 +190,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         Next_chunk : bool
             True if more chunks can be loaded, False if this was
             the last chunk.
-        Njets_initial : int
+        n_jets_initial : int
             Number of jets available.
         start_index : int
             Start index of the chunk.
@@ -206,28 +206,28 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         with h5py.File(in_file, "r") as f:
 
             # Get the number of jets inside the file
-            Njets_initial = len(f["jets"])
+            n_jets_initial = len(f["jets"])
 
-            # Check if custom inital njets are given for this sample
+            # Check if custom inital n_jets are given for this sample
             if (
-                "custom_njets_initial" in self.options
-                and self.options["custom_njets_initial"] is not None
-                and sample in list(self.options["custom_njets_initial"])
+                "custom_n_jets_initial" in self.options
+                and self.options["custom_n_jets_initial"] is not None
+                and sample in list(self.options["custom_n_jets_initial"])
             ):
 
                 # Get the number of jets that are asked for in the config
-                Njets_asked = int(self.options["custom_njets_initial"][sample])
+                n_jets_asked = int(self.options["custom_n_jets_initial"][sample])
 
-                # Check that enough jets are there. If not, changed asked njets
-                if Njets_initial <= Njets_asked:
+                # Check that enough jets are there. If not, changed asked n_jets
+                if n_jets_initial <= n_jets_asked:
                     logger.warning(
                         f"For sample {sample}, demanding more initial jets"
-                        f" ({Njets_asked}) than available ({Njets_initial})."
+                        f" ({n_jets_asked}) than available ({n_jets_initial})."
                         " Forcing to available."
                     )
 
                 else:
-                    Njets_initial = Njets_asked
+                    n_jets_initial = n_jets_asked
 
             # Set start and end index
             start_ind = 0
@@ -237,14 +237,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             tupled_indices = []
 
             # Iterate until the number of asked jets is reached
-            while end_ind <= Njets_initial or start_ind == 0:
+            while end_ind <= n_jets_initial or start_ind == 0:
 
                 # Check that not an end index is chosen, which is not available
                 # 100 jets available, chunk size: 30, end index: 80
                 # Adding this up would cause an error
-                if end_ind + chunk_size > Njets_initial:
+                if end_ind + chunk_size > n_jets_initial:
                     # Missing less then a chunk, joining to last chunk
-                    end_ind = Njets_initial
+                    end_ind = n_jets_initial
 
                 # Append the start and end index pairs to list
                 tupled_indices.append((start_ind, end_ind))
@@ -280,7 +280,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 # and the available jets and the start index of the chunk
                 yield sample, samples, index_tuple[
                     1
-                ] != Njets_initial, Njets_initial, index_tuple[0]
+                ] != n_jets_initial, n_jets_initial, index_tuple[0]
 
     def Load_Index_Generator(self, in_file: str, chunk_size: int):
         """
@@ -369,31 +369,31 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Open input file
         with h5py.File(in_file, "r") as f:
             # Get the number of jets inside the file
-            Njets_initial = len(f["jets"])
+            n_jets_initial = len(f["jets"])
 
-            # Check if custom inital njets are given for this sample
+            # Check if custom inital n_jets are given for this sample
             if (
-                "custom_njets_initial" in self.options
-                and self.options["custom_njets_initial"] is not None
-                and sample in list(self.options["custom_njets_initial"])
+                "custom_n_jets_initial" in self.options
+                and self.options["custom_n_jets_initial"] is not None
+                and sample in list(self.options["custom_n_jets_initial"])
             ):
 
                 # Get the number of jets that are asked for in the config
-                Njets_asked = int(self.options["custom_njets_initial"][sample])
+                n_jets_asked = int(self.options["custom_n_jets_initial"][sample])
 
-                # Check that enough jets are there. If not, changed asked njets
-                if Njets_initial <= Njets_asked:
+                # Check that enough jets are there. If not, changed asked n_jets
+                if n_jets_initial <= n_jets_asked:
                     logger.warning(
                         f"For sample {sample}, demanding more initial jets"
-                        f" ({Njets_asked}) than available ({Njets_initial})."
+                        f" ({n_jets_asked}) than available ({n_jets_initial})."
                         " Forcing to available."
                     )
 
                 else:
-                    Njets_initial = Njets_asked
+                    n_jets_initial = n_jets_asked
 
             # Get the jets which are to be loaded
-            to_load = f["jets"][:Njets_initial]
+            to_load = f["jets"][:n_jets_initial]
 
             # Retrieve the resampling variables from the jets
             jets_x = np.asarray(to_load[self.var_x])
@@ -521,13 +521,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     h_target += new_hist
 
                 # Get the number of jets that were loaded in this step
-                njets_added = len(target_dist["sample_vector"])
+                n_jets_added = len(target_dist["sample_vector"])
 
                 # Update the progres bar
-                pbar.update(njets_added)
+                pbar.update(n_jets_added)
 
                 # Add the number of loaded jets to the availabe number
-                available_numbers += njets_added
+                available_numbers += n_jets_added
 
                 # Set the chunk counter up
                 chunk_counter += 1
@@ -1687,7 +1687,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             self.target_fractions.append(self.options["fractions"][sample_category])
 
         # Correct target numbers
-        njets_asked = self.options["njets"]
+        n_jets_asked = self.options["n_jets"]
         target_numbers_corr = CorrectFractions(
             N_jets=available_numbers,
             target_fractions=self.target_fractions,
@@ -1695,21 +1695,21 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         )
 
         # Check for how many jets are requested
-        if njets_asked == -1:
+        if n_jets_asked == -1:
             logger.info("Maximising number of jets to target distribution.")
 
         else:
-            logger.info(f"Requesting {njets_asked} in total from target.")
+            logger.info(f"Requesting {n_jets_asked} in total from target.")
 
             # Correct the fractions
             total_corr = sum(target_numbers_corr)
-            if total_corr < njets_asked:
+            if total_corr < n_jets_asked:
                 logger.info("Requesting more jets from target than available.")
                 logger.info("PDF sampling will thus upsample target too.")
-                ratio = float(njets_asked / total_corr)
+                ratio = float(n_jets_asked / total_corr)
                 target_numbers_corr = [int(num * ratio) for num in target_numbers_corr]
-            elif total_corr > njets_asked:
-                ratio = float(njets_asked / total_corr)
+            elif total_corr > n_jets_asked:
+                ratio = float(n_jets_asked / total_corr)
                 target_numbers_corr = [int(num * ratio) for num in target_numbers_corr]
 
         # Add the target number
@@ -2440,7 +2440,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             self.Combine_Flavours()
 
             # Plot the variables from the output file of the resampling process
-            if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+            if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
                 logger.info("Plotting resampled distributions...")
                 preprocessing_plots(
                     sample=self.config.GetFileName(option="resampled"),
@@ -2455,7 +2455,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     and "save_tracks" in self.options
                     and self.options["save_tracks"] is True
                     else None,
-                    nJets=self.options["njets_to_plot"],
+                    n_jets=self.options["n_jets_to_plot"],
                     atlas_second_tag=self.config.plot_sample_label,
                     logy=True,
                     ylabel="Normalised number of jets",

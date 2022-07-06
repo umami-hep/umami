@@ -42,7 +42,7 @@ def get_track_mask(tracks: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     tracks : np.ndarray
-        Loaded tracks with shape (nJets, nTrks, nTrkFeatures). Note, the
+        Loaded tracks with shape (n_jets, nTrks, nTrkFeatures). Note, the
         input tracks should not already be converted with np.nan_to_num, as this
         function relies on a np.isnan check in the case where the valid flag is
         not present.
@@ -50,7 +50,7 @@ def get_track_mask(tracks: np.ndarray) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        A bool array (nJets, nTrks), True for tracks that are present.
+        A bool array (n_jets, nTrks), True for tracks that are present.
 
     Raises
     ------
@@ -342,8 +342,8 @@ class Scaling:
         self,
         first_scale_dict: dict,
         second_scale_dict: dict,
-        first_nJets: int,
-        second_nJets: int,
+        first_n_jets: int,
+        second_n_jets: int,
     ):
         """
         Combine two scale dicts for jet variables.
@@ -354,16 +354,16 @@ class Scaling:
             First scale dict to join.
         second_scale_dict : dict
             Second scale dict to join.
-        first_nJets : int
+        first_n_jets : int
             Number of jets used for the first scale dict.
-        second_nJets : int
+        second_n_jets : int
             Number of jets used for the second scale dict.
 
         Returns
         -------
         combined_scaled_dict : list
             The combined scale dict list.
-        combined_nJets : int
+        combined_n_jets : int
             The combined number of jets (corresponding to the combined dicts).
         """
 
@@ -379,8 +379,8 @@ class Scaling:
                     first_scale_dict=first_scale_dict,
                     second_scale_dict=second_scale_dict,
                     variable=counter,
-                    first_N=first_nJets,
-                    second_N=second_nJets,
+                    first_N=first_n_jets,
+                    second_N=second_n_jets,
                 )
 
                 # Combine the mean/shift in a dict and append it
@@ -393,10 +393,10 @@ class Scaling:
                     )
                 )
 
-        # Sum of nJets corresponding to combined scale dict
-        combined_nJets = first_nJets + second_nJets
+        # Sum of n_jets corresponding to combined scale dict
+        combined_n_jets = first_n_jets + second_n_jets
 
-        return combined_dict_list, combined_nJets
+        return combined_dict_list, combined_n_jets
 
     def get_scaling_tracks(
         self,
@@ -410,12 +410,12 @@ class Scaling:
         Parameters
         ----------
         data : np.ndarray
-            Loaded tracks with shape (nJets, nTrks, nTrkFeatures)
+            Loaded tracks with shape (n_jets, nTrks, nTrkFeatures)
         var_names : list
             List of variables which are to be scaled
         track_mask : np.ndarray
             Boolen array where False denotes padded tracks,
-            with shape (nJets, nTrks)
+            with shape (n_jets, nTrks)
 
         Returns
         -------
@@ -558,7 +558,7 @@ class Scaling:
         # Get the jets scaling generator
         jets_scaling_generator = self.get_scaling_dict_generator(
             input_file=input_file,
-            nJets=file_length,
+            n_jets=file_length,
             chunk_size=chunk_size,
         )
 
@@ -570,17 +570,17 @@ class Scaling:
             # Check if this is the first time loading from the generator
             if chunk_counter == 0:
                 # Get the first chunk of scales from the generator
-                scale_dict, nJets_loaded = next(jets_scaling_generator)
+                scale_dict, n_jets_loaded = next(jets_scaling_generator)
             else:
                 # Get the next chunk of scales from the generator
-                tmp_scale_dict, tmp_nJets_loaded = next(jets_scaling_generator)
+                tmp_scale_dict, tmp_n_jets_loaded = next(jets_scaling_generator)
 
                 # Combine the scale dicts coming from the generator
-                scale_dict, nJets_loaded = self.join_scale_dicts_jets(
+                scale_dict, n_jets_loaded = self.join_scale_dicts_jets(
                     first_scale_dict=scale_dict,
                     second_scale_dict=tmp_scale_dict,
-                    first_nJets=nJets_loaded,
-                    second_nJets=tmp_nJets_loaded,
+                    first_n_jets=n_jets_loaded,
+                    second_n_jets=tmp_n_jets_loaded,
                 )
 
         logger.info("Calculating scaling and shifting values for the track variables")
@@ -597,7 +597,7 @@ class Scaling:
                 # Load generator
                 trks_scaling_generator = self.get_scaling_tracks_generator(
                     input_file=input_file,
-                    nJets=file_length,
+                    n_jets=file_length,
                     tracks_name=tracks_name,
                     chunk_size=chunk_size,
                 )
@@ -644,7 +644,7 @@ class Scaling:
     def get_scaling_dict_generator(
         self,
         input_file: str,
-        nJets: int,
+        n_jets: int,
         chunk_size: int = int(10000),
     ):
         """
@@ -654,7 +654,7 @@ class Scaling:
         ----------
         input_file : str
             File which is to be scaled.
-        nJets : int
+        n_jets : int
             Number of jets which are to be scaled.
         chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted per step,
@@ -664,7 +664,7 @@ class Scaling:
         ------
         scale_dict_trk : dict
             Dict with the scale/shift values for each variable.
-        nJets : int
+        n_jets : int
             Number of jets used for scaling/shifting.
         """
 
@@ -679,12 +679,12 @@ class Scaling:
             tupled_indices = []
 
             # Loop over indicies
-            while start_ind < nJets:
+            while start_ind < n_jets:
                 # Calculate end index of the chunk
                 end_ind = int(start_ind + chunk_size)
 
-                # Check if end index is bigger than Njets
-                end_ind = min(end_ind, nJets)
+                # Check if end index is bigger than n_jets
+                end_ind = min(end_ind, n_jets)
 
                 # Append to list
                 tupled_indices.append((start_ind, end_ind))
@@ -708,7 +708,7 @@ class Scaling:
                 jets.replace([np.inf, -np.inf], np.nan, inplace=True)
 
                 if "weight" not in jets:
-                    length = nJets if nJets < chunk_size else len(jets)
+                    length = n_jets if n_jets < chunk_size else len(jets)
                     jets["weight"] = np.ones(int(length))
 
                 # Iterate over the vars of the jets
@@ -743,7 +743,7 @@ class Scaling:
     def get_scaling_tracks_generator(
         self,
         input_file: str,
-        nJets: int,
+        n_jets: int,
         tracks_name: str,
         chunk_size: int = int(10000),
     ):
@@ -755,7 +755,7 @@ class Scaling:
         ----------
         input_file : str
             File which is to be scaled.
-        nJets : int
+        n_jets : int
             Number of jets which are to be scaled.
         tracks_name : str
             Name of the tracks
@@ -788,12 +788,12 @@ class Scaling:
             tupled_indices = []
 
             # Loop over indicies
-            while start_ind < nJets:
+            while start_ind < n_jets:
                 # Calculate end index of the chunk
                 end_ind = int(start_ind + chunk_size)
 
-                # Check if end index is bigger than Njets
-                end_ind = min(end_ind, nJets)
+                # Check if end index is bigger than n_jets
+                end_ind = min(end_ind, n_jets)
 
                 # Append to list
                 tupled_indices.append((start_ind, end_ind))
@@ -842,7 +842,7 @@ class Scaling:
         jets_variables: list,
         jets_scale_dict: dict,
         jets_default_dict: dict,
-        nJets: int,
+        n_jets: int,
         tracks_scale_dict: dict = None,
         chunk_size: int = int(10000),
     ):
@@ -860,7 +860,7 @@ class Scaling:
             Scale dict of the jet variables with the values inside.
         jets_default_dict : dict
             Default scale dict of the jets.
-        nJets : int
+        n_jets : int
             Number of jets which are to be scaled.
         tracks_scale_dict : dict, optional
             Scale dict of the track variables., by default None
@@ -893,9 +893,9 @@ class Scaling:
             # Get the indices
             start_ind = 0
             tupled_indices = []
-            while start_ind < nJets:
+            while start_ind < n_jets:
                 end_ind = int(start_ind + chunk_size)
-                end_ind = min(end_ind, nJets)
+                end_ind = min(end_ind, n_jets)
                 tupled_indices.append((start_ind, end_ind))
                 start_ind = end_ind
                 end_ind = int(start_ind + chunk_size)
@@ -906,7 +906,7 @@ class Scaling:
                 jets = pd.DataFrame(f["/jets"][index_tuple[0] : index_tuple[1]])
                 labels = pd.DataFrame(f["/labels"][index_tuple[0] : index_tuple[1]])
                 if "weight" not in jets:
-                    length = nJets if nJets < chunk_size else len(jets)
+                    length = n_jets if n_jets < chunk_size else len(jets)
                     jets["weight"] = np.ones(int(length))
 
                 if "weight" not in jets_variables:
@@ -1029,7 +1029,7 @@ class Scaling:
             jets_variables=jets_variables,
             jets_scale_dict=jets_scale_dict,
             jets_default_dict=jets_default_dict,
-            nJets=file_length,
+            n_jets=file_length,
             tracks_scale_dict=tracks_scale_dict,
             chunk_size=chunk_size,
         )
@@ -1153,8 +1153,8 @@ class Scaling:
 
         # Plot the variables from the output file of the resampling process
         if (
-            "njets_to_plot" in self.config.sampling["options"]
-            and self.config.sampling["options"]["njets_to_plot"]
+            "n_jets_to_plot" in self.config.sampling["options"]
+            and self.config.sampling["options"]["n_jets_to_plot"]
         ):
             logger.info("Plotting resampled and scaled distributions...")
             preprocessing_plots(
@@ -1170,7 +1170,7 @@ class Scaling:
                 and "save_tracks" in self.config.sampling["options"]
                 and self.config.sampling["options"]["save_tracks"] is True
                 else None,
-                nJets=self.config.sampling["options"]["njets_to_plot"],
+                n_jets=self.config.sampling["options"]["n_jets_to_plot"],
                 atlas_second_tag=self.config.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",

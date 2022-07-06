@@ -48,7 +48,7 @@ with open(test_dir + "test_var.yaml", "w") as outfile:
 # adjust it to your h5 ntuple path and yaml variable file
 filepath = test_dir + test_file
 var_file = test_dir + "test_var.yaml"
-nJets = 1000
+n_jets = 1000
 
 # load jets
 class_labels = ["bjets", "cjets", "ujets"]
@@ -63,7 +63,7 @@ jetsAll, _ = udt.LoadJetsFromFile(
     filepath=filepath,
     class_labels=class_labels,
     variables=jetsVarsAll,
-    nJets=nJets,
+    n_jets=n_jets,
     print_logger=False,
 )
 

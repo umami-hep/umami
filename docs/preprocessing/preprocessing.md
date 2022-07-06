@@ -104,16 +104,16 @@ For an explanation of the resampling function specific `options`, have a look in
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `fractions` | `dict` | Gives the fractions of ttbar and zprime in the final training sample. These values need to add up to 1! |
-| `njets`  | `int` |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class in the final training sample, while for other methods it is the total number of jets after resampling. For the `pdf` method, setting this value to `-1` maximises the number of jets in the training sample. |
+| `n_jets`  | `int` |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class in the final training sample, while for other methods it is the total number of jets after resampling. For the `pdf` method, setting this value to `-1` maximises the number of jets in the training sample. |
 | `save_tracks` | `bool` | Define if tracks are processed or not. These are not needed to train DL1r/DL1d |
 | `tracks_names` | `list` of `str` | Name of the tracks (in the .h5 files coming from the dumper) which are processed. Multiple tracks datasets can be preprocessed simultaneously when two `str` are given in the list. |
 | `save_track_labels` | `bool` | If this value is `True`, the track variables in `track_truth_variables` will be processed as labels without scaling. The will be saved in an extra group in the final training file. The name will be `Y_<track_name>_train`. `<track_name>` is here the name of the track collection. |
 | `track_truth_variables` | `str` or `list` | Track variables that will be handled as truth labels. Multiple can be given in a `list` of `str` or just one in a single string. |
 | `intermediate_index_file` | `str` | For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). |
-| `njets_to_plot` | `int` | Number of jets which are used for plotting the variables of the jets/tracks after each preprocessing step (resampling, scaling, shuffling/writing). If `null` is given, the plotting is skipped. |
+| `n_jets_to_plot` | `int` | Number of jets which are used for plotting the variables of the jets/tracks after each preprocessing step (resampling, scaling, shuffling/writing). If `null` is given, the plotting is skipped. |
 
 
-**Note**: `njets` are the number of jets you want to have in your final training file for the `count` and `weighting` method. For the `pdf` method, this is the number of jets per flavour in the training file!
+**Note**: `n_jets` are the number of jets you want to have in your final training file for the `count` and `weighting` method. For the `pdf` method, this is the number of jets per flavour in the training file!
 
 ### General settings
 
@@ -161,8 +161,8 @@ Standard undersampling approach. Undersamples all flavours to the statistically 
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `sampling_variables` | `list` |  Needs exactly 2 variables. Sampling variables which are used for resampling. The example shows this for the `pt_btagJes` and `absEta_btagJes` variables. In case of the `count` method, you define a nested list (one sublist for each category (ttbar or zprime)) with the first and last bin edge and the number of bins to use. |
-| `custom_njets_initial` | `dict` | Used jets per sample to ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples. |
-| `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`. |
+| `custom_n_jets_initial` | `dict` | Used jets per sample to ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples. |
+| `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_n_jets_initial`. |
 
 #### Importance Sampling With Replacement (PDF Sampling)
 
@@ -196,10 +196,10 @@ First are the bins for the two resampling variables. You need to define a nested
         - training_zprime_cjets
         - training_zprime_ujets
 
-    custom_njets_initial: # Leave empty for pdf method
+    custom_n_jets_initial: # Leave empty for pdf method
 
     # For PDF sampling, this is the maximum upsampling rate (important to limit tau upsampling)
-    # File are referred by their key (as in custom_njets_initial)
+    # File are referred by their key (as in custom_n_jets_initial)
     max_upsampling_ratio:
       training_ttbar_cjets: 5
       training_zprime_cjets: 5
@@ -213,10 +213,10 @@ First are the bins for the two resampling variables. You need to define a nested
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `sampling_variables` | `list` |  Needs exactly 2 variables. Sampling variables which are used for resampling. The example shows this for the `pt_btagJes` and `absEta_btagJes` variables. In case of the `pdf` method, you define a nested list (one sublist for each category (ttbar or zprime)) with the first and last bin edge and the number of bins to use (np.linespace arguments). |
-| `custom_njets_initial` | `None` | These values are used only in the `count` and `weighting` method. |
-| `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_njets_initial`. |
+| `custom_n_jets_initial` | `None` | These values are used only in the `count` and `weighting` method. |
+| `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of ttbar and zprime, we need to define some empirically derived values for the ttbar samples in `custom_n_jets_initial`. |
 | `max_upsampling_ratio` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a maximal ratio of upsampling. If there are not enough cjets and the `max_upsampling_ratio` is reached, the form of the distribution is applied but not the number. So there can be different numbers of jets per bin per class, but the shape of distributions will still be the same (if you normalise them). |
-|`sampling_fraction` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a factor to scale the number of jets for this sample in the final training dataset compared to the number of jets defined in `njets`. This can be useful if subclasses of u-, c- and/or b-jets are used for training but the overall ratio for u-,c- and b-jet should still be 1:1:1|
+|`sampling_fraction` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a factor to scale the number of jets for this sample in the final training dataset compared to the number of jets defined in `n_jets`. This can be useful if subclasses of u-, c- and/or b-jets are used for training but the overall ratio for u-,c- and b-jet should still be 1:1:1|
 
 #### Importance Sampling Without Replacement
 
@@ -226,10 +226,10 @@ The options for the this method are similar to the ones from the `count` method.
 
 ```yaml
 sampling:
-  # Downsampling method that gives same fractions and shape 
+  # Downsampling method that gives same fractions and shape
   # distributions given a target distribution, here the b-jets
   method: importance_no_replace
-  
+
   options:
     # Specify the target distribution
     target_distribution: bjets
@@ -253,9 +253,9 @@ sampling:
         - training_zprime_bjets
         - training_zprime_cjets
         - training_zprime_ujets
-    
+
     # Set to -1 or don't include this to use all the available jets
-    njets: -1
+    n_jets: -1
 ```
 
 | Setting | Type | Explanation |

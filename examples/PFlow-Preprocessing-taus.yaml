@@ -211,7 +211,7 @@ sampling:
         - training_zprime_ujets
         - training_zprime_taujets
 
-    custom_njets_initial:
+    custom_n_jets_initial:
       # these are empiric values ensuring a smooth hybrid sample
       training_ttbar_bjets: 5.5e6
       training_ttbar_cjets: 11.5e6
@@ -223,7 +223,7 @@ sampling:
       zprime: 0.3
 
     # For PDF sampling, this is the maximum upsampling rate (important to limit tau upsampling)
-    # File are referred by their key (as in custom_njets_initial)
+    # File are referred by their key (as in custom_n_jets_initial)
     max_upsampling_ratio:
       training_ttbar_cjets: 5
       training_zprime_cjets: 5
@@ -232,11 +232,11 @@ sampling:
 
     # number of training jets
     # For PDF sampling: the number of target jets per class!
-    #                   So if you set njets=1_000_000 and you have 3 output classes
+    #                   So if you set n_jets=1_000_000 and you have 3 output classes
     #                   you will end up with 3_000_000 jets
     # For other sampling methods: total number of jets after resampling
     # If set to -1: max out to target numbers (limited by fractions ratio)
-    njets: -1
+    n_jets: -1
 
     # Bool, if track information (for DIPS etc.) are saved.
     save_tracks: False
@@ -256,7 +256,7 @@ sampling:
 
     # How many jets you want to use for the plotting of the results
     # Give null (the yaml None) if you don't want to plot them
-    njets_to_plot: 3e4
+    n_jets_to_plot: 3e4
 
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name

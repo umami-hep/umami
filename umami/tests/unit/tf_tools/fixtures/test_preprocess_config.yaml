@@ -115,7 +115,7 @@ sampling:
     tracks_name: "tracks"
     save_track_labels: True
     track_truth_variables: ["truthOriginLabel", "truthVertexIndex"]
-    njets: 5.5e6
+    n_jets: 5.5e6
     intermediate_index_file: indices.h5
     # outputfiles are split into 5
     iterations: 5

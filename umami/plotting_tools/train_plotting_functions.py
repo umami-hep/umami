@@ -81,7 +81,7 @@ def get_comp_tagger_rej_dict(
     unique_identifier: str,
     tagger_comp_var: list,
     recommended_frac_dict: dict,
-    nJets: int,
+    n_jets: int,
     working_point: float,
     class_labels: list,
     main_class: str,
@@ -100,7 +100,7 @@ def get_comp_tagger_rej_dict(
         List of the comparison tagger probability variable names.
     recommended_frac_dict : dict
         Dict with the fractions.
-    nJets : int
+    n_jets : int
         Number of jets to use for calculation of the comparison tagger
         rejections
     working_point : float
@@ -121,7 +121,7 @@ def get_comp_tagger_rej_dict(
     df, labels = LoadJetsFromFile(
         filepath=file,
         class_labels=class_labels,
-        nJets=nJets,
+        n_jets=n_jets,
         variables=tagger_comp_var,
         cut_vars_dict=cut_vars_dict,
         print_logger=False,
@@ -1067,7 +1067,7 @@ def run_validation_check(
                         unique_identifier=val_file_identifier,
                         tagger_comp_var=tagger_comp_vars[comp_tagger],
                         recommended_frac_dict=recommended_frac_dict[comp_tagger],
-                        nJets=Val_settings["n_jets"],
+                        n_jets=Val_settings["n_jets"],
                         cut_vars_dict=val_file_config["variable_cuts"]
                         if "variable_cuts" in val_file_config
                         else None,

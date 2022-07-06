@@ -102,7 +102,7 @@ sampling:
         - validation_zprime_bjets
         - validation_zprime_cjets
         - validation_zprime_ujets
-    njets: 5e6
+    n_jets: 5e6
     intermediate_index_file: *intermediate_index_file_validation
 
 # Name of the output file from the preprocessing

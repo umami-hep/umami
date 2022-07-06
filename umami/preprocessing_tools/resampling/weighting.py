@@ -140,7 +140,7 @@ class Weighting(ResamplingTools):
         self.WriteFile(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
-        if "njets_to_plot" in self.options and self.options["njets_to_plot"]:
+        if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.GetFileName(option="resampled"),
@@ -155,7 +155,7 @@ class Weighting(ResamplingTools):
                 and "save_tracks" in self.options
                 and self.options["save_tracks"] is True
                 else None,
-                nJets=self.options["njets_to_plot"],
+                n_jets=self.options["n_jets_to_plot"],
                 atlas_second_tag=self.config.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",

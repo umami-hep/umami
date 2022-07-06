@@ -38,7 +38,7 @@ class CorrectFractionsTestCase(unittest.TestCase):
         with self.assertRaises(AssertionError):
             CorrectFractions([5000, 6000, 3000], [0.2, 0.6, 0.2], ["Zjets", "ttbar"])
 
-    def test_CorrectFractions_zero_Njets(self):
+    def test_CorrectFractions_zero_n_jets(self):
         with self.assertRaises(ValueError):
             CorrectFractions([0, 6000, 3000], [0.2, 0.6, 0.2])
 

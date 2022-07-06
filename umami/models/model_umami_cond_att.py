@@ -202,9 +202,9 @@ def UmamiCondAtt(args, train_config, preprocess_config):
                     X_Name="X_train",
                     X_trk_Name=f"X_{tracks_name}_train",
                     Y_Name="Y_train",
-                    n_jets=int(nn_structure["nJets_train"])
-                    if "nJets_train" in nn_structure
-                    and nn_structure["nJets_train"] is not None
+                    n_jets=int(nn_structure["n_jets_train"])
+                    if "n_jets_train" in nn_structure
+                    and nn_structure["n_jets_train"] is not None
                     else metadata["n_jets"],
                     batch_size=nn_structure["batch_size"],
                     nConds=nn_structure["N_Conditions"],
@@ -271,7 +271,7 @@ def UmamiCondAtt(args, train_config, preprocess_config):
         val_data_dict = utt.load_validation_data_umami(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            nJets=n_jets_val,
+            n_jets=n_jets_val,
             convert_to_tensor=True,
             nCond=nn_structure["N_Conditions"],
         )
@@ -299,8 +299,8 @@ def UmamiCondAtt(args, train_config, preprocess_config):
         train_dataset,
         epochs=nEpochs,
         callbacks=callbacks,
-        steps_per_epoch=int(nn_structure["nJets_train"]) / nn_structure["batch_size"]
-        if "nJets_train" in nn_structure and nn_structure["nJets_train"] is not None
+        steps_per_epoch=int(nn_structure["n_jets_train"]) / nn_structure["batch_size"]
+        if "n_jets_train" in nn_structure and nn_structure["n_jets_train"] is not None
         else metadata["n_jets"] / nn_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,

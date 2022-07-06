@@ -210,9 +210,9 @@ def TrainLargeFile(args, train_config, preprocess_config):
                     train_file_path=train_config.train_file,
                     X_Name="X_train",
                     Y_Name="Y_train",
-                    n_jets=int(nn_structure["nJets_train"])
-                    if "nJets_train" in nn_structure
-                    and nn_structure["nJets_train"] is not None
+                    n_jets=int(nn_structure["n_jets_train"])
+                    if "n_jets_train" in nn_structure
+                    and nn_structure["n_jets_train"] is not None
                     else metadata["n_jets"],
                     batch_size=nn_structure["batch_size"],
                     excluded_var=excluded_var,
@@ -278,7 +278,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
         val_data_dict = utt.load_validation_data_dl1(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            nJets=n_jets_val,
+            n_jets=n_jets_val,
         )
 
     # Set my_callback as callback. Writes history information
@@ -306,8 +306,8 @@ def TrainLargeFile(args, train_config, preprocess_config):
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=callbacks,
-        steps_per_epoch=int(nn_structure["nJets_train"]) / nn_structure["batch_size"]
-        if "nJets_train" in nn_structure and nn_structure["nJets_train"] is not None
+        steps_per_epoch=int(nn_structure["n_jets_train"]) / nn_structure["batch_size"]
+        if "n_jets_train" in nn_structure and nn_structure["n_jets_train"] is not None
         else metadata["n_jets"] / nn_structure["batch_size"],
         use_multiprocessing=True,
         workers=8,

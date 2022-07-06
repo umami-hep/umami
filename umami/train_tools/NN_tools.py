@@ -732,7 +732,7 @@ def get_test_sample(
     var_dict: str,
     preprocess_config: object,
     class_labels: list,
-    nJets: int = int(3e5),
+    n_jets: int = int(3e5),
     exclude: list = None,
     cut_vars_dict: dict = None,
     jet_variables: list = None,
@@ -752,7 +752,7 @@ def get_test_sample(
         Loaded preprocessing config that was used.
     class_labels : list
         List of classes used for training of the model.
-    nJets : int
+    n_jets : int
         Number of jets that should be loaded.
     exclude : list
         List of variables that are not loaded.
@@ -826,7 +826,7 @@ def get_test_sample(
     jets, Umami_labels = LoadJetsFromFile(
         filepath=filepaths,
         class_labels=class_labels,
-        nJets=nJets,
+        n_jets=n_jets,
         cut_vars_dict=cut_vars_dict,
         variables=jet_variables,
         print_logger=False,
@@ -893,7 +893,7 @@ def get_test_sample_trks(
     preprocess_config: object,
     class_labels: list,
     tracks_name: str,
-    nJets: int = int(3e5),
+    n_jets: int = int(3e5),
     cut_vars_dict: dict = None,
     print_logger: bool = False,
 ):
@@ -913,7 +913,7 @@ def get_test_sample_trks(
         List of classes used for training of the model.
     tracks_name : str
         Name of tracks collection to use.
-    nJets : int
+    n_jets : int
         Number of jets that should be loaded.
     cut_vars_dict : dict
         Dict with the cuts that should be applied.
@@ -952,8 +952,8 @@ def get_test_sample_trks(
             " different! They need to be the same!"
         )
 
-    # making sure the nJets aregument is an integer
-    nJets = int(nJets)
+    # making sure the n_jets aregument is an integer
+    n_jets = int(n_jets)
     # Get the paths of the input file as list
     # In case there are multiple files (Wildcard etc.)
     filepaths = glob(input_file)
@@ -977,7 +977,7 @@ def get_test_sample_trks(
     trks, labels = LoadTrksFromFile(
         filepath=filepaths,
         class_labels=class_labels,
-        nJets=nJets,
+        n_jets=n_jets,
         tracks_name=tracks_name,
         cut_vars_dict=cut_vars_dict,
         print_logger=print_logger,
@@ -1000,7 +1000,7 @@ def get_test_sample_trks(
 def load_validation_data_umami(
     train_config: object,
     preprocess_config: object,
-    nJets: int,
+    n_jets: int,
     jets_var_list: list = None,
     convert_to_tensor: bool = False,
     nCond: int = None,
@@ -1014,7 +1014,7 @@ def load_validation_data_umami(
         Loaded train_config object.
     preprocess_config : object
         Loaded preprocess_config object.
-    nJets : int
+    n_jets : int
         Number of jets to load.
     jets_var_list : list
         List with jet variables that are to be loaded.
@@ -1062,7 +1062,7 @@ def load_validation_data_umami(
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
             tracks_name=tracks_name,
-            nJets=nJets,
+            n_jets=n_jets,
             exclude=exclude,
             jet_variables=jets_var_list,
             cut_vars_dict=cut_vars_dict,
@@ -1100,7 +1100,7 @@ def load_validation_data_umami(
 def load_validation_data_dl1(
     train_config: object,
     preprocess_config: object,
-    nJets: int,
+    n_jets: int,
     convert_to_tensor: bool = False,
 ) -> dict:
     """
@@ -1112,7 +1112,7 @@ def load_validation_data_dl1(
         Loaded train_config object.
     preprocess_config : object
         Loaded preprocess_config object.
-    nJets : int
+    n_jets : int
         Number of jets to load.
     convert_to_tensor : bool
         Decide, if the validation data are converted to
@@ -1129,8 +1129,8 @@ def load_validation_data_dl1(
     val_data_dict = {}
     val_files = train_config.validation_files
 
-    # Ensure the nJets is an int
-    nJets = int(nJets)
+    # Ensure the n_jets is an int
+    n_jets = int(n_jets)
 
     # Check for excluded variables
     exclude = None
@@ -1152,7 +1152,7 @@ def load_validation_data_dl1(
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
-            nJets=nJets,
+            n_jets=n_jets,
             exclude=exclude,
             cut_vars_dict=cut_vars_dict,
         )
@@ -1177,7 +1177,7 @@ def load_validation_data_dl1(
 def load_validation_data_dips(
     train_config: object,
     preprocess_config: object,
-    nJets: int,
+    n_jets: int,
     convert_to_tensor: bool = False,
 ) -> dict:
     """
@@ -1189,7 +1189,7 @@ def load_validation_data_dips(
         Loaded train_config object.
     preprocess_config : object
         Loaded preprocess_config object.
-    nJets : int
+    n_jets : int
         Number of jets to load.
     convert_to_tensor : bool
         Decide, if the validation data are converted to
@@ -1226,7 +1226,7 @@ def load_validation_data_dips(
             preprocess_config=preprocess_config,
             class_labels=NN_structure["class_labels"],
             tracks_name=tracks_name,
-            nJets=nJets,
+            n_jets=n_jets,
             cut_vars_dict=cut_vars_dict,
         )
 
@@ -1253,7 +1253,7 @@ def GetTestFile(
     preprocess_config: object,
     class_labels: list,
     tracks_name: str,
-    nJets: int,
+    n_jets: int,
     exclude: list = None,
     cut_vars_dict: dict = None,
     jet_variables: list = None,
@@ -1275,7 +1275,7 @@ def GetTestFile(
         List of classes used for training of the model.
     tracks_name : str
         Name of the tracks collection to use.
-    nJets : int
+    n_jets : int
         Number of jets that should be loaded.
     exclude : list
         List of variables that are not loaded.
@@ -1302,7 +1302,7 @@ def GetTestFile(
         preprocess_config=preprocess_config,
         class_labels=class_labels,
         tracks_name=tracks_name,
-        nJets=int(nJets),
+        n_jets=int(n_jets),
         cut_vars_dict=cut_vars_dict,
         print_logger=False,
     )
@@ -1312,7 +1312,7 @@ def GetTestFile(
         var_dict=var_dict,
         preprocess_config=preprocess_config,
         class_labels=class_labels,
-        nJets=int(nJets),
+        n_jets=int(n_jets),
         exclude=exclude,
         cut_vars_dict=cut_vars_dict,
         jet_variables=jet_variables,
@@ -1565,7 +1565,7 @@ def calc_validation_metrics(
     preprocess_config: object,
     tagger: str,
     target_beff: float = 0.77,
-    nJets: int = int(3e5),
+    n_jets: int = int(3e5),
     model_string: str = "model_epoch",
 ) -> str:
     """
@@ -1582,7 +1582,7 @@ def calc_validation_metrics(
         Name of the tagger that is used to calcualte metrics.
     target_beff : float
         Working point that is to be used.
-    nJets : int
+    n_jets : int
         Number of jets to use for calculation.
     model_string : str
         Name of the model files.
@@ -1656,7 +1656,7 @@ def calc_validation_metrics(
         data_dict = load_validation_data_umami(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            nJets=nJets,
+            n_jets=n_jets,
             convert_to_tensor=False,
         )
 
@@ -1664,7 +1664,7 @@ def calc_validation_metrics(
         data_dict = load_validation_data_dl1(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            nJets=nJets,
+            n_jets=n_jets,
             convert_to_tensor=False,
         )
 
@@ -1672,7 +1672,7 @@ def calc_validation_metrics(
         data_dict = load_validation_data_dips(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            nJets=nJets,
+            n_jets=n_jets,
             convert_to_tensor=False,
         )
 
@@ -1680,7 +1680,7 @@ def calc_validation_metrics(
         data_dict = load_validation_data_umami(
             train_config=train_config,
             preprocess_config=preprocess_config,
-            nJets=nJets,
+            n_jets=n_jets,
             jets_var_list=[
                 global_config.etavariable,
                 global_config.pTvariable,
@@ -1820,7 +1820,7 @@ def calc_validation_metrics(
     # Get validation dict name
     _, val_output_file_path = get_metrics_file_name(
         working_point=target_beff,
-        n_jets=nJets,
+        n_jets=n_jets,
         dir_name=train_config.model_name,
     )
 

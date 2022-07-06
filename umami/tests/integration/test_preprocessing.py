@@ -426,8 +426,8 @@ class TestPreprocessing(unittest.TestCase):
         )
         replaceLineInFile(
             self.config,
-            "    njets_to_plot:",
-            "    njets_to_plot: null",
+            "    n_jets_to_plot:",
+            "    n_jets_to_plot: null",
         )
         replaceLineInFile(
             self.config,
@@ -453,8 +453,8 @@ class TestPreprocessing(unittest.TestCase):
         )
         replaceLineInFile(
             self.pdf_config,
-            "    njets: 25e6",
-            "    njets: -1",
+            "    n_jets: 25e6",
+            "    n_jets: -1",
         )
         replaceLineInFile(
             self.pdf_config,
@@ -473,8 +473,8 @@ class TestPreprocessing(unittest.TestCase):
         )
         replaceLineInFile(
             self.pdf_config,
-            "    njets_to_plot:",
-            "    njets_to_plot: 3e4",
+            "    n_jets_to_plot:",
+            "    n_jets_to_plot: 3e4",
         )
 
         # copy config file and change name to pdf for pdf preprocessing config
@@ -489,8 +489,8 @@ class TestPreprocessing(unittest.TestCase):
         )
         replaceLineInFile(
             self.weight_config,
-            "    njets_to_plot:",
-            "    njets_to_plot: null",
+            "    n_jets_to_plot:",
+            "    n_jets_to_plot: null",
         )
 
         self.importance_no_replace_config = (
@@ -520,7 +520,7 @@ class TestPreprocessing(unittest.TestCase):
         )
         replaceLineInFile(
             self.importance_no_replace_config,
-            "    custom_njets_initial:",
+            "    custom_n_jets_initial:",
             "",
         )
         replaceLineInFile(
@@ -691,8 +691,8 @@ class TestPreprocessing(unittest.TestCase):
 
         replaceLineInFile(
             self.pdf_config,
-            "    njets_to_plot:",
-            "    njets_to_plot: null",
+            "    n_jets_to_plot:",
+            "    n_jets_to_plot: null",
         )
 
         replaceLineInFile(

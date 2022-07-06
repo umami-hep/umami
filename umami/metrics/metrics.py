@@ -35,7 +35,7 @@ def calc_disc_values(
     jets_dict : dict
         Dict with the jets inside. In each entry are the jets
         of one class and their output values of the NN as
-        numpy ndarray in the shape (nJets, n_outputs).
+        numpy ndarray in the shape (n_jets, n_outputs).
     index_dict : dict
         Dict with the class names as keys and their corresponding
         column number in the n_outputs.
@@ -174,7 +174,7 @@ def get_score(
 ) -> np.ndarray:
     """
     Similar to CalcDiscValues but uses directly the output of the
-    NN (shape: (nJets, nClasses)) for calculation.
+    NN (shape: (n_jets, nClasses)) for calculation.
 
     Parameters
     ----------
@@ -353,10 +353,10 @@ def get_rejection(
     ----------
     y_pred : numpy.ndarray
         The prediction output of the NN. This must be the shape of
-        (nJets, nClasses).
+        (n_jets, nClasses).
     y_true : numpy.ndarray
         The true class of the jets. This must also be of the shape
-        (nJets, nClasses) (One-Hot-encoded).
+        (n_jets, nClasses) (One-Hot-encoded).
     class_labels : list
         A list of the class_labels which are used. This must be the
         same order as the truth! See the Notes for more details.

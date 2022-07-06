@@ -305,7 +305,7 @@ def CorrectFractions(
 
     Returns
     -------
-    nJets_to_keep : np.ndarray
+    n_jets_to_keep : np.ndarray
         Array of N_jets to keep per class
 
     Raises
@@ -861,7 +861,7 @@ class ResamplingTools(Resampling):
         Parameters
         ----------
         n_jets : int, optional
-            If the custom_njets_initial are not set, use this value to decide
+            If the custom_n_jets_initial are not set, use this value to decide
             how much jets are loaded from each sample. By default None
 
         Raises
@@ -904,27 +904,27 @@ class ResamplingTools(Resampling):
 
                     # Check for custom initial jets
                     if (
-                        "custom_njets_initial" in self.options
-                        and self.options["custom_njets_initial"] is not None
-                        and sample in list(self.options["custom_njets_initial"])
+                        "custom_n_jets_initial" in self.options
+                        and self.options["custom_n_jets_initial"] is not None
+                        and sample in list(self.options["custom_n_jets_initial"])
                     ):
-                        nJets_initial = int(
-                            self.options["custom_njets_initial"][sample]
+                        n_jets_initial = int(
+                            self.options["custom_n_jets_initial"][sample]
                         )
                         logger.debug(
-                            f"Using custom_njets_initial for {sample} of "
-                            f"{nJets_initial} from config"
+                            f"Using custom_n_jets_initial for {sample} of "
+                            f"{n_jets_initial} from config"
                         )
 
                     # Check if the parameter is given in init (for pdf sampling)
                     elif n_jets is not None:
-                        nJets_initial = n_jets
+                        n_jets_initial = n_jets
 
                     else:
-                        nJets_initial = None
+                        n_jets_initial = None
 
-                    jets_x = np.asarray(f["jets"].fields(self.var_x)[:nJets_initial])
-                    jets_y = np.asarray(f["jets"].fields(self.var_y)[:nJets_initial])
+                    jets_x = np.asarray(f["jets"].fields(self.var_x)[:n_jets_initial])
+                    jets_y = np.asarray(f["jets"].fields(self.var_y)[:n_jets_initial])
                 logger.info(
                     f"Loaded {len(jets_x)}"
                     f" {preparation_sample.get('category')} jets from"

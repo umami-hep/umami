@@ -252,7 +252,7 @@ def preprocessing_plots(
     use_random_jets: bool = False,
     jet_collection: str = "jets",
     track_collection_list: list = None,
-    nJets: int = 3e4,
+    n_jets: int = 3e4,
     seed: int = 42,
     **kwargs,
 ):
@@ -272,14 +272,14 @@ def preprocessing_plots(
         Path to folder where the plots are saved.
     use_random_jets : bool, optional
         Decide if random jets are drawn from the sample to
-        ensure correct mixing. Otherwise the first nJets are
+        ensure correct mixing. Otherwise the first n_jets are
         used for plotting, by default False
     jet_collection : str, optional
         Name of the jet collection, by default "jets"
     track_collection_list : list, optional
         List of str of the track collections which are to be
         plotted, by default None
-    nJets : int, optional
+    n_jets : int, optional
         Number of jets to plot, by default int(3e4)
     seed : int, optional
         Random seed for the selection of the jets, by default 42
@@ -296,10 +296,10 @@ def preprocessing_plots(
     # Get max number of available jets
     with h5py.File(sample, "r") as f:
         try:
-            nJets_infile = len(f["/jets"])
+            n_jets_infile = len(f["/jets"])
 
         except KeyError:
-            nJets_infile = len(f["/X_train"])
+            n_jets_infile = len(f["/X_train"])
 
     # Check if random values are used or not
     if use_random_jets is True:
@@ -310,8 +310,8 @@ def preprocessing_plots(
         # Mix the chunks
         selected_indicies = sorted(
             rng.choice(
-                np.arange(nJets_infile, dtype=int),
-                int(nJets),
+                np.arange(n_jets_infile, dtype=int),
+                int(n_jets),
                 replace=False,
             )
         )
@@ -320,12 +320,12 @@ def preprocessing_plots(
 
         # if number of requested jets is larger that what is available,
         # plot all available jets.
-        if nJets > nJets_infile:
+        if n_jets > n_jets_infile:
             logger.warning(
-                f"You requested {nJets} jets,"
-                f"but there are only {nJets_infile} jets in the input!"
+                f"You requested {n_jets} jets,"
+                f"but there are only {n_jets_infile} jets in the input!"
             )
-        selected_indicies = np.arange(min(nJets, nJets_infile), dtype=int)
+        selected_indicies = np.arange(min(n_jets, n_jets_infile), dtype=int)
 
     # Check if track collection list is valid
     if isinstance(track_collection_list, str):

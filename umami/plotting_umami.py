@@ -164,7 +164,7 @@ def plot_roc(
     Raises
     ------
     AttributeError
-        If the needed njets per class used to calculate the
+        If the needed n_jets per class used to calculate the
         rejections is not in the rej_per_epoch results file.
     """
     df_results_list = []
@@ -173,7 +173,7 @@ def plot_roc(
     labels = []
     linestyles = []
     colours = []
-    njets_test = []
+    n_jets_test = []
 
     # Get the epoch which is to be evaluated
     eval_epoch = int(eval_params["epoch"])
@@ -211,15 +211,15 @@ def plot_roc(
             "draw_errors" in plot_config["plot_settings"]
             and plot_config["plot_settings"]["draw_errors"] is False
         ):
-            njets_test.append(None)
+            n_jets_test.append(None)
 
         else:
             try:
                 with h5py.File(
                     eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
                 ) as h5_file:
-                    njets_test.append(
-                        h5_file.attrs[f"njets_{model_config['rejection_class']}"]
+                    n_jets_test.append(
+                        h5_file.attrs[f"n_jets_{model_config['rejection_class']}"]
                     )
 
             except KeyError as error:
@@ -253,7 +253,7 @@ def plot_roc(
         ratio_id=ratio_id,
         linestyles=linestyles,
         colours=colours,
-        n_test=njets_test,
+        n_test=n_jets_test,
         **plot_config["plot_settings"],
     )
 
