@@ -65,7 +65,7 @@ def prepareConfig(yaml_config: str) -> dict:
         If one of the needed options is not given or is None.
     """
 
-    logger.info(f"Using config file {yaml_config}")
+    logger.info("Using config file %s", yaml_config)
     with open(yaml_config, "r") as conf:
         config = yaml.load(conf, Loader=yaml_loader)
 
@@ -205,7 +205,7 @@ def main():
     # Get the class ids for removing
     class_ids = get_class_label_ids(class_labels)
 
-    logger.info(f"Evaluating {model_file}")
+    logger.info("Evaluating %s", model_file)
 
     # Load the input file
     with h5py.File(input_file, "r") as file:
@@ -228,7 +228,7 @@ def main():
             n_jets=int(10e6),
             exclude=None,
         )
-        logger.info(f"Evaluated jets: {len(Y_test)}")
+        logger.info("Evaluated jets: %i", len(Y_test))
 
         # Get the umami and dips predictions
         pred_dips, pred_umami = load_model_umami(
@@ -249,7 +249,7 @@ def main():
             tracks_name=tracks_name,
             n_jets=int(10e6),
         )
-        logger.info(f"Evaluated jets: {len(Y_test)}")
+        logger.info("Evaluated jets: %i", len(Y_test))
 
         # Load the model
         with CustomObjectScope({"Sum": Sum}):
@@ -272,7 +272,7 @@ def main():
             n_jets=int(10e6),
             exclude=None,
         )
-        logger.info(f"Evaluated jets: {len(Y_test)}")
+        logger.info("Evaluated jets: %i", len(Y_test))
 
         # Load the model
         with CustomObjectScope({"Sum": Sum}):
@@ -305,7 +305,7 @@ def main():
 
     # Add the truth to the dataframe
     df["y"] = np.argmax(Y_test, axis=1)
-    logger.info(f"Jets: {len(df)}")
+    logger.info("Jets: %i", len(df))
 
     # Get the first class defined in class labels to calculate the difference
     prob_key = global_config.flavour_categories[class_labels[0]]["prob_var_name"]
@@ -351,7 +351,7 @@ def main():
         df_select = df_select.copy()
         df_select.sort_values("diff", ascending=False, inplace=True)
         out_file = f"{args.output}.csv"
-        logger.info(f"Writing output file {out_file}")
+        logger.info("Writing output file %s", out_file)
         df_select.to_csv(out_file, index=False)
 
 

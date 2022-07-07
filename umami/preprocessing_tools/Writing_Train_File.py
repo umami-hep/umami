@@ -249,9 +249,9 @@ class TrainSampleWriter:
             chunk_size=chunk_size,
         )
 
-        logger.info(f"Saving final train files to {out_file}")
-        logger.info(f"Using precision: {self.precision}")
-        logger.info(f"Using compression: {self.compression}")
+        logger.info("Saving final train files to %s", out_file)
+        logger.info("Using precision: %s", self.precision)
+        logger.info("Using compression: %s", self.compression)
 
         with h5py.File(out_file, "w") as h5file:
 
@@ -260,7 +260,7 @@ class TrainSampleWriter:
             jet_idx = 0
 
             while chunk_counter <= n_chunks:
-                logger.info(f"Writing chunk {chunk_counter+1} of {n_chunks+1}.")
+                logger.info("Writing chunk %i of %i", chunk_counter + 1, n_chunks + 1)
                 try:
                     # Load jets from file
                     if self.save_tracks is False:

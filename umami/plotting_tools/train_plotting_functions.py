@@ -61,7 +61,7 @@ def plot_validation_files(
 
     if val_files is None:
         logger.warning(
-            f"No validation files provided --> not plotting {metric_identifier}."
+            "No validation files provided --> not plotting %s.", metric_identifier
         )
 
     else:
@@ -141,8 +141,9 @@ def get_comp_tagger_rej_dict(
     for tagger_var in tagger_comp_var:
         if tagger_var not in avai_variables:
             logger.warning(
-                f"Tagger probability {tagger_var} not in validation file"
-                f" {os.path.basename(file)}. Skipping ..."
+                "Tagger probability %s not in validation file %s. Skipping ...",
+                tagger_var,
+                os.path.basename(file),
             )
             Skip_rej_calc = True
 
@@ -416,8 +417,10 @@ def plot_rej_per_epoch_comp(
 
                 except KeyError:
                     logger.info(
-                        f"{iter_class} rejection for {comp_tagger} and file "
-                        f"{unique_identifier} not in dict! Skipping ..."
+                        "%s rejection for %s and file %s not in dict! Skipping ...",
+                        iter_class,
+                        comp_tagger,
+                        unique_identifier,
                     )
 
         if trained_taggers is None:
@@ -638,8 +641,9 @@ def plot_rej_per_epoch(
 
                 except KeyError:
                     logger.info(
-                        f"{iter_class} rejection for {comp_tagger} not in"
-                        " dict! Skipping ..."
+                        "%s rejection for %s not in dict! Skipping ...",
+                        iter_class,
+                        comp_tagger,
                     )
 
         if trained_taggers is None:
@@ -983,7 +987,7 @@ def run_validation_check(
         When no training metrics json could be found.
     """
 
-    logger.info(f"Running performance check for {tagger}.")
+    logger.info("Running performance check for %s.", tagger)
 
     # Load parameters from train config
     Eval_parameters = train_config.Eval_parameters_validation
@@ -998,7 +1002,7 @@ def run_validation_check(
     val_files = train_config.validation_files
 
     # Printing the given plot args for debugging
-    logger.debug(f"plot_args = {plot_args}")
+    logger.debug("plot_args = %s", plot_args)
 
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
@@ -1012,7 +1016,7 @@ def run_validation_check(
         train_metrics_dict = pd.read_json(train_metrics_file_name)
 
     except ValueError:
-        logger.warning(f"Train metrics json {train_metrics_file_name} not found!")
+        logger.warning("Train metrics json %s not found!", train_metrics_file_name)
         train_metrics_dict = None
 
     # Get dict with validation results from json
@@ -1021,10 +1025,11 @@ def run_validation_check(
 
     except ValueError:
         logger.warning(
-            f"Validation results json {val_metrics_file_name} could not be found! "
+            "Validation results json %s could not be found! "
             "Check your train config values (the name of the file loaded depends "
             "on them). If you want to use a specific json file, use the -d option "
-            "of the plotting_epoch_performance script!"
+            "of the plotting_epoch_performance script!",
+            val_metrics_file_name,
         )
         val_metrics_dict = None
 
@@ -1083,7 +1088,7 @@ def run_validation_check(
 
     # Define dir where the plots are saved
     plot_dir = f"{train_config.model_name}/plots"
-    logger.info(f"saving plots to {plot_dir}")
+    logger.info("saving plots to %s", plot_dir)
     os.makedirs(plot_dir, exist_ok=True)
 
     # Get a deep copy of the class labels

@@ -107,7 +107,7 @@ def plot_probability(
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
-            logger.info(f"model: {model_name}")
+            logger.info("model: %s", model_name)
 
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -180,7 +180,7 @@ def plot_roc(
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
-            logger.info(f"model: {model_name}")
+            logger.info("model: %s", model_name)
 
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -336,7 +336,7 @@ def plot_score(
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
-            logger.info(f"model: {model_name}")
+            logger.info("model: %s", model_name)
 
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -403,7 +403,7 @@ def plot_pt_vs_eff(
             continue
 
         if print_model:
-            logger.info(f"model: {model_name}")
+            logger.info("model: %s", model_name)
 
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -518,7 +518,7 @@ def plot_frac_contour(
 
     for model_name, model_config in plot_config["models_to_plot"].items():
         if print_model:
-            logger.info(f"model: {model_name}")
+            logger.info("model: %s", model_name)
 
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
@@ -615,7 +615,7 @@ def set_up_plots(
 
         # Define the path to the new plot
         if print_model:
-            logger.info(f"Processing: {plot_name}")
+            logger.info("Processing: %s", plot_name)
 
         if epoch_to_name is True:
             save_plot_to = os.path.join(
@@ -696,8 +696,8 @@ def set_up_plots(
 
         if print_model:
             logger.info(
-                "saved plot as:"
-                f' {save_plot_to.replace(eval_params["Path_to_models_dir"], "")} \n'
+                "saved plot as: %s\n",
+                save_plot_to.replace(eval_params["Path_to_models_dir"], ""),
             )
 
 

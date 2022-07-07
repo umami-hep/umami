@@ -134,8 +134,8 @@ def evaluate_model(
     # Print a warning that no variable cuts are used for the file
     if var_cuts is None:
         logger.warning(
-            f"No variable cuts are given for {data_set_name}."
-            " Please check if you defined them!"
+            "No variable cuts are given for %s. Please check if you defined them!",
+            data_set_name,
         )
 
     if (
@@ -144,9 +144,10 @@ def evaluate_model(
     ):
         results_filename_extension = eval_params["results_filename_extension"]
         logger.warning(
-            f"Results filename extension is set to {results_filename_extension}. "
+            "Results filename extension is set to %s. "
             "This means you have to specify the 'evaluation_file' when plotting your "
-            "results."
+            "results.",
+            results_filename_extension,
         )
     else:
         results_filename_extension = ""
@@ -193,7 +194,7 @@ def evaluate_model(
         model_file = utt.GetModelPath(
             model_name=train_config.model_name, epoch=args.epoch
         )
-        logger.info(f"Evaluating {model_file}")
+        logger.info("Evaluating %s", model_file)
 
         # Define excluded variables and laod them
         exclude = None
@@ -468,9 +469,10 @@ def evaluate_model_dips(
     ):
         results_filename_extension = eval_params["results_filename_extension"]
         logger.warning(
-            f"Results filename extension is set to {results_filename_extension}. "
+            "Results filename extension is set to %s. "
             "This means you have to specify the 'evaluation_file' when plotting your "
-            "results."
+            "results.",
+            results_filename_extension,
         )
     else:
         results_filename_extension = ""
@@ -478,8 +480,8 @@ def evaluate_model_dips(
     # Print a warning that no variable cuts are used for the file
     if var_cuts is None:
         logger.warning(
-            f"No variable cuts are given for {data_set_name}."
-            " Please check if you defined them!"
+            "No variable cuts are given for %s. Please check if you defined them!",
+            data_set_name,
         )
 
     # Set number of n_jets for testing
@@ -505,7 +507,7 @@ def evaluate_model_dips(
 
     # Get model file path
     model_file = utt.GetModelPath(model_name=train_config.model_name, epoch=args.epoch)
-    logger.info(f"Evaluating {model_file}")
+    logger.info("Evaluating %s", model_file)
 
     # Check which test files need to be loaded depending on the CADS version
     logger.info("Start loading %s test file", data_set_name)
@@ -779,8 +781,8 @@ def evaluate_model_dl1(
     # Print a warning that no variable cuts are used for the file
     if var_cuts is None:
         logger.warning(
-            f"No variable cuts are given for {data_set_name}."
-            " Please check if you defined them!"
+            "No variable cuts are given for %s. Please check if you defined them!",
+            data_set_name,
         )
 
     if (
@@ -789,9 +791,10 @@ def evaluate_model_dl1(
     ):
         results_filename_extension = eval_params["results_filename_extension"]
         logger.warning(
-            f"Results filename extension is set to {results_filename_extension}. "
+            "Results filename extension is set to %s. "
             "This means you have to specify the 'evaluation_file' when plotting your "
-            "results."
+            "results.",
+            results_filename_extension,
         )
     else:
         results_filename_extension = ""
@@ -820,7 +823,7 @@ def evaluate_model_dl1(
 
     # Get model file path
     model_file = utt.GetModelPath(model_name=train_config.model_name, epoch=args.epoch)
-    logger.info(f"Evaluating {model_file}")
+    logger.info("Evaluating %s", model_file)
 
     # Define excluded variables and laod them
     exclude = None
@@ -880,7 +883,7 @@ def evaluate_model_dl1(
             if item in available_variables:
                 add_variables_available.append(item)
             else:
-                logger.info(f"Variable '{item}' not available")
+                logger.info("Variable '%s' not available", item)
         variables.extend(add_variables_available)
 
     # Load the jets and truth labels (internal) with selected variables
@@ -913,7 +916,7 @@ def evaluate_model_dl1(
     # Adding extra variables if available
     if add_variables_available is not None:
         for item in add_variables_available:
-            logger.info(f"Adding {item}")
+            logger.info("Adding %s", item)
             df_discs[item] = jets[item]
 
     # Create results dir
@@ -1098,7 +1101,7 @@ if __name__ == "__main__":
         or not evaluate_trained_model
     ):
         if tagger_name.casefold() in ("umami", "umami_cond_att"):
-            logger.info(f"Start evaluating {tagger_name} with test files...")
+            logger.info("Start evaluating %s with test files...", tagger_name)
         else:
             logger.info("Start evaluating in-file taggers with test files...")
 

@@ -17,14 +17,14 @@ class h5_to_tf_record_converter:
         self.path_h5 = self.config.GetFileName(option="resampled_scaled_shuffled")
         try:
             self.chunk_size = int(config.convert_to_tfrecord["chunk_size"])
-            logger.info(f"Save {self.chunk_size} entries in one file")
+            logger.info("Save %i entries in one file", self.chunk_size)
 
         except (AttributeError, KeyError, ValueError) as chunk_size_no_int:
             try:
                 self.chunk_size = config.preparation["convert"]["chunk_size"]
                 if not isinstance(self.chunk_size, int):
                     raise KeyError from chunk_size_no_int
-                logger.info(f"Save {self.chunk_size} entries in one file")
+                logger.info("Save %i entries in one file", self.chunk_size)
 
             except KeyError:
                 logger.warning(
@@ -78,8 +78,9 @@ class h5_to_tf_record_converter:
             # Get the number of jets in the file
             length_dataset = len(hFile["X_train"])
             logger.info(
-                f"Total length of the dataset is {length_dataset}. Load"
-                f" {self.chunk_size} samples at a time"
+                "Total length of the dataset is %i. Load %i samples at a time",
+                length_dataset,
+                self.chunk_size,
             )
 
             # Get the number of loads that needs to be done
@@ -89,7 +90,7 @@ class h5_to_tf_record_converter:
             if length_dataset % self.chunk_size != 0:
                 total_loads += 1
 
-            logger.info(f"Total number of loading steps is {total_loads}")
+            logger.info("Total number of loading steps is %i", total_loads)
             for i in tqdm.tqdm(range(total_loads)):
 
                 # Get start and end chunk index
@@ -202,7 +203,7 @@ class h5_to_tf_record_converter:
 
         # Write the metadata (dim. values) to file
         with open(metadata_filename, "w") as metadata:
-            logger.info(f"Writing metadata to {metadata_filename}")
+            logger.info("Writing metadata to %s", metadata_filename)
             json.dump(data, metadata)
 
     def write_tfrecord(self):
@@ -281,5 +282,5 @@ class h5_to_tf_record_converter:
 
                     # Write to file
                     file_writer.write(record_bytes.SerializeToString())
-                logger.info(f"Data written in {filename}")
+                logger.info("Data written in %s", filename)
         self.save_parameters(record_dir=record_dir)

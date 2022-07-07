@@ -152,7 +152,7 @@ def prepareConfig(
     config = os.path.join(test_dir, os.path.basename(config_source))
 
     # prepare config files by modifying local copies of config files
-    logger.info(f"Preparing config file based on {config_source} in {config}...")
+    logger.info("Preparing config file based on %s in %s...", config_source, config)
     copyfile(config_source, config)
 
     # Get the path to the test files
@@ -275,7 +275,7 @@ def runTraining(config: dict, tagger: str) -> bool:
     """
 
     if tagger:
-        logger.info(f"Test: running train.py for {tagger}...")
+        logger.info("Test: running train.py for %s...", tagger)
         run_train = run(["python", "umami/train.py", "-c", f"{config}"], check=True)
 
         try:
@@ -284,7 +284,7 @@ def runTraining(config: dict, tagger: str) -> bool:
         except CalledProcessError as error:
             raise AssertionError(f"Test failed: train.py for {tagger}.") from error
 
-        logger.info(f"Test: running plotting_epoch_performance.py for {tagger}...")
+        logger.info("Test: running plotting_epoch_performance.py for %s...", tagger)
 
         if tagger != "DL1r":
             run_plot_epoch = run(
@@ -319,7 +319,7 @@ def runTraining(config: dict, tagger: str) -> bool:
                 f"Test failed: plotting_epoch_performance.py for {tagger}."
             ) from error
 
-    logger.info(f"Test: running evaluate_model.py for {tagger}...")
+    logger.info("Test: running evaluate_model.py for %s...", tagger)
     run_evaluate_model = run(
         [
             "python",
@@ -355,7 +355,7 @@ class TestTraining(unittest.TestCase):
 
         self.test_dir_path = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.test_dir = f"{self.test_dir_path.name}"
-        logger.info(f"Creating test directory in {self.test_dir}")
+        logger.info("Creating test directory in %s", self.test_dir)
 
         logger.info("Downloading test data...")
         for file in self.data["test_umami"]["files"]:
@@ -364,7 +364,7 @@ class TestTraining(unittest.TestCase):
                 self.data["test_umami"]["data_subfolder"],
                 file,
             )
-            logger.info(f"Retrieving file from path {path}")
+            logger.info("Retrieving file from path %s", path)
             run(["wget", path, "--directory-prefix", self.test_dir], check=True)
 
     def test_train_dips_no_attention(self):

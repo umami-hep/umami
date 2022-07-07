@@ -228,7 +228,7 @@ def get_rej_per_frac_dict(
 
     # Check if taggers where skipped and print them
     if len(skipped_taggers) != 0:
-        logger.warning(f"Following taggers are skipped for file: {skipped_taggers}")
+        logger.warning("Following taggers are skipped for file: %s", skipped_taggers)
 
     return tagger_rej_dict
 
@@ -366,7 +366,7 @@ def get_rej_per_eff_dict(
         )
 
     if len(skipped_taggers) != 0:
-        logger.warning(f"Following taggers are skipped for file: {skipped_taggers}")
+        logger.warning("Following taggers are skipped for file: %s", skipped_taggers)
 
     # Remove entries of not loaded taggers from the dicts
     for skipped_tagger in skipped_taggers:
@@ -482,14 +482,16 @@ def get_scores_probs_dict(
 
                 except KeyError:
                     logger.warning(
-                        f"Did not find probability values of flavour {flav} "
-                        f"for tagger {tagger}. This is ignored."
+                        "Did not find probability values of flavour %s "
+                        "for tagger %s. This is ignored.",
+                        flav,
+                        tagger,
                     )
                     class_labels_copy.remove(flav)
 
             # Check if tagger is in file
             if len(class_labels_copy) == 0:
-                logger.warning(f"Tagger {tagger} not in .h5 files! Skipping...")
+                logger.warning("Tagger %s not in .h5 files! Skipping...", tagger)
                 continue
 
             # Reshape to wrong sorted (transpose change it to correct shape)
@@ -510,7 +512,7 @@ def get_scores_probs_dict(
             )
 
         except KeyError:
-            logger.warning(f"{tagger} is in files, but not in frac_dict! Skipping...")
+            logger.warning("%s is in files, but not in frac_dict! Skipping...", tagger)
             continue
 
     return df_discs_dict

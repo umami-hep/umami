@@ -252,7 +252,7 @@ def umami_tagger(args, train_config, preprocess_config):
             if exclude is not None:
                 metadata["n_jet_features"] -= len(excluded_var)
             logger.debug(
-                f"Input shape of jet training set: {metadata['n_jet_features']}"
+                "Input shape of jet training set: %s", metadata["n_jet_features"]
             )
 
         if nn_structure["use_sample_weights"]:

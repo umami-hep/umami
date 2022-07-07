@@ -135,7 +135,7 @@ def GetModelPath(model_name: str, epoch: int) -> str:
     model_path = f"{model_name}/model_files/model_epoch{epoch:03d}.h5"
 
     # Get logger output for debugging
-    logger.debug(f"Treating model {model_path}")
+    logger.debug("Treating model %s", model_path)
 
     # Return path
     return model_path
@@ -287,7 +287,7 @@ def create_metadata_folder(
         if (overwrite_config is True) or not os.path.isfile(
             os.path.join(model_name, "metadata", os.path.basename(file_path))
         ):
-            logger.info(f"Copy {file_path} to metadata folder!")
+            logger.info("Copy %s to metadata folder!", file_path)
             copyfile(
                 file_path,
                 os.path.join(model_name, "metadata", os.path.basename(file_path)),
@@ -457,8 +457,8 @@ class CallbackBase(Callback):
 
             except FileNotFoundError:
                 logger.warning(
-                    f"No train metrics file found named {self.train_metrics_file_name}!"
-                    " Init a new one!"
+                    "No train metrics file found named %s! Init a new one!",
+                    self.train_metrics_file_name,
                 )
                 self.train_metrics_list = []
 
@@ -469,8 +469,8 @@ class CallbackBase(Callback):
 
                 except FileNotFoundError:
                     logger.warning(
-                        "No validation metrics file found named"
-                        f" {self.val_metrics_file_name}! Init a new one!"
+                        "No validation metrics file found named %s! Init a new one!",
+                        self.val_metrics_file_name,
                     )
                     self.val_metrics_list = []
 
@@ -674,7 +674,7 @@ def get_jet_feature_indices(variable_header: dict, exclude: list = None):
             excluded_variables.append(exclude_that)
             variables.remove(exclude_that)
         else:
-            logger.warning(f"Variables to exclude not found: {exclude_that}")
+            logger.warning("Variables to exclude not found: %s", exclude_that)
     # Get the index of the excluded variables for training
     excluded_var_indices = [
         i for i, excl in enumerate(all_variables) if excl in excluded_variables
@@ -683,9 +683,9 @@ def get_jet_feature_indices(variable_header: dict, exclude: list = None):
     excluded_var_indices = (
         None if len(excluded_var_indices) == 0 else excluded_var_indices
     )
-    logger.debug(f"variables: {variables}")
-    logger.debug(f"excluded_variables: {excluded_variables}")
-    logger.debug(f"excluded_var_indices: {excluded_var_indices}")
+    logger.debug("variables: %s", variables)
+    logger.debug("excluded_variables: %s", excluded_variables)
+    logger.debug("excluded_var_indices: %s", excluded_var_indices)
     return variables, excluded_variables, excluded_var_indices
 
 
@@ -865,12 +865,12 @@ def get_test_sample(
             if print_logger:
                 if elem["name"] in excluded_variables:
                     logger.info(
-                        f"{elem['name']} has been excluded from variable"
-                        " config (is in scale dict)."
+                        "%s has been excluded from variable config (is in scale dict).",
+                        elem["name"],
                     )
                 else:
                     logger.warning(
-                        f"{elem['name']} in scale dict but not in variable config."
+                        "%s in scale dict but not in variable config.", elem["name"]
                     )
             continue
         if "isDefaults" in elem["name"]:
@@ -1040,10 +1040,10 @@ def load_validation_data_umami(
 
     # Set the tracks collection name
     tracks_name = train_config.tracks_name
-    logger.debug(f"Using tracks_name value '{tracks_name}' for validation")
+    logger.debug("Using tracks_name value '%s' for validation", tracks_name)
 
     for val_file_identifier, val_file_config in val_files.items():
-        logger.info(f"Loading validation file {val_file_identifier}")
+        logger.info("Loading validation file %s", val_file_identifier)
         # Get the cut vars dict if defined
         cut_vars_dict = (
             val_file_config["variable_cuts"]
@@ -1139,7 +1139,7 @@ def load_validation_data_dl1(
 
     # loop over validation files and load X_valid, Y_valid for each file
     for val_file_identifier, val_file_config in val_files.items():
-        logger.info(f"Loading validation file {val_file_identifier}")
+        logger.info("Loading validation file %s", val_file_identifier)
 
         cut_vars_dict = (
             val_file_config["variable_cuts"]
@@ -1208,11 +1208,11 @@ def load_validation_data_dips(
 
     # Set the tracks collection name
     tracks_name = train_config.tracks_name
-    logger.debug(f"Using tracks_name value '{tracks_name}' for validation")
+    logger.debug("Using tracks_name value '%s' for validation", tracks_name)
 
     # loop over validation files and load X_valid, Y_valid for each file
     for val_file_identifier, val_file_config in val_files.items():
-        logger.info(f"Loading validation file {val_file_identifier}")
+        logger.info("Loading validation file %s", val_file_identifier)
 
         cut_vars_dict = (
             val_file_config["variable_cuts"]
@@ -1599,10 +1599,10 @@ def calc_validation_metrics(
     """
 
     # Get evaluation parameters and NN structure from train config
-    Eval_parameters = train_config.Eval_parameters_validation
+    eval_parameters = train_config.Eval_parameters_validation
     val_params = train_config.Validation_metrics_settings
-    NN_structure = train_config.NN_structure
-    Second_model_string = (
+    nn_structure = train_config.NN_structure
+    second_model_string = (
         "dips_model_" if model_string == "model_epoch" else "model_epoch"
     )
 
@@ -1615,11 +1615,11 @@ def calc_validation_metrics(
 
     if len(training_output) == 0:
         logger.warning(
-            f"{model_string} models used but not found! Using {Second_model_string}"
+            "%s models used but not found! Using %s", model_string, second_model_string
         )
 
         # Set new model string
-        model_string = Second_model_string
+        model_string = second_model_string
 
         # Make a list with the model epochs saves with second model name string
         training_output = [
@@ -1633,8 +1633,8 @@ def calc_validation_metrics(
 
         # Get val dict file name
         _, val_output_file_path = get_metrics_file_name(
-            working_point=Eval_parameters["WP"],
-            n_jets=Eval_parameters["n_jets"],
+            working_point=eval_parameters["WP"],
+            n_jets=eval_parameters["n_jets"],
             dir_name=train_config.model_name,
         )
 
@@ -1693,7 +1693,7 @@ def calc_validation_metrics(
 
     # Loop over the different model savepoints at each epoch
     for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
-        logger.info(f"Working on {n+1}/{len(training_output)} input files")
+        logger.info("Working on %i/%i input files", n + 1, len(training_output))
 
         # Init results dict to save to
         result_dict = {}
@@ -1728,10 +1728,10 @@ def calc_validation_metrics(
             val_result_dict = evaluate_model_umami(
                 model=umami,
                 data_dict=data_dict,
-                class_labels=NN_structure["class_labels"],
-                main_class=NN_structure["main_class"],
+                class_labels=nn_structure["class_labels"],
+                main_class=nn_structure["main_class"],
                 target_beff=target_beff,
-                frac_dict=Eval_parameters["frac_values"],
+                frac_dict=eval_parameters["frac_values"],
                 batch_size=val_params["val_batch_size"],
             )
 
@@ -1746,10 +1746,10 @@ def calc_validation_metrics(
             val_result_dict = evaluate_model(
                 model=dl1,
                 data_dict=data_dict,
-                class_labels=NN_structure["class_labels"],
-                main_class=NN_structure["main_class"],
+                class_labels=nn_structure["class_labels"],
+                main_class=nn_structure["main_class"],
                 target_beff=target_beff,
-                frac_dict=Eval_parameters["frac_values"],
+                frac_dict=eval_parameters["frac_values"],
                 batch_size=val_params["val_batch_size"],
             )
 
@@ -1765,10 +1765,10 @@ def calc_validation_metrics(
             val_result_dict = evaluate_model(
                 model=dips,
                 data_dict=data_dict,
-                class_labels=NN_structure["class_labels"],
-                main_class=NN_structure["main_class"],
+                class_labels=nn_structure["class_labels"],
+                main_class=nn_structure["main_class"],
                 target_beff=target_beff,
-                frac_dict=Eval_parameters["frac_values"],
+                frac_dict=eval_parameters["frac_values"],
                 batch_size=val_params["val_batch_size"],
             )
 
@@ -1794,10 +1794,10 @@ def calc_validation_metrics(
             val_result_dict = evaluate_model(
                 model=cads,
                 data_dict=data_dict,
-                class_labels=NN_structure["class_labels"],
-                main_class=NN_structure["main_class"],
+                class_labels=nn_structure["class_labels"],
+                main_class=nn_structure["main_class"],
                 target_beff=target_beff,
-                frac_dict=Eval_parameters["frac_values"],
+                frac_dict=eval_parameters["frac_values"],
                 batch_size=val_params["val_batch_size"],
             )
 

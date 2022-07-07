@@ -105,7 +105,7 @@ def LoadJetsFromFile(
 
                 # Check for logger
                 if print_logger:
-                    logger.warning(f"{var} not available in files!")
+                    logger.warning("%s not available in files!", var)
 
         # Load variables for cuts if given
         if cut_vars_dict:
@@ -214,11 +214,13 @@ def LoadJetsFromFile(
         # Check if enough jets are loaded
         if n_jets_counter < n_jets:
             logger.warning(
-                f"Requested {n_jets} but only {n_jets_counter} could be loaded!"
+                "Requested %i but only %i could be loaded!",
+                n_jets,
+                n_jets_counter,
             )
 
         else:
-            logger.info(f"Loaded {n_jets} jets!")
+            logger.info("Loaded %i jets!", n_jets)
 
     # Return the jets and internal labels
     return all_jets[:n_jets], all_labels[:n_jets]
@@ -433,11 +435,11 @@ def LoadTrksFromFile(
         # Check if enough jets are loaded
         if n_jets_counter < n_jets:
             logger.warning(
-                f"Requested {n_jets} but only {n_jets_counter} could be loaded!"
+                "Requested %i but only %i could be loaded!", n_jets, n_jets_counter
             )
 
         else:
-            logger.info(f"Loaded {n_jets} jets!")
+            logger.info("Loaded %i jets!", n_jets)
 
     # Return Trks and labels
     return all_trks[:n_jets], all_labels[:n_jets]

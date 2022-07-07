@@ -77,7 +77,7 @@ class Configuration:
         )
         with open(self.yaml_default_config, "r") as conf:
             self.default_config = self.YAML.load(conf)
-        logger.info(f"Using config file {self.yaml_config}")
+        logger.info("Using config file %s", self.yaml_config)
 
         with open(self.yaml_config, "r") as conf:
             self.config = self.YAML.load(conf)
@@ -121,7 +121,7 @@ class Configuration:
                 raise KeyError(f"You need to specify {elem} in yourconfig file!")
             else:
                 logger.warning(
-                    f"Setting {elem} to default value {self.default_config[elem]}"
+                    "Setting %s to default value %s", elem, self.default_config[elem]
                 )
                 setattr(self, elem, self.default_config[elem])
 
@@ -251,14 +251,16 @@ class Configuration:
         os.makedirs(os.path.dirname(new_config_path), exist_ok=True)
 
         # copy config
-        logger.info(f"Copying config file to {new_config_path}")
+        logger.info("Copying config file to %s", new_config_path)
         if os.path.exists(new_config_path):
-            logger.warning(f"Overwriting existing config at {new_config_path}")
+            logger.warning("Overwriting existing config at %s", new_config_path)
         with open(new_config_path, "w") as f:
             yaml.dump(config, f)
 
         # copy var dict
-        logger.info(f"Copying variable dict to {new_config_path}")
+        logger.info("Copying variable dict to %s", new_config_path)
         if os.path.exists(new_var_dict_path):
-            logger.warning(f"Overwriting existing variable dict at {new_var_dict_path}")
+            logger.warning(
+                "Overwriting existing variable dict at %s", new_var_dict_path
+            )
         shutil.copyfile(self.var_file, new_var_dict_path)

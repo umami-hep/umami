@@ -73,7 +73,7 @@ def get_sample_cuts(jets: np.ndarray, cuts: list) -> np.ndarray:
 
         # expect a dictionary with only one entry
         cut = list(cut_entry.keys())
-        logger.debug(f"Cuts: {cuts}")
+        logger.debug("Cuts: %s", cuts)
         if len(cut) != 1:
             raise KeyError(
                 "The cut object is expected to be a dictionary with one entry."
@@ -130,7 +130,9 @@ def get_sample_cuts(jets: np.ndarray, cuts: list) -> np.ndarray:
     indices_to_remove = np.where(reduce(operator.or_, cut_rejections, False))[0]
     del cut_rejections
 
-    logger.debug(f"Cuts remove {len(indices_to_remove)} jets of a total of {len(jets)}")
+    logger.debug(
+        "Cuts remove %i jets of a total of %i", len(indices_to_remove), len(jets)
+    )
     return indices_to_remove
 
 
