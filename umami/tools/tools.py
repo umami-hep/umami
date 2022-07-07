@@ -43,13 +43,15 @@ def compare_leading_spaces(ref: str, comp: str):
     """
     ref_spaces = len(ref) - len(ref.lstrip())
     comp_spaces = len(comp) - len(comp.lstrip())
-    logger.debug(f"Leading spaces in {ref}: {ref_spaces}")
-    logger.debug(f"Leading spaces in {comp}: {comp_spaces}")
+    logger.debug("Leading spaces in %s: %s", ref, ref_spaces)
+    logger.debug("Leading spaces in %s: %s", comp, comp_spaces)
     diff_spaces = ref_spaces - comp_spaces
     if diff_spaces != 0:
         logger.warning(
-            f"Your strings `{ref}` and `{comp}` have a different amount of leading "
-            f"spaces ({diff_spaces})."
+            "Your strings `%s` and `%s` have different amount of leading spaces (%s).",
+            ref,
+            comp,
+            diff_spaces,
         )
 
     return diff_spaces

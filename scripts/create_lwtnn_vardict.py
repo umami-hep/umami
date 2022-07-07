@@ -203,7 +203,7 @@ def __run():
             args.tracks_name,
         )
 
-        logger.info(f"Found {len(track_variables)} variables")
+        logger.info("Found %i variables", len(track_variables))
         inputs = {}
 
         # Set the name of the track collection (for athena)
@@ -228,7 +228,7 @@ def __run():
             }
         ]
 
-        logger.info(f"Saving {args.output}.")
+        logger.info("Saving %s.", args.output)
 
         # Save the lwtnn variable dict in json in correct format
         with open(args.output, "w") as dips_vars:
@@ -247,7 +247,7 @@ def __run():
             variable_config,
         )
 
-        logger.info(f"Found {len(jet_variables)} jet variables")
+        logger.info("Found %i jet variables", len(jet_variables))
 
         # Define a dict for the jet inputs
         jet_inputs = {}
@@ -268,7 +268,7 @@ def __run():
         if "tau" in args.tagger:
             logger.info("Detected tau output in tagger.")
             labels_tau = ["pu", "pc", "pb", "ptau"]
-            logger.info(f"Using labels {labels_tau}")
+            logger.info("Using labels %s", labels_tau)
             lwtnn_var_dict["outputs"] = [
                 {
                     "labels": labels_tau,
@@ -284,7 +284,7 @@ def __run():
                 }
             ]
 
-        logger.info(f"Saving {args.output}.")
+        logger.info("Saving %s.", args.output)
 
         # Save the lwtnn variable dict in json in correct format
         with open(args.output, "w") as dl1_vars:
@@ -310,8 +310,8 @@ def __run():
             args.tracks_name,
         )
 
-        logger.info(f"Found {len(track_variables)} track variables")
-        logger.info(f"Found {len(jet_variables)} jet variables")
+        logger.info("Found %i track variables", len(track_variables))
+        logger.info("Found %i jet variables", len(jet_variables))
 
         # Init track input dict
         track_inputs = {}
@@ -354,7 +354,7 @@ def __run():
             },
         ]
 
-        logger.info(f"Saving {args.output}.")
+        logger.info("Saving %s.", args.output)
 
         # Save the lwtnn variable dict in json in correct format
         with open(args.output, "w") as umami_vars:

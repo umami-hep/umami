@@ -80,7 +80,7 @@ def prepare_model(
     init_epoch = 0
 
     if train_config.model_file is not None and continue_training is False:
-        logger.info(f"Loading model from: {train_config.model_file}")
+        logger.info("Loading model from: %s", train_config.model_file)
         model_file = train_config.model_file
 
     elif continue_training is True:
@@ -91,7 +91,7 @@ def prepare_model(
         )[-1]
 
         # Load the latest model
-        logger.info(f"Continue training using model {model_file_name}")
+        logger.info("Continue training using model %s", model_file_name)
 
         # Set the load_optimiser to True so the model is not recompiled
         load_optimiser = True

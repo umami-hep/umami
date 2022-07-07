@@ -59,7 +59,7 @@ def plot_variable(
     kwargs = translate_kwargs(kwargs)
 
     # Give a debug logger
-    logger.debug(f"Plotting variable {variable}...")
+    logger.debug("Plotting variable %s...", variable)
 
     # Init the histogram plot object
     histo_plot = HistogramPlot(**kwargs)
@@ -322,8 +322,9 @@ def preprocessing_plots(
         # plot all available jets.
         if n_jets > n_jets_infile:
             logger.warning(
-                f"You requested {n_jets} jets,"
-                f"but there are only {n_jets_infile} jets in the input!"
+                "You requested %i jets,but there are only %i jets in the input!",
+                n_jets,
+                n_jets_infile,
             )
         selected_indicies = np.arange(min(n_jets, n_jets_infile), dtype=int)
 

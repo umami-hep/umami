@@ -100,7 +100,7 @@ def runPreprocessing(
     if flavours_to_process is None:
         flavours_to_process = ["ujets", "cjets", "bjets"]
 
-    logger.info(f"Starting integration test of the {method} method.")
+    logger.info("Starting integration test of the %s method.", method)
     logger.info("Test: running the prepare...")
 
     # Generate list of samples
@@ -370,7 +370,7 @@ class TestPreprocessing(unittest.TestCase):
         self.indices = os.path.join(self.test_dir, "indices.h5")
 
         logger.info(
-            f"Preparing config file based on {config_source} in {self.config}..."
+            "Preparing config file based on %s in %s ...", config_source, self.config
         )
         copyfile(config_source, self.config)
         copyfile(config_paths_source, self.config_paths)

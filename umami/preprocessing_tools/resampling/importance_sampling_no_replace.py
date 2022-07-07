@@ -117,7 +117,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         if n_jets_requested == -1 or n_jets_requested is None:
             logger.info("Maximising number of jets to target distribution.")
         else:
-            logger.info(f"Requesting {n_jets_requested} in total.")
+            logger.info("Requesting %i in total.", n_jets_requested)
             n_jets_per_class = n_jets_requested // len(self.class_categories)
             if len(indices_to_keep[target_distribution]) >= n_jets_per_class:
                 for class_category in self.class_categories:
@@ -132,8 +132,9 @@ class UnderSamplingNoReplace(ResamplingTools):
                 n_jets_per_class = len(indices_to_keep[target_distribution])
                 size_total = n_jets_per_class * len(self.class_categories)
                 logger.warning(
-                    f"You asked for {n_jets_requested:.0f} jets, however, "
-                    f"only {size_total} are available."
+                    "You asked for %i jets, however, only %i are available.",
+                    n_jets_requested,
+                    size_total,
                 )
 
         # get indices per single sample
@@ -165,8 +166,8 @@ class UnderSamplingNoReplace(ResamplingTools):
                     )
                     sample_size = len(self.indices_to_keep[sample_name])
                     size_total += sample_size
-                    logger.info(f"Using {sample_size} jets from {sample_name}.")
-        logger.info(f"Using in total {size_total} jets.")
+                    logger.info("Using %s jets from %s.", sample_size, sample_name)
+        logger.info("Using in total %s jets.", size_total)
         return self.indices_to_keep
 
     def GetSamplingProbability(  # pylint: disable=no-self-use

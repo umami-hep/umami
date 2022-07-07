@@ -56,7 +56,7 @@ class Weighting(ResamplingTools):
 
         with open(save_name, "wb") as file:
             pickle.dump(weights_dict, file)
-        logger.info(f"Saved flavour weights to: {save_name}")
+        logger.info("Saved flavour weights to: %s", save_name)
 
     def GetIndices(self):
         """
@@ -101,8 +101,8 @@ class Weighting(ResamplingTools):
                     )
                     sample_size = len(self.indices_to_keep[sample_name])
                     size_total += sample_size
-                    logger.info(f"Using {sample_size} jets from {sample_name}.")
-        logger.info(f"Using in total {size_total} jets.")
+                    logger.info("Using %i jets from %s.", sample_size, sample_name)
+        logger.info("Using in total %i jets.", size_total)
         return self.indices_to_keep
 
     def Run(self):

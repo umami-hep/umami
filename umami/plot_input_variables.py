@@ -81,7 +81,7 @@ def plot_trks_variables(plot_config, plot_type):
         if plotting_config["variables"] == "jets":
             continue
 
-        logger.info(f"Start {plot_name}...\n")
+        logger.info("Start %s...\n", plot_name)
         plotting_config["plot_settings"] = translate_kwargs(
             plotting_config["plot_settings"]
         )
@@ -165,7 +165,7 @@ def plot_jets_variables(plot_config, plot_type):
         if plotting_config["variables"] == "tracks":
             continue
 
-        logger.info(f"Start {plot_name}...\n")
+        logger.info("Start %s...\n", plot_name)
         plotting_config["plot_settings"] = translate_kwargs(
             plotting_config["plot_settings"]
         )

@@ -63,7 +63,7 @@ def load_tfrecords_train_dataset(
     except KeyError:
         nfiles = 5
         logger.warning(
-            f"No number of files to be loaded in parallel defined. Set to {nfiles}"
+            "No number of files to be loaded in parallel defined. Set to %i", nfiles
         )
 
     # Get the tfrecords

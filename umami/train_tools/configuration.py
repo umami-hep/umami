@@ -54,7 +54,7 @@ class Configuration:
         with open(self.yaml_default_config, "r") as conf:
             self.default_config = yaml.load(conf, Loader=yaml_loader)
 
-        logger.info(f"Using train config file {self.yaml_config}")
+        logger.info("Using train config file %s", self.yaml_config)
         with open(self.yaml_config, "r") as conf:
             self.config = yaml.load(conf, Loader=yaml_loader)
 

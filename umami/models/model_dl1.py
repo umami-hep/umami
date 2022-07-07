@@ -157,7 +157,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
     # Load the excluded variables from train_config
     if "exclude" in train_config.config:
         exclude = train_config.config["exclude"]
-        logger.debug(f"Exclude option specified with values {exclude}.")
+        logger.debug("Exclude option specified with values %s.", exclude)
 
     else:
         exclude = None
@@ -174,7 +174,9 @@ def TrainLargeFile(args, train_config, preprocess_config):
     feature_connect_indices = None
     if "repeat_end" in nn_structure and nn_structure["repeat_end"] is not None:
         repeat_end = nn_structure["repeat_end"]
-        logger.info(f"Repeating the following variables in the last layer {repeat_end}")
+        logger.info(
+            "Repeating the following variables in the last layer %s", repeat_end
+        )
         feature_connect_indices = utt.get_jet_feature_position(repeat_end, variables)
 
     if ".h5" in train_config.train_file:
@@ -187,7 +189,7 @@ def TrainLargeFile(args, train_config, preprocess_config):
             _, metadata["n_jet_features"] = f["X_train"].shape
             if exclude is not None:
                 metadata["n_jet_features"] -= len(excluded_var)
-            logger.debug(f"Input shape of training set: {metadata['n_jet_features']}")
+            logger.debug("Input shape of training set: %s", metadata["n_jet_features"])
 
         if nn_structure["use_sample_weights"]:
             tensor_types = (tf.float32, tf.float32, tf.float32)

@@ -50,7 +50,7 @@ def main():
     ]
 
     # load jets from file
-    logger.info(f"Loading jets from file(s) {args.input_file_path}...")
+    logger.info("Loading jets from file(s) %s...", args.input_file_path)
     jets, _ = utt.LoadJetsFromFile(
         args.input_file_path,
         class_labels=class_labels,
@@ -88,7 +88,7 @@ def main():
 
     logger.info("Determined efficiency working point cut values:")
     for eff, cut in cut_values.items():
-        logger.info(f"Efficiency: {eff} | d_b cut value: {cut}")
+        logger.info("Efficiency: %.3f | d_b cut value: %.3f", eff, cut)
 
 
 if __name__ == "__main__":

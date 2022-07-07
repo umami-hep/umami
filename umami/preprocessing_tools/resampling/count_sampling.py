@@ -135,8 +135,9 @@ class UnderSampling(ResamplingTools):
                 self.class_categories
             )
             logger.warning(
-                f"You asked for {self.options['n_jets']:.0f} jets, however, "
-                f"only {size_total} are available."
+                "You asked for %i jets, however, only %i are available.",
+                self.options["n_jets"],
+                size_total,
             )
 
         # get indices per single sample
@@ -168,8 +169,8 @@ class UnderSampling(ResamplingTools):
                     )
                     sample_size = len(self.indices_to_keep[sample_name])
                     size_total += sample_size
-                    logger.info(f"Using {sample_size} jets from {sample_name}.")
-        logger.info(f"Using in total {size_total} jets.")
+                    logger.info("Using %i jets from %s.", sample_size, sample_name)
+        logger.info("Using in total %i jets.", size_total)
         return self.indices_to_keep
 
     def Run(self):

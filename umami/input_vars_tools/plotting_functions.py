@@ -129,8 +129,8 @@ def plot_n_tracks_per_jet(
     if not os.path.isdir(f"{output_directory}/"):
         os.makedirs(f"{output_directory}/")
 
-    logger.info(f"Path: {output_directory}")
-    logger.info(f"Track origin: {track_origin}\n")
+    logger.info("Path: %s", output_directory)
+    logger.info("Track origin: %s\n", track_origin)
 
     # Initialise plot
     n_tracks_plot = HistogramPlot(**kwargs)
@@ -181,7 +181,7 @@ def plot_n_tracks_per_jet(
         f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}",
         transparent=transparent,
     )
-    logger.info(f"Average number of tracks:\n{DataFrame.from_dict(n_tracks_means)}")
+    logger.info("Average number of tracks:\n%s", DataFrame.from_dict(n_tracks_means))
 
 
 def plot_input_vars_trks(
@@ -321,9 +321,10 @@ def plot_input_vars_trks(
                 for iter_var in trks_vars_tmp:
                     if iter_var not in trks_vars:
                         logger.warning(
-                            f"Variable {iter_var} of {datasets_labels[counter]} "
-                            f"not in {datasets_labels[0]} track collection. "
-                            "Skipping..."
+                            "Variable %s of %s not in %s track collection. Skipping...",
+                            iter_var,
+                            datasets_labels[counter],
+                            datasets_labels[0],
                         )
 
     for n_lead in n_leading:
@@ -342,15 +343,15 @@ def plot_input_vars_trks(
             if not os.path.isdir(filedir):
                 os.makedirs(filedir)
 
-        logger.info(f"Path: {filedir}")
-        logger.info(f"Sorting: {sorting_variable}")
-        logger.info(f"nLeading track: {n_lead}")
-        logger.info(f"Track origin: {track_origin}\n")
+        logger.info("Path: %s", filedir)
+        logger.info("Sorting: %s", sorting_variable)
+        logger.info("nLeading track: %s", n_lead)
+        logger.info("Track origin: %s\n", track_origin)
 
         # Loop over variables
         for var in trks_vars:
             if var in bins_dict:
-                logger.info(f"Plotting {var}...")
+                logger.info("Plotting %s...", var)
 
                 # Initialise plot for this variable
                 var_plot = HistogramPlot(bins=bins_dict[var], **kwargs)
@@ -426,7 +427,7 @@ def plot_input_vars_trks(
                     f"{filedir}/{var}_{n_lead}_{track_origin}.{plot_type}",
                     transparent=transparent,
                 )
-        logger.info(f"\n{80 * '-'}")
+        logger.info("\n%s", 80 * "-")
 
 
 def plot_input_vars_jets(
@@ -536,7 +537,7 @@ def plot_input_vars_jets(
                     lim_right = special_param_jets[var]["lim_right"]
                     var_plot.bins_range = (lim_left, lim_right)
 
-            logger.info(f"Plotting {var} ...")
+            logger.info("Plotting %s ...", var)
 
             # Iterate over datasets
             for dataset_number, (label, linestyle) in enumerate(
@@ -569,4 +570,4 @@ def plot_input_vars_jets(
             var_plot.draw()
             var_plot.savefig(f"{filedir}/{var}.{plot_type}", transparent=transparent)
 
-    logger.info(f"\n{80 * '-'}")
+    logger.info("\n%s", 80 * "-")

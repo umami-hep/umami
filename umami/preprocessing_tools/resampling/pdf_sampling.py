@@ -221,9 +221,11 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 # Check that enough jets are there. If not, changed asked n_jets
                 if n_jets_initial <= n_jets_asked:
                     logger.warning(
-                        f"For sample {sample}, demanding more initial jets"
-                        f" ({n_jets_asked}) than available ({n_jets_initial})."
-                        " Forcing to available."
+                        "For sample %s, demanding more initial jets (%i) than "
+                        "available (%i). Forcing to available.",
+                        sample,
+                        n_jets_asked,
+                        n_jets_initial,
                     )
 
                 else:
@@ -384,9 +386,11 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 # Check that enough jets are there. If not, changed asked n_jets
                 if n_jets_initial <= n_jets_asked:
                     logger.warning(
-                        f"For sample {sample}, demanding more initial jets"
-                        f" ({n_jets_asked}) than available ({n_jets_initial})."
-                        " Forcing to available."
+                        "For sample %s, demanding more initial jets (%i) than available"
+                        " (%i). Forcing to available.",
+                        sample,
+                        n_jets_asked,
+                        n_jets_initial,
                     )
 
                 else:
@@ -399,8 +403,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             jets_x = np.asarray(to_load[self.var_x])
             jets_y = np.asarray(to_load[self.var_y])
             logger.info(
-                f"Loaded {len(jets_x)} {preparation_sample.get('category')}"
-                f" jets from {sample}."
+                "Loaded %i %s jets from %s.",
+                len(jets_x),
+                preparation_sample.get("category"),
+                sample,
             )
 
         # Stack the jets
@@ -1369,7 +1375,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             self.options["samples"][sample_category][sample_id] + "_selected.h5",
         )
 
-        logger.info(f"Writing to file {save_name}.")
+        logger.info("Writing to file %s.", save_name)
 
         # Init a new progress bar
         pbar = tqdm(total=np.sum(sample_lengths))
@@ -1533,7 +1539,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             self.options["samples"][sample_category][sample_id] + "_selected.h5",
         )
 
-        logger.info(f"Writing to file {save_name}.")
+        logger.info("Writing to file %s.", save_name)
 
         # Create bool for loop and file creation
         load_chunk = True
@@ -1665,7 +1671,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Iterate over the samples
         for cat_ind, sample_category in enumerate(self.options["samples"]):
-            logger.info(f"Loading target in category {sample_category}.")
+            logger.info("Loading target in category %s.", sample_category)
 
             # Get the histogram from selected file
             reading_dict = self.File_to_histogram(
@@ -1699,7 +1705,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             logger.info("Maximising number of jets to target distribution.")
 
         else:
-            logger.info(f"Requesting {n_jets_asked} in total from target.")
+            logger.info("Requesting %s in total from target.", n_jets_asked)
 
             # Correct the fractions
             total_corr = sum(target_numbers_corr)
@@ -1721,10 +1727,12 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Iterate over the samples and log the info
         for cat_ind, sample_category in enumerate(self.options["samples"]):
             logger.info(
-                f"target - category {sample_category}: selected"
-                f" {self.target_number[sample_category]}/{available_numbers[cat_ind]} "
-                "jets, giving the requested fraction of "
-                f"{self.target_fractions[cat_ind]}"
+                "target - category %s: selected %i/%i jets, giving the requested "
+                "fraction of %s",
+                sample_category,
+                self.target_number[sample_category],
+                available_numbers[cat_ind],
+                self.target_fractions[cat_ind],
             )
 
         # Save the info to a json file
@@ -1805,23 +1813,26 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         num_corrected = int(num_av * upsampling)
                         asked_num.append(num_corrected)
                         logger.warning(
-                            f"Upsampling ratio demanded to {flavour_name} is"
-                            f" {upsampling_asked}, over limit of {upsampling}."
+                            "Upsampling ratio demanded to %s is %s, over limit of %s.",
+                            flavour_name,
+                            upsampling_asked,
+                            upsampling,
                         )
                         logger.warning(
-                            f"Number of {flavour_name} demanded will therefore"
-                            " be limited."
+                            "Number of %s demanded will therefore be limited.",
+                            flavour_name,
                         )
                     else:
                         logger.info(
-                            f"Upsampling ratio demanded to {flavour_name} is"
-                            f" {upsampling_asked}, below limit of"
-                            f" {upsampling}."
+                            "Upsampling ratio demanded to %s is %s, below limit of %s.",
+                            flavour_name,
+                            upsampling_asked,
+                            upsampling,
                         )
                         asked_num.append(num_asked)
                 else:
                     logger.info(
-                        f"No maximum upsampling ratio demanded to {flavour_name}."
+                        "No maximum upsampling ratio demanded to %s.", flavour_name
                     )
                     asked_num.append(num_asked)
 
@@ -1833,7 +1844,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             )
             for flavour_name, num in zip(flavour_names, asked_num_corr):
                 self.number_to_sample[flavour_name] = int(num)
-                logger.info(f"For {flavour_name}, demanding {int(num)} jets.")
+                logger.info("For %s, demanding %i jets.", flavour_name, num)
         else:
             for sample_category, flavour_name in zip(
                 self.options["samples"], flavour_names
@@ -1842,8 +1853,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     sample_category
                 ]
                 logger.info(
-                    f"For {flavour_name}, demanding"
-                    f" {target_data['target_number'][sample_category]} jets."
+                    "For %s, demanding %s jets.",
+                    flavour_name,
+                    target_data["target_number"][sample_category],
                 )
         if any(
             flavour_name in self.sampling_fraction for flavour_name in flavour_names
@@ -1910,7 +1922,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             iterator=iterator,
         )
         logger.info(
-            f"Computing PDF in {sample_category} for the {reading_dict['category']}."
+            "Computing PDF in %s for the %s.", sample_category, reading_dict["category"]
         )
 
         # Calculate the PDF
@@ -1987,8 +1999,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             target_data = json.load(load_file)
         number_to_sample = target_data["number_to_sample"][sample_name]
 
-        logger.info(f"Selecting indices for {sample_name}.")
-        logger.info(f"Saving indices to: {save_name}")
+        logger.info("Selecting indices for %s.", sample_name)
+        logger.info("Saving indices to: %s", save_name)
 
         # Use the resample iterator if iterator is True
         if flavour_distribution is None or iterator:
@@ -2055,8 +2067,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         """
 
         logger.info(
-            f"Sampling {self.options['samples'][sample_category][sample_id]}"
-            f" for {sample_category}."
+            "Sampling %s for %s.",
+            self.options["samples"][sample_category][sample_id],
+            sample_category,
         )
 
         if iterator or selected_indices is None:
@@ -2094,8 +2107,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Log infos
         logger.info("Combining all the flavours into a single file.")
-        logger.info(f"Storing to {self.outfile_path}")
-        logger.info(f"Storing to {output_name}")
+        logger.info("Storing to %s", self.outfile_path)
+        logger.info("Storing to %s", output_name)
 
         # Set the create_file to True for first loop
         create_file = True
@@ -2160,12 +2173,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 *sample_paths, key=dataset
             )
             common_vars[dataset] = common_vars_i
-            logger.debug(f"Common vars in {dataset}: {common_vars_i}")
-            logger.debug(f"Diff vars in {dataset}: {diff_vars}")
+            logger.debug("Common vars in %s: %s", dataset, common_vars_i)
+            logger.debug("Diff vars in %s: %s", dataset, diff_vars)
             if diff_vars:
                 logger.warning(
-                    f"The {dataset} in your specified samples don't have the same "
-                    f" variables. The following variables are different: {diff_vars}"
+                    "The %s in your specified samples don't have the same "
+                    " variables. The following variables are different: %s",
+                    dataset,
+                    diff_vars,
                 )
                 logger.warning(
                     "All variables which are not present in all samples are "
@@ -2404,8 +2419,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             for cat_ind, sample_category in enumerate(self.options["samples"]):
                 if sample_id not in self.do_flavours:
                     logger.warning(
-                        f"Skipping {sample_category} - {sample} (not in list"
-                        " to execute)."
+                        "Skipping %s - %s (not in list to execute).",
+                        sample_category,
+                        sample,
                     )
                     continue
 

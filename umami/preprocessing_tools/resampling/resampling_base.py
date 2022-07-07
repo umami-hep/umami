@@ -379,17 +379,21 @@ def CorrectFractions(
             entry = df.iloc[i]
             if class_names is None:
                 logger.info(
-                    f"class {i}: selected"
-                    f" {entry['target_N_jets']}/{entry['N_jets']} jets per"
-                    " class giving the requested fraction of"
-                    f" {entry['target_fractions']}"
+                    "class %i: selected %i/%i jets per class giving the requested "
+                    "fraction of %s",
+                    i,
+                    entry["target_N_jets"],
+                    entry["N_jets"],
+                    entry["target_fractions"],
                 )
             else:
                 logger.info(
-                    f"{entry['class_names']}: selected"
-                    f" {entry['target_N_jets']}/{entry['N_jets']} jets per"
-                    " class giving the requested fraction of"
-                    f" {entry['target_fractions']}"
+                    "%s: selected %i/%i jets per class giving the requested fraction "
+                    "of %s",
+                    entry["class_names"],
+                    entry["target_N_jets"],
+                    entry["N_jets"],
+                    entry["target_fractions"],
                 )
     return df["target_N_jets"].astype(int).values
 
@@ -532,7 +536,7 @@ class Resampling:
 
         # Calculate the binning of the variables with the provided info about
         # the binning
-        logger.info(f"Using {variables[0]} and {variables[1]} for resampling.")
+        logger.info("Using %s and %s for resampling.", variables[0], variables[1])
         self.bins_x = CalculateBinning(sampling_variables[0][self.var_x]["bins"])
         self.bins_y = CalculateBinning(sampling_variables[1][self.var_y]["bins"])
 
@@ -717,12 +721,14 @@ class Resampling:
                 *sample_paths, key=dataset
             )
             common_vars[dataset] = common_vars_i
-            logger.debug(f"Common vars in {dataset}: {common_vars_i}")
-            logger.debug(f"Diff vars in {dataset}: {diff_vars}")
+            logger.debug("Common vars in %s: %s", dataset, common_vars_i)
+            logger.debug("Diff vars in %s: %s", dataset, diff_vars)
             if diff_vars:
                 logger.warning(
-                    f"The {dataset} in your specified samples don't have the same "
-                    f" variables. The following variables are different: {diff_vars}"
+                    "The %s in your specified samples don't have the same "
+                    " variables. The following variables are different: %s",
+                    dataset,
+                    diff_vars,
                 )
                 logger.warning("These variables are ignored in all further steps.")
 
@@ -744,7 +750,7 @@ class Resampling:
         ]
         create_file = True
         chunk_counter = 0
-        logger.info(f"Writing to file {self.outfile_name}")
+        logger.info("Writing to file %s", self.outfile_name)
         pbar = tqdm(total=np.sum(sample_lengths))
         while chunk_counter < n_chunks + 1:
             for i, _ in enumerate(indices):
@@ -898,7 +904,7 @@ class ResamplingTools(Resampling):
                 preparation_sample_path = GetPreparationSamplePath(preparation_sample)
                 self.sample_file_map[sample] = preparation_sample_path
                 logger.info(
-                    f"Loading sampling variables from {preparation_sample_path}"
+                    "Loading sampling variables from %s", preparation_sample_path
                 )
                 with h5py.File(preparation_sample_path, "r") as f:
 
@@ -912,8 +918,9 @@ class ResamplingTools(Resampling):
                             self.options["custom_n_jets_initial"][sample]
                         )
                         logger.debug(
-                            f"Using custom_n_jets_initial for {sample} of "
-                            f"{n_jets_initial} from config"
+                            "Using custom_n_jets_initial for %s of %i from config",
+                            sample,
+                            n_jets_initial,
                         )
 
                     # Check if the parameter is given in init (for pdf sampling)
@@ -926,9 +933,10 @@ class ResamplingTools(Resampling):
                     jets_x = np.asarray(f["jets"].fields(self.var_x)[:n_jets_initial])
                     jets_y = np.asarray(f["jets"].fields(self.var_y)[:n_jets_initial])
                 logger.info(
-                    f"Loaded {len(jets_x)}"
-                    f" {preparation_sample.get('category')} jets from"
-                    f" {sample}."
+                    "Loaded %s %s jets from %s.",
+                    len(jets_x),
+                    preparation_sample.get("category"),
+                    sample,
                 )
                 # construct a flat array with 5 columns:
                 # x, y, index, sample_id, sample_class

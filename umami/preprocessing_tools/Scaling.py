@@ -226,7 +226,7 @@ class Scaling:
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
         self.compression = self.config.compression
 
-        logger.info(f"Using variable dict at {config.var_file}")
+        logger.info("Using variable dict at %s", config.var_file)
         self.variable_config = GetVariableDict(config.var_file)
 
     def join_mean_scale(
@@ -543,7 +543,7 @@ class Scaling:
             input_file = self.config.GetFileName(option="resampled")
 
         logger.info("Calculating scaling and shifting values for the jet variables")
-        logger.info(f"Using {input_file} for calculation of scaling/shifting")
+        logger.info("Using %s for calculation of scaling/shifting", input_file)
 
         # Extract the correct variables
         variables_header = self.variable_config["train_variables"]
@@ -565,7 +565,7 @@ class Scaling:
         # Loop over chunks
         for chunk_counter in range(n_chunks):
             logger.info(
-                f"Calculating jet scales for chunk {chunk_counter+1} of {n_chunks}"
+                "Calculating jet scales for chunk %i of %i", chunk_counter + 1, n_chunks
             )
             # Check if this is the first time loading from the generator
             if chunk_counter == 0:
@@ -605,8 +605,10 @@ class Scaling:
                 # Loop over chunks
                 for chunk_counter in range(n_chunks):
                     logger.info(
-                        f"Calculating track scales for {tracks_name} for chunk"
-                        f" {chunk_counter+1} of {n_chunks}"
+                        "Calculating track scales for %s for chunk %i of %i",
+                        tracks_name,
+                        chunk_counter + 1,
+                        n_chunks,
                     )
                     # Check if this is the first time loading from the generator
                     if chunk_counter == 0:
@@ -639,7 +641,7 @@ class Scaling:
         os.makedirs(os.path.dirname(self.scale_dict_path), exist_ok=True)
         with open(self.scale_dict_path, "w") as outfile:
             json.dump(scale_dict, outfile, indent=4)
-        logger.info(f"Saved scale dictionary as {self.scale_dict_path}")
+        logger.info("Saved scale dictionary as %s", self.scale_dict_path)
 
     def get_scaling_dict_generator(
         self,
@@ -720,7 +722,8 @@ class Scaling:
                     # Set Default values for isDefaults variables
                     if "isDefaults" in var:
                         logger.debug(
-                            f"Default scaling/shifting values (0, 1) are used for {var}"
+                            "Default scaling/shifting values (0, 1) are used for %s",
+                            var,
                         )
                         scale_dict.append(self.dict_in(var, 0.0, 1.0, None))
 
@@ -991,8 +994,8 @@ class Scaling:
         if input_file is None:
             input_file = self.config.GetFileName(option="resampled")
 
-        logger.info(f"Scale/Shift jets from {input_file}")
-        logger.info(f"Using scales in {self.scale_dict_path}")
+        logger.info("Scale/Shift jets from %s", input_file)
+        logger.info("Using scales in %s", self.scale_dict_path)
 
         # Extract the correct variables
         variables_header_jets = self.variable_config["train_variables"]
@@ -1042,7 +1045,9 @@ class Scaling:
             chunk_counter = 0
             while chunk_counter <= n_chunks:
                 logger.info(
-                    f"Applying scales for chunk {chunk_counter+1} of {n_chunks+1}."
+                    "Applying scales for chunk %s of %s.",
+                    chunk_counter + 1,
+                    n_chunks + 1,
                 )
                 try:
                     # Load jets from file

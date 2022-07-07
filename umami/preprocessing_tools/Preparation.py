@@ -152,7 +152,7 @@ class PrepareSamples:
         with h5py.File(filename, "r") as data_set:
             # get total number of jets in file
             total_n_jets = len(data_set["jets"])
-            logger.debug(f"Total number of jets in file: {total_n_jets}")
+            logger.debug("Total number of jets in file: %i", total_n_jets)
             # first tuple is given by (0, batch_size)
             start_batch = 0
             end_batch = batch_size
@@ -183,7 +183,7 @@ class PrepareSamples:
         for filename, batches in files_in_batches:
             if self.n_jets_to_get <= 0:
                 break
-            logger.debug(f"Opening file {filename}.")
+            logger.debug("Opening file %s.", filename)
             with h5py.File(filename, "r") as data_set:
                 for batch in batches:
                     # load jets in batches
@@ -205,7 +205,7 @@ class PrepareSamples:
     def Run(self):
         """Run over Ntuples to extract jets (and potentially also tracks)."""
         logger.info(
-            f"Preparing ntuples for {self.sample_type} {self.sample_category}..."
+            "Preparing ntuples for %s %s...", self.sample_type, self.sample_category
         )
 
         pbar = tqdm(total=self.n_jets_to_get)
@@ -287,5 +287,7 @@ class PrepareSamples:
         if self.n_jets_to_get > 0:
             logger.warning(
                 "Not as many jets selected as defined in config file. Only"
-                f" {self.jets_loaded} jets selected instead of {n_jets_check}"
+                " %i jets selected instead of %i",
+                self.jets_loaded,
+                n_jets_check,
             )

@@ -41,13 +41,16 @@ def translate_kwargs(kwargs):
     for key, elem in mapping.items():
         if key in kwargs:
             # if old naming is used, translate to new naming
-            logger.debug(f"Mapping keyword argument {key} -> {elem}")
+            logger.debug("Mapping keyword argument %s -> %s", key, elem)
             if isinstance(elem, str):
                 # print warning if old AND new convention are used
                 if elem in kwargs:
                     logger.warning(
                         "You specified two keyword arguments which mean the same: "
-                        f"{key}, {elem} --> using the new naming convention {elem}"
+                        "%s, %s --> using the new naming convention %s",
+                        key,
+                        elem,
+                        elem,
                     )
                 else:
                     kwargs[elem] = kwargs[key]
@@ -61,8 +64,9 @@ def translate_kwargs(kwargs):
     for dep_key in deprecated_args:
         if dep_key in kwargs:
             logger.warning(
-                f"You specified the argument {dep_key}, which is no longer"
-                " supported and will be ignored."
+                "You specified the argument %s, which is no longer"
+                " supported and will be ignored.",
+                dep_key,
             )
             kwargs.pop(dep_key)
     return kwargs

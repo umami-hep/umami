@@ -67,7 +67,7 @@ def runPlotting(config, tagger):
         Preprocessing succeeded or not.
     """
 
-    logger.info(f"Test: running plotting_umami.py for {tagger}...")
+    logger.info("Test: running plotting_umami.py for %s...", tagger)
     run_plotting_umami = run(
         [
             "python",

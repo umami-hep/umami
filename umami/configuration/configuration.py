@@ -48,7 +48,7 @@ class Configuration:
         ]
         for item in config_items:
             if item in self.config:
-                self.logger.debug(f"Setting {item} to {self.config[item]}.")
+                self.logger.debug("Setting %s to %s.", item, self.config[item])
                 setattr(self, item, self.config[item])
             else:
                 raise KeyError(f"You need to specify {item} in your config file!")
@@ -56,7 +56,7 @@ class Configuration:
     def set_mpl_plotting_backend(self):
         """Setting the plotting backend of matplotlib."""
         self.logger.debug(
-            f"Setting Matplotlib's backend to {self.config['MPLPlottingBackend']}"
+            "Setting Matplotlib's backend to %s", self.config["MPLPlottingBackend"]
         )
 
         matplotlib.use(self.config["MPLPlottingBackend"])
@@ -64,7 +64,7 @@ class Configuration:
     def set_tf_debug_level(self):
         """Setting the Debug level of tensorflow.
         For reference see https://stackoverflow.com/questions/35869137/avoid-tensorflow-print-on-standard-error"""  # noqa # pylint: disable=C0301
-        self.logger.debug(f"Setting TFDebugLevel to {self.config['TFDebugLevel']}")
+        self.logger.debug("Setting TFDebugLevel to %s", self.config["TFDebugLevel"])
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(self.config["TFDebugLevel"])
 
     def set_logging_level(self) -> object:
@@ -89,8 +89,8 @@ class Configuration:
             umami_logger.setLevel(log_levels[self.config["DebugLevel"]])
         else:
             logging.error(
-                f"The 'DebugLevel' option {self.config['DebugLevel']} set in"
-                " the global config is not valid."
+                "The 'DebugLevel' option %s set in the global config is not valid.",
+                self.config["DebugLevel"],
             )
         ch_handler = logging.StreamHandler()
         ch_handler.setLevel(log_levels[self.config["DebugLevel"]])
@@ -156,4 +156,4 @@ def set_log_level(umami_logger, log_level: str):
 
 global_config = Configuration()
 logger = global_config.logger
-logger.debug(f"Loading global config {global_config.yaml_config}")
+logger.debug("Loading global config %s", global_config.yaml_config)

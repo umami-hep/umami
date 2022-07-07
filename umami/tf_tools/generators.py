@@ -115,7 +115,7 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
 
         if self.print_logger is True:
             logger.info(
-                f"\nloading in memory {part + 1}/{1 + self.n_jets // self.step_size}"
+                "\nloading in memory %i/%i", part + 1, 1 + self.n_jets // self.step_size
             )
 
         # Check that the correct X_Name and X_trk_Name is given

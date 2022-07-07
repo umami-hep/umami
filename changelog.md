@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing all pylint `logging-fstring-interpolation` issues [!582](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/582)
 - Adding consistent n_jets naming [!570](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/570)
 
 ### [v0.10](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.10)
