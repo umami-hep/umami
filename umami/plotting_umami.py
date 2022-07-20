@@ -123,7 +123,7 @@ def plot_probability(
             )
 
         df_list.append(df_results)
-        tagger_list.append(model_config["tagger_name"].casefold())
+        tagger_list.append(model_config["tagger_name"])
         model_labels.append(model_config["label"])
         class_labels_list.append(model_config["class_labels"])
 
@@ -196,7 +196,7 @@ def plot_roc(
             )
 
         df_results_list.append(model_config["df_results_eff_rej"])
-        tagger_list.append(model_config["tagger_name"].casefold())
+        tagger_list.append(model_config["tagger_name"])
         rej_class_list.append(model_config["rejection_class"])
         labels.append(model_config["label"])
 
@@ -295,7 +295,7 @@ def plot_confusion_matrix(
 
     uet.plot_confusion_matrix(
         df_results=df_results,
-        tagger_name=plot_config["tagger_name"].casefold(),
+        tagger_name=plot_config["tagger_name"],
         class_labels=plot_config["class_labels"],
         plot_name=plot_name,
         **plot_config["plot_settings"],
@@ -353,7 +353,7 @@ def plot_score(
 
         df_list.append(df_results)
         model_labels.append(model_config["label"])
-        tagger_list.append(model_config["tagger_name"].casefold())
+        tagger_list.append(model_config["tagger_name"])
         class_labels_list.append(model_config["class_labels"])
 
     uet.plot_score(
@@ -421,7 +421,7 @@ def plot_pt_vs_eff(
 
         df_list.append(df_results)
         model_labels.append(model_config["label"])
-        tagger_list.append(model_config["tagger_name"].casefold())
+        tagger_list.append(model_config["tagger_name"])
 
     uet.plot_pt_dependence(
         df_list=df_list,
@@ -546,7 +546,7 @@ def plot_frac_contour(
             marker_list.append(model_config["marker"])
 
         df_results_list.append(model_config["df_results_frac_rej"])
-        tagger_list.append(model_config["tagger_name"].casefold())
+        tagger_list.append(model_config["tagger_name"])
         labels.append(model_config["label"])
         linestyles.append(model_config["linestyle"])
         colours.append(model_config["colour"])
