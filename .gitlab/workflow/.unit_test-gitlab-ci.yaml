@@ -25,6 +25,7 @@
       - coverage_files/
     reports:
       junit: report.xml
+    expire_in: 1 day
   retry: 2
 
 .unittest_parallel_template: &unittest_parallel_template

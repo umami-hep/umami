@@ -238,78 +238,103 @@ def runPreprocessing(
             ) from error
 
     tagger_path = f"./test_preprocessing_{tagger}_{string_id}_{method}/"
+    tagger_path_full = f"./test_preprocessing_{tagger}_{string_id}_{method}_full/"
 
-    if os.path.isdir(tagger_path):
+    # Copy the artifacts from tmp to a local folder and the folder which will be
+    # uploaded
+    for copy_path in [tagger_path, tagger_path_full]:
         run(
             [
                 "cp",
                 "-rf",
                 f"{test_dir}/",
-                tagger_path,
+                copy_path,
             ],
             check=True,
         )
 
-    else:
-        run(
-            [
-                "mv",
-                f"{test_dir}/",
-                tagger_path,
-            ],
-            check=True,
-        )
+        # Get the path of the not needed configs
+        unused_configs = os.path.join(copy_path, "PFlow-Preprocessing_*.yaml")
 
-    # Get the path of the not needed configs
-    unused_configs = os.path.join(tagger_path, "PFlow-Preprocessing_*.yaml")
+        # Rename the needed config to PFlow-Preprocessing.yaml and erase the unused
+        # TODO change in python 3.10
+        if method == "count":
+            run(
+                [f"rm -rfv {unused_configs}"],
+                shell=True,
+                check=True,
+            )
 
-    # Rename the needed config to PFlow-Preprocessing.yaml and erase the unused
-    # TODO change in python 3.10
-    if method == "count":
-        run(
-            [f"rm -rfv {unused_configs}"],
-            shell=True,
-            check=True,
-        )
+        elif method == "pdf":
+            copyfile(
+                os.path.join(copy_path, "PFlow-Preprocessing_pdf.yaml"),
+                os.path.join(copy_path, "PFlow-Preprocessing.yaml"),
+            )
+            run(
+                [f"rm -rfv {unused_configs}"],
+                shell=True,
+                check=True,
+            )
 
-    elif method == "pdf":
-        copyfile(
-            os.path.join(tagger_path, "PFlow-Preprocessing_pdf.yaml"),
-            os.path.join(tagger_path, "PFlow-Preprocessing.yaml"),
-        )
-        run(
-            [f"rm -rfv {unused_configs}"],
-            shell=True,
-            check=True,
-        )
+        elif method == "weighting":
+            copyfile(
+                os.path.join(copy_path, "PFlow-Preprocessing_weighting.yaml"),
+                os.path.join(copy_path, "PFlow-Preprocessing.yaml"),
+            )
+            run(
+                [f"rm -rfv {unused_configs}"],
+                shell=True,
+                check=True,
+            )
 
-    elif method == "weighting":
-        copyfile(
-            os.path.join(tagger_path, "PFlow-Preprocessing_weighting.yaml"),
-            os.path.join(tagger_path, "PFlow-Preprocessing.yaml"),
-        )
-        run(
-            [f"rm -rfv {unused_configs}"],
-            shell=True,
-            check=True,
-        )
+        elif method == "importance_no_replace":
+            copyfile(
+                os.path.join(
+                    copy_path,
+                    "PFlow-Preprocessing_importance_no_replace.yaml",
+                ),
+                os.path.join(copy_path, "PFlow-Preprocessing.yaml"),
+            )
+            run(
+                [f"rm -rfv {unused_configs}"],
+                shell=True,
+                check=True,
+            )
 
-    elif method == "importance_no_replace":
-        copyfile(
-            os.path.join(
-                tagger_path,
-                "PFlow-Preprocessing_importance_no_replace.yaml",
-            ),
-            os.path.join(tagger_path, "PFlow-Preprocessing.yaml"),
-        )
-        run(
-            [f"rm -rfv {unused_configs}"],
-            shell=True,
-            check=True,
-        )
+        else:
+            raise KeyError(f"Method {method} is not supported by the integration test!")
 
-    else:
-        raise KeyError(f"Method {method} is not supported by the integration test!")
+    # Remove all intermediate files which are not needed for the training
+    run(
+        [f"rm -rfv {tagger_path}/ttbar/"],
+        shell=True,
+        check=True,
+    )
+    run(
+        [f"rm -rfv {tagger_path}/zpext/"],
+        shell=True,
+        check=True,
+    )
+    run(
+        [f"rm -rfv {tagger_path}/PDF_sampling/"],
+        shell=True,
+        check=True,
+    )
+    run(
+        [f"rm -rfv {tagger_path}/*_training_*.h5"],
+        shell=True,
+        check=True,
+    )
+    run(
+        [f"rm -rfv {tagger_path}/PFlow-hybrid_70-test-resampled.h5"],
+        shell=True,
+        check=True,
+    )
+    run(
+        [f"rm -rfv {tagger_path}/PFlow-hybrid_70-test-resampled_scaled.h5"],
+        shell=True,
+        check=True,
+    )
 
     return True
 

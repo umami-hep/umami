@@ -34,6 +34,7 @@ test_coverage:
       coverage_report:
         coverage_format: cobertura
         path: coverage_files/coverage.xml
+    expire_in: 1 day
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   retry: 2
   needs: *coverage_dependencies
