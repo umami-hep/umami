@@ -377,15 +377,16 @@ def plot_input_vars_trks(
 
                     # Sort the variables and tracks after given variable
                     if track_origin == "All":
-                        tmp = np.asarray(
+                        trks_array = np.asarray(
                             [
                                 trks_dict[label][var][k][sorting[k]]
                                 for k in range(len(trks_dict[label][sorting_variable]))
                             ]
                         )
+
                     else:
                         # Select tracks of a given origin, so keep truthOriginLabel
-                        tmp = np.asarray(
+                        trks_array = np.asarray(
                             [
                                 trks_dict[label][[var, "truthOriginLabel"]][k][
                                     sorting[k]
@@ -394,20 +395,46 @@ def plot_input_vars_trks(
                             ]
                         )
 
+                    # Retrieve the track mask to figure out which track is a placeholder
+                    try:
+                        trk_mask = np.asarray(
+                            [
+                                trks_dict[label]["valid"][k][sorting[k]]
+                                for k in range(len(trks_dict[label][sorting_variable]))
+                            ]
+                        )
+
+                    except ValueError:
+                        trk_mask = ~np.isnan(
+                            np.asarray(
+                                [
+                                    trks_dict[label]["ptfrac"][k][sorting[k]]
+                                    for k in range(
+                                        len(trks_dict[label][sorting_variable])
+                                    )
+                                ]
+                            )
+                        )
+
                     for flav_label, flavour in enumerate(class_labels):
-                        jets = tmp[flavour_label_dict[label] == flav_label]
+                        # Get the mask for the flavour which is to be plotted
+                        tracks_flav_mask = flavour_label_dict[label] == flav_label
+
+                        # Get the tracks and masks for one specific flavour
+                        tracks = trks_array[tracks_flav_mask][:, n_lead]
+                        tracks_mask = trk_mask[tracks_flav_mask][:, n_lead]
 
                         # Get number of tracks
                         if track_origin == "All":
-                            track_values = jets[:, n_lead][~np.isnan(jets[:, n_lead])]
+                            track_values = tracks[tracks_mask]
+
                         else:
-                            mask_nan = ~np.isnan(jets[var][:, n_lead])
                             mask_origin = np.asarray(
-                                jets[:, n_lead]["truthOriginLabel"]
+                                tracks["truthOriginLabel"]
                                 == global_config.OriginType[track_origin]
                             )
-                            track_values = jets[:, n_lead][
-                                np.logical_and(mask_nan, mask_origin)
+                            track_values = tracks[
+                                np.logical_and(tracks_mask, mask_origin)
                             ][var]
 
                         # Add histogram to plot
@@ -427,6 +454,9 @@ def plot_input_vars_trks(
                     f"{filedir}/{var}_{n_lead}_{track_origin}.{plot_type}",
                     transparent=transparent,
                 )
+
+            else:
+                logger.debug("Variable %s not in the binning dict. Skipping ...", var)
         logger.info("\n%s", 80 * "-")
 
 
