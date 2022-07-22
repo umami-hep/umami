@@ -312,7 +312,7 @@ class JetPlotting_TestCase(unittest.TestCase):
     def test_plot_input_vars_trks_comparison_not_normalised(self):
         plotting_config = self.plot_config["tracks_test_not_normalised"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
-        tracks_name_list = ["tracks", "tracks"]
+        tracks_name_list = ["tracks", "tracks_loose"]
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_input_vars_trks(
@@ -344,7 +344,7 @@ class JetPlotting_TestCase(unittest.TestCase):
     def test_plot_input_vars_trks_comparison(self):
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
-        tracks_name_list = ["tracks", "tracks"]
+        tracks_name_list = ["tracks", "tracks_loose"]
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_input_vars_trks(
@@ -428,7 +428,7 @@ class JetPlotting_TestCase(unittest.TestCase):
     def test_plot_n_tracks_per_jet(self):
         plotting_config = self.plot_config["nTracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
-        tracks_name_list = ["tracks", "tracks"]
+        tracks_name_list = ["tracks", "tracks_loose"]
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_n_tracks_per_jet(

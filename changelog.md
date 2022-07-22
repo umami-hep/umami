@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing track masking for the input variable plots [!585](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/585) 
 - Reducing artifact size for the preprocessing integration tests [!586](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/586)
 - Removing casefold in tagger name retrieval [!584](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/584)
 - Fixing all pylint `logging-fstring-interpolation` issues [!582](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/582)

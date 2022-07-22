@@ -132,6 +132,9 @@ class TestInput_Vars_Plotting(unittest.TestCase):
                     "files"
                 ] = f"{self.test_dir}plot_input_vars_r22_check.h5"
                 self.config[plot]["Datasets_to_plot"]["R22"]["label"] = "R22 Test"
+                self.config[plot]["Datasets_to_plot"]["R22"][
+                    "tracks_name"
+                ] = "tracks_loose"
                 self.config[plot]["plot_settings"][
                     "SecondTag"
                 ] = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
@@ -161,6 +164,7 @@ class TestInput_Vars_Plotting(unittest.TestCase):
             "IP3D_signed_d0_significance": 100,
             "numberOfInnermostPixelLayerHits": [0, 4, 1],
             "dr": None,
+            "numberOfSCTHits": None,
         }
 
         # Save changes to yaml
