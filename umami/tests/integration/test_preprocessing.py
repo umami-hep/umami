@@ -50,6 +50,7 @@ def runPreprocessing(
     string_id: str,
     test_dir: str,
     flavours_to_process: list = None,
+    sample_type_list: list = None,
 ) -> bool:
     """
     Call all steps of the preprocessing for a certain configuration and variable dict
@@ -72,6 +73,9 @@ def runPreprocessing(
     flavours_to_process : list, optional
         List with the flavours that are to be processed. By default
         None
+    sample_type_list: list, optional
+        List with the sample types to prepare. By default this will be
+        ['ttbar', 'zpext']. By default None
 
     Raises
     ------
@@ -96,17 +100,20 @@ def runPreprocessing(
         Preprocessing succeeded or not.
     """
 
+    logger.info("Starting integration test of the %s method.", method)
+    logger.info("Test: running the prepare...")
+
     # Check if default needs to be set
     if flavours_to_process is None:
         flavours_to_process = ["ujets", "cjets", "bjets"]
 
-    logger.info("Starting integration test of the %s method.", method)
-    logger.info("Test: running the prepare...")
+    if sample_type_list is None:
+        sample_type_list = ["ttbar", "zprime"]
 
     # Generate list of samples
     sample_list = [
         f"training_{sample_type}_{flavour}"
-        for sample_type in ["ttbar", "zprime"]
+        for sample_type in sample_type_list
         for flavour in flavours_to_process
     ]
 
@@ -259,6 +266,11 @@ def runPreprocessing(
         # Rename the needed config to PFlow-Preprocessing.yaml and erase the unused
         # TODO change in python 3.10
         if method == "count":
+            if string_id == "hits":
+                copyfile(
+                    os.path.join(copy_path, "PFlow-Preprocessing_hits.yaml"),
+                    os.path.join(copy_path, "PFlow-Preprocessing.yaml"),
+                )
             run(
                 [f"rm -rfv {unused_configs}"],
                 shell=True,
@@ -377,6 +389,9 @@ class TestPreprocessing(unittest.TestCase):
         var_dict_dl1r_source = os.path.join(
             os.getcwd(), self.data["test_preprocessing"]["var_dict_dl1r"]
         )
+        var_dict_dips_hits_source = os.path.join(
+            os.getcwd(), self.data["test_preprocessing"]["var_dict_dips_hits"]
+        )
         self.config = os.path.join(self.test_dir, os.path.basename(config_source))
         self.config_paths = os.path.join(
             self.test_dir, os.path.basename(config_paths_source)
@@ -390,6 +405,9 @@ class TestPreprocessing(unittest.TestCase):
         self.var_dict_dl1r = os.path.join(
             self.test_dir, os.path.basename(var_dict_dl1r_source)
         )
+        self.var_dict_dips_hits = os.path.join(
+            self.test_dir, os.path.basename(var_dict_dips_hits_source)
+        )
         self.scale_dict = os.path.join(self.test_dir, "PFlow-scale_dict.json")
         self.output = os.path.join(self.test_dir, "PFlow-hybrid_70-test.h5")
         self.indices = os.path.join(self.test_dir, "indices.h5")
@@ -402,6 +420,7 @@ class TestPreprocessing(unittest.TestCase):
         copyfile(var_dict_umami_source, self.var_dict_umami)
         copyfile(var_dict_dips_source, self.var_dict_dips)
         copyfile(var_dict_dl1r_source, self.var_dict_dl1r)
+        copyfile(var_dict_dips_hits_source, self.var_dict_dips_hits)
 
         # modify copy of preprocessing config file for test
         replaceLineInFile(
@@ -437,12 +456,12 @@ class TestPreprocessing(unittest.TestCase):
         replaceLineInFile(
             self.config,
             "      file_pattern: user.alfroch.410470",
-            "      file_pattern: ttbar/*.h5",
+            "      file_pattern: ttbar/ci_ttbar_basefile.h5",
         )
         replaceLineInFile(
             self.config,
             "      file_pattern: user.alfroch.427081",
-            "      file_pattern: zpext/*.h5",
+            "      file_pattern: zpext/ci_zpext_basefile.h5",
         )
         replaceLineInFile(
             self.config,
@@ -579,6 +598,61 @@ class TestPreprocessing(unittest.TestCase):
             "",
         )
 
+        # copy config file and change name to hits for hit preprocessing test
+        self.hits_config = self.config[:].replace(".yaml", "") + "_hits.yaml"
+        copyfile(self.config, self.hits_config)
+
+        replaceLineInFile(
+            self.hits_config,
+            "      file_pattern: ttbar/ci_ttbar_basefile.h5",
+            "      file_pattern: ttbar/ci_hits_basefile.h5",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "      file_pattern: zpext/ci_zpext_basefile.h5",
+            "      file_pattern: zpext/ci_hits_basefile.h5",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "    tracks_names:",
+            "    tracks_names: ['hits']",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "      ttbar: 0.7",
+            "      ttbar: 0.0",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "      zprime: 0.3",
+            "      zprime: 1.0",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "    save_track_labels: True",
+            "    save_track_labels: False",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "      ttbar:",
+            "",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "        - training_ttbar_bjets",
+            "",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "        - training_ttbar_cjets",
+            "",
+        )
+        replaceLineInFile(
+            self.hits_config,
+            "        - training_ttbar_ujets",
+            "",
+        )
+
         logger.info("Downloading test data...")
         for file in self.data["test_preprocessing"]["files"]:
             path = os.path.join(
@@ -602,6 +676,18 @@ class TestPreprocessing(unittest.TestCase):
                 "mv",
                 os.path.join(self.test_dir, "ci_zpext_basefile.h5"),
                 os.path.join(self.test_dir, "zpext", "ci_zpext_basefile.h5"),
+            ],
+            check=True,
+        )
+        copyfile(
+            os.path.join(self.test_dir, "ci_hits_basefile.h5"),
+            os.path.join(self.test_dir, "ttbar", "ci_hits_basefile.h5"),
+        )
+        run(
+            [
+                "mv",
+                os.path.join(self.test_dir, "ci_hits_basefile.h5"),
+                os.path.join(self.test_dir, "zpext", "ci_hits_basefile.h5"),
             ],
             check=True,
         )
@@ -638,6 +724,25 @@ class TestPreprocessing(unittest.TestCase):
                 method="count",
                 string_id="base",
                 test_dir=self.test_dir,
+            )
+        )
+
+    def test_preprocessing_dips_hits_count(self):
+        """Integration test of preprocessing.py script using DIPS with hits
+        variables."""
+        replaceLineInFile(
+            self.config_paths,
+            ".var_file:",
+            f".var_file: &var_file {self.var_dict_dips_hits}",
+        )
+        self.assertTrue(
+            runPreprocessing(
+                self.hits_config,
+                tagger="dips",
+                method="count",
+                string_id="hits",
+                test_dir=self.test_dir,
+                sample_type_list=["zprime"],
             )
         )
 

@@ -1,0 +1,48 @@
+label: HadronConeExclTruthLabelID
+train_variables:
+  JetKinematics:
+    - absEta_btagJes
+    - pt_btagJes
+
+# Standard tracks training variables
+.tracks_variables: &tracks_variables
+  noNormVars:
+    - IP3D_signed_d0_significance
+    - IP3D_signed_z0_significance
+    - numberOfInnermostPixelLayerHits
+    - numberOfNextToInnermostPixelLayerHits
+    - numberOfInnermostPixelLayerSharedHits
+    - numberOfInnermostPixelLayerSplitHits
+    - numberOfPixelSharedHits
+    - numberOfPixelSplitHits
+    - numberOfSCTSharedHits
+  logNormVars:
+    - ptfrac
+    - dr
+  jointNormVars:
+    - numberOfPixelHits
+    - numberOfSCTHits
+    - d0         # Modified name in R22. Was: btagIp_d0
+    - z0SinTheta # Modified name in R22. Was: btagIp_z0SinTheta
+
+# Defining basic hit variables
+.hits_variables: &hits_variables
+  noNormVars:
+    - layer
+    - isFake
+    - isSplit
+  jointNormVars:
+    - x_local
+    - y_local
+    - z_local
+    - x_global
+    - y_global
+    - z_global
+
+track_train_variables:
+  tracks:
+    <<: *tracks_variables
+  tracks_loose:
+    <<: *tracks_variables
+  hits:
+    <<: *hits_variables

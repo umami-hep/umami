@@ -119,25 +119,38 @@ def apply_scaling_trks(
     # Get track mask
     track_mask = get_track_mask(trks)
 
-    # Get the track variables
-    tracks_noNormVars = variable_config["track_train_variables"][tracks_name][
-        "noNormVars"
-    ]
-    tracks_logNormVars = variable_config["track_train_variables"][tracks_name][
-        "logNormVars"
-    ]
-    tracks_jointNormVars = variable_config["track_train_variables"][tracks_name][
-        "jointNormVars"
-    ]
-    tracks_variables = tracks_noNormVars + tracks_logNormVars + tracks_jointNormVars
+    # Load the variables which are scaled/shifted
+    trk_vars = []
+    trk_vars_lists_dict = {}
+
+    for var_type in ["noNormVars", "logNormVars", "jointNormVars"]:
+        if (
+            var_type in variable_config["track_train_variables"][tracks_name]
+            and variable_config["track_train_variables"][tracks_name][var_type]
+            is not None
+        ):
+            trk_vars_lists_dict[var_type] = variable_config["track_train_variables"][
+                tracks_name
+            ][var_type]
+
+        else:
+            logger.warning("No %s in variable dict for %s!", var_type, tracks_name)
+            trk_vars_lists_dict[var_type] = []
+
+        # Combine all variables into one list
+    for _, item in trk_vars_lists_dict.items():
+        trk_vars += item
 
     # Iterate over variables and scale/shift it
-    for var in tracks_variables:
+    for var in trk_vars:
         x = trks[var]
 
-        if var in tracks_logNormVars:
+        if var in trk_vars_lists_dict["logNormVars"]:
             x = np.log(x)
-        if var in tracks_jointNormVars or var in tracks_logNormVars:
+        if (
+            var in trk_vars_lists_dict["jointNormVars"]
+            or var in trk_vars_lists_dict["logNormVars"]
+        ):
             shift = np.float32(scale_dict[var]["shift"])
             scale = np.float32(scale_dict[var]["scale"])
             if scale == 0 or np.isinf(scale):
@@ -736,7 +749,9 @@ class Scaling:
                             varname=var,
                             custom_defaults_vars=self.variable_config[
                                 "custom_defaults_vars"
-                            ],
+                            ]
+                            if "custom_defaults_vars" in self.variable_config
+                            else None,
                         )
                         scale_dict.append(self.dict_in(*dict_entry))
 
@@ -775,13 +790,26 @@ class Scaling:
         """
 
         # Load the variables which are scaled/shifted
-        logNormVars = self.variable_config["track_train_variables"][tracks_name][
-            "logNormVars"
-        ]
-        jointNormVars = self.variable_config["track_train_variables"][tracks_name][
-            "jointNormVars"
-        ]
-        trkVars = logNormVars + jointNormVars
+        trkVars = []
+        var_lists_dict = {}
+
+        for var_type in ["logNormVars", "jointNormVars"]:
+            if (
+                var_type in self.variable_config["track_train_variables"][tracks_name]
+                and self.variable_config["track_train_variables"][tracks_name][var_type]
+                is not None
+            ):
+                var_lists_dict[var_type] = self.variable_config[
+                    "track_train_variables"
+                ][tracks_name][var_type]
+
+            else:
+                logger.warning("No %s in variable dict for %s!", var_type, tracks_name)
+                var_lists_dict[var_type] = []
+
+        # Combine all variables into one list
+        for _, item in var_lists_dict.items():
+            trkVars += item
 
         # Open h5 file
         with h5py.File(input_file, "r") as infile_all:
@@ -824,7 +852,7 @@ class Scaling:
                 eps = 1e-8
 
                 # Take the log of the desired variables
-                for i, _ in enumerate(logNormVars):
+                for i, _ in enumerate(var_lists_dict["logNormVars"]):
                     X_trk_train[:, :, i][track_mask] = np.log(
                         X_trk_train[:, :, i][track_mask] + eps
                     )
@@ -832,7 +860,7 @@ class Scaling:
                 # Scale the variables
                 scale_dict_trk, nTrks = self.get_scaling_tracks(
                     data=X_trk_train[:, :, :],
-                    var_names=logNormVars + jointNormVars,
+                    var_names=trkVars,
                     track_mask=track_mask,
                 )
 

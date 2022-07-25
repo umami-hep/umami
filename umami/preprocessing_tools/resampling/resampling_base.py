@@ -763,7 +763,10 @@ class Resampling:
                                 jets_i, tracks_i, labels_i = next(generators[i])
                                 labels = np.concatenate([labels, labels_i])
                                 jets = np.concatenate([jets, jets_i])
-                                tracks = np.concatenate([tracks, tracks_i], axis=1)
+                                tracks = [
+                                    np.concatenate([tracks[j], tracks_i[j]])
+                                    for j in range(len(tracks))
+                                ]
                             except TypeError as invalid_type:
                                 if str(invalid_type) == "invalid type promotion":
                                     raise TypeError(
