@@ -201,7 +201,7 @@ class GetRejection_TestCase(unittest.TestCase):
         Also checking if incorrect shapes between y_* and class_labels.
         """
         with self.assertRaises(ValueError):
-            _, _ = get_rejection(
+            get_rejection(
                 y_pred=self.y_pred,
                 y_true=self.y_true_tau,
                 class_labels=self.class_labels_tau,
@@ -211,7 +211,7 @@ class GetRejection_TestCase(unittest.TestCase):
             )
 
         with self.assertRaises(ValueError):
-            _, _ = get_rejection(
+            get_rejection(
                 y_pred=self.y_pred_tau,
                 y_true=self.y_true_tau,
                 class_labels=self.class_labels,

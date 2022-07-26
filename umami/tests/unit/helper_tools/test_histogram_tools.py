@@ -144,7 +144,7 @@ class hist_ratio_TestCase(unittest.TestCase):
     def test_hist_not_same_length_nominator_denominator(self):
         """Test raise of error when numerator and denominator have different shapes."""
         with self.assertRaises(AssertionError):
-            _, _ = hist_ratio(
+            hist_ratio(
                 numerator=np.ones(2),
                 denominator=np.ones(3),
                 numerator_unc=np.ones(3),
@@ -155,7 +155,7 @@ class hist_ratio_TestCase(unittest.TestCase):
         """Test raise of error of shape differences between numerator and
         numerator uncertainty"""
         with self.assertRaises(AssertionError):
-            _, _ = hist_ratio(
+            hist_ratio(
                 numerator=np.ones(3),
                 denominator=np.ones(3),
                 numerator_unc=np.ones(2),
@@ -166,7 +166,7 @@ class hist_ratio_TestCase(unittest.TestCase):
         """Test raise of error of shape differences between denominator and
         denominator uncertainty"""
         with self.assertRaises(AssertionError):
-            _, _ = hist_ratio(
+            hist_ratio(
                 numerator=np.ones(3),
                 denominator=np.ones(3),
                 numerator_unc=np.ones(3),

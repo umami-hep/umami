@@ -105,7 +105,7 @@ def SamplingGenerator(
                 (np.ones(index_tuple[1] - index_tuple[0]) * label),
                 classes=label_classes,
             )[:, :-1]
-            label_classes = label_classes[:-1]
+            label_classes.pop()
 
             # Check for duplicates
             if duplicate and quick_check_duplicates(loading_indices):
@@ -669,7 +669,7 @@ class Resampling:
                     (np.ones(index_tuple[1] - index_tuple[0]) * label),
                     classes=label_classes,
                 )[:, :-1]
-                label_classes = label_classes[:-1]
+                label_classes.pop()
                 # Yield the jets and labels
                 # If tracks are used, also yield the tracks
                 if save_tracks:

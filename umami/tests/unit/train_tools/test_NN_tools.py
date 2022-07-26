@@ -4,9 +4,11 @@
 Unit test script for the NN_tools functions
 """
 
+import json
 import os
 import tempfile
 import unittest
+from pathlib import Path
 from shutil import copyfile
 from subprocess import run
 
@@ -16,6 +18,7 @@ from umami.configuration import logger, set_log_level
 from umami.tools import replace_line_in_file
 from umami.train_tools.configuration import Configuration
 from umami.train_tools.NN_tools import (
+    CallbackBase,
     MyCallback,
     MyCallbackUmami,
     create_metadata_folder,
@@ -99,10 +102,8 @@ class setup_output_directory_TestCase(unittest.TestCase):
 
         # Create file inside the test dir
         os.makedirs(os.path.join(self.tmp_test_dir, "model_files"), exist_ok=True)
-        run(
-            ["touch", f"{self.tmp_test_dir}/model_files/model_epoch.h5"],
-            check=True,
-        )
+        Path(f"{self.tmp_test_dir}/model_files/model_epoch.h5").touch()
+        Path(f"{self.tmp_test_dir}/test_val_dict.json").touch()
 
     def test_setup_output_directory(self):
         """Test nominal behaviour."""
@@ -198,6 +199,27 @@ class get_metrics_file_name_TestCase(unittest.TestCase):
         with self.subTest("Test working dir_name parameter"):
             self.assertEqual(parameters["dir_name"], self.dir_name)
 
+    def test_get_parameters_exception(self):
+        """Test execption if wrong parameter is extracted."""
+        with self.assertRaises(Exception):
+            _ = get_parameters_from_validation_dict_name(
+                self.dir_name + "/" + "validation_WP0p77_0jets_Dict.json"
+            )
+
+    def test_get_dict_name_without_val_dict_path(self):
+        """Test name retrieval without validation dict."""
+        train_metrics_file_name, val_metrics_file_name = get_metrics_file_name(
+            working_point=self.WP,
+            n_jets=None,
+            dir_name=self.dir_name,
+        )
+
+        self.assertEqual(
+            train_metrics_file_name,
+            self.dir_name + "/" + "train_metrics_dict.json",
+        )
+        self.assertIsNone(val_metrics_file_name)
+
 
 class create_metadata_folder_TestCase(unittest.TestCase):
     """Test class for the create_metadata_folder function."""
@@ -215,9 +237,11 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         )
         self.var_dict_path = os.path.join(self.tmp_test_dir, "Var_Dict.yaml")
         self.scale_dict_path = os.path.join(self.tmp_test_dir, "scale_dict.json")
+        self.model_file_path = os.path.join(self.tmp_test_dir, "test_model_file.h5")
 
-        run(["touch", f"{self.var_dict_path}"], check=True)
-        run(["touch", f"{self.scale_dict_path}"], check=True)
+        Path(f"{self.var_dict_path}").touch()
+        Path(f"{self.scale_dict_path}").touch()
+        Path(f"{self.model_file_path}").touch()
 
         copyfile(
             os.path.join(os.getcwd(), "examples/Dips-PFlow-Training-config.yaml"),
@@ -278,6 +302,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
             var_dict_path=self.var_dict_path,
             model_name=self.model_name,
             preprocess_config_path=self.preprocess_config,
+            model_file_path=self.model_file_path,
             overwrite_config=True,
         )
 
@@ -433,6 +458,100 @@ class Configuration_TestCase(unittest.TestCase):
             config.get_configuration()
 
 
+class CallbackBase_TestCase(unittest.TestCase):
+    """
+    Unit tests for the callback base class
+    """
+
+    def setUp(self) -> None:
+        self.test_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
+        self.class_labels = ["bjets", "cjets", "ujets"]
+        self.main_class = "bjets"
+        self.model_path = f"{self.test_dir.name}/test_model"
+        self.nClasses = len(self.class_labels)
+        self.target_beff = 0.77
+        self.n_jets = 300
+        self.val_data_dict = {}
+        self.frac_dict = {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        }
+
+    def test_init_no_continue(self):
+        """Test init without continue training."""
+        CallbackBase(
+            model_name=self.model_path,
+            class_labels=self.class_labels,
+            main_class=self.main_class,
+            val_data_dict=self.val_data_dict,
+            target_beff=self.target_beff,
+            frac_dict=self.frac_dict,
+            n_jets=self.n_jets,
+            use_lrr=False,
+            continue_training=False,
+        )
+
+    def test_init_with_continue_new_file_init(self):
+        """Test init with continue training."""
+        CallbackBase(
+            model_name=self.model_path,
+            class_labels=self.class_labels,
+            main_class=self.main_class,
+            val_data_dict=self.val_data_dict,
+            target_beff=self.target_beff,
+            frac_dict=self.frac_dict,
+            n_jets=self.n_jets,
+            use_lrr=False,
+            continue_training=True,
+        )
+
+    def test_init_with_continue_no_file_init(self):
+        """Test init with continue training but no file given."""
+        # Create dirs and files
+        os.makedirs(self.model_path, exist_ok=True)
+        test_list = [{"train1": 1}, {"train2": 2}, {"train": 3}]
+
+        with open(
+            os.path.join(self.model_path, "train_metrics_dict.json"), "w"
+        ) as train_outfile:
+            json.dump(test_list, train_outfile, indent=4)
+        with open(
+            os.path.join(
+                self.model_path,
+                f"validation_WP0p{int(self.target_beff * 100)}_"
+                f"{self.n_jets}jets_Dict.json",
+            ),
+            "w",
+        ) as train_outfile:
+            json.dump(test_list, train_outfile, indent=4)
+
+        CallbackBase(
+            model_name=self.model_path,
+            class_labels=self.class_labels,
+            main_class=self.main_class,
+            val_data_dict=self.val_data_dict,
+            target_beff=self.target_beff,
+            frac_dict=self.frac_dict,
+            n_jets=self.n_jets,
+            use_lrr=False,
+            continue_training=True,
+        )
+
+    def test_init_no_val_data(self):
+        """Test init without valdidation data."""
+        CallbackBase(
+            model_name=self.model_path,
+            class_labels=self.class_labels,
+            main_class=self.main_class,
+            val_data_dict=None,
+            target_beff=self.target_beff,
+            frac_dict=self.frac_dict,
+            n_jets=self.n_jets,
+            use_lrr=False,
+            continue_training=True,
+        )
+
+
 class MyCallback_TestCase(unittest.TestCase):
     """
     Test the Callback implementation for DIPS
@@ -442,8 +561,6 @@ class MyCallback_TestCase(unittest.TestCase):
         self.test_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.main_class = "bjets"
-        self.nTrks = 40
-        self.nFeatures = 15
         self.nClasses = len(self.class_labels)
         self.target_beff = 0.77
         self.val_data_dict = {}
@@ -521,7 +638,8 @@ class get_jet_feature_indices_TestCase(unittest.TestCase):
     def test_get_jet_feature_indices(self):
         """Test nominal behaviour."""
         variables, excluded_variables, position = get_jet_feature_indices(
-            self.variable_config, self.exclude
+            variable_header=self.variable_config,
+            exclude=self.exclude + ["Not_existing_var"],
         )
 
         with self.subTest("Test cutted variables"):
@@ -532,6 +650,19 @@ class get_jet_feature_indices_TestCase(unittest.TestCase):
 
         with self.subTest("Test position of the variables"):
             self.assertEqual(position[0], self.position)
+
+    def test_exclude_in_header(self):
+        """Test exclude in header option."""
+        variables, excluded_variables, position = get_jet_feature_indices(
+            variable_header=self.variable_config,
+            exclude=self.exclude + ["JetFitter"],
+        )
+        self.assertEqual(variables, ["pt_btagJes"])
+        self.assertEqual(
+            excluded_variables,
+            ["JetFitter_isDefaults", "JetFitter_mass", "absEta_btagJes"],
+        )
+        self.assertEqual(position[0], self.position)
 
 
 class get_jet_feature_position_TestCase(unittest.TestCase):
@@ -548,6 +679,7 @@ class get_jet_feature_position_TestCase(unittest.TestCase):
         ]
 
         self.repeat_variables = ["pt_btagJes"]
+        self.faulty_repeat_variable = ["non_existing_var"]
         self.position = [1]
 
     def test_get_jet_feature_position(self):
@@ -556,6 +688,11 @@ class get_jet_feature_position_TestCase(unittest.TestCase):
             self.repeat_variables, self.variable_config
         )
         self.assertEqual(feature_connect_indices, self.position)
+
+    def test_get_jet_feature_position_ValueError(self):
+        """Test raise of ValueError."""
+        with self.assertRaises(ValueError):
+            get_jet_feature_position(self.faulty_repeat_variable, self.variable_config)
 
 
 class GetSamples_TestCase(unittest.TestCase):
@@ -568,6 +705,7 @@ class GetSamples_TestCase(unittest.TestCase):
         self.tracks_name = "tracks"
         self.NN_structure = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.sampling = {"class_labels": ["bjets", "cjets", "ujets"]}
+        self.preparation = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.test_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.validation_files = {
             "ttbar_r21_val": {
@@ -651,7 +789,7 @@ class GetSamples_TestCase(unittest.TestCase):
     def test_get_test_sample_trks_Different_class_labels(self):
         """Test get test sample trks for different class labels error."""
         with self.assertRaises(AssertionError):
-            _, _ = get_test_sample_trks(
+            get_test_sample_trks(
                 input_file=self.validation_files["ttbar_r21_val"]["path"],
                 var_dict=self.var_dict,
                 preprocess_config=self,
@@ -714,7 +852,7 @@ class GetSamples_TestCase(unittest.TestCase):
     def test_get_test_sample_Different_class_labels(self):
         """Test get test sample for different class labels error."""
         with self.assertRaises(AssertionError):
-            _, _ = get_test_sample(
+            get_test_sample(
                 input_file=self.validation_files["ttbar_r21_val"]["path"],
                 var_dict=self.var_dict,
                 preprocess_config=self,
@@ -733,23 +871,89 @@ class GetSamples_TestCase(unittest.TestCase):
             preprocess_config=self,
             class_labels=self.class_labels_extended,
             n_jets=self.n_jets,
-            exclude=self.exclude,
+            jet_variables=["pt_btagJes"],
+        )
+        self.assertEqual(len(X), len(Y))
+        self.assertEqual(X.shape, (len(X), 1))
+        self.assertEqual(Y.shape, (len(Y), 4))
+        self.assertEqual(
+            list(X.keys()),
+            ["pt_btagJes"],
         )
 
-        with self.subTest("Test jet to label length"):
-            self.assertEqual(len(X), len(Y))
+    def test_get_test_sample_errors(self):
+        """Test errors risen by get_test_sample."""
+        # Check ValueError if jet_variables and exclude are given
+        with self.subTest("Test Value Error"):
+            with self.assertRaises(ValueError):
+                get_test_sample(
+                    input_file=self.validation_files["ttbar_r21_val"]["path"],
+                    var_dict=self.var_dict,
+                    preprocess_config=self,
+                    class_labels=self.class_labels,
+                    n_jets=self.n_jets,
+                    exclude=self.exclude,
+                    jet_variables=["pt_btagJes"],
+                )
 
-        with self.subTest("Test jet shape"):
-            self.assertEqual(X.shape, (len(X), 3))
+        # Check empty filepaths
+        with self.subTest("Test Runtime Error"):
+            with self.assertRaises(RuntimeError):
+                get_test_sample(
+                    input_file=f"{self.test_dir.name}/not_existing_file.h5",
+                    var_dict=self.var_dict,
+                    preprocess_config=self,
+                    class_labels=self.class_labels,
+                    n_jets=self.n_jets,
+                    exclude=self.exclude,
+                )
 
-        with self.subTest("Test label shape"):
-            self.assertEqual(Y.shape, (len(Y), 4))
+        with self.subTest("Test Runtime Error"):
+            with self.assertRaises(RuntimeError):
+                get_test_sample_trks(
+                    input_file=f"{self.test_dir.name}/not_existing_file.h5",
+                    var_dict=self.var_dict,
+                    preprocess_config=self,
+                    class_labels=self.class_labels,
+                    tracks_name=self.tracks_name,
+                    n_jets=self.n_jets,
+                )
 
-        with self.subTest("Test jet variables"):
-            self.assertEqual(
-                list(X.keys()),
-                ["absEta_btagJes", "JetFitter_isDefaults", "JetFitter_mass"],
-            )
+        # Request variable which is not in scale dict
+        with self.subTest("Test Key Error"):
+            with self.assertRaises(KeyError):
+                get_test_sample(
+                    input_file=self.validation_files["ttbar_r21_val"]["path"],
+                    var_dict=self.var_dict,
+                    preprocess_config=self,
+                    class_labels=self.class_labels,
+                    n_jets=self.n_jets,
+                    jet_variables=["pt_btagJes", "JetFitter_energyFraction"],
+                )
+
+        # Check class label assertion error
+        with self.subTest("Test Assertion Error"):
+            del self.sampling["class_labels"]
+            with self.assertRaises(AssertionError):
+                get_test_sample(
+                    input_file=self.validation_files["ttbar_r21_val"]["path"],
+                    var_dict=self.var_dict,
+                    preprocess_config=self,
+                    class_labels=self.class_labels + ["bb-jets"],
+                    n_jets=self.n_jets,
+                    exclude=self.exclude,
+                )
+
+        with self.subTest("Test Assertion Error"):
+            with self.assertRaises(AssertionError):
+                get_test_sample_trks(
+                    input_file=self.validation_files["ttbar_r21_val"]["path"],
+                    var_dict=self.var_dict,
+                    preprocess_config=self,
+                    class_labels=self.class_labels + ["bb-jets"],
+                    tracks_name=self.tracks_name,
+                    n_jets=self.n_jets,
+                )
 
     def test_get_test_file(self):
         """Test nominal behaviour."""

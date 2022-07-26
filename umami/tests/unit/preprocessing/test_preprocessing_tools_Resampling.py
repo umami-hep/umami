@@ -1,6 +1,8 @@
 """Unit tests for Resampling in the preprocessing tools."""
 import os
+import tempfile
 import unittest
+from subprocess import run
 
 import h5py
 import numpy as np
@@ -11,6 +13,7 @@ from umami.preprocessing_tools import (  # PDFSampling,
     CalculateBinning,
     Configuration,
     CorrectFractions,
+    SamplingGenerator,
     UnderSampling,
     UnderSamplingNoReplace,
 )
@@ -98,12 +101,146 @@ class CalculateBinningTestCase(unittest.TestCase):
         np.testing.assert_array_equal(CalculateBinning(bins), expected_outcome)
 
 
-class ResamplingGeneratorTestCase(unittest.TestCase):
+class SamplingGeneratorTestCase(unittest.TestCase):
     """
-    Test the implementation of the UndersamplingGenerator function.
+    Test the implementation of the SamplingGenerator function.
     """
 
-    # TODO: write tests
+    def setUp(self) -> None:
+        self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
+        self.tmp_test_dir = f"{self.tmp_dir.name}"
+        self.label_classes = ["bjets", "cjets", "ujets"]
+        np.random.seed(42)
+        self.indices = sorted(np.random.randint(0, 3000, 3000))
+        self.label = 2
+        self.seed = 42
+        self.chunk_size = 100
+        self.duplicate = True
+        self.save_tracks = True
+        self.tracks_names = ["tracks", "tracks_loose"]
+        self.n_tracks = 40
+        self.test_file = os.path.join(self.tmp_test_dir, "ci_ttbar_testing.h5")
+
+        run(
+            [
+                "wget",
+                "https://umami-ci-provider.web.cern.ch/preprocessing/"
+                "ci_ttbar_testing.h5",
+                "--directory-prefix",
+                self.tmp_test_dir,
+            ],
+            check=True,
+        )
+
+    def test_no_tracks(self):
+        """Testing no tracks yield"""
+        generator = SamplingGenerator(
+            file=self.test_file,
+            indices=self.indices,
+            label=self.label,
+            label_classes=self.label_classes,
+            save_tracks=False,
+            tracks_names=None,
+            chunk_size=self.chunk_size,
+            seed=self.seed,
+            duplicate=self.duplicate,
+        )
+
+        jets, labels = next(generator)
+
+        with self.subTest("Test jets shape"):
+            self.assertEqual(jets.shape, (self.chunk_size,))
+
+        with self.subTest("Test labels shape"):
+            self.assertEqual(labels.shape, (self.chunk_size, len(self.label_classes)))
+
+    def test_tracks(self):
+        """Testing with tracks yield"""
+        generator = SamplingGenerator(
+            file=self.test_file,
+            indices=self.indices,
+            label=self.label,
+            label_classes=self.label_classes,
+            save_tracks=self.save_tracks,
+            tracks_names=self.tracks_names,
+            chunk_size=self.chunk_size,
+            seed=self.seed,
+            duplicate=self.duplicate,
+        )
+
+        jets, tracks, labels = next(generator)
+        with self.subTest("Test jets shape"):
+            self.assertEqual(jets.shape, (self.chunk_size,))
+
+        with self.subTest("Test tracks shape"):
+            self.assertEqual(tracks[0].shape, (self.chunk_size, self.n_tracks))
+            self.assertEqual(tracks[1].shape, (self.chunk_size, self.n_tracks))
+
+        with self.subTest("Test labels shape"):
+            self.assertEqual(labels.shape, (self.chunk_size, len(self.label_classes)))
+
+    def test_no_duplicate(self):
+        """Testing with tracks yield with no duplicates."""
+        generator = SamplingGenerator(
+            file=self.test_file,
+            indices=np.arange(0, 3000, 1),
+            label=self.label,
+            label_classes=self.label_classes,
+            save_tracks=self.save_tracks,
+            tracks_names=self.tracks_names,
+            chunk_size=self.chunk_size,
+            seed=self.seed,
+            duplicate=False,
+        )
+
+        jets, tracks, labels = next(generator)
+        with self.subTest("Test jets shape"):
+            self.assertEqual(jets.shape, (self.chunk_size,))
+
+        with self.subTest("Test tracks shape"):
+            self.assertEqual(tracks[0].shape, (self.chunk_size, self.n_tracks))
+            self.assertEqual(tracks[1].shape, (self.chunk_size, self.n_tracks))
+
+        with self.subTest("Test labels shape"):
+            self.assertEqual(labels.shape, (self.chunk_size, len(self.label_classes)))
+
+    def test_no_duplicate_no_tracks(self):
+        """Testing no tracks yield with no duplicates."""
+        generator = SamplingGenerator(
+            file=self.test_file,
+            indices=np.arange(0, 3000, 1),
+            label=self.label,
+            label_classes=self.label_classes,
+            save_tracks=False,
+            tracks_names=None,
+            chunk_size=self.chunk_size,
+            seed=self.seed,
+            duplicate=False,
+        )
+
+        jets, labels = next(generator)
+        with self.subTest("Test jets shape"):
+            self.assertEqual(jets.shape, (self.chunk_size,))
+
+        with self.subTest("Test labels shape"):
+            self.assertEqual(labels.shape, (self.chunk_size, len(self.label_classes)))
+
+    def test_duplicate_error(self):
+        """Test duplicate TypeError."""
+        with self.assertRaises(TypeError):
+            generator = SamplingGenerator(
+                file=self.test_file,
+                indices=self.indices,
+                label=self.label,
+                label_classes=self.label_classes,
+                save_tracks=self.save_tracks,
+                tracks_names=self.tracks_names,
+                chunk_size=self.chunk_size,
+                seed=self.seed,
+                duplicate=False,
+            )
+
+            next(generator)
 
 
 class ResamplingTestCase(unittest.TestCase):

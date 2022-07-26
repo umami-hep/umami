@@ -46,7 +46,7 @@ class Load_Files_TestCase(unittest.TestCase):
     def test_LoadJetsFromFile_h5_errors(self):
         """Test the raise of errors for wrong h5 file."""
         with self.assertRaises(RuntimeError):
-            _, _ = LoadJetsFromFile(
+            LoadJetsFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
                     "test_to_fail*.h5",
@@ -56,7 +56,7 @@ class Load_Files_TestCase(unittest.TestCase):
             )
 
         with self.assertRaises(KeyError):
-            _, _ = LoadJetsFromFile(
+            LoadJetsFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
                     "ci_ttbar_testing.h5",
@@ -140,14 +140,14 @@ class Load_Files_TestCase(unittest.TestCase):
     def test_LoadJetsFromFile_wrong_filepath(self):
         """Test raise of error for wrong filepath."""
         with self.assertRaises(KeyError):
-            _, _ = LoadJetsFromFile(
+            LoadJetsFromFile(
                 filepath=666,
                 class_labels=self.class_labels,
                 n_jets=self.n_jets,
             )
 
         with self.assertRaises(RuntimeError):
-            _, _ = LoadJetsFromFile(
+            LoadJetsFromFile(
                 filepath="",
                 class_labels=self.class_labels,
                 n_jets=self.n_jets,
@@ -206,7 +206,7 @@ class Load_Files_TestCase(unittest.TestCase):
     def test_LoadTrksFromFile_raise_errors(self):
         """Test the raise of the different errors."""
         with self.assertRaises(RuntimeError):
-            _, _ = LoadTrksFromFile(
+            LoadTrksFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
                     "test_to_fail*.h5",
@@ -216,7 +216,7 @@ class Load_Files_TestCase(unittest.TestCase):
             )
 
         with self.assertRaises(KeyError):
-            _, _ = LoadTrksFromFile(
+            LoadTrksFromFile(
                 filepath=os.path.join(
                     self.tmp_test_dir,
                     "ci_ttbar_testing.h5",
@@ -234,14 +234,14 @@ class Load_Files_TestCase(unittest.TestCase):
             )
 
         with self.assertRaises(KeyError):
-            _, _ = LoadTrksFromFile(
+            LoadTrksFromFile(
                 filepath=666,
                 class_labels=self.class_labels,
                 n_jets=self.n_jets,
             )
 
         with self.assertRaises(RuntimeError):
-            _, _ = LoadTrksFromFile(
+            LoadTrksFromFile(
                 filepath="",
                 class_labels=self.class_labels,
                 n_jets=self.n_jets,

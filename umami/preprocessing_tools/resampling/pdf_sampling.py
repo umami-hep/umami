@@ -1566,7 +1566,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 (np.ones(len(indices)) * label),
                 classes=label_classes,
             )[:, :-1]
-            label_classes = label_classes[:-1]
+            label_classes.pop()
             # Open the input file and read the jets and tracks
             # in a fancy way which allows double index loading
             with h5py.File(in_file, "r") as file_df:
