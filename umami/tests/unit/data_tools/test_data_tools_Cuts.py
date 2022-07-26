@@ -1,3 +1,4 @@
+"""Test scripts for the data tools cuts."""
 import unittest
 
 import numpy as np
@@ -69,6 +70,7 @@ class GetSampleCutsTestCase(unittest.TestCase):
         self.pass_ttbar = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
 
     def test_cuts_passing_ttbar(self):
+        """Testing cuts for ttbar pass."""
         indices_to_remove = get_sample_cuts(
             self.jets.to_records(index=False),
             self.cuts,
@@ -78,6 +80,7 @@ class GetSampleCutsTestCase(unittest.TestCase):
         self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
 
     def test_cuts_passing_ttbar_extended_labelling(self):
+        """Testing cuts for ttbar pass with the extended labelling."""
         indices_to_remove = get_sample_cuts(
             self.jets.to_records(index=False),
             self.extended_cuts,
@@ -87,6 +90,7 @@ class GetSampleCutsTestCase(unittest.TestCase):
         self.assertTrue(np.array_equal(cut_result, self.pass_ttbar))
 
     def test_cuts_wrong_format(self):
+        """Testing raise of KeyError for wrongly formatted cuts."""
         with self.assertRaises(KeyError):
             get_sample_cuts(
                 self.jets.to_records(index=False),
@@ -94,6 +98,7 @@ class GetSampleCutsTestCase(unittest.TestCase):
             )
 
     def test_cuts_wrong_modulo(self):
+        """Testing raise of KeyError for wrong modulo cuts."""
         with self.assertRaises(RuntimeError):
             get_sample_cuts(
                 self.jets.to_records(index=False),
@@ -101,6 +106,7 @@ class GetSampleCutsTestCase(unittest.TestCase):
             )
 
     def test_cuts_wrong_operator(self):
+        """Testing raise of KeyError for wrong operator cuts."""
         with self.assertRaises(KeyError):
             get_sample_cuts(
                 self.jets.to_records(index=False),
@@ -118,11 +124,13 @@ class GetCategoryCutsTestCase(unittest.TestCase):
         self.label_value = 5
 
     def test_WrongTypeProvided(self):
+        """Testing wrong type provided."""
         self.label_value = "5"
         with self.assertRaises(ValueError):
             get_category_cuts(self.label_var, self.label_value)
 
     def test_IntegerCase(self):
+        """Testing ints."""
         cuts = get_category_cuts(self.label_var, self.label_value)
         expected_cuts = [
             {self.label_var: {"operator": "==", "condition": self.label_value}}
@@ -130,6 +138,7 @@ class GetCategoryCutsTestCase(unittest.TestCase):
         self.assertEqual(cuts, expected_cuts)
 
     def test_FloatCase(self):
+        """Testing floats."""
         self.label_value = 5.0
         cuts = get_category_cuts(self.label_var, self.label_value)
         expected_cuts = [
@@ -138,6 +147,7 @@ class GetCategoryCutsTestCase(unittest.TestCase):
         self.assertEqual(cuts, expected_cuts)
 
     def test_ListCase(self):
+        """Testing lists."""
         self.label_value = [5, 55]
         cuts = get_category_cuts(self.label_var, self.label_value)
         expected_cuts = [

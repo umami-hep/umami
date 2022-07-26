@@ -191,7 +191,7 @@ def evaluate_model(
             raise ValueError("You need to give an epoch which is to be evaluated!")
 
         # Get model file path
-        model_file = utt.GetModelPath(
+        model_file = utt.get_model_path(
             model_name=train_config.model_name, epoch=args.epoch
         )
         logger.info("Evaluating %s", model_file)
@@ -205,7 +205,7 @@ def evaluate_model(
         logger.info("Start loading %s test file", data_set_name)
         if tagger.casefold() == "umami_cond_att".casefold():
             # Load the test jets
-            x_test, x_test_trk, _ = utt.GetTestFile(
+            x_test, x_test_trk, _ = utt.get_test_file(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
                 preprocess_config=preprocess_config,
@@ -231,7 +231,7 @@ def evaluate_model(
 
         else:
             # Get the testfile with the needed configs
-            x_test, x_test_trk, _ = utt.GetTestFile(
+            x_test, x_test_trk, _ = utt.get_test_file(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
                 preprocess_config=preprocess_config,
@@ -506,14 +506,16 @@ def evaluate_model_dips(
         )
 
     # Get model file path
-    model_file = utt.GetModelPath(model_name=train_config.model_name, epoch=args.epoch)
+    model_file = utt.get_model_path(
+        model_name=train_config.model_name, epoch=args.epoch
+    )
     logger.info("Evaluating %s", model_file)
 
     # Check which test files need to be loaded depending on the CADS version
     logger.info("Start loading %s test file", data_set_name)
     if tagger.casefold() == "cads":
         # Load the test jets
-        x_test, x_test_trk, y_test = utt.GetTestFile(
+        x_test, x_test_trk, y_test = utt.get_test_file(
             input_file=test_file,
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
@@ -822,7 +824,9 @@ def evaluate_model_dl1(
         )
 
     # Get model file path
-    model_file = utt.GetModelPath(model_name=train_config.model_name, epoch=args.epoch)
+    model_file = utt.get_model_path(
+        model_name=train_config.model_name, epoch=args.epoch
+    )
     logger.info("Evaluating %s", model_file)
 
     # Define excluded variables and laod them

@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Unit test script for the generator functions of tf_tools.
+"""
+
 import os
 import tempfile
 import unittest
@@ -24,7 +30,7 @@ class BaseGeneratorTest(unittest.TestCase):
 
         self.test_dir_path = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.test_dir = f"{self.test_dir_path.name}"
-        logger.info(f"Creating test directory in {self.test_dir}")
+        logger.info("Creating test directory in %s", self.test_dir)
 
         logger.info("Downloading test data...")
         path = os.path.join(
@@ -33,7 +39,7 @@ class BaseGeneratorTest(unittest.TestCase):
             "PFlow-hybrid_70-test-preprocessed_shuffled.h5",
         )
 
-        logger.info(f"Retrieving file from path {path}")
+        logger.info("Retrieving file from path %s", path)
         run(
             [
                 "wget",

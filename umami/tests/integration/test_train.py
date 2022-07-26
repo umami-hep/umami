@@ -13,7 +13,7 @@ from subprocess import CalledProcessError, run
 import yaml
 
 from umami.configuration import logger, set_log_level
-from umami.tools import replaceLineInFile, yaml_loader
+from umami.tools import replace_line_in_file, yaml_loader
 
 set_log_level(logger, "DEBUG")
 
@@ -136,12 +136,12 @@ def prepareConfig(
         copyfile(var_dict_source, var_dict)
 
         # modify copy of preprocessing config file for test
-        replaceLineInFile(
+        replace_line_in_file(
             preprocessing_config_paths,
             ".outfile_name:",
             f".outfile_name: &outfile_name {train_file}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             preprocessing_config_paths,
             ".dict_file:",
             f".dict_file: &dict_file {scale_dict}",

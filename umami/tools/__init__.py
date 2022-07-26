@@ -5,7 +5,7 @@ from umami.tools.tools import (
     check_main_class_input,
     compare_leading_spaces,
     natural_keys,
-    replaceLineInFile,
+    replace_line_in_file,
     yaml_loader,
 )
 from umami.tools.yaml_tools import YAML

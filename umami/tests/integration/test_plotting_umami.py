@@ -14,7 +14,7 @@ import yaml
 
 from umami.configuration import logger  # noqa: F401
 from umami.configuration import set_log_level
-from umami.tools import replaceLineInFile, yaml_loader
+from umami.tools import replace_line_in_file, yaml_loader
 
 set_log_level(logger, "DEBUG")
 
@@ -144,17 +144,17 @@ class TestPlottingUmami(unittest.TestCase):
         copyfile(self.config_source_dips, self.config_dips)
 
         # modify copy of preprocessing config file for test
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_dips,
             "Path_to_models_dir:",
             "  Path_to_models_dir: ./",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_dips,
             "model_name:",
             f"  model_name: {self.model_name_dips}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_dips,
             "epoch:",
             "  epoch: 1",
@@ -169,17 +169,17 @@ class TestPlottingUmami(unittest.TestCase):
         # Copy the plotting yaml file
         copyfile(self.config_source_umami, self.config_umami)
 
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_umami,
             "Path_to_models_dir:",
             "  Path_to_models_dir: ./",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_umami,
             "model_name:",
             f"  model_name: {self.model_name_umami}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_umami,
             "epoch:",
             "  epoch: 1",
@@ -195,17 +195,17 @@ class TestPlottingUmami(unittest.TestCase):
         copyfile(self.config_source_dl1r, self.config_dl1r)
 
         # modify copy of preprocessing config file for test
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_dl1r,
             "Path_to_models_dir:",
             "  Path_to_models_dir: ./",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_dl1r,
             "model_name:",
             f"  model_name: {self.model_name_dl1r}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_dl1r,
             "epoch:",
             "  epoch: 1",

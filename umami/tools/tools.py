@@ -57,7 +57,7 @@ def compare_leading_spaces(ref: str, comp: str):
     return diff_spaces
 
 
-def replaceLineInFile(file, key, new_line, only_first=False):
+def replace_line_in_file(file, key, new_line, only_first=False):
     """Replace line in file
 
     Parameters

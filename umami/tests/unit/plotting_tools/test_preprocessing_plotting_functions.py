@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Unit test script for the preprocessing plot functions.
+"""
+
 import os
 import tempfile
 import unittest
@@ -17,6 +23,8 @@ set_log_level(logger, "DEBUG")
 
 
 class preprocessing_plots_TestCase(unittest.TestCase):
+    """Test class for the preprocessing plot functions."""
+
     def setUp(self):
         """
         Get dataset for testing.
@@ -26,7 +34,7 @@ class preprocessing_plots_TestCase(unittest.TestCase):
         plt.close("all")
 
         # Create a temporary directory
-        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.actual_plots_dir = f"{self.tmp_dir.name}/"
         self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
 
@@ -45,6 +53,7 @@ class preprocessing_plots_TestCase(unittest.TestCase):
         )
 
     def test_preprocessing_plots(self):
+        """Test nominal behaviour for the preprocessing plots."""
         preprocessing_plots(
             sample=os.path.join(
                 self.actual_plots_dir,
@@ -97,6 +106,8 @@ class preprocessing_plots_TestCase(unittest.TestCase):
 
 
 class plot_resampling_variables_TestCase(unittest.TestCase):
+    """Test class for the plot resampling variables functions."""
+
     def setUp(self):
         """
         Get dataset for testing.
@@ -106,7 +117,7 @@ class plot_resampling_variables_TestCase(unittest.TestCase):
         plt.close("all")
 
         # Create a temporary directory
-        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.actual_plots_dir = f"{self.tmp_dir.name}/"
         self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
 
@@ -166,14 +177,15 @@ class plot_resampling_variables_TestCase(unittest.TestCase):
         )
 
         for var in self.variables:
-            self.assertEqual(
-                None,
-                compare_images(
-                    self.expected_plots_dir + f"{var}_before_resampling.png",
-                    self.actual_plots_dir + f"{var}_before_resampling.png",
-                    tol=1,
-                ),
-            )
+            with self.subTest(f"Test {var} plot before resampling."):
+                self.assertEqual(
+                    None,
+                    compare_images(
+                        self.expected_plots_dir + f"{var}_before_resampling.png",
+                        self.actual_plots_dir + f"{var}_before_resampling.png",
+                        tol=1,
+                    ),
+                )
 
     def test_plot_resampling_variables_wrong_binning(self):
         """Test the plot_resampling_variables wrong binning error"""

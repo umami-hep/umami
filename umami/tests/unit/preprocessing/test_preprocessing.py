@@ -1,3 +1,4 @@
+"""Unit test if preprocessing."""
 import argparse
 import os
 import unittest  # noqa
@@ -34,7 +35,14 @@ class PreprocessingTestParser(unittest.TestCase):
             tracks=False,
         ),
     )
-    def test_Parser(self, mock_args):
+    def test_parser(self, mock_args):  # pylint: disable=W0613
+        """Test parser
+
+        Parameters
+        ----------
+        mock_args : mock_args
+            passed arguments from command line via mock
+        """
         parser = get_parser()
         self.assertEqual(parser.config_file, self.config_file)
         self.assertFalse(parser.tracks)
@@ -51,3 +59,5 @@ class PreprocessingTestGetScaleDict(unittest.TestCase):
         self.config_file = os.path.join(
             os.path.dirname(__file__), "test_preprocess_config.yaml"
         )
+
+    # TODO: write test
