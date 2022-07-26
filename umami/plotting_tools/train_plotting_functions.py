@@ -225,7 +225,7 @@ def plot_disc_cut_per_epoch(
         f"\n{frac_class} fraction = {frac}\nWP={int(target_beff * 100):02d}%"
     )
     disc_cut_plot.initialise_plot()
-    disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
+    disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}")
 
 
 def plot_disc_cut_per_epoch_umami(
@@ -285,7 +285,7 @@ def plot_disc_cut_per_epoch_umami(
     )
     disc_cut_plot.atlas_second_tag += f"\nWP={int(target_beff * 100):02d}%"
     disc_cut_plot.initialise_plot()
-    disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
+    disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}")
 
 
 def plot_rej_per_epoch_comp(
@@ -529,7 +529,7 @@ def plot_rej_per_epoch_comp(
     rej_plot.fig.tight_layout()
     rej_plot.plotting_done = True
     rej_plot.atlasify()
-    rej_plot.savefig(f"{plot_name}.{plot_datatype}", transparent=True)
+    rej_plot.savefig(f"{plot_name}.{plot_datatype}")
 
 
 def plot_rej_per_epoch(
@@ -689,10 +689,7 @@ def plot_rej_per_epoch(
         )
 
         rej_plot.initialise_plot()
-        rej_plot.savefig(
-            f"{plot_name}_{iter_class}_rejection.{plot_datatype}",
-            transparent=True,
-        )
+        rej_plot.savefig(f"{plot_name}_{iter_class}_rejection.{plot_datatype}")
 
 
 def plot_losses(
@@ -749,7 +746,7 @@ def plot_losses(
     )
 
     loss_plot.initialise_plot()
-    loss_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
+    loss_plot.savefig(plot_name + f".{plot_datatype}")
 
 
 def plot_accuracies(
@@ -805,7 +802,7 @@ def plot_accuracies(
         **kwargs,
     )
     acc_plot.initialise_plot()
-    acc_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
+    acc_plot.savefig(plot_name + f".{plot_datatype}")
 
 
 def plot_losses_umami(
@@ -878,7 +875,7 @@ def plot_losses_umami(
         **kwargs,
     )
     loss_plot.initialise_plot()
-    loss_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
+    loss_plot.savefig(plot_name + f".{plot_datatype}")
 
 
 def plot_accuracies_umami(
@@ -952,7 +949,7 @@ def plot_accuracies_umami(
     )
 
     acc_plot.initialise_plot()
-    acc_plot.savefig(plot_name + f".{plot_datatype}", transparent=True)
+    acc_plot.savefig(plot_name + f".{plot_datatype}")
 
 
 def run_validation_check(

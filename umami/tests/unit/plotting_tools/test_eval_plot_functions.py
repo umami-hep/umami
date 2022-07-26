@@ -337,6 +337,7 @@ class Eval_plots_TestCase(unittest.TestCase):
                 {"cjets": 0.1, "ujets": 0.9},
                 {"cjets": 0.1, "ujets": 0.9},
             ],
+            # plot_name=self.expected_plots_dir + "plot_fraction_contour.png",
             plot_name=self.actual_plots_dir + "plot_fraction_contour.png",
             rejections_to_fix_list=[None, None],
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow Jets,\n$t\\bar{t}$ Test Sample",
