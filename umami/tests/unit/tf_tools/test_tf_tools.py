@@ -438,7 +438,7 @@ class prepare_model_TestCase(unittest.TestCase):
         self.NN_structure = {"load_optimiser": True}
 
         with self.assertRaises(ValueError):
-            _, _, _ = prepare_model(train_config=self)
+            prepare_model(train_config=self)
 
     def test_load_model_without_continue_training(self):
         """Test loading of a model without continuation."""
