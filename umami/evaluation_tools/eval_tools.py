@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Script with all the higher level evaluation functions.
-"""
-
+"""Script with all the higher level evaluation functions."""
 from umami.configuration import global_config, logger  # isort:skip
 import copy
 from itertools import permutations

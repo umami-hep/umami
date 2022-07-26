@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Integration tests for the scripts located in the examples directory
-"""
+"""Integration tests for the scripts located in the examples directory."""
 
 import os
 from subprocess import run

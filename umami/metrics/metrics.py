@@ -1,8 +1,5 @@
-#!/usr/bin/env python
-
 """
-Script with all the metrics calculations used to grade the
-performance of the taggers.
+Script with all the metrics calculations used to grade theperformance of the taggers.
 """
 
 import copy

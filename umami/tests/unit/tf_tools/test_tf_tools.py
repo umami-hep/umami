@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for the functions of tf_tools.
-"""
+"""Unit test script for the functions of tf_tools."""
 
 import os
 import tempfile

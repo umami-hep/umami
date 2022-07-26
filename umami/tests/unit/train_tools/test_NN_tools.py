@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for the NN_tools functions
-"""
-
+"""Unit test script for the NN_tools functions."""
 import json
 import os
 import tempfile

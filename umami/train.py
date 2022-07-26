@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Training script to perform various tagger trainings."""
 import argparse
 

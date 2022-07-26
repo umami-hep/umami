@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-This script integration tests the training of the different models.
-"""
+"""This script integration tests the training of the different models."""
 
 import os
 import tempfile

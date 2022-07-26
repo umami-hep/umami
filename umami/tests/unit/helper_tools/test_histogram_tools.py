@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for the histogram helper functions.
-"""
+"""Unit test script for the histogram helper functions."""
 
 import unittest
 

@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Removing #!/usr/bin/env python from scripts  [!591](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/591)
 - Adding some missing unit tests [!587](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/587)
 - Plots per default with non-transparent background [!590](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/590)
 - Fixing pylint for unit tests [!588](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/588)

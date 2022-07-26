@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Keras model of the UMAMI tagger."""
 from umami.configuration import logger  # isort:skip
 import os
