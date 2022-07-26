@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Unit test script for the functions of tf_tools.
+"""
+
 import os
 import tempfile
 import unittest
@@ -13,6 +19,8 @@ set_log_level(logger, "DEBUG")
 
 
 class test_Attention(tf.test.TestCase):
+    """Test class for the attention layer."""
+
     def setUp(self):
         """
         Setting up the Attention network
@@ -22,7 +30,7 @@ class test_Attention(tf.test.TestCase):
         self.activation = "relu"
         self.mask_zero = True
         self.apply_softmax = True
-        super(test_Attention, self).setUp()
+        super().setUp()
 
         self.my_attention = Attention(
             nodes=self.nodes,
@@ -32,16 +40,19 @@ class test_Attention(tf.test.TestCase):
         )
 
     def test_get_config(self):
+        """Test the returning of the config values."""
         # Get configs from Dense Net
         configs = self.my_attention.get_config()
 
         # Test configs
-        self.assertEqual(self.nodes, configs["nodes"])
-        self.assertEqual(self.activation, configs["activation"])
-        self.assertEqual(self.mask_zero, configs["mask_zero"])
-        self.assertEqual(self.apply_softmax, configs["apply_softmax"])
+        with self.subTest("Test architecture values which are returned"):
+            self.assertEqual(self.nodes, configs["nodes"])
+            self.assertEqual(self.activation, configs["activation"])
+            self.assertEqual(self.mask_zero, configs["mask_zero"])
+            self.assertEqual(self.apply_softmax, configs["apply_softmax"])
 
     def test_call(self):
+        """Test the call function."""
         inputs = np.array(
             [
                 [[0, 1, 1], [1, 1, 0], [1, 1, 1]],
@@ -62,6 +73,7 @@ class test_Attention(tf.test.TestCase):
         np.testing.assert_almost_equal(expected_output, out)
 
     def test_call_no_softmax(self):
+        """Test the call function with no softmax applied."""
         attention = Attention(
             nodes=self.nodes,
             activation=self.activation,
@@ -89,6 +101,7 @@ class test_Attention(tf.test.TestCase):
         np.testing.assert_almost_equal(expected_output, out)
 
     def test_call_with_mask(self):
+        """The the call function with given masking."""
         attention = Attention(
             nodes=self.nodes,
             activation=self.activation,
@@ -116,6 +129,7 @@ class test_Attention(tf.test.TestCase):
         np.testing.assert_almost_equal(expected_output, out)
 
     def test_call_AssertionError(self):
+        """Test call functions assertion error."""
         inputs = np.array([[0, 1, 1], [1, 1, 0]])
 
         # Get net output
@@ -123,6 +137,7 @@ class test_Attention(tf.test.TestCase):
             _ = self.my_attention(inputs=inputs)
 
     def test_compute_mask(self):
+        """Test computing of the masking."""
         inputs = np.array(
             [
                 [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
@@ -139,6 +154,7 @@ class test_Attention(tf.test.TestCase):
         self.assertAllEqual(mask, expected_output)
 
     def test_compute_mask_Errors(self):
+        """Test error of the masking."""
         _ = Attention(
             nodes=self.nodes,
             activation=self.activation,
@@ -155,6 +171,8 @@ class test_Attention(tf.test.TestCase):
 
 
 class test_DeepSet(tf.test.TestCase):
+    """Test class for the DeepSet."""
+
     def setUp(self):
         """
         Setting up the DeepSet network
@@ -164,7 +182,7 @@ class test_DeepSet(tf.test.TestCase):
         self.activation = "relu"
         self.mask_zero = True
         self.batch_norm = True
-        super(test_DeepSet, self).setUp()
+        super().setUp()
 
         self.my_deepset = DeepSet(
             nodes=self.nodes,
@@ -174,16 +192,19 @@ class test_DeepSet(tf.test.TestCase):
         )
 
     def test_get_config(self):
+        """Test the returning of the config values."""
         # Get configs from Dense Net
         configs = self.my_deepset.get_config()
 
         # Test configs
-        self.assertEqual(self.nodes, configs["nodes"])
-        self.assertEqual(self.activation, configs["activation"])
-        self.assertEqual(self.batch_norm, configs["batch_norm"])
-        self.assertEqual(self.mask_zero, configs["mask_zero"])
+        with self.subTest("Test architecture values which are returned"):
+            self.assertEqual(self.nodes, configs["nodes"])
+            self.assertEqual(self.activation, configs["activation"])
+            self.assertEqual(self.batch_norm, configs["batch_norm"])
+            self.assertEqual(self.mask_zero, configs["mask_zero"])
 
     def test_call(self):
+        """Test call function."""
         # Define an input
         inputs = np.array(
             [
@@ -207,6 +228,7 @@ class test_DeepSet(tf.test.TestCase):
         np.testing.assert_almost_equal(expected_output, out)
 
     def test_call_no_batch_norm(self):
+        """Test call function with no batch normalisation."""
         deepset = DeepSet(
             nodes=self.nodes,
             activation=self.activation,
@@ -237,6 +259,7 @@ class test_DeepSet(tf.test.TestCase):
         np.testing.assert_almost_equal(expected_output, out)
 
     def test_call_with_mask(self):
+        """Test call function with given mask."""
         deepset = DeepSet(
             nodes=self.nodes,
             activation=self.activation,
@@ -264,6 +287,7 @@ class test_DeepSet(tf.test.TestCase):
         np.testing.assert_almost_equal(expected_output, out)
 
     def test_call_AssertionError(self):
+        """Test call functions assertion error."""
         inputs = np.array([[0, 1, 1], [1, 1, 0]])
 
         # Get net output
@@ -271,6 +295,7 @@ class test_DeepSet(tf.test.TestCase):
             _ = self.my_deepset(inputs=inputs)
 
     def test_compute_mask(self):
+        """Test compute_mask function."""
         inputs = np.array(
             [
                 [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
@@ -288,6 +313,8 @@ class test_DeepSet(tf.test.TestCase):
 
 
 class test_DenseNet(tf.test.TestCase):
+    """The class for the DenseNet"""
+
     def setUp(self):
         """
         Setting up the DenseNet
@@ -297,7 +324,7 @@ class test_DenseNet(tf.test.TestCase):
         self.output_nodes = 3
         self.activation = "relu"
         self.batch_norm = True
-        super(test_DenseNet, self).setUp()
+        super().setUp()
 
         self.my_dense = DenseNet(
             nodes=self.nodes,
@@ -308,16 +335,19 @@ class test_DenseNet(tf.test.TestCase):
         )
 
     def test_get_config(self):
+        """Test returning the config values"""
         # Get configs from Dense Net
         configs = self.my_dense.get_config()
 
         # Test configs
-        self.assertEqual(self.output_nodes, configs["output_nodes"])
-        self.assertEqual(self.activation, configs["activation"])
-        self.assertEqual(self.batch_norm, configs["batch_norm"])
-        self.assertEqual(self.nodes, configs["nodes"])
+        with self.subTest("Test architecture values which are returned"):
+            self.assertEqual(self.output_nodes, configs["output_nodes"])
+            self.assertEqual(self.activation, configs["activation"])
+            self.assertEqual(self.batch_norm, configs["batch_norm"])
+            self.assertEqual(self.nodes, configs["nodes"])
 
     def test_call(self):
+        """Test the call function."""
         inputs = np.array([[0, 1, 1], [1, 1, 0]])
         expected_output = np.array(
             [
@@ -333,11 +363,11 @@ class test_DenseNet(tf.test.TestCase):
         np.testing.assert_almost_equal(expected_output, out)
 
 
-class TestPrepareModel(unittest.TestCase):
+class prepare_model_TestCase(unittest.TestCase):
     """Test the prepare_model function."""
 
     def setUp(self) -> None:
-        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.tmp_test_dir = f"{self.tmp_dir.name}/"
 
         self.model_name = self.tmp_test_dir + "Test_prepare_model"
@@ -358,7 +388,8 @@ class TestPrepareModel(unittest.TestCase):
                 "https://umami-ci-provider.web.cern.ch/umami/test_model_file.h5",
                 "--directory-prefix",
                 self.tmp_test_dir,
-            ]
+            ],
+            check=True,
         )
 
         run(
@@ -370,7 +401,8 @@ class TestPrepareModel(unittest.TestCase):
                     "model_files",
                     "model_epoch001.h5",
                 ),
-            ]
+            ],
+            check=True,
         )
 
     def test_init_fresh_model(self):

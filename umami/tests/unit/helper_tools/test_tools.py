@@ -15,7 +15,7 @@ from umami.configuration import logger, set_log_level
 from umami.tools import (
     check_main_class_input,
     compare_leading_spaces,
-    replaceLineInFile,
+    replace_line_in_file,
 )
 from umami.train_tools.configuration import Configuration
 
@@ -77,7 +77,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         """Test the standard behaviour of the function."""
 
         # Change the model_name
-        replaceLineInFile(
+        replace_line_in_file(
             self.train_config_path,
             "model_name:",
             "model_name: Unittest_Testname",
@@ -93,7 +93,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
 
         # Change the model_name
         with self.assertRaises(AttributeError):
-            replaceLineInFile(
+            replace_line_in_file(
                 self.train_config_path,
                 "Defintly_not_in_the_file:",
                 "model_name: Unittest_Testname",
@@ -104,7 +104,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         """Test the standard behaviour of the function."""
 
         # Change the model_name
-        replaceLineInFile(
+        replace_line_in_file(
             self.train_config_path,
             "model_name:",
             "model_name: Unittest_Testname",
@@ -119,7 +119,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
 
         # Change the model_name
         with self.assertRaises(AttributeError):
-            replaceLineInFile(
+            replace_line_in_file(
                 self.train_config_path,
                 "Defintly_not_in_the_file:",
                 "model_name: Unittest_Testname",
@@ -135,7 +135,10 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         (("   test134", " test789"), 2),
     ],
 )
-def test_compare_leading_spaces(input: tuple, expected_result: int) -> None:
+def test_compare_leading_spaces(  # pylint: disable=W0622
+    input: tuple,
+    expected_result: int,
+) -> None:
     """Test different scenarios for `compare_leading_spaces` function.
 
     Parameters

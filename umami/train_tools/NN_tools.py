@@ -25,7 +25,7 @@ from umami.preprocessing_tools import (
     binarise_jet_labels,
     generate_default_dict,
 )
-from umami.tools import natural_keys, replaceLineInFile
+from umami.tools import natural_keys, replace_line_in_file
 
 
 def get_unique_identifiers(keys: list, prefix: str) -> list:
@@ -114,7 +114,7 @@ def get_metrics_file_name(
     return train_dict_path, validation_dict_path
 
 
-def GetModelPath(model_name: str, epoch: int) -> str:
+def get_model_path(model_name: str, epoch: int) -> str:
     """
     Get the path where the model will be saved/is saved.
 
@@ -310,13 +310,13 @@ def create_metadata_folder(
                     os.path.basename(var_dict_path),
                 )
 
-                replaceLineInFile(
+                replace_line_in_file(
                     os.path.join(model_name, "metadata", os.path.basename(file_path)),
                     "preprocess_config:",
                     f"preprocess_config: {metadata_preprocess_config_path}",
                 )
 
-                replaceLineInFile(
+                replace_line_in_file(
                     os.path.join(model_name, "metadata", os.path.basename(file_path)),
                     "var_dict:",
                     f"var_dict: {metadata_var_dict_path}",
@@ -330,7 +330,7 @@ def create_metadata_folder(
                         os.path.basename(model_file_path),
                     )
 
-                    replaceLineInFile(
+                    replace_line_in_file(
                         os.path.join(
                             model_name, "metadata", os.path.basename(file_path)
                         ),
@@ -353,13 +353,13 @@ def create_metadata_folder(
                     os.path.basename(var_dict_path),
                 )
 
-                replaceLineInFile(
+                replace_line_in_file(
                     os.path.join(model_name, "metadata", os.path.basename(file_path)),
                     ".dict_file: &dict_file",
                     f".dict_file: &dict_file {metadata_scale_dict_path}",
                 )
 
-                replaceLineInFile(
+                replace_line_in_file(
                     os.path.join(model_name, "metadata", os.path.basename(file_path)),
                     ".var_file: &var_file",
                     f".var_file: &var_file {metadata_var_dict_path}",
@@ -1056,7 +1056,7 @@ def load_validation_data_umami(
         if "exclude" in train_config.config:
             exclude = train_config.config["exclude"]
 
-        (X_valid, X_valid_trk, Y_valid,) = GetTestFile(
+        (X_valid, X_valid_trk, Y_valid,) = get_test_file(
             input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
             preprocess_config=preprocess_config,
@@ -1247,7 +1247,7 @@ def load_validation_data_dips(
     return val_data_dict
 
 
-def GetTestFile(
+def get_test_file(
     input_file: str,
     var_dict: str,
     preprocess_config: object,

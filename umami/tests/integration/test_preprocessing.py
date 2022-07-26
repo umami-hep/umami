@@ -13,7 +13,7 @@ from subprocess import CalledProcessError, run
 import yaml
 
 from umami.configuration import logger, set_log_level
-from umami.tools import replaceLineInFile, yaml_loader
+from umami.tools import replace_line_in_file, yaml_loader
 
 set_log_level(logger, "DEBUG")
 
@@ -423,57 +423,57 @@ class TestPreprocessing(unittest.TestCase):
         copyfile(var_dict_dips_hits_source, self.var_dict_dips_hits)
 
         # modify copy of preprocessing config file for test
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             "ntuple_path:",
             f"ntuple_path: &ntuple_path {self.test_dir}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             "sample_path:",
             f"sample_path: &sample_path {self.test_dir}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             "file_path:",
             f"file_path: &file_path {self.test_dir}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".outfile_name:",
             f".outfile_name: &outfile_name {self.output}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".dict_file:",
             f".dict_file: &dict_file {self.scale_dict}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".intermediate_index_file:",
             f".intermediate_index_file: &intermediate_index_file {self.indices}",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "      file_pattern: user.alfroch.410470",
             "      file_pattern: ttbar/ci_ttbar_basefile.h5",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "      file_pattern: user.alfroch.427081",
             "      file_pattern: zpext/ci_zpext_basefile.h5",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "    tracks_names:",
             "    tracks_names: ['tracks','tracks_loose']",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "    n_jets_to_plot:",
             "    n_jets_to_plot: null",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "  N_add_vars:",
             "  N_add_vars: 2",
@@ -484,38 +484,38 @@ class TestPreprocessing(unittest.TestCase):
         copyfile(self.config, self.pdf_config)
 
         # Change the method to pdf and adapt options
-        replaceLineInFile(self.pdf_config, "  method: count", "  method: pdf")
-        replaceLineInFile(
+        replace_line_in_file(self.pdf_config, "  method: count", "  method: pdf")
+        replace_line_in_file(
             self.pdf_config,
             "          bins: [[0, 600000, 351], [650000, 6000000, 84]]",
             "          bins: [[0, 25e4, 100], [25e4, 6e6, 100]]",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "          bins: [0, 2.5, 10]",
             "          bins: [[0, 2.5, 10], [0, 2.5, 10]]",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "    n_jets: 25e6",
             "    n_jets: -1",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "      training_ttbar_bjets: 5.5e6",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "      training_ttbar_cjets: 11.5e6",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "      training_ttbar_ujets: 13.5e6",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "    n_jets_to_plot:",
             "    n_jets_to_plot: 3e4",
@@ -525,13 +525,15 @@ class TestPreprocessing(unittest.TestCase):
         self.weight_config = self.config[:].replace(".yaml", "") + "_weighting.yaml"
         copyfile(self.config, self.weight_config)
 
-        replaceLineInFile(self.weight_config, "  method: count", "  method: weighting")
-        replaceLineInFile(
+        replace_line_in_file(
+            self.weight_config, "  method: count", "  method: weighting"
+        )
+        replace_line_in_file(
             self.weight_config,
             "    bool_attach_sample_weights: False",
             "    bool_attach_sample_weights: True",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.weight_config,
             "    n_jets_to_plot:",
             "    n_jets_to_plot: null",
@@ -542,57 +544,57 @@ class TestPreprocessing(unittest.TestCase):
         )
         copyfile(self.config, self.importance_no_replace_config)
 
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "  method: count",
             "  method: importance_no_replace",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "    weighting_target_flavour: 'bjets'",
             "    target_distribution: 'bjets'",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "          bins: [[0, 600000, 351], [650000, 6000000, 84]]",
             "          bins: [[0, 600000, 100], [600500, 6000000, 20]]",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "          bins: [0, 2.5, 10]",
             "          bins: [0, 2.5, 2]",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "    custom_n_jets_initial:",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "      training_ttbar_bjets: 5.5e6",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "      training_ttbar_cjets: 11.5e6",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "      training_ttbar_ujets: 13.5e6",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "    fractions:",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "      ttbar: 0.7",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.importance_no_replace_config,
             "      zprime: 0.3",
             "",
@@ -602,52 +604,52 @@ class TestPreprocessing(unittest.TestCase):
         self.hits_config = self.config[:].replace(".yaml", "") + "_hits.yaml"
         copyfile(self.config, self.hits_config)
 
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "      file_pattern: ttbar/ci_ttbar_basefile.h5",
             "      file_pattern: ttbar/ci_hits_basefile.h5",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "      file_pattern: zpext/ci_zpext_basefile.h5",
             "      file_pattern: zpext/ci_hits_basefile.h5",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "    tracks_names:",
             "    tracks_names: ['hits']",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "      ttbar: 0.7",
             "      ttbar: 0.0",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "      zprime: 0.3",
             "      zprime: 1.0",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "    save_track_labels: True",
             "    save_track_labels: False",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "      ttbar:",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "        - training_ttbar_bjets",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "        - training_ttbar_cjets",
             "",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.hits_config,
             "        - training_ttbar_ujets",
             "",
@@ -694,7 +696,7 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_umami_count(self):
         """Integration test of preprocessing.py script using Umami variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_umami}",
@@ -712,7 +714,7 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_dips_count(self):
         """Integration test of preprocessing.py script using DIPS variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dips}",
@@ -730,7 +732,7 @@ class TestPreprocessing(unittest.TestCase):
     def test_preprocessing_dips_hits_count(self):
         """Integration test of preprocessing.py script using DIPS with hits
         variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dips_hits}",
@@ -748,17 +750,17 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_dl1r_count(self):
         """Integration test of preprocessing.py script using DL1r variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "    save_tracks:",
             "    save_tracks: False",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "    tracks_names:",
             "    tracks_names: null",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dl1r}",
@@ -776,7 +778,7 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_umami_pdf(self):
         """Integration test of preprocessing.py script using Umami variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_umami}",
@@ -794,7 +796,7 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_dips_pdf(self):
         """Integration test of preprocessing.py script using DIPS variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dips}",
@@ -813,31 +815,31 @@ class TestPreprocessing(unittest.TestCase):
     def test_preprocessing_dips_four_classes_pdf(self):
         """Integration test of preprocessing.py script using DIPS variables and four
         classes."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dips}",
         )
 
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "    n_jets_to_plot:",
             "    n_jets_to_plot: null",
         )
 
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "  class_labels:",
             "  class_labels: [ujets, cjets, bjets, taujets]",
         )
 
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "        - training_ttbar_ujets",
             "        - training_ttbar_ujets\n        - training_ttbar_taujets",
         )
 
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "        - training_zprime_ujets",
             "        - training_zprime_ujets\n        - training_zprime_taujets",
@@ -856,17 +858,17 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_dl1r_pdf(self):
         """Integration test of preprocessing.py script using DL1r variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.pdf_config,
             "    save_tracks:",
             "    save_tracks: False",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "    tracks_names:",
             "    tracks_names: null",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dl1r}",
@@ -884,7 +886,7 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_umami_weighting(self):
         """Integration test of preprocessing.py script using Umami variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_umami}",
@@ -902,7 +904,7 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_dips_weighting(self):
         """Integration test of preprocessing.py script using DIPS variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dips}",
@@ -919,17 +921,17 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_dl1r_weighting(self):
         """Integration test of preprocessing.py script using DL1r variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.weight_config,
             "    save_tracks:",
             "    save_tracks: False",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config,
             "    tracks_names:",
             "    tracks_names: null",
         )
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dl1r}",
@@ -947,7 +949,7 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_preprocessing_umami_importance_no_replace(self):
         """Integration test of preprocessing.py script using DL1r variables."""
-        replaceLineInFile(
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_umami}",

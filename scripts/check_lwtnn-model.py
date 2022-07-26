@@ -219,7 +219,7 @@ def main():
 
     # Get prediction for umami
     if "umami" in tagger.casefold():
-        X_test_jet, X_test_trk, Y_test = utt.GetTestFile(
+        X_test_jet, X_test_trk, Y_test = utt.get_test_file(
             input_file,
             var_dict,
             preprocess_config,

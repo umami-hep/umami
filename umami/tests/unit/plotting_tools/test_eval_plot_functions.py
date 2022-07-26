@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Unit test script for eval plot functions.
+"""
+
 import os
 import tempfile
 import unittest
@@ -21,12 +27,14 @@ from umami.plotting_tools.eval_plotting_functions import (
 set_log_level(logger, "DEBUG")
 
 
-class plot_score_TestCase(unittest.TestCase):
+class Eval_plots_TestCase(unittest.TestCase):
+    """Test class for the eval plot functions."""
+
     def setUp(self):
         # reset matplotlib parameters
         plt.rcdefaults()
         plt.close("all")
-        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.actual_plots_dir = f"{self.tmp_dir.name}/"
         self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
         self.plot_config = {
@@ -49,18 +57,26 @@ class plot_score_TestCase(unittest.TestCase):
         self.class_labels = ["ujets", "cjets", "bjets"]
         self.main_class = "bjets"
 
-        run(["wget", self.results_url, "--directory-prefix", self.actual_plots_dir])
-        run(["wget", self.rej_url, "--directory-prefix", self.actual_plots_dir])
+        run(
+            ["wget", self.results_url, "--directory-prefix", self.actual_plots_dir],
+            check=True,
+        )
+        run(
+            ["wget", self.rej_url, "--directory-prefix", self.actual_plots_dir],
+            check=True,
+        )
         run(
             [
                 "wget",
                 self.frac_url,
                 "--directory-prefix",
                 self.actual_plots_dir,
-            ]
+            ],
+            check=True,
         )
 
     def test_plot_score(self):
+        """Test nominal behaviour for plot_score without ratio."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
             "ttbar",
@@ -89,16 +105,15 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plot_score_comparison(self):
+        """Test nominal behaviour for plot_score with ratio."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
             "ttbar",
         )
 
-        self.model_labels = ["DIPS ttbar", "DIPS ttbar 2"]
-
         plot_score(
             df_list=[df_results_ttbar, df_results_ttbar],
-            model_labels=self.model_labels,
+            model_labels=["DIPS ttbar", "DIPS ttbar 2"],
             tagger_list=["dips", "dips"],
             class_labels_list=[
                 self.class_labels,
@@ -122,6 +137,7 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plot_roc(self):
+        """Test nominal for roc with one rejection."""
         df_results_eff_rej_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-rej_per_eff-1_new.h5",
             "ttbar",
@@ -157,6 +173,7 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plot_roc_comparison(self):
+        """Test nominal for roc with two rejection."""
         df_results_eff_rej_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-rej_per_eff-1_new.h5",
             "ttbar",
@@ -192,19 +209,16 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plot_pt_dependence(self):
+        """Test nominal for pT vs rejection."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
             "ttbar",
         )
 
-        self.df_list = [df_results_ttbar, df_results_ttbar]
-        self.tagger_list = ["dips", "dips"]
-        self.model_labels = ["DIPS ttbar", "DIPS 2"]
-
         plot_pt_dependence(
-            df_list=self.df_list,
-            tagger_list=self.tagger_list,
-            model_labels=self.model_labels,
+            df_list=[df_results_ttbar, df_results_ttbar],
+            tagger_list=["dips", "dips"],
+            model_labels=["DIPS ttbar", "DIPS 2"],
             # plot_name=self.expected_plots_dir + "pT_vs_Test.png",
             plot_name=self.actual_plots_dir + "pT_vs_Test.png",
             class_labels=self.class_labels,
@@ -225,6 +239,7 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plot_saliency(self):
+        """Test nominal behaviour for the saliency plots."""
         rng = np.random.default_rng(42)
         maps_dict = {
             "Variables_list": [f"p{i}" for i in range(15)],
@@ -251,6 +266,7 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plot_prob(self):
+        """Test nominal behaviour for the probability plots without ratio."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
             "ttbar",
@@ -277,6 +293,7 @@ class plot_score_TestCase(unittest.TestCase):
         )
 
     def test_plot_prob_comparison(self):
+        """Test nominal behaviour for the probability plots with ratio."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
             "ttbar",

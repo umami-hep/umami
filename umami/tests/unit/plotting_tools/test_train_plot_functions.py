@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Unit test script for the train plot functions.
+"""
+
 import os
 import tempfile
 import unittest
@@ -23,7 +29,9 @@ from umami.plotting_tools.train_plotting_functions import (
 set_log_level(logger, "DEBUG")
 
 
-class GetRejection_TestCase(unittest.TestCase):
+class Train_Plots_TestCase(unittest.TestCase):
+    """Test class for the train plot function."""
+
     def setUp(self):
         """
         Create a default dataset for testing.
@@ -32,7 +40,7 @@ class GetRejection_TestCase(unittest.TestCase):
         plt.rcdefaults()
         plt.close("all")
         # Create a temporary directory
-        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.actual_plots_dir = f"{self.tmp_dir.name}/"
         self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
         list_of_keys = [
@@ -114,6 +122,7 @@ class GetRejection_TestCase(unittest.TestCase):
         self.frac_class = "cjets"
 
     def test_plot_rej_per_epoch_comp(self):
+        """Test the rejection per epoch comparison plot."""
         plot_rej_per_epoch_comp(
             df_results=self.df_results,
             tagger_label="dips",
@@ -143,6 +152,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_plot_rej_per_epoch(self):
+        """Test the rejection per epoch plot."""
         plot_rej_per_epoch(
             df_results=self.df_results,
             tagger_label="dips",
@@ -161,25 +171,28 @@ class GetRejection_TestCase(unittest.TestCase):
             atlas_second_tag="$\\sqrt{s}=13$ TeV, PFlow jets",
         )
 
-        self.assertEqual(
-            None,
-            compare_images(
-                self.expected_plots_dir + "plot_rej_per_epoch_cjets_rejection.png",
-                self.actual_plots_dir + "plot_rej_per_epoch_cjets_rejection.png",
-                tol=1,
-            ),
-        )
+        with self.subTest("Testing cjets rejection"):
+            self.assertEqual(
+                None,
+                compare_images(
+                    self.expected_plots_dir + "plot_rej_per_epoch_cjets_rejection.png",
+                    self.actual_plots_dir + "plot_rej_per_epoch_cjets_rejection.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertEqual(
-            None,
-            compare_images(
-                self.expected_plots_dir + "plot_rej_per_epoch_ujets_rejection.png",
-                self.actual_plots_dir + "plot_rej_per_epoch_ujets_rejection.png",
-                tol=1,
-            ),
-        )
+        with self.subTest("Testing ujets rejection"):
+            self.assertEqual(
+                None,
+                compare_images(
+                    self.expected_plots_dir + "plot_rej_per_epoch_ujets_rejection.png",
+                    self.actual_plots_dir + "plot_rej_per_epoch_ujets_rejection.png",
+                    tol=1,
+                ),
+            )
 
     def test_plot_losses(self):
+        """Test the loss plot."""
         plot_losses(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "plot_losses",
@@ -200,6 +213,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_plot_accuracies(self):
+        """Test the accuracy plot."""
         plot_accuracies(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "plot_accuracies",
@@ -221,6 +235,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_plot_disc_cut_per_epoch(self):
+        """Test the discriminant cut per epoch plot."""
         plot_disc_cut_per_epoch(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "plot_disc_cut_per_epoch",
@@ -242,6 +257,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_plot_disc_cut_per_epoch_umami(self):
+        """Test the discriminant cut per epoch plot with two taggers."""
         plot_disc_cut_per_epoch_umami(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "plot_disc_cut_per_epoch_umami",
@@ -262,6 +278,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_plot_losses_umami(self):
+        """Test the loss plot with two taggers."""
         plot_losses_umami(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "plot_losses_umami",
@@ -283,6 +300,7 @@ class GetRejection_TestCase(unittest.TestCase):
         )
 
     def test_plot_accuracies_umami(self):
+        """Test the accuracy plot with two taggers."""
         plot_accuracies_umami(
             df_results=self.df_results,
             plot_name=self.actual_plots_dir + "plot_accuracies_umami",
@@ -305,11 +323,13 @@ class GetRejection_TestCase(unittest.TestCase):
 
 
 class get_comp_tagger_rej_dict_TestCase(unittest.TestCase):
+    """Test the rejection dict calculation."""
+
     def setUp(self):
         # reset matplotlib parameters
         plt.rcdefaults()
         plt.close("all")
-        self.test_dir = tempfile.TemporaryDirectory()
+        self.test_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.validation_files = {
             "ttbar_r21_val": {
                 "path": f"{self.test_dir.name}/ci_ttbar_testing.h5",
@@ -330,10 +350,12 @@ class get_comp_tagger_rej_dict_TestCase(unittest.TestCase):
                 "ci_ttbar_testing.h5",
                 "--directory-prefix",
                 self.test_dir.name,
-            ]
+            ],
+            check=True,
         )
 
     def test_get_comp_tagger_rej_dict_umami(self):
+        """Test get_comp_tagger_rej_dict for 2 taggers."""
         comp_rej_dict = get_comp_tagger_rej_dict(
             file=self.validation_files[self.validation_unique_identifiers[0]]["path"],
             unique_identifier=self.validation_unique_identifiers[0],
@@ -345,16 +367,20 @@ class get_comp_tagger_rej_dict_TestCase(unittest.TestCase):
             main_class=self.main_class,
         )
 
-        self.assertTrue(
-            f"cjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
-            and f"ujets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
-        )
+        with self.subTest("Test both rejections"):
+            self.assertTrue(
+                f"cjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+                and f"ujets_rej_{self.validation_unique_identifiers[0]}"
+                in comp_rej_dict
+            )
 
-        self.assertFalse(
-            f"bjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
-        )
+        with self.subTest("Test signal"):
+            self.assertFalse(
+                f"bjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+            )
 
     def test_get_comp_tagger_rej_dict_dips_dl1(self):
+        """Test get_comp_tagger_rej_dict for 1 taggers."""
         comp_rej_dict = get_comp_tagger_rej_dict(
             file=self.validation_files[self.validation_unique_identifiers[0]]["path"],
             unique_identifier=self.validation_unique_identifiers[0],
@@ -366,11 +392,14 @@ class get_comp_tagger_rej_dict_TestCase(unittest.TestCase):
             main_class=self.main_class,
         )
 
-        self.assertTrue(
-            f"cjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
-            and f"ujets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
-        )
+        with self.subTest("Test both rejections"):
+            self.assertTrue(
+                f"cjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+                and f"ujets_rej_{self.validation_unique_identifiers[0]}"
+                in comp_rej_dict
+            )
 
-        self.assertFalse(
-            f"bjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
-        )
+        with self.subTest("Test signal"):
+            self.assertFalse(
+                f"bjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
+            )

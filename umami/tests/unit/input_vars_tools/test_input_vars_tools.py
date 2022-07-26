@@ -1,3 +1,4 @@
+"""Unit tests for input variable plots."""
 import os
 import tempfile
 import unittest
@@ -19,6 +20,8 @@ set_log_level(logger, "DEBUG")
 
 
 class JetPlotting_TestCase(unittest.TestCase):
+    """Test class for jet plotting functions."""
+
     def setUp(self):
         """
         Create a default dataset for testing.
@@ -27,7 +30,9 @@ class JetPlotting_TestCase(unittest.TestCase):
         plt.rcdefaults()
         plt.close("all")
         # Create a temporary directory
-        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir = (
+            tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+        )
         self.actual_plots_dir = f"{self.tmp_dir.name}/"
         self.data_url = "https://umami-ci-provider.web.cern.ch/plot_input_vars/"
 
@@ -52,10 +57,17 @@ class JetPlotting_TestCase(unittest.TestCase):
         with open(self.yaml_file) as yaml_config:
             self.plot_config = yaml.load(yaml_config, Loader=yaml_loader)
 
-        run(["wget", self.r21_url, "--directory-prefix", self.actual_plots_dir])
-        run(["wget", self.r22_url, "--directory-prefix", self.actual_plots_dir])
+        run(
+            ["wget", self.r21_url, "--directory-prefix", self.actual_plots_dir],
+            check=True,
+        )
+        run(
+            ["wget", self.r22_url, "--directory-prefix", self.actual_plots_dir],
+            check=True,
+        )
 
     def test_plot_input_vars_jets_wrong_type(self):
+        """Test jet input variable plots with wrong type."""
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file]
         labels_list = ["R21 Test"]
@@ -79,6 +91,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             )
 
     def test_plot_input_vars_jets(self):
+        """Test jet input variable plots."""
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file]
         labels_list = ["R21 Test"]
@@ -98,27 +111,30 @@ class JetPlotting_TestCase(unittest.TestCase):
             **plotting_config["plot_settings"],
         )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir + "jets_input_vars/" + "SV1_NGTinSvx.png",
-                self.actual_plots_dir + "jets_input_vars/" + "SV1_NGTinSvx.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir + "jets_input_vars/" + "SV1_NGTinSvx.png",
+                    self.actual_plots_dir + "jets_input_vars/" + "SV1_NGTinSvx.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "jets_input_vars/"
-                + "JetFitterSecondaryVertex_nTracks.png",
-                self.actual_plots_dir
-                + "jets_input_vars/"
-                + "JetFitterSecondaryVertex_nTracks.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "jets_input_vars/"
+                    + "JetFitterSecondaryVertex_nTracks.png",
+                    self.actual_plots_dir
+                    + "jets_input_vars/"
+                    + "JetFitterSecondaryVertex_nTracks.png",
+                    tol=1,
+                ),
+            )
 
     def test_plot_input_vars_jets_comparison_wrong_type(self):
+        """Test jet input plots with comparison and wrong type."""
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file]
         labels_list = ["R21 Test"]
@@ -141,6 +157,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             )
 
     def test_plot_input_vars_jets_comparison(self):
+        """Test jet input variable plot with comparison."""
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
         labels_list = ["R21 Test", "R22 Test"]
@@ -159,27 +176,30 @@ class JetPlotting_TestCase(unittest.TestCase):
             **plotting_config["plot_settings"],
         )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir + "comp/" + "SV1_NGTinSvx.png",
-                self.actual_plots_dir + "comp/" + "SV1_NGTinSvx.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir + "comp/" + "SV1_NGTinSvx.png",
+                    self.actual_plots_dir + "comp/" + "SV1_NGTinSvx.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "comp/"
-                + "JetFitterSecondaryVertex_nTracks.png",
-                self.actual_plots_dir
-                + "comp/"
-                + "JetFitterSecondaryVertex_nTracks.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "comp/"
+                    + "JetFitterSecondaryVertex_nTracks.png",
+                    self.actual_plots_dir
+                    + "comp/"
+                    + "JetFitterSecondaryVertex_nTracks.png",
+                    tol=1,
+                ),
+            )
 
     def test_plot_input_vars_trks_wrong_type(self):
+        """Test track input variable plots with wrong type."""
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
         tracks_name_list = ["tracks"]
@@ -203,6 +223,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             )
 
     def test_plot_input_vars_trks(self):
+        """Test track input variables with wrong type."""
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
         tracks_name_list = ["tracks"]
@@ -222,71 +243,78 @@ class JetPlotting_TestCase(unittest.TestCase):
             **plotting_config["plot_settings"],
         )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir + "ptfrac/All/" + "dr_None_All.png",
-                self.actual_plots_dir + "ptfrac/All/" + "dr_None_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir + "ptfrac/All/" + "dr_None_All.png",
+                    self.actual_plots_dir + "ptfrac/All/" + "dr_None_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "ptfrac/All/"
-                + "IP3D_signed_d0_significance_None_All.png",
-                self.actual_plots_dir
-                + "ptfrac/All/"
-                + "IP3D_signed_d0_significance_None_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "ptfrac/All/"
+                    + "IP3D_signed_d0_significance_None_All.png",
+                    self.actual_plots_dir
+                    + "ptfrac/All/"
+                    + "IP3D_signed_d0_significance_None_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "ptfrac/All/"
-                + "numberOfInnermostPixelLayerHits_None_All.png",
-                self.actual_plots_dir
-                + "ptfrac/All/"
-                + "numberOfInnermostPixelLayerHits_None_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "ptfrac/All/"
+                    + "numberOfInnermostPixelLayerHits_None_All.png",
+                    self.actual_plots_dir
+                    + "ptfrac/All/"
+                    + "numberOfInnermostPixelLayerHits_None_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir + "ptfrac/0/" + "dr_0_All.png",
-                self.actual_plots_dir + "ptfrac/0/" + "dr_0_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir + "ptfrac/0/" + "dr_0_All.png",
+                    self.actual_plots_dir + "ptfrac/0/" + "dr_0_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "ptfrac/0/"
-                + "IP3D_signed_d0_significance_0_All.png",
-                self.actual_plots_dir
-                + "ptfrac/0/"
-                + "IP3D_signed_d0_significance_0_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "ptfrac/0/"
+                    + "IP3D_signed_d0_significance_0_All.png",
+                    self.actual_plots_dir
+                    + "ptfrac/0/"
+                    + "IP3D_signed_d0_significance_0_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "ptfrac/0/"
-                + "numberOfInnermostPixelLayerHits_0_All.png",
-                self.actual_plots_dir
-                + "ptfrac/0/"
-                + "numberOfInnermostPixelLayerHits_0_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "ptfrac/0/"
+                    + "numberOfInnermostPixelLayerHits_0_All.png",
+                    self.actual_plots_dir
+                    + "ptfrac/0/"
+                    + "numberOfInnermostPixelLayerHits_0_All.png",
+                    tol=1,
+                ),
+            )
 
     def test_plot_input_vars_trks_comparison_wrong_type(self):
+        """Test track input variables with comparison and wrong type."""
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
         tracks_name_list = ["tracks"]
@@ -310,6 +338,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             )
 
     def test_plot_input_vars_trks_comparison_not_normalised(self):
+        """Test track variable plots without normalisation."""
         plotting_config = self.plot_config["tracks_test_not_normalised"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
         tracks_name_list = ["tracks", "tracks_loose"]
@@ -342,6 +371,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         )
 
     def test_plot_input_vars_trks_comparison(self):
+        """Test plotting track input variables with comparison."""
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
         tracks_name_list = ["tracks", "tracks_loose"]
@@ -361,71 +391,78 @@ class JetPlotting_TestCase(unittest.TestCase):
             **plotting_config["plot_settings"],
         )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir + "comp/ptfrac/All/" + "dr_None_All.png",
-                self.actual_plots_dir + "comp/ptfrac/All/" + "dr_None_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir + "comp/ptfrac/All/" + "dr_None_All.png",
+                    self.actual_plots_dir + "comp/ptfrac/All/" + "dr_None_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "comp/ptfrac/All/"
-                + "IP3D_signed_d0_significance_None_All.png",
-                self.actual_plots_dir
-                + "comp/ptfrac/All/"
-                + "IP3D_signed_d0_significance_None_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "comp/ptfrac/All/"
+                    + "IP3D_signed_d0_significance_None_All.png",
+                    self.actual_plots_dir
+                    + "comp/ptfrac/All/"
+                    + "IP3D_signed_d0_significance_None_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "comp/ptfrac/All/"
-                + "numberOfInnermostPixelLayerHits_None_All.png",
-                self.actual_plots_dir
-                + "comp/ptfrac/All/"
-                + "numberOfInnermostPixelLayerHits_None_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "comp/ptfrac/All/"
+                    + "numberOfInnermostPixelLayerHits_None_All.png",
+                    self.actual_plots_dir
+                    + "comp/ptfrac/All/"
+                    + "numberOfInnermostPixelLayerHits_None_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir + "comp/ptfrac/0/" + "dr_0_All.png",
-                self.actual_plots_dir + "comp/ptfrac/0/" + "dr_0_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir + "comp/ptfrac/0/" + "dr_0_All.png",
+                    self.actual_plots_dir + "comp/ptfrac/0/" + "dr_0_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "comp/ptfrac/0/"
-                + "IP3D_signed_d0_significance_0_All.png",
-                self.actual_plots_dir
-                + "comp/ptfrac/0/"
-                + "IP3D_signed_d0_significance_0_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "comp/ptfrac/0/"
+                    + "IP3D_signed_d0_significance_0_All.png",
+                    self.actual_plots_dir
+                    + "comp/ptfrac/0/"
+                    + "IP3D_signed_d0_significance_0_All.png",
+                    tol=1,
+                ),
+            )
 
-        self.assertIsNone(
-            compare_images(
-                self.expected_plots_dir
-                + "comp/ptfrac/0/"
-                + "numberOfInnermostPixelLayerHits_0_All.png",
-                self.actual_plots_dir
-                + "comp/ptfrac/0/"
-                + "numberOfInnermostPixelLayerHits_0_All.png",
-                tol=1,
-            ),
-        )
+        with self.subTest():
+            self.assertIsNone(
+                compare_images(
+                    self.expected_plots_dir
+                    + "comp/ptfrac/0/"
+                    + "numberOfInnermostPixelLayerHits_0_All.png",
+                    self.actual_plots_dir
+                    + "comp/ptfrac/0/"
+                    + "numberOfInnermostPixelLayerHits_0_All.png",
+                    tol=1,
+                ),
+            )
 
     def test_plot_n_tracks_per_jet(self):
+        """Test plotting n tracks per jet."""
         plotting_config = self.plot_config["nTracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
         tracks_name_list = ["tracks", "tracks_loose"]

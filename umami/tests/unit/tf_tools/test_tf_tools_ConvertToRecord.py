@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+"""
+Unit test script for the convert to tfrecord functions of tf_tools.
+"""
+
 import json
 import os
 import tempfile
@@ -34,7 +40,9 @@ class ConvertTest(unittest.TestCase):
         y_train = np.ones(shape=(3, 3))
         y_trks_train = np.ones(shape=(3, 40, 9))
         # save dummy data to temporary file
-        self.tfh5 = tempfile.NamedTemporaryFile(suffix="-resampled_scaled_shuffled.h5")
+        self.tfh5 = tempfile.NamedTemporaryFile(  # pylint: disable=R1732
+            suffix="-resampled_scaled_shuffled.h5"
+        )
         with h5py.File(self.tfh5, "w") as out_file:
             out_file.create_dataset("X_train", data=x_train)
             out_file.create_dataset(f"X_{tracks_name}_train", data=x_trks_train)
@@ -45,9 +53,10 @@ class ConvertTest(unittest.TestCase):
         )
 
     def test_save_parameters(self):
+        """Test the saving of the parameters for the tfrecord conversion."""
         cv = Convert_to_Record.h5_to_tf_record_converter(self.config)
         # create temporary directory where data should be saved
-        record_dir = tempfile.TemporaryDirectory()
+        record_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         cv.save_parameters(record_dir.name)
         parameters = {
             "n_jets": 3,
@@ -65,9 +74,11 @@ class ConvertTest(unittest.TestCase):
         self.assertEqual(parameters, parameters_saved)
 
     def test_save_parameters_nadd_vars(self):
+        """Test the saving of the parameters for the tfrecord conversion
+        with conditional info added."""
         cv = Convert_to_Record.h5_to_tf_record_converter(self.config)
         # create temporary directory where data should be saved
-        record_dir = tempfile.TemporaryDirectory()
+        record_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         cv.n_add_vars = 4
         cv.save_parameters(record_dir.name)
         parameters = {
@@ -86,6 +97,7 @@ class ConvertTest(unittest.TestCase):
         self.assertEqual(parameters, parameters_saved)
 
     def test_faulty_setup(self):
+        """Test raising of an error for a faulty setup."""
         cv = Convert_to_Record.h5_to_tf_record_converter(self.faulty_config)
         default_chunk_size = 5_000
         self.assertEqual(cv.chunk_size, default_chunk_size)

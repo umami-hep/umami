@@ -1,3 +1,4 @@
+"""Unit tests for Resampling in the preprocessing tools."""
 import os
 import unittest
 
@@ -22,43 +23,52 @@ class CorrectFractionsTestCase(unittest.TestCase):
     Test the implementation of the CorrectFractions function.
     """
 
-    def test_CorrectFractions_zero_length(self):
+    def test_zero_length(self):
+        """Tests zero length."""
         with self.assertRaises(ValueError):
             CorrectFractions([], [])
 
-    def test_CorrectFractions_different_input_lengths(self):
+    def test_different_input_lengths(self):
+        """Test different input lengths."""
         with self.assertRaises(AssertionError):
             CorrectFractions([1, 2, 3, 4], [0.2, 0.8, 0.0])
 
-    def test_CorrectFractions_not_fraction_sum_one(self):
+    def test_not_fraction_sum_one(self):
+        """Test not fraction sum one."""
         with self.assertRaises(ValueError):
             CorrectFractions([1, 2, 3, 4], [0.2, 0.5, 0.2, 0.2])
 
-    def test_CorrectFractions_different_input_length_class_names(self):
+    def test_different_input_length_class_names(self):
+        """Test different input length class names."""
         with self.assertRaises(AssertionError):
             CorrectFractions([5000, 6000, 3000], [0.2, 0.6, 0.2], ["Zjets", "ttbar"])
 
-    def test_CorrectFractions_zero_n_jets(self):
+    def test_zero_n_jets(self):
+        """Test zero n_jets."""
         with self.assertRaises(ValueError):
             CorrectFractions([0, 6000, 3000], [0.2, 0.6, 0.2])
 
-    def test_CorrectFractions_twice_same_fractions(self):
+    def test_twice_same_fractions(self):
+        """Test twice same fractions."""
         self.assertListEqual(
             list(CorrectFractions([1000, 6000, 3000], [0.2, 0.6, 0.2])),
             [1000, 3000, 1000],
         )
 
-    def test_CorrectFractions_input_correct_fractions(self):
+    def test_input_correct_fractions(self):
+        """Test input correct fractions."""
         N_jets = [2000, 6000, 2000]
         self.assertListEqual(list(CorrectFractions(N_jets, [0.2, 0.6, 0.2])), N_jets)
 
-    def test_CorrectFractions_scaling_down_largest(self):
+    def test_scaling_down_largest(self):
+        """Test scaling down largest."""
         self.assertListEqual(
             list(CorrectFractions([3000, 6000, 3000], [0.3, 0.5, 0.2])),
             [3000, 5000, 2000],
         )
 
-    def test_CorrectFractions_scaling_down_small(self):
+    def test_scaling_down_small(self):
+        """Test scaling down small."""
         self.assertListEqual(
             list(CorrectFractions([10000, 6000, 7000], [0.4, 0.5, 0.1])),
             [4800, 6000, 1200],
@@ -70,14 +80,19 @@ class CalculateBinningTestCase(unittest.TestCase):
     Test the implementation of the CalculateBinning function.
     """
 
-    def test_NonListCase(self):
+    def test_non_list_case(self):
+        """Test no list case."""
         with self.assertRaises(TypeError):
             CalculateBinning(1)
 
-    def test_SingleListCase(self):
+    @staticmethod
+    def test_single_list_case():
+        """Test single list case."""
         np.testing.assert_array_equal(CalculateBinning([1, 2, 3]), np.linspace(1, 2, 3))
 
-    def test_NestedListCase(self):
+    @staticmethod
+    def test_nested_list_case():
+        """Test nested lists."""
         bins = [[1, 2, 3], [3, 4, 5]]
         expected_outcome = np.concatenate([np.linspace(*elem) for elem in bins])
         np.testing.assert_array_equal(CalculateBinning(bins), expected_outcome)
@@ -88,7 +103,7 @@ class ResamplingGeneratorTestCase(unittest.TestCase):
     Test the implementation of the UndersamplingGenerator function.
     """
 
-    pass
+    # TODO: write tests
 
 
 class ResamplingTestCase(unittest.TestCase):
@@ -96,7 +111,7 @@ class ResamplingTestCase(unittest.TestCase):
     Test the implementation of the Resampling base class.
     """
 
-    pass
+    # TODO: write tests
 
 
 class UnderSamplingTestCase(unittest.TestCase):
@@ -134,13 +149,15 @@ class UnderSamplingTestCase(unittest.TestCase):
             }
         )
 
-    def test_CountNoSamplesDefined(self):
+    def test_count_no_samples_defined(self):
+        """Test no samples defined."""
         del self.sampling_config["options"]["samples"]
         us = UnderSampling(self.config)
         with self.assertRaises(KeyError):
             us.InitialiseSamples()
 
-    def test_DifferentSamplesPerCategory(self):
+    def test_different_samples_per_category(self):
+        """Test different samples per category."""
         del self.sampling_config["options"]["samples"]["zprime"][1]
         us = UnderSampling(self.config)
         with self.assertRaises(RuntimeError):
@@ -453,30 +470,35 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
                 ]
 
     def test_no_samples_defined(self):
+        """Test no samples defined."""
         del self.sampling_config["options"]["samples"]
         us = UnderSamplingNoReplace(self.config)
         with self.assertRaises(KeyError):
             us.InitialiseSamples()
 
     def test_different_samples_per_category(self):
+        """Test different samples per category."""
         del self.sampling_config["options"]["samples"]["zprime"][1]
         us = UnderSamplingNoReplace(self.config)
         with self.assertRaises(RuntimeError):
             us.InitialiseSamples()
 
     def test_equal_fractions(self):
+        """Test equal fractions."""
         us = UnderSamplingNoReplace(self.config)
         us.InitialiseSamples()
         indices = us.GetIndices()
-        self.assertEqual(
-            len(indices["training_ttbar_bjets"])
-            + len(indices["training_zprime_bjets"]),
-            len(indices["training_ttbar_cjets"])
-            + len(indices["training_zprime_cjets"]),
-        )
-        self.assertEqual(
-            len(indices["training_ttbar_bjets"])
-            + len(indices["training_zprime_bjets"]),
-            len(indices["training_ttbar_ujets"])
-            + len(indices["training_zprime_ujets"]),
-        )
+        with self.subTest():
+            self.assertEqual(
+                len(indices["training_ttbar_bjets"])
+                + len(indices["training_zprime_bjets"]),
+                len(indices["training_ttbar_cjets"])
+                + len(indices["training_zprime_cjets"]),
+            )
+        with self.subTest():
+            self.assertEqual(
+                len(indices["training_ttbar_bjets"])
+                + len(indices["training_zprime_bjets"]),
+                len(indices["training_ttbar_ujets"])
+                + len(indices["training_zprime_ujets"]),
+            )
