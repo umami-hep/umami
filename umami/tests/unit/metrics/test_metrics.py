@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for the functions in metrics.py
-"""
+"""Unit test script for the functions in metrics.py."""
 
 import unittest
 

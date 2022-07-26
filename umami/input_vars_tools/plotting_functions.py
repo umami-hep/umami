@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 """Plots the given input variables of the given files and also a comparison."""
-
 import os
 
 import numpy as np

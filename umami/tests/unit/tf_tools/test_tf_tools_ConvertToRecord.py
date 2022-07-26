@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for the convert to tfrecord functions of tf_tools.
-"""
-
+"""Unit test script for the convert to tfrecord functions of tf_tools."""
 import json
 import os
 import tempfile

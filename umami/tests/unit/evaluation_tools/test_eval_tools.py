@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for the functions in eval_tools.py
-"""
+"""Unit test script for the functions in eval_tools.py"""
 
 import unittest
 

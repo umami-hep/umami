@@ -1,6 +1,4 @@
-"""
-Helper functions to creating hybrid hdf5 samples from ttbar and Zprime ntuples
-"""
+"""Helper functions to creating hybrid hdf5 samples from ttbar and Zprime ntuples."""
 import os
 from glob import glob
 

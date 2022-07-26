@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for the classification helper functions.
-"""
+"""Unit test script for the classification helper functions."""
 import unittest
 
 from umami.configuration import logger, set_log_level

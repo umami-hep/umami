@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for the preprocessing plot functions.
-"""
+"""Unit test script for the preprocessing plot functions."""
 
 import os
 import tempfile

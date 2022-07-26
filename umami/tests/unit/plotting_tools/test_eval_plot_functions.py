@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test script for eval plot functions.
-"""
+"""Unit test script for eval plot functions."""
 
 import os
 import tempfile

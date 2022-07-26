@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-
-"""
-This script integration tests the preprocessing methods.
-"""
+"""This script integration tests the preprocessing methods."""
 
 import os
 import tempfile

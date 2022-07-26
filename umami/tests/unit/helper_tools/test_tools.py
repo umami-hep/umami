@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-
-"""
-Unit test the little helper functions from umami_tools.
-"""
-
+"""Unit test the little helper functions from umami_tools."""
 import os
 import tempfile
 import unittest

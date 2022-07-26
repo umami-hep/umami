@@ -1,8 +1,6 @@
-#!/usr/bin/env python
-
 """
-This script integration tests the plotting of the training
-results of the different models.
+This script integration tests the plotting of the training results of the different
+models.
 """
 
 import os
