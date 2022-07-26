@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Plots per default with non-transparent background [!590](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/590)
 - Fixing pylint for unit tests [!588](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/588)
 - Adding support for hits [!583](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/583)
 - Fixing track masking for the input variable plots [!585](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/585)

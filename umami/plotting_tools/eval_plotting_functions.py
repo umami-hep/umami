@@ -39,7 +39,6 @@ def plot_pt_dependence(
     grid: bool = False,
     colours: list = None,
     alpha: float = 0.8,
-    trans: bool = True,
     linewidth: float = 1.6,
     **kwargs,
 ) -> None:
@@ -81,8 +80,6 @@ def plot_pt_dependence(
         Custom colour list for the different models, by default None
     alpha : float, optional
         Value for visibility of the plot lines, by default 0.8
-    trans : bool, optional
-        saving figure with transparent background, by default True
     linewidth : float, optional
         Define the linewidth of the plotted lines, by default 1.6
     **kwargs : kwargs
@@ -207,7 +204,7 @@ def plot_pt_dependence(
                 "You set `working_point_line` to True but you are not looking at the"
                 " singal efficiency. It will probably not be visible on your plot."
             )
-    plot_pt.savefig(plot_name, transparent=trans)
+    plot_pt.savefig(plot_name)
 
 
 def plot_roc(
@@ -697,7 +694,7 @@ def plot_score(
 
     # Draw and save the plot
     score_plot.draw()
-    score_plot.savefig(plot_name, transparent=True)
+    score_plot.savefig(plot_name)
 
 
 def plot_prob(
@@ -729,7 +726,7 @@ def plot_prob(
     plot_name : str
         Path, Name and format of the resulting plot file.
     **kwargs : kwargs
-        kwargs for `VarVsEffPlot` function
+        kwargs for `HistogramPlot` function
     """
 
     # Set number of ratio panels if not specified
@@ -790,7 +787,7 @@ def plot_prob(
 
     # Draw and save the plot
     prob_plot.draw()
-    prob_plot.savefig(plot_name, transparent=True)
+    prob_plot.savefig(plot_name)
 
 
 def plot_confusion_matrix(
@@ -801,7 +798,7 @@ def plot_confusion_matrix(
     colorbar: bool = True,
     show_absolute: bool = False,
     show_normed: bool = True,
-    transparent_bkg: bool = True,
+    transparent: bool = False,
     dpi: int = 400,
 ) -> None:
     """Plotting the confusion matrix for a given tagger.
@@ -822,8 +819,8 @@ def plot_confusion_matrix(
         Show the absolute, by default False
     show_normed : bool, optional
         Show the output normed, by default True
-    transparent_bkg : bool, optional
-        Decide, if the background is transparent or not, by default True
+    transparent : bool, optional
+        Decide, if the background is transparent or not, by default False
     dpi : int, optional
         Sets a DPI value for the plot that is produced (mainly for png),
         by default 400
@@ -858,7 +855,7 @@ def plot_confusion_matrix(
     plt.tight_layout()
 
     # Save the plot to path
-    plt.savefig(plot_name, transparent=transparent_bkg, dpi=dpi)
+    plt.savefig(plot_name, transparent=transparent, dpi=dpi)
     plt.close()
 
 
@@ -1092,4 +1089,4 @@ def plot_fraction_contour(
 
     # Draw and save the plot
     frac_plot.draw()
-    frac_plot.savefig(plot_name, transparent=True)
+    frac_plot.savefig(plot_name)

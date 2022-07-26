@@ -62,7 +62,6 @@ def plot_n_tracks_per_jet(
     class_labels: list,
     output_directory: str = "input_vars_trks",
     plot_type: str = "pdf",
-    transparent: bool = True,
     track_origin: str = "All",
     **kwargs,
 ):
@@ -87,8 +86,6 @@ def plot_n_tracks_per_jet(
         Name of the output directory. Only the dir name not path!
     plot_type: str, optional
         File format for the output, by default "pdf"
-    transparent: bool, optional
-        Option to make the background of the plot transparent, by default True
     track_origin : str, optional
         Track set that is to be used for plotting, by default "All"
     **kwargs: dict
@@ -178,8 +175,7 @@ def plot_n_tracks_per_jet(
 
     n_tracks_plot.draw()
     n_tracks_plot.savefig(
-        f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}",
-        transparent=transparent,
+        f"{output_directory}/nTracks_per_Jet_{track_origin}.{plot_type}"
     )
     logger.info("Average number of tracks:\n%s", DataFrame.from_dict(n_tracks_means))
 
@@ -196,7 +192,6 @@ def plot_input_vars_trks(
     n_leading: list = None,
     output_directory: str = "input_vars_trks",
     plot_type: str = "pdf",
-    transparent: bool = True,
     track_origin: str = "All",
     **kwargs,
 ):
@@ -229,8 +224,6 @@ def plot_input_vars_trks(
         Name of the output directory. Only the dir name not path!
     plot_type: str, optional
         File format for the output, by default "pdf"
-    transparent: bool, optional
-        Option to make the background of the plot transparent, by default True
     track_origin : str, optional
         Track set that is to be used for plotting, by default "All"
     **kwargs: dict
@@ -450,10 +443,7 @@ def plot_input_vars_trks(
                         )
 
                 var_plot.draw()
-                var_plot.savefig(
-                    f"{filedir}/{var}_{n_lead}_{track_origin}.{plot_type}",
-                    transparent=transparent,
-                )
+                var_plot.savefig(f"{filedir}/{var}_{n_lead}_{track_origin}.{plot_type}")
 
             else:
                 logger.debug("Variable %s not in the binning dict. Skipping ...", var)
@@ -470,7 +460,6 @@ def plot_input_vars_jets(
     special_param_jets: dict = None,
     output_directory: str = "input_vars_jets",
     plot_type: str = "pdf",
-    transparent: bool = True,
     **kwargs,
 ):
     """
@@ -498,8 +487,6 @@ def plot_input_vars_jets(
         Name of the output directory. Only the dir name not path!
     plot_type: str, optional
         File format for the output, by default "pdf"
-    transparent: bool, optional
-        Option to make the background of the plot transparent, by default True
     **kwargs: dict
         Keyword arguments passed to the plot. You can use all arguments that are
         supported by the `HistogramPlot` class in the plotting API.
@@ -598,6 +585,6 @@ def plot_input_vars_jets(
 
             # Draw and save the plot
             var_plot.draw()
-            var_plot.savefig(f"{filedir}/{var}.{plot_type}", transparent=transparent)
+            var_plot.savefig(f"{filedir}/{var}.{plot_type}")
 
     logger.info("\n%s", 80 * "-")
