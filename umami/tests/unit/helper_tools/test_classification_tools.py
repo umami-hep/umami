@@ -4,6 +4,7 @@ import unittest
 from umami.configuration import logger, set_log_level
 from umami.helper_tools import (
     get_class_label_ids,
+    get_class_label_ops,
     get_class_label_variables,
     get_class_prob_var_names,
 )
@@ -25,6 +26,7 @@ class get_class_TestCase(unittest.TestCase):
             "HadronConeExclTruthLabelID",
         ]
         self.flatten_class_labels_3 = ["bjets", "cjets", "ujets"]
+        self.class_ops_3 = ["==", "==", "=="]
         self.class_labels_4 = ["bjets", "cjets", "ujets", "singlebjets"]
         self.class_prob_names_4 = [
             "rnnip_pb",
@@ -47,6 +49,9 @@ class get_class_TestCase(unittest.TestCase):
             "singlebjets",
             "singlebjets",
         ]
+        self.class_ops_4 = ["==", "==", "==", "==", "=="]
+        self.class_labels_diff_ops = ["bjets", "cjets", "ujets", "lepcbjets"]
+        self.class_ops_diff = ["==", "==", "==", "!=", "!="]
 
     def test_get_class_label_ids_3_classes(self):
         """Get the class label ids for 3 classes."""
@@ -83,6 +88,24 @@ class get_class_TestCase(unittest.TestCase):
 
         with self.subTest("Test flatten label variable list"):
             self.assertEqual(flatten_class_labels_4, self.flatten_class_labels_4)
+
+    def test_get_class_label_ops_3(self):
+        """Get the class operators for 3 classes."""
+        class_ops_3 = get_class_label_ops(self.class_labels_3)
+
+        self.assertEqual(class_ops_3, self.class_ops_3)
+
+    def test_get_class_label_ops_4(self):
+        """Get the class operators for 4 classes."""
+        class_ops_4 = get_class_label_ops(self.class_labels_4)
+
+        self.assertEqual(class_ops_4, self.class_ops_4)
+
+    def test_get_class_label_ops_diff(self):
+        """Get the class operators for classes with different operators."""
+        class_ops_diff_ops = get_class_label_ops(self.class_labels_diff_ops)
+
+        self.assertEqual(class_ops_diff_ops, self.class_ops_diff)
 
     def test_get_class_prob_var_names_3_classes(self):
         """Test the class prob var names for 3 classes."""
