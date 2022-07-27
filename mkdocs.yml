@@ -34,7 +34,7 @@ nav:
     - Preprocessing:
         - Overview: preprocessing/preprocessing.md
         - MC samples: preprocessing/mc-samples.md
-        - Truth labels: preprocessing/truth_labels.md
+        - Truth labels: 'https://ftag.docs.cern.ch/algorithms/labelling/'
     - Trainings:
         - Overview: trainings/index.md
         - Instructions: trainings/train-instructions.md
