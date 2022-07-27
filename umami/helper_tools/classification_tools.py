@@ -94,6 +94,44 @@ def get_class_label_variables(class_labels: list):
     return label_var_list, flatten_class_labels
 
 
+def get_class_label_ops(class_labels: list):
+    """
+    Retrieves the flavour operators of the class_labels provided
+    and returns them as a list.
+
+    Parameters
+    ----------
+    class_labels : list
+        List with the class labels.
+
+    Returns
+    -------
+    operator_list : list
+        List of the class label operators.
+    """
+
+    # Get the global_config
+    flavour_categories = global_config.flavour_categories
+
+    # Init new list
+    operator_list = []
+
+    for class_label in class_labels:
+        n_repeat = 1
+        if isinstance(flavour_categories[class_label]["label_value"], list):
+            n_repeat = len(flavour_categories[class_label]["label_value"])
+
+        operator_list = np.append(
+            operator_list,
+            [flavour_categories[class_label].get("operator", "==")] * n_repeat,
+        )
+
+    # Flatten the list if needed and return it
+    operator_list = operator_list.tolist()
+
+    return operator_list
+
+
 def get_class_prob_var_names(tagger_name: str, class_labels: list):
     """
     Returns a list of the probability variable names used for the

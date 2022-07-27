@@ -3,9 +3,14 @@ import os
 
 import pydash
 import yaml
+from numpy import unique, vstack
 
 from umami.configuration import logger
-from umami.helper_tools import get_class_label_ids, get_class_label_variables
+from umami.helper_tools import (
+    get_class_label_ids,
+    get_class_label_ops,
+    get_class_label_variables,
+)
 from umami.plotting_tools.utils import translate_kwargs
 from umami.tools import yaml_loader
 
@@ -251,10 +256,12 @@ class Configuration:
 
         # Define a security to check if label_value is used twice
         class_ids = get_class_label_ids(self.config["NN_structure"]["class_labels"])
+        class_ops = get_class_label_ops(self.config["NN_structure"]["class_labels"])
         class_label_vars, _ = get_class_label_variables(
             self.config["NN_structure"]["class_labels"]
         )
-        if len(class_ids) != len(set(class_ids)):
+        class_info = vstack((class_ids, class_ops, class_label_vars)).T
+        if len(class_info) != len(unique(class_info, axis=0)):
             raise ValueError("label_value is used twice in the used classes!")
 
         # Define a security check for using the jets twice
