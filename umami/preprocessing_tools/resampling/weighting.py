@@ -9,7 +9,7 @@ import numpy as np
 from umami.configuration import logger
 from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
 from umami.preprocessing_tools.resampling.resampling_base import ResamplingTools
-from umami.preprocessing_tools.utils import GetVariableDict
+from umami.preprocessing_tools.utils import get_variable_dict
 
 
 class Weighting(ResamplingTools):
@@ -144,7 +144,7 @@ class Weighting(ResamplingTools):
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.GetFileName(option="resampled"),
-                var_dict=GetVariableDict(self.config.var_file),
+                var_dict=get_variable_dict(self.config.var_file),
                 class_labels=self.config.sampling["class_labels"],
                 plots_dir=os.path.join(
                     self.resampled_path,

@@ -4,7 +4,7 @@ import argparse
 import json
 
 from umami.configuration import logger
-from umami.preprocessing_tools import GetVariableDict
+from umami.preprocessing_tools import get_variable_dict
 
 
 def get_parser():
@@ -187,7 +187,7 @@ def GetJetVariables(
 def __run():
     """main part of script generating json file"""
     args = get_parser()
-    variable_config = GetVariableDict(args.var_dict)
+    variable_config = get_variable_dict(args.var_dict)
 
     if "dips" in args.tagger.lower():
         logger.info("Starting processing DIPS variables.")

@@ -21,7 +21,7 @@ from tensorflow.keras.optimizers import Adam  # pylint: disable=import-error
 
 import umami.tf_tools as utf
 import umami.train_tools as utt
-from umami.preprocessing_tools import GetVariableDict
+from umami.preprocessing_tools import get_variable_dict
 
 
 def create_umami_model(
@@ -228,7 +228,7 @@ def umami_tagger(args, train_config, preprocess_config):
         exclude = None
 
     # Load variable config
-    variable_config = GetVariableDict(train_config.var_dict)
+    variable_config = get_variable_dict(train_config.var_dict)
 
     # Get excluded variables
     _, _, excluded_var = utt.get_jet_feature_indices(

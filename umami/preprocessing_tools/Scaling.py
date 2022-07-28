@@ -9,7 +9,7 @@ import pandas as pd
 
 from umami.configuration import logger
 from umami.plotting_tools import preprocessing_plots
-from umami.preprocessing_tools.utils import GetVariableDict
+from umami.preprocessing_tools.utils import get_variable_dict
 
 
 def generate_default_dict(scale_dict: dict) -> dict:
@@ -206,21 +206,21 @@ class Scaling:
             nor a string
         """
 
-        self.config = config
         self.scale_dict_path = config.dict_file
+        self.sampling_options = config.sampling["options"]
         self.save_tracks = (
-            self.config.sampling["options"]["save_tracks"]
-            if "save_tracks" in self.config.sampling["options"].keys()
+            config.sampling["options"]["save_tracks"]
+            if "save_tracks" in config.sampling["options"].keys()
             else False
         )
         self.save_track_labels = (
-            self.config.sampling["options"]["save_track_labels"]
-            if "save_track_labels" in self.config.sampling["options"].keys()
+            config.sampling["options"]["save_track_labels"]
+            if "save_track_labels" in config.sampling["options"].keys()
             else False
         )
         self.track_label_variables = (
-            self.config.sampling["options"]["track_truth_variables"]
-            if "track_truth_variables" in self.config.sampling["options"].keys()
+            config.sampling["options"]["track_truth_variables"]
+            if "track_truth_variables" in config.sampling["options"].keys()
             else None
         )
 
@@ -236,11 +236,14 @@ class Scaling:
                     """
                 )
 
-        self.tracks_names = self.config.sampling["options"]["tracks_names"]
-        self.compression = self.config.compression
+        self.tracks_names = config.sampling["options"]["tracks_names"]
+        self.compression = config.compression
 
         logger.info("Using variable dict at %s", config.var_file)
-        self.variable_config = GetVariableDict(config.var_file)
+        self.variable_config = get_variable_dict(config.var_file)
+
+        # Adding the full config to retrieve the correct paths
+        self.config = config
 
     def join_mean_scale(
         self,
@@ -1186,8 +1189,8 @@ class Scaling:
 
         # Plot the variables from the output file of the resampling process
         if (
-            "n_jets_to_plot" in self.config.sampling["options"]
-            and self.config.sampling["options"]["n_jets_to_plot"]
+            "n_jets_to_plot" in self.sampling_options
+            and self.sampling_options["n_jets_to_plot"]
         ):
             logger.info("Plotting resampled and scaled distributions...")
             preprocessing_plots(
@@ -1198,12 +1201,12 @@ class Scaling:
                     self.config.config["parameters"]["file_path"],
                     "plots/scaling/",
                 ),
-                track_collection_list=self.config.sampling["options"]["tracks_names"]
-                if "tracks_names" in self.config.sampling["options"]
-                and "save_tracks" in self.config.sampling["options"]
-                and self.config.sampling["options"]["save_tracks"] is True
+                track_collection_list=self.sampling_options["tracks_names"]
+                if "tracks_names" in self.sampling_options
+                and "save_tracks" in self.sampling_options
+                and self.sampling_options["save_tracks"] is True
                 else None,
-                n_jets=self.config.sampling["options"]["n_jets_to_plot"],
+                n_jets=self.sampling_options["n_jets_to_plot"],
                 atlas_second_tag=self.config.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",

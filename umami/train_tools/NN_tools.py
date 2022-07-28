@@ -20,10 +20,10 @@ import umami.tf_tools as utf
 from umami.data_tools import LoadJetsFromFile, LoadTrksFromFile
 from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import (
-    GetVariableDict,
     apply_scaling_trks,
     binarise_jet_labels,
     generate_default_dict,
+    get_variable_dict,
 )
 from umami.tools import natural_keys, replace_line_in_file
 
@@ -817,7 +817,7 @@ def get_test_sample(
         )
 
     # Load variables
-    variable_config = GetVariableDict(var_dict)
+    variable_config = get_variable_dict(var_dict)
 
     # Load scale dict
     with open(preprocess_config.dict_file, "r") as infile:
@@ -968,7 +968,7 @@ def get_test_sample_trks(
         )
 
     # Load variables
-    variable_config = GetVariableDict(var_dict)
+    variable_config = get_variable_dict(var_dict)
 
     # Load scale dict for the tracks
     with open(preprocess_config.dict_file, "r") as infile:

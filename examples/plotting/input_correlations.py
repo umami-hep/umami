@@ -17,7 +17,7 @@ from scipy import stats
 
 import umami.data_tools as udt
 from umami.configuration import logger
-from umami.preprocessing_tools import GetVariableDict
+from umami.preprocessing_tools import get_variable_dict
 
 # get test data
 test_data = (
@@ -52,7 +52,7 @@ n_jets = 1000
 
 # load jets
 class_labels = ["bjets", "cjets", "ujets"]
-variable_config = GetVariableDict(var_file)
+variable_config = get_variable_dict(var_file)
 jetsVarsAll = [
     i
     for j in variable_config["train_variables"]

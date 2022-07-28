@@ -10,9 +10,9 @@ import pandas as pd
 from umami.configuration import global_config, logger, set_log_level
 from umami.preprocessing_tools import (
     Configuration,
-    GetVariableDict,
     PrepareSamples,
     binarise_jet_labels,
+    get_variable_dict,
 )
 
 set_log_level(logger, "DEBUG")
@@ -88,7 +88,7 @@ class GetVariableDictTestCase(unittest.TestCase):
             "jointNormVars": ["numberOfPixelHits", "numberOfSCTHits", "btagIp_d0"],
         }
         self.def_vars = 0
-        self.test_dict = GetVariableDict(self.var_file)
+        self.test_dict = get_variable_dict(self.var_file)
 
     def test_nested_structure(self):
         """Test nested structure."""

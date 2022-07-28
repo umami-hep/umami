@@ -8,7 +8,7 @@ from tensorflow.keras.layers import Lambda  # pylint: disable=import-error
 from tensorflow.keras.models import Model  # pylint: disable=import-error
 
 import umami.metrics as umt
-from umami.preprocessing_tools import GetVariableDict
+from umami.preprocessing_tools import get_variable_dict
 from umami.tools import check_main_class_input
 
 
@@ -626,7 +626,7 @@ def get_saliency_map_dict(
     )
 
     # Load the variable dict
-    var_dict = GetVariableDict(var_dict_path)
+    var_dict = get_variable_dict(var_dict_path)
 
     # Extract track variables from the dict
     trk_variables_dict = var_dict["track_train_variables"][tracks_name]
