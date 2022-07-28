@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Bot posts message in MR in case files used as placeholders were changed [!594](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/594)
 - Pointing truth label docs directly to FTAG docs  [!593](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/593)
 - Compare class id, class operators and variables of each class definition instead of only comparing the class id to avoid the same class definition. [!575](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/575)
 - Removing #!/usr/bin/env python from scripts  [!591](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/591)

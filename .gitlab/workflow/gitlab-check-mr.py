@@ -1,5 +1,6 @@
 """Checks a gitlab MR and add labels to it."""
 import os
+from pathlib import Path
 
 import gitlab  # pylint: disable=import-error
 import yaml
@@ -37,6 +38,57 @@ def get_labels(changed_files: list, labels_mr: list):
     return list(set(labels_mr)), changed_files_in_docs
 
 
+def get_script_doc_code_replacement(file: str):
+    """Get the name of script which is being replaced in docs.
+
+    Parameters
+    ----------
+    file : str
+        File name of the file that is searched for the
+        placeholders
+
+    Returns
+    -------
+    list
+        Script names which are used for code replacement in file
+    """
+    script_names = []
+    with open(file, "r") as md_file:
+        for line in md_file:
+            if "§§§" in line:
+                # select string which is enclosed in §§§
+                selected_line = line.split("§§§")[1]
+                if ":" in selected_line:
+                    selected_line = selected_line.split(":")[0]
+                script_names.append(selected_line)
+    return script_names
+
+
+def get_file_pattern_directory(directory: str = "docs/", file_extension: list = "*.md"):
+    """Searches in directory all files for specific string patterns.
+
+    Parameters
+    ----------
+    directory : str
+        Directory in which to search files.
+    file_extension: str
+        File extension to be used, by default `*.md`
+
+    Returns
+    -------
+    set
+        Set of script names which are used for code replacement in docs
+    """
+    filenames = [str(path) for path in Path(directory).rglob(file_extension)]
+    if "docs/setup/development/good_practices_docs.md" in filenames:
+        filenames.remove("docs/setup/development/good_practices_docs.md")
+
+    script_names = []
+    for filename in filenames:
+        script_names += get_script_doc_code_replacement(filename)
+    return set(script_names)
+
+
 if __name__ == "__main__":
     # connecting to the CERN gitlab API
     gl = gitlab.Gitlab(
@@ -56,6 +108,33 @@ if __name__ == "__main__":
     mr.labels = mr_labels
     mr.save()
     print("Found following labels:", mr_labels)
+
+    # Check if files were changed which are used as placeholders in docs, if yes,
+    # comment on MR to check that nothing is messed up
+    docs_with_placeholders = get_file_pattern_directory()
+    placeholder_files_changed = docs_with_placeholders.intersection(
+        set(changed_files_mr)
+    )
+    if len(placeholder_files_changed) > 0:
+        print(
+            "Following files are changed which are used as placeholders",
+            placeholder_files_changed,
+        )
+        note = (
+            "The following files are changed and used as placeholders in the docs:\n"
+            + "\n".join(f"* `{elem}`" for elem in placeholder_files_changed)
+            + "\n\n**Please check that they are still correct!**"
+        )
+        post_note = True
+        for note_i in mr.notes.list():
+            if note_i.body == note:
+                post_note = False
+                break
+        if post_note:
+            # Post the note to the MR if not already done
+            mr.notes.create({"body": note})
+        mr.save()
+
     # define flag if only documentation is concerned
     only_docs = (changed_files_in_docs_mr + changelog_changed) == len(changed_files_mr)
     if len(changed_files_mr) == 0:
