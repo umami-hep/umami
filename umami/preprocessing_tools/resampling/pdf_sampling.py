@@ -22,7 +22,7 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     SamplingGenerator,
     read_dataframe_repetition,
 )
-from umami.preprocessing_tools.utils import GetVariableDict
+from umami.preprocessing_tools.utils import get_variable_dict
 
 
 class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
@@ -2460,7 +2460,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 logger.info("Plotting resampled distributions...")
                 preprocessing_plots(
                     sample=self.config.GetFileName(option="resampled"),
-                    var_dict=GetVariableDict(self.config.var_file),
+                    var_dict=get_variable_dict(self.config.var_file),
                     class_labels=self.config.sampling["class_labels"],
                     plots_dir=os.path.join(
                         self.resampled_path,

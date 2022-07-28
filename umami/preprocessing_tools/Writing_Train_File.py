@@ -10,7 +10,7 @@ from scipy.stats import binned_statistic_2d
 
 from umami.configuration import logger
 from umami.plotting_tools import preprocessing_plots
-from umami.preprocessing_tools import GetVariableDict
+from umami.preprocessing_tools import get_variable_dict
 
 
 class TrainSampleWriter:
@@ -32,22 +32,32 @@ class TrainSampleWriter:
             Type of compression which should be used, by default None
         """
 
-        self.config = config
         self.save_tracks = (
-            self.config.sampling["options"]["save_tracks"]
-            if "save_tracks" in self.config.sampling["options"].keys()
+            config.sampling["options"]["save_tracks"]
+            if "save_tracks" in config.sampling["options"].keys()
             else False
         )
         self.save_track_labels = (
-            self.config.sampling["options"]["save_track_labels"]
-            if "save_track_labels" in self.config.sampling["options"].keys()
+            config.sampling["options"]["save_track_labels"]
+            if "save_track_labels" in config.sampling["options"].keys()
             else False
         )
-        self.tracks_names = self.config.sampling["options"]["tracks_names"]
+        self.track_label_variables = (
+            config.sampling["options"]["track_truth_variables"]
+            if "track_truth_variables" in config.sampling["options"].keys()
+            else None
+        )
+        self.class_labels = config.sampling["class_labels"]
+        self.tracks_names = config.sampling["options"]["tracks_names"]
         self.compression = compression
         self.precision = config.config["precision"]
         self.rnd_seed = 42
-        self.variable_config = GetVariableDict(config.var_file)
+        self.variable_config = get_variable_dict(config.var_file)
+        self.scale_dict = config.dict_file
+        self.sampling_options = config.sampling["options"]
+
+        # Adding the full config to retrieve the correct paths
+        self.config = config
 
     def load_generator(
         self,
@@ -190,7 +200,7 @@ class TrainSampleWriter:
         # Remove the nans that were introduced and return
         return thearray[~np.isnan(thearray)]
 
-    def WriteTrainSample(
+    def write_train_sample(
         self,
         input_file: str = None,
         output_file: str = None,
@@ -219,7 +229,7 @@ class TrainSampleWriter:
         # Define outfile name
         if output_file is None:
             out_file = self.config.GetFileName(option="resampled_scaled_shuffled")
-        if self.config.sampling["options"]["bool_attach_sample_weights"]:
+        if self.sampling_options["bool_attach_sample_weights"]:
             file_name = (
                 self.config.config["parameters"]["sample_path"] + "/flavour_weights"
             )
@@ -278,7 +288,7 @@ class TrainSampleWriter:
                     # final absolute jet index of this chunk
                     jet_idx_end = jet_idx + len(jets)
 
-                    if self.config.sampling["options"]["bool_attach_sample_weights"]:
+                    if self.sampling_options["bool_attach_sample_weights"]:
                         self.calculateWeights(weights_dict, jets, labels)
 
                     weights = jets["weight"]
@@ -316,6 +326,11 @@ class TrainSampleWriter:
                             shape=(n_jets,),
                         )
 
+                        # Writing jet variables as attributes to X_train
+                        h5file["X_train"].attrs["jet_variables"] = jets_variables
+                        h5file["Y_train"].attrs["label_classes"] = self.class_labels
+                        h5file["flavour"].attrs["label_classes"] = self.class_labels
+
                     if chunk_counter == 0 and self.save_tracks is True:
                         for i, tracks_name in enumerate(self.tracks_names):
                             chunks = (
@@ -345,6 +360,27 @@ class TrainSampleWriter:
                                         track_labels[i].shape[2],
                                     ),
                                 )
+
+                                # Add the track truth variables as attribute to the
+                                # track labels dataset
+                                h5file[f"Y_{tracks_name}_train"].attrs[
+                                    tracks_name + "_truth_variables"
+                                ] = self.track_label_variables
+
+                            # Extract the track variables used for training from the
+                            # var config and write them as attribute to the tracks
+                            # dataset
+                            h5file[f"X_{tracks_name}_train"].attrs[
+                                tracks_name + "_variables"
+                            ] = [
+                                trk_var
+                                for trk_header in self.variable_config[
+                                    "track_train_variables"
+                                ][tracks_name]
+                                for trk_var in self.variable_config[
+                                    "track_train_variables"
+                                ][tracks_name][trk_header]
+                            ]
 
                     # Jet inputs
                     h5file["X_train"][jet_idx:jet_idx_end] = jets
@@ -383,8 +419,8 @@ class TrainSampleWriter:
 
         # Plot the variables from the output file of the resampling process
         if (
-            "n_jets_to_plot" in self.config.sampling["options"]
-            and self.config.sampling["options"]["n_jets_to_plot"]
+            "n_jets_to_plot" in self.sampling_options
+            and self.sampling_options["n_jets_to_plot"]
         ):
             logger.info("Plotting prepared training dataset distributions...")
             preprocessing_plots(
@@ -395,12 +431,12 @@ class TrainSampleWriter:
                     self.config.config["parameters"]["file_path"],
                     "plots/resampling_scaled_shuffled/",
                 ),
-                track_collection_list=self.config.sampling["options"]["tracks_names"]
-                if "tracks_names" in self.config.sampling["options"]
-                and "save_tracks" in self.config.sampling["options"]
-                and self.config.sampling["options"]["save_tracks"] is True
+                track_collection_list=self.sampling_options["tracks_names"]
+                if "tracks_names" in self.sampling_options
+                and "save_tracks" in self.sampling_options
+                and self.sampling_options["save_tracks"] is True
                 else None,
-                n_jets=self.config.sampling["options"]["n_jets_to_plot"],
+                n_jets=self.sampling_options["n_jets_to_plot"],
                 atlas_second_tag=self.config.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
@@ -435,7 +471,7 @@ class TrainSampleWriter:
             (n_jets x (nFlavor x 1))
         """
         # scale to original values for binning
-        with open(self.config.dict_file, "r") as infile:
+        with open(self.scale_dict, "r") as infile:
             jets_scale_dict = json.load(infile)
         for elem in jets_scale_dict["jets"]:
             if elem["name"] == "pt_btagJes":

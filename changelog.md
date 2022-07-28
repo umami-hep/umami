@@ -7,6 +7,8 @@
 - Pointing truth label docs directly to FTAG docs  [!593](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/593)
 - Compare class id, class operators and variables of each class definition instead of only comparing the class id to avoid the same class definition. [!575](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/575)
 - Removing #!/usr/bin/env python from scripts  [!591](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/591)
+- Adding metadata information to training file [!592](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/592)
+- Removing #!/usr/bin/env python from scripts [!591](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/591)
 - Adding some missing unit tests [!587](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/587)
 - Plots per default with non-transparent background [!590](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/590)
 - Fixing pylint for unit tests [!588](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/588)

@@ -8,7 +8,7 @@ from puma import Histogram, HistogramPlot
 import umami.data_tools as udt
 from umami.configuration import global_config, logger
 from umami.plotting_tools.utils import translate_binning
-from umami.preprocessing_tools import GetVariableDict
+from umami.preprocessing_tools import get_variable_dict
 
 
 def check_kwargs_for_ylabel_and_n_ratio_panel(
@@ -274,7 +274,7 @@ def plot_input_vars_trks(
         flavour_label_dict.update({label: flavour_labels})
 
     # Load var dict
-    variable_config = GetVariableDict(var_dict)
+    variable_config = get_variable_dict(var_dict)
 
     # Loading track variables
     try:
@@ -521,7 +521,7 @@ def plot_input_vars_jets(
         jets_dict.update({label: jets})
         flavour_label_dict.update({label: flavour_labels})
 
-    variable_config = GetVariableDict(var_dict)
+    variable_config = get_variable_dict(var_dict)
 
     # Loading jet variables
     jet_variables = [

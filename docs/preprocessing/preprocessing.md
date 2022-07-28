@@ -383,6 +383,18 @@ preprocessing.py --config <path to config file> --apply_scales
 preprocessing.py --config <path to config file> --write
 ```
 
+After the final write step, the usual jet and track(s) datasets are no longer available. They are replaced with datasets with unstructured `numpy.ndarray`s. The names of these new datasets in the final training file can be found in the table below:
+
+| Before writing | After writing | Shape | Comment |
+| -------------- | ------------- | ----- | ------- |
+| `jets` | `X_train` | `(n_jets, n_jet_variables)` | |
+| `<tracks_name>` | `X_<tracks_name>_train` | `(n_jets, n_tracks, n_track_variables)` | `<tracks_name>` is the name of the track collection in the `.h5` files coming from the training-dataset-dumper. |
+| `labels` | `Y_train` | `(n_jets, n_jet_classes)` | One-hot encoded truth labels. The `n_jet_classes` are the `class_labels` defined in the preprocessing config. The value `0` here corresponds to the jet origin which is on index `0` in the `class_labels` list. |
+| `labels` | `flavour` | `(n_jets,)` | Sparse representation of the jet labels. Which value correspond to which jet type can be found [here](https://ftag.docs.cern.ch/algorithms/labelling/#jet-truth-labels). |
+| `<tracks_name>_labels` | `Y_<tracks_name>_train` | `(n_jets, n_tracks, n_track_truth_variables)` | This is the sparse representation of the `track_truth_variables`. |
+
+In the final training file, the column information (and therefore which column corresponds to which variable) is not longer available. You can run `h5ls -v` on the file to get some information about the variables for each of the datasets. The variables for the specific jet and track(s) datasets will be shown as a attribute of the dataset.
+
 If you are saving the tracks it might be useful to save your samples as a directory with [tf Records](https://www.tensorflow.org/tutorials/load_data/tfrecord). This can be done by using `--to_records` instead of `--write`.
 Important: you need to have ran `--write` beforehand.
 

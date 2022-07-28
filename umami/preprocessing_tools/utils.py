@@ -9,7 +9,7 @@ from umami.configuration import logger
 from umami.tools import yaml_loader
 
 
-def GetVariableDict(yaml_file: str) -> dict:
+def get_variable_dict(yaml_file: str) -> dict:
     """
     Reads yaml_file containig the variables and exports
     them to a dict.
