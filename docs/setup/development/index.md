@@ -82,7 +82,7 @@ There is a [global configuration](https://gitlab.cern.ch/atlas-flavor-tagging-to
 
 | Option | Description |
 |--------|-------------|
-| `pTvariable`       |    Setting the name of the `pT` variable which is used in several places.         |
+| `pTvariable`       |    Setting the name of the $p_T$ variable which is used in several places.         |
 |  `etavariable`      |      Setting the name of the `absolute eta` variable which is used in several places.        |
 |  `DebugLevel`      |      Defines the debug level. Possible values:  `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`      |
 |  `TFDebugLevel`      |      Defines the debug level of tensorflow, it takes integer values [0,1,2,3], where 0 prints all messages.      |
