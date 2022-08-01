@@ -181,18 +181,19 @@ def plot_roc(
         if print_model:
             logger.info("model: %s", model_name)
 
+        # Check for evaluation file
         if ("evaluation_file" not in model_config) or (
             model_config["evaluation_file"] is None
         ):
-            model_config["df_results_eff_rej"] = pd.read_hdf(
-                eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5",
-                model_config["data_set_name"],
-            )
+            df_results_file = eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5"
 
         else:
-            model_config["df_results_eff_rej"] = pd.read_hdf(
-                model_config["evaluation_file"], model_config["data_set_name"]
-            )
+            df_results_file = model_config["evaluation_file"]
+
+        # Retrieve the dataset from file
+        model_config["df_results_eff_rej"] = pd.read_hdf(
+            df_results_file, model_config["data_set_name"]
+        )
 
         df_results_list.append(model_config["df_results_eff_rej"])
         tagger_list.append(model_config["tagger_name"])
@@ -214,9 +215,7 @@ def plot_roc(
 
         else:
             try:
-                with h5py.File(
-                    eval_file_dir + f"/results-rej_per_eff-{eval_epoch}.h5", "r"
-                ) as h5_file:
+                with h5py.File(df_results_file, "r") as h5_file:
                     n_jets_test.append(
                         h5_file.attrs[f"n_jets_{model_config['rejection_class']}"]
                     )
