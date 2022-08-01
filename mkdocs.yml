@@ -32,8 +32,12 @@ nav:
 
         - Changelog: setup/changelog.md
     - Preprocessing:
-        - Overview: preprocessing/preprocessing.md
-        - MC samples: preprocessing/mc-samples.md
+        - Overview: preprocessing/Overview.md
+        - Ntuple preparation: preprocessing/ntuple_preparation.md
+        - Resampling: preprocessing/resampling.md
+        - Scaling/Shifting: preprocessing/scaling_shifting.md
+        - Write train sample: preprocessing/write_train_sample.md
+        - MC samples: 'https://ftag.docs.cern.ch/software/samples/'
         - Truth labels: 'https://ftag.docs.cern.ch/algorithms/labelling/'
     - Trainings:
         - Overview: trainings/index.md

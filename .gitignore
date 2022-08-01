@@ -21,6 +21,7 @@ umami/dips*/*
 plots/*
 env/*
 .vscode/*
+!docs/assets/*.png
 !umami/tests/unit/**/*.png
 python_install/
 METADATA
