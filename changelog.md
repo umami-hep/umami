@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding x_axis_granularity argument + Fixing evaluation_file plotting issue [!596](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/596)
 - Bot posts message in MR in case files used as placeholders were changed [!594](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/594)
 - Pointing truth label docs directly to FTAG docs  [!593](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/593)
 - Compare class id, class operators and variables of each class definition instead of only comparing the class id to avoid the same class definition. [!575](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/575)

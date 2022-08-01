@@ -345,6 +345,9 @@ def evaluate_model(
         frac_values_comp=frac_values_comp,
         eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
         eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
+        x_axis_granularity=100
+        if "x_axis_granularity" not in eval_params
+        else eval_params["x_axis_granularity"],
     )
 
     df_eff_rej = pd.DataFrame(tagger_rej_dicts)
@@ -632,6 +635,9 @@ def evaluate_model_dips(
         frac_values_comp=frac_values_comp,
         eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
         eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
+        x_axis_granularity=100
+        if "x_axis_granularity" not in eval_params
+        else eval_params["x_axis_granularity"],
     )
 
     # Form the dict to a Dataframe and save it
@@ -944,6 +950,9 @@ def evaluate_model_dl1(
         frac_values_comp=frac_values_comp,
         eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
         eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
+        x_axis_granularity=100
+        if "x_axis_granularity" not in eval_params
+        else eval_params["x_axis_granularity"],
     )
 
     # Add dict to Dataframe and delete dict
