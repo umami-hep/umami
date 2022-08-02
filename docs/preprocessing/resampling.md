@@ -1,7 +1,8 @@
 ## Resampling
 The resampling step is the most crucial task of the preprocessing. Using the samples from the preparation step, the resampling stitches together the used processes and, based on the resampling method used, resamples all flavours used to one target flavour. Due to differences in the number of jets in different $p_T$ and $\eta$ regions, the tagging of the jets is not independent of those regions. To ensure a kinematic independent tagging of the jets, the resampling methods sample the different flavours so that in the given $p_T$ and $\eta$ bins, the same amount of jets per flavour are present. The technique how this is done are specific to the method. In their respective section, this will be explained more in detail. This 2D resampling is illustrated with the following plot from [Manuel Guth's PhD Defense Talk](https://indico.cern.ch/event/981227/#1-search-for-tthbb-production):
 
-<img src=https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/assets/resampling.png width=500>
+
+![Example for 2D resampling in pT and eta](../assets/resampling.png)
 
 For the `count` (or down-sampling), `PDF` (a combination fo up- and down-sampling) and `importance_no_replace` (similar to `PDF` but no reusing of the jets) methods, we first fill the target flavour in your 2D bins. After that, for each bin, the same amount of jets from other flavours, which fit in the 2D bin, are added. This up- and down-sampling is illustrated in the following plot from [Kaggle](https://www.kaggle.com/code/rafjaa/resampling-strategies-for-imbalanced-datasets/notebook):
 
