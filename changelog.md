@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding script to process test samples in an easy way  [!595](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/595)
 - Adding x_axis_granularity argument + Fixing evaluation_file plotting issue [!596](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/596)
 - Restructure and update preprocessing documentation [!598](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/598)
 - Bot posts message in MR in case files used as placeholders were changed [!594](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/594)

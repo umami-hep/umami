@@ -21,13 +21,21 @@ Additional preprocessing steps for PFlow jets are required to ensure similar kin
 
 ![pT distribution of downsampled hybrid samples](../assets/pt_btagJes-downsampled.png)
 
-Although we are using here for example reasons $t\bar{t}$ and $Z'$ to create a hybrid sample, you can use any kind of samples. Also, you don't need to create a hybrid sample. You can still use only one sample and for the preprocessing. 
+Although we are using here for example reasons $t\bar{t}$ and $Z'$ to create a hybrid sample, you can use any kind of samples. Also, you don't need to create a hybrid sample. You can still use only one sample and for the preprocessing.
 All these steps are implemented in the `preprocessing.py` script, whose usage is described in the follwing documentation.
 
 ## Preprocessing Steps
 For the preprocessing, four steps need to be done:
 
-1. [Preparation step](ntuple_preparation.md): Extract the different flavours from the `.h5` files from the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and separate them into flavour-specific files. Also the the split in training/validation/evaluation is done at this step. 
+1. [Preparation step](ntuple_preparation.md): Extract the different flavours from the `.h5` files from the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and separate them into flavour-specific files. Also the the split in training/validation/evaluation is done at this step.
 2. [Resampling step](resampling.md): Combine and resample the different processes/flavours to achieve similar $p_T$ and $\eta$ distributions for all used flavours.
 3. [Scaling/Shifting step](scaling_shifting.md): Calculate scaling/shifting values for all variables that are about to be used in the training. Then apply the scaling/shifting with the just calculated values.
 4. [Writing step](write_train_sample.md): Write the final training sample to disk. In this step, the collections of jets and track variables are encoded and flattened so that we can load/use them for training.
+
+
+## Apply Preprocessing with stand-alone script
+
+In some cases you might want to apply the scaling and shifting to a data set using a stand-alone script.
+For instance if you train with pytorch and just need a validation/test sample.
+
+This can be done with the script `scripts/process_test_file.py`.
