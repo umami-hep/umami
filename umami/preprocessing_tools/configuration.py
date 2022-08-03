@@ -83,7 +83,7 @@ class Configuration:
             self.config = self.YAML.load(conf)
 
     def get_configuration(self) -> None:
-        """Assigne configuration from file to class variables.
+        """Assign configuration from file to class variables.
 
         Raises
         ------

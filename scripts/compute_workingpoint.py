@@ -7,7 +7,7 @@ import numpy as np
 import umami.train_tools as utt
 
 
-def getArgumentParser():
+def get_parser():
     """Argparse option for compute_workingpoint script.
 
     Returns
@@ -23,12 +23,12 @@ def getArgumentParser():
     parser.add_argument("-m", "--main_class", default="bjets")
     parser.add_argument("-w", "--working_points", default=[0.60, 0.70, 0.77, 0.85])
     parser.add_argument("-n", "--n_jets", default=22_000_000)
-    return parser
+    return parser.parse_args()
 
 
 def main():
     """Main function called when executing script."""
-    args = getArgumentParser().parse_args()
+    args = get_parser()
     tagger = args.tagger
     main_class = args.main_class
     class_labels = args.class_labels

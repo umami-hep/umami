@@ -1,6 +1,6 @@
 # flake8: noqa
 # pylint: skip-file
-from umami.preprocessing_tools.Configuration import Configuration
+from umami.preprocessing_tools.configuration import Configuration
 from umami.preprocessing_tools.Merging import (
     add_data,
     check_keys,

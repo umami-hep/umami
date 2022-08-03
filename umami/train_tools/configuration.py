@@ -75,7 +75,7 @@ class Configuration:
                         self.config[elem][item] = self.default_config[elem][item]
 
     def get_configuration(self):
-        """Assigne configuration from file to class variables.
+        """Assign configuration from file to class variables.
 
         Raises
         ------

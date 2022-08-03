@@ -30,7 +30,7 @@ class Configuration:
             self.config = yaml.load(conf, Loader=yaml.FullLoader)
 
     def get_configuration(self):
-        """Assigne configuration from file to class variables.
+        """Assign configuration from file to class variables.
 
         Raises
         ------
