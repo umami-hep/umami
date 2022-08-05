@@ -85,6 +85,7 @@ Dips_pT_vs_beff:
   plot_settings:
     bin_edges: [0, 20, 30, 40, 60, 85, 110, 140, 175, 250, 400, 1000]
     flavour: "cjets"
+    variable: "pt"
     class_labels: ["ujets", "cjets", "bjets"]
     main_class: "bjets"
     working_point: 0.77

@@ -37,7 +37,7 @@ For plotting, these different plots are available:
 Plot a confusion matrix. For example:
 
 ```yaml
-§§§examples/plotting_umami_config_dips.yaml:141:147§§§
+§§§examples/plotting_umami_config_dips.yaml:142:148§§§
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -48,7 +48,7 @@ Plot a confusion matrix. For example:
 Plotting the DNN probability output for a specific class. For example:
 
 ```yaml
-§§§examples/plotting_umami_config_dips.yaml:163:178§§§
+§§§examples/plotting_umami_config_dips.yaml:164:179§§§
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -84,7 +84,7 @@ Plotting the b-tagging discriminant scores for the different jet flavors. For ex
 Plotting the ROC Curves of the rejection rates against the b-tagging efficiency. For example:
 
 ```yaml
-§§§examples/plotting_umami_config_dips.yaml:100:116§§§
+§§§examples/plotting_umami_config_dips.yaml:101:117§§§
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -104,27 +104,28 @@ Plotting the ROC Curves of the rejection rates against the b-tagging efficiency.
 You can plot two rejections at the same time with two subplots with the ratios. One for each rejection. An example for this can be seen here:
 
 ```yaml
-§§§examples/plotting_umami_config_dips.yaml:118:139§§§
+§§§examples/plotting_umami_config_dips.yaml:119:140§§§
 ```
 
-#### pT vs Efficiency
+#### Variable vs Efficiency
 Plot the b efficiency/c-rejection/light-rejection against the pT. For example:
 
 ```yaml
-§§§examples/plotting_umami_config_dips.yaml:78:98§§§
+§§§examples/plotting_umami_config_dips.yaml:78:99§§§
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `type` | `str` | Necessary | This gives the type of plot function used. Must be `"pT_vs_eff"` here. |
+| `type` | `str` | Necessary | This gives the type of plot function used. Must be `"var_vs_eff"` here. |
 | `dips` | `None` | Necessary | Internal naming of the model. This will not show up anywhere, but it must be unique! You can define multiple of these models. All of them will be plotted. The baseline for the ratio is the first model defined here. |
 | `data_set_name` | `str` | Necessary | Name of the dataset that is used. This is the name of the test_file which you want to use. |
 | `label` | `str` | Necessary | Legend label of the model. |
 | `tagger_name` | `str` | Necessary | Name of the tagger which is to be plotted. This is the name of the tagger either from the `.h5` files or your freshly trained tagger (look [here](https://umami-docs.web.cern.ch/plotting/plotting_umami/#yaml-config-file) for an explanation of the freshly trained tagger names). **IMPORTANT: If you want to use a tagger from the `.h5` files, you must run the `evaluate_model.py` script with the names of taggers in the train config in the `Eval_parameters_validation` section. There you need to enter the name to the `tagger` list and the fraction values to the `frac_values_comp` dict. The key is the name of the tagger. |
 | `bin_edges` | `list` | Necessary | Setting the edges of the bins. Don't forget the first/last edge! |
 | `flavour` | `str` | Necessary | Flavour class rejection which is to be plotted. |
-| `class_labels` | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
-| `main_class` | `str` | Class which is to be tagged. |
+| `variable` | `str` | Necessary | Variable against the efficiency/rejection is plotted against. |
+| `class_labels` | `list` | Necessary | List of class labels that were used in the preprocessing/training. They must be the same in all three files! Order is important! |
+| `main_class` | `str` | Necessary | Class which is to be tagged. |
 | `working_point` | `float` | Necessary | Float of the working point that will be used. |
 | `working_point_line` | `float` | Optional | Print a horizontal line at this value efficiency. |
 | `fixed_eff_bin` | `bool` | Optional | Calculate the WP cut on the discriminant per bin. |
@@ -133,7 +134,7 @@ Plot the b efficiency/c-rejection/light-rejection against the pT. For example:
 To evaluate the impact of the track variables to the final b-tagging discriminant can't be found using SHAPley. To make the impact visible (for each track of the jet), so-called Saliency maps are used. These maps are calculated when evaluating the model you have trained (if it is activated). A lot of different options can be set. An example is given here:
 
 ```yaml
-§§§examples/plotting_umami_config_dips.yaml:149:160§§§
+§§§examples/plotting_umami_config_dips.yaml:150:161§§§
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |

@@ -365,7 +365,7 @@ def plot_score(
     )
 
 
-def plot_pt_vs_eff(
+def plot_var_vs_eff(
     plot_name: str,
     plot_config: dict,
     eval_params: dict,
@@ -421,7 +421,7 @@ def plot_pt_vs_eff(
         model_labels.append(model_config["label"])
         tagger_list.append(model_config["tagger_name"])
 
-    uet.plot_pt_dependence(
+    uet.plot_var_vs_eff(
         df_list=df_list,
         tagger_list=tagger_list,
         model_labels=model_labels,
@@ -680,8 +680,15 @@ def set_up_plots(
                 print_model=print_model,
             )
 
-        elif plot_config["type"] == "pT_vs_eff":
-            plot_pt_vs_eff(
+        # TODO Remove pT_vs_eff
+        elif plot_config["type"] in ("pT_vs_eff", "var_vs_eff"):
+            if plot_config["type"] == "pT_vs_eff":
+                logger.warning(
+                    "Deprecation Warning: You set as plottype pT_vs_eff. This "
+                    "is will be removed in future umami versions."
+                )
+
+            plot_var_vs_eff(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
                 eval_params=eval_params,

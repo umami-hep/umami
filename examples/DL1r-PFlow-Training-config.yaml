@@ -148,7 +148,7 @@ Eval_parameters_validation:
     }
 
     # A list to add available variables to the evaluation files
-    add_variables_eval: ["actualInteractionsPerCrossing"]
+    add_eval_variables: ["actualInteractionsPerCrossing"]
 
     # Working point used in the evaluation
     WP: 0.77
