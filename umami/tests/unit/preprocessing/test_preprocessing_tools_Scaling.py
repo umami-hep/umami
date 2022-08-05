@@ -4,9 +4,15 @@ import os
 import unittest
 
 import numpy as np
+import pandas as pd
 
 from umami.configuration import logger, set_log_level
-from umami.preprocessing_tools import Configuration, Scaling, apply_scaling_trks
+from umami.preprocessing_tools import (
+    Configuration,
+    Scaling,
+    apply_scaling_jets,
+    apply_scaling_trks,
+)
 
 set_log_level(logger, "DEBUG")
 
@@ -48,6 +54,91 @@ class ApplyScalingTrksTestCase(unittest.TestCase):
         )
 
         np.testing.assert_array_almost_equal(scaled_trks, self.control_trks)
+
+
+class ApplyScalingJetsTestCase(unittest.TestCase):
+    """Test class for apply_scaling_jets function."""
+
+    def setUp(self) -> None:
+        self.variable_list = [
+            "absEta_btagJes",
+            "pt_btagJes",
+            "JetFitter_isDefaults",
+        ]
+        self.jets = pd.DataFrame(
+            {
+                var: np.ones(5) * counter
+                for counter, var in enumerate(self.variable_list)
+            }
+        )
+        self.control_jets = pd.DataFrame(
+            {
+                "absEta_btagJes": np.ones(5) * -0.5,
+                "pt_btagJes": np.zeros(5),
+                "JetFitter_isDefaults": np.ones(5) * 2,
+            }
+        )
+        self.scale_dict = [
+            {
+                "name": var,
+                "shift": 1,
+                "scale": 2,
+                "default": 0,
+            }
+            for var in self.variable_list
+        ]
+
+    def test_scaling_jets(self):
+        """Testing the default behaviour."""
+        logger.warning(self.jets)
+        jets = apply_scaling_jets(
+            jets=self.jets,
+            variables_list=self.variable_list,
+            scale_dict=self.scale_dict,
+        )
+
+        for var in self.variable_list:
+            with self.subTest(f"Testing variable {var}"):
+                np.testing.assert_array_almost_equal(jets[var], self.control_jets[var])
+
+    def test_KeyError_scale_dict(self):
+        """Test error raise if variable not in scale dict."""
+        with self.assertRaises(KeyError):
+            apply_scaling_jets(
+                jets=self.jets,
+                variables_list=self.variable_list + ["JetFitter_mass"],
+                scale_dict=self.scale_dict,
+            )
+
+    def test_ValueError_scale_value(self):
+        """Test error raise if variable not in scale dict."""
+        faulty_scale_dict = [
+            {
+                "name": "absEta_btagJes",
+                "shift": 1,
+                "scale": 0,
+                "default": 0,
+            },
+            {
+                "name": "absEta_btagJes",
+                "shift": 1,
+                "scale": np.inf,
+                "default": 0,
+            },
+            {
+                "name": "absEta_btagJes",
+                "shift": 1,
+                "scale": 0,
+                "default": 0,
+            },
+        ]
+
+        with self.assertRaises(ValueError):
+            apply_scaling_jets(
+                jets=self.jets,
+                variables_list=self.variable_list,
+                scale_dict=faulty_scale_dict,
+            )
 
 
 class ScalingTestCase(unittest.TestCase):

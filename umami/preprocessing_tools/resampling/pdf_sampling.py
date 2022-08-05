@@ -8,7 +8,6 @@ import pickle
 import h5py
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
-from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
 
 from umami.configuration import logger
@@ -22,7 +21,7 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     SamplingGenerator,
     read_dataframe_repetition,
 )
-from umami.preprocessing_tools.utils import get_variable_dict
+from umami.preprocessing_tools.utils import binarise_jet_labels, get_variable_dict
 
 
 class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
@@ -1561,12 +1560,11 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             load_chunk = load_more
 
             # One hot encode the loaded labels
-            label_classes.append(-1)
-            labels = label_binarize(
-                (np.ones(len(indices)) * label),
-                classes=label_classes,
-            )[:, :-1]
-            label_classes.pop()
+            labels = binarise_jet_labels(
+                labels=(np.ones(len(indices)) * label),
+                internal_labels=label_classes,
+            )
+
             # Open the input file and read the jets and tracks
             # in a fancy way which allows double index loading
             with h5py.File(in_file, "r") as file_df:

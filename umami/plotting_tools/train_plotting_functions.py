@@ -129,7 +129,10 @@ def get_comp_tagger_rej_dict(
     )
 
     # Binarize the labels
-    y_true = binarise_jet_labels(labels)
+    y_true = binarise_jet_labels(
+        labels=labels,
+        internal_labels=list(range(len(class_labels))),
+    )
 
     # Get a list with all per-jets variables loaded
     avai_variables = list(df.keys())
