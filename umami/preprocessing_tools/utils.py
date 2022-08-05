@@ -1,9 +1,8 @@
 """Collection of utility functions for preprocessing tools."""
-
 import numpy as np
 import pandas as pd
 import yaml
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import label_binarize
 
 from umami.configuration import logger
 from umami.tools import yaml_loader
@@ -48,7 +47,8 @@ def get_variable_dict(yaml_file: str) -> dict:
 
 
 def binarise_jet_labels(
-    df: pd.DataFrame,
+    labels: pd.DataFrame,
+    internal_labels: list,
     column: str = "label",
 ) -> np.ndarray:
     """
@@ -56,20 +56,56 @@ def binarise_jet_labels(
 
     Parameters
     ----------
-    df : pd.DataFrame
-        Dataframe with the labels inside.
+    labels : pd.DataFrame or np.ndarray
+        Dataframe or array with the labels inside.
+    internal_labels : list
+        List with the used labels.
     column : str, optional
-        Label name to be used to binarise, by default "label"
+        Column name of the labels if pd.DataFrame is given,
+        by default "label"
 
     Returns
     -------
     np.ndarray
-        containing binary label with shape (len(df), n_classes)
+        containing binary label with shape (len(labels), n_classes)
+
+    Raises
+    ------
+    TypeError
+        If given labels are neither pd.DataFrame nor np.ndarray
+    ValueError
+        If the given labels are empty
     """
 
-    lb = LabelBinarizer()
-    if isinstance(df, np.ndarray):
-        return lb.fit_transform(df)
+    if isinstance(labels, pd.DataFrame):
+        labels = np.array(labels[column].values)
 
-    labels = np.array(df[column].values)
-    return lb.fit_transform(labels)
+    elif not isinstance(labels, np.ndarray):
+        raise TypeError(
+            f"Given type {type(labels)} is not supported. Only np.ndarray and"
+            " pd.DataFrame"
+        )
+
+    if len(labels) == 0:
+        raise ValueError("Given labels are empty!")
+
+    for unique_label in np.unique(labels):
+        if unique_label not in internal_labels:
+            raise ValueError(
+                "Given internal labels list does not contain all labels"
+                " available in the labels!"
+            )
+
+    # Workaround to prevent 1d labels if only two classes are given in class_labels
+    internal_labels.append(-1)
+
+    # One hot encode the labels
+    labels = label_binarize(
+        y=labels,
+        classes=internal_labels,
+    )[:, :-1]
+
+    # Remove the workaround
+    internal_labels.pop()
+
+    return labels

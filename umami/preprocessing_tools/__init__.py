@@ -31,6 +31,7 @@ from umami.preprocessing_tools.resampling.resampling_base import (
 from umami.preprocessing_tools.resampling.weighting import Weighting
 from umami.preprocessing_tools.Scaling import (
     Scaling,
+    apply_scaling_jets,
     apply_scaling_trks,
     generate_default_dict,
     get_track_mask,

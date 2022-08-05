@@ -114,28 +114,113 @@ class GetVariableDictTestCase(unittest.TestCase):
         )
 
 
-class GetBinaryLabelsTestCase(unittest.TestCase):
-    """Test the implementation of the GetBinaryLabels function."""
+class BinariseJetLabelsTestCase(unittest.TestCase):
+    """Test the implementation of the binarise_jet_labels function."""
 
     def setUp(self):
         """Create a default dataset for testing."""
         self.y = np.concatenate(
-            [np.zeros(12), 4 * np.ones(35), 6 * np.ones(5), 15 * np.ones(35)]
+            [np.zeros(12), np.ones(35), 2 * np.ones(5), 3 * np.ones(35)]
         )
         np.random.seed(42)
         np.random.shuffle(self.y)
         self.df = pd.DataFrame({"label": self.y})
+        self.two_classes_y = np.asarray([0, 1, 1, 0, 1])
+        self.four_classes_y = np.asarray([0, 1, 2, 3, 2])
+
+    def test_correct_output(self):
+        """Testing correct behaviour."""
+        y_correct = np.asarray(
+            [
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, 0],
+            ]
+        )
+
+        y_categ = binarise_jet_labels(
+            labels=self.four_classes_y,
+            internal_labels=list(range(4)),
+        )
+        np.testing.assert_array_equal(y_correct, y_categ)
+
+    def test_2_classes_correct_output(self):
+        """Testing correct behaviour."""
+        y_correct = np.asarray(
+            [
+                [1, 0],
+                [0, 1],
+                [0, 1],
+                [1, 0],
+                [0, 1],
+            ]
+        )
+
+        y_categ = binarise_jet_labels(
+            labels=self.two_classes_y,
+            internal_labels=list(range(2)),
+        )
+        np.testing.assert_array_equal(y_correct, y_categ)
 
     def test_zero_length(self):
         """Test zero case."""
         df_0 = pd.DataFrame({"label": []})
         with self.assertRaises(ValueError):
-            binarise_jet_labels(df_0)
+            binarise_jet_labels(
+                labels=df_0,
+                internal_labels=list(range(4)),
+            )
 
-    def test_shape(self):
-        """Test shape."""
-        y_categ = binarise_jet_labels(self.df, "label")
+    def test_wrong_type(self):
+        """Test wrong input type case."""
+        df_0 = "I am a wrong type"
+        with self.assertRaises(TypeError):
+            binarise_jet_labels(
+                labels=df_0,
+                internal_labels=list(range(4)),
+            )
+
+    def test_missing_internal_label(self):
+        """Test wrong input type case."""
+        with self.assertRaises(ValueError):
+            binarise_jet_labels(
+                labels=self.y,
+                internal_labels=list(range(3)),
+            )
+
+    def test_shape_array(self):
+        """Test shape for array input."""
+        y_categ = binarise_jet_labels(
+            labels=self.y,
+            internal_labels=list(range(4)),
+            column="label",
+        )
         self.assertEqual(y_categ.shape, (len(self.y), 4))
+
+    def test_shape_DataFrame(self):
+        """Test shape for DataFrame input."""
+        y_categ = binarise_jet_labels(
+            labels=self.df,
+            internal_labels=list(range(4)),
+            column="label",
+        )
+        self.assertEqual(y_categ.shape, (len(self.y), 4))
+
+    def test_shape_2_classes(self):
+        """Test 2 classes"""
+        y = np.concatenate([np.zeros(12), np.ones(35)])
+        np.random.seed(42)
+        np.random.shuffle(y)
+        df_two_classes = pd.DataFrame({"label": y})
+
+        y_categ = binarise_jet_labels(
+            labels=df_two_classes,
+            internal_labels=list(range(2)),
+            column="label",
+        )
+        self.assertEqual(y_categ.shape, (len(y), 2))
 
 
 class PrepareSamplesTestCase(unittest.TestCase):

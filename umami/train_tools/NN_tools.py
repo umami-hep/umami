@@ -20,9 +20,9 @@ import umami.tf_tools as utf
 from umami.data_tools import LoadJetsFromFile, LoadTrksFromFile
 from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import (
+    apply_scaling_jets,
     apply_scaling_trks,
     binarise_jet_labels,
-    generate_default_dict,
     get_variable_dict,
 )
 from umami.tools import natural_keys, replace_line_in_file
@@ -776,8 +776,6 @@ def get_test_sample(
         If jet_variables and exclude are used at the same time.
     RuntimeError
         If no file could be found in the given filepath.
-    KeyError
-        If variable is used which is not in the scale dict.
     """
 
     # Assert that the jet variables and exlude are not called at the same time
@@ -829,11 +827,14 @@ def get_test_sample(
         n_jets=n_jets,
         cut_vars_dict=cut_vars_dict,
         variables=jet_variables,
-        print_logger=False,
+        print_logger=print_logger,
     )
 
     # Binarize Labels
-    labels = binarise_jet_labels(Umami_labels)
+    labels = binarise_jet_labels(
+        labels=Umami_labels,
+        internal_labels=list(range(len(class_labels))),
+    )
 
     # Check if jet_variables is defined
     if jet_variables:
@@ -847,41 +848,13 @@ def get_test_sample(
             variable_config["train_variables"], exclude
         )
 
-    # Select only wanted variables
-    jets = jets[variables]
+    logger.debug("Excluded variables: %s", excluded_variables)
 
-    # Replace inf with nans
-    jets = jets.replace([np.inf, -np.inf], np.nan)
-
-    logger.info("Replacing default values.")
-    default_dict = generate_default_dict(scale_dict)
-    jets = jets.fillna(default_dict)
-
-    logger.info("Applying scaling and shifting.")
-    scale_dict_variables = []
-    for elem in scale_dict:
-        scale_dict_variables.append(elem["name"])
-        if elem["name"] not in variables:
-            if print_logger:
-                if elem["name"] in excluded_variables:
-                    logger.info(
-                        "%s has been excluded from variable config (is in scale dict).",
-                        elem["name"],
-                    )
-                else:
-                    logger.warning(
-                        "%s in scale dict but not in variable config.", elem["name"]
-                    )
-            continue
-        if "isDefaults" in elem["name"]:
-            continue
-        jets[elem["name"]] -= elem["shift"]
-        jets[elem["name"]] /= elem["scale"]
-    if not set(variables).issubset(scale_dict_variables):
-        raise KeyError(
-            f"Requested {(set(variables).difference(scale_dict_variables))}"
-            " which are not in scale dict."
-        )
+    jets = apply_scaling_jets(
+        jets=jets,
+        variables_list=variables,
+        scale_dict=scale_dict,
+    )
 
     # Return jets and labels
     return jets, labels
@@ -984,7 +957,10 @@ def get_test_sample_trks(
     )
 
     # Binarize the labels
-    binary_labels = binarise_jet_labels(labels)
+    binary_labels = binarise_jet_labels(
+        labels=labels,
+        internal_labels=list(range(len(class_labels))),
+    )
 
     # Apply scaling to the tracks
     trks, _ = apply_scaling_trks(

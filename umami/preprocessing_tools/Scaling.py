@@ -73,6 +73,82 @@ def get_track_mask(tracks: np.ndarray) -> np.ndarray:
     )
 
 
+def apply_scaling_jets(
+    jets: pd.DataFrame,
+    variables_list: dict,
+    scale_dict: dict,
+) -> pd.DataFrame:
+    """
+    Apply the jet scaling and shifting for the given jets.
+
+    Parameters
+    ----------
+    jets : pd.DataFrame
+        Loaded jets which are to be scaled/shifted.
+    variables_list : dict
+        Train variables which will be scaled/shifted. For all
+        variables, the scaling/shifting values must be in the
+        scaling dict.
+    scale_dict : dict
+        Loaded scaling dict with the scaling/shifting values
+        for the variables defined in variables_list.
+
+    Returns
+    -------
+    pd.DataFrame
+        Scaled/Shifted jets with the variables defined in variables_list
+
+    Raises
+    ------
+    KeyError
+        When for the variable which is to be scaled no shift/scale values
+        are available in the scale dict.
+    ValueError
+        If the scale parameter for the variable is either 0 or inf.
+    """
+
+    # Generate the defaults dict out of the scale dict
+    default_dict = generate_default_dict(scale_dict)
+
+    # Repacking scaling dict
+    scale_dict = dict(zip([scale_var["name"] for scale_var in scale_dict], scale_dict))
+
+    # Get rid of all not-wanted variables
+    jets = jets[variables_list]
+
+    # Replace infinity values with nan values
+    jets = jets.replace([np.inf, -np.inf], np.nan)
+
+    # Fill the nan values with the default values from the default dict
+    jets = jets.fillna(default_dict)
+
+    # Loop over the variables requested
+    for var in variables_list:
+
+        # Skipping default variables
+        if "isDefaults" in var or "weight" in var:
+            continue
+
+        # Check if scaling/shifting values are availabe for this variable
+        if var not in scale_dict.keys():
+            raise KeyError(
+                f"Requested {var} to be used but no values for this "
+                "variable is available in the scale dict!"
+            )
+
+        # Ensuring correct scaling factors
+        if scale_dict[var]["scale"] == 0 or np.isinf(scale_dict[var]["scale"]):
+            raise ValueError(
+                f"Scale parameter for jet var {var} is {scale_dict[var]['scale']}."
+            )
+
+        # Shift and scale the variables
+        jets[var] -= scale_dict[var]["shift"]
+        jets[var] /= scale_dict[var]["scale"]
+
+    return jets
+
+
 def apply_scaling_trks(
     trks: np.ndarray,
     variable_config: dict,
@@ -875,7 +951,6 @@ class Scaling:
         input_file: str,
         jets_variables: list,
         jets_scale_dict: dict,
-        jets_default_dict: dict,
         n_jets: int,
         tracks_scale_dict: dict = None,
         chunk_size: int = int(10000),
@@ -892,8 +967,6 @@ class Scaling:
             Variables of the jets which are to be scaled.
         jets_scale_dict : dict
             Scale dict of the jet variables with the values inside.
-        jets_default_dict : dict
-            Default scale dict of the jets.
         n_jets : int
             Number of jets which are to be scaled.
         tracks_scale_dict : dict, optional
@@ -914,11 +987,6 @@ class Scaling:
             Yielded track labels
         flavour : np.ndarray
             Yielded flavours
-
-        Raises
-        ------
-        ValueError
-            If scale is found to be 0 or inf for any jet variable.
         """
 
         # Open the file and load the jets
@@ -949,24 +1017,11 @@ class Scaling:
                 # keep the jet flavour
                 flavour = jets[self.variable_config["label"]]
 
-                # Remove inf values
-                jets = jets[jets_variables]
-                jets = jets.replace([np.inf, -np.inf], np.nan)
-
-                # Fill the nans with default values
-                jets = jets.fillna(jets_default_dict)
-
-                for elem in jets_scale_dict:
-                    if "isDefaults" in elem["name"] or "weight" in elem["name"]:
-                        continue
-
-                    if elem["scale"] == 0 or np.isinf(elem["scale"]):
-                        raise ValueError(
-                            f"Scale parameter for jet var {elem['name']} is "
-                            f"{elem['scale']}."
-                        )
-                    jets[elem["name"]] -= elem["shift"]
-                    jets[elem["name"]] /= elem["scale"]
+                jets = apply_scaling_jets(
+                    jets=jets,
+                    variables_list=jets_variables,
+                    scale_dict=jets_scale_dict,
+                )
 
                 if self.save_tracks is False:
                     yield jets, labels, flavour
@@ -1042,9 +1097,6 @@ class Scaling:
         with open(self.scale_dict_path, "r") as infile:
             jets_scale_dict = json.load(infile)["jets"]
 
-        # Define Scale dict with default values
-        jets_default_dict = generate_default_dict(jets_scale_dict)
-
         # Check if tracks are used
         if self.save_tracks:
             tracks_scale_dict = {}
@@ -1062,7 +1114,6 @@ class Scaling:
             input_file=input_file,
             jets_variables=jets_variables,
             jets_scale_dict=jets_scale_dict,
-            jets_default_dict=jets_default_dict,
             n_jets=file_length,
             tracks_scale_dict=tracks_scale_dict,
             chunk_size=chunk_size,
