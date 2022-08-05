@@ -14,10 +14,10 @@ from umami.configuration import logger, set_log_level
 from umami.plotting_tools.eval_plotting_functions import (
     plot_fraction_contour,
     plot_prob,
-    plot_pt_dependence,
     plot_roc,
     plot_saliency,
     plot_score,
+    plot_var_vs_eff,
 )
 
 set_log_level(logger, "DEBUG")
@@ -211,7 +211,7 @@ class Eval_plots_TestCase(unittest.TestCase):
             "ttbar",
         )
 
-        plot_pt_dependence(
+        plot_var_vs_eff(
             df_list=[df_results_ttbar, df_results_ttbar],
             tagger_list=["dips", "dips"],
             model_labels=["DIPS ttbar", "DIPS 2"],

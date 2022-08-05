@@ -6,10 +6,10 @@ from umami.plotting_tools.eval_plotting_functions import (
     plot_confusion_matrix,
     plot_fraction_contour,
     plot_prob,
-    plot_pt_dependence,
     plot_roc,
     plot_saliency,
     plot_score,
+    plot_var_vs_eff,
 )
 from umami.plotting_tools.preprocessing_plotting_functions import (
     plot_resampling_variables,

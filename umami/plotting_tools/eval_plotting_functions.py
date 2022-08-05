@@ -23,7 +23,7 @@ from umami.configuration import global_config, logger
 from umami.plotting_tools.utils import translate_kwargs
 
 
-def plot_pt_dependence(
+def plot_var_vs_eff(
     df_list: list,
     tagger_list: list,
     model_labels: list,
@@ -31,6 +31,7 @@ def plot_pt_dependence(
     class_labels: list,
     main_class: str,
     flavour: str,
+    variable: str = None,
     working_point: float = 0.77,
     disc_cut: float = None,
     fixed_eff_bin: bool = False,
@@ -63,6 +64,9 @@ def plot_pt_dependence(
         Class that is to be plotted. For all non-signal classes, this
         will be the rejection and for the signal class, this will be
         the efficiency.
+    variable : str, optional
+        The variable against which the efficiency/rejection is plotted.
+        By default None, which will use the pT as variable in GeV.
     working_point : float, optional
         Working point which is to be used, by default 0.77.
     disc_cut : float, optional
@@ -109,8 +113,12 @@ def plot_pt_dependence(
             "Please use the plotting python API."
         )
 
+    # Set default variable
+    if variable is None:
+        variable = "pt"
+
     # Set xlabel if not given
-    if "xlabel" not in kwargs:
+    if "xlabel" not in kwargs and variable == "pt":
         kwargs["xlabel"] = r"$p_T$ [GeV]"
 
     # Set bin edges if not given
@@ -167,7 +175,12 @@ def plot_pt_dependence(
         zip(df_list, model_labels, tagger_list, colours)
     ):
         # Get jet pts
-        jetPts = df_results["pt"] / 1e3
+        jet_var = df_results[variable]
+
+        # Make pT in GeV
+        if variable == "pt":
+            jet_var = jet_var / 1e3
+
         # Get truth labels
         is_signal = df_results["labels"] == index_dict[main_class]
         is_bkg = (
@@ -176,9 +189,9 @@ def plot_pt_dependence(
         disc = df_results[f"disc_{tagger}"]
         plot_pt.add(
             VarVsEff(
-                x_var_sig=jetPts[is_signal],
+                x_var_sig=jet_var[is_signal],
                 disc_sig=disc[is_signal],
-                x_var_bkg=jetPts[is_bkg] if mode == "bkg_rej" else None,
+                x_var_bkg=jet_var[is_bkg] if mode == "bkg_rej" else None,
                 disc_bkg=disc[is_bkg] if mode == "bkg_rej" else None,
                 bins=bin_edges,
                 working_point=working_point,
