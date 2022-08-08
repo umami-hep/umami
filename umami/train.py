@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     # Get the train and preprocess config
     train_config = utt.Configuration(args.config_file)
-    preprocess_config = upt.Configuration(train_config.preprocess_config)
+    preprocess_config = upt.PreprocessConfiguration(train_config.preprocess_config)
 
     # Get the tagger which is to be trained from the train config
     tagger_name = train_config.NN_structure["tagger"]

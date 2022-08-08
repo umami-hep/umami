@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding configuration base class and doc improvements for pdf sampling [!604](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/604)
 - Merging evaluate_model script funtions + adapt pt_vs plots to be var_vs plots [!599](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/599)
 - Unify scaling/shifting application for preprocessing/validation [!597](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/597)
 - Adding script to process test samples in an easy way  [!595](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/595)

@@ -632,25 +632,27 @@ class Scaling:
 
         # Get input filename to calculate scaling and shifting
         if input_file is None:
-            input_file = self.config.GetFileName(option="resampled")
+            input_file = self.config.get_file_name(option="resampled")
 
         logger.info("Calculating scaling and shifting values for the jet variables")
         logger.info("Using %s for calculation of scaling/shifting", input_file)
 
-        # Extract the correct variables
-        variables_header = self.variable_config["train_variables"]
-        var_list = [i for j in variables_header for i in variables_header[j]]
-
         # Get the file_length
-        file_length = len(h5py.File(input_file, "r")["/jets"].fields(var_list[0])[:])
+        file_length = len(h5py.File(input_file, "r")["/jets"])
+        logger.info("Found %i jets in file.", file_length)
+        n_jets_scaling = int(
+            self.config.sampling["options"].get("n_jets_scaling", file_length)
+        )
+        n_jets_scaling = file_length if n_jets_scaling is None else n_jets_scaling
+        logger.info("Using %i jets to calculate scaling and shifting.", n_jets_scaling)
 
         # Get the number of chunks we need to load
-        n_chunks = int(np.ceil(file_length / chunk_size))
+        n_chunks = int(np.ceil(n_jets_scaling / chunk_size))
 
         # Get the jets scaling generator
         jets_scaling_generator = self.get_scaling_dict_generator(
             input_file=input_file,
-            n_jets=file_length,
+            n_jets=n_jets_scaling,
             chunk_size=chunk_size,
         )
 
@@ -689,7 +691,7 @@ class Scaling:
                 # Load generator
                 trks_scaling_generator = self.get_scaling_tracks_generator(
                     input_file=input_file,
-                    n_jets=file_length,
+                    n_jets=n_jets_scaling,
                     tracks_name=tracks_name,
                     chunk_size=chunk_size,
                 )
@@ -1078,7 +1080,7 @@ class Scaling:
 
         # Get input filename to calculate scaling and shifting
         if input_file is None:
-            input_file = self.config.GetFileName(option="resampled")
+            input_file = self.config.get_file_name(option="resampled")
 
         logger.info("Scale/Shift jets from %s", input_file)
         logger.info("Using scales in %s", self.scale_dict_path)
@@ -1089,7 +1091,7 @@ class Scaling:
             i for j in variables_header_jets for i in variables_header_jets[j]
         ]
 
-        file_length = len(h5py.File(input_file, "r")["/jets"][jets_variables[0]][:])
+        file_length = len(h5py.File(input_file, "r")["/jets"])
 
         n_chunks = int(np.ceil(file_length / chunk_size))
 
@@ -1120,7 +1122,7 @@ class Scaling:
         )
 
         logger.info("Applying scaling and shifting.")
-        out_file = self.config.GetFileName(option="resampled_scaled")
+        out_file = self.config.get_file_name(option="resampled_scaled")
         with h5py.File(out_file, "w") as h5file:
 
             # Set up chunk counter and start looping
@@ -1245,7 +1247,7 @@ class Scaling:
         ):
             logger.info("Plotting resampled and scaled distributions...")
             preprocessing_plots(
-                sample=self.config.GetFileName(option="resampled_scaled"),
+                sample=self.config.get_file_name(option="resampled_scaled"),
                 var_dict=self.variable_config,
                 class_labels=self.config.sampling["class_labels"],
                 plots_dir=os.path.join(

@@ -224,11 +224,11 @@ class TrainSampleWriter:
 
         # Get the input files for writing/merging
         if input_file is None:
-            input_file = self.config.GetFileName(option="resampled_scaled")
+            input_file = self.config.get_file_name(option="resampled_scaled")
 
         # Define outfile name
         if output_file is None:
-            out_file = self.config.GetFileName(option="resampled_scaled_shuffled")
+            out_file = self.config.get_file_name(option="resampled_scaled_shuffled")
         if self.sampling_options["bool_attach_sample_weights"]:
             file_name = (
                 self.config.config["parameters"]["sample_path"] + "/flavour_weights"
@@ -424,7 +424,7 @@ class TrainSampleWriter:
         ):
             logger.info("Plotting prepared training dataset distributions...")
             preprocessing_plots(
-                sample=self.config.GetFileName(option="resampled_scaled_shuffled"),
+                sample=self.config.get_file_name(option="resampled_scaled_shuffled"),
                 var_dict=self.variable_config,
                 class_labels=self.config.sampling["class_labels"],
                 plots_dir=os.path.join(

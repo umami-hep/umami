@@ -288,7 +288,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
-                sample=self.config.GetFileName(option="resampled"),
+                sample=self.config.get_file_name(option="resampled"),
                 var_dict=get_variable_dict(self.config.var_file),
                 class_labels=self.config.sampling["class_labels"],
                 plots_dir=os.path.join(

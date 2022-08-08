@@ -9,8 +9,8 @@ import pandas as pd
 
 from umami.configuration import global_config, logger, set_log_level
 from umami.preprocessing_tools import (
-    Configuration,
     PrepareSamples,
+    PreprocessConfiguration,
     binarise_jet_labels,
     get_variable_dict,
 )
@@ -33,7 +33,7 @@ class ConfigurationTestCase(unittest.TestCase):
 
     def test_missing_key_error(self):
         """Test missing key error."""
-        config = Configuration(self.config_file)
+        config = PreprocessConfiguration(self.config_file)
         del config.config["outfile_name"]
         with self.assertRaises(KeyError):
             config.get_configuration()
@@ -48,23 +48,23 @@ class ConfigurationTestCase(unittest.TestCase):
 
     def test_get_file_name_no_input(self):
         """Test filename without input."""
-        config = Configuration(self.config_file)
-        out_file = config.GetFileName()
+        config = PreprocessConfiguration(self.config_file)
+        out_file = config.get_file_name()
         self.assertEqual(out_file, config.outfile_name)
 
     def test_get_file_name_no_iterations(self):
         """Test no iterations"""
-        config = Configuration(self.config_file)
+        config = PreprocessConfiguration(self.config_file)
         with self.subTest():
             self.assertNotIn("test", config.outfile_name)
-        out_file = config.GetFileName(option="test")
+        out_file = config.get_file_name(option="test")
         with self.subTest():
             self.assertIn("test", out_file)
 
     def test_get_file_name_no_iterations_no_input(self):
         """Test no iterations and no input."""
-        config = Configuration(self.config_file)
-        out_file = config.GetFileName()
+        config = PreprocessConfiguration(self.config_file)
+        out_file = config.get_file_name()
         self.assertEqual(config.outfile_name, out_file)
 
 
@@ -244,7 +244,7 @@ class PrepareSamplesTestCase(unittest.TestCase):
         self.config_file = os.path.join(
             os.path.dirname(__file__), self.args.config_file
         )
-        self.config = Configuration(self.config_file)
+        self.config = PreprocessConfiguration(self.config_file)
         # create temporary h5 file
         jets = pd.DataFrame(
             {

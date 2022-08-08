@@ -8,7 +8,7 @@ import tensorflow as tf
 import umami.train_tools as utt
 from umami.helper_tools import get_class_prob_var_names
 from umami.plotting_tools import run_validation_check
-from umami.preprocessing_tools import Configuration
+from umami.preprocessing_tools import PreprocessConfiguration
 
 
 def get_parser():
@@ -234,5 +234,5 @@ if __name__ == "__main__":
         tf.config.experimental.set_memory_growth(gpu, True)
 
     training_config = utt.Configuration(arg_parser.config_file)
-    preprocessing_config = Configuration(training_config.preprocess_config)
+    preprocessing_config = PreprocessConfiguration(training_config.preprocess_config)
     main(arg_parser, training_config, preprocessing_config)

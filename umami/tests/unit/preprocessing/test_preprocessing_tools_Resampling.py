@@ -11,8 +11,8 @@ import pandas as pd
 from umami.configuration import global_config, logger, set_log_level
 from umami.preprocessing_tools import (  # PDFSampling,
     CalculateBinning,
-    Configuration,
     CorrectFractions,
+    PreprocessConfiguration,
     SamplingGenerator,
     UnderSampling,
     UnderSamplingNoReplace,
@@ -263,7 +263,7 @@ class UnderSamplingTestCase(unittest.TestCase):
         self.config_file = os.path.join(
             os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
-        self.config = Configuration(self.config_file)
+        self.config = PreprocessConfiguration(self.config_file)
         self.sampling_config = self.config.sampling
         self.samples_config = (self.config.preparation).get("samples")
 
@@ -392,7 +392,7 @@ class PDFResamplingTestCase(unittest.TestCase):
         self.config_file = os.path.join(
             os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
-        self.config = Configuration(self.config_file)
+        self.config = PreprocessConfiguration(self.config_file)
         sampling_config = self.config.sampling
         sampling_config["options"]["sampling_variables"][0][global_config.pTvariable][
             "bins"
@@ -506,7 +506,7 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
         self.config_file = os.path.join(
             os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
-        self.config = Configuration(self.config_file)
+        self.config = PreprocessConfiguration(self.config_file)
         sampling_config = self.config.sampling
         sampling_config["options"]["target_distribution"] = "bjets"
         sampling_config["options"]["sampling_variables"][0][global_config.pTvariable][

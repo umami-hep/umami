@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 
 from umami.configuration import logger, set_log_level
-from umami.preprocessing_tools import Configuration
+from umami.preprocessing_tools import PreprocessConfiguration
 from umami.tf_tools import Convert_to_Record
 
 set_log_level(logger, "DEBUG")
@@ -26,9 +26,9 @@ class ConvertTest(unittest.TestCase):
         self.faulty_config_file = os.path.join(
             os.path.dirname(__file__), "fixtures", "test_preprocess_faulty_config.yaml"
         )
-        self.config = Configuration(self.config_file)
+        self.config = PreprocessConfiguration(self.config_file)
         tracks_name = self.config.sampling["options"]["tracks_names"][0]
-        self.faulty_config = Configuration(self.faulty_config_file)
+        self.faulty_config = PreprocessConfiguration(self.faulty_config_file)
         # create dummy data
         x_train = np.ones(shape=(3, 41))
         x_trks_train = np.ones(shape=(3, 40, 5))

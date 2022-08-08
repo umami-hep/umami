@@ -5,12 +5,35 @@ import shutil
 
 import yaml
 
-from umami.configuration import logger
-from umami.tools import YAML
+from umami.configuration import Configuration, logger
 
 
-class Configuration:
-    """docstring for Configuration."""
+def check_key(location, old_key: str, new_key: str) -> None:
+    """Helper function to check
+
+
+    Parameters
+    ----------
+    location : object
+        location in which to check the keys
+    old_key : str
+        name of old key/option
+    new_key : str
+        name of new key/option
+    Raises
+    ------
+    KeyError
+        If deprecated keys are being used
+    """
+    if old_key in location:
+        raise KeyError(
+            f"`{old_key}` was deprecated and is now called `{new_key}`. "
+            "Please change that in your config"
+        )
+
+
+class PreprocessConfiguration(Configuration):
+    """Preprocessing Configuration class."""
 
     def __init__(self, yaml_config: str):
         """Init the Configuration class.
@@ -20,28 +43,17 @@ class Configuration:
         yaml_config : str
             Path to yaml config file.
         """
-        super().__init__()
-        self.YAML = YAML(typ="safe", pure=True)
-        self.yaml_config = yaml_config
-        self.yaml_default_config = "configs/preprocessing_default_config.yaml"
-        self.load_config_files()
+        super().__init__(yaml_config)
+        self.yaml_default_config = os.path.join(
+            os.path.dirname(__file__), "configs/preprocessing_default_config.yaml"
+        )
+        self.load_config_file()
         self.get_configuration()
-        self.CheckTracksNames()
+        self.check_tracks_names()
+        self.check_deprecated_keys()
 
     @property
-    def ConfigPath(self) -> str:
-        """
-        Return config path.
-
-        Returns
-        -------
-        str
-            Config path.
-        """
-        return self.yaml_config
-
-    @property
-    def ParameterConfigPath(self) -> str:
+    def parameter_config_path(self) -> str:
         """
         Return parameter config path, as found on some line in the config file.
 
@@ -65,22 +77,10 @@ class Configuration:
             return None
 
         preprocess_parameters_path = os.path.join(
-            os.path.dirname(self.ConfigPath),
+            os.path.dirname(self.config_path),
             line[1].strip(),
         )
         return preprocess_parameters_path
-
-    def load_config_files(self) -> None:
-        """Load config file from disk."""
-        self.yaml_default_config = os.path.join(
-            os.path.dirname(__file__), self.yaml_default_config
-        )
-        with open(self.yaml_default_config, "r") as conf:
-            self.default_config = self.YAML.load(conf)
-        logger.info("Using config file %s", self.yaml_config)
-
-        with open(self.yaml_config, "r") as conf:
-            self.config = self.YAML.load(conf)
 
     def get_configuration(self) -> None:
         """Assign configuration from file to class variables.
@@ -125,7 +125,7 @@ class Configuration:
                 )
                 setattr(self, elem, self.default_config[elem])
 
-    def GetFileName(
+    def get_file_name(
         self,
         iteration: int = None,
         option: str = None,
@@ -191,7 +191,21 @@ class Configuration:
         out_file = out_file[:idx] + inserttxt + extension
         return out_file
 
-    def CheckTracksNames(self) -> None:
+    def check_deprecated_keys(self) -> None:
+        """Checks if deprecated keys are used in the config file and raise an error."""
+
+        check_key(
+            self.sampling["options"].keys(),
+            "custom_njets_initial",
+            "custom_n_jets_initial",
+        )
+        check_key(
+            self.sampling["options"].keys(),
+            "njets",
+            "n_jets",
+        )
+
+    def check_tracks_names(self) -> None:
         """Checks if the option tracks_name is given."""
         if (
             "tracks_names" not in self.sampling["options"]

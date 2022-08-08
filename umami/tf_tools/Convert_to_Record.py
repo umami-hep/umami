@@ -14,7 +14,7 @@ class h5_to_tf_record_converter:
 
     def __init__(self, config):
         self.config = config
-        self.path_h5 = self.config.GetFileName(option="resampled_scaled_shuffled")
+        self.path_h5 = self.config.get_file_name(option="resampled_scaled_shuffled")
         try:
             self.chunk_size = int(config.convert_to_tfrecord["chunk_size"])
             logger.info("Save %i entries in one file", self.chunk_size)
