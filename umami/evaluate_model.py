@@ -16,7 +16,7 @@ import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.evaluation_tools import FeatureImportance
 from umami.helper_tools import get_class_label_variables, get_class_prob_var_names
-from umami.preprocessing_tools import Configuration
+from umami.preprocessing_tools import PreprocessConfiguration
 
 # from plottingFunctions import sigBkgEff
 tf.compat.v1.disable_eager_execution()
@@ -585,7 +585,7 @@ if __name__ == "__main__":
         evaluate_trained_model = True  # pylint: disable=invalid-name
 
     preprocessing_config = (
-        Configuration(training_config.preprocess_config)
+        PreprocessConfiguration(training_config.preprocess_config)
         if evaluate_trained_model
         else training_config
     )

@@ -8,7 +8,7 @@ import pandas as pd
 
 from umami.configuration import logger, set_log_level
 from umami.preprocessing_tools import (
-    Configuration,
+    PreprocessConfiguration,
     Scaling,
     apply_scaling_jets,
     apply_scaling_trks,
@@ -150,7 +150,7 @@ class ScalingTestCase(unittest.TestCase):
         self.config_file = os.path.join(
             os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
-        self.config = Configuration(self.config_file)
+        self.config = PreprocessConfiguration(self.config_file)
         self.config.var_file = os.path.join(
             os.path.dirname(__file__), "fixtures/dummy_var_file.yaml"
         )

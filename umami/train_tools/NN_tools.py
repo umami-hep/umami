@@ -18,8 +18,8 @@ from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-e
 import umami.metrics as umt
 import umami.tf_tools as utf
 from umami.data_tools import LoadJetsFromFile, LoadTrksFromFile
-from umami.preprocessing_tools import Configuration as Preprocess_Configuration
 from umami.preprocessing_tools import (
+    PreprocessConfiguration,
     apply_scaling_jets,
     apply_scaling_trks,
     binarise_jet_labels,
@@ -269,9 +269,9 @@ def create_metadata_folder(
     os.makedirs(os.path.join(model_name, "model_files"), exist_ok=True)
 
     # Get scale dict
-    preprocess_config = Preprocess_Configuration(preprocess_config_path)
+    preprocess_config = PreprocessConfiguration(preprocess_config_path)
     scale_dict_path = preprocess_config.dict_file
-    preprocess_parameters_path = preprocess_config.ParameterConfigPath
+    preprocess_parameters_path = preprocess_config.parameter_config_path
 
     # Copy files to metadata folder if not existing
     for file_path in [

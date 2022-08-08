@@ -117,7 +117,7 @@ if __name__ == "__main__":
         set_log_level(logger, "DEBUG")
 
     # Load preprocess config file
-    config = upt.Configuration(args.config_file)
+    config = upt.PreprocessConfiguration(args.config_file)
 
     # Check for preparation
     if args.prepare:

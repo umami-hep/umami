@@ -476,7 +476,7 @@ class Resampling:
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
 
         # Get path attributes
-        self.outfile_name = self.config.GetFileName(option="resampled")
+        self.outfile_name = self.config.get_file_name(option="resampled")
         self.outfile_path = self.config.config["parameters"]["sample_path"]
         self.resampled_path = self.config.config["parameters"]["file_path"]
 

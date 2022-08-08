@@ -36,6 +36,7 @@ For an explanation of the resampling function specific `options`, have a look in
 | `save_track_labels` | `bool` | If this value is `True`, the track variables in `track_truth_variables` will be processed as labels without scaling. The will be saved in an extra group in the final training file. The name will be `Y_<track_name>_train`. `<track_name>` is here the name of the track collection. |
 | `track_truth_variables` | `str` or `list` | Track variables that will be handled as truth labels. Multiple can be given in a `list` of `str` or just one in a single string. |
 | `intermediate_index_file` | `str` | For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). |
+| `n_jets_scaling` | `int` | Number of jets which are used to calculate scaling and shifting values. If `null` is given, all jets in file are used. |
 | `n_jets_to_plot` | `int` | Number of jets which are used for plotting the variables of the jets/tracks after each preprocessing step (resampling, scaling, shuffling/writing). If `null` is given, the plotting is skipped. |
 
 
@@ -222,7 +223,7 @@ preprocessing.py --config <path to config file> --resampling
 
     where the `$0` stands for an index in `samples/ttbar`. If we take the example from the PDF Sampling section, this contains the samples of the bjets, cjets and ujets. 0 is therefore the bjets, 1 is the cjets and 2 is the ujets. Note: This will process the bjets for both categories, $t\bar{t}$ and $Z'$, although we need to look in `samples/ttbar`. Only the flavour is important here.
 
-    After all these subjobs are finished, you can continue with the plotting and the combination of the flavours into our final resampled file. For that you need to run
+    After all these subjobs are finished, you can continue with the plotting (this step plots the distributions of the resampled variables before the actual resampling) and the combination of the flavours into our final resampled file. For that you need to run
 
     ```bash
     preprocessing.py --config <path to config file> --resampling --flavour plotting

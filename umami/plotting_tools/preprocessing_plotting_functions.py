@@ -293,7 +293,7 @@ def preprocessing_plots(
         If the provided track collection list is neither a string or
         a list.
     """
-
+    logger.info("Plots will be saved in the directory %s", plots_dir)
     # Get max number of available jets
     with h5py.File(sample, "r") as f:
         try:

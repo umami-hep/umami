@@ -7,7 +7,7 @@ import matplotlib
 import yaml
 
 
-class Configuration:
+class GlobalConfiguration:
     """
     This is a global configuration to allow certain settings which are
     hardcoded so far.
@@ -154,6 +154,6 @@ def set_log_level(umami_logger, log_level: str):
         handler.setLevel(log_levels[log_level])
 
 
-global_config = Configuration()
+global_config = GlobalConfiguration()
 logger = global_config.logger
 logger.debug("Loading global config %s", global_config.yaml_config)

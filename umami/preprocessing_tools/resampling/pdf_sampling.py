@@ -2101,7 +2101,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         """
 
         # Get the output name of the final single file
-        output_name = self.config.GetFileName(option="resampled")
+        output_name = self.config.get_file_name(option="resampled")
 
         # Log infos
         logger.info("Combining all the flavours into a single file.")
@@ -2371,6 +2371,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Get the samples before resampling for plotting
 
         if self.do_plotting:
+            logger.info("Start plotting resampling variables before sampling.")
             # Get the samples from the files and concatenate them for plotting
             self.InitialiseSamples(n_jets=int(1e6))
             self.ConcatenateSamples()
@@ -2457,7 +2458,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
                 logger.info("Plotting resampled distributions...")
                 preprocessing_plots(
-                    sample=self.config.GetFileName(option="resampled"),
+                    sample=self.config.get_file_name(option="resampled"),
                     var_dict=get_variable_dict(self.config.var_file),
                     class_labels=self.config.sampling["class_labels"],
                     plots_dir=os.path.join(
