@@ -1,12 +1,12 @@
 ## Ntuple preparation
 
-After the ntuple production (training-dataset-dumper), the first step of the preprocessing is the preparation of the different flavour files. In this step, the different flavours that are to be used for the training are extracted from the `.h5` files and written into extra files. While extracting the jets, different cuts are applied and the splitting into training/validation/test is done. 
+After the ntuple production (training-dataset-dumper), the first step of the preprocessing is the preparation of the different flavour files. In this step, the different flavours that are to be used for the training are extracted from the `.h5` files and written into extra files. While extracting the jets, different cuts are applied and the splitting into training/validation/test is done.
 
 ### Config file
 As already mentioned in the [overview](preprocessing/Overview.md), the preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
 
 ```yaml
-§§§examples/plotting_input_vars.yaml:259:270§§§
+§§§examples/PFlow-Preprocessing.yaml:259:270§§§
 ```
 
 | Setting | Type | Explanation |
@@ -19,7 +19,7 @@ As already mentioned in the [overview](preprocessing/Overview.md), the preproces
 The `var_dict` and `dict_file` options are normally set in the [`Preprocessing-parameters.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml) file. A snapshot of these two variables is shown here:
 
 ```yaml
-§§§examples/Preprocessing-parameters.yaml:17:21§§§
+§§§examples/Preprocessing-parameters.yaml:20:24§§§
 ```
 
 For the preparation step, we also need the some more parts of the preprocessing config, which are described in the following sections.
@@ -29,10 +29,10 @@ For the preparation step, we also need the some more parts of the preprocessing 
 parameters: !include Preprocessing-parameters.yaml
 ```
 
-This line specifies where the ntuples (which are used) are stored and where to save the output of the preprocessing. You can find an example file [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). In the following the options from the `Preprocessing-parameters.yaml`, which are needed for the preparation step, will be explained: 
+This line specifies where the ntuples (which are used) are stored and where to save the output of the preprocessing. You can find an example file [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). In the following the options from the `Preprocessing-parameters.yaml`, which are needed for the preparation step, will be explained:
 
 ```yaml
-§§§examples/Preprocessing-parameters.yaml:1:8§§§
+§§§examples/Preprocessing-parameters.yaml:1:11§§§
 ```
 
 | Setting | Type | Explanation |
@@ -84,18 +84,18 @@ In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Sin
 §§§examples/PFlow-Preprocessing.yaml:68:177§§§
 ```
 
-The last part is the exact splitting of the flavours. In `samples`, you define for each of $t\bar{t}$/$Z'$ and training/validation/testing the flavours you want to use. 
+The last part is the exact splitting of the flavours. In `samples`, you define for each of $t\bar{t}$/$Z'$ and training/validation/testing the flavours you want to use.
 
 The sample are defined as dicts with the following options:
 
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `type` | `str` | Type of process that this file will be. |
-| `category` | `str` | This defines that flavour that will be extracted in this file. You can either use a flavour like `bjets` or `inclusive`, which will use all tracks regardless of their flavour. | 
-| `n_jets` | `int` | Number of jets you want for this specific flavour. 
+| `category` | `str` | This defines that flavour that will be extracted in this file. You can either use a flavour like `bjets` or `inclusive`, which will use all tracks regardless of their flavour. |
+| `n_jets` | `int` | Number of jets you want for this specific flavour.
 | `cuts` | `list` | A list of cuts that are applied. In the default case, this is added via templates which are added with `<<:`. |
 | `f_output` | `dict` | As for `ntuples` this defined the part where the file will be saved. || `path` | `str` | Dict entry of `f_output`. This gives the path to the folder where the prepared file wil be stored (this is the same as `sample_path` in `Preprocessing-Parameters.yaml`). |
-| `file` | `str` | Dict entry of `f_output`. This is the name of the output file. |  
+| `file` | `str` | Dict entry of `f_output`. This is the name of the output file. |
 
 **Note**: The `n_jets` should be as high as possible for the train files! This is just the number of jets for this flavour which are extraced from the `.h5` files coming from the dumper. The resampling algorithm uses these samples to get the jets for building the final training sample, but it only uses as much as needed! Only for the validation and testing files we suggest to use something around `4e6` (otherwise the loading later on takes quite some time).
 
@@ -106,7 +106,7 @@ To run the preparation step, switch to the `umami/umami/` folder and run the fol
 preprocessing.py --config <path to config file> --prepare
 ```
 
-The preprocessing will start in order of the files defined in `samples:` to preprare the different selected samples. This step is one of the longest steps of the preprocessing if not parallelised. You can run the preparation in for the different defines samples one per job, by defined which sample is to be prepared. 
+The preprocessing will start in order of the files defined in `samples:` to preprare the different selected samples. This step is one of the longest steps of the preprocessing if not parallelised. You can run the preparation in for the different defines samples one per job, by defined which sample is to be prepared.
 
 For example, to run the sample preparation for the prepared training _b_-jet sample `training_ttbar_bjets`, which has been defined in the config file in the `preparation: samples:` block, execute:
 

@@ -313,6 +313,27 @@ CompositingComposer.add_compositor("!include", include_compositor)
 ExcludingConstructor.add_filter(exclude_filter, node_types=(MappingNode, SequenceNode))
 
 
+def join(loader, node):
+    """Custom tag handler as suggested in https://stackoverflow.com/a/57327330
+
+    Parameters
+    ----------
+    loader : object
+        yaml loader
+    node : object
+        yaml node
+
+    Returns
+    -------
+    str
+        joint string
+    """
+    seq = loader.construct_sequence(node)
+    return "".join([str(i) for i in seq])
+
+
+ruamel.yaml.add_constructor("!join", join)
+
 if __name__ == "__main__":
     import argparse
     import pprint
