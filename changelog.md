@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Switching track variable precision to float32 [!608](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/608)
 - Merge apply_scaling and write step in preprocessing [!605](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/605)
 - Adding string join support for yaml [!607](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/607)
 - Adding configuration base class and doc improvements for pdf sampling [!604](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/604)

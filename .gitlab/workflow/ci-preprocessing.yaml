@@ -73,7 +73,7 @@ plot_name: null
 var_file: null
 dict_file: null
 compression: null
-precision: float16
+precision: float32
 convert_to_tfrecord:
   chunk_size: 5000
   N_add_vars: null

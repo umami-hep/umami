@@ -652,6 +652,11 @@ class CalculateScaling:
             File which is used to calculate scaling/shifting, by default None
         chunk_size : int, optional
             Scale dict calculated using the given file, by default 1e5
+
+        Raises
+        ------
+        ValueError
+            If one of the scaling/shifting values is inf
         """
 
         # Get input filename to calculate scaling and shifting
@@ -748,6 +753,26 @@ class CalculateScaling:
                             first_nTrks=nTrks_loaded,
                             second_nTrks=tmp_nTrks_loaded,
                         )
+
+                # Checking for inf values in scaling/shifting values
+                inf_error = False
+                for iter_var, iter_dict in scale_dict_trk_selection.items():
+                    for shift_scale, shift_scale_value in iter_dict.items():
+                        if np.isinf(shift_scale_value) or np.isnan(shift_scale_value):
+                            logger.error(
+                                "Track variable %s in track collection %s has an"
+                                " inf/nan value for %s value!",
+                                iter_var,
+                                tracks_name,
+                                shift_scale,
+                            )
+                            inf_error = True
+
+                if inf_error:
+                    raise ValueError(
+                        "One or more track variables have scale/shift"
+                        " values equal to infinity!"
+                    )
 
                 # Add scale dict for given tracks selection to the more general one
                 scale_dict_trk.update({tracks_name: scale_dict_trk_selection})

@@ -275,7 +275,7 @@ dict_file: *dict_file
 compression: null
 
 # save final output files with specified precision
-precision: float16
+precision: float32
 
 # Options for the conversion to tfrecords
 convert_to_tfrecord:
