@@ -67,18 +67,11 @@ def get_parser():
     )
 
     action.add_argument(
-        "-a",
-        "--apply_scales",
-        action="store_true",
-        help="Apllies scaling and shifting factors.",
-    )
-
-    action.add_argument(
         "-w",
         "--write",
         action="store_true",
-        help="""Shuffles sample and writes training sample and
-        training labels to disk""",
+        help="""Shuffles sample, applies scaling and writes
+        training sample and training labels to disk""",
     )
 
     action.add_argument(
@@ -173,17 +166,8 @@ if __name__ == "__main__":
 
     # Calculate the scale dicts of the previous resampled files
     elif args.scaling:
-        Scaling = upt.Scaling(config)
+        Scaling = upt.CalculateScaling(config)
         Scaling.get_scale_dict(chunk_size=args.chunk_size)
-
-    # Apply scaling of the previous calculated scale dicts
-    elif args.apply_scales:
-
-        # Copy config to output directory
-        config.copy_to_out_dir("scaling")
-
-        Scaling = upt.Scaling(config)
-        Scaling.apply_scales()
 
     # Check for final writing to disk in train format
     elif args.write:

@@ -5,12 +5,17 @@ import pickle
 
 import h5py
 import numpy as np
-from numpy.lib.recfunctions import repack_fields, structured_to_unstructured
+from numpy.lib.recfunctions import (
+    append_fields,
+    repack_fields,
+    structured_to_unstructured,
+)
 from scipy.stats import binned_statistic_2d
 
 from umami.configuration import logger
 from umami.plotting_tools import preprocessing_plots
 from umami.preprocessing_tools import get_variable_dict
+from umami.preprocessing_tools.Scaling import apply_scaling_jets, apply_scaling_trks
 
 
 class TrainSampleWriter:
@@ -59,11 +64,13 @@ class TrainSampleWriter:
         # Adding the full config to retrieve the correct paths
         self.config = config
 
-    def load_generator(
+    def load_scaled_generator(
         self,
         input_file: str,
         index: list,
         n_jets: int,
+        jets_scale_dict: dict,
+        tracks_scale_dict: dict = None,
         chunk_size: int = 100_000,
     ):
         """
@@ -78,6 +85,10 @@ class TrainSampleWriter:
             List with the indicies.
         n_jets : int
             Number of jets used.
+        jets_scale_dict : dict
+            Scale dict of the jet variables with the values inside.
+        tracks_scale_dict : dict, optional
+            Scale dict of the track variables., by default None
         chunk_size : int, optional
             The number of jets which are loaded and scaled/shifted
             per step, by default 100_000
@@ -115,13 +126,38 @@ class TrainSampleWriter:
 
                 # Retrieve the slice of indices randomly selected from whole file
                 indices_selected = index[index_tuple[0] : index_tuple[1]]
+
                 # Need to sort the indices
                 indices_selected = np.sort(indices_selected).astype(int)
 
+                # Get the jet variables from the variable config
+                variables_header_jets = self.variable_config["train_variables"]
+                jets_variables = [
+                    i for j in variables_header_jets for i in variables_header_jets[j]
+                ]
+
+                # Check if weights are available in the resampled file
+                if (
+                    "weight" in list(f["/jets"].dtype.fields.keys())
+                    and "weight" not in jets_variables
+                ):
+                    jets_variables += ["weight"]
+
                 # Load jets
-                jets = f["/jets"][indices_selected]
+                jets = f["/jets"].fields(jets_variables)[indices_selected]
                 labels = f["/labels"][indices_selected]
-                flavour = f["/flavour"][indices_selected]
+
+                # keep the jet flavour
+                flavour = f["/jets"].fields([self.variable_config["label"]])[
+                    indices_selected
+                ]
+
+                # If no weights are available, init ones as weights
+                if "weight" not in jets_variables:
+                    length = n_jets if n_jets < chunk_size else len(jets)
+                    jets = append_fields(
+                        jets, "weight", np.ones(int(length)), dtypes="<i8"
+                    )
 
                 # shuffling the chunk now (prior step still has ordered chunks)
                 rng_index = np.arange(len(jets))
@@ -130,6 +166,13 @@ class TrainSampleWriter:
                 jets = jets[rng_index]
                 labels = labels[rng_index]
                 flavour = flavour[rng_index]
+
+                # Apply the scaling for the jet variables
+                jets = apply_scaling_jets(
+                    jets=jets,
+                    variables_list=jets_variables,
+                    scale_dict=jets_scale_dict,
+                )
 
                 if self.save_tracks is False:
                     yield jets, labels, flavour
@@ -140,25 +183,26 @@ class TrainSampleWriter:
                     # Loop over track selections
                     for tracks_name in self.tracks_names:
 
+                        # Get the tracks scale dict
+                        trk_scale_dict = tracks_scale_dict[tracks_name]
+
                         # Load tracks
                         trks = np.asarray(
                             h5py.File(input_file, "r")[f"/{tracks_name}"][
                                 indices_selected
-                            ],
-                            dtype=self.precision,
+                            ]
                         )
                         trks = trks[rng_index]
 
-                        if self.save_track_labels:
-                            trk_labels = np.asarray(
-                                h5py.File(input_file, "r")[f"/{tracks_name}_labels"][
-                                    indices_selected
-                                ]
-                            )
-                            trk_labels = trk_labels[rng_index]
-
-                        else:
-                            trk_labels = None
+                        # Apply scaling to the tracks
+                        trks, trk_labels = apply_scaling_trks(
+                            trks=trks,
+                            variable_config=self.variable_config,
+                            scale_dict=trk_scale_dict,
+                            tracks_name=tracks_name,
+                            save_track_labels=self.save_track_labels,
+                            track_label_variables=self.track_label_variables,
+                        )
 
                         tracks.append(trks)
                         track_labels.append(trk_labels)
@@ -224,11 +268,12 @@ class TrainSampleWriter:
 
         # Get the input files for writing/merging
         if input_file is None:
-            input_file = self.config.get_file_name(option="resampled_scaled")
+            input_file = self.config.get_file_name(option="resampled")
 
         # Define outfile name
         if output_file is None:
             out_file = self.config.get_file_name(option="resampled_scaled_shuffled")
+
         if self.sampling_options["bool_attach_sample_weights"]:
             file_name = (
                 self.config.config["parameters"]["sample_path"] + "/flavour_weights"
@@ -236,10 +281,28 @@ class TrainSampleWriter:
             with open(file_name, "rb") as file:
                 weights_dict = pickle.load(file)
 
-        # Extract the correct variables
-        variables_header_jets = self.variable_config["train_variables"]
+        # Get scale dict
+        with open(self.scale_dict, "r") as infile:
+            jets_scale_dict = json.load(infile)["jets"]
+
+        # Check if tracks are used
+        if self.save_tracks:
+            tracks_scale_dict = {}
+
+            # Get the scale dict for tracks
+            with open(self.scale_dict, "r") as infile:
+                full_scale_dict = json.load(infile)
+                for tracks_name in self.tracks_names:
+                    tracks_scale_dict[tracks_name] = full_scale_dict[f"{tracks_name}"]
+
+        else:
+            tracks_scale_dict = None
+
+        # Extract the correct variables (without weights)
         jets_variables = [
-            i for j in variables_header_jets for i in variables_header_jets[j]
+            var
+            for var_group in self.variable_config["train_variables"]
+            for var in self.variable_config["train_variables"][var_group]
         ]
 
         # Get the max length of the input file
@@ -252,10 +315,13 @@ class TrainSampleWriter:
         absolute_index = np.arange(n_jets)
         absolute_index = self.better_shuffling(absolute_index, n_jets)
 
-        load_generator = self.load_generator(
+        # Init the generator which loads/shuffles/scales the jet/track variables
+        load_generator = self.load_scaled_generator(
             input_file=input_file,
             index=absolute_index,
             n_jets=n_jets,
+            jets_scale_dict=jets_scale_dict,
+            tracks_scale_dict=tracks_scale_dict,
             chunk_size=chunk_size,
         )
 
@@ -289,13 +355,16 @@ class TrainSampleWriter:
                     jet_idx_end = jet_idx + len(jets)
 
                     if self.sampling_options["bool_attach_sample_weights"]:
-                        self.calculateWeights(weights_dict, jets, labels)
+                        self.calculate_weights(weights_dict, jets, labels)
 
                     weights = jets["weight"]
 
                     # Reform jets to unstructured arrays
                     jets = repack_fields(jets[jets_variables])
                     jets = structured_to_unstructured(jets)
+
+                    # Reform the flavour to unstructured array
+                    flavour = repack_fields(flavour[self.variable_config["label"]])
 
                     if chunk_counter == 0:
                         h5file.create_dataset(
@@ -442,7 +511,7 @@ class TrainSampleWriter:
                 ylabel="Normalised number of jets",
             )
 
-    def calculateWeights(
+    def calculate_weights(
         self,
         weights_dict: dict,
         jets: np.ndarray,

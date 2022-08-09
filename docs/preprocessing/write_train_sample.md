@@ -1,5 +1,5 @@
 ## Writing Train Sample
-In the final step of the preprocessing, the resampled, scaled and shifted training jets are written to disk in a format, that can be used for training. For this, the collection of the training sample will get different names and data types. The collections are replaced with datasets with unstructured `numpy.ndarray`s. The names/shapes of these new datasets in the final training file can be found in the table below:
+In the final step of the preprocessing, the resampled, training jets are scaled/shifted and then written to disk in a format, that can be used for training. For this, the collections of the training sample will get different names and data types. The collections are replaced with datasets with unstructured `numpy.ndarray`s. The names/shapes of these new datasets in the final training file can be found in the table below:
 
 | Before writing | After writing | Shape | Comment |
 | -------------- | ------------- | ----- | ------- |
