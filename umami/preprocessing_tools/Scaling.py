@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 
 from umami.configuration import logger
-from umami.plotting_tools import preprocessing_plots
 from umami.preprocessing_tools.utils import get_variable_dict
 
 
@@ -100,6 +99,8 @@ def apply_scaling_jets(
 
     Raises
     ------
+    ValueError
+        When jets is neither a pandas DataFrame nor a structured numpy ndarray
     KeyError
         When for the variable which is to be scaled no shift/scale values
         are available in the scale dict.
@@ -107,20 +108,34 @@ def apply_scaling_jets(
         If the scale parameter for the variable is either 0 or inf.
     """
 
+    # Check type of input
+    if isinstance(jets, pd.DataFrame):
+        is_dataframe = True
+
+    elif isinstance(jets, np.ndarray):
+        is_dataframe = False
+
+    else:
+        raise ValueError(
+            "Only pandas DataFrame and structured numpy ndarrays are"
+            " valid input datatypes for jets!"
+        )
+
     # Generate the defaults dict out of the scale dict
     default_dict = generate_default_dict(scale_dict)
 
     # Repacking scaling dict
     scale_dict = dict(zip([scale_var["name"] for scale_var in scale_dict], scale_dict))
 
-    # Get rid of all not-wanted variables
-    jets = jets[variables_list]
+    if is_dataframe:
+        # Get rid of all not-wanted variables
+        jets = jets[variables_list]
 
-    # Replace infinity values with nan values
-    jets = jets.replace([np.inf, -np.inf], np.nan)
+        # Replace infinity values with nan values
+        jets = jets.replace([np.inf, -np.inf], np.nan)
 
-    # Fill the nan values with the default values from the default dict
-    jets = jets.fillna(default_dict)
+        # Fill the nan values with the default values from the default dict
+        jets = jets.fillna(default_dict)
 
     # Loop over the variables requested
     for var in variables_list:
@@ -134,6 +149,15 @@ def apply_scaling_jets(
             raise KeyError(
                 f"Requested {var} to be used but no values for this "
                 "variable is available in the scale dict!"
+            )
+
+        if not is_dataframe:
+            # Replace inf and nans
+            jets[var] = np.nan_to_num(
+                x=jets[var],
+                nan=default_dict[var],
+                posinf=default_dict[var],
+                neginf=default_dict[var],
             )
 
         # Ensuring correct scaling factors
@@ -243,24 +267,24 @@ def apply_scaling_trks(
             )
         var_arr_list.append(np.nan_to_num(x))
 
-        # track vertex and origin labels
-        if save_track_labels:
-            trk_labels = np.stack(
-                [np.nan_to_num(trks[v]) for v in track_label_variables],
-                axis=-1,
-            )
-
-        else:
-            trk_labels = None
-
     # Stack the results for new dataset
     scaled_trks = np.stack(var_arr_list, axis=-1)
+
+    # track vertex and origin labels
+    if save_track_labels:
+        trk_labels = np.stack(
+            [np.nan_to_num(trks[v]) for v in track_label_variables],
+            axis=-1,
+        )
+
+    else:
+        trk_labels = None
 
     # Return the scaled and tracks and, if defined, the track labels
     return scaled_trks, trk_labels
 
 
-class Scaling:
+class CalculateScaling:
     """
     Scaling class. Can calculate the scaling and shifting for training dataset
     and can apply it.
@@ -947,320 +971,3 @@ class Scaling:
 
                 # Yield the scale dict and the number jets
                 yield scale_dict_trk, nTrks
-
-    def scale_generator(
-        self,
-        input_file: str,
-        jets_variables: list,
-        jets_scale_dict: dict,
-        n_jets: int,
-        tracks_scale_dict: dict = None,
-        chunk_size: int = int(10000),
-    ):
-        """
-        Set up a generator who applies the scaling/shifting for the given
-        jet variables.
-
-        Parameters
-        ----------
-        input_file : str
-            File which is to be scaled.
-        jets_variables : list
-            Variables of the jets which are to be scaled.
-        jets_scale_dict : dict
-            Scale dict of the jet variables with the values inside.
-        n_jets : int
-            Number of jets which are to be scaled.
-        tracks_scale_dict : dict, optional
-            Scale dict of the track variables., by default None
-        chunk_size : int, optional
-            The number of jets which are loaded and scaled/shifted per step,
-            by default int(10000)
-
-        Yields
-        ------
-        jets : np.ndarray
-            Yielded jets
-        tracks : np.ndarray
-            Yielded tracks
-        labels : np.ndarray
-            Yielded labels
-        tracks_labels : np.ndarray
-            Yielded track labels
-        flavour : np.ndarray
-            Yielded flavours
-        """
-
-        # Open the file and load the jets
-        with h5py.File(input_file, "r") as f:
-
-            # Get the indices
-            start_ind = 0
-            tupled_indices = []
-            while start_ind < n_jets:
-                end_ind = int(start_ind + chunk_size)
-                end_ind = min(end_ind, n_jets)
-                tupled_indices.append((start_ind, end_ind))
-                start_ind = end_ind
-                end_ind = int(start_ind + chunk_size)
-
-            for index_tuple in tupled_indices:
-
-                # Load jets
-                jets = pd.DataFrame(f["/jets"][index_tuple[0] : index_tuple[1]])
-                labels = pd.DataFrame(f["/labels"][index_tuple[0] : index_tuple[1]])
-                if "weight" not in jets:
-                    length = n_jets if n_jets < chunk_size else len(jets)
-                    jets["weight"] = np.ones(int(length))
-
-                if "weight" not in jets_variables:
-                    jets_variables += ["weight"]
-
-                # keep the jet flavour
-                flavour = jets[self.variable_config["label"]]
-
-                jets = apply_scaling_jets(
-                    jets=jets,
-                    variables_list=jets_variables,
-                    scale_dict=jets_scale_dict,
-                )
-
-                if self.save_tracks is False:
-                    yield jets, labels, flavour
-
-                elif self.save_tracks is True:
-                    tracks, tracks_labels = [], []
-                    # Loop on each track selection
-                    for tracks_name in self.tracks_names:
-                        trk_scale_dict = tracks_scale_dict[tracks_name]
-                        # Load tracks
-                        trks = np.asarray(
-                            h5py.File(input_file, "r")[f"/{tracks_name}"][
-                                index_tuple[0] : index_tuple[1]
-                            ]
-                        )
-
-                        # Apply scaling to the tracks
-                        trks, trk_labels = apply_scaling_trks(
-                            trks=trks,
-                            variable_config=self.variable_config,
-                            scale_dict=trk_scale_dict,
-                            tracks_name=tracks_name,
-                            save_track_labels=self.save_track_labels,
-                            track_label_variables=self.track_label_variables,
-                        )
-                        tracks.append(trks)
-                        tracks_labels.append(trk_labels)
-
-                    # Yield jets, labels and tracks
-                    yield (
-                        jets,
-                        tracks,
-                        labels,
-                        tracks_labels,
-                        flavour,
-                    )
-
-    def apply_scales(
-        self,
-        input_file: str = None,
-        chunk_size: int = 1e6,
-    ):
-        """
-        Apply the scaling and shifting.
-
-        Parameters
-        ----------
-        input_file : str, optional
-            File which is to be scaled., by default None
-        chunk_size : int, optional
-            The number of jets which are loaded and scaled/shifted per step,
-            by default 1e6
-        """
-
-        # Get input filename to calculate scaling and shifting
-        if input_file is None:
-            input_file = self.config.get_file_name(option="resampled")
-
-        logger.info("Scale/Shift jets from %s", input_file)
-        logger.info("Using scales in %s", self.scale_dict_path)
-
-        # Extract the correct variables
-        variables_header_jets = self.variable_config["train_variables"]
-        jets_variables = [
-            i for j in variables_header_jets for i in variables_header_jets[j]
-        ]
-
-        file_length = len(h5py.File(input_file, "r")["/jets"])
-
-        n_chunks = int(np.ceil(file_length / chunk_size))
-
-        # Get scale dict
-        with open(self.scale_dict_path, "r") as infile:
-            jets_scale_dict = json.load(infile)["jets"]
-
-        # Check if tracks are used
-        if self.save_tracks:
-            tracks_scale_dict = {}
-            # Get the scale dict for tracks
-            with open(self.scale_dict_path, "r") as infile:
-                full_scale_dict = json.load(infile)
-                for tracks_name in self.tracks_names:
-                    tracks_scale_dict[tracks_name] = full_scale_dict[f"{tracks_name}"]
-
-        else:
-            tracks_scale_dict = None
-
-        # Load jets
-        scale_generator = self.scale_generator(
-            input_file=input_file,
-            jets_variables=jets_variables,
-            jets_scale_dict=jets_scale_dict,
-            n_jets=file_length,
-            tracks_scale_dict=tracks_scale_dict,
-            chunk_size=chunk_size,
-        )
-
-        logger.info("Applying scaling and shifting.")
-        out_file = self.config.get_file_name(option="resampled_scaled")
-        with h5py.File(out_file, "w") as h5file:
-
-            # Set up chunk counter and start looping
-            chunk_counter = 0
-            while chunk_counter <= n_chunks:
-                logger.info(
-                    "Applying scales for chunk %s of %s.",
-                    chunk_counter + 1,
-                    n_chunks + 1,
-                )
-                try:
-                    # Load jets from file
-                    if self.save_tracks is False:
-                        jets, labels, flavour = next(scale_generator)
-
-                    else:
-                        (
-                            jets,
-                            tracks,
-                            labels,
-                            track_labels,
-                            flavour,
-                        ) = next(scale_generator)
-
-                    if chunk_counter == 0:
-                        h5file.create_dataset(
-                            "jets",
-                            data=jets.to_records(index=False),
-                            compression="gzip",
-                            maxshape=(None,),
-                        )
-                        h5file.create_dataset(
-                            "labels",
-                            data=labels,
-                            compression="gzip",
-                            maxshape=(None, labels.shape[1]),
-                        )
-                        h5file.create_dataset(
-                            "flavour",
-                            data=flavour,
-                            compression="gzip",
-                            maxshape=(None,),
-                        )
-
-                    if chunk_counter == 0 and self.save_tracks is True:
-                        for i, tracks_name in enumerate(self.tracks_names):
-                            h5file.create_dataset(
-                                tracks_name,
-                                data=tracks[i],
-                                compression="lzf",
-                                chunks=((100,) + tracks[i].shape[1:]),
-                                maxshape=(
-                                    None,
-                                    tracks[i].shape[1],
-                                    tracks[i].shape[2],
-                                ),
-                            )
-                            if self.save_track_labels:
-                                h5file.create_dataset(
-                                    f"{tracks_name}_labels",
-                                    data=track_labels[i],
-                                    compression="lzf",
-                                    chunks=((100,) + track_labels[i].shape[1:]),
-                                    maxshape=(
-                                        None,
-                                        track_labels[i].shape[1],
-                                        track_labels[i].shape[2],
-                                    ),
-                                )
-
-                    else:
-                        # appending to existing dataset
-                        h5file["jets"].resize(
-                            (h5file["jets"].shape[0] + jets.shape[0]),
-                            axis=0,
-                        )
-                        h5file["jets"][-jets.shape[0] :] = jets.to_records(
-                            index=False
-                        )  # jets
-
-                        h5file["labels"].resize(
-                            (h5file["labels"].shape[0] + labels.shape[0]),
-                            axis=0,
-                        )
-                        h5file["labels"][-labels.shape[0] :] = labels
-
-                        h5file["flavour"].resize(
-                            (h5file["flavour"].shape[0] + flavour.shape[0]),
-                            axis=0,
-                        )
-                        h5file["flavour"][-flavour.shape[0] :] = flavour
-
-                        if self.save_tracks is True:
-                            for i, tracks_name in enumerate(self.tracks_names):
-                                h5file[tracks_name].resize(
-                                    (h5file[tracks_name].shape[0] + tracks[i].shape[0]),
-                                    axis=0,
-                                )
-                                h5file[tracks_name][-tracks[i].shape[0] :] = tracks[i]
-
-                                if self.save_track_labels:
-                                    h5file[f"{tracks_name}_labels"].resize(
-                                        (
-                                            h5file[f"{tracks_name}_labels"].shape[0]
-                                            + track_labels[i].shape[0]
-                                        ),
-                                        axis=0,
-                                    )
-                                    h5file[f"{tracks_name}_labels"][
-                                        -track_labels[i].shape[0] :
-                                    ] = track_labels[i]
-
-                except StopIteration:
-                    break
-
-                chunk_counter += 1
-
-        # Plot the variables from the output file of the resampling process
-        if (
-            "n_jets_to_plot" in self.sampling_options
-            and self.sampling_options["n_jets_to_plot"]
-        ):
-            logger.info("Plotting resampled and scaled distributions...")
-            preprocessing_plots(
-                sample=self.config.get_file_name(option="resampled_scaled"),
-                var_dict=self.variable_config,
-                class_labels=self.config.sampling["class_labels"],
-                plots_dir=os.path.join(
-                    self.config.config["parameters"]["file_path"],
-                    "plots/scaling/",
-                ),
-                track_collection_list=self.sampling_options["tracks_names"]
-                if "tracks_names" in self.sampling_options
-                and "save_tracks" in self.sampling_options
-                and self.sampling_options["save_tracks"] is True
-                else None,
-                n_jets=self.sampling_options["n_jets_to_plot"],
-                atlas_second_tag=self.config.plot_sample_label,
-                logy=True,
-                ylabel="Normalised number of jets",
-            )

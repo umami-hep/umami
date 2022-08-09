@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Merge apply_scaling and write step in preprocessing [!605](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/605)
 - Adding string join support for yaml [!607](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/607)
 - Adding configuration base class and doc improvements for pdf sampling [!604](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/604)
 - Merging evaluate_model script funtions + adapt pt_vs plots to be var_vs plots [!599](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/599)

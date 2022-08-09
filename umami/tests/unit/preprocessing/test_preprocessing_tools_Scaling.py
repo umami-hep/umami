@@ -8,8 +8,8 @@ import pandas as pd
 
 from umami.configuration import logger, set_log_level
 from umami.preprocessing_tools import (
+    CalculateScaling,
     PreprocessConfiguration,
-    Scaling,
     apply_scaling_jets,
     apply_scaling_trks,
 )
@@ -71,6 +71,19 @@ class ApplyScalingJetsTestCase(unittest.TestCase):
                 for counter, var in enumerate(self.variable_list)
             }
         )
+        self.structured_array_jets = np.array(
+            [
+                (0, 1, 2),
+                (0, 1, 2),
+                (0, 1, 2),
+                (0, 1, 2),
+                (0, 1, 2),
+            ],
+            dtype={
+                "names": self.variable_list,
+                "formats": ["<f4", "<f4", "<f4"],
+            },
+        )
         self.control_jets = pd.DataFrame(
             {
                 "absEta_btagJes": np.ones(5) * -0.5,
@@ -90,9 +103,20 @@ class ApplyScalingJetsTestCase(unittest.TestCase):
 
     def test_scaling_jets(self):
         """Testing the default behaviour."""
-        logger.warning(self.jets)
         jets = apply_scaling_jets(
             jets=self.jets,
+            variables_list=self.variable_list,
+            scale_dict=self.scale_dict,
+        )
+
+        for var in self.variable_list:
+            with self.subTest(f"Testing variable {var}"):
+                np.testing.assert_array_almost_equal(jets[var], self.control_jets[var])
+
+    def test_scaling_structured_array_jets(self):
+        """Testing default behaviour for structured numpy array."""
+        jets = apply_scaling_jets(
+            jets=self.structured_array_jets,
             variables_list=self.variable_list,
             scale_dict=self.scale_dict,
         )
@@ -162,7 +186,7 @@ class ScalingTestCase(unittest.TestCase):
         self.combined_mean = 3.8
         self.combined_std = 1.7776388834631178
 
-        scaling_class = Scaling(self.config)
+        scaling_class = CalculateScaling(self.config)
 
         combined_mean, combined_std = scaling_class.join_mean_scale(
             first_scale_dict=self.first_scale_dict,
@@ -192,7 +216,7 @@ class ScalingTestCase(unittest.TestCase):
             "variable_2": {"shift": 2.2, "scale": 1.977371993328519},
         }
 
-        scaling_class = Scaling(self.config)
+        scaling_class = CalculateScaling(self.config)
 
         combined_scale_dict, combined_nTrks = scaling_class.join_scale_dicts_trks(
             first_scale_dict=self.first_scale_dict,
@@ -241,7 +265,7 @@ class ScalingTestCase(unittest.TestCase):
             },
         ]
 
-        scaling_class = Scaling(self.config)
+        scaling_class = CalculateScaling(self.config)
 
         combined_scale_dict, combined_n_jets = scaling_class.join_scale_dicts_jets(
             first_scale_dict=self.first_scale_dict,
@@ -283,7 +307,7 @@ class ScalingTestCase(unittest.TestCase):
             "default": self.default,
         }
 
-        scaling_class = Scaling(self.config)
+        scaling_class = CalculateScaling(self.config)
 
         combined_scale_dict = scaling_class.dict_in(
             varname=self.varname,
@@ -314,7 +338,7 @@ class ScalingTestCase(unittest.TestCase):
             "variable_2": {"shift": 120, "scale": 69.27962663486768},
         }
 
-        scaling_class = Scaling(self.config)
+        scaling_class = CalculateScaling(self.config)
 
         scale_dict, nTrks = scaling_class.get_scaling_tracks(
             data=self.data,
@@ -347,7 +371,7 @@ class ScalingTestCase(unittest.TestCase):
         self.average_control = 49.5
         self.std_control = 28.86607004772212
 
-        scaling_class = Scaling(self.config)
+        scaling_class = CalculateScaling(self.config)
 
         varname, average, std, default = scaling_class.get_scaling(
             vec=self.vec,

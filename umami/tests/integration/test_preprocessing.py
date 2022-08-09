@@ -177,24 +177,6 @@ def runPreprocessing(
     except CalledProcessError as error:
         raise AssertionError("Test failed: preprocessing.py --scaling.") from error
 
-    logger.info("Test: applying shifting and scaling factors...")
-    run_apply_scales = run(
-        [
-            "python",
-            "umami/preprocessing.py",
-            "-c",
-            f"{config}",
-            "--apply_scales",
-            "--verbose",
-        ],
-        check=True,
-    )
-
-    try:
-        run_apply_scales.check_returncode()
-    except CalledProcessError as error:
-        raise AssertionError("Test failed: preprocessing.py --apply_scales.") from error
-
     logger.info("Test: shuffling the samples and writing the samples to disk...")
     run_write = run(
         [
@@ -335,11 +317,6 @@ def runPreprocessing(
     )
     run(
         [f"rm -rfv {tagger_path}/PFlow-hybrid_70-test-resampled.h5"],
-        shell=True,
-        check=True,
-    )
-    run(
-        [f"rm -rfv {tagger_path}/PFlow-hybrid_70-test-resampled_scaled.h5"],
         shell=True,
         check=True,
     )
