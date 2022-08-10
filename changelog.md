@@ -4,6 +4,8 @@
 
 ### Latest
 
+- Update puma version to v0.1.7 [!614](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/614)
+
 ### [v0.11](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.11) (10.08.2022)
 
 - Removing var_dict from train config [!611](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/611)
