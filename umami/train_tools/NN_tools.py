@@ -316,12 +316,6 @@ def create_metadata_folder(
                     f"preprocess_config: {metadata_preprocess_config_path}",
                 )
 
-                replace_line_in_file(
-                    os.path.join(model_name, "metadata", os.path.basename(file_path)),
-                    "var_dict:",
-                    f"var_dict: {metadata_var_dict_path}",
-                )
-
                 if model_file_path:
                     metadata_model_file_path = os.path.join(
                         os.getcwd(),
@@ -975,7 +969,6 @@ def get_test_sample_trks(
 
 def load_validation_data_umami(
     train_config: object,
-    preprocess_config: object,
     n_jets: int,
     jets_var_list: list = None,
     convert_to_tensor: bool = False,
@@ -988,8 +981,6 @@ def load_validation_data_umami(
     ----------
     train_config : object
         Loaded train_config object.
-    preprocess_config : object
-        Loaded preprocess_config object.
     n_jets : int
         Number of jets to load.
     jets_var_list : list
@@ -1035,7 +1026,7 @@ def load_validation_data_umami(
         (X_valid, X_valid_trk, Y_valid,) = get_test_file(
             input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
-            preprocess_config=preprocess_config,
+            preprocess_config=train_config.preprocess_config,
             class_labels=NN_structure["class_labels"],
             tracks_name=tracks_name,
             n_jets=n_jets,
@@ -1075,7 +1066,6 @@ def load_validation_data_umami(
 
 def load_validation_data_dl1(
     train_config: object,
-    preprocess_config: object,
     n_jets: int,
     convert_to_tensor: bool = False,
 ) -> dict:
@@ -1086,8 +1076,6 @@ def load_validation_data_dl1(
     ----------
     train_config : object
         Loaded train_config object.
-    preprocess_config : object
-        Loaded preprocess_config object.
     n_jets : int
         Number of jets to load.
     convert_to_tensor : bool
@@ -1126,7 +1114,7 @@ def load_validation_data_dl1(
         (X_valid, Y_valid,) = get_test_sample(
             input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
-            preprocess_config=preprocess_config,
+            preprocess_config=train_config.preprocess_config,
             class_labels=NN_structure["class_labels"],
             n_jets=n_jets,
             exclude=exclude,
@@ -1152,7 +1140,6 @@ def load_validation_data_dl1(
 
 def load_validation_data_dips(
     train_config: object,
-    preprocess_config: object,
     n_jets: int,
     convert_to_tensor: bool = False,
 ) -> dict:
@@ -1163,8 +1150,6 @@ def load_validation_data_dips(
     ----------
     train_config : object
         Loaded train_config object.
-    preprocess_config : object
-        Loaded preprocess_config object.
     n_jets : int
         Number of jets to load.
     convert_to_tensor : bool
@@ -1199,7 +1184,7 @@ def load_validation_data_dips(
         (X_valid, Y_valid,) = get_test_sample_trks(
             input_file=val_file_config["path"],
             var_dict=train_config.var_dict,
-            preprocess_config=preprocess_config,
+            preprocess_config=train_config.preprocess_config,
             class_labels=NN_structure["class_labels"],
             tracks_name=tracks_name,
             n_jets=n_jets,
@@ -1538,7 +1523,6 @@ def evaluate_model(
 
 def calc_validation_metrics(
     train_config: object,
-    preprocess_config: object,
     tagger: str,
     target_beff: float = 0.77,
     n_jets: int = int(3e5),
@@ -1552,8 +1536,6 @@ def calc_validation_metrics(
     ----------
     train_config : object
         The loaded train config object.
-    preprocess_config : object
-        The loaded preprocess config object.
     tagger : str
         Name of the tagger that is used to calcualte metrics.
     target_beff : float
@@ -1631,7 +1613,6 @@ def calc_validation_metrics(
     if tagger.casefold() == "umami":
         data_dict = load_validation_data_umami(
             train_config=train_config,
-            preprocess_config=preprocess_config,
             n_jets=n_jets,
             convert_to_tensor=False,
         )
@@ -1639,7 +1620,6 @@ def calc_validation_metrics(
     elif tagger.casefold() == "dl1":
         data_dict = load_validation_data_dl1(
             train_config=train_config,
-            preprocess_config=preprocess_config,
             n_jets=n_jets,
             convert_to_tensor=False,
         )
@@ -1647,7 +1627,6 @@ def calc_validation_metrics(
     elif tagger.casefold() in ("dips", "dips_attention"):
         data_dict = load_validation_data_dips(
             train_config=train_config,
-            preprocess_config=preprocess_config,
             n_jets=n_jets,
             convert_to_tensor=False,
         )
@@ -1655,7 +1634,6 @@ def calc_validation_metrics(
     elif tagger.casefold() == "cads":
         data_dict = load_validation_data_umami(
             train_config=train_config,
-            preprocess_config=preprocess_config,
             n_jets=n_jets,
             jets_var_list=[
                 global_config.etavariable,

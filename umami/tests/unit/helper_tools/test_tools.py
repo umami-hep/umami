@@ -1,18 +1,17 @@
 """Unit test the little helper functions from umami_tools."""
-import os
 import tempfile
 import unittest
-from shutil import copyfile
+from pathlib import Path
 
 import pytest
 
 from umami.configuration import logger, set_log_level
-from umami.tools import (
+from umami.tools.tools import (
     check_main_class_input,
     compare_leading_spaces,
     replace_line_in_file,
 )
-from umami.train_tools.configuration import Configuration
+from umami.tools.yaml_tools import YAML
 
 set_log_level(logger, "DEBUG")
 
@@ -61,27 +60,38 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.tmp_test_dir = f"{self.tmp_dir.name}"
 
-        # Get the path for a basic config
-        self.train_config_path = os.path.join(self.tmp_test_dir, "train_config.yaml")
-        copyfile(
-            os.path.join(os.getcwd(), "examples/Dips-PFlow-Training-config.yaml"),
-            self.train_config_path,
-        )
+        self.yaml = YAML(typ="safe", pure=True)
+        test_config = {
+            "model_name": "before_replacement_name",
+            "another_key": "dummy content",
+        }
+        self.dummy_file = Path(self.tmp_test_dir) / "dummy_config.yaml"
+        self.yaml.dump(test_config, self.dummy_file)
+
+    def load_file(self):
+        """Helper function to load yaml file.
+
+        Returns
+        -------
+        dict
+            dict with yaml file.
+        """
+        return self.yaml.load(self.dummy_file)
 
     def test_replaceLineInFile_Single_Line(self) -> None:
         """Test the standard behaviour of the function."""
 
         # Change the model_name
         replace_line_in_file(
-            self.train_config_path,
+            self.dummy_file,
             "model_name:",
             "model_name: Unittest_Testname",
             only_first=True,
         )
 
         # Load the yaml config file and check the value
-        config = Configuration(self.train_config_path)
-        self.assertEqual(config.model_name, "Unittest_Testname")
+        config = self.load_file()
+        self.assertEqual(config["model_name"], "Unittest_Testname")
 
     def test_replaceLineInFile_Single_Line_Fail(self) -> None:
         """Test the raise error behaviour of the function."""
@@ -89,7 +99,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         # Change the model_name
         with self.assertRaises(AttributeError):
             replace_line_in_file(
-                self.train_config_path,
+                self.dummy_file,
                 "Defintly_not_in_the_file:",
                 "model_name: Unittest_Testname",
                 only_first=True,
@@ -100,14 +110,14 @@ class replaceLineInFile_TestCase(unittest.TestCase):
 
         # Change the model_name
         replace_line_in_file(
-            self.train_config_path,
+            self.dummy_file,
             "model_name:",
             "model_name: Unittest_Testname",
         )
 
         # Load the yaml config file and check the value
-        config = Configuration(self.train_config_path)
-        self.assertEqual(config.model_name, "Unittest_Testname")
+        config = self.load_file()
+        self.assertEqual(config["model_name"], "Unittest_Testname")
 
     def test_replaceLineInFile_Multiple_Lines_Fail(self) -> None:
         """Test the raise error behaviour of the function."""
@@ -115,7 +125,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         # Change the model_name
         with self.assertRaises(AttributeError):
             replace_line_in_file(
-                self.train_config_path,
+                self.dummy_file,
                 "Defintly_not_in_the_file:",
                 "model_name: Unittest_Testname",
             )

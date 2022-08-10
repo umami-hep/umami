@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from umami.configuration.configuration import logger
-from umami.tools import YAML
+from umami.tools.yaml_tools import YAML
 
 
 class Configuration:

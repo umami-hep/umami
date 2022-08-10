@@ -8,7 +8,6 @@ import tensorflow as tf
 import umami.train_tools as utt
 from umami.helper_tools import get_class_prob_var_names
 from umami.plotting_tools import run_validation_check
-from umami.preprocessing_tools import PreprocessConfiguration
 
 
 def get_parser():
@@ -89,7 +88,7 @@ def get_parser():
     return parser.parse_args()
 
 
-def main(args, train_config, preprocess_config):
+def main(args, train_config):
     """Executes plotting of epoch performance plots
 
     Parameters
@@ -98,8 +97,6 @@ def main(args, train_config, preprocess_config):
         command line argument parser options
     train_config : object
         configuration file used for training
-    preprocess_config : object
-        configuration file used for preprocessing
 
     Raises
     ------
@@ -167,7 +164,6 @@ def main(args, train_config, preprocess_config):
             # Calculate the validation metrics and save them
             val_metrics_file_name = utt.calc_validation_metrics(
                 train_config=train_config,
-                preprocess_config=preprocess_config,
                 target_beff=working_point,
                 n_jets=n_jets,
                 tagger=tagger,
@@ -234,5 +230,4 @@ if __name__ == "__main__":
         tf.config.experimental.set_memory_growth(gpu, True)
 
     training_config = utt.Configuration(arg_parser.config_file)
-    preprocessing_config = PreprocessConfiguration(training_config.preprocess_config)
-    main(arg_parser, training_config, preprocessing_config)
+    main(arg_parser, training_config)

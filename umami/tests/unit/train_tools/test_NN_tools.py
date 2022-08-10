@@ -221,40 +221,38 @@ class create_metadata_folder_TestCase(unittest.TestCase):
 
     def setUp(self):
         self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
-        self.tmp_test_dir = f"{self.tmp_dir.name}"
-        self.model_name = os.path.join(self.tmp_test_dir, "test_model")
-        self.train_config_path = os.path.join(self.tmp_test_dir, "train_config.yaml")
-        self.preprocess_config = os.path.join(
-            self.tmp_test_dir, "preprocess_config.yaml"
+        self.tmp_test_dir = Path(self.tmp_dir.name)
+        self.model_name = Path(self.tmp_test_dir) / "test_model"
+        self.train_config_path = Path(self.tmp_test_dir) / "train_config.yaml"
+        self.preprocess_config = Path(self.tmp_test_dir) / "preprocess_config.yaml"
+        self.preprocess_config_include = (
+            Path(self.tmp_test_dir) / "Preprocessing-parameters.yaml"
         )
-        self.preprocess_config_include = os.path.join(
-            self.tmp_test_dir, "Preprocessing-parameters.yaml"
-        )
-        self.var_dict_path = os.path.join(self.tmp_test_dir, "Var_Dict.yaml")
-        self.scale_dict_path = os.path.join(self.tmp_test_dir, "scale_dict.json")
-        self.model_file_path = os.path.join(self.tmp_test_dir, "test_model_file.h5")
+        self.var_dict_path = Path(self.tmp_test_dir) / "Var_Dict.yaml"
+        self.scale_dict_path = Path(self.tmp_test_dir) / "scale_dict.json"
+        self.model_file_path = Path(self.tmp_test_dir) / "test_model_file.h5"
 
-        Path(f"{self.var_dict_path}").touch()
-        Path(f"{self.scale_dict_path}").touch()
-        Path(f"{self.model_file_path}").touch()
+        self.var_dict_path.touch()
+        self.scale_dict_path.touch()
+        self.model_file_path.touch()
 
         copyfile(
-            os.path.join(os.getcwd(), "examples/Dips-PFlow-Training-config.yaml"),
+            Path("examples/Dips-PFlow-Training-config.yaml"),
             self.train_config_path,
         )
         copyfile(
-            os.path.join(os.getcwd(), "examples/PFlow-Preprocessing.yaml"),
+            Path("examples/PFlow-Preprocessing.yaml"),
             self.preprocess_config,
         )
         copyfile(
-            os.path.join(os.getcwd(), "examples/Preprocessing-parameters.yaml"),
+            Path("examples/Preprocessing-parameters.yaml"),
             self.preprocess_config_include,
         )
 
         replace_line_in_file(
-            self.train_config_path,
-            "var_dict:",
-            f"var_dict: {self.var_dict_path}",
+            self.preprocess_config,
+            "var_file:",
+            f"var_file: {self.var_dict_path}",
         )
 
         replace_line_in_file(
@@ -325,8 +323,8 @@ class Configuration_TestCase(unittest.TestCase):
         """
         Set a example config file.
         """
-        self.config_file = os.path.join(
-            os.path.dirname(__file__), "fixtures/test_train_config.yaml"
+        self.config_file = (
+            Path(os.path.dirname(__file__)) / "fixtures/test_train_config.yaml"
         )
 
     def test_no_val_no_eval_batch_size(self):
@@ -757,6 +755,7 @@ class GetSamples_TestCase(unittest.TestCase):
         self.length_track_variables = 5
         self.nTracks = 40
         self.config = {"exclude": self.exclude}
+        self.preprocess_config = self
 
     def test_get_test_sample_trks(self):
         """Test nominal behaviour."""
@@ -977,7 +976,10 @@ class GetSamples_TestCase(unittest.TestCase):
     def test_load_validation_data_umami(self):
         """Test the loading of the validation data for umami."""
 
-        val_data_dict = load_validation_data_umami(self, self, self.n_jets)
+        val_data_dict = load_validation_data_umami(
+            train_config=self,
+            n_jets=self.n_jets,
+        )
 
         self.assertEqual(
             list(val_data_dict.keys()),
@@ -994,7 +996,10 @@ class GetSamples_TestCase(unittest.TestCase):
     def test_load_validation_data_dips(self):
         """Test the loading of the validation data for dips."""
 
-        val_data_dict = load_validation_data_dips(self, self, self.n_jets)
+        val_data_dict = load_validation_data_dips(
+            train_config=self,
+            n_jets=self.n_jets,
+        )
 
         self.assertEqual(
             list(val_data_dict.keys()),
@@ -1009,7 +1014,10 @@ class GetSamples_TestCase(unittest.TestCase):
     def test_load_validation_data_umami_no_var_cuts(self):
         """Test the loading of the validation data for umami with no variable cuts."""
 
-        val_data_dict = load_validation_data_umami(self, self, self.n_jets)
+        val_data_dict = load_validation_data_umami(
+            train_config=self,
+            n_jets=self.n_jets,
+        )
 
         self.assertEqual(
             list(val_data_dict.keys()),
@@ -1026,7 +1034,10 @@ class GetSamples_TestCase(unittest.TestCase):
     def test_load_validation_data_dips_no_var_cuts(self):
         """Test the loading of the validation data for dips with no variable cuts."""
 
-        val_data_dict = load_validation_data_dips(self, self, self.n_jets)
+        val_data_dict = load_validation_data_dips(
+            train_config=self,
+            n_jets=self.n_jets,
+        )
 
         self.assertEqual(
             list(val_data_dict.keys()),

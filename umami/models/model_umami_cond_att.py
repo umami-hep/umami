@@ -93,7 +93,7 @@ def create_umami_cond_att_model(
     return umami, NN_structure["epochs"], init_epoch
 
 
-def UmamiCondAtt(args, train_config, preprocess_config):
+def UmamiCondAtt(args, train_config):
     """Training handling of UMAMI with conditional attention tagger.
 
     Parameters
@@ -102,8 +102,6 @@ def UmamiCondAtt(args, train_config, preprocess_config):
         Arguments from command line parser
     train_config : object
         training configuration
-    preprocess_config : object
-        preprocessing configuration
 
     Raises
     ------
@@ -269,7 +267,6 @@ def UmamiCondAtt(args, train_config, preprocess_config):
     if n_jets_val > 0:
         val_data_dict = utt.load_validation_data_umami(
             train_config=train_config,
-            preprocess_config=preprocess_config,
             n_jets=n_jets_val,
             convert_to_tensor=True,
             nCond=nn_structure["N_Conditions"],

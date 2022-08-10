@@ -8,4 +8,3 @@ from umami.tools.tools import (
     replace_line_in_file,
     yaml_loader,
 )
-from umami.tools.yaml_tools import YAML

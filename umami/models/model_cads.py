@@ -83,7 +83,7 @@ def create_cads_model(
     return cads, nn_structure["epochs"], init_epoch
 
 
-def cads_tagger(args, train_config, preprocess_config):
+def cads_tagger(args, train_config):
     """
     Training handling of CADS.
 
@@ -93,8 +93,6 @@ def cads_tagger(args, train_config, preprocess_config):
         Arguments from command line parser
     train_config : object
         training configuration
-    preprocess_config : object
-        preprocessing configuration
 
     Raises
     ------
@@ -239,7 +237,6 @@ def cads_tagger(args, train_config, preprocess_config):
         if nn_structure["N_Conditions"] is None:
             val_data_dict = utt.load_validation_data_dips(
                 train_config=train_config,
-                preprocess_config=preprocess_config,
                 n_jets=n_jets_val,
                 convert_to_tensor=True,
             )
@@ -255,7 +252,6 @@ def cads_tagger(args, train_config, preprocess_config):
         else:
             val_data_dict = utt.load_validation_data_umami(
                 train_config=train_config,
-                preprocess_config=preprocess_config,
                 n_jets=n_jets_val,
                 convert_to_tensor=True,
                 jets_var_list=["absEta_btagJes", "pt_btagJes"],

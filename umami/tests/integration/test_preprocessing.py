@@ -3,6 +3,7 @@
 import os
 import tempfile
 import unittest
+from pathlib import Path
 from shutil import copyfile
 from subprocess import CalledProcessError, run
 
@@ -222,8 +223,8 @@ def runPreprocessing(
                 "Test failed: preprocessing.py --to_records."
             ) from error
 
-    tagger_path = f"./test_preprocessing_{tagger}_{string_id}_{method}/"
-    tagger_path_full = f"./test_preprocessing_{tagger}_{string_id}_{method}_full/"
+    tagger_path = Path(f"./test_preprocessing_{tagger}_{string_id}_{method}/")
+    tagger_path_full = Path(f"./test_preprocessing_{tagger}_{string_id}_{method}_full/")
 
     # Copy the artifacts from tmp to a local folder and the folder which will be
     # uploaded
@@ -239,15 +240,15 @@ def runPreprocessing(
         )
 
         # Get the path of the not needed configs
-        unused_configs = os.path.join(copy_path, "PFlow-Preprocessing_*.yaml")
+        unused_configs = copy_path / "PFlow-Preprocessing_*.yaml"
 
         # Rename the needed config to PFlow-Preprocessing.yaml and erase the unused
         # TODO change in python 3.10
         if method == "count":
             if string_id == "hits":
                 copyfile(
-                    os.path.join(copy_path, "PFlow-Preprocessing_hits.yaml"),
-                    os.path.join(copy_path, "PFlow-Preprocessing.yaml"),
+                    copy_path / "PFlow-Preprocessing_hits.yaml",
+                    copy_path / "PFlow-Preprocessing.yaml",
                 )
             run(
                 [f"rm -rfv {unused_configs}"],
@@ -255,44 +256,29 @@ def runPreprocessing(
                 check=True,
             )
 
-        elif method == "pdf":
+        elif method in ["pdf", "weighting", "importance_no_replace"]:
             copyfile(
-                os.path.join(copy_path, "PFlow-Preprocessing_pdf.yaml"),
-                os.path.join(copy_path, "PFlow-Preprocessing.yaml"),
+                copy_path / f"PFlow-Preprocessing_{method}.yaml",
+                copy_path / "PFlow-Preprocessing.yaml",
             )
             run(
                 [f"rm -rfv {unused_configs}"],
                 shell=True,
                 check=True,
             )
-
-        elif method == "weighting":
-            copyfile(
-                os.path.join(copy_path, "PFlow-Preprocessing_weighting.yaml"),
-                os.path.join(copy_path, "PFlow-Preprocessing.yaml"),
-            )
-            run(
-                [f"rm -rfv {unused_configs}"],
-                shell=True,
-                check=True,
-            )
-
-        elif method == "importance_no_replace":
-            copyfile(
-                os.path.join(
-                    copy_path,
-                    "PFlow-Preprocessing_importance_no_replace.yaml",
-                ),
-                os.path.join(copy_path, "PFlow-Preprocessing.yaml"),
-            )
-            run(
-                [f"rm -rfv {unused_configs}"],
-                shell=True,
-                check=True,
-            )
-
         else:
             raise KeyError(f"Method {method} is not supported by the integration test!")
+
+        # replace all options which pointed to the test directory `test_dir` and replace
+        # with copy_path - here the `Preprocessing-parameters.yaml` file is concerned
+        param_content = ""
+        with open(copy_path / "Preprocessing-parameters.yaml", "r") as par_conf:
+            for line in par_conf:
+                if test_dir in line:
+                    line = line.replace(str(test_dir), str(copy_path))
+                param_content += line
+        with open(copy_path / "Preprocessing-parameters.yaml", "w") as par_conf:
+            par_conf.write(param_content)
 
     # Remove all intermediate files which are not needed for the training
     run(

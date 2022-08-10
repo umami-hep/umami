@@ -6,6 +6,7 @@
 
 ### [v0.11](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.11) (10.08.2022)
 
+- Removing var_dict from train config [!611](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/611)
 - Switching track variable precision to float32 [!608](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/608)
 - Merge apply_scaling and write step in preprocessing [!605](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/605)
 - Adding string join support for yaml [!607](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/607)
