@@ -1,6 +1,6 @@
 # Set modelname and path to Pflow preprocessing config file
 model_name: unit_test_model
-preprocess_config: ./umami/tests/unit/preprocessing/test_preprocess_config.yaml
+preprocess_config: ./umami/tests/unit/preprocessing/fixtures/test_preprocess_config.yaml
 
 # Add training file
 train_file: dummy.h5
@@ -24,8 +24,6 @@ test_files:
     zpext_r21:
         path: dummy.h5
 
-# Path to Variable dict used in preprocessing
-var_dict: ./umami/configs/Umami_Variables.yaml
 
 bool_use_taus: False
 

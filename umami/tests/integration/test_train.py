@@ -3,6 +3,7 @@
 import os
 import tempfile
 import unittest
+from pathlib import Path
 from shutil import copyfile
 from subprocess import CalledProcessError, run
 
@@ -144,7 +145,7 @@ def prepareConfig(
         )
 
     # Get the train config file and copy it to test dir
-    config_source = os.path.join(os.getcwd(), data[f"test_{tagger}"]["config"])
+    config_source = Path(data[f"test_{tagger}"]["config"])
     config = os.path.join(test_dir, os.path.basename(config_source))
 
     # prepare config files by modifying local copies of config files

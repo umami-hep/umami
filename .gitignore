@@ -31,6 +31,9 @@ Preprocessing-parameters-*.yaml
 # ignoring preprocessing integration test folders
 test_preprocessing_*/
 test_train_*/
+# exclude user folders and files
+*user*/
+*user*
 # ignoring any test directory
 test-*/
 jobs/

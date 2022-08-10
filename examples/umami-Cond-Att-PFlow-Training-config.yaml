@@ -51,8 +51,6 @@ test_files:
         path: <path_palce_holder>/inclusive_testing_zpext_PFlow_r22.h5
         <<: *variable_cuts_zpext
 
-# Path to Variable dict used in preprocessing
-var_dict: <path_palce_holder>/umami/umami-git/umami/configs/Umami_Variables.yaml
 
 exclude: null
 

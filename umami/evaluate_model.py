@@ -585,7 +585,7 @@ if __name__ == "__main__":
         evaluate_trained_model = True  # pylint: disable=invalid-name
 
     preprocessing_config = (
-        PreprocessConfiguration(training_config.preprocess_config)
+        PreprocessConfiguration(training_config.preprocess_config.yaml_config)
         if evaluate_trained_model
         else training_config
     )

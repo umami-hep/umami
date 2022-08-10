@@ -4,7 +4,6 @@ import argparse
 import tensorflow as tf
 
 import umami.models as utm
-import umami.preprocessing_tools as upt
 import umami.train_tools as utt
 from umami.configuration import logger, set_log_level
 
@@ -69,7 +68,6 @@ if __name__ == "__main__":
 
     # Get the train and preprocess config
     train_config = utt.Configuration(args.config_file)
-    preprocess_config = upt.PreprocessConfiguration(train_config.preprocess_config)
 
     # Get the tagger which is to be trained from the train config
     tagger_name = train_config.NN_structure["tagger"]
@@ -79,7 +77,7 @@ if __name__ == "__main__":
         train_config_path=args.config_file,
         var_dict_path=train_config.var_dict,
         model_name=train_config.model_name,
-        preprocess_config_path=train_config.preprocess_config,
+        preprocess_config_path=train_config.preprocess_config.yaml_config,
         overwrite_config=bool(args.overwrite_config),
         model_file_path=train_config.model_file,
     )
@@ -91,35 +89,30 @@ if __name__ == "__main__":
             utm.Dips(
                 args=args,
                 train_config=train_config,
-                preprocess_config=preprocess_config,
             )
 
         elif tagger_name.casefold() == "dl1":
             utm.TrainLargeFile(
                 args=args,
                 train_config=train_config,
-                preprocess_config=preprocess_config,
             )
 
         elif tagger_name.casefold() == "umami":
             utm.umami_tagger(
                 args=args,
                 train_config=train_config,
-                preprocess_config=preprocess_config,
             )
 
         elif tagger_name.casefold() in ("cads", "dips_attention"):
             utm.cads_tagger(
                 args=args,
                 train_config=train_config,
-                preprocess_config=preprocess_config,
             )
 
         elif tagger_name == "umami_cond_att":
             utm.UmamiCondAtt(
                 args=args,
                 train_config=train_config,
-                preprocess_config=preprocess_config,
             )
 
         else:

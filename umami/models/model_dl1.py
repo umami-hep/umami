@@ -120,7 +120,7 @@ def create_dl1_model(
     return model, NN_structure["epochs"], init_epoch
 
 
-def TrainLargeFile(args, train_config, preprocess_config):
+def TrainLargeFile(args, train_config):
     """Training handling of DL1 tagger.
 
     Parameters
@@ -129,8 +129,6 @@ def TrainLargeFile(args, train_config, preprocess_config):
         Arguments from command line parser
     train_config : object
         training configuration
-    preprocess_config : object
-        preprocessing configuration
 
     Raises
     ------
@@ -279,7 +277,6 @@ def TrainLargeFile(args, train_config, preprocess_config):
     if n_jets_val > 0:
         val_data_dict = utt.load_validation_data_dl1(
             train_config=train_config,
-            preprocess_config=preprocess_config,
             n_jets=n_jets_val,
         )
 

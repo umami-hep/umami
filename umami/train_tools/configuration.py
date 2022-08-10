@@ -12,6 +12,7 @@ from umami.helper_tools import (
     get_class_label_variables,
 )
 from umami.plotting_tools.utils import translate_kwargs
+from umami.preprocessing_tools import PreprocessConfiguration
 from umami.tools import yaml_loader
 
 
@@ -100,7 +101,6 @@ class Configuration:
             "train_file",
             "validation_files",
             "test_files",
-            "var_dict",
             "NN_structure",
             "Validation_metrics_settings",
             "Eval_parameters_validation",
@@ -149,6 +149,10 @@ class Configuration:
             if item in self.config:
                 if item == "tracks_name":
                     setattr(self, "tracks_key", f"X_{self.config[item]}_train")
+                elif item == "preprocess_config":
+                    self.preprocess_config = PreprocessConfiguration(self.config[item])
+                    self.var_dict = self.preprocess_config.var_file
+                    continue
 
                 elif item == "NN_structure" and bool_evaluate_trained_model is True:
                     if (self.config["NN_structure"]["tagger"] == "dips_attention") and (
