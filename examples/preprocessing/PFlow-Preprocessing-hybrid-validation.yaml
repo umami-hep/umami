@@ -3,6 +3,20 @@
 <<: !include PFlow-Preprocessing.yaml
 
 # Defining yaml anchors to be used later, avoiding duplication
+.outlier_cuts: &outlier_cuts
+  - JetFitterSecondaryVertex_mass:
+      operator: <
+      condition: 25000
+      NaNcheck: True
+  - JetFitterSecondaryVertex_energy:
+      operator: <
+      condition: 1e8
+      NaNcheck: True
+  - JetFitter_deltaR:
+      operator: <
+      condition: 0.6
+      NaNcheck: True
+
 .cuts_template_ttbar_validation: &cuts_template_ttbar_validation
   cuts:
     - eventNumber:

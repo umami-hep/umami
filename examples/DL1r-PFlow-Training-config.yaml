@@ -1,6 +1,6 @@
 # Set modelname and path to Pflow preprocessing config file
 model_name: DL1r-PFlow_new-taggers-stats-22M
-preprocess_config: examples/PFlow-Preprocessing.yaml
+preprocess_config: examples/preprocessing/PFlow-Preprocessing.yaml
 
 # Add here a pretrained model to start with.
 # Leave empty for a fresh start
@@ -13,14 +13,14 @@ train_file: <path_palce_holder>/PFlow-hybrid-preprocessed_shuffled.h5
 .variable_cuts_ttbar: &variable_cuts_ttbar
     variable_cuts:
         - pt_btagJes:
-            operator: "<="
-            condition: 2.5e5
+              operator: "<="
+              condition: 2.5e5
 
 .variable_cuts_zpext: &variable_cuts_zpext
     variable_cuts:
         - pt_btagJes:
-            operator: ">"
-            condition: 2.5e5
+              operator: ">"
+              condition: 2.5e5
 
 # Add validation files
 validation_files:

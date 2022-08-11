@@ -6,7 +6,7 @@ After the ntuple production (training-dataset-dumper), the first step of the pre
 As already mentioned in the [overview](preprocessing/Overview.md), the preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
 
 ```yaml
-§§§examples/PFlow-Preprocessing.yaml:259:270§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:211:221§§§
 ```
 
 | Setting | Type | Explanation |
@@ -16,10 +16,10 @@ As already mentioned in the [overview](preprocessing/Overview.md), the preproces
 | `var_file` | `str` | Path to the variable dict which is used. Default configs can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tree/master/umami/configs) |
 | `dict_file` | `str` | Full path (with filename) to the scale dict. This must be a `.json` file! |
 
-The `var_dict` and `dict_file` options are normally set in the [`Preprocessing-parameters.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml) file. A snapshot of these two variables is shown here:
+The `var_dict` and `dict_file` options are normally set in the [`Preprocessing-parameters.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/Preprocessing-parameters.yaml) file. A snapshot of these two variables is shown here:
 
 ```yaml
-§§§examples/Preprocessing-parameters.yaml:20:24§§§
+§§§examples/preprocessing/Preprocessing-parameters.yaml:20:24§§§
 ```
 
 For the preparation step, we also need the some more parts of the preprocessing config, which are described in the following sections.
@@ -29,10 +29,10 @@ For the preparation step, we also need the some more parts of the preprocessing 
 parameters: !include Preprocessing-parameters.yaml
 ```
 
-This line specifies where the ntuples (which are used) are stored and where to save the output of the preprocessing. You can find an example file [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). In the following the options from the `Preprocessing-parameters.yaml`, which are needed for the preparation step, will be explained:
+This line specifies where the ntuples (which are used) are stored and where to save the output of the preprocessing. You can find an example file [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/Preprocessing-parameters.yaml). In the following the options from the `Preprocessing-parameters.yaml`, which are needed for the preparation step, will be explained:
 
 ```yaml
-§§§examples/Preprocessing-parameters.yaml:1:11§§§
+§§§examples/preprocessing/Preprocessing-parameters.yaml:1:11§§§
 ```
 
 | Setting | Type | Explanation |
@@ -42,7 +42,12 @@ This line specifies where the ntuples (which are used) are stored and where to s
 
 #### Cut Templates
 ```yaml
-§§§examples/PFlow-Preprocessing.yaml:3:52§§§
+cut_parameters: !include Preprocessing-cut_parameters.yaml
+```
+This line includes the cut parameter file `Preprocessing-cut_parameters.yaml`
+
+```yaml
+§§§examples/preprocessing/Preprocessing-cut_parameters.yaml§§§
 ```
 
 The cuts defined in this section are templates for the cuts of the different flavour for $t\bar{t}$/$Z'$. `ttbar_train` and `zprime_train` are the jets which are used for training while validation/test are the templates for validation and test.
@@ -67,7 +72,7 @@ Another cut which can be applied is the `pt_btagJes`, which is a cut on the jet 
 
 #### File- and Flavour Preparation
 ```yaml
-§§§examples/PFlow-Preprocessing.yaml:54:66§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:5:17§§§
 ```
 In the `Preparation` section, different options need to be set and files/flavours defined. The options that need to be set are given in the following table:
 
@@ -81,7 +86,7 @@ In the `Preparation` section, different options need to be set and files/flavour
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
 
 ```yaml
-§§§examples/PFlow-Preprocessing.yaml:68:177§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:19:128§§§
 ```
 
 The last part is the exact splitting of the flavours. In `samples`, you define for each of $t\bar{t}$/$Z'$ and training/validation/testing the flavours you want to use.

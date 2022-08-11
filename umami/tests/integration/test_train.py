@@ -94,43 +94,38 @@ def prepareConfig(
             var_file = var_file_from
 
         # config files, will be copied to test dir
-        preprocessing_config_source = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/",
-            os.path.basename(data["test_preprocessing"]["config"]),
+        test_dir = Path(test_dir)
+        preprocess_dir = Path(f"./test_preprocessing_{preprocess_files}/")
+        preprocessing_config_source = preprocess_dir / os.path.basename(
+            data["test_preprocessing"]["config"]
         )
-        preprocessing_config_paths_source = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/",
-            os.path.basename(data["test_preprocessing"]["config_paths"]),
+        preprocessing_config_paths_source = preprocess_dir / os.path.basename(
+            data["test_preprocessing"]["config_paths"]
         )
-        preprocessing_config = os.path.join(
-            test_dir, os.path.basename(preprocessing_config_source)
-        )
-        preprocessing_config_paths = os.path.join(
-            test_dir, os.path.basename(preprocessing_config_paths_source)
-        )
+        preprocessing_config = test_dir / preprocessing_config_source.name
+        preprocessing_config_paths = test_dir / preprocessing_config_paths_source.name
 
-        var_dict_source = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/",
-            os.path.basename(data["test_preprocessing"][f"var_dict_{var_file}"]),
+        var_dict_source = preprocess_dir / os.path.basename(
+            data["test_preprocessing"][f"var_dict_{var_file}"]
         )
-        var_dict = os.path.join(test_dir, os.path.basename(var_dict_source))
+        var_dict = test_dir / var_dict_source.name
 
         # input files, will be downloaded to test dir
         logger.info("Retrieving files from preprocessing...")
 
-        train_file = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/",
-            "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5",
+        train_file = (
+            preprocess_dir / "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5"
         )
-        scale_dict = os.path.join(
-            f"./test_preprocessing_{preprocess_files}/",
-            "PFlow-scale_dict.json",
-        )
+        scale_dict = preprocess_dir / "PFlow-scale_dict.json"
 
         # Copy preprocess configs and var dict
         copyfile(preprocessing_config_source, preprocessing_config)
         copyfile(preprocessing_config_paths_source, preprocessing_config_paths)
         copyfile(var_dict_source, var_dict)
+
+        for elem in data["test_preprocessing"]["add_configs"]:
+            name_elem = Path(elem).name
+            copyfile(preprocess_dir / name_elem, test_dir / name_elem)
 
         # modify copy of preprocessing config file for test
         replace_line_in_file(
@@ -142,6 +137,11 @@ def prepareConfig(
             preprocessing_config_paths,
             ".dict_file:",
             f".dict_file: &dict_file {scale_dict}",
+        )
+        replace_line_in_file(
+            preprocessing_config_paths,
+            ".var_file:",
+            f".var_file: &var_file {test_dir}/{var_dict_source.name}",
         )
 
     # Get the train config file and copy it to test dir

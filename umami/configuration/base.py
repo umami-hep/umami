@@ -22,7 +22,7 @@ class Configuration:
             if `yaml_config` does not exist as file
         """
         super().__init__()
-        self.YAML = YAML(typ="safe", pure=True)
+        self.yaml = YAML(typ="safe", pure=True)
         self.yaml_config = Path(yaml_config)
         if not self.yaml_config.exists():
             raise ValueError(
@@ -46,9 +46,6 @@ class Configuration:
 
     def load_config_file(self) -> None:
         """Load config file from disk."""
-        with open(self.yaml_default_config, "r") as conf:
-            self.default_config = self.YAML.load(conf)
+        self.default_config = self.yaml.load(Path(self.yaml_default_config))
         logger.info("Using config file %s", self.yaml_config)
-
-        with open(self.yaml_config, "r") as conf:
-            self.config = self.YAML.load(conf)
+        self.config = self.yaml.load(self.yaml_config)

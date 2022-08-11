@@ -2,8 +2,7 @@
 import copy
 import os
 import shutil
-
-import yaml
+from pathlib import Path
 
 from umami.configuration import Configuration, logger
 
@@ -44,8 +43,9 @@ class PreprocessConfiguration(Configuration):
             Path to yaml config file.
         """
         super().__init__(yaml_config)
-        self.yaml_default_config = os.path.join(
-            os.path.dirname(__file__), "configs/preprocessing_default_config.yaml"
+        self.yaml_default_config = (
+            Path(os.path.dirname(__file__))
+            / "configs/preprocessing_default_config.yaml"
         )
         self.load_config_file()
         self.get_configuration()
@@ -224,7 +224,7 @@ class PreprocessConfiguration(Configuration):
                 self.sampling["options"]["tracks_names"]
             ]
 
-    def copy_to_out_dir(self, suffix: str) -> None:
+    def copy_to_out_dir(self, suffix: str, out_dir: str = None) -> None:
         """
         Write the current config object to a new file, in the output dir
         of the current preprocessing job
@@ -233,47 +233,56 @@ class PreprocessConfiguration(Configuration):
         ----------
         suffix : str
             Append this string to the copied config file name
+        out_dir : str
+            Output directory to which the files are copied.
         """
-
-        # get output directory of this preprocessing job
-        out_dir = os.path.dirname(self.config["parameters"]["file_path"])
-
-        # don't run during tests
-        if out_dir == ".":
-            return
-
-        # go up one level
-        if os.path.basename(out_dir) == "preprocessed":
-            out_dir = os.path.dirname(out_dir)
+        if out_dir is None:
+            # don't run during tests
+            if self.config["parameters"]["file_path"] == ".":
+                return
+            # get output directory of this preprocessing job and go up one level
+            out_dir = Path(self.config["parameters"]["file_path"]).parent
+        else:
+            out_dir = Path(out_dir)
+        # make output directory
+        out_dir.mkdir(parents=True, exist_ok=True)
 
         # deepcopy current config dict
         config = copy.deepcopy(self.config)
 
         # get path for copy of current conifg
-        root, ext = os.path.splitext(os.path.basename(self.yaml_config))
-        if suffix not in root:
-            new_config_fname = root + "_" + suffix + ext
-        else:
-            new_config_fname = root + ext
-        new_config_path = os.path.join(out_dir, new_config_fname)
+        suffix = f"_{suffix}" if suffix not in self.yaml_config.stem else ""
+        new_config_path = Path(out_dir) / (
+            self.yaml_config.stem + suffix + self.yaml_config.suffix
+        )
 
         # get new var dict path and update copied config
-        new_var_dict_path = os.path.join(out_dir, os.path.basename(self.var_file))
-        config["parameters"]["var_file"] = new_var_dict_path
+        new_var_dict_path = out_dir / Path(self.var_file).name
+        config["var_file"] = str(new_var_dict_path.resolve())
+        config["parameters"]["var_file"] = str(new_var_dict_path.resolve())
 
-        # make output dir
-        os.makedirs(os.path.dirname(new_config_path), exist_ok=True)
+        # if scale dict file exists, copy it as well
+        if Path(self.dict_file).is_file():
+            logger.info("Scale dict exists and will be copied.")
+            new_scale_dict_path = out_dir / Path(self.dict_file).name
+            config["dict_file"] = str(new_scale_dict_path.resolve())
+            config["parameters"][".dict_file"] = str(new_scale_dict_path.resolve())
+            logger.info("Copying config file to %s", new_scale_dict_path)
+            if new_scale_dict_path.is_file():
+                logger.warning(
+                    "Overwriting existing scale dict at %s", new_scale_dict_path
+                )
+            shutil.copyfile(self.dict_file, new_scale_dict_path)
 
         # copy config
         logger.info("Copying config file to %s", new_config_path)
-        if os.path.exists(new_config_path):
+        if new_config_path.is_file():
             logger.warning("Overwriting existing config at %s", new_config_path)
-        with open(new_config_path, "w") as f:
-            yaml.dump(config, f)
+        self.yaml.dump(config, new_config_path)
 
         # copy var dict
         logger.info("Copying variable dict to %s", new_config_path)
-        if os.path.exists(new_var_dict_path):
+        if new_var_dict_path.is_file():
             logger.warning(
                 "Overwriting existing variable dict at %s", new_var_dict_path
             )
