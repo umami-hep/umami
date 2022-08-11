@@ -241,12 +241,16 @@ class create_metadata_folder_TestCase(unittest.TestCase):
             self.train_config_path,
         )
         copyfile(
-            Path("examples/PFlow-Preprocessing.yaml"),
+            Path("examples/preprocessing/PFlow-Preprocessing.yaml"),
             self.preprocess_config,
         )
         copyfile(
-            Path("examples/Preprocessing-parameters.yaml"),
+            Path("examples/preprocessing/Preprocessing-parameters.yaml"),
             self.preprocess_config_include,
+        )
+        copyfile(
+            Path("examples/preprocessing/Preprocessing-cut_parameters.yaml"),
+            Path(self.tmp_test_dir) / "Preprocessing-cut_parameters.yaml",
         )
 
         replace_line_in_file(

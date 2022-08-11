@@ -243,6 +243,9 @@ def create_metadata_folder(
     Create a metadata folder in the new model_name dir and
     copy all configs there and change the paths inside the
     configs to the new metadata directory path.
+    The following configs are copied:
+    preprocessing config, variable dict, scale dict, training config and
+    model_file
 
     Parameters
     ----------
@@ -263,100 +266,54 @@ def create_metadata_folder(
 
     # Check if model path already existing
     # If not, make it
-    os.makedirs(os.path.join(model_name, "metadata"), exist_ok=True)
+    meta_data_folder = Path(model_name) / "metadata"
+    logger.info("Creating meta data folder %s", meta_data_folder)
+    meta_data_folder.mkdir(parents=True, exist_ok=True)
 
     # Create directory for models
-    os.makedirs(os.path.join(model_name, "model_files"), exist_ok=True)
+    model_files_folder = Path(model_name) / "model_files"
+    logger.info("Creating models folder %s", model_files_folder)
+    model_files_folder.mkdir(parents=True, exist_ok=True)
 
-    # Get scale dict
+    # Get scale dict and copy it to metadata
     preprocess_config = PreprocessConfiguration(preprocess_config_path)
-    scale_dict_path = preprocess_config.dict_file
-    preprocess_parameters_path = preprocess_config.parameter_config_path
+    metadata_preprocess_config_path = (
+        meta_data_folder / preprocess_config.yaml_config.name
+    )
+    if (overwrite_config is True) or not metadata_preprocess_config_path.is_file():
+        preprocess_config.copy_to_out_dir(suffix="", out_dir=meta_data_folder)
 
     # Copy files to metadata folder if not existing
     for file_path in [
         train_config_path,
-        preprocess_config_path,
         var_dict_path,
-        scale_dict_path,
-        preprocess_parameters_path,
         model_file_path,
     ]:
         if file_path is None:
             continue
-        if (overwrite_config is True) or not os.path.isfile(
-            os.path.join(model_name, "metadata", os.path.basename(file_path))
-        ):
-            logger.info("Copy %s to metadata folder!", file_path)
-            copyfile(
-                file_path,
-                os.path.join(model_name, "metadata", os.path.basename(file_path)),
+        new_file_path = meta_data_folder / Path(file_path).name
+        if (overwrite_config is False) and new_file_path.is_file():
+            continue
+        logger.info("Copy %s to metadata folder!", file_path)
+        copyfile(file_path, new_file_path)
+
+        # Change the paths for the preprocess config and var dict in the
+        # train_config
+        if file_path == train_config_path:
+
+            replace_line_in_file(
+                new_file_path,
+                "preprocess_config:",
+                f"preprocess_config: {metadata_preprocess_config_path}",
             )
 
-            # Change the paths for the preprocess config and var dict in the
-            # train_config
-            if file_path == train_config_path:
-                metadata_preprocess_config_path = os.path.join(
-                    os.getcwd(),
-                    model_name,
-                    "metadata",
-                    os.path.basename(preprocess_config_path),
-                )
-
-                metadata_var_dict_path = os.path.join(
-                    os.getcwd(),
-                    model_name,
-                    "metadata",
-                    os.path.basename(var_dict_path),
-                )
+            if model_file_path:
+                metadata_model_file_path = meta_data_folder / Path(model_file_path).name
 
                 replace_line_in_file(
-                    os.path.join(model_name, "metadata", os.path.basename(file_path)),
-                    "preprocess_config:",
-                    f"preprocess_config: {metadata_preprocess_config_path}",
-                )
-
-                if model_file_path:
-                    metadata_model_file_path = os.path.join(
-                        os.getcwd(),
-                        model_name,
-                        "metadata",
-                        os.path.basename(model_file_path),
-                    )
-
-                    replace_line_in_file(
-                        os.path.join(
-                            model_name, "metadata", os.path.basename(file_path)
-                        ),
-                        "model_file:",
-                        f"model_file: {metadata_model_file_path}",
-                    )
-
-            elif file_path == preprocess_parameters_path:
-                metadata_scale_dict_path = os.path.join(
-                    os.getcwd(),
-                    model_name,
-                    "metadata",
-                    os.path.basename(scale_dict_path),
-                )
-
-                metadata_var_dict_path = os.path.join(
-                    os.getcwd(),
-                    model_name,
-                    "metadata",
-                    os.path.basename(var_dict_path),
-                )
-
-                replace_line_in_file(
-                    os.path.join(model_name, "metadata", os.path.basename(file_path)),
-                    ".dict_file: &dict_file",
-                    f".dict_file: &dict_file {metadata_scale_dict_path}",
-                )
-
-                replace_line_in_file(
-                    os.path.join(model_name, "metadata", os.path.basename(file_path)),
-                    ".var_file: &var_file",
-                    f".var_file: &var_file {metadata_var_dict_path}",
+                    new_file_path,
+                    "model_file:",
+                    f"model_file: {metadata_model_file_path}",
                 )
 
 

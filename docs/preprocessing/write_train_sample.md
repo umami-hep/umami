@@ -15,7 +15,7 @@ In the final training file, the column information (and therefore which column c
 For the final writing step, only a few options are needed. Those are shown/explained below
 
 ```yaml
-§§§examples/PFlow-Preprocessing.yaml:272:281§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:223:232§§§
 ```
 
 | Setting | Explanation |

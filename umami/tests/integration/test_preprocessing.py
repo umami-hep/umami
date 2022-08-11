@@ -274,7 +274,7 @@ def runPreprocessing(
         param_content = ""
         with open(copy_path / "Preprocessing-parameters.yaml", "r") as par_conf:
             for line in par_conf:
-                if test_dir in line:
+                if str(test_dir) in line:
                     line = line.replace(str(test_dir), str(copy_path))
                 param_content += line
         with open(copy_path / "Preprocessing-parameters.yaml", "w") as par_conf:
@@ -322,54 +322,34 @@ class TestPreprocessing(unittest.TestCase):
         preprocessing config file.
         """
         # Get test configuration
-        self.data = get_configuration()
+        data = get_configuration()
+        data_url = data["data_url"]
+        data = data["test_preprocessing"]
 
         self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
-        self.test_dir = f"{self.tmp_dir.name}"
+        self.test_dir = Path(self.tmp_dir.name)
         logger.info("Creating test directory in %s", self.test_dir)
 
         # Make filepaths for basefiles
-        run(["mkdir", "-p", os.path.join(self.test_dir, "ttbar")], check=True)
-        run(["mkdir", "-p", os.path.join(self.test_dir, "zpext")], check=True)
+        run(["mkdir", "-p", Path(self.test_dir) / "ttbar"], check=True)
+        run(["mkdir", "-p", Path(self.test_dir) / "zpext"], check=True)
 
         # inputs for test will be located in test_dir
-        config_source = os.path.join(
-            os.getcwd(), self.data["test_preprocessing"]["config"]
-        )
-        config_paths_source = os.path.join(
-            os.getcwd(), self.data["test_preprocessing"]["config_paths"]
-        )
-        var_dict_umami_source = os.path.join(
-            os.getcwd(), self.data["test_preprocessing"]["var_dict_umami"]
-        )
-        var_dict_dips_source = os.path.join(
-            os.getcwd(), self.data["test_preprocessing"]["var_dict_dips"]
-        )
-        var_dict_dl1r_source = os.path.join(
-            os.getcwd(), self.data["test_preprocessing"]["var_dict_dl1r"]
-        )
-        var_dict_dips_hits_source = os.path.join(
-            os.getcwd(), self.data["test_preprocessing"]["var_dict_dips_hits"]
-        )
-        self.config = os.path.join(self.test_dir, os.path.basename(config_source))
-        self.config_paths = os.path.join(
-            self.test_dir, os.path.basename(config_paths_source)
-        )
-        self.var_dict_umami = os.path.join(
-            self.test_dir, os.path.basename(var_dict_umami_source)
-        )
-        self.var_dict_dips = os.path.join(
-            self.test_dir, os.path.basename(var_dict_dips_source)
-        )
-        self.var_dict_dl1r = os.path.join(
-            self.test_dir, os.path.basename(var_dict_dl1r_source)
-        )
-        self.var_dict_dips_hits = os.path.join(
-            self.test_dir, os.path.basename(var_dict_dips_hits_source)
-        )
-        self.scale_dict = os.path.join(self.test_dir, "PFlow-scale_dict.json")
-        self.output = os.path.join(self.test_dir, "PFlow-hybrid_70-test.h5")
-        self.indices = os.path.join(self.test_dir, "indices.h5")
+        config_source = Path(data["config"])
+        config_paths_source = Path(data["config_paths"])
+        var_dict_umami_source = Path(data["var_dict_umami"])
+        var_dict_dips_source = Path(data["var_dict_dips"])
+        var_dict_dl1r_source = Path(data["var_dict_dl1r"])
+        var_dict_dips_hits_source = Path(data["var_dict_dips_hits"])
+        self.config = self.test_dir / os.path.basename(config_source)
+        self.config_paths = self.test_dir / config_paths_source.name
+        self.var_dict_umami = self.test_dir / var_dict_umami_source.name
+        self.var_dict_dips = self.test_dir / var_dict_dips_source.name
+        self.var_dict_dl1r = self.test_dir / var_dict_dl1r_source.name
+        self.var_dict_dips_hits = self.test_dir / var_dict_dips_hits_source.name
+        self.scale_dict = self.test_dir / "PFlow-scale_dict.json"
+        self.output = self.test_dir / "PFlow-hybrid_70-test.h5"
+        self.indices = self.test_dir / "indices.h5"
 
         logger.info(
             "Preparing config file based on %s in %s ...", config_source, self.config
@@ -380,6 +360,10 @@ class TestPreprocessing(unittest.TestCase):
         copyfile(var_dict_dips_source, self.var_dict_dips)
         copyfile(var_dict_dl1r_source, self.var_dict_dl1r)
         copyfile(var_dict_dips_hits_source, self.var_dict_dips_hits)
+
+        for elem in data["add_configs"]:
+            path_elem = Path(elem)
+            copyfile(path_elem, self.test_dir / path_elem.name)
 
         # modify copy of preprocessing config file for test
         replace_line_in_file(
@@ -439,7 +423,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         # copy config file and change name to pdf for pdf preprocessing config
-        self.pdf_config = self.config[:].replace(".yaml", "") + "_pdf.yaml"
+        self.pdf_config = str(self.config)[:].replace(".yaml", "") + "_pdf.yaml"
         copyfile(self.config, self.pdf_config)
 
         # Change the method to pdf and adapt options
@@ -481,7 +465,9 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         # copy config file and change name to pdf for pdf preprocessing config
-        self.weight_config = self.config[:].replace(".yaml", "") + "_weighting.yaml"
+        self.weight_config = (
+            str(self.config)[:].replace(".yaml", "") + "_weighting.yaml"
+        )
         copyfile(self.config, self.weight_config)
 
         replace_line_in_file(
@@ -499,7 +485,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.importance_no_replace_config = (
-            self.config[:].replace(".yaml", "") + "_importance_no_replace.yaml"
+            str(self.config)[:].replace(".yaml", "") + "_importance_no_replace.yaml"
         )
         copyfile(self.config, self.importance_no_replace_config)
 
@@ -560,7 +546,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         # copy config file and change name to hits for hit preprocessing test
-        self.hits_config = self.config[:].replace(".yaml", "") + "_hits.yaml"
+        self.hits_config = str(self.config)[:].replace(".yaml", "") + "_hits.yaml"
         copyfile(self.config, self.hits_config)
 
         replace_line_in_file(
@@ -615,10 +601,10 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         logger.info("Downloading test data...")
-        for file in self.data["test_preprocessing"]["files"]:
+        for file in data["files"]:
             path = os.path.join(
-                self.data["data_url"],
-                self.data["test_preprocessing"]["data_subfolder"],
+                data_url,
+                data["data_subfolder"],
                 file,
             )
             logger.info("Retrieving file from path %s", path)

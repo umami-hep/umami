@@ -14,7 +14,7 @@ The `Weighting Sampling` is not a real resampling, in the same sense as the othe
 The resampling part of the config file starts with the `sampling:` dict.
 
 ```yaml
-§§§examples/PFlow-Preprocessing.yaml:179:185§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:130:136§§§
 ```
 
 In `sampling`, we can define now the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf`, `importance_no_replace` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
@@ -24,7 +24,7 @@ An important part are the `class_labels` which are defined here. You can define 
 For an explanation of the resampling function specific `options`, have a look in the section of the resampling method you want to use. The general `options` are explained in the following:
 
 ```yaml
-§§§examples/PFlow-Preprocessing.yaml:220:251§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:172:208§§§
 ```
 
 | Setting | Type | Explanation |
@@ -35,7 +35,7 @@ For an explanation of the resampling function specific `options`, have a look in
 | `tracks_names` | `list` of `str` | Name of the tracks (in the .h5 files coming from the dumper) which are processed. Multiple tracks datasets can be preprocessed simultaneously when two `str` are given in the list. |
 | `save_track_labels` | `bool` | If this value is `True`, the track variables in `track_truth_variables` will be processed as labels without scaling. The will be saved in an extra group in the final training file. The name will be `Y_<track_name>_train`. `<track_name>` is here the name of the track collection. |
 | `track_truth_variables` | `str` or `list` | Track variables that will be handled as truth labels. Multiple can be given in a `list` of `str` or just one in a single string. |
-| `intermediate_index_file` | `str` | For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/Preprocessing-parameters.yaml). |
+| `intermediate_index_file` | `str` | For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/Preprocessing-parameters.yaml). |
 | `n_jets_scaling` | `int` | Number of jets which are used to calculate scaling and shifting values. If `null` is given, all jets in file are used. |
 | `n_jets_to_plot` | `int` | Number of jets which are used for plotting the variables of the jets/tracks after each preprocessing step (resampling, scaling, shuffling/writing). If `null` is given, the plotting is skipped. |
 
@@ -47,7 +47,7 @@ For an explanation of the resampling function specific `options`, have a look in
 Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used.
 
 ```yaml
-§§§examples/PFlow-Preprocessing.yaml:188:218§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:139:169§§§
 ```
 
 | Setting | Type | Explanation |
@@ -58,7 +58,7 @@ Standard undersampling approach. Undersamples all flavours to the statistically 
 
 ### Importance Sampling With Replacement (PDF Sampling)
 
-The PDF sampling method is based on the principles of importance sampling. If your sample's statistics are small and/or your lowest distribution is other than the target distribution (in case of b-tagging, this is the b-jet distribution), you can force the b-jet distribution shape on the other jet flavour distributions. This will ensure all the distributions have the target distribution shape and the same fractions for the two given resampling variables. To enforce the same shape and number of jets per $p_T$ and $\eta$ bin, the statistically higher flavours are undersampled and the statistically lower flavours are upsampled to the target flavour. An example for the reprocessing config file which uses the pdf sampling can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-taus.yaml). In this case, four different flavours are used.
+The PDF sampling method is based on the principles of importance sampling. If your sample's statistics are small and/or your lowest distribution is other than the target distribution (in case of b-tagging, this is the b-jet distribution), you can force the b-jet distribution shape on the other jet flavour distributions. This will ensure all the distributions have the target distribution shape and the same fractions for the two given resampling variables. To enforce the same shape and number of jets per $p_T$ and $\eta$ bin, the statistically higher flavours are undersampled and the statistically lower flavours are upsampled to the target flavour. An example for the reprocessing config file which uses the pdf sampling can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/PFlow-Preprocessing-taus.yaml). In this case, four different flavours are used.
 
 The options for the pdf method seems quite similar to the ones from the `count` method. But there are some important differences!
 First are the bins for the two resampling variables. You need to define a nested list with the regions for both sample categories ($t\bar{t}$ and $Z'$). Even if they are the same!
@@ -241,7 +241,7 @@ preprocessing.py --config <path to config file> --resampling
 
 #### Hybrid validation and testing resampling
 
-To create hybrid `ttbar` and `zprime` validation samples that are also resampled like the training samples see the following file for a full example: [`examples/PFlow-Preprocessing-hybrid-validation.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/PFlow-Preprocessing-hybrid-validation.yaml).
+To create hybrid `ttbar` and `zprime` validation samples that are also resampled like the training samples see the following file for a full example: [`examples/preprocessing/PFlow-Preprocessing-hybrid-validation.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/PFlow-Preprocessing-hybrid-validation.yaml).
 
 ???+ warning "Do not use for creating training samples"
 
@@ -251,7 +251,7 @@ Then you can just do:
 
 ```bash
 # prepare, apply cuts and split all flavours
-preprocessing.py --config examples/PFlow-Preprocessing-hybrid-validation.yaml --prepare
+preprocessing.py --config examples/preprocessing/PFlow-Preprocessing-hybrid-validation.yaml --prepare
 # resample and recombine
-preprocessing.py --config examples/PFlow-Preprocessing-hybrid-validation.yaml --resampling
+preprocessing.py --config examples/preprocessing/PFlow-Preprocessing-hybrid-validation.yaml --resampling
 ```
