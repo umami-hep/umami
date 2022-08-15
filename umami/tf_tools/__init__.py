@@ -21,4 +21,4 @@ from umami.tf_tools.layers import (
 )
 from umami.tf_tools.load_tfrecord import TFRecordReader, load_tfrecords_train_dataset
 from umami.tf_tools.models import Deepsets_model, Deepsets_model_umami, prepare_model
-from umami.tf_tools.tools import GetLRReducer
+from umami.tf_tools.tools import get_learning_rate_reducer

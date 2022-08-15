@@ -131,7 +131,7 @@ def create_dips_model(
     return dips, NN_structure["epochs"], init_epoch
 
 
-def Dips(args, train_config):
+def train_dips(args, train_config):
     """Training handling of DIPS tagger.
 
     Parameters
@@ -251,7 +251,7 @@ def Dips(args, train_config):
 
     if "LRR" in nn_structure and nn_structure["LRR"] is True:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.GetLRReducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -259,7 +259,7 @@ def Dips(args, train_config):
     # Load validation data for callback
     val_data_dict = None
     if n_jets_val > 0:
-        val_data_dict = utt.load_validation_data_dips(
+        val_data_dict = utt.load_validation_data(
             train_config=train_config,
             n_jets=n_jets_val,
             convert_to_tensor=True,

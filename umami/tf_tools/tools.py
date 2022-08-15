@@ -2,7 +2,7 @@
 from tensorflow.keras.callbacks import ReduceLROnPlateau  # pylint: disable=import-error
 
 
-def GetLRReducer(
+def get_learning_rate_reducer(
     LRR_monitor: str = "loss",
     LRR_factor: float = 0.8,
     LRR_patience: int = 3,

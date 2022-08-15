@@ -93,7 +93,7 @@ def create_umami_cond_att_model(
     return umami, NN_structure["epochs"], init_epoch
 
 
-def UmamiCondAtt(args, train_config):
+def train_umami_cond_att(args, train_config):
     """Training handling of UMAMI with conditional attention tagger.
 
     Parameters
@@ -257,7 +257,7 @@ def UmamiCondAtt(args, train_config):
 
     if "LRR" in nn_structure and nn_structure["LRR"] is True:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.GetLRReducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -265,7 +265,7 @@ def UmamiCondAtt(args, train_config):
     # Load validation data for callback
     val_data_dict = None
     if n_jets_val > 0:
-        val_data_dict = utt.load_validation_data_umami(
+        val_data_dict = utt.load_validation_data(
             train_config=train_config,
             n_jets=n_jets_val,
             convert_to_tensor=True,

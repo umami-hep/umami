@@ -17,8 +17,6 @@ from umami.train_tools.NN_tools import (
     get_test_file,
     get_test_sample,
     get_test_sample_trks,
-    load_validation_data_dips,
-    load_validation_data_dl1,
-    load_validation_data_umami,
+    load_validation_data,
     setup_output_directory,
 )

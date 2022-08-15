@@ -86,31 +86,31 @@ if __name__ == "__main__":
         # Check for DIPS
         # TODO: Switch to case syntax with python 3.10
         if tagger_name.casefold() == "dips":
-            utm.Dips(
+            utm.train_dips(
                 args=args,
                 train_config=train_config,
             )
 
         elif tagger_name.casefold() == "dl1":
-            utm.TrainLargeFile(
+            utm.train_dl1(
                 args=args,
                 train_config=train_config,
             )
 
         elif tagger_name.casefold() == "umami":
-            utm.umami_tagger(
+            utm.train_umami(
                 args=args,
                 train_config=train_config,
             )
 
         elif tagger_name.casefold() in ("cads", "dips_attention"):
-            utm.cads_tagger(
+            utm.train_cads(
                 args=args,
                 train_config=train_config,
             )
 
         elif tagger_name == "umami_cond_att":
-            utm.UmamiCondAtt(
+            utm.train_umami_cond_att(
                 args=args,
                 train_config=train_config,
             )
