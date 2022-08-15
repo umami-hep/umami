@@ -2,7 +2,7 @@
 Although the UMAMI framework is made to evaluate and plot the results of the trainings of the taggers that are living inside of it, the framework can also evaluate and plot taggers that are already present in the files coming from the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper).
 The tagger results come from LWTNN models which are used to evaluate the jets in the derivations. The training-dataset-dumper applies these taggers and dumps the output probabilities for the different classes in the output .h5 files. These probabilities can be read by the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py) script and can be evaluated like a freshly trained model.
 
-To evaluate only the output files, there is a specific config file in the examples, which is called [evaluate_comp_taggers.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/evaluate_comp_taggers.yaml).
+To evaluate only the output files, there is a specific config file in the examples, which is called [evaluate_comp_taggers.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/training/evaluate_comp_taggers.yaml).
 These can look for example like this:
 
 ```yaml
@@ -98,7 +98,7 @@ Eval_parameters_validation:
 To run the evaluation, you can now execute the following command in the `umami/umami` folder where the `evaluate_model.py` is:
 
 ```bash
-evaluate_model.py -c ../examples/evaluate_comp_taggers.yaml
+evaluate_model.py -c ../examples/training/evaluate_comp_taggers.yaml
 ```
 
 The `evaluate_model.py` will now output a results file which has the results of your defined taggers inside. You can now use it like a regular one with a freshly trained model inside. An explanation how to plot the results is given in the [plotting_umami](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/docs/plotting_umami.md) documentation.

@@ -237,7 +237,7 @@ class create_metadata_folder_TestCase(unittest.TestCase):
         self.model_file_path.touch()
 
         copyfile(
-            Path("examples/Dips-PFlow-Training-config.yaml"),
+            Path("examples/training/Dips-PFlow-Training-config.yaml"),
             self.train_config_path,
         )
         copyfile(

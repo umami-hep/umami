@@ -1,54 +1,54 @@
 # Set modelname and path to Pflow preprocessing config file
-model_name: dips_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
-preprocess_config: <path_place_holder>/umami/examples/preprocessing/PFlow-Preprocessing.yaml
+model_name: umami_dev
+preprocess_config: <path_palce_holder>/PFlow-Preprocessing-DESY.yaml
 
 # Add here a pretrained model to start with.
 # Leave empty for a fresh start
 model_file:
 
 # Add training file
-train_file: <path_place_holder>/PFlow-hybrid-preprocessed_shuffled.h5
+train_file: <path_palce_holder>/PFlow-hybrid_70-test-preprocessed_shuffled.h5
 
 # Defining templates for the variable cuts
 .variable_cuts_ttbar: &variable_cuts_ttbar
     variable_cuts:
         - pt_btagJes:
-              operator: "<="
-              condition: 2.5e5
+            operator: "<="
+            condition: 2.5e5
 
 .variable_cuts_zpext: &variable_cuts_zpext
     variable_cuts:
         - pt_btagJes:
-              operator: ">"
-              condition: 2.5e5
+            operator: ">"
+            condition: 2.5e5
 
 # Add validation files
 validation_files:
     ttbar_r21_val:
-        path: <path_place_holder>/inclusive_validation_ttbar_PFlow.h5
+        path: <path_palce_holder>/inclusive_validation_ttbar_PFlow.h5
         label: "$t\\bar{t}$ Release 21"
         <<: *variable_cuts_ttbar
 
     zprime_r21_val:
-        path: <path_place_holder>/inclusive_validation_zprime_PFlow.h5
+        path: <path_palce_holder>/inclusive_validation_zprime_PFlow.h5
         label: "$Z'$ Release 21"
         <<: *variable_cuts_zpext
 
 test_files:
     ttbar_r21:
-        path: <path_place_holder>/inclusive_testing_ttbar_PFlow.h5
+        path: <path_palce_holder>/inclusive_testing_ttbar_PFlow.h5
         <<: *variable_cuts_ttbar
 
     ttbar_r22:
-        path: <path_place_holder>/inclusive_testing_ttbar_PFlow_r22.h5
+        path: <path_palce_holder>/inclusive_testing_ttbar_PFlow_r22.h5
         <<: *variable_cuts_ttbar
 
     zpext_r21:
-        path: <path_place_holder>/inclusive_testing_zprime_PFlow.h5
+        path: <path_palce_holder>/inclusive_testing_zprime_PFlow.h5
         <<: *variable_cuts_zpext
 
     zpext_r22:
-        path: <path_place_holder>/inclusive_testing_zpext_PFlow_r22.h5
+        path: <path_palce_holder>/inclusive_testing_zpext_PFlow_r22.h5
         <<: *variable_cuts_zpext
 
 
@@ -57,22 +57,40 @@ exclude: null
 # Tracks dataset name
 tracks_name: "tracks"
 
-# Values for the neural network
+# number of files to be loaded in parallel when using TF Records as input files
+nfiles: 5
+
 NN_structure:
     # Decide, which tagger is used
-    tagger: "dips"
+    tagger: "umami"
 
     # NN Training parameters
-    lr: 0.001
-    batch_size: 15000
+    lr: 0.01
+    batch_size: 5000
     epochs: 200
 
     # Number of jets used for training
     # To use all: Fill nothing
     n_jets_train:
 
-    # Dropout rate. If = 0, dropout is disabled
+    # Dropout rate for the DIPS block. If = 0, dropout is disabled
     dropout: 0
+
+    # Decide if Batch Normalisation is used in the DIPS block
+    Batch_Normalisation: True
+
+    # DIPS structure
+    DIPS_ppm_units: [100, 100, 128]
+    DIPS_dense_units: [100, 100, 100, 30]
+
+    # These are the layers that will be concatenated with the last layer of DIPS_dense_units
+    intermediate_units: [72]
+
+    # DL1 structure
+    DL1_units: [57, 60, 48, 36, 24, 12, 6]
+
+    # total loss = loss(umami) + dips_loss_weight * loss(dips)
+    dips_loss_weight: 1
 
     # Define which classes are used for training
     # These are defined in the global_config
@@ -80,15 +98,6 @@ NN_structure:
 
     # Main class which is to be tagged
     main_class: "bjets"
-
-    # Decide if Batch Normalisation is used
-    Batch_Normalisation: True
-
-    # Structure of the dense layers for each track
-    ppm_sizes: [100, 100, 128]
-
-    # Structure of the dense layers after summing up the track outputs
-    dense_sizes: [100, 100, 100, 30]
 
     # Options for the Learning Rate reducer
     LRR: True
@@ -106,9 +115,6 @@ Validation_metrics_settings:
         rnnip: "Recomm. RNNIP"
         DL1r: "Recomm. DL1r"
 
-    # Label for the freshly trained tagger
-    tagger_label: "DIPS"
-
     # Working point used in the validation
     WP: 0.77
 
@@ -120,7 +126,6 @@ Validation_metrics_settings:
     # Set the datatype of the plots
     plot_datatype: "pdf"
 
-# Eval parameters for validation evaluation while training
 Eval_parameters_validation:
     # Number of jets used for evaluation
     n_jets: 3e5
@@ -130,17 +135,28 @@ Eval_parameters_validation:
     tagger: ["rnnip", "DL1r"]
 
     # Define fc values for the taggers
-    frac_values_comp:
-        {
-            "rnnip": {"cjets": 0.07, "ujets": 0.93},
-            "DL1r": {"cjets": 0.018, "ujets": 0.982},
-        }
+    frac_values_comp: {
+        "rnnip": {
+            "cjets": 0.07,
+            "ujets": 0.93,
+        },
+        "DL1r": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
+    }
 
     # Charm fraction value used for evaluation of the trained model
-    frac_values: {"cjets": 0.005, "ujets": 0.995}
+    frac_values: {
+        "dips": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
+        "umami": {
+            "cjets": 0.018,
+            "ujets": 0.982,
+        },
+    }
 
     # Working point used in the evaluation
     WP: 0.77
-
-    # Decide, if the Saliency maps are calculated or not.
-    calculate_saliency: True

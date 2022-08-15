@@ -17,7 +17,7 @@ test_preprocessing:
 test_dips:
     data_subfolder: 'preprocessing'
     model_name: 'test_train_dips'
-    config: 'examples/Dips-PFlow-Training-config.yaml'
+    config: 'examples/training/Dips-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/preprocessing/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
     files:
@@ -27,7 +27,7 @@ test_dips:
 test_dips_hits:
     data_subfolder: 'preprocessing'
     model_name: 'test_train_dips_hits'
-    config: 'examples/Dips-PFlow-Training-config.yaml'
+    config: 'examples/training/Dips-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/preprocessing/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
     files:
@@ -36,7 +36,7 @@ test_dips_hits:
 test_dips_four_classes:
     data_subfolder: 'preprocessing'
     model_name: 'test_train_dips_four_classes'
-    config: 'examples/Dips-PFlow-Training-config.yaml'
+    config: 'examples/training/Dips-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/preprocessing/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
     files:
@@ -46,7 +46,7 @@ test_dips_four_classes:
 test_cads:
     data_subfolder: 'preprocessing'
     model_name: 'test_train_cads'
-    config: 'examples/CADS-PFlow-Training-config.yaml'
+    config: 'examples/training/CADS-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/preprocessing/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_dips.yaml'
     files:
@@ -56,7 +56,7 @@ test_cads:
 test_dl1r:
     data_subfolder: 'preprocessing'
     model_name: 'test_train_dl1r'
-    config: 'examples/DL1r-PFlow-Training-config.yaml'
+    config: 'examples/training/DL1r-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/preprocessing/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_DL1r.yaml'
     files:
@@ -66,7 +66,7 @@ test_dl1r:
 test_umami:
     data_subfolder: 'preprocessing'
     model_name: 'test_train_umami'
-    config: 'examples/umami-PFlow-Training-config.yaml'
+    config: 'examples/training/umami-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/preprocessing/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_Umami.yaml'
     files:
@@ -76,7 +76,7 @@ test_umami:
 test_umami_cond_att:
     data_subfolder: 'preprocessing'
     model_name: 'test_train_umami_cond_att'
-    config: 'examples/umami-Cond-Att-PFlow-Training-config.yaml'
+    config: 'examples/training/umami-Cond-Att-PFlow-Training-config.yaml'
     preprocessing_config: 'examples/preprocessing/PFlow-Preprocessing.yaml'
     plotting_config: 'examples/plotting_umami_config_Umami.yaml'
     files:
@@ -86,7 +86,7 @@ test_umami_cond_att:
 test_evaluate_comp_taggers:
     data_subfolder: 'preprocessing'
     model_name: 'test_evaluate_comp_taggers'
-    config: 'examples/evaluate_comp_taggers.yaml'
+    config: 'examples/training/evaluate_comp_taggers.yaml'
     files:
         - ci_ttbar_testing.h5
         - ci_zpext_testing.h5

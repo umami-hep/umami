@@ -39,9 +39,11 @@ nav:
         - Write train sample: preprocessing/write_train_sample.md
         - MC samples: 'https://ftag.docs.cern.ch/software/samples/'
         - Truth labels: 'https://ftag.docs.cern.ch/algorithms/labelling/'
-    - Trainings:
-        - Overview: trainings/index.md
-        - Instructions: trainings/train-instructions.md
+    - Training:
+        - Overview: trainings/Overview.md
+        - Start Training your Model: trainings/train.md
+        - Validate your Training: trainings/validate.md
+        - Evaluate your Training: trainings/evaluate.md
         - Running GNN: trainings/GNN-instructions.md
         - Feature Importance: trainings/Feature_Importance.md
         - LWTNN Conversion: trainings/LWTNN-conversion.md
