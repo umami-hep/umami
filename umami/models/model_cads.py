@@ -83,7 +83,7 @@ def create_cads_model(
     return cads, nn_structure["epochs"], init_epoch
 
 
-def cads_tagger(args, train_config):
+def train_cads(args, train_config):
     """
     Training handling of CADS.
 
@@ -226,7 +226,7 @@ def cads_tagger(args, train_config):
 
     if "LRR" in nn_structure and nn_structure["LRR"] is True:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.GetLRReducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -234,39 +234,24 @@ def cads_tagger(args, train_config):
     # Load validation data for callback
     val_data_dict = None
     if n_jets_val > 0:
-        if nn_structure["N_Conditions"] is None:
-            val_data_dict = utt.load_validation_data_dips(
-                train_config=train_config,
-                n_jets=n_jets_val,
-                convert_to_tensor=True,
-            )
+        val_data_dict = utt.load_validation_data(
+            train_config=train_config,
+            n_jets=n_jets_val,
+            convert_to_tensor=True,
+            jets_var_list=["absEta_btagJes", "pt_btagJes"],
+            nCond=nn_structure["N_Conditions"],
+        )
 
-            # TODO: Add a representative validation dataset for training (shown in
-            # stdout)
-            # Create the validation data tuple for the fit function
-            # validation_data = (
-            #     val_data_dict["X_valid"],
-            #     val_data_dict["Y_valid"],
-            # )
-
-        else:
-            val_data_dict = utt.load_validation_data_umami(
-                train_config=train_config,
-                n_jets=n_jets_val,
-                convert_to_tensor=True,
-                jets_var_list=["absEta_btagJes", "pt_btagJes"],
-            )
-
-            # TODO: Add a representative validation dataset for training (shown in
-            # stdout)
-            # Create the validation data tuple for the fit function
-            # validation_data = (
-            #     [
-            #         val_data_dict["X_valid_trk"],
-            #         val_data_dict["X_valid"],
-            #     ],
-            #     val_data_dict["Y_valid"],
-            # )
+        # TODO: Add a representative validation dataset for training (shown in
+        # stdout)
+        # Create the validation data tuple for the fit function
+        # validation_data = (
+        #     [
+        #         val_data_dict["X_valid_trk"],
+        #         val_data_dict["X_valid"],
+        #     ],
+        #     val_data_dict["Y_valid"],
+        # )
 
     # Set my_callback as callback. Writes history information
     # to json file.

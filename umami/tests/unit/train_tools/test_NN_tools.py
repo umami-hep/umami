@@ -27,8 +27,7 @@ from umami.train_tools.NN_tools import (
     get_test_sample,
     get_test_sample_trks,
     get_unique_identifiers,
-    load_validation_data_dips,
-    load_validation_data_umami,
+    load_validation_data,
     setup_output_directory,
 )
 
@@ -700,7 +699,10 @@ class GetSamples_TestCase(unittest.TestCase):
     def setUp(self):
         self.Eval_parameters_validation = {}
         self.tracks_name = "tracks"
-        self.NN_structure = {"class_labels": ["bjets", "cjets", "ujets"]}
+        self.NN_structure = {
+            "class_labels": ["bjets", "cjets", "ujets"],
+            "tagger": "dips",
+        }
         self.sampling = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.preparation = {"class_labels": ["bjets", "cjets", "ujets"]}
         self.test_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
@@ -977,48 +979,67 @@ class GetSamples_TestCase(unittest.TestCase):
         with self.subTest("Test Y_valid shape"):
             self.assertEqual(Y_valid.shape, (len(Y_valid), 3))
 
-    def test_load_validation_data_umami(self):
+    def test_load_validation_data(self):
         """Test the loading of the validation data for umami."""
 
-        val_data_dict = load_validation_data_umami(
-            train_config=self,
-            n_jets=self.n_jets,
-        )
+        for convert_to_tensor in [True, False]:
+            for iter_tagger in ["umami", "umami_cond_att", "cads"]:
+                with self.subTest(f"{iter_tagger}_tensor_{convert_to_tensor}"):
+                    self.NN_structure["tagger"] = iter_tagger
 
-        self.assertEqual(
-            list(val_data_dict.keys()),
-            [
-                "X_valid_ttbar_r21_val",
-                "X_valid_trk_ttbar_r21_val",
-                "Y_valid_ttbar_r21_val",
-                "X_valid_zprime_r21_val",
-                "X_valid_trk_zprime_r21_val",
-                "Y_valid_zprime_r21_val",
-            ],
-        )
+                    val_data_dict = load_validation_data(
+                        train_config=self,
+                        n_jets=self.n_jets,
+                        convert_to_tensor=convert_to_tensor,
+                    )
 
-    def test_load_validation_data_dips(self):
-        """Test the loading of the validation data for dips."""
+                    self.assertEqual(
+                        list(val_data_dict.keys()),
+                        [
+                            "X_valid_ttbar_r21_val",
+                            "X_valid_trk_ttbar_r21_val",
+                            "Y_valid_ttbar_r21_val",
+                            "X_valid_zprime_r21_val",
+                            "X_valid_trk_zprime_r21_val",
+                            "Y_valid_zprime_r21_val",
+                        ],
+                    )
 
-        val_data_dict = load_validation_data_dips(
-            train_config=self,
-            n_jets=self.n_jets,
-        )
+            for iter_tagger in ["dips", "dips_attention", "dl1"]:
+                with self.subTest(f"{iter_tagger}_tensor_{convert_to_tensor}"):
+                    self.NN_structure["tagger"] = iter_tagger
 
-        self.assertEqual(
-            list(val_data_dict.keys()),
-            [
-                "X_valid_ttbar_r21_val",
-                "Y_valid_ttbar_r21_val",
-                "X_valid_zprime_r21_val",
-                "Y_valid_zprime_r21_val",
-            ],
-        )
+                    val_data_dict = load_validation_data(
+                        train_config=self,
+                        n_jets=self.n_jets,
+                        convert_to_tensor=convert_to_tensor,
+                    )
 
-    def test_load_validation_data_umami_no_var_cuts(self):
+                    self.assertEqual(
+                        list(val_data_dict.keys()),
+                        [
+                            "X_valid_ttbar_r21_val",
+                            "Y_valid_ttbar_r21_val",
+                            "X_valid_zprime_r21_val",
+                            "Y_valid_zprime_r21_val",
+                        ],
+                    )
+
+    def test_load_validation_data_unsupported_tagger(self):
+        """Test behaviour when not supported tagger is provided."""
+        self.NN_structure["tagger"] = "not_supported_tagger"
+
+        with self.assertRaises(ValueError):
+            load_validation_data(
+                train_config=self,
+                n_jets=self.n_jets,
+            )
+
+    def test_load_validation_data_no_var_cuts(self):
         """Test the loading of the validation data for umami with no variable cuts."""
+        self.NN_structure["tagger"] = "umami"
 
-        val_data_dict = load_validation_data_umami(
+        val_data_dict = load_validation_data(
             train_config=self,
             n_jets=self.n_jets,
         )
@@ -1031,24 +1052,6 @@ class GetSamples_TestCase(unittest.TestCase):
                 "Y_valid_ttbar_r21_val",
                 "X_valid_zprime_r21_val",
                 "X_valid_trk_zprime_r21_val",
-                "Y_valid_zprime_r21_val",
-            ],
-        )
-
-    def test_load_validation_data_dips_no_var_cuts(self):
-        """Test the loading of the validation data for dips with no variable cuts."""
-
-        val_data_dict = load_validation_data_dips(
-            train_config=self,
-            n_jets=self.n_jets,
-        )
-
-        self.assertEqual(
-            list(val_data_dict.keys()),
-            [
-                "X_valid_ttbar_r21_val",
-                "Y_valid_ttbar_r21_val",
-                "X_valid_zprime_r21_val",
                 "Y_valid_zprime_r21_val",
             ],
         )

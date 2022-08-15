@@ -172,7 +172,7 @@ def create_umami_model(
     return umami, nn_structure["epochs"], init_epoch
 
 
-def umami_tagger(args, train_config):
+def train_umami(args, train_config):
     """Training handling of UMAMI tagger.
 
     Parameters
@@ -211,7 +211,7 @@ def umami_tagger(args, train_config):
 
     val_data_dict = None
     if n_jets_val > 0:
-        val_data_dict = utt.load_validation_data_umami(
+        val_data_dict = utt.load_validation_data(
             train_config=train_config,
             n_jets=n_jets_val,
             convert_to_tensor=True,
@@ -334,7 +334,7 @@ def umami_tagger(args, train_config):
 
     if "LRR" in nn_structure and nn_structure["LRR"] is True:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.GetLRReducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)

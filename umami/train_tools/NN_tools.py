@@ -353,7 +353,7 @@ class CallbackBase(Callback):
             Number of jets used in the validation. By default None
         val_data_dict : dict, optional
             Dict with the loaded validation data. These are loaded
-            using the `load_validation_data_*` functions. By default
+            using the `load_validation_data` functions. By default
             None.
         target_beff : float
             Float value between 0 and 1 for which main class efficiency
@@ -924,7 +924,7 @@ def get_test_sample_trks(
     return trks, binary_labels
 
 
-def load_validation_data_umami(
+def load_validation_data(
     train_config: object,
     n_jets: int,
     jets_var_list: list = None,
@@ -952,20 +952,35 @@ def load_validation_data_umami(
     -------
     val_data_dict : dict
         Dict with the validation data.
+
+    Raises
+    ------
+    ValueError
+        If the given tagger is not supported.
     """
     if jets_var_list is None:
         jets_var_list = []
-    # Define NN_Structure and the Eval params
-    NN_structure = train_config.NN_structure
+
+    # Get class labels and tagger name
+    class_labels = train_config.NN_structure["class_labels"]
+    tagger = train_config.NN_structure["tagger"]
 
     # Init a new dict for the loaded val data
     val_data_dict = {}
     val_files = train_config.validation_files
 
     # Set the tracks collection name
-    tracks_name = train_config.tracks_name
-    logger.debug("Using tracks_name value '%s' for validation", tracks_name)
+    if hasattr(train_config, "tracks_name"):
+        tracks_name = train_config.tracks_name
+        logger.debug("Using tracks_name value '%s' for validation", tracks_name)
 
+    else:
+        tracks_name = None
+
+    # Check for excluded variables
+    exclude = train_config.config.get("exclude", None)
+
+    # Loop over the different validation files
     for val_file_identifier, val_file_config in val_files.items():
         logger.info("Loading validation file %s", val_file_identifier)
         # Get the cut vars dict if defined
@@ -975,191 +990,75 @@ def load_validation_data_umami(
             else None
         )
 
-        # Check for excluded variables
-        exclude = None
-        if "exclude" in train_config.config:
-            exclude = train_config.config["exclude"]
+        # Set default to None and change it if used
+        X_valid, X_valid_trk, Y_valid = None, None, None
 
-        (X_valid, X_valid_trk, Y_valid,) = get_test_file(
-            input_file=val_file_config["path"],
-            var_dict=train_config.var_dict,
-            preprocess_config=train_config.preprocess_config,
-            class_labels=NN_structure["class_labels"],
-            tracks_name=tracks_name,
-            n_jets=n_jets,
-            exclude=exclude,
-            jet_variables=jets_var_list,
-            cut_vars_dict=cut_vars_dict,
-        )
-
-        if convert_to_tensor:
-            # Transform to tf.tensors and add to val_dict
-            val_data_dict[f"X_valid_{val_file_identifier}"] = tf.convert_to_tensor(
-                X_valid, dtype=tf.float64
+        # Check which tagger is used and load the neede data
+        if tagger.casefold() in ("dips", "dips_attention"):
+            (X_valid, Y_valid,) = get_test_sample_trks(
+                input_file=val_file_config["path"],
+                var_dict=train_config.var_dict,
+                preprocess_config=train_config.preprocess_config,
+                class_labels=class_labels,
+                tracks_name=tracks_name,
+                n_jets=n_jets,
+                cut_vars_dict=cut_vars_dict,
             )
-            val_data_dict[f"X_valid_trk_{val_file_identifier}"] = tf.convert_to_tensor(
-                X_valid_trk, dtype=tf.float64
+
+        elif tagger.casefold() in ("dl1"):
+            (X_valid, Y_valid,) = get_test_sample(
+                input_file=val_file_config["path"],
+                var_dict=train_config.var_dict,
+                preprocess_config=train_config.preprocess_config,
+                class_labels=class_labels,
+                n_jets=n_jets,
+                exclude=exclude,
+                cut_vars_dict=cut_vars_dict,
             )
-            val_data_dict[f"Y_valid_{val_file_identifier}"] = tf.convert_to_tensor(
-                Y_valid, dtype=tf.int64
-            )
-            if nCond is not None:
-                val_data_dict[
-                    f"X_valid_addvars_{val_file_identifier}"
-                ] = tf.convert_to_tensor(X_valid.iloc[:, :nCond], dtype=tf.float64)
 
-        else:
-            val_data_dict[f"X_valid_{val_file_identifier}"] = X_valid
-            val_data_dict[f"X_valid_trk_{val_file_identifier}"] = X_valid_trk
-            val_data_dict[f"Y_valid_{val_file_identifier}"] = Y_valid
-            if nCond is not None:
-                val_data_dict[f"X_valid_addvars_{val_file_identifier}"] = X_valid.iloc[
-                    :, :nCond
-                ]
-
-    # Return the val data dict
-    return val_data_dict
-
-
-def load_validation_data_dl1(
-    train_config: object,
-    n_jets: int,
-    convert_to_tensor: bool = False,
-) -> dict:
-    """
-    Load the validation data for DL1.
-
-    Parameters
-    ----------
-    train_config : object
-        Loaded train_config object.
-    n_jets : int
-        Number of jets to load.
-    convert_to_tensor : bool
-        Decide, if the validation data are converted to
-        tensorflow tensors to avoid memory leaks.
-
-    Returns
-    -------
-    val_data_dict : dict
-        Dict with the validation data.
-    """
-
-    # Define NN_Structure and the Eval params
-    NN_structure = train_config.NN_structure
-    val_data_dict = {}
-    val_files = train_config.validation_files
-
-    # Ensure the n_jets is an int
-    n_jets = int(n_jets)
-
-    # Check for excluded variables
-    exclude = None
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
-
-    # loop over validation files and load X_valid, Y_valid for each file
-    for val_file_identifier, val_file_config in val_files.items():
-        logger.info("Loading validation file %s", val_file_identifier)
-
-        cut_vars_dict = (
-            val_file_config["variable_cuts"]
-            if "variable_cuts" in val_file_config
-            else None
-        )
-
-        (X_valid, Y_valid,) = get_test_sample(
-            input_file=val_file_config["path"],
-            var_dict=train_config.var_dict,
-            preprocess_config=train_config.preprocess_config,
-            class_labels=NN_structure["class_labels"],
-            n_jets=n_jets,
-            exclude=exclude,
-            cut_vars_dict=cut_vars_dict,
-        )
-
-        if convert_to_tensor:
-            # Transform to tf.tensors and add to val_dict
-            val_data_dict[f"X_valid_{val_file_identifier}"] = tf.convert_to_tensor(
-                X_valid, dtype=tf.float64
-            )
-            val_data_dict[f"Y_valid_{val_file_identifier}"] = tf.convert_to_tensor(
-                Y_valid, dtype=tf.int64
+        elif tagger.casefold() in ("umami", "umami_cond_att", "cads"):
+            (X_valid, X_valid_trk, Y_valid,) = get_test_file(
+                input_file=val_file_config["path"],
+                var_dict=train_config.var_dict,
+                preprocess_config=train_config.preprocess_config,
+                class_labels=class_labels,
+                tracks_name=tracks_name,
+                n_jets=n_jets,
+                exclude=exclude,
+                jet_variables=jets_var_list,
+                cut_vars_dict=cut_vars_dict,
             )
 
         else:
-            val_data_dict[f"X_valid_{val_file_identifier}"] = X_valid
-            val_data_dict[f"Y_valid_{val_file_identifier}"] = Y_valid
+            raise ValueError(f"The defined tagger {tagger} is not supported!")
 
-    # Return the val data dict
-    return val_data_dict
-
-
-def load_validation_data_dips(
-    train_config: object,
-    n_jets: int,
-    convert_to_tensor: bool = False,
-) -> dict:
-    """
-    Load the validation data for DIPS.
-
-    Parameters
-    ----------
-    train_config : object
-        Loaded train_config object.
-    n_jets : int
-        Number of jets to load.
-    convert_to_tensor : bool
-        Decide, if the validation data are converted to
-        tensorflow tensors to avoid memory leaks.
-
-    Returns
-    -------
-    val_data_dict : dict
-        Dict with the validation data.
-    """
-
-    # Define NN_Structure and the Eval params
-    NN_structure = train_config.NN_structure
-    val_data_dict = {}
-    val_files = train_config.validation_files
-
-    # Set the tracks collection name
-    tracks_name = train_config.tracks_name
-    logger.debug("Using tracks_name value '%s' for validation", tracks_name)
-
-    # loop over validation files and load X_valid, Y_valid for each file
-    for val_file_identifier, val_file_config in val_files.items():
-        logger.info("Loading validation file %s", val_file_identifier)
-
-        cut_vars_dict = (
-            val_file_config["variable_cuts"]
-            if "variable_cuts" in val_file_config
-            else None
-        )
-
-        (X_valid, Y_valid,) = get_test_sample_trks(
-            input_file=val_file_config["path"],
-            var_dict=train_config.var_dict,
-            preprocess_config=train_config.preprocess_config,
-            class_labels=NN_structure["class_labels"],
-            tracks_name=tracks_name,
-            n_jets=n_jets,
-            cut_vars_dict=cut_vars_dict,
-        )
-
-        if convert_to_tensor:
-            # Transform to tf.tensors and add to val_dict
-            val_data_dict[f"X_valid_{val_file_identifier}"] = tf.convert_to_tensor(
-                X_valid, dtype=tf.float64
-            )
-            val_data_dict[f"Y_valid_{val_file_identifier}"] = tf.convert_to_tensor(
-                Y_valid, dtype=tf.int64
+        if X_valid is not None:
+            val_data_dict[f"X_valid_{val_file_identifier}"] = (
+                tf.convert_to_tensor(X_valid, dtype=tf.float32)
+                if convert_to_tensor
+                else X_valid
             )
 
-        else:
-            val_data_dict[f"X_valid_{val_file_identifier}"] = X_valid
-            val_data_dict[f"Y_valid_{val_file_identifier}"] = Y_valid
+        if X_valid_trk is not None:
+            val_data_dict[f"X_valid_trk_{val_file_identifier}"] = (
+                tf.convert_to_tensor(X_valid_trk, dtype=tf.float32)
+                if convert_to_tensor
+                else X_valid_trk
+            )
+
+        if Y_valid is not None:
+            val_data_dict[f"Y_valid_{val_file_identifier}"] = (
+                tf.convert_to_tensor(Y_valid, dtype=tf.uint8)
+                if convert_to_tensor
+                else Y_valid
+            )
+
+        if nCond is not None:
+            val_data_dict[f"X_valid_addvars_{val_file_identifier}"] = (
+                tf.convert_to_tensor(X_valid.iloc[:, :nCond], dtype=tf.float32)
+                if convert_to_tensor
+                else X_valid.iloc[:, :nCond]
+            )
 
     # Return the val data dict
     return val_data_dict
@@ -1565,42 +1464,18 @@ def calc_validation_metrics(
     # Init a results list
     results = []
 
-    # TODO Change in Python 3.10
     # Check tagger and load the correct val data
-    if tagger.casefold() == "umami":
-        data_dict = load_validation_data_umami(
-            train_config=train_config,
-            n_jets=n_jets,
-            convert_to_tensor=False,
-        )
-
-    elif tagger.casefold() == "dl1":
-        data_dict = load_validation_data_dl1(
-            train_config=train_config,
-            n_jets=n_jets,
-            convert_to_tensor=False,
-        )
-
-    elif tagger.casefold() in ("dips", "dips_attention"):
-        data_dict = load_validation_data_dips(
-            train_config=train_config,
-            n_jets=n_jets,
-            convert_to_tensor=False,
-        )
-
-    elif tagger.casefold() == "cads":
-        data_dict = load_validation_data_umami(
-            train_config=train_config,
-            n_jets=n_jets,
-            jets_var_list=[
-                global_config.etavariable,
-                global_config.pTvariable,
-            ],
-            convert_to_tensor=False,
-        )
-
-    else:
-        raise ValueError(f"Tagger {tagger} is not supported!")
+    data_dict = load_validation_data(
+        train_config=train_config,
+        n_jets=n_jets,
+        convert_to_tensor=False,
+        jets_var_list=[
+            global_config.etavariable,
+            global_config.pTvariable,
+        ]
+        if tagger.casefold() == "cads"
+        else None,
+    )
 
     # Loop over the different model savepoints at each epoch
     for n, model_file in enumerate(sorted(training_output, key=natural_keys)):

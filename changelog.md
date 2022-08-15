@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Merging load validation data functions [!615](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/615)
 - Cleanup of preprocessing config [!609](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/609)
 - Update puma version to v0.1.7 [!614](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/614)
 
