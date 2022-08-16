@@ -35,7 +35,7 @@ class Eval_plots_TestCase(unittest.TestCase):
         self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
         self.plot_config = {
             "evaluation_file": None,
-            "data_set_name": "ttbar",
+            "data_set_name": "ttbar_r21",
             "prediction_label": "dips_pb",
             "prediction_labels": ["dips_pb", "dips_pc", "dips_pu"],
             "discriminant": "b",
@@ -75,7 +75,7 @@ class Eval_plots_TestCase(unittest.TestCase):
         """Test nominal behaviour for plot_score without ratio."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
-            "ttbar",
+            "ttbar_r21",
         )
 
         plot_score(
@@ -104,7 +104,7 @@ class Eval_plots_TestCase(unittest.TestCase):
         """Test nominal behaviour for plot_score with ratio."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
-            "ttbar",
+            "ttbar_r21",
         )
 
         plot_score(
@@ -208,7 +208,7 @@ class Eval_plots_TestCase(unittest.TestCase):
         """Test nominal for pT vs rejection."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
-            "ttbar",
+            "ttbar_r21",
         )
 
         plot_var_vs_eff(
@@ -265,7 +265,7 @@ class Eval_plots_TestCase(unittest.TestCase):
         """Test nominal behaviour for the probability plots without ratio."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
-            "ttbar",
+            "ttbar_r21",
         )
 
         plot_prob(
@@ -292,7 +292,7 @@ class Eval_plots_TestCase(unittest.TestCase):
         """Test nominal behaviour for the probability plots with ratio."""
         df_results_ttbar = pd.read_hdf(
             self.actual_plots_dir + "/results-1_new.h5",
-            "ttbar",
+            "ttbar_r21",
         )
 
         plot_prob(

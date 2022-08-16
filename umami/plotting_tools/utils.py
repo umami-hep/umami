@@ -1,7 +1,43 @@
 """Helper functions for plotting"""
 import numpy as np
 
-from umami.configuration import logger  # isort:skip
+from umami.configuration import logger, global_config  # isort:skip
+
+
+def retrieve_truth_label_var_value(class_labels: list) -> tuple:
+    """
+    Retrieve the truth label variable to use and their values for a given
+    list of flavours.
+
+    Parameters
+    ----------
+    class_labels : list
+        List with the classes to retrieve. Like ["bjets", "cjets", "ujets"]
+
+    Returns
+    -------
+    tuple
+        The label dict and the label variabel dict. The first contains the
+        value of the given flavour and the latter contain the truth label
+        variable which is to use for this specific flavour. Both are dicts.
+        For each flavour given in class_labels, a key and a value are given
+        in both dicts.
+    """
+
+    # Get global config for flavours
+    flav_cat = global_config.flavour_categories
+
+    # Get dict with the labels for the flavour
+    label_dict = {
+        iter_flav: flav_cat[iter_flav]["label_value"] for iter_flav in class_labels
+    }
+
+    # Get a dict which truth variable is used for the specified flavour
+    label_var_dict = {
+        iter_flav: flav_cat[iter_flav]["label_var"] for iter_flav in class_labels
+    }
+
+    return (label_dict, label_var_dict)
 
 
 def translate_kwargs(kwargs):

@@ -20,7 +20,7 @@ from puma import (
 )
 
 from umami.configuration import global_config, logger
-from umami.plotting_tools.utils import translate_kwargs
+from umami.plotting_tools.utils import retrieve_truth_label_var_value, translate_kwargs
 
 
 def plot_var_vs_eff(
@@ -600,7 +600,7 @@ def plot_score(
     main_class: str,
     plot_name: str,
     working_points: list = None,
-    same_height_WP: bool = True,
+    same_height_WP: bool = False,
     **kwargs,
 ) -> None:
     """Plot the tagging discriminant scores for the evalutated jets.
@@ -644,8 +644,8 @@ def plot_score(
     # TODO Add get_good_linestyles
     flav_cat = global_config.flavour_categories
 
-    # Get index dict
-    index_dict = {f"{flavour}": i for i, flavour in enumerate(class_labels_list[0])}
+    # Get the truth value and the truth variable to use for the used flavours
+    label_dict, label_var_dict = retrieve_truth_label_var_value(class_labels_list[0])
 
     # Init the Histogram plot object
     score_plot = HistogramPlot(**kwargs)
@@ -657,20 +657,24 @@ def plot_score(
     if working_points is not None:
         # Init a new list for the WPs
         working_point_xvalues = []
+        working_point_label = []
 
         # Calculate x value of WP line
-        for working_point in working_points:
+        for working_point in sorted(working_points, reverse=True):
             working_point_xvalues.append(
                 np.percentile(
-                    df_list[0].query(f"labels=={index_dict[main_class]}")[
-                        f"disc_{tagger_list[0]}"
-                    ],
+                    df_list[0].query(
+                        f"{label_var_dict[main_class]}=={label_dict[main_class]}"
+                    )[f"disc_{tagger_list[0]}"],
                     (1 - working_point) * 100,
                 )
             )
+            working_point_label.append(f"{int(working_point * 100)} %")
+
         score_plot.draw_vlines(
             vlines_xvalues=working_point_xvalues,
             same_height=same_height_WP,
+            vlines_label_list=working_point_label,
         )
 
     for model_counter, (
@@ -688,15 +692,15 @@ def plot_score(
             class_labels_list,
         )
     ):
-        # Get index dict
-        index_dict = {f"{flavour}": j for j, flavour in enumerate(class_labels)}
+        # Get the truth value and the truth variable to use for the used flavours
+        label_dict, label_var_dict = retrieve_truth_label_var_value(class_labels)
 
         for iter_flavour in class_labels:
             score_plot.add(
                 Histogram(
-                    values=df_results.query(f"labels=={index_dict[iter_flavour]}")[
-                        f"disc_{tagger}"
-                    ],
+                    values=df_results.query(
+                        f"{label_var_dict[iter_flavour]}=={label_dict[iter_flavour]}"
+                    )[f"disc_{tagger}"],
                     flavour=iter_flavour,
                     ratio_group=iter_flavour,
                     label=model_label if len(model_labels) > 1 else None,
@@ -756,9 +760,6 @@ def plot_prob(
     # Get flavour categories from global config file
     flav_cat = global_config.flavour_categories
 
-    # Get index dict
-    index_dict = {f"{iter_flav}": i for i, iter_flav in enumerate(class_labels_list[0])}
-
     # Init the histogram plot object
     prob_plot = HistogramPlot(**kwargs)
 
@@ -781,15 +782,15 @@ def plot_prob(
             class_labels_list,
         )
     ):
-        # Get index dict
-        index_dict = {f"{iter_flav}": i for i, iter_flav in enumerate(class_labels)}
+        # Get the truth value and the truth variable to use for the used flavours
+        label_dict, label_var_dict = retrieve_truth_label_var_value(class_labels)
 
         for iter_flavour in class_labels:
             prob_plot.add(
                 Histogram(
-                    values=df_results.query(f"labels=={index_dict[iter_flavour]}")[
-                        f'{tagger}_{flav_cat[flavour]["prob_var_name"]}'
-                    ],
+                    values=df_results.query(
+                        f"{label_var_dict[iter_flavour]}=={label_dict[iter_flavour]}"
+                    )[f'{tagger}_{flav_cat[flavour]["prob_var_name"]}'],
                     flavour=iter_flavour,
                     ratio_group=iter_flavour,
                     label=model_label if len(model_labels) > 1 else None,

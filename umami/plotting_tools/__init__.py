@@ -28,3 +28,4 @@ from umami.plotting_tools.train_plotting_functions import (
     plot_rej_per_epoch_comp,
     run_validation_check,
 )
+from umami.plotting_tools.utils import retrieve_truth_label_var_value
