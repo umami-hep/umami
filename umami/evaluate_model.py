@@ -411,6 +411,10 @@ def evaluate_model(
         frac_values_comp=frac_values_comp,
     )
 
+    # Adding truth label values to the dict
+    for truth_variable in list(set(label_var_list)):
+        df_discs_dict[truth_variable] = jets[truth_variable]
+
     # Add dict to Dataframe and delete dict
     df_discs = pd.DataFrame(df_discs_dict)
     del df_discs_dict

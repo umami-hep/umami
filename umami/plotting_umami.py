@@ -123,8 +123,11 @@ def plot_probability(
 
         df_list.append(df_results)
         tagger_list.append(model_config["tagger_name"])
-        model_labels.append(model_config["label"])
         class_labels_list.append(model_config["class_labels"])
+
+        # Check if model label is given. If not, append empty string
+        # to keep the dimensions of the lists similar
+        model_labels.append(model_config.get("label", ""))
 
     uet.plot_prob(
         df_list=df_list,
@@ -350,9 +353,12 @@ def plot_score(
             )
 
         df_list.append(df_results)
-        model_labels.append(model_config["label"])
         tagger_list.append(model_config["tagger_name"])
         class_labels_list.append(model_config["class_labels"])
+
+        # Check if model label is given. If not, append empty string
+        # to keep the dimensions of the lists similar
+        model_labels.append(model_config.get("label", ""))
 
     uet.plot_score(
         df_list=df_list,
@@ -418,8 +424,11 @@ def plot_var_vs_eff(
             )
 
         df_list.append(df_results)
-        model_labels.append(model_config["label"])
         tagger_list.append(model_config["tagger_name"])
+
+        # Check if model label is given. If not, append empty string
+        # to keep the dimensions of the lists similar
+        model_labels.append(model_config.get("label", ""))
 
     uet.plot_var_vs_eff(
         df_list=df_list,
