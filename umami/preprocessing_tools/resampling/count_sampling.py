@@ -184,7 +184,7 @@ class UnderSampling(ResamplingTools):
             concat_samples=self.concat_samples,
             var_positions=[0, 1],
             variable_names=[self.var_x, self.var_y],
-            sample_categories=list(self.config.preparation["ntuples"].keys()),
+            sample_categories=self.config.preparation.sample_categories,
             output_dir=os.path.join(
                 self.resampled_path,
                 "plots/resampling/",

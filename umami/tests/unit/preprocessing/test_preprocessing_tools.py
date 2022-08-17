@@ -18,56 +18,6 @@ from umami.preprocessing_tools import (
 set_log_level(logger, "DEBUG")
 
 
-class ConfigurationTestCase(unittest.TestCase):
-    """
-    Test the implementation of the Configuration class.
-    """
-
-    def setUp(self):
-        """
-        Set a example config file.
-        """
-        self.config_file = os.path.join(
-            os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
-        )
-
-    def test_missing_key_error(self):
-        """Test missing key error."""
-        config = PreprocessConfiguration(self.config_file)
-        del config.config["outfile_name"]
-        with self.assertRaises(KeyError):
-            config.get_configuration()
-
-    # this functionality is still there but is not used for now
-    # so will keep the test here in case this is used again
-    # def test_missing_key_warning(self):
-    #     config = Configuration(self.config_file)
-    #     del config.config["outfile_name"]
-    #     with self.assertWarns(Warning):
-    #         config.get_configuration()
-
-    def test_get_file_name_no_input(self):
-        """Test filename without input."""
-        config = PreprocessConfiguration(self.config_file)
-        out_file = config.get_file_name()
-        self.assertEqual(out_file, config.outfile_name)
-
-    def test_get_file_name_no_iterations(self):
-        """Test no iterations"""
-        config = PreprocessConfiguration(self.config_file)
-        with self.subTest():
-            self.assertNotIn("test", config.outfile_name)
-        out_file = config.get_file_name(option="test")
-        with self.subTest():
-            self.assertIn("test", out_file)
-
-    def test_get_file_name_no_iterations_no_input(self):
-        """Test no iterations and no input."""
-        config = PreprocessConfiguration(self.config_file)
-        out_file = config.get_file_name()
-        self.assertEqual(config.outfile_name, out_file)
-
-
 class GetVariableDictTestCase(unittest.TestCase):
     """
     Test the implementation of GetVariableDict function.
@@ -278,15 +228,18 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_wrong_category_provided(self):
         """Test wrong category provided."""
-        self.config.preparation["samples"]["ttbar"]["category"] = "None"
+        self.config.preparation.samples["ttbar"].category = "None"
         with self.assertRaises(KeyError):
             PrepareSamples(self.args, self.config)
 
     def test_get_batches_per_file(self):
         """Test batches per file."""
+        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
         ps = PrepareSamples(self.args, self.config)
-        ps.ntuples = [self.tf.name]
-        files_in_batches = map(ps.GetBatchesPerFile, ps.ntuples)
+        files_in_batches = map(
+            ps.get_batches_per_file,
+            ps.config.preparation.get_input_files(self.args.sample),
+        )
         for batch_tuple in list(files_in_batches):
             # first entry of tuples is the filename
             with self.subTest():
@@ -298,9 +251,12 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_jets_generator_fullcuts_wotracks(self):
         """Test jet generator without tracks."""
+        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
         ps = PrepareSamples(self.args, self.config)
-        ps.ntuples = [self.tf.name]
-        files_in_batches = map(ps.GetBatchesPerFile, ps.ntuples)
+        files_in_batches = map(
+            ps.get_batches_per_file,
+            ps.config.preparation.get_input_files(self.args.sample),
+        )
         ps.save_tracks = None
         expected_jets = np.array([])
         for num, (jets, tracks) in enumerate(ps.jets_generator(files_in_batches)):
@@ -311,9 +267,12 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_jets_generator_fullcuts(self):
         """Test jet generator including tracks with full cuts."""
+        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
         ps = PrepareSamples(self.args, self.config)
-        ps.ntuples = [self.tf.name]
-        files_in_batches = map(ps.GetBatchesPerFile, ps.ntuples)
+        files_in_batches = map(
+            ps.get_batches_per_file,
+            ps.config.preparation.get_input_files(self.args.sample),
+        )
         ps.save_tracks = True
         expected_jets = np.array([])
         expected_tracks = np.array([])
@@ -326,9 +285,12 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_jets_generator_lightcut(self):
         """Test jet generator including tracks with cut on light jets."""
+        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
         ps = PrepareSamples(self.args, self.config)
-        ps.ntuples = [self.tf.name]
-        files_in_batches = map(ps.GetBatchesPerFile, ps.ntuples)
+        files_in_batches = map(
+            ps.get_batches_per_file,
+            ps.config.preparation.get_input_files(self.args.sample),
+        )
         ps.save_tracks = True
         ps.cuts = [{"eventNumber": {"operator": "==", "condition": 0}}]
         expected_jets_len = expected_tracks_len = 1
@@ -341,8 +303,8 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_run(self):
         """Test the run function."""
+        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
         ps = PrepareSamples(self.args, self.config)
-        ps.ntuples = [self.tf.name]
-        ps.output_file = self.output_file.name
-        ps.Run()
+        ps.sample.output_name = self.output_file.name
+        ps.run()
         assert os.path.exists(self.output_file.name) == 1

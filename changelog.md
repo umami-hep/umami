@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Rewriting of preprocessing config reader [!606](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/606)
 - Adding truth label to results file + Fix flavour retrieval in plotting [!618](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/618)
 - Merging load validation data functions [!615](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/615)
 - Update training documentation [!613](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/613)

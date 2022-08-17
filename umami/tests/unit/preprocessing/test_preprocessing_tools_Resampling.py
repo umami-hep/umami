@@ -265,7 +265,6 @@ class UnderSamplingTestCase(unittest.TestCase):
         )
         self.config = PreprocessConfiguration(self.config_file)
         self.sampling_config = self.config.sampling
-        self.samples_config = (self.config.preparation).get("samples")
 
         self.df_bjets = pd.DataFrame(
             {
@@ -409,7 +408,6 @@ class PDFResamplingTestCase(unittest.TestCase):
             2,
         ]
         self.sampling_config = sampling_config
-        self.samples_config = (self.config.preparation).get("samples")
         self.data = {
             "training_ttbar_bjets": pd.DataFrame(
                 {
@@ -469,10 +467,7 @@ class PDFResamplingTestCase(unittest.TestCase):
             "training_zprime_ujets",
         ]
         for sample in training_ttbar_samples:
-            sample_config_output = self.samples_config[sample]["f_output"]
-            test_h5_file_name = (
-                f"{sample_config_output['path']}/{sample_config_output['file']}"
-            )
+            test_h5_file_name = self.config.preparation.output_name
             with h5py.File(test_h5_file_name, "w") as f:
                 jets = f.create_dataset(
                     "jets",
@@ -524,7 +519,6 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
             2,
         ]
         self.sampling_config = sampling_config
-        self.samples_config = (self.config.preparation).get("samples")
         self.data = {
             "training_ttbar_bjets": pd.DataFrame(
                 {
@@ -584,10 +578,7 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
             "training_zprime_ujets",
         ]
         for sample in training_ttbar_samples:
-            sample_config_output = self.samples_config[sample]["f_output"]
-            test_h5_file_name = (
-                f"{sample_config_output['path']}/{sample_config_output['file']}"
-            )
+            test_h5_file_name = self.config.preparation.get_sample(sample).output_name
             with h5py.File(test_h5_file_name, "w") as f:
                 jets = f.create_dataset(
                     "jets",

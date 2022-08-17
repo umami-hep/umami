@@ -28,6 +28,9 @@ METADATA
 top_level.txt
 # ignoring insitute dependent parameter files
 Preprocessing-parameters-*.yaml
+# ignoring user folders
+*user*/
+*user*
 # ignoring preprocessing integration test folders
 test_preprocessing_*/
 test_train_*/

@@ -6,7 +6,7 @@ After the ntuple production (training-dataset-dumper), the first step of the pre
 As already mentioned in the [overview](preprocessing/Overview.md), the preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:211:221§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:180:190§§§
 ```
 
 | Setting | Type | Explanation |
@@ -72,21 +72,21 @@ Another cut which can be applied is the `pt_btagJes`, which is a cut on the jet 
 
 #### File- and Flavour Preparation
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:5:17§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:5:14§§§
 ```
 In the `Preparation` section, different options need to be set and files/flavours defined. The options that need to be set are given in the following table:
 
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `batchsize` | `int` | Number of jets that are loaded per iteration step from the `.h5` files. This is to not load the whole `.h5` file at once, which could lead to exhaustion of the available RAM. This number can adjusted to the amount of RAM that is available. |
-| `ntuples` | `dict` | The dict with the file types which are used in the preprocessing. `ttbar` and `zprime` are the internal names of these files. Both are also dicts. |
+| `input_h5` | `dict` | The dict with the file types which are used in the preprocessing. Here `ttbar` and `zprime` are the internal names of these files. Both are also dicts. |
 | `path` | `str` | Dict entry of `ttbar` and `zprime`. This gives the path to the folder where the process folders are stored (this is the same as `ntuple_path` in `Preprocessing-Parameters.yaml`). |
-| `file` | `str` | Dict entry of `ttbar` and `zprime`. This is the specific path to the `.h5` files of the process. The `path` and `file` are in the script merged to form the global path to the `.h5` files. Wildcards are supported! |
+| `file_pattern` | `str` | Dict entry of `ttbar` and `zprime`. This is the specific path to the `.h5` files of the process. The `path` and `file` are in the script merged to form the global path to the `.h5` files. Wildcards are supported! |
 
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:19:128§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:16:97§§§
 ```
 
 The last part is the exact splitting of the flavours. In `samples`, you define for each of $t\bar{t}$/$Z'$ and training/validation/testing the flavours you want to use.
@@ -97,10 +97,10 @@ The sample are defined as dicts with the following options:
 | ------- | ---- | ----------- |
 | `type` | `str` | Type of process that this file will be. |
 | `category` | `str` | This defines that flavour that will be extracted in this file. You can either use a flavour like `bjets` or `inclusive`, which will use all tracks regardless of their flavour. |
-| `n_jets` | `int` | Number of jets you want for this specific flavour.
+| `n_jets` | `int` | Number of jets you want for this specific flavour. If not specified, it is set to 4M.|
 | `cuts` | `list` | A list of cuts that are applied. In the default case, this is added via templates which are added with `<<:`. |
-| `f_output` | `dict` | As for `ntuples` this defined the part where the file will be saved. || `path` | `str` | Dict entry of `f_output`. This gives the path to the folder where the prepared file wil be stored (this is the same as `sample_path` in `Preprocessing-Parameters.yaml`). |
-| `file` | `str` | Dict entry of `f_output`. This is the name of the output file. |
+| `output_name` | `str` | Name of the output file where the prepared file will be stored. |
+
 
 **Note**: The `n_jets` should be as high as possible for the train files! This is just the number of jets for this flavour which are extraced from the `.h5` files coming from the dumper. The resampling algorithm uses these samples to get the jets for building the final training sample, but it only uses as much as needed! Only for the validation and testing files we suggest to use something around `4e6` (otherwise the loading later on takes quite some time).
 
