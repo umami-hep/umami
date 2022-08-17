@@ -47,7 +47,8 @@ def calculate_fraction_dict(
 
     # Create the permutations
     combinations = permutations(
-        np.arange(frac_min, frac_max, step).tolist(), len(class_labels_wo_main)
+        np.arange(frac_min, frac_max + step, step),
+        len(class_labels_wo_main),
     )
 
     # Iterate over the combinations

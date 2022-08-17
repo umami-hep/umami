@@ -122,22 +122,23 @@ def evaluate_model(
     eval_params = train_config.Eval_parameters_validation
     class_labels = train_config.NN_structure["class_labels"]
     main_class = train_config.NN_structure["main_class"]
-    frac_values_comp = eval_params["frac_values_comp"]
+    frac_values_comp = eval_params.get("frac_values_comp")
     working_point = eval_params["WP"]
-    add_variables = eval_params.get("add_eval_variables", None)
+    add_variables = eval_params.get("add_eval_variables")
     tracks_name = (
         train_config.tracks_name if hasattr(train_config, "tracks_name") else None
     )
-    var_cuts = test_set_config.get("variable_cuts", None)
+    var_cuts = test_set_config.get("variable_cuts")
+    tagger_from_file = eval_params.get("tagger")
 
     # Test if multiple taggers are given or not
-    if isinstance(eval_params["tagger"], str):
-        tagger_list = [eval_params["tagger"]]
+    if isinstance(tagger_from_file, str):
+        tagger_list = [tagger_from_file]
 
-    elif isinstance(eval_params["tagger"], list):
-        tagger_list = eval_params["tagger"]
+    elif isinstance(tagger_from_file, list):
+        tagger_list = tagger_from_file
 
-    elif eval_params["tagger"] is None:
+    elif tagger_from_file is None:
         tagger_list = []
 
     else:

@@ -7,7 +7,7 @@ Eval_parameters:
 
 # Contour fraction plot
 contour_fraction_ttbar:
-  type: "Frac_Contour"
+  type: "fraction_contour"
   rejections: ["ujets", "cjets"]
   models_to_plot:
     dl1r:

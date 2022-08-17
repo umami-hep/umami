@@ -927,6 +927,9 @@ def plot_fraction_contour(
     IndexError
         If the given number of tagger names, labels and data dicts are not
         the same.
+    ValueError
+        If the given marker values summed (together with the fixed rejection
+        values) is not equal to one (or not on the plotted curve).
     """
 
     # Translate the old keywords
@@ -996,7 +999,11 @@ def plot_fraction_contour(
         marked_points_list,
     ):
         # Init a dict for the rejections with an empty list for each rejection
-        df = {f"{rejection}": [] for rejection in rejections_to_plot}
+        df = {str(rejection): [] for rejection in rejections_to_plot}
+
+        # Init x- and y positon for the mark
+        plot_point_x = None
+        plot_point_y = None
 
         # Loop over the fraction values
         for frac in fraction_list:
@@ -1013,10 +1020,7 @@ def plot_fraction_contour(
                         rej_to_fix_key,
                         rej_to_fix_key_value,
                     ) in fixed_rejections.items():
-                        if (
-                            not dict_values[f"{rej_to_fix_key}_rej"]
-                            == rej_to_fix_key_value
-                        ):
+                        if not dict_values[rej_to_fix_key] == rej_to_fix_key_value:
                             rej_to_fix_bool = False
 
                 # Check that the correct combination of fraction value and
@@ -1049,6 +1053,14 @@ def plot_fraction_contour(
         )
 
         if marked_point_dict:
+            if plot_point_x is None and plot_point_y is None:
+                raise ValueError(
+                    f"The given marker for {tagger} is not on the plotted line!"
+                    " Please check that you have given correct position values!"
+                    " The values of the marker point (and the ones in fixed_rejections"
+                    " if defined) must add up to 1!"
+                )
+
             # Build the correct marker for the point
             frac_label_x = flav_cat[rejections_to_plot[0]]["prob_var_name"]
             frac_x_value = marked_point_dict[f"{rejections_to_plot[0]}"]
