@@ -120,23 +120,20 @@ if __name__ == "__main__":
 
         # Check if one specific sample is given
         if args.sample:
-            preparation_tool = upt.PrepareSamples(args, config)
-            preparation_tool.Run()
-
-        # If no specific sample is given
+            samples = [args.sample]
+        # If no specific sample is given iterate over the samples defined in the config
         else:
+            samples = config.preparation.samples.keys()
             logger.warning(
                 "No --sample was selected, using all in config file! This can"
                 " take a lot of time!"
             )
+        for iter_sample in samples:
 
-            # Iterate over the samples defined in the config
-            for iter_sample in config.preparation["samples"].keys():
-
-                # Set the argument in args to this sample and run prepare
-                args.sample = iter_sample
-                preparation_tool = upt.PrepareSamples(args, config)
-                preparation_tool.Run()
+            # Set the argument in args to this sample and run prepare
+            args.sample = iter_sample
+            preparation_tool = upt.PrepareSamples(args, config)
+            preparation_tool.run()
 
     # Check for resampling
     elif args.resampling:

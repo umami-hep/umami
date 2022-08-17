@@ -11,10 +11,7 @@ from umami.preprocessing_tools.Merging import (
 )
 
 # from umami.preprocessing_tools.PDF_Sampling import PDFSampling
-from umami.preprocessing_tools.Preparation import (
-    GetPreparationSamplePath,
-    PrepareSamples,
-)
+from umami.preprocessing_tools.Preparation import PrepareSamples
 from umami.preprocessing_tools.resampling.count_sampling import UnderSampling
 from umami.preprocessing_tools.resampling.importance_sampling_no_replace import (
     UnderSamplingNoReplace,

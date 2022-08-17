@@ -14,7 +14,7 @@ The `Weighting Sampling` is not a real resampling, in the same sense as the othe
 The resampling part of the config file starts with the `sampling:` dict.
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:130:136§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:99:105
 ```
 
 In `sampling`, we can define now the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf`, `importance_no_replace` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
@@ -24,7 +24,7 @@ An important part are the `class_labels` which are defined here. You can define 
 For an explanation of the resampling function specific `options`, have a look in the section of the resampling method you want to use. The general `options` are explained in the following:
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:172:208§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:141:177§§§
 ```
 
 | Setting | Type | Explanation |
@@ -47,7 +47,7 @@ For an explanation of the resampling function specific `options`, have a look in
 Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used.
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:139:169§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:108:138§§§
 ```
 
 | Setting | Type | Explanation |

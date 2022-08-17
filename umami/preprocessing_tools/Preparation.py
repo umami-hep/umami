@@ -1,31 +1,10 @@
 """Helper functions to creating hybrid hdf5 samples from ttbar and Zprime ntuples."""
-import os
-from glob import glob
-
 import h5py
 import numpy as np
 from tqdm import tqdm
 
 from umami.configuration import global_config, logger
 from umami.data_tools import get_category_cuts, get_sample_cuts
-
-
-def GetPreparationSamplePath(sample):
-    """
-    Retrieves the output sample path of the samples defined in the `samples` block in
-    the preprocessing config.
-
-    Parameters
-    ----------
-    sample : dict
-        sample configuration
-
-    Returns
-    -------
-    str
-        output sample path
-    """
-    return os.path.join(sample.get("f_output")["path"], sample.get("f_output")["file"])
 
 
 class PrepareSamples:
@@ -74,23 +53,17 @@ class PrepareSamples:
         if not args.sample:
             raise KeyError("Please provide --sample to prepare hybrid samples")
         # load list of samples
-        samples = self.config.preparation["samples"]
-        try:
-            sample = samples[args.sample]
-        except KeyError as error:
-            raise KeyError(f'sample "{args.sample}" not in config file!') from error
+        self.sample = self.config.preparation.get_sample(args.sample)
 
-        self.sample_type = sample.get("type")
-        self.sample_category = sample.get("category")
-        cuts = sample.get("cuts", None)
-        if self.sample_category == "inclusive":
+        cuts = self.sample.cuts
+        if self.sample.category == "inclusive":
             self.cuts = cuts
         else:
             try:
-                category_setup = global_config.flavour_categories[self.sample_category]
+                category_setup = global_config.flavour_categories[self.sample.category]
             except KeyError as error:
                 raise KeyError(
-                    f"Requested sample category {self.sample_category} not"
+                    f"Requested sample category {self.sample.category} not"
                     " defined in global config."
                 ) from error
 
@@ -101,35 +74,19 @@ class PrepareSamples:
                 category_setup.get("operator"),
             )
             self.cuts = cuts + category_cuts
-        self.n_jets_to_get = int(sample.get("n_jets", 0))
 
         # Check if tracks are used
         self.save_tracks = self.config.sampling["options"]["save_tracks"]
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
 
-        output_path = sample.get("f_output")["path"]
-        self.output_file = os.path.join(output_path, sample.get("f_output")["file"])
-        os.makedirs(output_path, exist_ok=True)
+        self.sample.output_name.parent.mkdir(parents=True, exist_ok=True)
 
         # bookkeeping variables for running over the ntuples
         self.jets_loaded = 0
         self.create_file = True
         self.shuffle_array = args.shuffle_array
 
-        # set up ntuples
-        ntuples = self.config.preparation["ntuples"]
-        ntuple_path = ntuples.get(sample["type"])["path"]
-        ntuple_file_pattern = ntuples.get(sample["type"])["file_pattern"]
-        self.ntuples = glob(os.path.join(ntuple_path, ntuple_file_pattern))
-
-        # get size of batches
-        if "batchsize" not in self.config.preparation:
-            logger.warning("no batch size given. Batch size set to 1,000,000")
-            self.batch_size = 1_000_000
-        else:
-            self.batch_size = int(self.config.preparation["batchsize"])
-
-    def GetBatchesPerFile(self, filename: str):
+    def get_batches_per_file(self, filename: str):
         """
         Split the file into batches to avoid that the loaded data is too large.
 
@@ -146,19 +103,18 @@ class PrepareSamples:
             tuples of start and end index of batch
 
         """
-        batch_size = self.batch_size
         with h5py.File(filename, "r") as data_set:
             # get total number of jets in file
             total_n_jets = len(data_set["jets"])
             logger.debug("Total number of jets in file: %i", total_n_jets)
             # first tuple is given by (0, batch_size)
             start_batch = 0
-            end_batch = batch_size
+            end_batch = self.config.preparation.batch_size
             indices_batches = [(start_batch, end_batch)]
             # get remaining tuples of indices defining the batches
             while end_batch <= total_n_jets:
-                start_batch += batch_size
-                end_batch = start_batch + batch_size
+                start_batch += self.config.preparation.batch_size
+                end_batch = start_batch + self.config.preparation.batch_size
                 indices_batches.append((start_batch, end_batch))
         return (filename, indices_batches)
 
@@ -179,7 +135,7 @@ class PrepareSamples:
             tracks if `self.save_tracks` is set to True
         """
         for filename, batches in files_in_batches:
-            if self.n_jets_to_get <= 0:
+            if self.sample.n_jets <= 0:
                 break
             logger.debug("Opening file %s.", filename)
             with h5py.File(filename, "r") as data_set:
@@ -200,24 +156,27 @@ class PrepareSamples:
                         tracks = None
                     yield (jets, tracks)
 
-    def Run(self):
+    def run(self):
         """Run over Ntuples to extract jets (and potentially also tracks)."""
         logger.info(
-            "Preparing ntuples for %s %s...", self.sample_type, self.sample_category
+            "Preparing ntuples for %s %s...", self.sample.type, self.sample.category
         )
 
-        pbar = tqdm(total=self.n_jets_to_get)
+        pbar = tqdm(total=self.sample.n_jets)
         # get list of batches for each file
-        files_in_batches = map(self.GetBatchesPerFile, self.ntuples)
+        files_in_batches = map(
+            self.get_batches_per_file,
+            self.config.preparation.get_input_files(self.sample.type),
+        )
         # loop over batches for all files and load the batches separately
-        n_jets_check = self.n_jets_to_get
+        n_jets_check = self.sample.n_jets
         displayed_writing_output = True
         for jets, tracks in self.jets_generator(files_in_batches):
             if jets.shape[0] == 0:
                 continue
             pbar.update(jets.size)
             self.jets_loaded += jets.size
-            self.n_jets_to_get -= jets.size
+            self.sample.n_jets -= jets.size
 
             if self.shuffle_array:
                 pbar.write("Shuffling array")
@@ -238,8 +197,8 @@ class PrepareSamples:
             if self.create_file:
                 self.create_file = False  # pylint: disable=W0201:
                 # write to file by creating dataset
-                pbar.write("Creating output file: " + self.output_file)
-                with h5py.File(self.output_file, "w") as out_file:
+                pbar.write(f"Creating output file: {self.sample.output_name}")
+                with h5py.File(self.sample.output_name, "w") as out_file:
                     out_file.create_dataset(
                         "jets",
                         data=jets,
@@ -259,8 +218,8 @@ class PrepareSamples:
             else:
                 # appending to existing dataset
                 if displayed_writing_output:
-                    pbar.write("Writing to output file: " + self.output_file)
-                with h5py.File(self.output_file, "a") as out_file:
+                    pbar.write(f"Writing to output file: {self.sample.output_name}")
+                with h5py.File(self.sample.output_name, "a") as out_file:
                     out_file["jets"].resize(
                         (out_file["jets"].shape[0] + jets.shape[0]),
                         axis=0,
@@ -279,10 +238,10 @@ class PrepareSamples:
                                 -tracks[tracks_name].shape[0] :
                             ] = tracks[tracks_name]
                 displayed_writing_output = False
-            if self.n_jets_to_get <= 0:
+            if self.sample.n_jets <= 0:
                 break
         pbar.close()
-        if self.n_jets_to_get > 0:
+        if self.sample.n_jets > 0:
             logger.warning(
                 "Not as many jets selected as defined in config file. Only"
                 " %i jets selected instead of %i",

@@ -2,6 +2,7 @@
 import copy
 import os
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 
 from umami.configuration import Configuration, logger
@@ -9,7 +10,6 @@ from umami.configuration import Configuration, logger
 
 def check_key(location, old_key: str, new_key: str) -> None:
     """Helper function to check
-
 
     Parameters
     ----------
@@ -29,6 +29,219 @@ def check_key(location, old_key: str, new_key: str) -> None:
             f"`{old_key}` was deprecated and is now called `{new_key}`. "
             "Please change that in your config"
         )
+
+
+@dataclass
+class Sample:
+    """Class storing sample info.
+
+    Parameters
+    ----------
+    name : str
+        Name of sample
+    type : str
+        Sample type
+    category : str
+        Sample category, e.g. bjets
+    n_jets : int
+        Number of jets to load from sample
+    cuts : dict
+        Dictionary containing cuts which will be applied on sample
+    output_name : str
+        Name of output file
+    """
+
+    name: str = None
+    type: str = None
+    category: str = None
+    n_jets: int = None
+    cuts: dict = None
+    output_name: str = None
+
+    def __str__(self) -> str:
+        return (
+            f"{self.name=}, {self.type=}, {self.category=}, {self.n_jets=}, "
+            f"{self.cuts=}, {self.output_name=}"
+        )
+
+
+class Preparation:
+    """Class handling preprocessing options in `preparation` block."""
+
+    def __init__(self, settings: dict) -> None:
+        """Initialise Preparation settings.
+
+        Parameters
+        ----------
+        settings : dict
+            Dictionary containing the preparation block.
+        """
+        # Number of jets loaded per batch from the files for preparation.
+        self.settings = settings
+        # TODO: rename also in config to batch_size
+        if "batch_size" in settings:
+            self.batch_size = int(settings.get("batch_size"))
+        elif "batchsize" in settings:
+            self.batch_size = int(settings.get("batchsize"))
+        else:
+            self.batch_size = 500_000
+            logger.info(
+                "Batch size not specified for prepare step. It will be set to 500k."
+            )
+        self.input_files = {}
+        # the keywords ntuples was renamed to input_h5, though still supporting both.
+        self._init_input_h5(settings.get("input_h5", settings.get("ntuples")))
+        self.samples = {}
+        self._init_samples(settings.get("samples"))
+        self.sample_categories = None
+
+    def get_sample(self, sample_name: str):
+        """Retrieve information about sample.
+
+        Parameters
+        ----------
+        sample_name : str
+            Name of sample
+
+        Returns
+        -------
+        Sample
+            sample class of specified sample
+
+        Raises
+        ------
+        KeyError
+            if specified sample not in config file
+        """
+        try:
+            return self.samples[sample_name]
+        except KeyError as error:
+            raise KeyError(
+                f"Requested sample `{sample_name}` is not defined in config file."
+            ) from error
+
+    def _init_samples(self, samples: dict) -> None:
+        """Reading in samples from configuration.
+
+        Parameters
+        ----------
+        samples : dict
+            dictionary containing samples
+
+        Raises
+        ------
+        KeyError
+            if both `f_output` and `output_name` are specified for a sample
+        """
+
+        for sample_name, sample_settings in samples.items():
+            # for now two config options are supported, either defining the full name
+            # via `output_name` or in the old way giving a dict `f_output` with `path`
+            # and `file` specified.
+            if "f_output" in sample_settings and "output_name" in sample_settings:
+                raise KeyError(
+                    "You specified both `f_output` and `output_name` in your"
+                    f"`{sample_name}`, you can only specify one of them."
+                )
+            sample = Sample()
+            sample.name = sample_name
+            f_output = sample_settings.get("f_output", None)
+            if f_output is None:
+                sample.output_name = Path(sample_settings.get("output_name"))
+            else:
+                sample.output_name = Path(f_output.get("path", ".")) / f_output.get(
+                    "file"
+                )
+            sample.type = sample_settings.get("type")
+            sample.category = sample_settings.get("category")
+            if "n_jets" in sample_settings:
+                sample.n_jets = int(sample_settings.get("n_jets"))
+            else:
+                sample.n_jets = int(4e6)
+                logger.info(
+                    "`n_jets` not specified for sample %s. It will be set to 10M.",
+                    sample_name,
+                )
+            sample.cuts = sample_settings.get("cuts")
+            if sample.cuts is None:
+                sample.cuts = []
+            self.samples[sample_name] = sample
+            logger.debug("Read in sample %s", sample)
+
+    def _init_input_h5(self, input_h5: dict) -> None:
+        """Reading in input_h5 from configuration.
+
+        Parameters
+        ----------
+        input_h5 : dict
+            dictionary containing input_h5
+        """
+        # The sample categories are the keys of the input_h5 dict
+        sample_categories = []
+        for sample_type, value in input_h5.items():
+            path = Path(value.get("path"))
+            self.input_files[sample_type] = list(path.rglob(value.get("file_pattern")))
+            sample_categories.append(sample_type)
+        self.sample_categories = sample_categories
+
+    def get_input_files(self, sample_type: str):
+        """Provides
+
+        Parameters
+        ----------
+        sample_type : str
+            Sample type, e.g. ttbar
+
+        Returns
+        -------
+        list
+            List of h5 input files
+        """
+        return self.input_files.get(sample_type)
+
+
+@dataclass
+class Sampling:
+    """Class handling preprocessing options in `sampling` block."""
+
+    class_labels: list = None
+    method: str = None
+    options: object = None
+
+
+@dataclass
+class SamplingOptions:
+    """Class handling preprocessing options in `sampling` block."""
+
+    sampling_variables: list = None
+    samples: dict = None
+    custom_n_jets_initial: dict = None
+    fractions: dict = None
+    max_upsampling_ratio: dict = None
+    n_jets: int = None
+    n_jets_scaling: int = None
+    save_tracks: bool = None
+    tracks_names: list = None
+    save_track_labels: bool = None
+    track_truth_variables: list = None
+    intermediate_index_file: str = None
+    weighting_target_flavour: str = None
+    bool_attach_sample_weights: bool = None
+    n_jets_to_plot: int = None
+
+
+@dataclass
+class GeneralSettings:
+    """Class handling general preprocessing options."""
+
+    outfile_name: str = None
+    plot_name: str = None
+    plot_sample_label: str = None
+    var_file: str = None
+    dict_file: str = None
+    compression: str = None
+    precision: str = None
+    convert_to_tfrecord: dict = None
 
 
 class PreprocessConfiguration(Configuration):
@@ -52,35 +265,9 @@ class PreprocessConfiguration(Configuration):
         self.check_tracks_names()
         self.check_deprecated_keys()
 
-    @property
-    def parameter_config_path(self) -> str:
-        """
-        Return parameter config path, as found on some line in the config file.
-
-        Returns
-        -------
-        str
-            Preprocessing parameter filepath
-        """
-
-        with open(self.yaml_config, "r") as conf:
-            line = conf.readline()
-            while "!include" not in line:
-                line = conf.readline()
-
-        line = line.split("!include ")
-        if line[0] != "parameters: ":
-            logger.warning(
-                "You did not specify in the first line of the preprocessing config  the"
-                " 'parameters' with the !include option. Ignoring any parameter file."
-            )
-            return None
-
-        preprocess_parameters_path = os.path.join(
-            os.path.dirname(self.config_path),
-            line[1].strip(),
-        )
-        return preprocess_parameters_path
+        # here the new syntax starts
+        logger.info("Initialising preparation configuration.")
+        self.preparation = Preparation(self.config.get("preparation"))
 
     def get_configuration(self) -> None:
         """Assign configuration from file to class variables.
@@ -91,6 +278,8 @@ class PreprocessConfiguration(Configuration):
             if required config option is not present in passed config file
         """
         for elem in self.default_config:
+            if elem == "preparation":
+                continue
             if elem in self.config:
                 if isinstance(self.config[elem], dict) and "f_" in elem:
                     if "file" not in self.config[elem]:

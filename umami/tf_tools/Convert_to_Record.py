@@ -21,7 +21,7 @@ class h5_to_tf_record_converter:
 
         except (AttributeError, KeyError, ValueError) as chunk_size_no_int:
             try:
-                self.chunk_size = config.preparation["convert"]["chunk_size"]
+                self.chunk_size = config.convert_to_tfrecord["chunk_size"]
                 if not isinstance(self.chunk_size, int):
                     raise KeyError from chunk_size_no_int
                 logger.info("Save %i entries in one file", self.chunk_size)

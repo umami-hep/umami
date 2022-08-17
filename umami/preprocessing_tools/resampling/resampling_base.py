@@ -14,7 +14,6 @@ from tqdm import tqdm
 
 from umami.configuration import logger
 from umami.data_tools import compare_h5_files_variables
-from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
 
 
 def SamplingGenerator(
@@ -458,12 +457,17 @@ class Resampling:
         config : object
             umami.preprocessing_tools.Configuration object which stores
             the config for the preprocessing
+
+        Raises
+        ------
+        KeyError
+            Deprecation Error if class_labels are given in preparation block
         """
 
         # Get options as attributes of self
         self.config = config
         self.options = config.sampling.get("options")
-        self.preparation_samples = config.preparation.get("samples")
+        self.preparation_config = config.preparation
         # filling self.[var_x var_y bins_x bins_y]
         self._GetBinning()
         self.rnd_seed = 42
@@ -497,17 +501,12 @@ class Resampling:
                 label: label_id
                 for label_id, label in enumerate(config.sampling["class_labels"])
             }
-
-        except KeyError:
-            self.class_labels_map = {
-                label: label_id
-                for label_id, label in enumerate(config.preparation["class_labels"])
-            }
-            logger.warning(
-                "Deprecation Warning: class_labels are given in preparation"
-                " and not in sampling block! Consider moving this to"
+        except KeyError as error:
+            raise KeyError(
+                "Deprecation Error: class_labels are given in preparation"
+                " and not in sampling block! You need to move this option to"
                 " the sampling block in your config!"
-            )
+            ) from error
 
     def _GetBinning(self):
         """
@@ -738,7 +737,7 @@ class Resampling:
                 indices=indices[sample],
                 chunk_size=chunk_sizes[i],
                 label=self.class_labels_map[
-                    self.preparation_samples[sample]["category"]
+                    self.preparation_config.get_sample(sample).category
                 ],
                 label_classes=list(range(len(self.class_labels_map))),
                 variables=common_vars,
@@ -903,8 +902,9 @@ class ResamplingTools(Resampling):
             sample_id = self.sample_categories[sample_category]
             self.samples[sample_category] = []
             for sample in samples[sample_category]:
-                preparation_sample = self.preparation_samples.get(sample)
-                preparation_sample_path = GetPreparationSamplePath(preparation_sample)
+                preparation_sample_path = self.config.preparation.get_sample(
+                    sample
+                ).output_name
                 self.sample_file_map[sample] = preparation_sample_path
                 logger.info(
                     "Loading sampling variables from %s", preparation_sample_path
@@ -938,7 +938,7 @@ class ResamplingTools(Resampling):
                 logger.info(
                     "Loaded %s %s jets from %s.",
                     len(jets_x),
-                    preparation_sample.get("category"),
+                    self.preparation_config.get_sample(sample).category,
                     sample,
                 )
                 # construct a flat array with 5 columns:
@@ -956,14 +956,14 @@ class ResamplingTools(Resampling):
                     {
                         "file": preparation_sample_path,
                         "sample_vector": sample_vector,
-                        "category": preparation_sample.get("category"),
+                        "category": self.preparation_config.get_sample(sample).category,
                         "sample": sample,
                         "sample_id": sample_id,
                     }
                 )
                 self.sample_map[sample_category] = {
                     **self.sample_map[sample_category],
-                    preparation_sample.get("category"): sample,
+                    self.preparation_config.get_sample(sample).category: sample,
                 }
 
     def GetValidClassCategories(self, samples: dict):
@@ -983,8 +983,6 @@ class ResamplingTools(Resampling):
 
         Raises
         ------
-        KeyError
-            If the sample requested is not in the preparation block.
         RuntimeError
             If your specified samples in the sampling block don't have
             same samples in each category.
@@ -995,14 +993,8 @@ class ResamplingTools(Resampling):
         for category in categories:
             check_consistency[category] = []
             for sample in samples[category]:
-                preparation_sample = self.preparation_samples.get(sample)
-                if preparation_sample is None:
-                    raise KeyError(
-                        f"'{sample}' was requested in sampling/samples block, "
-                        "however, it was not defined in preparation/samples in"
-                        "the preprocessing config file!"
-                    )
-                check_consistency[category].append(preparation_sample["category"])
+                preparation_sample = self.preparation_config.get_sample(sample)
+                check_consistency[category].append(preparation_sample.category)
         combs = list(itertools.combinations(check_consistency.keys(), 2))
         combs_check = [
             sorted(check_consistency[elem[0]]) == sorted(check_consistency[elem[1]])

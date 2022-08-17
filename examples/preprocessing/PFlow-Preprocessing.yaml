@@ -2,12 +2,9 @@ parameters: !include Preprocessing-parameters.yaml
 cut_parameters: !include Preprocessing-cut_parameters.yaml
 
 
-preparation: &preparation
-  # Number of jets loaded per batch from the files for preparation.
-  batchsize: 50000
-
-  # Path to the .h5 ntuples from the h5 dumper.
-  ntuples:
+preparation:
+  # Path to the .h5 files from the h5 dumper.
+  input_h5:
     ttbar:
       path: *ntuple_path
       file_pattern: user.alfroch.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
@@ -22,9 +19,7 @@ preparation: &preparation
       category: bjets
       n_jets: 10e6
       <<: *cuts_template_ttbar_train
-      f_output:
-        path: *sample_path
-        file: bjets_training_ttbar_PFlow.h5
+      output_name: !join [*sample_path, /bjets_training_ttbar_PFlow.h5]
 
     training_ttbar_cjets:
       type: ttbar
@@ -32,36 +27,28 @@ preparation: &preparation
       # Number of c jets available in MC16d
       n_jets: 12745953
       <<: *cuts_template_ttbar_train
-      f_output:
-        path: *sample_path
-        file: cjets_training_ttbar_PFlow.h5
+      output_name: !join [*sample_path, /cjets_training_ttbar_PFlow.h5]
 
     training_ttbar_ujets:
       type: ttbar
       category: ujets
       n_jets: 20e6
       <<: *cuts_template_ttbar_train
-      f_output:
-        path: *sample_path
-        file: ujets_training_ttbar_PFlow.h5
+      output_name: !join [*sample_path, /ujets_training_ttbar_PFlow.h5]
 
     training_ttbar_taujets:
       type: ttbar
       category: taujets
       n_jets: 13e6
       <<: *cuts_template_ttbar_train
-      f_output:
-        path: *sample_path
-        file: taujets_training_ttbar_PFlow.h5
+      output_name: !join [*sample_path, /taujets_training_ttbar_PFlow.h5]
 
     training_zprime_bjets:
       type: zprime
       category: bjets
       n_jets: 10e6
       <<: *cuts_template_zprime_train
-      f_output:
-        path: *sample_path
-        file: bjets_training_zprime_PFlow.h5
+      output_name: !join [*sample_path, /bjets_training_zprime_PFlow.h5]
 
     training_zprime_cjets:
       type: zprime
@@ -69,65 +56,47 @@ preparation: &preparation
       # Number of c jets available in MC16d
       n_jets: 10e6
       <<: *cuts_template_zprime_train
-      f_output:
-        path: *sample_path
-        file: cjets_training_zprime_PFlow.h5
+      output_name: !join [*sample_path, /cjets_training_zprime_PFlow.h5]
 
     training_zprime_ujets:
       type: zprime
       category: ujets
       n_jets: 10e6
       <<: *cuts_template_zprime_train
-      f_output:
-        path: *sample_path
-        file: ujets_training_zprime_PFlow.h5
+      output_name: !join [*sample_path, /ujets_training_zprime_PFlow.h5]
 
     training_zprime_taujets:
       type: zprime
       category: taujets
       n_jets: 10e6
       <<: *cuts_template_zprime_train
-      f_output:
-        path: *sample_path
-        file: taujets_training_zprime_PFlow.h5
+      output_name: !join [*sample_path, /taujets_training_zprime_PFlow.h5]
 
     validation_ttbar:
       type: ttbar
       category: inclusive
-      n_jets: 4e6
       <<: *cuts_template_validation
-      f_output:
-        path: *sample_path
-        file: inclusive_validation_ttbar_PFlow.h5
+      output_name: !join [*sample_path, /inclusive_validation_ttbar_PFlow.h5]
 
     testing_ttbar:
       type: ttbar
       category: inclusive
-      n_jets: 4e6
       <<: *cuts_template_test
-      f_output:
-        path: *sample_path
-        file: inclusive_testing_ttbar_PFlow.h5
+      output_name: !join [*sample_path, /inclusive_testing_ttbar_PFlow.h5]
 
     validation_zprime:
       type: zprime
       category: inclusive
-      n_jets: 4e6
       <<: *cuts_template_validation
-      f_output:
-        path: *sample_path
-        file: inclusive_validation_zprime_PFlow.h5
+      output_name: !join [*sample_path, /inclusive_validation_zprime_PFlow.h5]
 
     testing_zprime:
       type: zprime
       category: inclusive
-      n_jets: 4e6
       <<: *cuts_template_test
-      f_output:
-        path: *sample_path
-        file: inclusive_testing_zprime_PFlow.h5
+      output_name: !join [*sample_path, /inclusive_testing_zprime_PFlow.h5]
 
-sampling: &sampling
+sampling:
   # Classes which are used in the resampling. Order is important.
   # The order needs to be the same as in the training config!
   class_labels: [ujets, cjets, bjets]
@@ -136,7 +105,7 @@ sampling: &sampling
   method: count
 
   # The options depend on the sampling method
-  options: &sampling_options
+  options:
     sampling_variables:
       - pt_btagJes:
           # bins take either a list containing the np.linspace arguments

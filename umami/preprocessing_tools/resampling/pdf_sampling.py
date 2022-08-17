@@ -13,7 +13,6 @@ from tqdm import tqdm
 from umami.configuration import logger
 from umami.data_tools import compare_h5_files_variables
 from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
-from umami.preprocessing_tools.Preparation import GetPreparationSamplePath
 from umami.preprocessing_tools.resampling.resampling_base import (
     CorrectFractions,
     JsonNumpyEncoder,
@@ -199,7 +198,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         sample, preparation_sample = self.sample_file_map[sample_category][sample_id]
 
         # Get path of the input file
-        in_file = GetPreparationSamplePath(preparation_sample)
+        in_file = self.config.preparation.get_sample(
+            preparation_sample.name
+        ).output_name
 
         # Open input file
         with h5py.File(in_file, "r") as f:
@@ -273,7 +274,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 samples = {
                     "file": in_file,
                     "sample_vector": sample_vector,
-                    "category": preparation_sample.get("category"),
+                    "category": preparation_sample.category,
                 }
 
                 # Yield the sample name, the dict with the info,
@@ -365,7 +366,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         sample, preparation_sample = self.sample_file_map[sample_category][sample_id]
 
         # Get path of the input file
-        in_file = GetPreparationSamplePath(preparation_sample)
+        in_file = self.config.preparation.get_sample(preparation_sample).output_name
 
         # Open input file
         with h5py.File(in_file, "r") as f:
@@ -404,7 +405,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             logger.info(
                 "Loaded %i %s jets from %s.",
                 len(jets_x),
-                preparation_sample.get("category"),
+                preparation_sample.category,
                 sample,
             )
 
@@ -415,7 +416,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         samples = {
             "file": in_file,
             "sample_vector": sample_vector,
-            "category": preparation_sample.get("category"),
+            "category": preparation_sample.category,
         }
 
         # Return sample name and the dict
@@ -566,7 +567,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             "xbins": x_bin_edges,
             "ybins": y_bin_edges,
             "available_numbers": available_numbers,
-            "category": preparation_sample.get("category"),
+            "category": preparation_sample.category,
         }
 
         # If the in memory approach is chosen, set the target distribution in dict
@@ -616,7 +617,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         for sample_category in self.sample_categories:
             self.sample_file_map[sample_category] = {}
             for sample_id, sample in enumerate(samples[sample_category]):
-                preparation_sample = self.preparation_samples.get(sample)
+                preparation_sample = self.preparation_config.get_sample(sample)
                 self.sample_file_map[sample_category][sample_id] = (
                     sample,
                     preparation_sample,
@@ -628,7 +629,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     and sample in list(self.options["max_upsampling_ratio"])
                 ):
                     max_upsampling = float(self.options["max_upsampling_ratio"][sample])
-                    in_file = GetPreparationSamplePath(preparation_sample)
+                    in_file = self.config.preparation.get_sample(
+                        preparation_sample
+                    ).output_name
                     with h5py.File(in_file, "r") as f:
                         num_available = len(f["jets"])
                     self.max_upsampling[sample] = (
@@ -674,7 +677,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             for sample in samples[category]:
 
                 # Get the preparation configs (cuts etc.) for the sample
-                preparation_sample = self.preparation_samples.get(sample)
+                preparation_sample = self.preparation_config.get_sample(sample)
 
                 # Check that the samples are also defined in the preparation stage
                 if preparation_sample is None:
@@ -685,7 +688,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     )
 
                 # Add the sample to the check dict
-                check_consistency[category].append(preparation_sample["category"])
+                check_consistency[category].append(preparation_sample.category)
 
         # Get the combinations of the dict keys
         combs = list(itertools.combinations(check_consistency.keys(), 2))
@@ -1172,7 +1175,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         _, preparation_sample = self.sample_file_map[sample_category][sample_id]
 
         # Create a store_key for the sample
-        store_key = sample_category + "_" + preparation_sample.get("category")
+        store_key = sample_category + "_" + preparation_sample.category
 
         # Get filepath where the info of the target data are saved
         load_name = os.path.join(
@@ -1337,7 +1340,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         _, preparation_sample = self.sample_file_map[sample_category][sample_id]
 
         # Get the filepath of the input file
-        in_file = GetPreparationSamplePath(preparation_sample)
+        in_file = self.config.preparation.get_sample(preparation_sample).output_name
 
         # Get the number of indicies
         sample_lengths = len(selected_indices)
@@ -1356,7 +1359,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             file=in_file,
             indices=selected_indices,
             chunk_size=chunk_sizes,
-            label=self.class_labels_map[preparation_sample["category"]],
+            label=self.class_labels_map[preparation_sample.category],
             label_classes=list(range(len(self.class_labels_map))),
             save_tracks=self.save_tracks,
             tracks_names=self.tracks_names,
@@ -1493,7 +1496,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         _, preparation_sample = self.sample_file_map[sample_category][sample_id]
 
         # Get the filepath of the input sample
-        in_file = GetPreparationSamplePath(preparation_sample)
+        in_file = self.config.preparation.get_sample(
+            preparation_sample.name
+        ).output_name
 
         # Get filepath where the info of the target data are saved
         load_name = os.path.join(
@@ -1523,7 +1528,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         )
 
         # Get the labels
-        label = self.class_labels_map[preparation_sample["category"]]
+        label = self.class_labels_map[preparation_sample.category]
 
         # Get the label classes
         label_classes = list(range(len(self.class_labels_map)))
@@ -2381,7 +2386,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 concat_samples=self.concat_samples,
                 var_positions=[0, 1],
                 variable_names=[self.var_x, self.var_y],
-                sample_categories=list(self.config.preparation["ntuples"].keys()),
+                sample_categories=self.config.preparation.sample_categories,
                 output_dir=os.path.join(
                     self.resampled_path,
                     "plots/resampling/",

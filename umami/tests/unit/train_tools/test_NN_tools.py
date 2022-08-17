@@ -946,6 +946,8 @@ class GetSamples_TestCase(unittest.TestCase):
 
         with self.subTest("Test Assertion Error"):
             with self.assertRaises(AssertionError):
+                # reinitialising since self.sampling["class_labels"] was deleted above
+                self.sampling = {"class_labels": ["bjets", "cjets", "ujets"]}
                 get_test_sample_trks(
                     input_file=self.validation_files["ttbar_r21_val"]["path"],
                     var_dict=self.var_dict,

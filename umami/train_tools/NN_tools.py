@@ -858,23 +858,10 @@ def get_test_sample_trks(
     """
 
     # Adding class_labels check between preprocess_config and given labels
-    # Try/Except here for backward compatibility
-    try:
-        assert preprocess_config.sampling["class_labels"] == class_labels, (
-            "class_labels from preprocessing_config and from train_config are"
-            " different! They need to be the same!"
-        )
-
-    except (AttributeError, KeyError):
-        logger.warning(
-            "Deprecation Warning: class_labels are given in preparation"
-            " and not in sampling block! Consider moving this to"
-            " the sampling block in your config!"
-        )
-        assert preprocess_config.preparation["class_labels"] == class_labels, (
-            "class_labels from preprocessing_config and from train_config are"
-            " different! They need to be the same!"
-        )
+    assert preprocess_config.sampling["class_labels"] == class_labels, (
+        "class_labels from preprocessing_config and from train_config are"
+        " different! They need to be the same!"
+    )
 
     # making sure the n_jets aregument is an integer
     n_jets = int(n_jets)
