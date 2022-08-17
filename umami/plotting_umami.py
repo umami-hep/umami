@@ -555,8 +555,8 @@ def plot_frac_contour(
         df_results_list.append(model_config["df_results_frac_rej"])
         tagger_list.append(model_config["tagger_name"])
         labels.append(model_config["label"])
-        linestyles.append(model_config["linestyle"])
-        colours.append(model_config["colour"])
+        linestyles.append(model_config.get("linestyle"))
+        colours.append(model_config.get("colour"))
 
     uet.plot_fraction_contour(
         df_results_list=df_results_list,
@@ -637,7 +637,8 @@ def set_up_plots(
             )
 
         # Check for plot type and use the needed function
-        if plot_config["type"] == "Frac_Contour":
+        # TODO Remove Frac_Contour
+        if plot_config["type"] in ("Frac_Contour", "fraction_contour"):
             plot_frac_contour(
                 plot_name=save_plot_to,
                 plot_config=plot_config,
