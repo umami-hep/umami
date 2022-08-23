@@ -54,10 +54,10 @@ def create_umami_model(
         Starting epoch number
     """
     # Load NN Structure and training parameter from file
-    nn_structure = train_config.NN_structure
+    nn_structure = train_config.nn_structure
 
     # Set NN options
-    batch_norm = nn_structure["Batch_Normalisation"]
+    batch_norm = nn_structure["batch_normalisation"]
     dropout = nn_structure["dropout"]
     class_labels = nn_structure["class_labels"]
 
@@ -78,7 +78,7 @@ def create_umami_model(
         tdd = masked_inputs
 
         # Define the TimeDistributed layers for the different tracks
-        for i, phi_nodes in enumerate(nn_structure["DIPS_ppm_units"]):
+        for i, phi_nodes in enumerate(nn_structure["dips_ppm_units"]):
 
             tdd = TimeDistributed(
                 Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
@@ -103,8 +103,8 @@ def create_umami_model(
 
         for j, (f_nodes, drop_rate) in enumerate(
             zip(
-                nn_structure["DIPS_dense_units"],
-                [dropout] * len(nn_structure["DIPS_dense_units"][:-1]) + [0],
+                nn_structure["dips_dense_units"],
+                [dropout] * len(nn_structure["dips_dense_units"][:-1]) + [0],
             )
         ):
 
@@ -135,7 +135,7 @@ def create_umami_model(
         x_net = Concatenate()([f_net, x_net])
 
         # Loop to initialise the hidden layers
-        for unit in nn_structure["DL1_units"]:
+        for unit in nn_structure["dl1_units"]:
             x_net = Dense(
                 units=unit,
                 activation="linear",
@@ -189,9 +189,9 @@ def train_umami(args, train_config):
     """
 
     # Load NN Structure and training parameter from file
-    nn_structure = train_config.NN_structure
-    val_params = train_config.Validation_metrics_settings
-    eval_params = train_config.Eval_parameters_validation
+    nn_structure = train_config.nn_structure
+    val_params = train_config.validation_settings
+    eval_params = train_config.evaluation_settings
 
     # Init a list for the callbacks
     callbacks = []
@@ -332,7 +332,7 @@ def train_umami(args, train_config):
     else:
         n_epochs = args.epochs
 
-    if "LRR" in nn_structure and nn_structure["LRR"] is True:
+    if "lrr" in nn_structure and nn_structure["lrr"] is True:
         # Define LearningRate Reducer as Callback
         reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
@@ -363,7 +363,7 @@ def train_umami(args, train_config):
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
         batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["LRR"] if "LRR" in nn_structure else False,
+        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
     )
 
     # Append the callback

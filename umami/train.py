@@ -70,7 +70,7 @@ if __name__ == "__main__":
     train_config = utt.Configuration(args.config_file)
 
     # Get the tagger which is to be trained from the train config
-    tagger_name = train_config.NN_structure["tagger"]
+    tagger_name = train_config.nn_structure["tagger"]
 
     # Create the metadatafolder
     utt.create_metadata_folder(

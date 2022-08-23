@@ -42,7 +42,7 @@ test_files:
                 condition: 250000
 
 # Values for the neural network
-NN_structure:
+nn_structure:
     # Use evaluated tagger scores in h5 file and not trained model
     tagger: None
 
@@ -55,10 +55,10 @@ NN_structure:
 
 # Plotting settings for training metrics plots.
 # Those are not used here. Only when running plotting_epoch_performance.py
-Validation_metrics_settings:
+validation_settings:
 
 # Eval parameters for validation evaluation while training
-Eval_parameters_validation:
+evaluation_settings:
     # Number of jets used for validation
     n_jets: 3e5
 
@@ -85,10 +85,10 @@ Eval_parameters_validation:
 | `model_name` | String | Necessary | Name of the model which is to be trained. Also the foldername where everything of the model will be saved. |
 | `evaluate_trained_model` | Bool | Necessary | Needs to be `False` here. Otherwise the script tries to load the freshly trained model
 | `test_files` | Dict | Optional | Here you can define different test samples that are used in the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). Those test samples need to be defined in a dict structure shown in the example. The name of the dict entry is relevant and is the unique identifier in the results file which is produced by the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py). `Path` gives the path to the file. For test samples, all samples from the training-dataset-dumper can be used without preprocessing although the preprocessing of Umami produces test samples to ensure orthogonality of the jets with respect to the train sample. |
-| `NN_structure` | None | Necessary | A dict where all important information for the training are defined. |
+| `nn_structure` | None | Necessary | A dict where all important information for the training are defined. |
 | `class_labels` | List | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
 | `main_class` | String | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. |
-| `Eval_parameters_validation` | None | Necessary | A dict where all important information for the training are defined. |
+| `evaluation_settings` | None | Necessary | A dict where all important information for the training are defined. |
 | `n_jets` | Int | Necessary | Number of jets used for evaluation. This should not be to high, due to the fact that Callback function also uses this amount of jets after each epoch for validation. |
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |

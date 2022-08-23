@@ -4,7 +4,7 @@ After you validated your training and found an epoch you want to use for a more 
 
 ### Config
 
-The important part for the evaluation is the `Eval_parameters_validation` section. In there are all options set to evaluate your model. In the following example, the different options are shown/explained. There are some specific options only available for some taggers. These options can be found in their respective subsections.
+The important part for the evaluation is the `evaluation_settings` section. In there are all options set to evaluate your model. In the following example, the different options are shown/explained. There are some specific options only available for some taggers. These options can be found in their respective subsections.
 
 ```yaml
 §§§examples/training/Dips-PFlow-Training-config.yaml:124:143§§§
@@ -24,7 +24,7 @@ The important part for the evaluation is the `Eval_parameters_validation` sectio
 | `frac_min` | `float` | Optional | Minimal fraction value which is set for a background class in the fraction scan. |
 | `frac_max` | `float` | Optional | Maximal fraction value which is set for a background class in the fraction scan. |
 | `add_eval_variables` | `list` | Optional | A list to add available variables to the evaluation files. With this, variables can be added for the variable vs eff/rejection plots. |
-| `eval_batch_size` | `int` | Optional | Number of jets used per batch for the evaluation of the training. If not given, the batch size from `NN_structure` is used. |
+| `eval_batch_size` | `int` | Optional | Number of jets used per batch for the evaluation of the training. If not given, the batch size from `nn_structure` is used. |
 
 ??? info "DIPS"
     #### DIPS

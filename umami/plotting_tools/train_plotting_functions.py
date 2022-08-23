@@ -990,12 +990,12 @@ def run_validation_check(
     logger.info("Running performance check for %s.", tagger)
 
     # Load parameters from train config
-    Eval_parameters = train_config.Eval_parameters_validation
-    Val_settings = train_config.Validation_metrics_settings
+    Eval_parameters = train_config.evaluation_settings
+    Val_settings = train_config.validation_settings
     plot_args = train_config.plot_args
     frac_dict = Eval_parameters["frac_values"]
-    class_labels = train_config.NN_structure["class_labels"]
-    main_class = train_config.NN_structure["main_class"]
+    class_labels = train_config.nn_structure["class_labels"]
+    main_class = train_config.nn_structure["main_class"]
     recommended_frac_dict = Eval_parameters["frac_values_comp"]
     # Load the unique identifiers of the validation files and the corresponding plot
     # labels. These are used several times in this function

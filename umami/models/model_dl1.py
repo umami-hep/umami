@@ -34,7 +34,7 @@ def create_dl1_model(
     Parameters
     ----------
     train_config : object
-        Training configuration with NN_structure sub-dict
+        Training configuration with nn_structure sub-dict
         giving the structure of the NN.
     input_shape : tuple
         Size of the input: (nFeatures,).
@@ -48,19 +48,19 @@ def create_dl1_model(
     -------
     model : keras model
         Keras model.
-    NN_structure["epochs"] :
+    nn_structure["epochs"] :
         number of epochs to be trained
     init_epoch : int
         Starting epoch number
     """
 
     # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
+    nn_structure = train_config.nn_structure
 
     # Set NN options
-    batch_norm = NN_structure["Batch_Normalisation"]
-    dropout = NN_structure["dropout"]
-    class_labels = NN_structure["class_labels"]
+    batch_norm = nn_structure["batch_normalisation"]
+    dropout = nn_structure["dropout"]
+    class_labels = nn_structure["class_labels"]
 
     # Check if a prepared model is used or not
     model, init_epoch, load_optimiser = utf.prepare_model(
@@ -74,7 +74,7 @@ def create_dl1_model(
 
         # Define layers
         x = inputs
-        for i, unit in enumerate(NN_structure["dense_sizes"]):
+        for i, unit in enumerate(nn_structure["dense_sizes"]):
             x = Dense(
                 units=unit,
                 activation="linear",
@@ -87,10 +87,10 @@ def create_dl1_model(
 
             # Add dropout if != 0
             if dropout != 0:
-                x = Dropout(NN_structure["dropout_rate"][i])(x)
+                x = Dropout(nn_structure["dropout_rate"][i])(x)
 
             # Define activation for the layer
-            x = Activation(NN_structure["activations"][i])(x)
+            x = Activation(nn_structure["activations"][i])(x)
 
         if feature_connect_indices is not None:
             x = tf.keras.layers.concatenate(
@@ -106,7 +106,7 @@ def create_dl1_model(
 
     if load_optimiser is False:
         # Compile model with given optimiser
-        model_optimiser = Adam(learning_rate=NN_structure["lr"])
+        model_optimiser = Adam(learning_rate=nn_structure["lr"])
         model.compile(
             loss="categorical_crossentropy",
             optimizer=model_optimiser,
@@ -117,7 +117,7 @@ def create_dl1_model(
     if logger.level <= 20:
         model.summary()
 
-    return model, NN_structure["epochs"], init_epoch
+    return model, nn_structure["epochs"], init_epoch
 
 
 def train_dl1(args, train_config):
@@ -137,9 +137,9 @@ def train_dl1(args, train_config):
     """
 
     # Load NN Structure and training parameter from file
-    nn_structure = train_config.NN_structure
-    val_params = train_config.Validation_metrics_settings
-    eval_params = train_config.Eval_parameters_validation
+    nn_structure = train_config.nn_structure
+    val_params = train_config.validation_settings
+    eval_params = train_config.evaluation_settings
 
     # Init a list for the callbacks
     callbacks = []
@@ -265,7 +265,7 @@ def train_dl1(args, train_config):
     # Append the callback
     callbacks.append(dl1_mChkPt)
 
-    if "LRR" in nn_structure and nn_structure["LRR"] is True:
+    if "lrr" in nn_structure and nn_structure["lrr"] is True:
         # Define LearningRate Reducer as Callback
         reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
@@ -293,7 +293,7 @@ def train_dl1(args, train_config):
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
         batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["LRR"] if "LRR" in nn_structure else False,
+        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
     )
 
     # Append the callback

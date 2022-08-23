@@ -29,25 +29,25 @@ bool_use_taus: False
 
 exclude: []
 
-NN_structure:
+nn_structure:
     lr: 0.01
     batch_size: 100
     epoch: 5
     tagger: "dips"
     # DIPS structure
-    DIPS_ppm_units: [100, 100, 128]
-    DIPS_dense_units: [100, 100, 100, 30]
-    # These are the layers that will be concatenated with the last layer of DIPS_dense_uits
+    dips_ppm_units: [100, 100, 128]
+    dips_dense_units: [100, 100, 100, 30]
+    # These are the layers that will be concatenated with the last layer of dips_dense_units
     intermediate_units: [72]
     # DL1 structure
-    DL1_units: [57, 60, 48, 36, 24, 12, 6]
+    dl1_units: [57, 60, 48, 36, 24, 12, 6]
     # total loss = loss(umami) + dips_loss_weight * loss(dips)
     dips_loss_weight: 1
     class_labels: ["bjets", "cjets", "ujets"]
     main_class: "bjets"
 
 # Plotting settings for training metrics plots
-Validation_metrics_settings:
+validation_settings:
     taggers_from_file:
         rnnip: "Recomm. RNNIP"
         DL1r: "Recomm. DL1r"
@@ -60,7 +60,7 @@ Validation_metrics_settings:
     # Set the datatype of the plots
     plot_datatype: "pdf"
 
-Eval_parameters_validation:
+evaluation_settings:
     # Number of jets used for each validation sample. Set this to 0 if you have memory problems
     n_jets: 1000
     fc_value: 0.018

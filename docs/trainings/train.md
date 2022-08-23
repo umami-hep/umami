@@ -14,7 +14,7 @@ The global settings are the base settings needed for every training. Here we def
 |---------|-----------|---------------------|-------------|
 | `model_name` | `str` | Necessary | Name of the model you want to train. This will be the name of the folder, where all results etc. will be saved in. This folder will automatically be created if not existing. |
 | `preprocess_config` | `str` | Necessary | Path to the preprocessing config you used to produce the train datasets. When you start the training and the folder for the model is created, this file is copied to the `metadata/` folder inside the model folder. Also, the path here in the train config will be changed to the new path of the preprocessing config inside the `metadata/` folder. |
-| `model_file` | `str` | Optional | If you already have a model and want to use the weights of this model as start point (maybe you have a R21 trained model and now you want to use the weights of that model as initial weights for your R22 training), you can give the path to this model here. This model will be loaded and used instead of init a new one. If you don't set `load_optimiser` in `NN_structure`, the optimiser state will be resetted. If you just want to continue a specific training, use `continue_training` and leave this option empty. |
+| `model_file` | `str` | Optional | If you already have a model and want to use the weights of this model as start point (maybe you have a R21 trained model and now you want to use the weights of that model as initial weights for your R22 training), you can give the path to this model here. This model will be loaded and used instead of init a new one. If you don't set `load_optimiser` in `nn_structure`, the optimiser state will be resetted. If you just want to continue a specific training, use `continue_training` and leave this option empty. |
 | `train_file` | `str` | Necessary | Path to the training sample. This is given by the `preprocessing` step of Umami. If you want to use the `TFRecords` format to train, this must be the path to the folder where the `TFRecords` files are saved. |
 | `continue_training` | `bool` | Optional | If your training died due to time constrains of jobs and you just want to continue the training from the latest point on, set this value to `True` and restart the training. |
 | `exclude` | `list` | Necessary | List of jet variables that are excluded from training. Only compatible with DL1* training!. To include all, just set this option to `null`. If you don't train DL1* also set this just to `null`. |
@@ -34,7 +34,7 @@ Both options can also be added after the training is finished. For the training 
 
 ### Network Settings
 
-The next section in the train config is the `NN_structure`. Here we define all the information needed for building the model, like which tagger we want to use and also the number of hidden layer and nodes per hidden layer. The general options are shown next while the tagger dependant options are shown in their respective subsections.
+The next section in the train config is the `nn_structure`. Here we define all the information needed for building the model, like which tagger we want to use and also the number of hidden layer and nodes per hidden layer. The general options are shown next while the tagger dependant options are shown in their respective subsections.
 
 ```yaml
 §§§examples/training/Dips-PFlow-Training-config.yaml:61:86§§§
@@ -51,19 +51,19 @@ The next section in the train config is the `NN_structure`. Here we define all t
 | `dropout` | `float` | Necessary | Dropout factor used in the network. If 0, dropout is not used. |
 | `class_labels` | `list` | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
 | `main_class` | `str` or `list` of `str` | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. This can either be one single class (`str`) or multiple classes (`list` of `str`). |
-| `Batch_Normalisation` | `bool` | Necessary | Decide, if batch normalisation is used in the network. (Look in the model files where this is used for the specific models) |
+| `batch_normalisation` | `bool` | Necessary | Decide, if batch normalisation is used in the network. (Look in the model files where this is used for the specific models) |
 | `dense_sizes` | `list` | Necessary | List of nodes per layer of the network. Every entry is one layer. The numbers need to be `int`! For DL1r/DL1d, this is the number of nodes per layer. For DIPS/DIPS Attention/Umami/CADS this is the number of nodes per layer for the _F_ network. |
 | `load_optimiser` | `bool` | Optional | When loading a model (via `model_file`), you can load the optimiser state for continuing a training (`True`) or initialize a new optimiser to use the model as a start point for a fresh training (`False`). |
 | `use_sample_weights` | `bool` | Optional | Applies the weights, you calculated with the `--weighting` flag from the preprocessing to the training loss function. |
 | `nfiles_tfrecord` | `int` | Optional | Number of files that are loaded at the same time when using `TFRecords` for training. |
-| `LRR` | `bool` | Optional | Decide, if a Learning Rate Reducer (LRR) is used or not. If yes, the following options can be added. |
-| `LRR_monitor` | `str` | Optional | Quantity to be monitored. Default: "loss" |
-| `LRR_factor` | `float` | Optional | Factor by which the learning rate will be reduced. `new_lr = lr * factor`. Default: 0.8 |
-| `LRR_patience` | `int` | Optional | Number of epochs with no improvement after which learning rate will be reduced. Default: 3 |
-| `LRR_verbose` | `int` | Optional | 0: Quiet, 1: Update messages. Default: 1 |
-| `LRR_mode` | `str` | Optional | One of `{"auto", "min", "max"}`. In "min" mode, the learning rate will be reduced when the quantity monitored has stopped decreasing; in "max" mode it will be reduced when the quantity monitored has stopped increasing; in "auto" mode, the direction is automatically inferred from the name of the monitored quantity. Default: "auto" |
-| `LRR_cooldown` | `int` | Optional | Number of epochs to wait before resuming normal operation after lr has been reduced. Default: 5 |
-| `LRR_min_lr` | `float` | Optional | Lower bound on the learning rate. Default: 0.000001 |
+| `lrr` | `bool` | Optional | Decide, if a Learning Rate Reducer (lrr) is used or not. If yes, the following options can be added. |
+| `lrr_monitor` | `str` | Optional | Quantity to be monitored. Default: "loss" |
+| `lrr_factor` | `float` | Optional | Factor by which the learning rate will be reduced. `new_lr = lr * factor`. Default: 0.8 |
+| `lrr_patience` | `int` | Optional | Number of epochs with no improvement after which learning rate will be reduced. Default: 3 |
+| `lrr_verbose` | `int` | Optional | 0: Quiet, 1: Update messages. Default: 1 |
+| `lrr_mode` | `str` | Optional | One of `{"auto", "min", "max"}`. In "min" mode, the learning rate will be reduced when the quantity monitored has stopped decreasing; in "max" mode it will be reduced when the quantity monitored has stopped increasing; in "auto" mode, the direction is automatically inferred from the name of the monitored quantity. Default: "auto" |
+| `lrr_cooldown` | `int` | Optional | Number of epochs to wait before resuming normal operation after lr has been reduced. Default: 5 |
+| `lrr_min_lr` | `float` | Optional | Lower bound on the learning rate. Default: 0.000001 |
 
 ??? info "DIPS"
     #### DIPS
@@ -97,10 +97,10 @@ The next section in the train config is the `NN_structure`. Here we define all t
 
     | Options | Data Type | Necessary, Optional | Explanation |
     |---------|-----------|---------------------|-------------|
-    | `DIPS_ppm_units` | `list` | Necessary | Similar to DIPS `ppm_sizes`. List of nodes per layer of the _ϕ_ network. Every entry is one layer. The numbers need to be `int`! |
-    | `DIPS_dense_units` | `list` | Necessary | Similar to DIPS `dense_sizes`. List of nodes per layer of the _F_ network. Every entry is one layer. The numbers need to be `int`! |
-    | `intermediate_units` | `list` | Necessary | These are the layers that will be concatenated with the last layer of `DIPS_dense_units`. Every entry is one layer. The numbers need to be `int`! |
-    | `DL1_units` | `list` | Necessary | Similar to DL1+ `dense_sizes`. List of nodes per layer of the DL1-like network. Every entry is one layer. The numbers need to be `int`! |
+    | `dips_ppm_units` | `list` | Necessary | Similar to DIPS `ppm_sizes`. List of nodes per layer of the _ϕ_ network. Every entry is one layer. The numbers need to be `int`! |
+    | `dips_dense_units` | `list` | Necessary | Similar to DIPS `dense_sizes`. List of nodes per layer of the _F_ network. Every entry is one layer. The numbers need to be `int`! |
+    | `intermediate_units` | `list` | Necessary | These are the layers that will be concatenated with the last layer of `dips_dense_units`. Every entry is one layer. The numbers need to be `int`! |
+    | `dl1_units` | `list` | Necessary | Similar to DL1+ `dense_sizes`. List of nodes per layer of the DL1-like network. Every entry is one layer. The numbers need to be `int`! |
     | `dips_loss_weight` | `float` or `int` | Necessary | Loss weight $w_{\text{DIPS}}$ for the DIPS loss. While training Umami, two losses are obtained: The final Umami loss and the DIPS loss. This value is the factor how important the DIPS loss is for the final model loss. $\text{Loss}_{\text{Total}} = \text{Loss}_{\text{Umami}} + w_{\text{DIPS}} * \text{Loss}_{\text{DIPS}}$. |
 
 ??? info "DIPS Attention/CADS"
@@ -118,7 +118,7 @@ The next section in the train config is the `NN_structure`. Here we define all t
     | `ppm_condition` | `bool` | Necessary | If you want to use/fold the conditional information into the input of the _ϕ_ network. |
     | `dense_sizes` | `list` | Necessary | Similar to DIPS `dense_sizes`. List of nodes per layer of the _F_ network. Every entry is one layer. The numbers need to be `int`! |
     | `dense_condition` | `bool` | Necessary | If you want to use/fold the conditional information into the input of the _F_ network. |
-    | `N_Conditions` | `int` | Necessary | Number of conditional jet input variables to use for CADS. |
+    | `n_conditions` | `int` | Necessary | Number of conditional jet input variables to use for CADS. |
     | `pooling` | `string` | Necessary | Pooling method that is used to pool the output of the _ϕ_ and _A_ networks. |
     | `attention_sizes` | `string` | Necessary | Similar to `ppm_sizes`. List of nodes per layer of the _A_ network. Every entry is one layer. The numbers need to be `int`! |
     | `attention_condition` | `bool` | Necessary | If you want to use/fold the conditional information into the input of the _A_ network. |
@@ -140,4 +140,4 @@ train.py -c <path to train config file>
 
 This will start the real training. Other command line arguments available for `train.py` are `-o` which will overwrite the configs/dicts in metadata if you run the training.
 
-**Note** When training, the callback methods of the different taggers validate the training on the fly which can lead to memory issues. To deactivate the on the fly validation, what we recommend, just set the `n_jets` option in the `Validation_metrics_settings` section of the train config to `0`.
+**Note** When training, the callback methods of the different taggers validate the training on the fly which can lead to memory issues. To deactivate the on the fly validation, what we recommend, just set the `n_jets` option in the `validation_settings` section of the train config to `0`.

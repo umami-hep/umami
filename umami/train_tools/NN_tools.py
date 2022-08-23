@@ -475,7 +475,7 @@ class MyCallback(CallbackBase):
             "accuracy": logs["accuracy"],
         }
 
-        # Write out learning rate if a LRR is used
+        # Write out learning rate if a lrr is used
         if self.use_lrr:
             train_metrics_dict["learning_rate"] = logs["lr"].item()
 
@@ -548,7 +548,7 @@ class MyCallbackUmami(CallbackBase):
             "accuracy_umami": logs["umami_accuracy"],
         }
 
-        # Write out learning rate if a LRR is used
+        # Write out learning rate if a lrr is used
         if self.use_lrr:
             train_metrics_dict["learning_rate"] = logs["lr"].item()
 
@@ -949,8 +949,8 @@ def load_validation_data(
         jets_var_list = []
 
     # Get class labels and tagger name
-    class_labels = train_config.NN_structure["class_labels"]
-    tagger = train_config.NN_structure["tagger"]
+    class_labels = train_config.nn_structure["class_labels"]
+    tagger = train_config.nn_structure["tagger"]
 
     # Init a new dict for the loaded val data
     val_data_dict = {}
@@ -1400,9 +1400,9 @@ def calc_validation_metrics(
     """
 
     # Get evaluation parameters and NN structure from train config
-    eval_parameters = train_config.Eval_parameters_validation
-    val_params = train_config.Validation_metrics_settings
-    nn_structure = train_config.NN_structure
+    eval_parameters = train_config.evaluation_settings
+    val_params = train_config.validation_settings
+    nn_structure = train_config.nn_structure
     second_model_string = (
         "dips_model_" if model_string == "model_epoch" else "model_epoch"
     )
@@ -1445,7 +1445,7 @@ def calc_validation_metrics(
     except FileNotFoundError:
         logger.info("No callback json file with validation metrics found! Make new one")
         training_output_list = [
-            {"epoch": n} for n in range(train_config.NN_structure["epochs"])
+            {"epoch": n} for n in range(train_config.nn_structure["epochs"])
         ]
 
     # Init a results list

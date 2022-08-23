@@ -49,12 +49,12 @@ def create_dips_model(
         Starting epoch number
     """
     # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
+    nn_structure = train_config.nn_structure
 
     # Set NN options
-    batch_norm = NN_structure["Batch_Normalisation"]
-    dropout = NN_structure["dropout"]
-    class_labels = NN_structure["class_labels"]
+    batch_norm = nn_structure["batch_normalisation"]
+    dropout = nn_structure["dropout"]
+    class_labels = nn_structure["class_labels"]
 
     # Check if a prepared model is used or not
     dips, init_epoch, load_optimiser = utf.prepare_model(
@@ -73,7 +73,7 @@ def create_dips_model(
         tdd = masked_inputs
 
         # Define the TimeDistributed layers for the different tracks
-        for i, phi_nodes in enumerate(NN_structure["ppm_sizes"]):
+        for i, phi_nodes in enumerate(nn_structure["ppm_sizes"]):
 
             tdd = TimeDistributed(
                 Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
@@ -99,8 +99,8 @@ def create_dips_model(
         # Define the main dips structure
         for j, (F_nodes, p) in enumerate(
             zip(
-                NN_structure["dense_sizes"],
-                [dropout] * len(NN_structure["dense_sizes"][:-1]) + [0],
+                nn_structure["dense_sizes"],
+                [dropout] * len(nn_structure["dense_sizes"][:-1]) + [0],
             )
         ):
 
@@ -117,7 +117,7 @@ def create_dips_model(
 
     if load_optimiser is False:
         # Set optimier and loss
-        model_optimiser = Adam(learning_rate=NN_structure["lr"])
+        model_optimiser = Adam(learning_rate=nn_structure["lr"])
         dips.compile(
             loss="categorical_crossentropy",
             optimizer=model_optimiser,
@@ -128,7 +128,7 @@ def create_dips_model(
     if logger.level <= 20:
         dips.summary()
 
-    return dips, NN_structure["epochs"], init_epoch
+    return dips, nn_structure["epochs"], init_epoch
 
 
 def train_dips(args, train_config):
@@ -147,9 +147,9 @@ def train_dips(args, train_config):
         If input is neither a h5 nor a directory.
     """
     # Load NN Structure and training parameter from file
-    nn_structure = train_config.NN_structure
-    val_params = train_config.Validation_metrics_settings
-    eval_params = train_config.Eval_parameters_validation
+    nn_structure = train_config.nn_structure
+    val_params = train_config.validation_settings
+    eval_params = train_config.evaluation_settings
     tracks_name = train_config.tracks_name
 
     # Init a list for the callbacks
@@ -249,7 +249,7 @@ def train_dips(args, train_config):
     # Append the callback
     callbacks.append(dips_mChkPt)
 
-    if "LRR" in nn_structure and nn_structure["LRR"] is True:
+    if "lrr" in nn_structure and nn_structure["lrr"] is True:
         # Define LearningRate Reducer as Callback
         reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
@@ -277,7 +277,7 @@ def train_dips(args, train_config):
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
         batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["LRR"] if "LRR" in nn_structure else False,
+        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
     )
 
     # Append the callback

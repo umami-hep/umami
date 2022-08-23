@@ -43,7 +43,7 @@ def create_umami_cond_att_model(
         Starting epoch number
     """
     # Load NN Structure and training parameter from file
-    NN_structure = train_config.NN_structure
+    nn_structure = train_config.nn_structure
 
     # Check if a prepared model is used or not
     umami, init_epoch, load_optimiser = utf.prepare_model(
@@ -57,31 +57,31 @@ def create_umami_cond_att_model(
         umami = utf.Deepsets_model_umami(
             trk_input_shape=input_shape,
             jet_input_shape=njet_features,
-            num_conditions=NN_structure["N_Conditions"],
-            num_set_features=NN_structure["DIPS_ppm_units"][-1],
-            DIPS_sets_nodes=NN_structure["DIPS_ppm_units"][:-1],
-            F_classif_nodes=NN_structure["DIPS_dense_units"],
-            classif_output=len(NN_structure["class_labels"]),
-            intermediate_units=NN_structure["intermediate_units"],
-            DL1_units=NN_structure["DL1_units"],
+            num_conditions=nn_structure["n_conditions"],
+            num_set_features=nn_structure["dips_ppm_units"][-1],
+            DIPS_sets_nodes=nn_structure["dips_ppm_units"][:-1],
+            F_classif_nodes=nn_structure["dips_dense_units"],
+            classif_output=len(nn_structure["class_labels"]),
+            intermediate_units=nn_structure["intermediate_units"],
+            dl1_units=nn_structure["dl1_units"],
             pooling="attention",
-            attention_nodes=NN_structure["attention_units"],
-            condition_sets=NN_structure["DIPS_ppm_condition"],
-            condition_attention=NN_structure["attention_condition"],
-            condition_classifier=NN_structure["dense_condition"],
+            attention_nodes=nn_structure["attention_units"],
+            condition_sets=nn_structure["dips_ppm_condition"],
+            condition_attention=nn_structure["attention_condition"],
+            condition_classifier=nn_structure["dense_condition"],
             shortcut_inputs=False,
-            sets_batch_norm=NN_structure["Batch_Normalisation"],
-            classif_batch_norm=NN_structure["Batch_Normalisation"],
+            sets_batch_norm=nn_structure["batch_normalisation"],
+            classif_batch_norm=nn_structure["batch_normalisation"],
             activation="relu",
             attention_softmax=False,
         )
 
     if load_optimiser is False:
         # Set optimier and loss
-        model_optimizer = Adam(learning_rate=NN_structure["lr"])
+        model_optimizer = Adam(learning_rate=nn_structure["lr"])
         umami.compile(
             loss="categorical_crossentropy",
-            loss_weights={"dips": NN_structure["dips_loss_weight"], "umami": 1},
+            loss_weights={"dips": nn_structure["dips_loss_weight"], "umami": 1},
             optimizer=model_optimizer,
             metrics=["accuracy"],
         )
@@ -90,7 +90,7 @@ def create_umami_cond_att_model(
     if logger.level <= 20:
         umami.summary()
 
-    return umami, NN_structure["epochs"], init_epoch
+    return umami, nn_structure["epochs"], init_epoch
 
 
 def train_umami_cond_att(args, train_config):
@@ -109,9 +109,9 @@ def train_umami_cond_att(args, train_config):
         If input is neither a h5 nor a directory.
     """
     # Load NN Structure and training parameter from file
-    nn_structure = train_config.NN_structure
-    val_params = train_config.Validation_metrics_settings
-    eval_params = train_config.Eval_parameters_validation
+    nn_structure = train_config.nn_structure
+    val_params = train_config.validation_settings
+    eval_params = train_config.evaluation_settings
     tracks_name = train_config.tracks_name
 
     # Init a list for the callbacks
@@ -169,7 +169,7 @@ def train_umami_cond_att(args, train_config):
                     "input_1": tf.TensorShape(
                         [None, metadata["n_trks"], metadata["n_trk_features"]]
                     ),
-                    "input_2": tf.TensorShape([None, nn_structure["N_Conditions"]]),
+                    "input_2": tf.TensorShape([None, nn_structure["n_conditions"]]),
                     "input_3": tf.TensorShape([None, metadata["n_jet_features"]]),
                 },
                 tf.TensorShape([None, metadata["n_dim"]]),
@@ -186,7 +186,7 @@ def train_umami_cond_att(args, train_config):
                     "input_1": tf.TensorShape(
                         [None, metadata["n_trks"], metadata["n_trk_features"]]
                     ),
-                    "input_2": tf.TensorShape([None, nn_structure["N_Conditions"]]),
+                    "input_2": tf.TensorShape([None, nn_structure["n_conditions"]]),
                     "input_3": tf.TensorShape([None, metadata["n_jet_features"]]),
                 },
                 tf.TensorShape([None, metadata["n_dim"]]),
@@ -204,7 +204,7 @@ def train_umami_cond_att(args, train_config):
                     and nn_structure["n_jets_train"] is not None
                     else metadata["n_jets"],
                     batch_size=nn_structure["batch_size"],
-                    nConds=nn_structure["N_Conditions"],
+                    nConds=nn_structure["n_conditions"],
                     chunk_size=int(1e6),
                     excluded_var=excluded_var,
                     sample_weights=nn_structure["use_sample_weights"],
@@ -255,7 +255,7 @@ def train_umami_cond_att(args, train_config):
     # Append the callback
     callbacks.append(umami_mChkPt)
 
-    if "LRR" in nn_structure and nn_structure["LRR"] is True:
+    if "lrr" in nn_structure and nn_structure["lrr"] is True:
         # Define LearningRate Reducer as Callback
         reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
@@ -269,7 +269,7 @@ def train_umami_cond_att(args, train_config):
             train_config=train_config,
             n_jets=n_jets_val,
             convert_to_tensor=True,
-            nCond=nn_structure["N_Conditions"],
+            nCond=nn_structure["n_conditions"],
         )
 
     # Init the Umami callback
@@ -283,7 +283,7 @@ def train_umami_cond_att(args, train_config):
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
         batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["LRR"] if "LRR" in nn_structure else False,
+        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
     )
 
     # Append the callback

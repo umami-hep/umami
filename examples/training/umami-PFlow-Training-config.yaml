@@ -60,7 +60,7 @@ tracks_name: "tracks"
 # number of files to be loaded in parallel when using TF Records as input files
 nfiles: 5
 
-NN_structure:
+nn_structure:
     # Decide, which tagger is used
     tagger: "umami"
 
@@ -77,17 +77,17 @@ NN_structure:
     dropout: 0
 
     # Decide if Batch Normalisation is used in the DIPS block
-    Batch_Normalisation: True
+    batch_normalisation: True
 
     # DIPS structure
-    DIPS_ppm_units: [100, 100, 128]
-    DIPS_dense_units: [100, 100, 100, 30]
+    dips_ppm_units: [100, 100, 128]
+    dips_dense_units: [100, 100, 100, 30]
 
-    # These are the layers that will be concatenated with the last layer of DIPS_dense_units
+    # These are the layers that will be concatenated with the last layer of dips_dense_units
     intermediate_units: [72]
 
     # DL1 structure
-    DL1_units: [57, 60, 48, 36, 24, 12, 6]
+    dl1_units: [57, 60, 48, 36, 24, 12, 6]
 
     # total loss = loss(umami) + dips_loss_weight * loss(dips)
     dips_loss_weight: 1
@@ -100,13 +100,13 @@ NN_structure:
     main_class: "bjets"
 
     # Options for the Learning Rate reducer
-    LRR: True
+    lrr: True
 
     # Option if you want to use sample weights for training
     use_sample_weights: False
 
 # Plotting settings for training metrics plots
-Validation_metrics_settings:
+validation_settings:
     # Number of jets used for validation
     n_jets: 3e5
 
@@ -126,7 +126,7 @@ Validation_metrics_settings:
     # Set the datatype of the plots
     plot_datatype: "pdf"
 
-Eval_parameters_validation:
+evaluation_settings:
     # Number of jets used for evaluation
     n_jets: 3e5
 

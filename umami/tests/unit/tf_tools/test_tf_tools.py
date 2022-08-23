@@ -368,7 +368,7 @@ class prepare_model_TestCase(unittest.TestCase):
 
         self.model_name = self.tmp_test_dir + "Test_prepare_model"
         self.model_file = None
-        self.NN_structure = {"load_optimiser": False}
+        self.nn_structure = {"load_optimiser": False}
 
         os.makedirs(
             os.path.join(
@@ -416,7 +416,7 @@ class prepare_model_TestCase(unittest.TestCase):
 
     def test_init_fresh_model_no_load_optimiser_given(self):
         """Test fresh model init with no load_optimiser given."""
-        self.NN_structure = {}
+        self.nn_structure = {}
 
         model, init_epoch, load_optimiser = prepare_model(train_config=self)
 
@@ -431,7 +431,7 @@ class prepare_model_TestCase(unittest.TestCase):
 
     def test_load_optimiser_ValueError(self):
         """Test load optimiser error."""
-        self.NN_structure = {"load_optimiser": True}
+        self.nn_structure = {"load_optimiser": True}
 
         with self.assertRaises(ValueError):
             prepare_model(train_config=self)
