@@ -630,7 +630,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 ):
                     max_upsampling = float(self.options["max_upsampling_ratio"][sample])
                     in_file = self.config.preparation.get_sample(
-                        preparation_sample
+                        preparation_sample.name
                     ).output_name
                     with h5py.File(in_file, "r") as f:
                         num_available = len(f["jets"])
