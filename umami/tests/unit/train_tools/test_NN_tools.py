@@ -336,56 +336,56 @@ class Configuration_TestCase(unittest.TestCase):
 
         with self.subTest("Test validation batch size"):
             self.assertEqual(
-                config.NN_structure["batch_size"],
-                config.Validation_metrics_settings["val_batch_size"],
+                config.nn_structure["batch_size"],
+                config.validation_settings["val_batch_size"],
             )
 
         with self.subTest("Test evaluation batch size"):
             self.assertEqual(
-                config.Validation_metrics_settings["val_batch_size"],
-                config.Eval_parameters_validation["eval_batch_size"],
+                config.validation_settings["val_batch_size"],
+                config.evaluation_settings["eval_batch_size"],
             )
 
     def test_no_val_batch_size(self):
         """Test the no validation batch size given case."""
         config = Configuration(self.config_file)
-        config.Eval_parameters_validation["eval_batch_size"] = 50
+        config.evaluation_settings["eval_batch_size"] = 50
 
         with self.subTest("Test validation batch size"):
             self.assertEqual(
-                config.NN_structure["batch_size"],
-                config.Validation_metrics_settings["val_batch_size"],
+                config.nn_structure["batch_size"],
+                config.validation_settings["val_batch_size"],
             )
 
         with self.subTest("Test evaluation batch size"):
             self.assertNotEqual(
-                config.Validation_metrics_settings["val_batch_size"],
-                config.Eval_parameters_validation["eval_batch_size"],
+                config.validation_settings["val_batch_size"],
+                config.evaluation_settings["eval_batch_size"],
             )
 
     def test_no_eval_batch_size(self):
         """Test the no evaluation batch size given case."""
         config = Configuration(self.config_file)
-        config.Validation_metrics_settings["val_batch_size"] = 50
+        config.validation_settings["val_batch_size"] = 50
 
         with self.subTest("Test evaluation batch size"):
             self.assertEqual(
-                config.NN_structure["batch_size"],
-                config.Eval_parameters_validation["eval_batch_size"],
+                config.nn_structure["batch_size"],
+                config.evaluation_settings["eval_batch_size"],
             )
 
         with self.subTest("Test different val and eval batch sizes"):
             self.assertNotEqual(
-                config.Validation_metrics_settings["val_batch_size"],
-                config.Eval_parameters_validation["eval_batch_size"],
+                config.validation_settings["val_batch_size"],
+                config.evaluation_settings["eval_batch_size"],
             )
 
     def test_no_batch_size(self):
         """Test no batch size given error."""
         config = Configuration(self.config_file)
-        del config.config["NN_structure"]["batch_size"]
-        del config.config["Validation_metrics_settings"]["val_batch_size"]
-        del config.config["Eval_parameters_validation"]["eval_batch_size"]
+        del config.config["nn_structure"]["batch_size"]
+        del config.config["validation_settings"]["val_batch_size"]
+        del config.config["evaluation_settings"]["eval_batch_size"]
         with self.assertRaises(ValueError):
             config.get_configuration()
 
@@ -399,7 +399,7 @@ class Configuration_TestCase(unittest.TestCase):
     def test_double_label_value(self):
         """Test double label error."""
         config = Configuration(self.config_file)
-        config.NN_structure["class_labels"] = [
+        config.nn_structure["class_labels"] = [
             "bjets",
             "singlebjets",
             "cjets",
@@ -412,7 +412,7 @@ class Configuration_TestCase(unittest.TestCase):
     def test_double_defined_b_jets(self):
         """Test double defined bjets error."""
         config = Configuration(self.config_file)
-        config.NN_structure["class_labels"] = [
+        config.nn_structure["class_labels"] = [
             "bjets",
             "bbjets",
             "cjets",
@@ -425,7 +425,7 @@ class Configuration_TestCase(unittest.TestCase):
     def test_double_defined_c_jets(self):
         """Test double defined cjets error."""
         config = Configuration(self.config_file)
-        config.NN_structure["class_labels"] = [
+        config.nn_structure["class_labels"] = [
             "bjets",
             "ccjets",
             "cjets",
@@ -438,8 +438,8 @@ class Configuration_TestCase(unittest.TestCase):
     def test_cads_without_cond_info(self):
         """Test cads without conditions error."""
         config = Configuration(self.config_file)
-        config.NN_structure["N_Conditions"] = 0
-        config.NN_structure["tagger"] = "cads"
+        config.nn_structure["n_conditions"] = 0
+        config.nn_structure["tagger"] = "cads"
 
         with self.assertRaises(ValueError):
             config.get_configuration()
@@ -447,8 +447,8 @@ class Configuration_TestCase(unittest.TestCase):
     def test_dips_att_with_cond_info(self):
         """Test dips attention with conditions error."""
         config = Configuration(self.config_file)
-        config.NN_structure["N_Conditions"] = 2
-        config.NN_structure["tagger"] = "dips_attention"
+        config.nn_structure["n_conditions"] = 2
+        config.nn_structure["tagger"] = "dips_attention"
 
         with self.assertRaises(ValueError):
             config.get_configuration()
@@ -697,9 +697,9 @@ class GetSamples_TestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.Eval_parameters_validation = {}
+        self.evaluation_settings = {}
         self.tracks_name = "tracks"
-        self.NN_structure = {
+        self.nn_structure = {
             "class_labels": ["bjets", "cjets", "ujets"],
             "tagger": "dips",
         }
@@ -987,7 +987,7 @@ class GetSamples_TestCase(unittest.TestCase):
         for convert_to_tensor in [True, False]:
             for iter_tagger in ["umami", "umami_cond_att", "cads"]:
                 with self.subTest(f"{iter_tagger}_tensor_{convert_to_tensor}"):
-                    self.NN_structure["tagger"] = iter_tagger
+                    self.nn_structure["tagger"] = iter_tagger
 
                     val_data_dict = load_validation_data(
                         train_config=self,
@@ -1009,7 +1009,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
             for iter_tagger in ["dips", "dips_attention", "dl1"]:
                 with self.subTest(f"{iter_tagger}_tensor_{convert_to_tensor}"):
-                    self.NN_structure["tagger"] = iter_tagger
+                    self.nn_structure["tagger"] = iter_tagger
 
                     val_data_dict = load_validation_data(
                         train_config=self,
@@ -1029,7 +1029,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_load_validation_data_unsupported_tagger(self):
         """Test behaviour when not supported tagger is provided."""
-        self.NN_structure["tagger"] = "not_supported_tagger"
+        self.nn_structure["tagger"] = "not_supported_tagger"
 
         with self.assertRaises(ValueError):
             load_validation_data(
@@ -1039,7 +1039,7 @@ class GetSamples_TestCase(unittest.TestCase):
 
     def test_load_validation_data_no_var_cuts(self):
         """Test the loading of the validation data for umami with no variable cuts."""
-        self.NN_structure["tagger"] = "umami"
+        self.nn_structure["tagger"] = "umami"
 
         val_data_dict = load_validation_data(
             train_config=self,

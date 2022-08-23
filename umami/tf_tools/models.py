@@ -65,8 +65,8 @@ def prepare_model(
     """
     # Load NN Structure and training parameter from file
     load_optimiser = (
-        train_config.NN_structure["load_optimiser"]
-        if "load_optimiser" in train_config.NN_structure
+        train_config.nn_structure["load_optimiser"]
+        if "load_optimiser" in train_config.nn_structure
         else False
     )
 
@@ -342,7 +342,7 @@ def Deepsets_model_umami(
     F_classif_nodes,
     classif_output,
     intermediate_units,
-    DL1_units,
+    dl1_units,
     pooling: str = "attention",
     attention_nodes: list = None,
     condition_sets: bool = True,
@@ -381,7 +381,7 @@ def Deepsets_model_umami(
     intermediate_units : list
         List with the number of neurons for the intermediate
         layer used for jet features
-    DL1_units : list
+    dl1_units : list
         List with the number of neurons for the DL1r
         hidden layers.
     pooling : str, optional
@@ -539,7 +539,7 @@ def Deepsets_model_umami(
     umami_in = Concatenate()([sec_to_last, x])
 
     umami_out = DenseNet(
-        DL1_units,
+        dl1_units,
         classif_output,
         activation=activation,
         batch_norm=classif_batch_norm,

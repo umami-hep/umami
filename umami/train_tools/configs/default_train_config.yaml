@@ -1,10 +1,10 @@
 model_name: Null
 test_files: Null
-NN_structure: Null
-Validation_metrics_settings:
+nn_structure: Null
+validation_settings:
     trained_taggers: Null
     taggers_from_file: Null
     val_batch_size: Null
-Eval_parameters_validation:
+evaluation_settings:
     eval_batch_size: Null
 tracks_name: Null

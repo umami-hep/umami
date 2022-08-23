@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding correct naming scheme for train config sections [!617](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/617)
 - Fixing multiple issues with the fraction contour plots [!619](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/619)
 - Adding automatic creation of samples dict for the preprocessing config [!610](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/610)
 - Rewriting of preprocessing config reader [!606](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/606)

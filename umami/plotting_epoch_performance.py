@@ -104,12 +104,12 @@ def main(args, train_config):
         If the given tagger is not supported.
     """ """"""
     # Get the eval and val params from the train config
-    val_params = train_config.Validation_metrics_settings
-    eval_params = train_config.Eval_parameters_validation
+    val_params = train_config.validation_settings
+    eval_params = train_config.evaluation_settings
 
     # Check for format option
     if args.format:
-        train_config.Validation_metrics_settings["plot_datatype"] = args.format
+        train_config.validation_settings["plot_datatype"] = args.format
 
     # Check for n_jets args
     if args.n_jets is None:
@@ -135,7 +135,7 @@ def main(args, train_config):
         tagger = args.tagger
 
     else:
-        tagger = train_config.NN_structure["tagger"]
+        tagger = train_config.nn_structure["tagger"]
 
     # Check if the tagger given is supported
     if tagger.casefold() in [
@@ -196,7 +196,7 @@ def main(args, train_config):
             tagger_comp_vars={
                 f"{comp_tagger}": get_class_prob_var_names(
                     tagger_name=f"{comp_tagger}",
-                    class_labels=train_config.NN_structure["class_labels"],
+                    class_labels=train_config.nn_structure["class_labels"],
                 )
                 for comp_tagger in comp_tagger_list
             }

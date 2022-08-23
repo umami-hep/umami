@@ -33,7 +33,7 @@ def load_tfrecords_train_dataset(
         If no metadata file could be found in tfrecords directory.
     """
     # Load NN Structure and training parameter from file
-    nn_structure = train_config.NN_structure
+    nn_structure = train_config.nn_structure
     tracks_name = train_config.tracks_name
 
     # Get the files in dir
@@ -76,7 +76,7 @@ def load_tfrecords_train_dataset(
         use_track_labels=nn_structure["attention_aux_task"]
         if "attention_aux_task" in nn_structure
         else False,
-        n_cond=nn_structure["N_Conditions"] if "N_Conditions" in nn_structure else None,
+        n_cond=nn_structure["n_conditions"] if "n_conditions" in nn_structure else None,
     )
 
     # Load the dataset from reader

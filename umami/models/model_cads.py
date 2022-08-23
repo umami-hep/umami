@@ -38,7 +38,7 @@ def create_cads_model(
         Starting epoch number
     """
     # Load NN Structure and training parameter from file
-    nn_structure = train_config.NN_structure
+    nn_structure = train_config.nn_structure
 
     # Check if a prepared model is used or not
     cads, init_epoch, load_optimiser = utf.prepare_model(
@@ -50,7 +50,7 @@ def create_cads_model(
         # Init a new cads/dips attention model
         cads = utf.Deepsets_model(
             repeat_input_shape=input_shape,
-            num_conditions=nn_structure["N_Conditions"],
+            num_conditions=nn_structure["n_conditions"],
             num_set_features=nn_structure["ppm_sizes"][-1],
             sets_nodes=nn_structure["ppm_sizes"][:-1],
             classif_nodes=nn_structure["dense_sizes"],
@@ -61,8 +61,8 @@ def create_cads_model(
             condition_attention=nn_structure["attention_condition"],
             condition_classifier=nn_structure["dense_condition"],
             shortcut_inputs=False,
-            sets_batch_norm=nn_structure["Batch_Normalisation"],
-            classif_batch_norm=nn_structure["Batch_Normalisation"],
+            sets_batch_norm=nn_structure["batch_normalisation"],
+            classif_batch_norm=nn_structure["batch_normalisation"],
             activation="relu",
             attention_softmax=False,
         )
@@ -101,9 +101,9 @@ def train_cads(args, train_config):
     """
 
     # Load NN Structure and training parameter from file
-    nn_structure = train_config.NN_structure
-    val_params = train_config.Validation_metrics_settings
-    eval_params = train_config.Eval_parameters_validation
+    nn_structure = train_config.nn_structure
+    val_params = train_config.validation_settings
+    eval_params = train_config.evaluation_settings
     tracks_name = train_config.tracks_name
 
     # Init a list for the callbacks
@@ -141,7 +141,7 @@ def train_cads(args, train_config):
                     "input_1": tf.TensorShape(
                         [None, metadata["n_trks"], metadata["n_trk_features"]]
                     ),
-                    "input_2": tf.TensorShape([None, nn_structure["N_Conditions"]]),
+                    "input_2": tf.TensorShape([None, nn_structure["n_conditions"]]),
                 },
                 tf.TensorShape([None, metadata["n_dim"]]),
                 tf.TensorShape([None]),
@@ -156,7 +156,7 @@ def train_cads(args, train_config):
                     "input_1": tf.TensorShape(
                         [None, metadata["n_trks"], metadata["n_trk_features"]]
                     ),
-                    "input_2": tf.TensorShape([None, nn_structure["N_Conditions"]]),
+                    "input_2": tf.TensorShape([None, nn_structure["n_conditions"]]),
                 },
                 tf.TensorShape([None, metadata["n_dim"]]),
             )
@@ -174,7 +174,7 @@ def train_cads(args, train_config):
                     and nn_structure["n_jets_train"] is not None
                     else metadata["n_jets"],
                     batch_size=nn_structure["batch_size"],
-                    nConds=nn_structure["N_Conditions"],
+                    nConds=nn_structure["n_conditions"],
                     chunk_size=int(1e6),
                     sample_weights=nn_structure["use_sample_weights"],
                 ),
@@ -224,7 +224,7 @@ def train_cads(args, train_config):
     # Append the callback
     callbacks.append(cads_model_checkpoint)
 
-    if "LRR" in nn_structure and nn_structure["LRR"] is True:
+    if "lrr" in nn_structure and nn_structure["lrr"] is True:
         # Define LearningRate Reducer as Callback
         reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
 
@@ -239,7 +239,7 @@ def train_cads(args, train_config):
             n_jets=n_jets_val,
             convert_to_tensor=True,
             jets_var_list=["absEta_btagJes", "pt_btagJes"],
-            nCond=nn_structure["N_Conditions"],
+            nCond=nn_structure["n_conditions"],
         )
 
         # TODO: Add a representative validation dataset for training (shown in
@@ -265,7 +265,7 @@ def train_cads(args, train_config):
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
         batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["LRR"] if "LRR" in nn_structure else False,
+        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
     )
 
     # Append the callback

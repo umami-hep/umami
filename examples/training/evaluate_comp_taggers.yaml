@@ -35,7 +35,7 @@ test_files:
         <<: *variable_cuts_zpext
 
 # Values for the neural network
-NN_structure:
+nn_structure:
     # Use evaluated tagger scores in h5 file and not trained model
     tagger: None
 
@@ -48,10 +48,10 @@ NN_structure:
 
 # Plotting settings for training metrics plots.
 # Those are not used here. Only when running plotting_epoch_performance.py
-Validation_metrics_settings:
+validation_settings:
 
 # Eval parameters for validation evaluation while training
-Eval_parameters_validation:
+evaluation_settings:
     # Number of jets used for validation
     n_jets: 3e5
 

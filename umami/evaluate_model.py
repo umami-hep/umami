@@ -119,9 +119,9 @@ def evaluate_model(
 
     # Get train parameters
     test_set_config = train_config.test_files[data_set_name]
-    eval_params = train_config.Eval_parameters_validation
-    class_labels = train_config.NN_structure["class_labels"]
-    main_class = train_config.NN_structure["main_class"]
+    eval_params = train_config.evaluation_settings
+    class_labels = train_config.nn_structure["class_labels"]
+    main_class = train_config.nn_structure["main_class"]
     frac_values_comp = eval_params.get("frac_values_comp")
     working_point = eval_params["WP"]
     add_variables = eval_params.get("add_eval_variables")
@@ -144,7 +144,7 @@ def evaluate_model(
     else:
         raise ValueError(
             """
-            Tagger given in Eval_parameters_validation
+            Tagger given in evaluation_settings
             is not a string or a list!
             """
         )
@@ -601,7 +601,7 @@ if __name__ == "__main__":
 
     else:
         try:
-            tagger_name = training_config.NN_structure["tagger"]
+            tagger_name = training_config.nn_structure["tagger"]
 
         except KeyError:
             logger.info(

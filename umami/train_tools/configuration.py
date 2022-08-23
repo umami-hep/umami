@@ -45,10 +45,8 @@ class Configuration:
             "tagger_label",
             "WP",
         ]
-        if self.config is not None and "Validation_metrics_settings" in self.config:
-            plot_arguments = pydash.omit(
-                self.config["Validation_metrics_settings"], omit_args
-            )
+        if self.config is not None and "validation_settings" in self.config:
+            plot_arguments = pydash.omit(self.config["validation_settings"], omit_args)
             return translate_kwargs(plot_arguments)
         return {}
 
@@ -101,18 +99,18 @@ class Configuration:
             "train_file",
             "validation_files",
             "test_files",
-            "NN_structure",
-            "Validation_metrics_settings",
-            "Eval_parameters_validation",
+            "nn_structure",
+            "validation_settings",
+            "evaluation_settings",
             "tracks_name",
         ]
         config_evaluation_items = [
             "model_name",
             "test_files",
             "evaluate_trained_model",
-            "NN_structure",
-            "Validation_metrics_settings",
-            "Eval_parameters_validation",
+            "nn_structure",
+            "validation_settings",
+            "evaluation_settings",
             "tracks_name",
         ]
 
@@ -141,7 +139,7 @@ class Configuration:
             raise KeyError(
                 """
                 You defined Plotting_settings. This option is deprecated. Please use
-                Validation_metrics_settings instead.
+                validation_settings instead.
                 """
             )
 
@@ -154,12 +152,12 @@ class Configuration:
                     self.var_dict = self.preprocess_config.var_file
                     continue
 
-                elif item == "NN_structure" and bool_evaluate_trained_model is True:
-                    if (self.config["NN_structure"]["tagger"] == "dips_attention") and (
-                        "N_Conditions" in self.config["NN_structure"]
+                elif item == "nn_structure" and bool_evaluate_trained_model is True:
+                    if (self.config["nn_structure"]["tagger"] == "dips_attention") and (
+                        "n_conditions" in self.config["nn_structure"]
                         and (
-                            self.config["NN_structure"]["N_Conditions"] != 0
-                            or self.config["NN_structure"]["N_Conditions"] is not None
+                            self.config["nn_structure"]["n_conditions"] != 0
+                            or self.config["nn_structure"]["n_conditions"] is not None
                         )
                     ):
                         raise ValueError(
@@ -169,11 +167,11 @@ class Configuration:
                             """
                         )
 
-                    if (self.config["NN_structure"]["tagger"] == "cads") and (
-                        "N_Conditions" in self.config["NN_structure"]
+                    if (self.config["nn_structure"]["tagger"] == "cads") and (
+                        "n_conditions" in self.config["nn_structure"]
                         and (
-                            self.config["NN_structure"]["N_Conditions"] == 0
-                            or self.config["NN_structure"]["N_Conditions"] is None
+                            self.config["nn_structure"]["n_conditions"] == 0
+                            or self.config["nn_structure"]["n_conditions"] is None
                         )
                     ):
                         raise ValueError(
@@ -184,14 +182,11 @@ class Configuration:
                             """
                         )
 
-                elif item == "Validation_metrics_settings":
+                elif item == "validation_settings":
                     try:
                         if (
-                            self.config["Validation_metrics_settings"]["val_batch_size"]
-                            is None
-                            and self.config["Eval_parameters_validation"][
-                                "eval_batch_size"
-                            ]
+                            self.config["validation_settings"]["val_batch_size"] is None
+                            and self.config["evaluation_settings"]["eval_batch_size"]
                             is None
                         ):
                             logger.warning(
@@ -201,28 +196,27 @@ class Configuration:
                                 "validation/evaluation!"
                             )
 
-                            self.config["Validation_metrics_settings"][
-                                "val_batch_size"
-                            ] = int(self.config["NN_structure"]["batch_size"])
-                            self.config["Eval_parameters_validation"][
-                                "eval_batch_size"
-                            ] = int(self.config["NN_structure"]["batch_size"])
+                            self.config["validation_settings"]["val_batch_size"] = int(
+                                self.config["nn_structure"]["batch_size"]
+                            )
+                            self.config["evaluation_settings"]["eval_batch_size"] = int(
+                                self.config["nn_structure"]["batch_size"]
+                            )
 
                         elif (
-                            self.config["Validation_metrics_settings"]["val_batch_size"]
-                            is None
+                            self.config["validation_settings"]["val_batch_size"] is None
                         ):
                             logger.warning(
                                 "No val_batch_size defined. Using training batch size"
                                 " for validation"
                             )
 
-                            self.config["Validation_metrics_settings"][
-                                "val_batch_size"
-                            ] = int(self.config["NN_structure"]["batch_size"])
+                            self.config["validation_settings"]["val_batch_size"] = int(
+                                self.config["nn_structure"]["batch_size"]
+                            )
 
                         elif (
-                            self.config["Eval_parameters_validation"]["eval_batch_size"]
+                            self.config["evaluation_settings"]["eval_batch_size"]
                             is None
                         ):
                             logger.warning(
@@ -230,12 +224,8 @@ class Configuration:
                                 " size for evaluation."
                             )
 
-                            self.config["Eval_parameters_validation"][
-                                "eval_batch_size"
-                            ] = int(
-                                self.config["Validation_metrics_settings"][
-                                    "val_batch_size"
-                                ]
+                            self.config["evaluation_settings"]["eval_batch_size"] = int(
+                                self.config["validation_settings"]["val_batch_size"]
                             )
 
                     except KeyError as Error:
@@ -245,7 +235,7 @@ class Configuration:
                 setattr(self, item, self.config[item])
 
             elif item == "tracks_name":
-                if "dl1" not in self.config["NN_structure"]["tagger"]:
+                if "dl1" not in self.config["nn_structure"]["tagger"]:
                     setattr(self, item, "tracks")
                     setattr(self, "tracks_key", "X_trk_train")
                     logger.warning(
@@ -259,10 +249,10 @@ class Configuration:
                 raise KeyError(f"You need to specify {item} in your config file!")
 
         # Define a security to check if label_value is used twice
-        class_ids = get_class_label_ids(self.config["NN_structure"]["class_labels"])
-        class_ops = get_class_label_ops(self.config["NN_structure"]["class_labels"])
+        class_ids = get_class_label_ids(self.config["nn_structure"]["class_labels"])
+        class_ops = get_class_label_ops(self.config["nn_structure"]["class_labels"])
         class_label_vars, _ = get_class_label_variables(
-            self.config["NN_structure"]["class_labels"]
+            self.config["nn_structure"]["class_labels"]
         )
         class_info = vstack((class_ids, class_ops, class_label_vars)).T
         if len(class_info) != len(unique(class_info, axis=0)):

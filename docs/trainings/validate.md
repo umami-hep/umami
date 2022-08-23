@@ -4,7 +4,7 @@ After your training is finished, you first need to validate the overall training
 
 ### Config
 
-The important part for the validation of your training is the `Validation_metrics_settings` section. In there are all options set to validate and plot the validated results of your training. In the following example, the different options are shown/explained.
+The important part for the validation of your training is the `validation_settings` section. In there are all options set to validate and plot the validated results of your training. In the following example, the different options are shown/explained.
 **Note** The validation plots are created using the [`puma package`](https://github.com/umami-hep/puma/). You can also give `puma` arguments, like `atlas_first_tag`, for the plots. These options are given to `puma` when the plotting is called.
 
 ```yaml
@@ -22,11 +22,11 @@ The important part for the validation of your training is the `Validation_metric
 | `use_atlas_tag` | `bool` | Optional | Decide, if the ATLAS tag is printed at the top left of the plot. |
 | `atlas_first_tag` | `str` | Optional | Main ATLAS tag which is right to "ATLAS" |
 | `atlas_second_tag` | `str` | Optional | Second line below the ATLAS tag |
-| `val_batch_size` | `int` | Optional | Number of jets used per batch for the validation of the training. If not given, the batch size from `NN_structure` is used. |
+| `val_batch_size` | `int` | Optional | Number of jets used per batch for the validation of the training. If not given, the batch size from `nn_structure` is used. |
 
 ### Running the Validation
 
-Before running the validation, please ensure that the `frac_dict` and `frac_dict_comp` option in `Eval_parameters_validation` is set for all taggers you want to plot! The validation uses this fraction values also for the rejection per epoch calculation! For a more detailed description of `frac_dict` and `frac_dict_comp`, please have a look [here](evaluate.md).
+Before running the validation, please ensure that the `frac_dict` and `frac_dict_comp` option in `evaluation_settings` is set for all taggers you want to plot! The validation uses this fraction values also for the rejection per epoch calculation! For a more detailed description of `frac_dict` and `frac_dict_comp`, please have a look [here](evaluate.md).
 
 After the config is prepared switch to the `umami/umami` folder and run the `plotting_epoch_performance.py` by executing the following command:
 

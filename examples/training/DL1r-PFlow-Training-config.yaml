@@ -54,7 +54,7 @@ test_files:
 
 exclude: null
 
-NN_structure:
+nn_structure:
     # Decide, which tagger is used
     tagger: "dl1"
 
@@ -78,7 +78,7 @@ NN_structure:
     main_class: "bjets"
 
     # Decide if Batch Normalisation is used
-    Batch_Normalisation: False
+    batch_normalisation: False
 
     # Nodes per dense layer. Starting with first dense layer.
     dense_sizes: [256, 128, 60, 48, 36, 24, 12, 6]
@@ -90,13 +90,13 @@ NN_structure:
     repeat_end: ["pt_btagJes", "absEta_btagJes"]
 
     # Options for the Learning Rate reducer
-    LRR: True
+    lrr: True
 
     # Option if you want to use sample weights for training
     use_sample_weights: False
 
 # Plotting settings for training metrics plots
-Validation_metrics_settings:
+validation_settings:
     # Number of jets used for validation
     n_jets: 3e5
 
@@ -119,7 +119,7 @@ Validation_metrics_settings:
     plot_datatype: "pdf"
 
 # Eval parameters for validation evaluation while training
-Eval_parameters_validation:
+evaluation_settings:
     # Number of jets used for evaluation
     n_jets: 3e5
 

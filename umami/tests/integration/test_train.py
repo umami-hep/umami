@@ -164,9 +164,9 @@ def prepareConfig(
         config_file["preprocess_config"] = f"{preprocessing_config}"
         config_file["train_file"] = f"{train_file}"
         config_file["var_dict"] = f"{var_dict}"
-        config_file["NN_structure"]["batch_size"] = 50
-        config_file["NN_structure"]["epochs"] = 2
-        config_file["NN_structure"]["n_jets_train"] = 100
+        config_file["nn_structure"]["batch_size"] = 50
+        config_file["nn_structure"]["epochs"] = 2
+        config_file["nn_structure"]["n_jets_train"] = 100
 
         # Add some validation files for testing
         config_file.update(
@@ -213,20 +213,20 @@ def prepareConfig(
         }
     )
 
-    config_file["Eval_parameters_validation"]["n_jets"] = 4_000
-    config_file["Eval_parameters_validation"]["eff_min"] = 0.77
+    config_file["evaluation_settings"]["n_jets"] = 4_000
+    config_file["evaluation_settings"]["eff_min"] = 0.77
 
     if four_classes_case is True:
-        config_file["NN_structure"]["main_class"] = ["bjets", "taujets"]
-        config_file["NN_structure"]["class_labels"] = [
+        config_file["nn_structure"]["main_class"] = ["bjets", "taujets"]
+        config_file["nn_structure"]["class_labels"] = [
             "ujets",
             "cjets",
             "bjets",
             "taujets",
         ]
-        config_file["Validation_metrics_settings"]["taggers_from_file"] = None
-        config_file["Eval_parameters_validation"]["tagger"] = None
-        config_file["Eval_parameters_validation"]["Calculate_Saliency"] = False
+        config_file["validation_settings"]["taggers_from_file"] = None
+        config_file["evaluation_settings"]["tagger"] = None
+        config_file["evaluation_settings"]["calculate_saliency"] = False
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
