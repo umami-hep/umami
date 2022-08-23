@@ -118,7 +118,7 @@ class PrepareSamples:
                 indices_batches.append((start_batch, end_batch))
         return (filename, indices_batches)
 
-    def jets_generator(self, files_in_batches: list):
+    def jets_generator(self, files_in_batches: list) -> tuple:
         """
         Helper function to extract jet and track information from a h5 ntuple.
 

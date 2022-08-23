@@ -2,6 +2,7 @@
 import os
 import tempfile
 import unittest
+from subprocess import CalledProcessError, run
 
 import h5py
 import numpy as np
@@ -16,6 +17,48 @@ from umami.preprocessing_tools import (
 )
 
 set_log_level(logger, "DEBUG")
+
+
+class CreateSamplesTestCase(unittest.TestCase):
+    """Testing the creation of the samples for the preprocessing config."""
+
+    def setUp(self) -> None:
+        """Setting up needed paths."""
+        self.test_dir_path = tempfile.TemporaryDirectory()  # pylint: disable=R1732
+        self.test_dir = f"{self.test_dir_path.name}"
+        self.output_path = os.path.join(self.test_dir, "test_samples.yaml")
+        self.config_file = os.path.join(
+            "examples/preprocessing",
+            "PFlow-Preprocessing.yaml",
+        )
+
+    def test_create_samples_dict(self):
+        """Test nominal behaviour.
+
+        Raises
+        ------
+        AssertionError
+            If the process returns an error.
+        """
+        run_script = run(
+            [
+                "python",
+                "scripts/create_preprocessing_samples.py",
+                "-c",
+                f"{self.config_file}",
+                "-o",
+                f"{self.output_path}",
+            ],
+            check=True,
+        )
+
+        try:
+            run_script.check_returncode()
+
+        except CalledProcessError as error:
+            raise AssertionError(
+                "Test failed: run_script for create_samples_dict."
+            ) from error
 
 
 class GetVariableDictTestCase(unittest.TestCase):
