@@ -104,6 +104,33 @@ The sample are defined as dicts with the following options:
 
 **Note**: The `n_jets` should be as high as possible for the train files! This is just the number of jets for this flavour which are extraced from the `.h5` files coming from the dumper. The resampling algorithm uses these samples to get the jets for building the final training sample, but it only uses as much as needed! Only for the validation and testing files we suggest to use something around `4e6` (otherwise the loading later on takes quite some time).
 
+??? info "Create samples list automatically"
+    If you don't want to define all the different samples one by one, you can also use the [`create_preprocessing_samples.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/create_preprocessing_samples.py) script. To use the script, you just need to adapt it to your needs:
+
+    ```python
+    categories = ["ujets", "cjets", "bjets"]
+    sample_types = ["ttbar", "zprime"]
+    n_jets = {
+        "training": int(10e6),
+        "validation": int(4e6),
+        "testing": int(4e6),
+    }
+    ```
+    | Setting | Type | Explanation |
+    | ------- | ---- | ----------- |
+    | `categories` | `list` | List with the flavours to extract. |
+    | `sample_types` | `list` | List with the sample types you want to use. |
+    | `n_jets` | `dict` | Dict with the number of jets which are to be extracted from the `.h5` files for the different usages of the samples (this must be training/validation/testing! You can't rename them!). |
+
+    This will create the content of the `samples` dict of the preprocessing config file. The different training samples, i.e. `training_ttbar_bjets` etc. and also the validation (`validation_ttbar` and `validation_zprime`) and testing samples (`testing_ttbar` and `testing_zprime`) will be created. In addition, the by flavour separated validation files (i.e `validation_ttbar_bjets`) needed for the hybrid validation creation are also prepared. Which cut template is used is also based on the name of the cut template. This must be `.cuts_template_training_ttbar` for the `training` case of `ttbar`.
+
+    To add your file to the preprocessing config, you can simply `!include` it like the preprocessing parameters. Just exchange the `samples` with the different samples defined in it with:
+
+    ```yaml
+    samples: !include <Path to your samples yaml file>
+    ```
+
+
 ### Run the Preparation
 To run the preparation step, switch to the `umami/umami/` folder and run the following command:
 

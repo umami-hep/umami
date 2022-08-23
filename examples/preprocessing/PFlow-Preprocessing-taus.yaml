@@ -21,7 +21,7 @@ preparation:
       type: ttbar
       category: bjets
       n_jets: 10e6
-      <<: *cuts_template_ttbar_train
+      <<: *cuts_template_training_ttbar
       output_name: !join [*sample_path, /bjets_training_ttbar_PFlow.h5]
 
 
@@ -29,24 +29,24 @@ preparation:
       type: ttbar
       category: cjets
       # Number of c jets available in MC16d
-      n_jets: 12745953
-      <<: *cuts_template_ttbar_train
+      n_jets: 10e6
+      <<: *cuts_template_training_ttbar
       output_name: !join [*sample_path, /cjets_training_ttbar_PFlow.h5]
 
 
     training_ttbar_ujets:
       type: ttbar
       category: ujets
-      n_jets: 20e6
-      <<: *cuts_template_ttbar_train
+      n_jets: 10e6
+      <<: *cuts_template_training_ttbar
       output_name: !join [*sample_path, /ujets_training_ttbar_PFlow.h5]
 
 
     training_ttbar_taujets:
       type: ttbar
       category: taujets
-      n_jets: 13e6
-      <<: *cuts_template_ttbar_train
+      n_jets: 10e6
+      <<: *cuts_template_training_ttbar
       output_name: !join [*sample_path, /taujets_training_ttbar_PFlow.h5]
 
 
@@ -54,7 +54,7 @@ preparation:
       type: zprime
       category: bjets
       n_jets: 10e6
-      <<: *cuts_template_zprime_train
+      <<: *cuts_template_training_zprime
       output_name: !join [*sample_path, /bjets_training_zprime_PFlow.h5]
 
 
@@ -63,7 +63,7 @@ preparation:
       category: cjets
       # Number of c jets available in MC16d
       n_jets: 10e6
-      <<: *cuts_template_zprime_train
+      <<: *cuts_template_training_zprime
       output_name: !join [*sample_path, /cjets_training_zprime_PFlow.h5]
 
 
@@ -71,7 +71,7 @@ preparation:
       type: zprime
       category: ujets
       n_jets: 10e6
-      <<: *cuts_template_zprime_train
+      <<: *cuts_template_training_zprime
       output_name: !join [*sample_path, /ujets_training_zprime_PFlow.h5]
 
 
@@ -79,7 +79,7 @@ preparation:
       type: zprime
       category: taujets
       n_jets: 10e6
-      <<: *cuts_template_zprime_train
+      <<: *cuts_template_training_zprime
       output_name: !join [*sample_path, /taujets_training_zprime_PFlow.h5]
 
 
@@ -93,7 +93,7 @@ preparation:
     testing_ttbar:
       type: ttbar
       category: inclusive
-      <<: *cuts_template_test
+      <<: *cuts_template_testing
       output_name: !join [*sample_path, /inclusive_testing_ttbar_PFlow.h5]
 
 
@@ -107,7 +107,7 @@ preparation:
     testing_zprime:
       type: zprime
       category: inclusive
-      <<: *cuts_template_test
+      <<: *cuts_template_testing
       output_name: !join [*sample_path, /inclusive_testing_zprime_PFlow.h5]
 
 
