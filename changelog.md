@@ -4,6 +4,10 @@
 
 ### Latest
 
+
+### [v0.12](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.12) (23.08.2022)
+
+- Small resampling fix [!620](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/620)
 - Fixing multiple issues with the fraction contour plots [!619](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/619)
 - Adding automatic creation of samples dict for the preprocessing config [!610](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/610)
 - Rewriting of preprocessing config reader [!606](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/606)

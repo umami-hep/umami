@@ -14,7 +14,7 @@ The `Weighting Sampling` is not a real resampling, in the same sense as the othe
 The resampling part of the config file starts with the `sampling:` dict.
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:99:105
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:99:105§§§
 ```
 
 In `sampling`, we can define now the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf`, `importance_no_replace` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
