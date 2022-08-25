@@ -231,7 +231,7 @@ def plot_roc(
     draw_errors: bool = True,
     labelpad: int = None,
     working_points: list = None,
-    same_height_WP: bool = True,
+    same_height_working_points: bool = True,
     linestyles: list = None,
     colours: list = None,
     n_test: list = None,
@@ -269,7 +269,7 @@ def plot_roc(
     working_points : list, optional
         List of working points which are to be plotted as
         vertical lines in the plot, by default None
-    same_height_WP : bool, optional
+    same_height_working_points : bool, optional
         Decide, if all working points lines have the same height or
         not, by default True
     linestyles : list, optional
@@ -425,7 +425,7 @@ def plot_roc(
     if working_points is not None:
         roc_plot.draw_vlines(
             vlines_xvalues=working_points,
-            same_height=same_height_WP,
+            same_height=same_height_working_points,
         )
 
     # Loop over the models with the different settings for each model
@@ -600,7 +600,7 @@ def plot_score(
     main_class: str,
     plot_name: str,
     working_points: list = None,
-    same_height_WP: bool = False,
+    same_height_working_points: bool = False,
     **kwargs,
 ) -> None:
     """Plot the tagging discriminant scores for the evalutated jets.
@@ -623,7 +623,7 @@ def plot_score(
         List of workings points which are plotted as vertical lines.
         By default, the working points for the first provided model is
         calculated and plotted, not for the rest! By default None
-    same_height_WP : bool, optional
+    same_height_working_points : bool, optional
         Decide, if all working points lines have the same height or
         not, by default True
     **kwargs : kwargs
@@ -673,7 +673,7 @@ def plot_score(
 
         score_plot.draw_vlines(
             vlines_xvalues=working_point_xvalues,
-            same_height=same_height_WP,
+            same_height=same_height_working_points,
             vlines_label_list=working_point_label,
         )
 

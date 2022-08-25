@@ -154,13 +154,13 @@ class get_metrics_file_name_TestCase(unittest.TestCase):
     def setUp(self):
         self.dir_name = "test"
         self.dict_name = "validation_WP0p77_300000jets_Dict.json"
-        self.WP = 0.77
+        self.working_point = 0.77
         self.n_jets = 300000
 
     def test_get_dict_name(self):
         """Test nominal behaviour."""
         train_metrics_file_name, val_metrics_file_name = get_metrics_file_name(
-            working_point=self.WP,
+            working_point=self.working_point,
             n_jets=self.n_jets,
             dir_name=self.dir_name,
         )
@@ -185,7 +185,7 @@ class get_metrics_file_name_TestCase(unittest.TestCase):
         )
 
         with self.subTest("Test working point parameter"):
-            self.assertEqual(parameters["WP"], self.WP)
+            self.assertEqual(parameters["working_point"], self.working_point)
 
         with self.subTest("Test working n_jets parameter"):
             self.assertEqual(parameters["n_jets"], self.n_jets)
@@ -203,7 +203,7 @@ class get_metrics_file_name_TestCase(unittest.TestCase):
     def test_get_dict_name_without_val_dict_path(self):
         """Test name retrieval without validation dict."""
         train_metrics_file_name, val_metrics_file_name = get_metrics_file_name(
-            working_point=self.WP,
+            working_point=self.working_point,
             n_jets=None,
             dir_name=self.dir_name,
         )

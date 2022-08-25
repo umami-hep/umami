@@ -125,7 +125,9 @@ def main(args, train_config):
     # Get the b eff
     if args.beff is None:
         working_point = (
-            float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
+            float(val_params["working_point"])
+            if "working_point" in val_params
+            else float(eval_params["working_point"])
         )
     else:
         working_point = args.beff
@@ -151,7 +153,7 @@ def main(args, train_config):
         if args.dict:
             output_file_name = args.dict
             parameters = utt.get_parameters_from_validation_dict_name(output_file_name)
-            beff = parameters["WP"]
+            beff = parameters["working_point"]
 
         elif args.recalculate:
             # Get the filename of the train metrics file

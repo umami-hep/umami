@@ -201,7 +201,9 @@ def train_umami(args, train_config):
 
     # Get needed variable from the train config
     working_point = (
-        float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
+        float(val_params["working_point"])
+        if "working_point" in val_params
+        else float(eval_params["working_point"])
     )
     n_jets_val = (
         int(val_params["n_jets"])

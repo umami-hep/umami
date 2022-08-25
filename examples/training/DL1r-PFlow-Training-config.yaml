@@ -108,10 +108,10 @@ validation_settings:
     tagger_label: "DL1r"
 
     # Working point used in the validation
-    WP: 0.77
+    working_point: 0.77
 
     # Plotting API parameters
-    # fc_value and WP_b are autmoatically added to the plot label
+    # fc_value and working_point_b are autmoatically added to the plot label
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "\n$\\sqrt{s}=13$ TeV, PFlow jets"
 
@@ -149,7 +149,7 @@ evaluation_settings:
     add_eval_variables: ["actualInteractionsPerCrossing"]
 
     # Working point used in the evaluation
-    WP: 0.77
+    working_point: 0.77
 
     # some properties for the feature importance explanation with SHAPley
     shapley:

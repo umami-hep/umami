@@ -171,14 +171,14 @@ def get_parameters_from_validation_dict_name(dict_name: str) -> dict:
     parameters = {}
 
     # Get the parameters from the name and add them to the dict
-    parameters["WP"] = float(sp[1].replace("WP", "").replace("p", "."))
+    parameters["working_point"] = float(sp[1].replace("WP", "").replace("p", "."))
     parameters["n_jets"] = int(sp[2].replace("jets", ""))
     parameters["dir_name"] = str(Path(dict_name).parent)
 
     # Check if the values are correctly extracted. Try to build the name
     # from the parameters and check if they are identical.
     _, val_dict_name = get_metrics_file_name(
-        working_point=parameters["WP"],
+        working_point=parameters["working_point"],
         n_jets=parameters["n_jets"],
         dir_name=parameters["dir_name"],
     )
@@ -1434,7 +1434,7 @@ def calc_validation_metrics(
 
         # Get val dict file name
         _, val_output_file_path = get_metrics_file_name(
-            working_point=eval_parameters["WP"],
+            working_point=eval_parameters["working_point"],
             n_jets=eval_parameters["n_jets"],
             dir_name=train_config.model_name,
         )

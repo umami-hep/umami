@@ -110,9 +110,7 @@ def train_cads(args, train_config):
     callbacks = []
 
     # Get needed variable from the train config
-    working_point = (
-        float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
-    )
+    working_point = float(val_params.get("working_point", eval_params["working_point"]))
     n_jets_val = (
         int(val_params["n_jets"])
         if "n_jets" in val_params
