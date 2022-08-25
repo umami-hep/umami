@@ -17,7 +17,7 @@ The important part for the evaluation is the `evaluation_settings` section. In t
 | `tagger` | `list` | Necessary | List of taggers used for comparison. This needs to be a list of `str` or a single `str`. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | `dict` | Necessary | `dict` with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `frac_values` | `dict` | Necessary | `dict` with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
-| `WP` | `float` | Necessary | Working point which is used in the evaluation. In the evaluation step, this is the value used for the fraction scan. |
+| `working_point` | `float` | Necessary | Working point which is used in the evaluation. In the evaluation step, this is the value used for the fraction scan. |
 | `eff_min` | `float` | Optional | Minimal main class efficiency considered for ROC. |
 | `eff_max` | `float` | Optional | Maximal main class efficiency considered for ROC. |
 | `frac_step` | `float` | Optional | Step size of the fraction value scan. Please keep in mind that the fractions given to the background classes need to add up to one! All combinations that do not add up to one are ignored. If you choose a combination `frac_min`, `frac_max` or `frac_step` where the fractions of the background classes do not add up to one, you will get an error while running `evaluate_model.py` |

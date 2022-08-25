@@ -73,4 +73,4 @@ evaluation_settings:
     frac_values: {"cjets": 0.018, "ujets": 0.982}
 
     # Working point used in the evaluation
-    WP: 0.77
+    working_point: 0.77

@@ -990,13 +990,12 @@ def run_validation_check(
     logger.info("Running performance check for %s.", tagger)
 
     # Load parameters from train config
-    Eval_parameters = train_config.evaluation_settings
-    Val_settings = train_config.validation_settings
+    val_settings = train_config.validation_settings
     plot_args = train_config.plot_args
-    frac_dict = Eval_parameters["frac_values"]
+    frac_dict = train_config.evaluation_settings["frac_values"]
     class_labels = train_config.nn_structure["class_labels"]
     main_class = train_config.nn_structure["main_class"]
-    recommended_frac_dict = Eval_parameters["frac_values_comp"]
+    recommended_frac_dict = train_config.evaluation_settings.get("frac_values_comp")
     # Load the unique identifiers of the validation files and the corresponding plot
     # labels. These are used several times in this function
     val_files = train_config.validation_files
@@ -1009,7 +1008,7 @@ def run_validation_check(
 
     # Get a working point
     if working_point is None:
-        working_point = Val_settings["WP"]
+        working_point = val_settings["working_point"]
 
     # Get dict with training results from json
     try:
@@ -1071,8 +1070,10 @@ def run_validation_check(
                         file=val_file_config["path"],
                         unique_identifier=val_file_identifier,
                         tagger_comp_var=tagger_comp_vars[comp_tagger],
-                        recommended_frac_dict=recommended_frac_dict[comp_tagger],
-                        n_jets=Val_settings["n_jets"],
+                        recommended_frac_dict=recommended_frac_dict[comp_tagger]
+                        if recommended_frac_dict
+                        else None,
+                        n_jets=val_settings["n_jets"],
                         cut_vars_dict=val_file_config["variable_cuts"]
                         if "variable_cuts" in val_file_config
                         else None,
@@ -1118,8 +1119,8 @@ def run_validation_check(
                         label_extension=val_file_config["label"],
                         rej_string=f"rej_{subtagger}_{val_file_identifier}",
                         target_beff=working_point,
-                        taggers_from_file=Val_settings["taggers_from_file"],
-                        trained_taggers=Val_settings["trained_taggers"],
+                        taggers_from_file=val_settings["taggers_from_file"],
+                        trained_taggers=val_settings["trained_taggers"],
                         **plot_args,
                     )
 
@@ -1136,8 +1137,8 @@ def run_validation_check(
                         label_extension=val_file_config["label"],
                         rej_string=f"rej_{subtagger}_{val_file_identifier}",
                         target_beff=working_point,
-                        taggers_from_file=Val_settings["taggers_from_file"],
-                        trained_taggers=Val_settings["trained_taggers"],
+                        taggers_from_file=val_settings["taggers_from_file"],
+                        trained_taggers=val_settings["trained_taggers"],
                         **plot_args,
                     )
 
@@ -1169,9 +1170,9 @@ def run_validation_check(
     else:
         # If no freshly trained tagger label is given, give tagger
         if not (
-            "tagger_label" in Val_settings and Val_settings["tagger_label"] is not None
+            "tagger_label" in val_settings and val_settings["tagger_label"] is not None
         ):
-            Val_settings["tagger_label"] = tagger
+            val_settings["tagger_label"] = tagger
 
         if n_rej == 2:
             # Plot comparsion for the comparison taggers
@@ -1179,7 +1180,7 @@ def run_validation_check(
             for val_file_identifier, val_file_config in val_files.items():
                 plot_rej_per_epoch_comp(
                     df_results=tagger_rej_dict,
-                    tagger_label=Val_settings["tagger_label"],
+                    tagger_label=val_settings["tagger_label"],
                     comp_tagger_rej_dict=comp_tagger_rej_dict,
                     unique_identifier=val_file_identifier,
                     plot_name=f"{plot_dir}/rej-plot_val_{val_file_identifier}",
@@ -1188,8 +1189,8 @@ def run_validation_check(
                     label_extension=val_file_config["label"],
                     rej_string=f"rej_{val_file_identifier}",
                     target_beff=working_point,
-                    taggers_from_file=Val_settings["taggers_from_file"],
-                    trained_taggers=Val_settings["trained_taggers"],
+                    taggers_from_file=val_settings["taggers_from_file"],
+                    trained_taggers=val_settings["trained_taggers"],
                     **plot_args,
                 )
 
@@ -1205,9 +1206,9 @@ def run_validation_check(
                 label_extension=val_file_config["label"],
                 rej_string=f"rej_{val_file_identifier}",
                 target_beff=working_point,
-                tagger_label=Val_settings["tagger_label"],
-                taggers_from_file=Val_settings["taggers_from_file"],
-                trained_taggers=Val_settings["trained_taggers"],
+                tagger_label=val_settings["tagger_label"],
+                taggers_from_file=val_settings["taggers_from_file"],
+                trained_taggers=val_settings["trained_taggers"],
                 **plot_args,
             )
 

@@ -43,7 +43,7 @@ class Configuration:
             "taggers_from_file",
             "trained_taggers",
             "tagger_label",
-            "WP",
+            "working_point",
         ]
         if self.config is not None and "validation_settings" in self.config:
             plot_arguments = pydash.omit(self.config["validation_settings"], omit_args)

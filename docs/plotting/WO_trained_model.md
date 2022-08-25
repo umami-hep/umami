@@ -77,7 +77,7 @@ evaluation_settings:
     frac_values: {"cjets": 0.018, "ujets": 0.982}
 
     # Working point used in the evaluation
-    WP: 0.77
+    working_point: 0.77
 ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -93,7 +93,7 @@ evaluation_settings:
 | `tagger` | List | Necessary | List of taggers used for comparison. This needs to be a list of string or a single string. The name of the taggers must be same as in the evaluation file. For example, if the DL1d probabilities in the test samples are called `DL1dLoose20210607_pb`, the name you need to add to the list is `DL1dLoose20210607`. |
 | `frac_values_comp` | Dict | Necessary | Dict with the fraction values for the comparison taggers. For all flavour (except the main flavour), you need to add values here which add up to one. |
 | `frac_values` | Dict | Necessary | Dict with the fraction values for the freshly trained tagger. For all flavour (except the main flavour), you need to add values here which add up to one. |
-| `WP` | Float | Necessary | Working point that is used for evaluation. |
+| `working_point` | Float | Necessary | Working point that is used for evaluation. |
 
 To run the evaluation, you can now execute the following command in the `umami/umami` folder where the `evaluate_model.py` is:
 

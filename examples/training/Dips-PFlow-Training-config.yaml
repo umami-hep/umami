@@ -110,7 +110,7 @@ validation_settings:
     tagger_label: "DIPS"
 
     # Working point used in the validation
-    WP: 0.77
+    working_point: 0.77
 
     # Plotting API parameters
     # fc_value and WP_b are automatically added to the plot label
@@ -140,7 +140,7 @@ evaluation_settings:
     frac_values: {"cjets": 0.005, "ujets": 0.995}
 
     # Working point used in the evaluation
-    WP: 0.77
+    working_point: 0.77
 
     # Decide, if the Saliency maps are calculated or not.
     calculate_saliency: True

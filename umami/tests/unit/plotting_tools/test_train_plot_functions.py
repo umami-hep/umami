@@ -338,7 +338,7 @@ class get_comp_tagger_rej_dict_TestCase(unittest.TestCase):
         self.recommended_frac_dict = {"cjets": 0.018, "ujets": 0.982}
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.main_class = "bjets"
-        self.WP = 0.77
+        self.working_point = 0.77
         run(
             [
                 "wget",
@@ -358,7 +358,7 @@ class get_comp_tagger_rej_dict_TestCase(unittest.TestCase):
             tagger_comp_var=self.tagger_comp_var_rnnip,
             recommended_frac_dict=self.recommended_frac_dict,
             n_jets=5000,
-            working_point=self.WP,
+            working_point=self.working_point,
             class_labels=self.class_labels,
             main_class=self.main_class,
         )
@@ -383,7 +383,7 @@ class get_comp_tagger_rej_dict_TestCase(unittest.TestCase):
             tagger_comp_var=self.tagger_comp_var_dl1r,
             recommended_frac_dict=self.recommended_frac_dict,
             n_jets=5000,
-            working_point=self.WP,
+            working_point=self.working_point,
             class_labels=self.class_labels,
             main_class=self.main_class,
         )

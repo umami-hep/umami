@@ -123,7 +123,7 @@ def evaluate_model(
     class_labels = train_config.nn_structure["class_labels"]
     main_class = train_config.nn_structure["main_class"]
     frac_values_comp = eval_params.get("frac_values_comp")
-    working_point = eval_params["WP"]
+    working_point = eval_params["working_point"]
     add_variables = eval_params.get("add_eval_variables")
     tracks_name = (
         train_config.tracks_name if hasattr(train_config, "tracks_name") else None

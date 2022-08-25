@@ -118,7 +118,11 @@ def train_umami_cond_att(args, train_config):
     callbacks = []
 
     # Get needed variable from the train config
-    WP = float(val_params["WP"]) if "WP" in val_params else float(eval_params["WP"])
+    working_point = (
+        float(val_params["working_point"])
+        if "working_point" in val_params
+        else float(eval_params["working_point"])
+    )
     n_jets_val = (
         int(val_params["n_jets"])
         if "n_jets" in val_params
@@ -236,11 +240,11 @@ def train_umami_cond_att(args, train_config):
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
-        nEpochs = nn_structure["epochs"]
+        n_epochs = nn_structure["epochs"]
 
     # If not, use epochs from config file
     else:
-        nEpochs = args.epochs
+        n_epochs = args.epochs
 
     # Set ModelCheckpoint as callback
     umami_mChkPt = ModelCheckpoint(
@@ -278,7 +282,7 @@ def train_umami_cond_att(args, train_config):
         class_labels=nn_structure["class_labels"],
         main_class=nn_structure["main_class"],
         val_data_dict=val_data_dict,
-        target_beff=WP,
+        target_beff=working_point,
         frac_dict=eval_params["frac_values"],
         n_jets=n_jets_val,
         continue_training=train_config.continue_training,
@@ -293,7 +297,7 @@ def train_umami_cond_att(args, train_config):
     logger.info("Start training")
     umami_cond_att_model.fit(
         train_dataset,
-        epochs=nEpochs,
+        epochs=n_epochs,
         callbacks=callbacks,
         steps_per_epoch=int(nn_structure["n_jets_train"]) / nn_structure["batch_size"]
         if "n_jets_train" in nn_structure and nn_structure["n_jets_train"] is not None
