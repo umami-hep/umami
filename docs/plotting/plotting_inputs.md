@@ -30,7 +30,7 @@ The number of tracks per jet can be plotted for all different files. This can be
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:91:108§§§
+    §§§examples/plotting_input_vars.yaml:95:112§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -51,7 +51,7 @@ To plot the track input variables, the following options are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:110:144§§§
+    §§§examples/plotting_input_vars.yaml:114:148§§§
     ```
 
 
@@ -73,7 +73,7 @@ To plot the jet input variables, the following options are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:16:89§§§
+    §§§examples/plotting_input_vars.yaml:16:93§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |

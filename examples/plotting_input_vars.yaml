@@ -23,6 +23,10 @@ jets_input_vars:
     R22:
       files: <path_palce_holder>/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
       label: "R22 Loose"
+      # If you want to specify the `class_labels` per dataset you can add it here
+      # If you don't specify anything here, the overall defined `class_labels` will be
+      # used
+      # class_labels: ["bjets", "cjets", "ujets"]
   plot_settings:
     <<: *default_plot_settings
   class_labels: ["bjets", "cjets", "ujets"]

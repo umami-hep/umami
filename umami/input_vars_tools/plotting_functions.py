@@ -11,6 +11,56 @@ from umami.plotting_tools.utils import translate_binning
 from umami.preprocessing_tools import get_variable_dict
 
 
+def get_datasets_configuration(plotting_config: dict, tracks: bool = False):
+    """Helper function to transform dict that stores the configuration of the different
+    datasets into lists of certain parameters.
+
+    Parameters
+    ----------
+    plotting_config : dict
+        Plotting configuration
+    tracks : bool, optional
+        Bool if the function should look for the `tracks_name` variable in the dataset
+        configurations.
+
+    Returns
+    -------
+    filepath_list : list
+        List with the filepaths of all the datasets.
+    labels_list : list
+        List with the 'dataset label' of each dataset.
+    class_labels_list : list
+        List with the class labels for each dataset. If no dataset-specific class labels
+        are provided, the globally defined class labels are used.
+    tracks_name_list : list
+        List with the track names of the datasets. Only returned if `tracks` is True.
+    """
+
+    filepath_list = []
+    labels_list = []
+    class_labels_list = []
+    tracks_name_list = []
+
+    datasets_config = plotting_config["Datasets_to_plot"]
+
+    for dataset_name in datasets_config:
+        if not datasets_config[dataset_name]["files"] is None:
+            filepath_list.append(datasets_config[dataset_name]["files"])
+            labels_list.append(datasets_config[dataset_name]["label"])
+            # check if this dataset has a specific list of class labels
+            class_labels_list.append(
+                datasets_config[dataset_name]["class_labels"]
+                if "class_labels" in datasets_config[dataset_name]
+                else plotting_config["class_labels"]
+            )
+            if tracks:
+                tracks_name_list.append(datasets_config[dataset_name]["tracks_name"])
+
+    if tracks:
+        return filepath_list, labels_list, class_labels_list, tracks_name_list
+    return filepath_list, labels_list, class_labels_list
+
+
 def check_kwargs_for_ylabel_and_n_ratio_panel(
     kwargs: dict,
     fallback_ylabel: str,
@@ -54,9 +104,9 @@ def check_kwargs_for_ylabel_and_n_ratio_panel(
 def plot_n_tracks_per_jet(
     datasets_filepaths: list,
     datasets_labels: list,
+    datasets_class_labels: list,
     datasets_track_names: list,
     n_jets: int,
-    class_labels: list,
     output_directory: str = "input_vars_trks",
     plot_type: str = "pdf",
     track_origin: str = "All",
@@ -73,12 +123,14 @@ def plot_n_tracks_per_jet(
         List of filepaths to the files.
     datasets_labels : list
         Label of the dataset for the legend.
+    datasets_class_labels : list
+        List with dataset-specific class labels, e.g. [["ujets", "cjets"], ["cjets"]]
+        to plot light-jets and c-jets for the first but only c-jets for the second
+        dataset
     datasets_track_names : list
         List with the track names of the files.
     n_jets : int
         Number of jets to use.
-    class_labels : list
-        List of classes that are to be plotted.
     output_directory : str
         Name of the output directory. Only the dir name not path!
     plot_type: str, optional
@@ -104,8 +156,8 @@ def plot_n_tracks_per_jet(
     flavour_label_dict = {}
 
     # Iterate over the different dataset filepaths and labels defined in the config
-    for (filepath, label, tracks_name) in zip(
-        datasets_filepaths, datasets_labels, datasets_track_names
+    for (filepath, label, tracks_name, class_labels) in zip(
+        datasets_filepaths, datasets_labels, datasets_track_names, datasets_class_labels
     ):
         loaded_trks, loaded_flavour_labels = udt.LoadTrksFromFile(
             filepath=filepath,
@@ -138,8 +190,8 @@ def plot_n_tracks_per_jet(
     # Store the means of the n_tracks distributions to print them at the end
     n_tracks_means = {label: {} for label in datasets_labels}
     # Iterate over datasets
-    for dataset_number, (label, linestyle) in enumerate(
-        zip(datasets_labels, linestyles[: len(datasets_labels)])
+    for dataset_number, (label, linestyle, class_labels) in enumerate(
+        zip(datasets_labels, linestyles[: len(datasets_labels)], datasets_class_labels)
     ):
         # Sort after given variable
         trks = np.asarray(trks_dict[label])
@@ -180,11 +232,11 @@ def plot_n_tracks_per_jet(
 def plot_input_vars_trks(
     datasets_filepaths: list,
     datasets_labels: list,
+    datasets_class_labels: list,
     datasets_track_names: list,
     var_dict: dict,
     n_jets: int,
     binning: dict,
-    class_labels: list,
     sorting_variable: str = "ptfrac",
     n_leading: list = None,
     output_directory: str = "input_vars_trks",
@@ -203,6 +255,10 @@ def plot_input_vars_trks(
         List of filepaths to the files.
     datasets_labels : list
         Label of the dataset for the legend.
+    datasets_class_labels : list
+        List with dataset-specific class labels, e.g. [["ujets", "cjets"], ["cjets"]]
+        to plot light-jets and c-jets for the first but only c-jets for the second
+        dataset
     datasets_track_names : list
         List with the track names of the files.
     var_dict : dict
@@ -211,8 +267,6 @@ def plot_input_vars_trks(
         Number of jets to use for plotting.
     binning : dict
         Decide which binning is used.
-    class_labels : list
-        List of class_labels which are to be plotted.
     sorting_variable : str
         Variable which is used for sorting.
     n_leading : list
@@ -252,9 +306,10 @@ def plot_input_vars_trks(
     flavour_label_dict = {}
 
     # Iterate over the different dataset filepaths and labels defined in the config
-    for filepath, label, tracks_name in zip(
+    for filepath, label, class_labels, tracks_name in zip(
         datasets_filepaths,
         datasets_labels,
+        datasets_class_labels,
         datasets_track_names,
     ):
 
@@ -359,8 +414,12 @@ def plot_input_vars_trks(
                     )
 
                 # Iterate over datasets
-                for dataset_number, (label, linestyle) in enumerate(
-                    zip(datasets_labels, linestyles[: len(datasets_labels)])
+                for dataset_number, (label, linestyle, class_labels) in enumerate(
+                    zip(
+                        datasets_labels,
+                        linestyles[: len(datasets_labels)],
+                        datasets_class_labels,
+                    )
                 ):
                     # Sort after given variable
                     sorting = np.argsort(-1 * trks_dict[label][sorting_variable])
@@ -450,10 +509,10 @@ def plot_input_vars_trks(
 def plot_input_vars_jets(
     datasets_filepaths: list,
     datasets_labels: list,
+    datasets_class_labels: list,
     var_dict: dict,
     n_jets: int,
     binning: dict,
-    class_labels: list,
     special_param_jets: dict = None,
     output_directory: str = "input_vars_jets",
     plot_type: str = "pdf",
@@ -470,14 +529,16 @@ def plot_input_vars_jets(
         List of filepaths to the files.
     datasets_labels : list
         Label of the dataset for the legend.
+    datasets_class_labels : list
+        List with dataset-specific class labels, e.g. [["ujets", "cjets"], ["cjets"]]
+        to plot light-jets and c-jets for the first but only c-jets for the second
+        dataset
     var_dict : dict
         Variable dict where all variables of the files are saved.
     n_jets : int
         Number of jets to use for plotting.
     binning : dict
         Decide which binning is used.
-    class_labels : list
-        List of class_labels which are to be plotted.
     special_param_jets : dict
         Dict with special x-axis cuts for the given variable.
     output_directory : str
@@ -508,7 +569,9 @@ def plot_input_vars_jets(
     flavour_label_dict = {}
 
     # Iterate over the different dataset filepaths and labels defined in the config
-    for (filepath, label) in zip(datasets_filepaths, datasets_labels):
+    for (filepath, label, class_labels) in zip(
+        datasets_filepaths, datasets_labels, datasets_class_labels
+    ):
         # Get the tracks and the labels from the file/files
         jets, flavour_labels = udt.LoadJetsFromFile(
             filepath=filepath,
@@ -554,8 +617,12 @@ def plot_input_vars_jets(
             logger.info("Plotting %s ...", var)
 
             # Iterate over datasets
-            for dataset_number, (label, linestyle) in enumerate(
-                zip(datasets_labels, linestyles[: len(datasets_labels)])
+            for dataset_number, (label, linestyle, class_labels) in enumerate(
+                zip(
+                    datasets_labels,
+                    linestyles[: len(datasets_labels)],
+                    datasets_class_labels,
+                )
             ):
                 # Get variable and the labels of the jets
                 jets_var = jets_dict[label][var]

@@ -83,9 +83,13 @@ def plot_trks_variables(plot_config, plot_type):
         plotting_config["plot_settings"] = translate_kwargs(
             plotting_config["plot_settings"]
         )
-        filepath_list = []
-        labels_list = []
-        tracks_list = []
+
+        (
+            filepath_list,
+            labels_list,
+            class_labels_list,
+            tracks_name_list,
+        ) = uit.get_datasets_configuration(plotting_config, tracks=True)
 
         # Default to no selection based on track_origin
         trk_origins = ["All"]
@@ -94,28 +98,13 @@ def plot_trks_variables(plot_config, plot_type):
         if "track_origins" in plotting_config:
             trk_origins = plotting_config["track_origins"]
 
-        for model_name, _ in plotting_config["Datasets_to_plot"].items():
-            if (
-                not plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
-                is None
-            ):
-                filepath_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
-                )
-                labels_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"]["label"]
-                )
-                tracks_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"]["tracks_name"]
-                )
-
         for trk_origin in trk_origins:
             if ("nTracks" in plotting_config) and (plotting_config["nTracks"] is True):
                 uit.plot_n_tracks_per_jet(
                     datasets_filepaths=filepath_list,
                     datasets_labels=labels_list,
-                    datasets_track_names=tracks_list,
-                    class_labels=plotting_config["class_labels"],
+                    datasets_class_labels=class_labels_list,
+                    datasets_track_names=tracks_name_list,
                     n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
                     output_directory=plotting_config["folder_to_save"]
                     if plotting_config["folder_to_save"]
@@ -129,8 +118,8 @@ def plot_trks_variables(plot_config, plot_type):
                 uit.plot_input_vars_trks(
                     datasets_filepaths=filepath_list,
                     datasets_labels=labels_list,
-                    datasets_track_names=tracks_list,
-                    class_labels=plotting_config["class_labels"],
+                    datasets_class_labels=class_labels_list,
+                    datasets_track_names=tracks_name_list,
                     var_dict=plot_config["Eval_parameters"]["var_dict"],
                     n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
                     binning=plotting_config["binning"],
@@ -167,25 +156,17 @@ def plot_jets_variables(plot_config, plot_type):
         plotting_config["plot_settings"] = translate_kwargs(
             plotting_config["plot_settings"]
         )
-        filepath_list = []
-        labels_list = []
 
-        for model_name, _ in plotting_config["Datasets_to_plot"].items():
-            if (
-                not plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
-                is None
-            ):
-                filepath_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"]["files"]
-                )
-                labels_list.append(
-                    plotting_config["Datasets_to_plot"][f"{model_name}"]["label"]
-                )
+        (  # pylint: disable=unbalanced-tuple-unpacking
+            filepath_list,
+            labels_list,
+            class_labels_list,
+        ) = uit.get_datasets_configuration(plotting_config)
 
         uit.plot_input_vars_jets(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
-            class_labels=plotting_config["class_labels"],
+            datasets_class_labels=class_labels_list,
             var_dict=plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
