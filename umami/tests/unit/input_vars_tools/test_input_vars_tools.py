@@ -10,6 +10,7 @@ from matplotlib.testing.compare import compare_images
 
 from umami.configuration import logger, set_log_level
 from umami.input_vars_tools.plotting_functions import (
+    get_datasets_configuration,
     plot_input_vars_jets,
     plot_input_vars_trks,
     plot_n_tracks_per_jet,
@@ -17,6 +18,81 @@ from umami.input_vars_tools.plotting_functions import (
 from umami.tools import yaml_loader
 
 set_log_level(logger, "DEBUG")
+
+
+class HelperFunction_TestCase(unittest.TestCase):
+    """Test class for helper functions."""
+
+    def setUp(self):
+        self.plotting_config = {
+            "class_labels": ["ujets", "cjets", "bjets"],
+            "Datasets_to_plot": {
+                "ds_1": {
+                    "files": "dummy_path_1",
+                    "label": "dummy_label_1",
+                },
+                "ds_2": {
+                    "files": "dummy_path_2",
+                    "label": "dummy_label_2",
+                },
+            },
+        }
+
+    def test_get_datasets_configuration_all_default(self):
+        """Test the helper function for the default case (same class labels for both
+        datasets)"""
+        exp_filepath_list = ["dummy_path_1", "dummy_path_2"]
+        exp_labels_list = ["dummy_label_1", "dummy_label_2"]
+        exp_class_labels_list = [
+            ["ujets", "cjets", "bjets"],
+            ["ujets", "cjets", "bjets"],
+        ]
+        (  # pylint: disable=unbalanced-tuple-unpacking
+            filepath_list,
+            labels_list,
+            class_labels_list,
+        ) = get_datasets_configuration(self.plotting_config)
+
+        with self.subTest():
+            self.assertEqual(exp_filepath_list, filepath_list)
+        with self.subTest():
+            self.assertEqual(exp_labels_list, labels_list)
+        with self.subTest():
+            self.assertEqual(exp_class_labels_list, class_labels_list)
+
+    def test_get_datasets_configuration_specific_class_labels(self):
+        """Test the helper function for the case of specifying specific class labels
+        for one of the datasets"""
+
+        # modify the config for this test
+        plotting_config = self.plotting_config
+        plotting_config["Datasets_to_plot"]["ds_2"]["class_labels"] = ["bjets"]
+        plotting_config["Datasets_to_plot"]["ds_1"]["tracks_name"] = "tracks_loose"
+        plotting_config["Datasets_to_plot"]["ds_2"]["tracks_name"] = "tracks"
+
+        # define expected outcome
+        exp_filepath_list = ["dummy_path_1", "dummy_path_2"]
+        exp_labels_list = ["dummy_label_1", "dummy_label_2"]
+        exp_class_labels_list = [
+            ["ujets", "cjets", "bjets"],
+            ["bjets"],
+        ]
+        exp_tracks_name_list = ["tracks_loose", "tracks"]
+        (
+            filepath_list,
+            labels_list,
+            class_labels_list,
+            tracks_name_list,
+        ) = get_datasets_configuration(self.plotting_config, tracks=True)
+
+        with self.subTest():
+            self.assertEqual(exp_filepath_list, filepath_list)
+        with self.subTest():
+            self.assertEqual(exp_labels_list, labels_list)
+        with self.subTest():
+            self.assertEqual(exp_class_labels_list, class_labels_list)
+        with self.subTest():
+            self.assertEqual(exp_tracks_name_list, tracks_name_list)
 
 
 class JetPlotting_TestCase(unittest.TestCase):
@@ -70,6 +146,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         """Test jet input variable plots with wrong type."""
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file]
+        class_labels_list = [["ujets", "cjets"]]
         labels_list = ["R21 Test"]
 
         # Change type in plotting_config to string to produce error
@@ -79,7 +156,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             plot_input_vars_jets(
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
-                class_labels=plotting_config["class_labels"],
+                datasets_class_labels=class_labels_list,
                 var_dict=self.plot_config["Eval_parameters"]["var_dict"],
                 n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
                 binning=plotting_config["binning"],
@@ -95,11 +172,12 @@ class JetPlotting_TestCase(unittest.TestCase):
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file]
         labels_list = ["R21 Test"]
+        class_labels_list = [["bjets", "cjets", "ujets", "taujets"]]
 
         plot_input_vars_jets(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
-            class_labels=plotting_config["class_labels"],
+            datasets_class_labels=class_labels_list,
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
@@ -138,6 +216,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file]
         labels_list = ["R21 Test"]
+        class_labels_list = [["ujets", "cjets"]]
 
         # Change type in plotting_config to string to produce error
         plotting_config["binning"]["SV1_NGTinSvx"] = "test"
@@ -146,7 +225,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             plot_input_vars_jets(
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
-                class_labels=plotting_config["class_labels"],
+                datasets_class_labels=class_labels_list,
                 var_dict=self.plot_config["Eval_parameters"]["var_dict"],
                 n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
                 binning=plotting_config["binning"],
@@ -160,12 +239,16 @@ class JetPlotting_TestCase(unittest.TestCase):
         """Test jet input variable plot with comparison."""
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
+        class_labels_list = [
+            ["bjets", "cjets", "ujets", "taujets"],
+            ["bjets", "cjets", "ujets", "taujets"],
+        ]
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_input_vars_jets(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
-            class_labels=plotting_config["class_labels"],
+            datasets_class_labels=class_labels_list,
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
@@ -202,6 +285,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         """Test track input variable plots with wrong type."""
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
+        class_labels_list = [["bjets", "cjets", "ujets"]]
         tracks_name_list = ["tracks"]
         labels_list = ["R21 Test"]
 
@@ -213,7 +297,7 @@ class JetPlotting_TestCase(unittest.TestCase):
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
                 datasets_track_names=tracks_name_list,
-                class_labels=plotting_config["class_labels"],
+                datasets_class_labels=class_labels_list,
                 var_dict=self.plot_config["Eval_parameters"]["var_dict"],
                 n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
                 binning=plotting_config["binning"],
@@ -226,14 +310,15 @@ class JetPlotting_TestCase(unittest.TestCase):
         """Test track input variables with wrong type."""
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
+        class_labels_list = [["bjets", "cjets", "ujets"]]
         tracks_name_list = ["tracks"]
         labels_list = ["R21 Test"]
 
         plot_input_vars_trks(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
+            datasets_class_labels=class_labels_list,
             datasets_track_names=tracks_name_list,
-            class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
@@ -317,6 +402,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         """Test track input variables with comparison and wrong type."""
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file]
+        class_labels_list = [["bjets", "cjets", "ujets"]]
         tracks_name_list = ["tracks"]
         labels_list = ["R21 Test"]
 
@@ -328,7 +414,7 @@ class JetPlotting_TestCase(unittest.TestCase):
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
                 datasets_track_names=tracks_name_list,
-                class_labels=plotting_config["class_labels"],
+                datasets_class_labels=class_labels_list,
                 var_dict=self.plot_config["Eval_parameters"]["var_dict"],
                 n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
                 binning=plotting_config["binning"],
@@ -341,14 +427,15 @@ class JetPlotting_TestCase(unittest.TestCase):
         """Test track variable plots without normalisation."""
         plotting_config = self.plot_config["tracks_test_not_normalised"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
+        class_labels_list = [["bjets", "cjets", "ujets"], ["bjets", "cjets", "ujets"]]
         tracks_name_list = ["tracks", "tracks_loose"]
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_input_vars_trks(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
+            datasets_class_labels=class_labels_list,
             datasets_track_names=tracks_name_list,
-            class_labels=plotting_config["class_labels"],
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
@@ -374,6 +461,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         """Test plotting track input variables with comparison."""
         plotting_config = self.plot_config["Tracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
+        class_labels_list = [["bjets", "cjets", "ujets"], ["bjets", "cjets", "ujets"]]
         tracks_name_list = ["tracks", "tracks_loose"]
         labels_list = ["R21 Test", "R22 Test"]
 
@@ -381,7 +469,7 @@ class JetPlotting_TestCase(unittest.TestCase):
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
             datasets_track_names=tracks_name_list,
-            class_labels=plotting_config["class_labels"],
+            datasets_class_labels=class_labels_list,
             var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             binning=plotting_config["binning"],
@@ -466,13 +554,14 @@ class JetPlotting_TestCase(unittest.TestCase):
         plotting_config = self.plot_config["nTracks_Test"]
         filepath_list = [self.r21_test_file, self.r22_test_file]
         tracks_name_list = ["tracks", "tracks_loose"]
+        class_labels_list = [["bjets", "cjets", "ujets"], ["bjets", "cjets", "ujets"]]
         labels_list = ["R21 Test", "R22 Test"]
 
         plot_n_tracks_per_jet(
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
+            datasets_class_labels=class_labels_list,
             datasets_track_names=tracks_name_list,
-            class_labels=plotting_config["class_labels"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
             output_directory=f"{self.actual_plots_dir}",
             # output_directory=f"{self.expected_plots_dir}",

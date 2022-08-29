@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding support for dataset-specific class labels in input var plots [!623](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/623)
 - Apply naming scheme for WP and nEpochs [!621](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/621)
 - Adding correct naming scheme for train config sections [!617](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/617)
 
