@@ -5,7 +5,7 @@ tracks_labels: &tracks_labels
   - truthVertexIndex
 
 tracks_loose_labels:
-  <<: *tracks_labels
+  *tracks_labels
 
 train_variables:
   JetKinematics:
