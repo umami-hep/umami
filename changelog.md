@@ -5,6 +5,7 @@
 ### Latest
 
 - Training metrics plots: now using `puma.Line2DPlot` objects here, which modifies the default colours [!629](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/629)
+- Fixing plotting issue in fraction contour + plot_scores [!624](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/624)
 - Switch to puma v0.1.8 [!630](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/630)
 - Adding support for dataset-specific class labels in input var plots [!623](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/623)
 - Apply naming scheme for WP and nEpochs [!621](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/621)
