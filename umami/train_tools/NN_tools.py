@@ -23,6 +23,7 @@ from umami.preprocessing_tools import (
     apply_scaling_jets,
     apply_scaling_trks,
     binarise_jet_labels,
+    get_scale_dict,
     get_variable_dict,
 )
 from umami.tools import natural_keys, replace_line_in_file
@@ -681,7 +682,7 @@ def get_jet_feature_position(
 def get_test_sample(
     input_file: str,
     var_dict: str,
-    preprocess_config: object,
+    scale_dict: str,
     class_labels: list,
     n_jets: int = int(3e5),
     exclude: list = None,
@@ -698,9 +699,9 @@ def get_test_sample(
     input_file : str
         Path to the file which is to be loaded.
     var_dict : str
-        Variable dict with the wanted jet variables inside.
-    preprocess_config : object
-        Loaded preprocessing config that was used.
+        Path to the variable dict or the loaded variable dict directly.
+    scale_dict : str
+        Path to the scale dict or the loaded scale dict directly.
     class_labels : list
         List of classes used for training of the model.
     n_jets : int
@@ -726,31 +727,12 @@ def get_test_sample(
     ValueError
         If jet_variables and exclude are used at the same time.
     RuntimeError
-        If no file could be found in the given filepath.
+        If no input file could be found in the given filepath.
     """
 
     # Assert that the jet variables and exlude are not called at the same time
     if jet_variables and exclude:
         raise ValueError("You can't set exclude and jet_variables. Choose one!")
-
-    # Adding class_labels check between preprocess_config and given labels
-    # Try/Except here for backward compatibility
-    try:
-        assert preprocess_config.sampling["class_labels"] == class_labels, (
-            "class_labels from preprocessing_config and from train_config are"
-            " different! They need to be the same!"
-        )
-
-    except (AttributeError, KeyError):
-        logger.warning(
-            "Deprecation Warning: class_labels are given in preparation"
-            " and not in sampling block! Consider moving this to"
-            " the sampling block in your config!"
-        )
-        assert preprocess_config.preparation["class_labels"] == class_labels, (
-            "class_labels from preprocessing_config and from train_config are"
-            " different! They need to be the same!"
-        )
 
     # Get the paths of the input file as list
     # In case there are multiple files (Wildcard etc.)
@@ -765,12 +747,9 @@ def get_test_sample(
             """
         )
 
-    # Load variables
-    variable_config = get_variable_dict(var_dict)
-
-    # Load scale dict
-    with open(preprocess_config.dict_file, "r") as infile:
-        scale_dict = json.load(infile)["jets"]
+    # Load scale and variables dict
+    var_dict_loaded = get_variable_dict(var_dict)
+    scale_dict_loaded = get_scale_dict(file_path=scale_dict, dict_key="jets")
 
     jets, Umami_labels = LoadJetsFromFile(
         filepath=filepaths,
@@ -796,7 +775,7 @@ def get_test_sample(
     else:
         # Retrieve variables and the excluded variables from the config
         variables, excluded_variables, _ = get_jet_feature_indices(
-            variable_config["train_variables"], exclude
+            var_dict_loaded["train_variables"], exclude
         )
 
     logger.debug("Excluded variables: %s", excluded_variables)
@@ -804,7 +783,7 @@ def get_test_sample(
     jets = apply_scaling_jets(
         jets=jets,
         variables_list=variables,
-        scale_dict=scale_dict,
+        scale_dict=scale_dict_loaded,
     )
 
     # Return jets and labels
@@ -814,7 +793,7 @@ def get_test_sample(
 def get_test_sample_trks(
     input_file: str,
     var_dict: str,
-    preprocess_config: object,
+    scale_dict: str,
     class_labels: list,
     tracks_name: str,
     n_jets: int = int(3e5),
@@ -830,9 +809,9 @@ def get_test_sample_trks(
     input_file : str
         Path to the file which is to be loaded.
     var_dict : str
-        Variable dict with the wanted track variables inside.
-    preprocess_config : object
-        Loaded preprocessing config that was used.
+        Path to the variable dict or the loaded variable dict directly.
+    scale_dict : str
+        Path to the scale dict or the loaded scale dict directly.
     class_labels : list
         List of classes used for training of the model.
     tracks_name : str
@@ -854,17 +833,12 @@ def get_test_sample_trks(
     Raises
     ------
     RuntimeError
-        If no file could be found in the given filepath.
+        If no input file could be found in the given filepath.
     """
 
-    # Adding class_labels check between preprocess_config and given labels
-    assert preprocess_config.sampling["class_labels"] == class_labels, (
-        "class_labels from preprocessing_config and from train_config are"
-        " different! They need to be the same!"
-    )
-
-    # making sure the n_jets aregument is an integer
+    # making sure the n_jets argument is an integer
     n_jets = int(n_jets)
+
     # Get the paths of the input file as list
     # In case there are multiple files (Wildcard etc.)
     filepaths = glob(input_file)
@@ -878,12 +852,9 @@ def get_test_sample_trks(
             """
         )
 
-    # Load variables
-    variable_config = get_variable_dict(var_dict)
-
-    # Load scale dict for the tracks
-    with open(preprocess_config.dict_file, "r") as infile:
-        scale_dict = json.load(infile)[f"{tracks_name}"]
+    # Load scale and variables dict
+    var_dict_loaded = get_variable_dict(var_dict)
+    scale_dict_loaded = get_scale_dict(file_path=scale_dict, dict_key=str(tracks_name))
 
     trks, labels = LoadTrksFromFile(
         filepath=filepaths,
@@ -903,8 +874,8 @@ def get_test_sample_trks(
     # Apply scaling to the tracks
     trks, _ = apply_scaling_trks(
         trks=trks,
-        variable_config=variable_config,
-        scale_dict=scale_dict,
+        variable_config=var_dict_loaded,
+        scale_dict=scale_dict_loaded,
         tracks_name=tracks_name,
     )
 
@@ -985,7 +956,7 @@ def load_validation_data(
             (X_valid, Y_valid,) = get_test_sample_trks(
                 input_file=val_file_config["path"],
                 var_dict=train_config.var_dict,
-                preprocess_config=train_config.preprocess_config,
+                scale_dict=train_config.preprocess_config.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -996,7 +967,7 @@ def load_validation_data(
             (X_valid, Y_valid,) = get_test_sample(
                 input_file=val_file_config["path"],
                 var_dict=train_config.var_dict,
-                preprocess_config=train_config.preprocess_config,
+                scale_dict=train_config.preprocess_config.dict_file,
                 class_labels=class_labels,
                 n_jets=n_jets,
                 exclude=exclude,
@@ -1007,7 +978,7 @@ def load_validation_data(
             (X_valid, X_valid_trk, Y_valid,) = get_test_file(
                 input_file=val_file_config["path"],
                 var_dict=train_config.var_dict,
-                preprocess_config=train_config.preprocess_config,
+                scale_dict=train_config.preprocess_config.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -1054,7 +1025,7 @@ def load_validation_data(
 def get_test_file(
     input_file: str,
     var_dict: str,
-    preprocess_config: object,
+    scale_dict: str,
     class_labels: list,
     tracks_name: str,
     n_jets: int,
@@ -1072,9 +1043,9 @@ def get_test_file(
     input_file : str
         Path to the file which is to be loaded.
     var_dict : str
-        Variable dict with the wanted jet variables inside.
-    preprocess_config : object
-        Loaded preprocessing config that was used.
+        Path to the variable dict or the loaded variable dict directly.
+    scale_dict : str
+        Path to the scale dict or the loaded scale dict directly.
     class_labels : list
         List of classes used for training of the model.
     tracks_name : str
@@ -1103,7 +1074,7 @@ def get_test_file(
     X_trk, Y_trk = get_test_sample_trks(
         input_file=input_file,
         var_dict=var_dict,
-        preprocess_config=preprocess_config,
+        scale_dict=scale_dict,
         class_labels=class_labels,
         tracks_name=tracks_name,
         n_jets=int(n_jets),
@@ -1114,7 +1085,7 @@ def get_test_file(
     X, Y = get_test_sample(
         input_file=input_file,
         var_dict=var_dict,
-        preprocess_config=preprocess_config,
+        scale_dict=scale_dict,
         class_labels=class_labels,
         n_jets=int(n_jets),
         exclude=exclude,

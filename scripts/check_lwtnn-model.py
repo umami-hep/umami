@@ -195,13 +195,6 @@ def main():
     ntracks_max = eval_config["ntracks_max"]
     batch_size = eval_config["batch_size"]
 
-    # Init the minimal preprocessing config for loading of the jets
-    preprocess_config = minimal_preprocessing_config(
-        scale_dict=scale_dict,
-        class_labels=class_labels,
-        tracks_name=tracks_name,
-    )
-
     # Get the class ids for removing
     class_ids = get_class_label_ids(class_labels)
 
@@ -220,10 +213,10 @@ def main():
     # Get prediction for umami
     if "umami" in tagger.casefold():
         X_test_jet, X_test_trk, Y_test = utt.get_test_file(
-            input_file,
-            var_dict,
-            preprocess_config,
-            class_labels,
+            input_file=input_file,
+            var_dict=var_dict,
+            scale_dict=scale_dict,
+            class_labels=class_labels,
             tracks_name=tracks_name,
             n_jets=int(10e6),
             exclude=None,
@@ -242,10 +235,10 @@ def main():
     # Get prediction for dips
     elif "dips" in tagger.casefold():
         X_test_trk, Y_test = utt.get_test_sample_trks(
-            input_file,
-            var_dict,
-            preprocess_config,
-            class_labels,
+            input_file=input_file,
+            var_dict=var_dict,
+            scale_dict=scale_dict,
+            class_labels=class_labels,
             tracks_name=tracks_name,
             n_jets=int(10e6),
         )
@@ -265,10 +258,10 @@ def main():
     # Get prediction for dl1
     elif "dl1" in tagger.casefold():
         X_test_jet, Y_test = utt.get_test_sample(
-            input_file,
-            var_dict,
-            preprocess_config,
-            class_labels,
+            input_file=input_file,
+            var_dict=var_dict,
+            scale_dict=scale_dict,
+            class_labels=class_labels,
             n_jets=int(10e6),
             exclude=None,
         )

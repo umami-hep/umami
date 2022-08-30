@@ -67,18 +67,12 @@ class minimal_preprocessing_config:
 def main():
     """Process test file and write it to disk."""
     args = get_parser()
-    # Init the minimal preprocessing config for loading of the jets
-    preprocess_config = minimal_preprocessing_config(
-        scale_dict=args.scale_dict,
-        class_labels=args.class_labels,
-        tracks_name=args.tracks_name,
-    )
     logger.info("Start processing")
 
     X_test_jet, X_test_trk, Y_test = get_test_file(
         input_file=args.input_file,
         var_dict=args.var_dict,
-        preprocess_config=preprocess_config,
+        scale_dict=args.scale_dict,
         class_labels=args.class_labels,
         tracks_name=args.tracks_name,
         n_jets=int(args.n_jets),

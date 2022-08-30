@@ -6,6 +6,7 @@ from itertools import permutations
 import numpy as np
 from tensorflow.keras.layers import Lambda  # pylint: disable=import-error
 from tensorflow.keras.models import Model  # pylint: disable=import-error
+from tqdm import tqdm
 
 import umami.metrics as umt
 from umami.preprocessing_tools import get_variable_dict
@@ -95,6 +96,7 @@ def get_rej_per_frac_dict(
     step: float = 0.01,
     frac_min: float = 0.01,
     frac_max: float = 1.0,
+    progress_bar: bool = False,
 ) -> dict:
     """Calculate the rejections for the background classes for all possible
     combinations of fraction values of the background classes. The fractions
@@ -124,12 +126,20 @@ def get_rej_per_frac_dict(
         Minimum value of the fractions, by default 0.01.
     frac_max : float
         Minimum value of the fractions, by default 1.0.
+    progress_bar : bool, optional
+        Decide, if a progress bar for the different combinations is printed to
+        the terminal. By default False.
 
     Returns
     -------
     dict
         Dict with the rejections for the taggers for the given fraction combinations.
     """
+    # Check if a freshly trained tagger is given. If not, init empty lists so the
+    # loop is not broken
+    if tagger_names is None and tagger_preds is None:
+        tagger_names = []
+        tagger_preds = []
 
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
@@ -164,7 +174,7 @@ def get_rej_per_frac_dict(
     skipped_taggers = []
 
     # Loop over effs for ROC plots
-    for frac_dict in dict_list:
+    for frac_dict in tqdm(dict_list, disable=not progress_bar):
 
         # Create dict entry key for the given fraction dict
         dict_key = ""
@@ -242,6 +252,7 @@ def get_rej_per_eff_dict(
     x_axis_granularity: int = 100,
     eff_min: float = 0.49,
     eff_max: float = 1.0,
+    progress_bar: bool = False,
 ) -> dict:
     """
     Calculates the rejections for the classes and taggers provided for
@@ -273,6 +284,9 @@ def get_rej_per_eff_dict(
         Lowest value for the efficiencies linspace.
     eff_max : float
         Highst value for the efficiencies linspace.
+    progress_bar : bool, optional
+        Decide, if a progress bar for the different effs is printed to
+        the terminal. By default False.
 
     Returns
     -------
@@ -280,6 +294,11 @@ def get_rej_per_eff_dict(
         Dict with the rejections for each tagger/class (wo main),
         disc cuts per effs and the effs.
     """
+    # Check if a freshly trained tagger is given. If not, init empty lists so the
+    # loop is not broken
+    if tagger_names is None and tagger_preds is None:
+        tagger_names = []
+        tagger_preds = []
 
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
@@ -312,7 +331,7 @@ def get_rej_per_eff_dict(
     skipped_taggers = []
 
     # Loop over effs for ROC plots
-    for eff in effs:
+    for eff in tqdm(effs, disable=not progress_bar):
         for tagger in extended_tagger_list:
             if tagger in tagger_names:
                 y_pred = tagger_preds[tagger_names.index(tagger)]
@@ -427,6 +446,12 @@ def get_scores_probs_dict(
         "eta": jets[global_config.etavariable],
         "labels": y_true,
     }
+
+    # Check if a freshly trained tagger is given. If not, init empty lists so the
+    # loop is not broken
+    if tagger_names is None and tagger_preds is None:
+        tagger_names = []
+        tagger_preds = []
 
     # Adding trained tagger probabilities
     for counter, tagger in enumerate(tagger_names + tagger_list):

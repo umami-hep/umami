@@ -33,5 +33,9 @@ from umami.preprocessing_tools.Scaling import (
     generate_default_dict,
     get_track_mask,
 )
-from umami.preprocessing_tools.utils import binarise_jet_labels, get_variable_dict
+from umami.preprocessing_tools.utils import (
+    binarise_jet_labels,
+    get_scale_dict,
+    get_variable_dict,
+)
 from umami.preprocessing_tools.Writing_Train_File import TrainSampleWriter

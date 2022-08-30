@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Remove preprocessing config from loading functions [!622](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/622)
 - Training metrics plots: now using `puma.Line2DPlot` objects here, which modifies the default colours [!629](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/629)
 - Fixing plotting issue in fraction contour + plot_scores [!624](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/624)
 - Switch to puma v0.1.8 [!630](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/630)

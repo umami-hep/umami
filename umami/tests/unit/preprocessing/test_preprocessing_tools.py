@@ -13,10 +13,86 @@ from umami.preprocessing_tools import (
     PrepareSamples,
     PreprocessConfiguration,
     binarise_jet_labels,
+    get_scale_dict,
     get_variable_dict,
 )
 
 set_log_level(logger, "DEBUG")
+
+
+class GetDictTestCase(unittest.TestCase):
+    """Testing the get_scale_dict and the get_variable_dict functions."""
+
+    def setUp(self) -> None:
+        """Setting up needed paths."""
+        self.var_file = os.path.join(
+            os.path.dirname(__file__), "fixtures/dummy_var_file_short.yaml"
+        )
+        self.scale_file = os.path.join(
+            os.path.dirname(__file__), "fixtures/dummy_scale_file_short.json"
+        )
+        self.control_var_dict = {
+            "custom_defaults_vars": {"JetFitter_energyFraction": 0},
+            "label": "HadronConeExclTruthLabelID",
+            "track_train_variables": {
+                "tracks": {
+                    "jointNormVars": [
+                        "numberOfPixelHits",
+                        "numberOfSCTHits",
+                        "btagIp_d0",
+                    ],
+                    "logNormVars": ["ptfrac", "dr"],
+                    "noNormVars": ["IP3D_signed_d0_significance"],
+                }
+            },
+            "train_variables": {
+                "JetFitter": ["JetFitter_isDefaults"],
+                "JetKinematics": ["absEta_btagJes", "pt_btagJes"],
+            },
+        }
+        self.control_scale_dict = [
+            {"name": "eta_btagJes", "shift": 1, "scale": 2, "default": 0},
+            {"name": "pt_btagJes", "shift": 5, "scale": 2, "default": 1},
+        ]
+
+    def test_get_scale_dict(self):
+        """Testing default behaviour of get_scale_dict."""
+
+        with self.subTest("Loading test"):
+            scale_dict = get_scale_dict(file_path=self.scale_file, dict_key="jets")
+            self.assertEqual(scale_dict, self.control_scale_dict)
+
+        with self.subTest("Already loaded test"):
+            scale_dict = get_scale_dict(
+                file_path=self.control_scale_dict, dict_key="jets"
+            )
+            self.assertEqual(scale_dict, self.control_scale_dict)
+
+        with self.subTest("Already loaded but without key"):
+            scale_dict = get_scale_dict(
+                file_path={"jets": self.control_scale_dict},
+                dict_key="jets",
+            )
+            self.assertEqual(scale_dict, self.control_scale_dict)
+
+        with self.subTest("Not compatible input type test"):
+            with self.assertRaises(ValueError):
+                get_scale_dict(file_path=int(5), dict_key="jets")
+
+    def test_get_variable_dict(self):
+        """Testing default behaviour of get_variable_dict."""
+
+        with self.subTest("Loading test"):
+            var_dict = get_variable_dict(file_path=self.var_file)
+            self.assertEqual(var_dict, self.control_var_dict)
+
+        with self.subTest("Already loaded test"):
+            var_dict = get_variable_dict(file_path=self.control_var_dict)
+            self.assertEqual(var_dict, self.control_var_dict)
+
+        with self.subTest("Not compatible input type test"):
+            with self.assertRaises(ValueError):
+                get_variable_dict(file_path=int(5))
 
 
 class CreateSamplesTestCase(unittest.TestCase):
