@@ -645,7 +645,9 @@ def plot_score(
     flav_cat = global_config.flavour_categories
 
     # Get the truth value and the truth variable to use for the used flavours
-    label_dict, label_var_dict = retrieve_truth_label_var_value(class_labels_list[0])
+    label_dict, label_var_dict = retrieve_truth_label_var_value(
+        class_labels_list[0] + [main_class]
+    )
 
     # Init the Histogram plot object
     score_plot = HistogramPlot(**kwargs)
@@ -953,7 +955,7 @@ def plot_fraction_contour(
 
     # Extract fraction steps from dict
     for _, dict_values in df_results_list[0].items():
-        fraction_list.append(dict_values[f"{rejections_to_plot[0]}"])
+        fraction_list.append(dict_values[rejections_to_plot[0]])
 
     # Remove all doubled items
     fraction_list = list(dict.fromkeys(fraction_list))
@@ -1026,8 +1028,8 @@ def plot_fraction_contour(
                 # Check that the correct combination of fraction value and
                 # rejection is chosen
                 if (
-                    f"{tagger}" in dict_key
-                    and dict_values[f"{rejections_to_plot[0]}"] == frac
+                    dict_key.startswith(f"{tagger}_")
+                    and dict_values[rejections_to_plot[0]] == frac
                     and rej_to_fix_bool
                 ):
                     for rejection in rejections_to_plot:
@@ -1035,8 +1037,8 @@ def plot_fraction_contour(
 
                     if (
                         marked_point_dict
-                        and marked_point_dict[f"{rejections_to_plot[0]}"]
-                        == dict_values[f"{rejections_to_plot[0]}"]
+                        and marked_point_dict[rejections_to_plot[0]]
+                        == dict_values[rejections_to_plot[0]]
                     ):
                         plot_point_x = dict_values[f"{rejections_to_plot[0]}_rej"]
                         plot_point_y = dict_values[f"{rejections_to_plot[1]}_rej"]
@@ -1063,9 +1065,9 @@ def plot_fraction_contour(
 
             # Build the correct marker for the point
             frac_label_x = flav_cat[rejections_to_plot[0]]["prob_var_name"]
-            frac_x_value = marked_point_dict[f"{rejections_to_plot[0]}"]
+            frac_x_value = marked_point_dict[rejections_to_plot[0]]
             frac_label_y = flav_cat[rejections_to_plot[1]]["prob_var_name"]
-            frac_y_value = marked_point_dict[f"{rejections_to_plot[1]}"]
+            frac_y_value = marked_point_dict[rejections_to_plot[1]]
 
             point_label = (
                 rf"{label} $f_{{{frac_label_x}}} = {frac_x_value}$,"

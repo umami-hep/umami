@@ -449,11 +449,9 @@ def evaluate_model(
         if tagger_preds != []  # pylint: disable=use-implicit-booleaness-not-comparison
         else None,
         frac_values_comp=frac_values_comp,
-        eff_min=0.49 if "eff_min" not in eval_params else eval_params["eff_min"],
-        eff_max=1.0 if "eff_max" not in eval_params else eval_params["eff_max"],
-        x_axis_granularity=100
-        if "x_axis_granularity" not in eval_params
-        else eval_params["x_axis_granularity"],
+        eff_min=eval_params.get("eff_min", 0.49),
+        eff_max=eval_params.get("eff_max", 1.0),
+        x_axis_granularity=eval_params.get("x_axis_granularity", 100),
     )
 
     df_eff_rej = pd.DataFrame(tagger_rej_dicts)
@@ -488,9 +486,9 @@ def evaluate_model(
         class_labels=class_labels,
         main_class=main_class,
         target_eff=working_point,
-        step=0.01 if "frac_step" not in eval_params else eval_params["frac_step"],
-        frac_min=0.01 if "frac_min" not in eval_params else eval_params["frac_min"],
-        frac_max=1.0 if "frac_max" not in eval_params else eval_params["frac_max"],
+        step=eval_params.get("frac_step", 0.01),
+        frac_min=eval_params.get("frac_min", 0),
+        frac_max=eval_params.get("frac_max", 1.0),
     )
 
     # Form the dict to a Dataframe and save it
@@ -531,12 +529,8 @@ def evaluate_model(
             frac_dict=eval_params["frac_values"],
             var_dict_path=train_config.var_dict,
             tracks_name=tracks_name,
-            nTracks=eval_params["saliency_ntrks"]
-            if "saliency_ntrks" in eval_params
-            else None,
-            effs=eval_params["saliency_effs"]
-            if "saliency_effs" in eval_params
-            else None,
+            nTracks=eval_params.get("saliency_ntrks"),
+            effs=eval_params.get("saliency_effs"),
         )
 
         # Create results dir and pickle file
