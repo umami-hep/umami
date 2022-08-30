@@ -34,6 +34,27 @@ from umami.train_tools.NN_tools import (
 set_log_level(logger, "DEBUG")
 
 
+class minimal_preprocessing_config:
+    """
+    Init a object with the scale dict as attribute
+    """
+
+    def __init__(
+        self,
+        scale_dict: str,
+    ):
+        """
+        Initalise the minimal preprocessing config so the loading
+        of the files is done correctly
+
+        Parameters
+        ----------
+        scale_dict : str
+            Path to the used scale dict.
+        """
+        self.dict_file = scale_dict
+
+
 class get_unique_identifiers_TestCase(unittest.TestCase):
     """Test class for the unique identifiers."""
 
@@ -761,14 +782,16 @@ class GetSamples_TestCase(unittest.TestCase):
         self.length_track_variables = 5
         self.nTracks = 40
         self.config = {"exclude": self.exclude}
-        self.preprocess_config = self
+        self.preprocess_config = minimal_preprocessing_config(
+            scale_dict=self.dict_file,
+        )
 
     def test_get_test_sample_trks(self):
         """Test nominal behaviour."""
         X_trk, Y_trk = get_test_sample_trks(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
-            preprocess_config=self,
+            scale_dict=self.dict_file,
             class_labels=self.class_labels,
             tracks_name=self.tracks_name,
             n_jets=self.n_jets,
@@ -786,18 +809,6 @@ class GetSamples_TestCase(unittest.TestCase):
         with self.subTest("Test label shape"):
             self.assertEqual(Y_trk.shape, (len(Y_trk), 3))
 
-    def test_get_test_sample_trks_Different_class_labels(self):
-        """Test get test sample trks for different class labels error."""
-        with self.assertRaises(AssertionError):
-            get_test_sample_trks(
-                input_file=self.validation_files["ttbar_r21_val"]["path"],
-                var_dict=self.var_dict,
-                preprocess_config=self,
-                class_labels=["ujets", "cjets", "bjets"],
-                tracks_name=self.tracks_name,
-                n_jets=self.n_jets,
-            )
-
     def test_get_test_sample_trks_Extended_Labeling(self):
         """Test get test sample trks for extended labelling."""
         self.sampling = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
@@ -805,7 +816,7 @@ class GetSamples_TestCase(unittest.TestCase):
         X_trk, Y_trk = get_test_sample_trks(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
-            preprocess_config=self,
+            scale_dict=self.dict_file,
             class_labels=self.class_labels_extended,
             tracks_name=self.tracks_name,
             n_jets=self.n_jets,
@@ -828,7 +839,7 @@ class GetSamples_TestCase(unittest.TestCase):
         X, Y = get_test_sample(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
-            preprocess_config=self,
+            scale_dict=self.dict_file,
             class_labels=self.class_labels,
             n_jets=self.n_jets,
             exclude=self.exclude,
@@ -849,18 +860,6 @@ class GetSamples_TestCase(unittest.TestCase):
                 ["absEta_btagJes", "JetFitter_isDefaults", "JetFitter_mass"],
             )
 
-    def test_get_test_sample_Different_class_labels(self):
-        """Test get test sample for different class labels error."""
-        with self.assertRaises(AssertionError):
-            get_test_sample(
-                input_file=self.validation_files["ttbar_r21_val"]["path"],
-                var_dict=self.var_dict,
-                preprocess_config=self,
-                class_labels=["ujets", "cjets", "bjets"],
-                n_jets=self.n_jets,
-                exclude=self.exclude,
-            )
-
     def test_get_test_sample_Extended_Labeling(self):
         """Test get test sample for the extended labelling."""
         self.sampling = {"class_labels": ["singlebjets", "cjets", "ujets", "bbjets"]}
@@ -868,7 +867,7 @@ class GetSamples_TestCase(unittest.TestCase):
         X, Y = get_test_sample(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
-            preprocess_config=self,
+            scale_dict=self.dict_file,
             class_labels=self.class_labels_extended,
             n_jets=self.n_jets,
             jet_variables=["pt_btagJes"],
@@ -889,7 +888,7 @@ class GetSamples_TestCase(unittest.TestCase):
                 get_test_sample(
                     input_file=self.validation_files["ttbar_r21_val"]["path"],
                     var_dict=self.var_dict,
-                    preprocess_config=self,
+                    scale_dict=self.dict_file,
                     class_labels=self.class_labels,
                     n_jets=self.n_jets,
                     exclude=self.exclude,
@@ -902,21 +901,10 @@ class GetSamples_TestCase(unittest.TestCase):
                 get_test_sample(
                     input_file=f"{self.test_dir.name}/not_existing_file.h5",
                     var_dict=self.var_dict,
-                    preprocess_config=self,
+                    scale_dict=self.dict_file,
                     class_labels=self.class_labels,
                     n_jets=self.n_jets,
                     exclude=self.exclude,
-                )
-
-        with self.subTest("Test Runtime Error"):
-            with self.assertRaises(RuntimeError):
-                get_test_sample_trks(
-                    input_file=f"{self.test_dir.name}/not_existing_file.h5",
-                    var_dict=self.var_dict,
-                    preprocess_config=self,
-                    class_labels=self.class_labels,
-                    tracks_name=self.tracks_name,
-                    n_jets=self.n_jets,
                 )
 
         # Request variable which is not in scale dict
@@ -925,34 +913,19 @@ class GetSamples_TestCase(unittest.TestCase):
                 get_test_sample(
                     input_file=self.validation_files["ttbar_r21_val"]["path"],
                     var_dict=self.var_dict,
-                    preprocess_config=self,
+                    scale_dict=self.dict_file,
                     class_labels=self.class_labels,
                     n_jets=self.n_jets,
                     jet_variables=["pt_btagJes", "JetFitter_energyFraction"],
                 )
 
-        # Check class label assertion error
-        with self.subTest("Test Assertion Error"):
-            del self.sampling["class_labels"]
-            with self.assertRaises(AssertionError):
-                get_test_sample(
-                    input_file=self.validation_files["ttbar_r21_val"]["path"],
-                    var_dict=self.var_dict,
-                    preprocess_config=self,
-                    class_labels=self.class_labels + ["bb-jets"],
-                    n_jets=self.n_jets,
-                    exclude=self.exclude,
-                )
-
-        with self.subTest("Test Assertion Error"):
-            with self.assertRaises(AssertionError):
-                # reinitialising since self.sampling["class_labels"] was deleted above
-                self.sampling = {"class_labels": ["bjets", "cjets", "ujets"]}
+        with self.subTest("Test Runtime Error"):
+            with self.assertRaises(RuntimeError):
                 get_test_sample_trks(
-                    input_file=self.validation_files["ttbar_r21_val"]["path"],
+                    input_file=f"{self.test_dir.name}/not_existing_file.h5",
                     var_dict=self.var_dict,
-                    preprocess_config=self,
-                    class_labels=self.class_labels + ["bb-jets"],
+                    scale_dict=self.dict_file,
+                    class_labels=self.class_labels,
                     tracks_name=self.tracks_name,
                     n_jets=self.n_jets,
                 )
@@ -962,7 +935,7 @@ class GetSamples_TestCase(unittest.TestCase):
         (X_valid, X_valid_trk, Y_valid,) = get_test_file(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
-            preprocess_config=self,
+            scale_dict=self.dict_file,
             class_labels=self.class_labels,
             tracks_name=self.tracks_name,
             n_jets=self.n_jets,

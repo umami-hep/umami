@@ -1,8 +1,8 @@
 """Execution script for training model evaluations."""
 from umami.configuration import global_config, logger, set_log_level  # isort:skip
 import argparse
-import os
 import pickle
+from pathlib import Path
 
 import h5py
 import pandas as pd
@@ -16,7 +16,6 @@ import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.evaluation_tools import FeatureImportance
 from umami.helper_tools import get_class_label_variables, get_class_prob_var_names
-from umami.preprocessing_tools import PreprocessConfiguration
 
 # from plottingFunctions import sigBkgEff
 tf.compat.v1.disable_eager_execution()
@@ -50,10 +49,13 @@ def get_parser():
     )
 
     parser.add_argument(
-        "-t",
-        "--tagger",
-        action="store_true",
-        help="Decide, which tagger was used and is to be evaluated.",
+        "-s",
+        "--step",
+        type=str,
+        default=None,
+        help="""Decide which step of the evaluation to run. If this parameter is not
+        given, all steps are run in order. The possible options for this are results,
+        rej_per_eff, rej_per_frac and saliency.""",
     )
 
     parser.add_argument(
@@ -84,7 +86,6 @@ def get_parser():
 def evaluate_model(
     args: object,
     train_config: object,
-    preprocess_config: object,
     test_file: str,
     data_set_name: str,
     tagger: str,
@@ -98,8 +99,6 @@ def evaluate_model(
         Loaded argparser.
     train_config : object
         Loaded train config.
-    preprocess_config : object
-        Loaded preprocessing config.
     test_file : str
         Path to the files which are to be tested. Wildcards are supported.
     data_set_name : str
@@ -171,8 +170,8 @@ def evaluate_model(
         )
 
     # Init the placeholder lists for tagger_names
-    tagger_names = []
-    tagger_preds = []
+    tagger_names = None
+    tagger_preds = None
 
     # Set number of n_jets for testing
     n_jets = int(eval_params["n_jets"]) if not args.n_jets else args.n_jets
@@ -225,7 +224,7 @@ def evaluate_model(
             x_comb, _ = utt.get_test_sample(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
-                preprocess_config=preprocess_config,
+                scale_dict=train_config.preprocess_config.dict_file,
                 class_labels=class_labels,
                 n_jets=n_jets,
                 exclude=exclude,
@@ -251,7 +250,7 @@ def evaluate_model(
             x_test, x_test_trk, y_test = utt.get_test_file(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
-                preprocess_config=preprocess_config,
+                scale_dict=train_config.preprocess_config.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -285,7 +284,7 @@ def evaluate_model(
             x_comb, y_test = utt.get_test_sample_trks(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
-                preprocess_config=preprocess_config,
+                scale_dict=train_config.preprocess_config.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -311,7 +310,7 @@ def evaluate_model(
             x_test, x_test_trk, _ = utt.get_test_file(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
-                preprocess_config=preprocess_config,
+                scale_dict=train_config.preprocess_config.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -397,150 +396,152 @@ def evaluate_model(
         cut_vars_dict=var_cuts,
     )
 
-    # Get the discriminant values and probabilities of each tagger for each jet
-    df_discs_dict = uet.get_scores_probs_dict(
-        jets=jets,
-        y_true=truth_internal_labels,
-        tagger_preds=tagger_preds,
-        tagger_names=tagger_names,
-        tagger_list=tagger_list,
-        class_labels=class_labels,
-        main_class=main_class,
-        frac_values=frac_values
-        if tagger_preds != []  # pylint: disable=use-implicit-booleaness-not-comparison
-        else None,
-        frac_values_comp=frac_values_comp,
-    )
-
-    # Adding truth label values to the dict
-    for truth_variable in list(set(label_var_list)):
-        df_discs_dict[truth_variable] = jets[truth_variable]
-
-    # Add dict to Dataframe and delete dict
-    df_discs = pd.DataFrame(df_discs_dict)
-    del df_discs_dict
-
-    # Adding extra variables if available
-    if add_variables_available is not None:
-        for item in add_variables_available:
-            logger.info("Adding %s", item)
-            df_discs[item] = jets[item]
-
     # Create results dir
-    os.makedirs(f"{train_config.model_name}/results", exist_ok=True)
+    Path(f"{train_config.model_name}/results").mkdir(parents=True, exist_ok=True)
 
-    # Save dataframe to h5
-    df_discs.to_hdf(
-        f"{train_config.model_name}/results/"
-        f"results{results_filename_extension}-{epoch}.h5",
-        data_set_name,
-    )
-
-    # Get the rejections, discs and effs of the taggers
-    tagger_rej_dicts = uet.get_rej_per_eff_dict(
-        jets=jets,
-        y_true=truth_internal_labels,
-        tagger_preds=tagger_preds,
-        tagger_names=tagger_names,
-        tagger_list=tagger_list,
-        class_labels=class_labels,
-        main_class=main_class,
-        frac_values=frac_values
-        if tagger_preds != []  # pylint: disable=use-implicit-booleaness-not-comparison
-        else None,
-        frac_values_comp=frac_values_comp,
-        eff_min=eval_params.get("eff_min", 0.49),
-        eff_max=eval_params.get("eff_max", 1.0),
-        x_axis_granularity=eval_params.get("x_axis_granularity", 100),
-    )
-
-    df_eff_rej = pd.DataFrame(tagger_rej_dicts)
-    del tagger_rej_dicts
-
-    df_eff_rej.to_hdf(
-        f"{train_config.model_name}/results/"
-        f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
-        data_set_name,
-    )
-
-    # Save the number of jets in the test file to the h5 file.
-    # This is needed to calculate the binomial errors
-    with h5py.File(
-        f"{train_config.model_name}/results/"
-        f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
-        "a",
-    ) as h5_file:
-        # Put the number of jets per class in the dict for unc calculation
-        for flav_counter, flavour in enumerate(class_labels):
-            h5_file.attrs[f"n_jets_{flavour}"] = len(
-                truth_internal_labels[truth_internal_labels == flav_counter]
-            )
-
-    # Get the rejections, discs and f_* values for the taggers
-    tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
-        jets=jets,
-        y_true=truth_internal_labels,
-        tagger_preds=tagger_preds,
-        tagger_names=tagger_names,
-        tagger_list=tagger_list,
-        class_labels=class_labels,
-        main_class=main_class,
-        target_eff=working_point,
-        step=eval_params.get("frac_step", 0.01),
-        frac_min=eval_params.get("frac_min", 0),
-        frac_max=eval_params.get("frac_max", 1.0),
-    )
-
-    # Form the dict to a Dataframe and save it
-    df_frac_rej = pd.DataFrame(tagger_fraction_rej_dict)
-    del tagger_fraction_rej_dict
-
-    df_frac_rej.to_hdf(
-        f"{train_config.model_name}/results/"
-        f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
-        data_set_name,
-    )
-
-    # Save the number of jets in the test file to the h5 file.
-    # This is needed to calculate the binomial errors
-    with h5py.File(
-        f"{train_config.model_name}/results/"
-        f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
-        "a",
-    ) as h5_file:
-        # Put the number of jets per class in the dict for unc calculation
-        for flav_counter, flavour in enumerate(class_labels):
-            h5_file.attrs[f"n_jets_{flavour}"] = len(
-                truth_internal_labels[truth_internal_labels == flav_counter]
-            )
-
-    if (
-        "calculate_saliency" in eval_params
-        and eval_params["calculate_saliency"] is True
-    ):
-        # Get the saliency map dict
-        saliency_map_dict = uet.get_saliency_map_dict(
-            model=model,
-            model_pred=pred_dips,
-            X_test=x_comb,
-            Y_test=y_test,
+    if args.step in (None, "results"):
+        # Get the discriminant values and probabilities of each tagger for each jet
+        df_discs_dict = uet.get_scores_probs_dict(
+            jets=jets,
+            y_true=truth_internal_labels,
+            tagger_preds=tagger_preds,
+            tagger_names=tagger_names,
+            tagger_list=tagger_list,
             class_labels=class_labels,
             main_class=main_class,
-            frac_dict=eval_params["frac_values"],
-            var_dict_path=train_config.var_dict,
-            tracks_name=tracks_name,
-            nTracks=eval_params.get("saliency_ntrks"),
-            effs=eval_params.get("saliency_effs"),
+            frac_values=frac_values if tagger_preds else None,
+            frac_values_comp=frac_values_comp,
         )
 
-        # Create results dir and pickle file
-        os.system(f"mkdir -p {train_config.model_name}/results")
-        with open(
-            f"{train_config.model_name}/results/saliency{results_filename_extension}"
-            f"_{args.epoch}_{data_set_name}.pkl",
-            "wb",
-        ) as pkl_file:
-            pickle.dump(saliency_map_dict, pkl_file)
+        # Adding truth label values to the dict
+        for truth_variable in list(set(label_var_list)):
+            df_discs_dict[truth_variable] = jets[truth_variable]
+
+        # Add dict to Dataframe and delete dict
+        df_discs = pd.DataFrame(df_discs_dict)
+        del df_discs_dict
+
+        # Adding extra variables if available
+        if add_variables_available is not None:
+            for item in add_variables_available:
+                logger.info("Adding %s", item)
+                df_discs[item] = jets[item]
+
+        # Save dataframe to h5
+        df_discs.to_hdf(
+            f"{train_config.model_name}/results/"
+            f"results{results_filename_extension}-{epoch}.h5",
+            data_set_name,
+        )
+
+    if args.step in (None, "rej_per_eff"):
+        # Get the rejections, discs and effs of the taggers
+        tagger_rej_dicts = uet.get_rej_per_eff_dict(
+            jets=jets,
+            y_true=truth_internal_labels,
+            tagger_preds=tagger_preds,
+            tagger_names=tagger_names,
+            tagger_list=tagger_list,
+            class_labels=class_labels,
+            main_class=main_class,
+            frac_values=frac_values if tagger_preds else None,
+            frac_values_comp=frac_values_comp,
+            eff_min=eval_params.get("eff_min", 0.49),
+            eff_max=eval_params.get("eff_max", 1.0),
+            x_axis_granularity=eval_params.get("x_axis_granularity", 100),
+            progress_bar=bool(args.verbose),
+        )
+
+        df_eff_rej = pd.DataFrame(tagger_rej_dicts)
+        del tagger_rej_dicts
+
+        df_eff_rej.to_hdf(
+            f"{train_config.model_name}/results/"
+            f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
+            data_set_name,
+        )
+
+        # Save the number of jets in the test file to the h5 file.
+        # This is needed to calculate the binomial errors
+        with h5py.File(
+            f"{train_config.model_name}/results/"
+            f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
+            "a",
+        ) as h5_file:
+            # Put the number of jets per class in the dict for unc calculation
+            for flav_counter, flavour in enumerate(class_labels):
+                h5_file.attrs[f"n_jets_{flavour}"] = len(
+                    truth_internal_labels[truth_internal_labels == flav_counter]
+                )
+
+    if args.step in (None, "rej_per_frac"):
+        # Get the rejections, discs and f_* values for the taggers
+        tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
+            jets=jets,
+            y_true=truth_internal_labels,
+            tagger_preds=tagger_preds,
+            tagger_names=tagger_names,
+            tagger_list=tagger_list,
+            class_labels=class_labels,
+            main_class=main_class,
+            target_eff=working_point,
+            step=eval_params.get("frac_step", 0.01),
+            frac_min=eval_params.get("frac_min", 0.01),
+            frac_max=eval_params.get("frac_max", 1.0),
+            progress_bar=bool(args.verbose),
+        )
+
+        # Form the dict to a Dataframe and save it
+        df_frac_rej = pd.DataFrame(tagger_fraction_rej_dict)
+        del tagger_fraction_rej_dict
+
+        df_frac_rej.to_hdf(
+            f"{train_config.model_name}/results/"
+            f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
+            data_set_name,
+        )
+
+        # Save the number of jets in the test file to the h5 file.
+        # This is needed to calculate the binomial errors
+        with h5py.File(
+            f"{train_config.model_name}/results/"
+            f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
+            "a",
+        ) as h5_file:
+            # Put the number of jets per class in the dict for unc calculation
+            for flav_counter, flavour in enumerate(class_labels):
+                h5_file.attrs[f"n_jets_{flavour}"] = len(
+                    truth_internal_labels[truth_internal_labels == flav_counter]
+                )
+
+    if args.step in (None, "saliency"):
+        if (
+            "calculate_saliency" in eval_params
+            and eval_params["calculate_saliency"] is True
+        ):
+            # Get the saliency map dict
+            saliency_map_dict = uet.get_saliency_map_dict(
+                model=model,
+                model_pred=pred_dips,
+                X_test=x_comb,
+                Y_test=y_test,
+                class_labels=class_labels,
+                main_class=main_class,
+                frac_dict=eval_params["frac_values"],
+                var_dict_path=train_config.var_dict,
+                tracks_name=tracks_name,
+                nTracks=eval_params.get("saliency_ntrks"),
+                effs=eval_params.get("saliency_effs"),
+            )
+
+            # Pickle file
+            with open(
+                f"{train_config.model_name}"
+                f"/results/saliency{results_filename_extension}"
+                f"_{args.epoch}_{data_set_name}.pkl",
+                "wb",
+            ) as pkl_file:
+                pickle.dump(saliency_map_dict, pkl_file)
 
     if args.shapley:
         logger.info("Explaining feature importance with SHAPley")
@@ -575,6 +576,13 @@ if __name__ == "__main__":
 
     training_config = utt.Configuration(arg_parser.config_file)
 
+    # Retrieve tagger name from train config
+    tagger_name = training_config.nn_structure.get("tagger")
+    if tagger_name is None:
+        logger.info(
+            "No tagger defined. Running evaluation without a freshly trained model!"
+        )
+
     # Check for evaluation only (= evaluation of tagger scores in files) is used:
     # if nothing is specified, assume that freshly trained tagger is evaluated
     try:
@@ -582,26 +590,6 @@ if __name__ == "__main__":
 
     except AttributeError:
         evaluate_trained_model = True  # pylint: disable=invalid-name
-
-    preprocessing_config = (
-        PreprocessConfiguration(training_config.preprocess_config.yaml_config)
-        if evaluate_trained_model
-        else training_config
-    )
-
-    # Get the tagger from arg_parser. If not given, use the one from train config
-    if arg_parser.tagger:
-        tagger_name = arg_parser.tagger
-
-    else:
-        try:
-            tagger_name = training_config.nn_structure["tagger"]
-
-        except KeyError:
-            logger.info(
-                "No tagger defined. Running evaluation without a freshly trained model!"
-            )
-            tagger_name = None  # pylint: disable=invalid-name
 
     # TODO Change this in python 3.10
     if evaluate_trained_model:
@@ -617,7 +605,6 @@ if __name__ == "__main__":
         evaluate_model(
             args=arg_parser,
             train_config=training_config,
-            preprocess_config=preprocessing_config,
             test_file=test_file_config["path"],
             data_set_name=test_file_identifier,
             tagger=tagger_name,
