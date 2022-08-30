@@ -7,7 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
-from puma import PlotBase
+from puma import Line2D, Line2DPlot
 
 from umami.configuration import global_config, logger
 from umami.data_tools import LoadJetsFromFile
@@ -19,14 +19,15 @@ from umami.tools import check_main_class_input
 def plot_validation_files(
     metric_identifier: str,
     df_results: dict,
-    ax,
+    plot_object: Line2DPlot,
     label_prefix: str = "",
     label_suffix: str = "",
     val_files: dict = None,
     **kwargs,
 ):
-    """Helper function which loops over the validation files and plots the chosen
-    metric for each epoch. Meant to be called in other plotting functions.
+    """Helper function which loops over the validation files and adds the line object
+    for the chosen metric for each epoch. Meant to be called in other plotting
+    functions.
 
     The fuction loops over the validation files and plots a line with the label
     f"{label_prefix}{validation_file_label}{label_suffix}" for each file.
@@ -37,9 +38,8 @@ def plot_validation_files(
         Identifier for the metric you want to plot, e.g. "val_loss" or "disc_cut".
     df_results : dict
         Dict which contains the results of the training.
-    ax : matplotlib.axes.Axes
-        Axis you want to plot the curves on. If None, the currently active axis
-        is used. By default None
+    plot_object : puma.Line2DPlot
+        Plot object you want to plot the curves on.
     label_prefix : str, optional
         This string is put at the beginning of the plot label for each line.
         For accuracy for example choose "validation accuracy - ", by default ""
@@ -65,14 +65,13 @@ def plot_validation_files(
         )
 
     else:
-        # Set xlim
-        ax.set_xlim(left=kwargs["xmin"], right=kwargs["xmax"])
-
         for val_file_identifier, val_file_config in val_files.items():
-            ax.plot(
-                df_results["epoch"],
-                df_results[f"{metric_identifier}_{val_file_identifier}"],
-                label=f"{label_prefix}{val_file_config['label']}{label_suffix}",
+            plot_object.add(
+                Line2D(
+                    df_results["epoch"],
+                    df_results[f"{metric_identifier}_{val_file_identifier}"],
+                    label=f"{label_prefix}{val_file_config['label']}{label_suffix}",
+                )
             )
 
 
@@ -203,14 +202,13 @@ def plot_disc_cut_per_epoch(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    disc_cut_plot = PlotBase(
+    disc_cut_plot = Line2DPlot(
         xlabel="Epoch",
         ylabel="$b$-tagging discriminant cut value",
         n_ratio_panels=0,
         logy=False,
         **kwargs,
     )
-    disc_cut_plot.initialise_figure()
 
     # loop over the validation files using the unique identifiers and plot the disc cut
     # value for each file
@@ -220,14 +218,14 @@ def plot_disc_cut_per_epoch(
         label_prefix="",
         label_suffix=" validation sample",
         val_files=val_files,
-        ax=disc_cut_plot.axis_top,
+        plot_object=disc_cut_plot,
         **kwargs,
     )
 
     disc_cut_plot.atlas_second_tag += (
         f"\n{frac_class} fraction = {frac}\nWP={int(target_beff * 100):02d}%"
     )
-    disc_cut_plot.initialise_plot()
+    disc_cut_plot.draw()
     disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}")
 
 
@@ -259,14 +257,13 @@ def plot_disc_cut_per_epoch_umami(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    disc_cut_plot = PlotBase(
+    disc_cut_plot = Line2DPlot(
         xlabel="Epoch",
         ylabel="$b$-tagging discriminant cut value",
         n_ratio_panels=0,
         logy=False,
         **kwargs,
     )
-    disc_cut_plot.initialise_figure()
     # loop over the validation files using the unique identifiers and plot the disc cut
     # value for each file
     plot_validation_files(
@@ -275,7 +272,7 @@ def plot_disc_cut_per_epoch_umami(
         label_prefix="Umami - ",
         label_suffix=" validation sample",
         val_files=val_files,
-        ax=disc_cut_plot.axis_top,
+        plot_object=disc_cut_plot,
         **kwargs,
     )
     plot_validation_files(
@@ -284,10 +281,10 @@ def plot_disc_cut_per_epoch_umami(
         label_prefix="DIPS - ",
         label_suffix=" validation sample",
         val_files=val_files,
-        ax=disc_cut_plot.axis_top,
+        plot_object=disc_cut_plot,
     )
     disc_cut_plot.atlas_second_tag += f"\nWP={int(target_beff * 100):02d}%"
-    disc_cut_plot.initialise_plot()
+    disc_cut_plot.draw()
     disc_cut_plot.savefig(f"{plot_name}.{plot_datatype}")
 
 
@@ -374,12 +371,11 @@ def plot_rej_per_epoch_comp(
         (0, (5, 10)),
     ]
 
-    rej_plot = PlotBase(
+    rej_plot = Line2DPlot(
         n_ratio_panels=0,
         logy=False,
         **kwargs,
     )
-    rej_plot.initialise_figure()
 
     ax_left = rej_plot.axis_top
     ax_left.set_xlim(left=kwargs["xmin"], right=kwargs["xmax"])
@@ -607,14 +603,13 @@ def plot_rej_per_epoch(
     flav_cat = global_config.flavour_categories
 
     for _, iter_class in enumerate(class_labels_wo_main):
-        rej_plot = PlotBase(
+        rej_plot = Line2DPlot(
             xlabel="Epoch",
             ylabel=f'{flav_cat[iter_class]["legend_label"]} rejection',
             n_ratio_panels=0,
             logy=False,
             **kwargs,
         )
-        rej_plot.initialise_figure()
         rej_plot.axis_top.set_xlim(left=kwargs["xmin"], right=kwargs["xmax"])
 
         # Init a linestyle counter
@@ -719,21 +714,22 @@ def plot_losses(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    loss_plot = PlotBase(
+    loss_plot = Line2DPlot(
         xlabel="Epoch",
         ylabel="Loss",
         n_ratio_panels=0,
         logy=False,
         **kwargs,
     )
-    loss_plot.initialise_figure()
 
     # plots training loss
     if "loss" in df_results:
-        loss_plot.axis_top.plot(
-            df_results["epoch"],
-            df_results["loss"],
-            label="training loss - hybrid sample",
+        loss_plot.add(
+            Line2D(
+                df_results["epoch"],
+                df_results["loss"],
+                label="training loss - hybrid sample",
+            )
         )
 
     # loop over the validation files using the unique identifiers and plot the loss
@@ -744,11 +740,11 @@ def plot_losses(
         label_prefix="validation loss - ",
         label_suffix=" sample",
         val_files=val_files,
-        ax=loss_plot.axis_top,
+        plot_object=loss_plot,
         **kwargs,
     )
 
-    loss_plot.initialise_plot()
+    loss_plot.draw()
     loss_plot.savefig(plot_name + f".{plot_datatype}")
 
 
@@ -777,20 +773,21 @@ def plot_accuracies(
         kwargs for `PlotBase` function
 
     """
-    acc_plot = PlotBase(
+    acc_plot = Line2DPlot(
         xlabel="Epoch",
         ylabel="Accuracy",
         n_ratio_panels=0,
         logy=False,
         **kwargs,
     )
-    acc_plot.initialise_figure()
 
     if "accuracy" in df_results:
-        acc_plot.axis_top.plot(
-            df_results["epoch"],
-            df_results["accuracy"],
-            label="training accuracy - hybrid sample",
+        acc_plot.add(
+            Line2D(
+                df_results["epoch"],
+                df_results["accuracy"],
+                label="training accuracy - hybrid sample",
+            )
         )
 
     # loop over the validation files using the unique identifiers and plot the accuracy
@@ -801,10 +798,10 @@ def plot_accuracies(
         label_prefix="validation accuracy - ",
         label_suffix=" sample",
         val_files=val_files,
-        ax=acc_plot.axis_top,
+        plot_object=acc_plot,
         **kwargs,
     )
-    acc_plot.initialise_plot()
+    acc_plot.draw()
     acc_plot.savefig(plot_name + f".{plot_datatype}")
 
 
@@ -833,28 +830,31 @@ def plot_losses_umami(
     **kwargs
         Keyword arguments handed to the plotting API
     """
-    loss_plot = PlotBase(
+    loss_plot = Line2DPlot(
         xlabel="Epoch",
         ylabel="Loss",
         n_ratio_panels=0,
         logy=False,
         **kwargs,
     )
-    loss_plot.initialise_figure()
 
     # Plot umami and dips training loss
     if "loss_umami" in df_results:
-        loss_plot.axis_top.plot(
-            df_results["epoch"],
-            df_results["loss_umami"],
-            label="training loss Umami - hybrid sample",
+        loss_plot.add(
+            Line2D(
+                df_results["epoch"],
+                df_results["loss_umami"],
+                label="training loss Umami - hybrid sample",
+            )
         )
 
     if "loss_dips" in df_results:
-        loss_plot.axis_top.plot(
-            df_results["epoch"],
-            df_results["loss_dips"],
-            label="training loss DIPS - hybrid sample",
+        loss_plot.add(
+            Line2D(
+                df_results["epoch"],
+                df_results["loss_dips"],
+                label="training loss DIPS - hybrid sample",
+            )
         )
 
     # loop over the validation files using the unique identifiers and plot the loss
@@ -865,7 +865,7 @@ def plot_losses_umami(
         label_prefix="validation loss Umami - ",
         label_suffix=" sample",
         val_files=val_files,
-        ax=loss_plot.axis_top,
+        plot_object=loss_plot,
         **kwargs,
     )
     plot_validation_files(
@@ -874,10 +874,10 @@ def plot_losses_umami(
         label_prefix="validation loss DIPS - ",
         label_suffix=" sample",
         val_files=val_files,
-        ax=loss_plot.axis_top,
+        plot_object=loss_plot,
         **kwargs,
     )
-    loss_plot.initialise_plot()
+    loss_plot.draw()
     loss_plot.savefig(plot_name + f".{plot_datatype}")
 
 
@@ -906,28 +906,31 @@ def plot_accuracies_umami(
     **kwargs : kwargs
         kwargs for `PlotBase` function
     """
-    acc_plot = PlotBase(
+    acc_plot = Line2DPlot(
         xlabel="Epoch",
         ylabel="Accuracy",
         n_ratio_panels=0,
         logy=False,
         **kwargs,
     )
-    acc_plot.initialise_figure()
 
     # Plot umami and dips training loss
     if "accuracy_umami" in df_results:
-        acc_plot.axis_top.plot(
-            df_results["epoch"],
-            df_results["accuracy_umami"],
-            label="training accuracy Umami - hybrid sample",
+        acc_plot.add(
+            Line2D(
+                df_results["epoch"],
+                df_results["accuracy_umami"],
+                label="training accuracy Umami - hybrid sample",
+            )
         )
 
     if "accuracy_dips" in df_results:
-        acc_plot.axis_top.plot(
-            df_results["epoch"],
-            df_results["accuracy_dips"],
-            label="training accuracy DIPS - hybrid sample",
+        acc_plot.add(
+            Line2D(
+                df_results["epoch"],
+                df_results["accuracy_dips"],
+                label="training accuracy DIPS - hybrid sample",
+            )
         )
 
     # loop over the validation files using the unique identifiers and plot the loss
@@ -938,7 +941,7 @@ def plot_accuracies_umami(
         label_prefix="validation accuracy Umami - ",
         label_suffix=" sample",
         val_files=val_files,
-        ax=acc_plot.axis_top,
+        plot_object=acc_plot,
         **kwargs,
     )
     plot_validation_files(
@@ -947,11 +950,11 @@ def plot_accuracies_umami(
         label_prefix="validation accuracy DIPS - ",
         label_suffix=" sample",
         val_files=val_files,
-        ax=acc_plot.axis_top,
+        plot_object=acc_plot,
         **kwargs,
     )
 
-    acc_plot.initialise_plot()
+    acc_plot.draw()
     acc_plot.savefig(plot_name + f".{plot_datatype}")
 
 
