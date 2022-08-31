@@ -4,6 +4,7 @@ import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from random import Random
 
 from umami.configuration import Configuration, logger
 
@@ -89,11 +90,12 @@ class Preparation:
                 "Batch size not specified for prepare step. It will be set to 500k."
             )
         self.input_files = {}
-        # the keywords ntuples was renamed to input_h5, though still supporting both.
-        self._init_input_h5(settings.get("input_h5", settings.get("ntuples")))
         self.samples = {}
         self._init_samples(settings.get("samples"))
-        self.sample_categories = None
+        # The sample categories are the keys of the input_h5 dict
+        self.sample_categories = list(
+            self.settings.get("input_h5", self.settings.get("ntuples")).keys()
+        )
 
     def get_sample(self, sample_name: str):
         """Retrieve information about sample.
@@ -176,13 +178,12 @@ class Preparation:
         input_h5 : dict
             dictionary containing input_h5
         """
-        # The sample categories are the keys of the input_h5 dict
-        sample_categories = []
         for sample_type, value in input_h5.items():
             path = Path(value.get("path"))
-            self.input_files[sample_type] = list(path.rglob(value.get("file_pattern")))
-            sample_categories.append(sample_type)
-        self.sample_categories = sample_categories
+            file_list = list(path.rglob(value.get("file_pattern")))
+            if value.get("randomise"):
+                Random(42).shuffle(file_list)
+            self.input_files[sample_type] = file_list
 
     def get_input_files(self, sample_type: str):
         """Provides
@@ -197,6 +198,14 @@ class Preparation:
         list
             List of h5 input files
         """
+        if not self.input_files:
+            # avoid to call this in the init since it is not always needed,
+            # make it available only when requested.
+            # the keyword `ntuples` was renamed to `input_h5`, still supporting both
+            self._init_input_h5(
+                self.settings.get("input_h5", self.settings.get("ntuples"))
+            )
+
         return self.input_files.get(sample_type)
 
 
