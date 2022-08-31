@@ -82,6 +82,7 @@ In the `Preparation` section, different options need to be set and files/flavour
 | `input_h5` | `dict` | The dict with the file types which are used in the preprocessing. Here `ttbar` and `zprime` are the internal names of these files. Both are also dicts. |
 | `path` | `str` | Dict entry of `ttbar` and `zprime`. This gives the path to the folder where the process folders are stored (this is the same as `ntuple_path` in `Preprocessing-Parameters.yaml`). |
 | `file_pattern` | `str` | Dict entry of `ttbar` and `zprime`. This is the specific path to the `.h5` files of the process. The `path` and `file` are in the script merged to form the global path to the `.h5` files. Wildcards are supported! |
+| `randomise` | `bool` | Optional setting to randomise the samples which are read in. can be useful if you have several data taking campaigns and you want a representative sample, especially important for validation and testing. (a random seed is set to maintain reproducibility.) by default `False` |
 
 In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
 
