@@ -7,6 +7,7 @@
 - adding randomise option to input_h5 block in preprocessing config [!631](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/631)
 - Input variable plots: Adding support for custom x-labels [!626](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/626)
 - Input variable plots: Adding support for dataset-specific class labels [!623](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/623)
+- Adding possibility to evaluate classes the freshly trained tagger is not trained on [!625](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/625)
 - Remove preprocessing config from loading functions [!622](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/622)
 - Training metrics plots: now using `puma.Line2DPlot` objects here, which modifies the default colours [!629](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/629)
 - Fixing plotting issue in fraction contour + plot_scores [!624](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/624)

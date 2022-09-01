@@ -124,6 +124,9 @@ def evaluate_model(
     frac_values_comp = eval_params.get("frac_values_comp")
     working_point = eval_params["working_point"]
     add_variables = eval_params.get("add_eval_variables")
+    classes_to_evaluate = class_labels + eval_params.get(
+        "extra_classes_to_evaluate", []
+    )
     tracks_name = (
         train_config.tracks_name if hasattr(train_config, "tracks_name") else None
     )
@@ -225,7 +228,7 @@ def evaluate_model(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
                 scale_dict=train_config.preprocess_config.dict_file,
-                class_labels=class_labels,
+                class_labels=classes_to_evaluate,
                 n_jets=n_jets,
                 exclude=exclude,
                 cut_vars_dict=var_cuts,
@@ -251,7 +254,7 @@ def evaluate_model(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
                 scale_dict=train_config.preprocess_config.dict_file,
-                class_labels=class_labels,
+                class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
                 cut_vars_dict=var_cuts,
@@ -285,7 +288,7 @@ def evaluate_model(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
                 scale_dict=train_config.preprocess_config.dict_file,
-                class_labels=class_labels,
+                class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
                 cut_vars_dict=var_cuts,
@@ -311,7 +314,7 @@ def evaluate_model(
                 input_file=test_file,
                 var_dict=train_config.var_dict,
                 scale_dict=train_config.preprocess_config.dict_file,
-                class_labels=class_labels,
+                class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
                 exclude=exclude,
@@ -377,20 +380,20 @@ def evaluate_model(
 
     # Adding all needed truth info variables
     label_var_list, _ = get_class_label_variables(
-        class_labels=class_labels,
+        class_labels=classes_to_evaluate,
     )
     variables += list(set(label_var_list))
 
     # Add the predictions labels for the defined taggers to variables list
     for tagger_iter in tagger_list:
         variables += get_class_prob_var_names(
-            tagger_name=f"{tagger_iter}", class_labels=class_labels
+            tagger_name=f"{tagger_iter}", class_labels=classes_to_evaluate
         )
 
     # Load the jets and truth labels (internal) with selected variables
     jets, truth_internal_labels = udt.LoadJetsFromFile(
         filepath=test_file,
-        class_labels=class_labels,
+        class_labels=classes_to_evaluate,
         n_jets=n_jets,
         variables=variables,
         cut_vars_dict=var_cuts,
@@ -404,10 +407,11 @@ def evaluate_model(
         df_discs_dict = uet.get_scores_probs_dict(
             jets=jets,
             y_true=truth_internal_labels,
+            tagger_classes=class_labels,
             tagger_preds=tagger_preds,
             tagger_names=tagger_names,
             tagger_list=tagger_list,
-            class_labels=class_labels,
+            class_labels=classes_to_evaluate,
             main_class=main_class,
             frac_values=frac_values if tagger_preds else None,
             frac_values_comp=frac_values_comp,
@@ -439,10 +443,11 @@ def evaluate_model(
         tagger_rej_dicts = uet.get_rej_per_eff_dict(
             jets=jets,
             y_true=truth_internal_labels,
+            tagger_classes=class_labels,
             tagger_preds=tagger_preds,
             tagger_names=tagger_names,
             tagger_list=tagger_list,
-            class_labels=class_labels,
+            class_labels=classes_to_evaluate,
             main_class=main_class,
             frac_values=frac_values if tagger_preds else None,
             frac_values_comp=frac_values_comp,
@@ -469,7 +474,7 @@ def evaluate_model(
             "a",
         ) as h5_file:
             # Put the number of jets per class in the dict for unc calculation
-            for flav_counter, flavour in enumerate(class_labels):
+            for flav_counter, flavour in enumerate(classes_to_evaluate):
                 h5_file.attrs[f"n_jets_{flavour}"] = len(
                     truth_internal_labels[truth_internal_labels == flav_counter]
                 )

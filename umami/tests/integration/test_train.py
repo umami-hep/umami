@@ -228,6 +228,19 @@ def prepareConfig(
         config_file["evaluation_settings"]["tagger"] = None
         config_file["evaluation_settings"]["calculate_saliency"] = False
 
+    if tagger == "dips":
+        config_file["evaluation_settings"]["extra_classes_to_evaluate"] = ["taujets"]
+        config_file["evaluation_settings"]["frac_values"] = {
+            "cjets": 0.005,
+            "ujets": 0.995,
+            "taujets": 0,
+        }
+        config_file["evaluation_settings"]["frac_values_comp"] = {
+            "rnnip": {"cjets": 0.07, "ujets": 0.93, "taujets": 0},
+            "DL1r": {"cjets": 0.018, "ujets": 0.982, "taujets": 0},
+        }
+        config_file["evaluation_settings"]["working_point"] = 0.85
+
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
             f"./test_preprocessing_{preprocess_files}/",

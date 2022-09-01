@@ -29,7 +29,7 @@ class Metrics_Small_TestCase(unittest.TestCase):
 
 
 class CalcDiscValues_TestCase(unittest.TestCase):
-    """Test class for the CalcDiscValues function."""
+    """Test class for the calc_disc_values function."""
 
     def setUp(self):
         self.jets_dict = {
@@ -47,6 +47,9 @@ class CalcDiscValues_TestCase(unittest.TestCase):
         self.frac_dict = {
             "cjets": 0.018,
             "ujets": 0.982,
+        }
+        self.faulty_frac_dict = {
+            "cjets": 0.018,
         }
 
         self.jets_dict_4_Classes = {
@@ -69,8 +72,8 @@ class CalcDiscValues_TestCase(unittest.TestCase):
             "taujets": 0.2,
         }
 
-    def test_CalcDiscValues(self):
-        """Test CalcDiscValues for three classes and bjets (main)."""
+    def test_calc_disc_values(self):
+        """Test calc_disc_values for three classes and bjets (main)."""
         disc_score = calc_disc_values(
             jets_dict=self.jets_dict,
             index_dict=self.index_dict,
@@ -80,8 +83,8 @@ class CalcDiscValues_TestCase(unittest.TestCase):
 
         self.assertEqual(len(disc_score), len(self.jets_dict["bjets"]))
 
-    def test_CalcDiscValues_Rejection(self):
-        """Test CalcDiscValues for three classes and cjets (not-main class)."""
+    def test_calc_disc_values_Rejection(self):
+        """Test calc_disc_values for three classes and cjets (not-main class)."""
         disc_score = calc_disc_values(
             jets_dict=self.jets_dict,
             index_dict=self.index_dict,
@@ -92,8 +95,8 @@ class CalcDiscValues_TestCase(unittest.TestCase):
 
         self.assertEqual(len(disc_score), len(self.jets_dict["bjets"]))
 
-    def test_CalcDiscValues_2Singal_Classes(self):
-        """Test CalcDiscValues for three classes and cjets (not-main class)."""
+    def test_calc_disc_values_2Singal_Classes(self):
+        """Test calc_disc_values for three classes and cjets (not-main class)."""
 
         disc_score = calc_disc_values(
             jets_dict=self.jets_dict_4_Classes,
@@ -108,9 +111,9 @@ class CalcDiscValues_TestCase(unittest.TestCase):
             + len(self.jets_dict_4_Classes["taujets"]),
         )
 
-    def test_CalcDiscValues_2Signal_Classes_bkg_jets(self):
+    def test_calc_disc_values_2Signal_Classes_bkg_jets(self):
         """
-        Test CalcDiscValues for four classes and 2 signal classes
+        Test calc_disc_values for four classes and 2 signal classes
         and calculation of scores for background class (not-main class).
         """
 
@@ -126,6 +129,18 @@ class CalcDiscValues_TestCase(unittest.TestCase):
             len(disc_score),
             len(self.jets_dict_4_Classes["cjets"]),
         )
+
+    def test_calc_disc_values_error(self):
+        """Testing raising of errors."""
+
+        with self.assertRaises(KeyError):
+            calc_disc_values(
+                jets_dict=self.jets_dict,
+                index_dict=self.index_dict,
+                main_class=self.main_class,
+                rej_class=self.rej_class,
+                frac_dict=self.faulty_frac_dict,
+            )
 
 
 class GetRejection_TestCase(unittest.TestCase):
@@ -196,15 +211,6 @@ class GetRejection_TestCase(unittest.TestCase):
         Test GetRejection with incorrect shapes in y_pred and y_true.
         Also checking if incorrect shapes between y_* and class_labels.
         """
-        with self.assertRaises(ValueError):
-            get_rejection(
-                y_pred=self.y_pred,
-                y_true=self.y_true_tau,
-                class_labels=self.class_labels_tau,
-                main_class=self.main_class,
-                frac_dict=self.frac_dict_tau,
-                target_eff=self.target_eff,
-            )
 
         with self.assertRaises(ValueError):
             get_rejection(
@@ -272,12 +278,23 @@ class GetScore_TestCase(unittest.TestCase):
         self.assertEqual(len(disc_scores), len(self.y_pred))
         self.assertAlmostEqual(disc_scores[0], -0.0597642740794453)
 
-    def test_GetScore_wrong_shapes(self):
-        """Test GetScore for incorrect shapes in y_pred and class_labels."""
-        with self.assertRaises(AssertionError):
-            _ = get_score(
-                y_pred=self.y_pred,
-                class_labels=self.class_labels_tau,
-                main_class=self.main_class,
-                frac_dict=self.frac_dict,
-            )
+    def test_get_score_errors(self):
+        """Test error raising of get_score"""
+
+        with self.subTest("Assertion Error"):
+            with self.assertRaises(AssertionError):
+                get_score(
+                    y_pred=self.y_pred,
+                    class_labels=self.class_labels_tau,
+                    main_class=self.main_class,
+                    frac_dict=self.frac_dict,
+                )
+
+        with self.subTest("Key Error"):
+            with self.assertRaises(KeyError):
+                get_score(
+                    y_pred=self.y_pred_tau,
+                    class_labels=self.class_labels_tau,
+                    main_class=self.main_class,
+                    frac_dict=self.frac_dict,
+                )
