@@ -242,6 +242,7 @@ def get_rej_per_frac_dict(
 def get_rej_per_eff_dict(
     jets,
     y_true,
+    tagger_classes: list,
     tagger_preds: list,
     tagger_names: list,
     tagger_list: list,
@@ -264,6 +265,10 @@ def get_rej_per_eff_dict(
         Dataframe with jets and the probabilites of the comparison taggers as columns.
     y_true : numpy.ndarray
         Truth labels of the jets.
+    tagger_classes: list
+        List of the classes that were used to train the freshly trained tagger.
+        For example, if you want to test the behavior of tau jets in the tagger
+        although the tagger was not trained on taus.
     tagger_preds : list
         Prediction output of the taggers listed. [pred_dips, pred_umami]
     tagger_names : list
@@ -327,8 +332,8 @@ def get_rej_per_eff_dict(
     tagger_rej_dicts["effs"] = effs
     tagger_disc_cut_dicts = {f"disc_{tagger}": [] for tagger in extended_tagger_list}
 
-    # Init a tagger-skipped list
-    skipped_taggers = []
+    # Init a tagger-skipped dict
+    skipped_taggers = {tagger: [] for tagger in extended_tagger_list}
 
     # Loop over effs for ROC plots
     for eff in tqdm(effs, disable=not progress_bar):
@@ -336,20 +341,51 @@ def get_rej_per_eff_dict(
             if tagger in tagger_names:
                 y_pred = tagger_preds[tagger_names.index(tagger)]
 
-            else:
-                try:
-                    y_pred = jets[
-                        [
-                            f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                            for flav in class_labels
-                        ]
-                    ].values
+                # Calculate the dimensions that need to be added
+                extra_dim = len(set(class_labels) - set(tagger_classes))
+                if extra_dim > 0:
+                    skipped_taggers[tagger] += list(
+                        set(class_labels) - set(tagger_classes)
+                    )
+                    y_pred = np.append(
+                        y_pred,
+                        np.zeros(shape=(extra_dim, y_pred.shape[0])).transpose(),
+                        axis=1,
+                    )
 
-                except KeyError:
-                    # Skipping this tagger if not in all flavours
-                    # or the tagger present in file
-                    skipped_taggers.append(tagger)
-                    continue
+            else:
+                # Shape the probabilities of the comparison taggers like the output of
+                # the networks
+                for flav_index, flav in enumerate(class_labels):
+
+                    # Trying to load the output probs of the tagger from file
+                    try:
+                        # Append the output to a flat array
+                        if flav_index == 0:
+                            tmp = jets[
+                                f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                            ].values
+
+                        else:
+                            tmp = np.append(
+                                tmp,
+                                jets[
+                                    f"{tagger}_"
+                                    f'{flavour_categories[flav]["prob_var_name"]}'
+                                ].values,
+                            )
+
+                    except KeyError:
+                        skipped_taggers[tagger].append(flav)
+                        if flav_index == 0:
+                            tmp = np.zeros_like(y_true)
+
+                        else:
+                            tmp = np.append(tmp, np.zeros_like(y_true))
+
+                # Reshape to wrong sorted (transpose change it to correct shape)
+                y_pred = tmp.reshape((len(class_labels), -1))
+                y_pred = np.transpose(y_pred)
 
             rej_dict_tmp, disc_cut_dict_tmp = umt.get_rejection(
                 y_pred=y_pred,
@@ -372,23 +408,36 @@ def get_rej_per_eff_dict(
                     ]
                 )
 
-    # Remove double entries and print warning
-    skipped_taggers = list(dict.fromkeys(skipped_taggers))
-    if skipped_taggers:
+    # Check which flavours are not present for which tagger
+    tagger_to_remove = []
+    masked_taggers = {}
+    for iter_tagger, labels in skipped_taggers.items():
+        if set(labels) == set(class_labels):
+            tagger_to_remove.append(iter_tagger)
+
+        elif len(labels) != 0:
+            masked_taggers[iter_tagger] = list(set(labels))
+
+    if len(masked_taggers.keys()) != 0:
         logger.warning(
-            "Taggers which do not have probability values for all requested class "
-            "labels are not evaluated."
+            "The following taggers have at least one class not in their output. This "
+            "missing output is masked with zeros:"
+        )
+        for iter_tagger, labels in masked_taggers.items():
+            logger.warning("Tagger: %s, Missing ouputs: %s", iter_tagger, labels)
+
+    if len(tagger_to_remove) != 0:
+        logger.warning(
+            "Following taggers are not present in the h5 files and are skipped: %s",
+            tagger_to_remove,
         )
 
-    if len(skipped_taggers) != 0:
-        logger.warning("Following taggers are skipped for file: %s", skipped_taggers)
-
-    # Remove entries of not loaded taggers from the dicts
-    for skipped_tagger in skipped_taggers:
-        del tagger_disc_cut_dicts[f"disc_{skipped_tagger}"]
+    # Remove taggers that are not present in files
+    for iter_tagger in tagger_to_remove:
+        del tagger_disc_cut_dicts[f"disc_{iter_tagger}"]
 
         for rej in class_labels_wo_main:
-            del tagger_rej_dicts[f"{skipped_tagger}_{rej}_rej"]
+            del tagger_rej_dicts[f"{iter_tagger}_{rej}_rej"]
 
     return {**tagger_disc_cut_dicts, **tagger_rej_dicts}
 
@@ -396,6 +445,7 @@ def get_rej_per_eff_dict(
 def get_scores_probs_dict(
     jets,
     y_true,
+    tagger_classes: list,
     tagger_preds: list,
     tagger_names: list,
     tagger_list: list,
@@ -413,6 +463,10 @@ def get_scores_probs_dict(
         Dataframe with the probabilites of the comparison taggers as columns
     y_true : numpy.ndarray
         Internal truth labeling of the used jets.
+    tagger_classes: list
+        List of the classes that were used to train the freshly trained tagger.
+        For example, if you want to test the behavior of tau jets in the tagger
+        although the tagger was not trained on taus.
     tagger_preds : list
         Prediction output of the taggers listed. e.g. [pred_dips, pred_umami]
     tagger_names : list
@@ -453,32 +507,56 @@ def get_scores_probs_dict(
         tagger_names = []
         tagger_preds = []
 
+    # Create the extended tagger list with fresh taggers and taggers from file
+    extended_tagger_list = tagger_list + tagger_names
+
+    # Init a tagger-skipped dict
+    skipped_taggers = {tagger: [] for tagger in extended_tagger_list}
+
     # Adding trained tagger probabilities
-    for counter, tagger in enumerate(tagger_names + tagger_list):
+    for tagger in extended_tagger_list:
 
-        # Make a copy of the class_labels
-        class_labels_copy = copy.deepcopy(class_labels)
-
+        # Get probability values of freshly trained tagger from provided predictions
         for flav_index, flav in enumerate(class_labels):
-            # Get probability values of freshly trained tagger from provided predictions
             if tagger in tagger_names:
-                df_discs_dict[
-                    f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                ] = tagger_preds[tagger_names.index(tagger)][:, flav_index]
+                try:
+                    df_discs_dict[
+                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                    ] = tagger_preds[tagger_names.index(tagger)][:, flav_index]
 
-            # Get probablility values of comparison taggers from dataframe (from file)
+                except IndexError:
+                    df_discs_dict[
+                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                    ] = np.zeros_like(y_true)
+
             else:
+                # Get probablility values of comparison taggers from dataframe
+                # (from file)
                 try:
                     df_discs_dict[
                         f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
                     ] = jets[f'{tagger}_{flavour_categories[flav]["prob_var_name"]}']
 
                 except KeyError:
-                    # Skipping not available taggers probabilities
-                    continue
+                    df_discs_dict[
+                        f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                    ] = np.zeros_like(y_true)
 
+        # Check which tagger is used
         if tagger in tagger_names:
-            y_pred = tagger_preds[counter]
+
+            # Define y_pred for the freshly trained tagger
+            y_pred = tagger_preds[tagger_names.index(tagger)]
+
+            # Calculate the dimensions that need to be added
+            extra_dim = len(set(class_labels) - set(tagger_classes))
+            if extra_dim > 0:
+                skipped_taggers[tagger] += list(set(class_labels) - set(tagger_classes))
+                y_pred = np.append(
+                    y_pred,
+                    np.zeros(shape=(extra_dim, y_pred.shape[0])).transpose(),
+                    axis=1,
+                )
 
         else:
             # Shape the probabilities of the comparison taggers like the output of
@@ -502,28 +580,22 @@ def get_scores_probs_dict(
                         )
 
                 except KeyError:
-                    logger.warning(
-                        "Did not find probability values of flavour %s "
-                        "for tagger %s. This is ignored.",
-                        flav,
-                        tagger,
-                    )
-                    class_labels_copy.remove(flav)
+                    skipped_taggers[tagger].append(flav)
+                    if flav_index == 0:
+                        tmp = np.zeros_like(y_true)
 
-            # Check if tagger is in file
-            if len(class_labels_copy) == 0:
-                logger.warning("Tagger %s not in .h5 files! Skipping...", tagger)
-                continue
+                    else:
+                        tmp = np.append(tmp, np.zeros_like(y_true))
 
             # Reshape to wrong sorted (transpose change it to correct shape)
-            y_pred = tmp.reshape((len(class_labels_copy), -1))
+            y_pred = tmp.reshape((len(class_labels), -1))
             y_pred = np.transpose(y_pred)
 
         # Adding scores of the trained network
         try:
             df_discs_dict[f"disc_{tagger}"] = umt.get_score(
                 y_pred=y_pred,
-                class_labels=class_labels_copy,
+                class_labels=class_labels,
                 main_class=main_class,
                 frac_dict=(
                     frac_values[f"{tagger}"]
@@ -535,6 +607,30 @@ def get_scores_probs_dict(
         except KeyError:
             logger.warning("%s is in files, but not in frac_dict! Skipping...", tagger)
             continue
+
+    # Remove double entries and print warning
+    tagger_to_remove = []
+    masked_taggers = {}
+    for iter_tagger, labels in skipped_taggers.items():
+        if set(labels) == set(class_labels):
+            tagger_to_remove.append(iter_tagger)
+
+        elif len(labels) != 0:
+            masked_taggers[iter_tagger] = list(set(labels))
+
+    if len(masked_taggers.keys()) != 0:
+        logger.warning(
+            "The following taggers have at least one class not in their output. This "
+            "missing output is masked with zeros:"
+        )
+        for iter_tagger, labels in masked_taggers.items():
+            logger.warning("Tagger: %s, Missing ouputs: %s", iter_tagger, labels)
+
+    if len(tagger_to_remove) != 0:
+        logger.warning(
+            "Following taggers are not present in the h5 files and are skipped: %s",
+            tagger_to_remove,
+        )
 
     return df_discs_dict
 

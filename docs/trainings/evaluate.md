@@ -25,6 +25,7 @@ The important part for the evaluation is the `evaluation_settings` section. In t
 | `frac_max` | `float` | Optional | Maximal fraction value which is set for a background class in the fraction scan. |
 | `add_eval_variables` | `list` | Optional | A list to add available variables to the evaluation files. With this, variables can be added for the variable vs eff/rejection plots. |
 | `eval_batch_size` | `int` | Optional | Number of jets used per batch for the evaluation of the training. If not given, the batch size from `nn_structure` is used. |
+| `extra_classes_to_evaluate` | `list` | Optional | List with jet flavours that are also loaded for evaluation although the tagger is not trained on this class. With this option, you can test the taggers behaviour for classes it wasn't trained on. Note: This must be a `list` and you also only need to add extra classes that are not in `class_labels`! Also you need to add an entry to the `frac_values` for each class in this list with value `0` so the calculation of the discriminants work. |
 
 ??? info "DIPS"
     #### DIPS

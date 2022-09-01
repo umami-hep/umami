@@ -1,7 +1,6 @@
 """
 Script with all the metrics calculations used to grade theperformance of the taggers.
 """
-
 import copy
 
 import numpy as np
@@ -49,6 +48,11 @@ def calc_disc_values(
     -------
     disc_score : numpy.ndarray
         Array with the discriminant score values for the jets.
+
+    Raises
+    ------
+    KeyError
+        If for the given class label no frac_dict entry is given
 
     Notes
     -----
@@ -143,10 +147,18 @@ def calc_disc_values(
 
         # Calculate denominator of disc_score
         for class_label in class_labels_wo_main:
-            denominator += (
-                frac_dict[class_label]
-                * jets_dict[rej_class_iterator][:, index_dict[class_label]]
-            )
+            try:
+                denominator += (
+                    frac_dict[class_label]
+                    * jets_dict[rej_class_iterator][:, index_dict[class_label]]
+                )
+
+            except KeyError as error:
+                raise KeyError(
+                    f"No fraction value for class {class_label} given! Please check "
+                    "the frac_values and frac_values_comp in the train config!"
+                ) from error
+
         denominator += add_small
 
         # Calculate the final scores
@@ -192,6 +204,11 @@ def get_score(
     -------
     disc_score : numpy.ndarray
         Discriminant Score for the jets provided.
+
+    Raises
+    ------
+    KeyError
+        If for the given class label no frac_dict entry is given
 
     Examples
     --------
@@ -261,7 +278,15 @@ def get_score(
 
     # Calculate denominator of disc_score
     for class_label in class_labels_wo_main:
-        denominator += frac_dict[class_label] * y_pred[:, index_dict[class_label]]
+        try:
+            denominator += frac_dict[class_label] * y_pred[:, index_dict[class_label]]
+
+        except KeyError as error:
+            raise KeyError(
+                f"No fraction value for class {class_label} given! Please check "
+                "the frac_values and frac_values_comp in the train config!"
+            ) from error
+
     denominator += add_small
 
     # Calculate final disc_score and return it
@@ -385,10 +410,6 @@ def get_rejection(
         If the given y_true does not match the provided class_labels.
     ValueError
         If the given shape of y_true is not supported!
-    ZeroDivisionError
-        If no jets which passes the cut value are given. E.g. if
-        no light jet is passing the WP cut, the rejection would
-        be infinite.
 
     Notes
     -----
@@ -465,6 +486,20 @@ def get_rejection(
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
+    # Adding zeros for prediction for classes which the tagger is not trained for
+    if len(y_true.shape) == 1:
+        extra_needed_dim = int((np.max(y_true) + 1) - y_pred.shape[1])
+
+    else:
+        extra_needed_dim = int(y_true.shape[1] - y_pred.shape[1])
+
+    if extra_needed_dim > 0:
+        y_pred = np.append(
+            y_pred,
+            np.zeros(shape=(extra_needed_dim, y_pred.shape[0])).transpose(),
+            axis=1,
+        )
+
     # Assert that y_pred and y_true have the same shape
     if y_pred.shape == y_true.shape and (len(y_pred.shape) == 2):
         if not y_true.shape[1] == len(class_labels):
@@ -509,14 +544,14 @@ def get_rejection(
 
     # Calculate efficiencies
     for iter_main_class in class_labels_wo_main:
-        try:
-            if unique_identifier is None:
-                dict_key = f"{iter_main_class}_rej"
-            elif subtagger is None:
-                dict_key = f"{iter_main_class}_rej_{unique_identifier}"
-            else:
-                dict_key = f"{iter_main_class}_rej_{subtagger}_{unique_identifier}"
+        if unique_identifier is None:
+            dict_key = f"{iter_main_class}_rej"
+        elif subtagger is None:
+            dict_key = f"{iter_main_class}_rej_{unique_identifier}"
+        else:
+            dict_key = f"{iter_main_class}_rej_{subtagger}_{unique_identifier}"
 
+        try:
             rej_dict[dict_key] = 1 / (
                 len(
                     jets_dict[iter_main_class][
@@ -533,11 +568,7 @@ def get_rejection(
                 / (len(jets_dict[iter_main_class]) + 1e-10)
             )
 
-        except ZeroDivisionError as error:
-            raise ZeroDivisionError(
-                "Not enough jets for rejection calculation of class "
-                f"{iter_main_class} for {target_eff} efficiency!\n"
-                "Maybe loosen the eff_min to fix it or give more jets!"
-            ) from error
+        except ZeroDivisionError:
+            rej_dict[dict_key] = np.nan
 
     return rej_dict, cutvalue

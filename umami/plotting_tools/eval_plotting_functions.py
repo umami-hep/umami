@@ -852,8 +852,15 @@ def plot_confusion_matrix(
     # Get the truth
     y_target = df_results["labels"]
 
+    # Get a bool list which jets to keep (removing unused flavour jets)
+    jets_to_keep = y_target <= len(class_labels) - 1
+
     # Get the probabilities of the tagger and select the highest
     y_predicted = np.argmax(df_results[prob_list].values, axis=1)
+
+    # Remove unused flavour jets
+    y_target = y_target[jets_to_keep]
+    y_predicted = y_predicted[jets_to_keep]
 
     # Define the confusion matrix
     cm = confusion_matrix(y_target=y_target, y_predicted=y_predicted, binary=False)
