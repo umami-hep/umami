@@ -123,6 +123,7 @@ def plot_trks_variables(plot_config, plot_type):
                     var_dict=plot_config["Eval_parameters"]["var_dict"],
                     n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
                     binning=plotting_config["binning"],
+                    xlabels_dict=plotting_config.get("xlabels"),
                     output_directory=plotting_config["folder_to_save"]
                     if plotting_config["folder_to_save"]
                     else "input_vars_trks/",
@@ -174,6 +175,7 @@ def plot_jets_variables(plot_config, plot_type):
             if plotting_config["folder_to_save"]
             else "input_vars_jets/",
             plot_type=plot_type,
+            xlabels_dict=plotting_config.get("xlabels"),
             special_param_jets=plotting_config["special_param_jets"],
             **plotting_config["plot_settings"],
         )

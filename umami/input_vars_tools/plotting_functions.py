@@ -237,6 +237,7 @@ def plot_input_vars_trks(
     var_dict: dict,
     n_jets: int,
     binning: dict,
+    xlabels_dict: dict = None,
     sorting_variable: str = "ptfrac",
     n_leading: list = None,
     output_directory: str = "input_vars_trks",
@@ -267,8 +268,13 @@ def plot_input_vars_trks(
         Number of jets to use for plotting.
     binning : dict
         Decide which binning is used.
-    sorting_variable : str
-        Variable which is used for sorting.
+    sorting_variable : str, optional
+        Variable which is used for sorting, by default "ptfrac"
+    xlabels_dict : dict, optional
+        Dict that stores the xlabels of the variables that are plotted. I.e. to
+        specify a label for "pt_btagJes", use {"pt_btagJes": "$p_T$ [MeV]"}.
+        Variables that do not appear in the dict will have the variable name as xlabel.
+        By default None
     n_leading : list
         n-th leading jet which is plotted. For all, = None.
     output_directory : str
@@ -292,6 +298,8 @@ def plot_input_vars_trks(
     # check to avoid dangerous default value (list)
     if n_leading is None:
         n_leading = [None]
+    if xlabels_dict is None:
+        xlabels_dict = {}
 
     # Create dict that stores the binning for all the variables
     bins_dict = {}
@@ -401,16 +409,20 @@ def plot_input_vars_trks(
                 # Initialise plot for this variable
                 var_plot = HistogramPlot(bins=bins_dict[var], **kwargs)
 
+                xlabel = xlabels_dict.get(var, var)
+
                 if n_lead is None:
                     var_plot.xlabel = (
-                        f"{var}" if track_origin == "All" else f"{var} ({track_origin})"
+                        xlabel
+                        if track_origin == "All"
+                        else f"{xlabel} ({track_origin})"
                     )
 
                 else:
                     var_plot.xlabel = (
-                        f"{n_lead+1} leading tracks {var}"
+                        f"{n_lead+1} leading tracks {xlabel}"
                         if track_origin == "All"
-                        else (f"{n_lead+1} leading tracks {var} ({track_origin})")
+                        else (f"{n_lead+1} leading tracks {xlabel} ({track_origin})")
                     )
 
                 # Iterate over datasets
@@ -513,6 +525,7 @@ def plot_input_vars_jets(
     var_dict: dict,
     n_jets: int,
     binning: dict,
+    xlabels_dict: dict = None,
     special_param_jets: dict = None,
     output_directory: str = "input_vars_jets",
     plot_type: str = "pdf",
@@ -539,16 +552,25 @@ def plot_input_vars_jets(
         Number of jets to use for plotting.
     binning : dict
         Decide which binning is used.
-    special_param_jets : dict
+    xlabels_dict : dict, optional
+        Dict that stores the xlabels of the variables that are plotted. I.e. to
+        specify a label for "pt_btagJes", use {"pt_btagJes": "$p_T$ [MeV]"}.
+        Variables that do not appear in the dict will have the variable name as xlabel.
+        By default None
+    special_param_jets : dict, optional
         Dict with special x-axis cuts for the given variable.
-    output_directory : str
+    output_directory : str, optional
         Name of the output directory. Only the dir name not path!
+        By default "input_vars_jets"
     plot_type: str, optional
         File format for the output, by default "pdf"
     **kwargs: dict
         Keyword arguments passed to the plot. You can use all arguments that are
         supported by the `HistogramPlot` class in the plotting API.
     """
+
+    if xlabels_dict is None:
+        xlabels_dict = {}
 
     kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(
         kwargs,
@@ -601,9 +623,12 @@ def plot_input_vars_jets(
     # Loop over vars
     for var in jet_variables:
         if var in bins_dict:
-
             # Initialise plot for this variable
-            var_plot = HistogramPlot(bins=bins_dict[var], xlabel=var, **kwargs)
+            var_plot = HistogramPlot(
+                bins=bins_dict[var],
+                xlabel=xlabels_dict.get(var, var),
+                **kwargs,
+            )
             # setting range based on value from config file
             if special_param_jets is not None and var in special_param_jets:
                 if (
