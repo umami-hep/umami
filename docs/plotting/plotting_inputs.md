@@ -30,7 +30,7 @@ The number of tracks per jet can be plotted for all different files. This can be
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:95:112§§§
+    §§§examples/plotting_input_vars.yaml:102:119§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -51,7 +51,7 @@ To plot the track input variables, the following options are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:114:148§§§
+    §§§examples/plotting_input_vars.yaml:121:155§§§
     ```
 
 
@@ -73,7 +73,7 @@ To plot the jet input variables, the following options are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:16:93§§§
+    §§§examples/plotting_input_vars.yaml:16:100§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -88,6 +88,7 @@ To plot the jet input variables, the following options are used.
 | `special_param_jets` | None | Necessary | Here starts the special x axis limits for a variable. If you want to set the x range by hand, add the variable here and also the `lim_left` for xmin and `lift_right` for xmax. |
 | `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is the step width. The so arranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. Variables that are not in here are not plotted! |
 | `plot_settings` | `dict` | Necessary | Here starts the plot settings. See possible parameters in the section below. |
+| `xlabels` | dict | Optional | Dict with custom xlabels |
 
 #### Plot settings
 The `plot_settings` section is similar for all three cases described above. 
@@ -114,6 +115,7 @@ You can use the following parameters. Note that some parameters are not supporte
 | Options | Plot Type | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|-----------|--------------------|-------------|
 | `binning` | All | `int`, `list` or empty | Necessary | Here starts the binning for each variable. If you give a `int`, there will be that many equal-width bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is number of bins. The so arranged numbers are bin edges not bins! If no value is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
+| `xlabels` | dict | Optional | Dict with custom xlabels |
 | `sorting_variable` | Track variables | `str` | Optional | Variable Name to sort after. |
 | `n_leading` | Track variables | `list` | Optional | `list` of the x leading tracks. If `None`, all tracks will be plotted. If `0` the leading tracks sorted after `sorting variable` will be plotted. You can add like `None`, `0` and `1` for example and it will plot all 3 of them, each in their own folders with according labeling. This must be a `list`! Even if there is only one option given. |
 | `track_origins` | Track variables and n_tracks plot | `list` | Optional | `list` that gives the desired track origins when plotting. |

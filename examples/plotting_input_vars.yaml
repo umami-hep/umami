@@ -20,6 +20,9 @@ jets_input_vars:
     R21:
       files: <path_palce_holder>/user.mguth.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow_looser-track_selection.2020-07-01-T193555-R26654_output.h5/*
       label: "R21 Loose"
+      # class_labels can also be defined for a specific dataset (the way it is done here,
+      # it doesn't change anything since it's the same as the globally defined class_labels)
+      class_labels: ["bjets", "cjets", "ujets"]
     R22:
       files: <path_palce_holder>/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
       label: "R22 Loose"
@@ -49,6 +52,10 @@ jets_input_vars:
     JetFitter_N2Tpair:
       lim_left: 0
       lim_right: 200
+  xlabels:
+    # here you can define xlabels, if a variable is not in this dict, the variable name
+    # will be used (i.e. for pT this would be 'pt_btagJes')
+    pt_btagJes: "$p_T$ [MeV]"
   binning:
     JetFitter_mass: 100
     JetFitter_energyFraction: 100
