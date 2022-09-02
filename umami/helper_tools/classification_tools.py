@@ -1,6 +1,8 @@
 """Provides methods for classification of events by flavour."""
-from umami.configuration import global_config  # isort:skip
 import numpy as np
+
+from umami.configuration import global_config
+from umami.tools.tools import flatten_list
 
 
 def get_class_label_ids(class_labels: list) -> list:
@@ -88,8 +90,8 @@ def get_class_label_variables(class_labels: list):
             flatten_class_labels.append(class_label)
 
     # Flatten the lists if needed
-    label_var_list = np.asarray(label_var_list).flatten().tolist()
-    flatten_class_labels = np.asarray(flatten_class_labels).flatten().tolist()
+    label_var_list = flatten_list(label_var_list)
+    flatten_class_labels = flatten_list(flatten_class_labels)
 
     return label_var_list, flatten_class_labels
 

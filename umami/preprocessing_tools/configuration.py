@@ -7,6 +7,7 @@ from pathlib import Path
 from random import Random
 
 from umami.configuration import Configuration, logger
+from umami.tools import flatten_list
 
 
 def check_key(location, old_key: str, new_key: str) -> None:
@@ -164,7 +165,7 @@ class Preparation:
                     "`n_jets` not specified for sample %s. It will be set to 10M.",
                     sample_name,
                 )
-            sample.cuts = sample_settings.get("cuts")
+            sample.cuts = flatten_list(sample_settings.get("cuts"))
             if sample.cuts is None:
                 sample.cuts = []
             self.samples[sample_name] = sample

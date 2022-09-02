@@ -1,5 +1,6 @@
 """Collection of tools used in different places in the project."""
 import re
+from collections.abc import Sequence
 
 import yaml
 
@@ -167,3 +168,42 @@ def check_main_class_input(main_class) -> list:
         )
 
     return main_class
+
+
+def flatten(nested_list: list):
+    """Flatten an arbitrarily nested list.
+    from https://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists
+
+    Parameters
+    ----------
+    nested_list : list
+        Arbitrarily nested list.
+
+    Yields
+    ------
+    list
+        Flattened list elements.
+    """
+    for elem in nested_list:
+        if isinstance(elem, Sequence) and not isinstance(elem, (str, bytes)):
+            yield from flatten(elem)
+        else:
+            yield elem
+
+
+def flatten_list(nested_list: list):
+    """Flatten an arbitrarily nested list.
+
+    Parameters
+    ----------
+    nested_list : list
+        Arbitrarily nested list.
+
+    Returns
+    ------
+    list
+        Flattened list or `None` if nested_list input was `None`
+    """
+    if nested_list is None:
+        return None
+    return list(flatten(nested_list))
