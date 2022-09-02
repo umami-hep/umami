@@ -177,7 +177,7 @@ sampling:
     save_tracks: False
 
     # Name of the track collection to use. Can be null if no track info is saved.
-    tracks_name: null
+    tracks_names: null
 
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file

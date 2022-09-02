@@ -6,6 +6,7 @@ from functools import reduce
 import numpy as np
 
 from umami.configuration import logger
+from umami.tools.tools import flatten_list
 
 
 def get_sample_cuts(jets: np.ndarray, cuts: list) -> np.ndarray:
@@ -58,14 +59,7 @@ def get_sample_cuts(jets: np.ndarray, cuts: list) -> np.ndarray:
     cut_rejections = []
 
     # flatten list of cuts in case these cuts are provided as lists inside of a list
-    clean_list = []
-    for sublist in cuts:
-        if isinstance(sublist, list):
-            for item in sublist:
-                clean_list.append(item)
-        else:
-            clean_list.append(sublist)
-    cuts = clean_list
+    cuts = flatten_list(cuts)
 
     for cut_entry in cuts:
         if cut_entry is None:
