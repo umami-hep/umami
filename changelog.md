@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Bot-comment about changed placeholders will now be posted as unresolved thread [!634](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/634)
 - Adding function to flatten arbitrary nested lists [!632](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/632)
 - Adding randomise option to input_h5 block in preprocessing config [!631](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/631)
 - Input variable plots: Adding support for custom x-labels [!626](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/626)
