@@ -126,13 +126,26 @@ if __name__ == "__main__":
             + "\n\n**Please check that they are still correct!**"
         )
         post_note = True
-        for note_i in mr.notes.list():
-            if note_i.body == note:
-                post_note = False
-                break
+        # go through all discussions in the MR
+        for discussion in mr.discussions.list():
+            # go through all notes of this discussion
+            for note_i in discussion.attributes["notes"]:
+                if note_i["body"] == note:
+                    post_note = False
+                    print(
+                        "Comment about changed placeholders already exists "
+                        "--> not posting."
+                    )
+                    break
         if post_note:
             # Post the note to the MR if not already done
-            mr.notes.create({"body": note})
+            mr.discussions.create({"body": note})
+            # Get the id of the discussion that was just created
+            discussion_id = mr.discussions.list()[-1].attributes["id"]
+            mr_d = mr.discussions.get(discussion_id)
+            # Set the discussion to unresolved, such that it has to be addressed
+            mr_d.resolved = False
+            print("Posting comment that placeholders should be checked.")
         mr.save()
 
     # define flag if only documentation is concerned
