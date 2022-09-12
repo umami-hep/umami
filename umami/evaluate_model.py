@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Execution script for training model evaluations."""
 from umami.configuration import global_config, logger, set_log_level  # isort:skip
 import argparse
