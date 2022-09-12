@@ -44,7 +44,7 @@ The important part for the evaluation is the `evaluation_settings` section. In t
     The following options are used in the feature importance check. A detailed description how to run this, please have a look [here](Feature_Importance.md)
 
     ```yaml
-    §§§examples/training/DL1r-PFlow-Training-config.yaml:154:175§§§
+    §§§examples/training/DL1r-PFlow-Training-config.yaml:157:178§§§
     ```
 
     | Options | Data Type | Necessary, Optional | Explanation |

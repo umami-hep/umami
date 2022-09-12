@@ -67,8 +67,11 @@ nn_structure:
     # To use all: Fill nothing
     n_jets_train:
 
-    # Dropout rate. If = 0, dropout is disabled
-    dropout: 0
+    # Dropout rates for the dense layers
+    # --> has to be a list of same length as the `dense_sizes` list
+    # The example here would use a dropout rate of 0.2 for the two middle layers but
+    # no dropout for the other layers
+    dropout_rate: [0, 0, 0, 0.2, 0.2, 0, 0, 0]
 
     # Define which classes are used for training
     # These are defined in the global_config
