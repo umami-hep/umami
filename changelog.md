@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Removing global `dropout` parameter from DL1* models. Dropout has to be specified per layer now via the list `dropout_rate` [!633](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/633)
 - Bot-comment about changed placeholders will now be posted as unresolved thread [!634](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/634)
 - Adding function to flatten arbitrary nested lists [!632](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/632)
 - Adding randomise option to input_h5 block in preprocessing config [!631](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/631)

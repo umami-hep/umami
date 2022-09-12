@@ -48,7 +48,8 @@ The next section in the train config is the `nn_structure`. Here we define all t
 | `batch_size` | `int` | Necessary | Batch size which is used for training. |
 | `epochs` | `int` | Necessary | Number of epochs of the training. |
 | `n_jets_train` | `int` | Necessary | Number of jets used for training. Leave empty to use all. |
-| `dropout` | `float` | Necessary | Dropout factor used in the network. If 0, dropout is not used. |
+| `dropout` | `float` or `bool` | Necessary | Global dropout rate used in the network. If 0, dropout is not used. For DL1*, this variable is a `bool` and only indicates if dropout is used or not. The dropout rates for DL1x are then defined in `dropout_rate`.|
+| `dropout_rate` | `list` | List of dropout rates (in the case of DL1* models). Has to be of the same length as the `dense_sizes` list. |
 | `class_labels` | `list` | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
 | `main_class` | `str` or `list` of `str` | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. This can either be one single class (`str`) or multiple classes (`list` of `str`). |
 | `batch_normalisation` | `bool` | Necessary | Decide, if batch normalisation is used in the network. (Look in the model files where this is used for the specific models) |
@@ -80,7 +81,7 @@ The next section in the train config is the `nn_structure`. Here we define all t
     #### DL1*
 
     ```yaml
-    §§§examples/training/DL1r-PFlow-Training-config.yaml:86:90§§§
+    §§§examples/training/DL1r-PFlow-Training-config.yaml:89:93§§§
     ```
 
     | Options | Data Type | Necessary, Optional | Explanation |
