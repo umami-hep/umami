@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Execution script for epoch performance plotting."""
 from umami.configuration import logger, set_log_level  # isort:skip
 
