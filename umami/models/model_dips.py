@@ -47,15 +47,28 @@ def create_dips_model(
         Number of epochs
     int
         Starting epoch number
+
+    Raises
+    ------
+    ValueError
+        If the deprecated global `dropout` parameter is used.
     """
     # Load NN Structure and training parameter from file
     nn_structure = train_config.nn_structure
 
     # Set NN options
     batch_norm = nn_structure["batch_normalisation"]
-    dropout = nn_structure["dropout"]
     class_labels = nn_structure["class_labels"]
 
+    dropout_rates_phi = utt.get_dropout_rates(
+        "dropout_rate_phi", "ppm_sizes", nn_structure
+    )
+    dropout_rates_f = utt.get_dropout_rates("dropout_rate", "dense_sizes", nn_structure)
+    if "dropout" in nn_structure:
+        raise ValueError(
+            "The global parameter `dropout` is deprecated. Please specify a "
+            "dropout rate for each layer."
+        )
     # Check if a prepared model is used or not
     dips, init_epoch, load_optimiser = utf.prepare_model(
         train_config=train_config,
@@ -73,7 +86,9 @@ def create_dips_model(
         tdd = masked_inputs
 
         # Define the TimeDistributed layers for the different tracks
-        for i, phi_nodes in enumerate(nn_structure["ppm_sizes"]):
+        for i, (phi_nodes, dropout_rate_phi) in enumerate(
+            zip(nn_structure["ppm_sizes"], dropout_rates_phi)
+        ):
 
             tdd = TimeDistributed(
                 Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
@@ -84,10 +99,10 @@ def create_dips_model(
                     BatchNormalization(), name=f"Phi{i}_BatchNormalization"
                 )(tdd)
 
-            if dropout != 0:
-                tdd = TimeDistributed(Dropout(rate=dropout), name=f"Phi{i}_Dropout")(
-                    tdd
-                )
+            if dropout_rate_phi != 0:
+                tdd = TimeDistributed(
+                    Dropout(rate=dropout_rate_phi), name=f"Phi{i}_Dropout"
+                )(tdd)
 
             tdd = TimeDistributed(Activation(activations.relu), name=f"Phi{i}_ReLU")(
                 tdd
@@ -97,18 +112,15 @@ def create_dips_model(
         F = utf.Sum(name="Sum")(tdd)
 
         # Define the main dips structure
-        for j, (F_nodes, p) in enumerate(
-            zip(
-                nn_structure["dense_sizes"],
-                [dropout] * len(nn_structure["dense_sizes"][:-1]) + [0],
-            )
+        for j, (F_nodes, dropout_rate_f) in enumerate(
+            zip(nn_structure["dense_sizes"], dropout_rates_f)
         ):
 
             F = Dense(F_nodes, activation="linear", name=f"F{j}_Dense")(F)
             if batch_norm:
                 F = BatchNormalization(name=f"F{j}_BatchNormalization")(F)
-            if dropout != 0:
-                F = Dropout(rate=p, name=f"F{j}_Dropout")(F)
+            if dropout_rate_f != 0:
+                F = Dropout(rate=dropout_rate_f, name=f"F{j}_Dropout")(F)
             F = Activation(activations.relu, name=f"F{j}_ReLU")(F)
 
         # Set output and activation function

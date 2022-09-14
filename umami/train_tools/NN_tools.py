@@ -29,6 +29,47 @@ from umami.preprocessing_tools import (
 from umami.tools import natural_keys, replace_line_in_file
 
 
+def get_dropout_rates(dropout_rates_name: str, layer_sizes_name: str, config: dict):
+    """Helper function to obtain the dropout rates from the training config (with a
+    check if it has same size as the array of layer sizes of the neural network).
+
+    Parameters
+    ----------
+    dropout_rates_name : str
+        Name of the key for the dropout rates (in the training config)
+    layer_sizes_name : str
+        Name of the key for the layer sizes (in the training config)
+    config : dict
+        Dict that stores these keys
+
+    Returns
+    -------
+    list
+        List with the dropout rates for the layers of the neural network
+
+    Raises
+    ------
+    ValueError
+        If the number of specified dropout rates != number of layers
+    """
+
+    # Read dropout rates, set to zero if not specified
+    dropout_rates = config.get(
+        dropout_rates_name, np.zeros(len(config.get(layer_sizes_name)))
+    )
+    if dropout_rates is None:
+        np.zeros(len(config.get(layer_sizes_name)))
+
+    # Raise error if dropout rate is not defined for each layer
+    if len(dropout_rates) != len(config.get(layer_sizes_name)):
+        raise ValueError(
+            f"`{dropout_rates_name}` has to be a list of same length as "
+            f"`{layer_sizes_name}`. Please check these parameters in your training "
+            "config."
+        )
+    return dropout_rates
+
+
 def get_unique_identifiers(keys: list, prefix: str) -> list:
     """Helper function which takes a list of strings, searches them for a given prefix
     of the form "prefix_<identifier>" and returns the remaining part of the matching

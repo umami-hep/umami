@@ -37,8 +37,8 @@ Both options can also be added after the training is finished. For the training 
 The next section in the train config is the `nn_structure`. Here we define all the information needed for building the model, like which tagger we want to use and also the number of hidden layer and nodes per hidden layer. The general options are shown next while the tagger dependant options are shown in their respective subsections.
 
 ```yaml
-§§§examples/training/Dips-PFlow-Training-config.yaml:61:86§§§
-§§§examples/training/Dips-PFlow-Training-config.yaml:90:97§§§
+§§§examples/training/Dips-PFlow-Training-config.yaml:61:83§§§
+§§§examples/training/Dips-PFlow-Training-config.yaml:88:97§§§
 ```
 
 | Options | Data Type | Necessary, Optional | Explanation |
@@ -48,12 +48,11 @@ The next section in the train config is the `nn_structure`. Here we define all t
 | `batch_size` | `int` | Necessary | Batch size which is used for training. |
 | `epochs` | `int` | Necessary | Number of epochs of the training. |
 | `n_jets_train` | `int` | Necessary | Number of jets used for training. Leave empty to use all. |
-| `dropout` | `float` or `bool` | Necessary | Global dropout rate used in the network. If 0, dropout is not used. For DL1*, this variable is a `bool` and only indicates if dropout is used or not. The dropout rates for DL1x are then defined in `dropout_rate`.|
-| `dropout_rate` | `list` | List of dropout rates (in the case of DL1* models). Has to be of the same length as the `dense_sizes` list. |
 | `class_labels` | `list` | Necessary | List of flavours used in training. NEEDS TO BE THE SAME AS IN THE `preprocess_config`. Even the ordering needs to be the same! |
 | `main_class` | `str` or `list` of `str` | Necessary | Main class which is to be tagged. Needs to be in `class_labels`. This can either be one single class (`str`) or multiple classes (`list` of `str`). |
 | `batch_normalisation` | `bool` | Necessary | Decide, if batch normalisation is used in the network. (Look in the model files where this is used for the specific models) |
 | `dense_sizes` | `list` | Necessary | List of nodes per layer of the network. Every entry is one layer. The numbers need to be `int`! For DL1r/DL1d, this is the number of nodes per layer. For DIPS/DIPS Attention/Umami/CADS this is the number of nodes per layer for the _F_ network. |
+| `dropout_rate` | `list` | List of dropout rates for the layers defined via `dense_sizes`. Has to be of the same length as the `dense_sizes` list. |
 | `load_optimiser` | `bool` | Optional | When loading a model (via `model_file`), you can load the optimiser state for continuing a training (`True`) or initialize a new optimiser to use the model as a start point for a fresh training (`False`). |
 | `use_sample_weights` | `bool` | Optional | Applies the weights, you calculated with the `--weighting` flag from the preprocessing to the training loss function. |
 | `nfiles_tfrecord` | `int` | Optional | Number of files that are loaded at the same time when using `TFRecords` for training. |
@@ -70,12 +69,13 @@ The next section in the train config is the `nn_structure`. Here we define all t
     #### DIPS
 
     ```yaml
-    §§§examples/training/Dips-PFlow-Training-config.yaml:87:88§§§
+    §§§examples/training/Dips-PFlow-Training-config.yaml:84:86§§§
     ```
 
     | Options | Data Type | Necessary, Optional | Explanation |
     |---------|-----------|---------------------|-------------|
     | `ppm_sizes` | `list` | Necessary | List of nodes per layer of the _ϕ_ network. Every entry is one layer. The numbers need to be `int`! |
+    | `dropout_rate_phi` | `list` | Necessary | List of dropout rates in the _ϕ_ network. Has to be of the same length as the `ppm_sizes` list. |
 
 ??? info "DL1*"
     #### DL1*
