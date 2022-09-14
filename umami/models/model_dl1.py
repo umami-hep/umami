@@ -3,7 +3,6 @@ from umami.configuration import logger  # isort:skip
 import os
 
 import h5py
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint  # pylint: disable=import-error
 from tensorflow.keras.layers import (  # pylint: disable=import-error
@@ -53,11 +52,6 @@ def create_dl1_model(
         number of epochs to be trained
     init_epoch : int
         Starting epoch number
-
-    Raises
-    ------
-    ValueError
-        If the list of dropout rates and the list of dense-layer sizes is not equal.
     """
 
     # Load NN Structure and training parameter from file
@@ -67,18 +61,7 @@ def create_dl1_model(
     batch_norm = nn_structure["batch_normalisation"]
     class_labels = nn_structure["class_labels"]
     # Read dropout rates, set to zero if not specified
-    dropout_rates = nn_structure.get(
-        "dropout_rate", np.zeros(len(nn_structure.get("dense_sizes")))
-    )
-    if dropout_rates is None:
-        np.zeros(len(nn_structure.get("dense_sizes")))
-
-    # Raise error if dropout rate is not defined for each layer
-    if len(dropout_rates) != len(nn_structure.get("dense_sizes")):
-        raise ValueError(
-            "`dropout_rate` has to be a list of same length as `dense_sizes`. "
-            "Please check the parameter `dropout_rate` in your training config."
-        )
+    dropout_rates = utt.get_dropout_rates("dropout_rate", "dense_sizes", nn_structure)
 
     # Check if a prepared model is used or not
     model, init_epoch, load_optimiser = utf.prepare_model(

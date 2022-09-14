@@ -17,6 +17,7 @@ from umami.train_tools.NN_tools import (
     MyCallback,
     MyCallbackUmami,
     create_metadata_folder,
+    get_dropout_rates,
     get_epoch_from_string,
     get_jet_feature_indices,
     get_jet_feature_position,
@@ -1030,3 +1031,37 @@ class GetSamples_TestCase(unittest.TestCase):
                 "Y_valid_zprime_r21_val",
             ],
         )
+
+
+class get_dropout_rates_TestCase(unittest.TestCase):
+    """Test class for the helper function get_dropout_rates."""
+
+    def setUp(self) -> None:
+        self.testdict_dips = {
+            "ppm_sizes": [100, 100, 128],
+            "dropout_rates_phi": [0, 0.1, 0],
+            "dense_sizes": [100, 100, 100, 30],
+            "dropout_rate": [0.1, 0.1, 0.1, 0.1],
+        }
+
+    def test_correct_config_dips(self):
+        """Test the case for DIPS"""
+        with self.subTest():
+            self.assertListEqual(
+                [0, 0.1, 0],
+                get_dropout_rates("dropout_rates_phi", "ppm_sizes", self.testdict_dips),
+            )
+        with self.subTest():
+            self.assertListEqual(
+                [0.1, 0.1, 0.1, 0.1],
+                get_dropout_rates("dropout_rate", "dense_sizes", self.testdict_dips),
+            )
+
+    def test_wrong_length(self):
+        """Test if error is raised if dropout rate is not defined for each layer."""
+        testdict_wrong_length = {
+            "dense_sizes": [100, 100, 128],
+            "dropout_rate": [0.1, 0],
+        }
+        with self.assertRaises(ValueError):
+            get_dropout_rates("dropout_rate", "dense_sizes", testdict_wrong_length)

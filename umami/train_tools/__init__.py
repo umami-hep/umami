@@ -8,6 +8,7 @@ from umami.train_tools.NN_tools import (
     create_metadata_folder,
     evaluate_model,
     evaluate_model_umami,
+    get_dropout_rates,
     get_epoch_from_string,
     get_jet_feature_indices,
     get_jet_feature_position,

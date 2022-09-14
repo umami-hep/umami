@@ -71,9 +71,6 @@ nn_structure:
     # To use all: Fill nothing
     n_jets_train:
 
-    # Dropout rate. If = 0, dropout is disabled
-    dropout: 0
-
     # Define which classes are used for training
     # These are defined in the global_config
     class_labels: ["ujets", "cjets", "bjets"]
@@ -84,11 +81,14 @@ nn_structure:
     # Decide if Batch Normalisation is used
     batch_normalisation: True
 
-    # Structure of the dense layers for each track
+    # Structure of the dense layers for each track + respective dropout rates
     ppm_sizes: [100, 100, 128]
+    dropout_rate_phi: [0, 0, 0]
 
-    # Structure of the dense layers after summing up the track outputs
+    # Structure of the dense layers after summing up the track outputs + respective
+    # dropout rates
     dense_sizes: [100, 100, 100, 30]
+    dropout_rate: [0.1, 0.1, 0.1, 0.1]
 
     # Options for the Learning Rate reducer
     lrr: True
