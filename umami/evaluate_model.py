@@ -476,7 +476,7 @@ def evaluate_model(
         ) as h5_file:
             # Put the number of jets per class in the dict for unc calculation
             for flav_counter, flavour in enumerate(classes_to_evaluate):
-                h5_file.attrs[f"n_jets_{flavour}"] = len(
+                h5_file.attrs[f"n_jets_{flavour}_{data_set_name}"] = len(
                     truth_internal_labels[truth_internal_labels == flav_counter]
                 )
 
@@ -516,7 +516,7 @@ def evaluate_model(
         ) as h5_file:
             # Put the number of jets per class in the dict for unc calculation
             for flav_counter, flavour in enumerate(class_labels):
-                h5_file.attrs[f"n_jets_{flavour}"] = len(
+                h5_file.attrs[f"n_jets_{flavour}_{data_set_name}"] = len(
                     truth_internal_labels[truth_internal_labels == flav_counter]
                 )
 
