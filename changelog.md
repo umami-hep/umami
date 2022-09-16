@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fix error calculation in ROC plots [!639](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/639)
 - Remove global `dropout` parameter from DIPS config. Dropout in DIPS is now defined for each layer with `dropout_rate` and `dropout_rate_phi` [!638](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/638)
 - Re-adding `#!/usr/bin/env python` to executable scripts [!635](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/635)
 - Removing global `dropout` parameter from DL1* models. Dropout has to be specified per layer now via the list `dropout_rate` [!633](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/633)

@@ -221,7 +221,10 @@ def plot_roc(
             try:
                 with h5py.File(df_results_file, "r") as h5_file:
                     n_jets_test.append(
-                        h5_file.attrs[f"n_jets_{model_config['rejection_class']}"]
+                        h5_file.attrs[
+                            f"n_jets_{model_config['rejection_class']}_"
+                            f"{model_config['data_set_name']}"
+                        ]
                     )
 
             except KeyError as error:
