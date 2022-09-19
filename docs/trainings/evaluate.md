@@ -23,7 +23,7 @@ The important part for the evaluation is the `evaluation_settings` section. In t
 | `frac_step` | `float` | Optional | Step size of the fraction value scan. Please keep in mind that the fractions given to the background classes need to add up to one! All combinations that do not add up to one are ignored. If you choose a combination `frac_min`, `frac_max` or `frac_step` where the fractions of the background classes do not add up to one, you will get an error while running `evaluate_model.py` |
 | `frac_min` | `float` | Optional | Minimal fraction value which is set for a background class in the fraction scan. |
 | `frac_max` | `float` | Optional | Maximal fraction value which is set for a background class in the fraction scan. |
-| `add_eval_variables` | `list` | Optional | A list to add available variables to the evaluation files. With this, variables can be added for the variable vs eff/rejection plots. |
+| `add_eval_variables` | `list` | Optional | A list of available variables which are to be added to the evaluation files. With this, variables can be added for the variable vs eff/rejection plots. |
 | `eval_batch_size` | `int` | Optional | Number of jets used per batch for the evaluation of the training. If not given, the batch size from `nn_structure` is used. |
 | `extra_classes_to_evaluate` | `list` | Optional | List with jet flavours that are also loaded for evaluation although the tagger is not trained on this class. With this option, you can test the taggers behaviour for classes it wasn't trained on. Note: This must be a `list` and you also only need to add extra classes that are not in `class_labels`! Also you need to add an entry to the `frac_values` for each class in this list with value `0` so the calculation of the discriminants work. |
 
@@ -67,3 +67,30 @@ evaluate_model.py -c <path to train config file> -e <epoch to evaluate>
 The `-e` options allows to define which epoch of the training is to be evaluated.
 
 **Note** Depending on the number of jets which are used for evaluation, this can take some time to process! Also, the use of a GPU for evaluation is highly recommended to reduce the time needed for execution.
+
+### Evaluate only the taggers inside the .h5 files (without a freshly trained model)
+
+Although the UMAMI framework is made to evaluate and plot the results of the trainings of the taggers that are living inside of it, the framework can also evaluate and plot taggers that are already present in the files coming from the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper).
+The tagger results come from LWTNN models which are used to evaluate the jets in the derivations. The training-dataset-dumper applies these taggers and dumps the output probabilities for the different classes in the output .h5 files. These probabilities can be read by the [`evaluate_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/evaluate_model.py) script and can be evaluated like a freshly trained model.
+
+To evaluate only the output files, there is a specific config file in the examples, which is called [evaluate_comp_taggers.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/training/evaluate_comp_taggers.yaml).
+
+This file is shown here:
+
+```yaml
+§§§examples/training/evaluate_comp_taggers.yaml§§§
+```
+
+Most of the options are similar to the ones already explained, although a lot of them are missing because they are not needed here. The ones that are new are explained in the following table
+
+| Options | Data Type | Necessary, Optional | Explanation |
+|---------|-----------|---------------------|-------------|
+| `evaluate_trained_model` | `bool` | Necessary | This options enables/disables the evaluation of a freshly trained model. By default, this value is `True` but if you want to evaluate only taggers already present in the `.h5` files, you need to set this option to `False`! |
+
+Now you can simply run the `evaluate_model.py` script as described in the section above but without the `-e` option. The command would look like this:
+
+```bash
+evaluate_model.py -c <path to train config file>
+```
+
+The `evaluate_model.py` will now output a results file like the one from the "regular" usage of the scripts with the difference that only your defined taggers in `tagger` are present in the files and no freshly trained tagger. An explanation how to plot the results is given in [here](https://umami-docs.web.cern.ch/plotting/plotting_umami/).

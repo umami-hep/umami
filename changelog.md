@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding FAQ and small docs update [!636](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/636)
 
 ### [v0.13](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.13) (15.09.2022)
 
