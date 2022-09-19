@@ -51,11 +51,15 @@ nav:
         - Overview: plotting/index.md
         - Input variables: plotting/plotting_inputs.md
         - Tagger performance: plotting/plotting_umami.md
-        - Evaluate Taggers in Samples: plotting/WO_trained_model.md
         - Python API:
             - Overview: plotting/python_api/index.md
             - Input Correlation plots: plotting/python_api/input_correlations.md
-
+    - FAQ:
+        - Overview: faq/overview_faq.md
+        - Preprocessing: faq/preprocessing_faq.md
+        - Training: faq/training_faq.md
+        - Validation of the trainings: faq/validation_faq.md
+        - Evaluation of the trainings: faq/evaluation_faq.md
 plugins:
     - search
 
