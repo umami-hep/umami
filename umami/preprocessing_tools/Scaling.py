@@ -167,8 +167,8 @@ def apply_scaling_jets(
             )
 
         # Shift and scale the variables
-        jets[var] -= scale_dict[var]["shift"]
-        jets[var] /= scale_dict[var]["scale"]
+        jets[var] = jets[var] - scale_dict[var]["shift"]
+        jets[var] = jets[var] / scale_dict[var]["scale"]
 
     return jets
 
