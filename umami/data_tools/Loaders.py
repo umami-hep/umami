@@ -15,11 +15,12 @@ from umami.tools import natural_keys
 def LoadJetsFromFile(
     filepath: str,
     class_labels: list,
-    n_jets: int,
+    n_jets: int = None,
     variables: list = None,
     cut_vars_dict: dict = None,
     print_logger: bool = True,
     chunk_size: int = 1e6,
+    indices_to_load: tuple = None,
 ):
     """
     Load jets from file. Only jets from classes in class_labels are returned.
@@ -40,6 +41,8 @@ def LoadJetsFromFile(
         Decide if the number of jets loaded from the file is printed.
     chunk_size : int
         Chunk size how much jets are loaded in on go.
+    indices_to_load : int, optional
+        Load the given indices, by default None
 
     Returns
     -------
@@ -51,18 +54,30 @@ def LoadJetsFromFile(
 
     Raises
     ------
+    ValueError
+        If neither n_jets nor indices_to_load is given
+    ValueError
+        If both n_jets and indices_to_load is given
     KeyError
         If filepath is not a list or a string
     RuntimeError
         If no files could be found in filepath
     """
 
-    # Make sure the n_jets argument is an integer
-    n_jets = int(n_jets)
-    chunk_size = int(chunk_size)
+    # Check that either n_jets or indices_to_load is given
+    if n_jets is None and indices_to_load is None:
+        raise ValueError("Neither n_jets nor indices_to_load were given!")
 
-    # Check if the chunk size is smaller than n_jets, if yes change it
-    chunk_size = chunk_size if chunk_size >= n_jets else n_jets
+    if n_jets is not None and indices_to_load is not None:
+        raise ValueError("You can't give both n_jets and indices_to_load!")
+
+    if n_jets:
+        # Make sure the n_jets argument is an integer
+        n_jets = int(n_jets)
+        chunk_size = int(chunk_size)
+
+        # Check if the chunk size is smaller than n_jets, if yes change it
+        chunk_size = chunk_size if chunk_size >= n_jets else n_jets
 
     if isinstance(filepath, str):
         # Get the paths of the files as a iterable list
@@ -126,22 +141,36 @@ def LoadJetsFromFile(
         n_jets_infile = len(h5py.File(file, "r")["/jets"])
 
         # Check how many times we need to iterate over the file
-        # to get all jets
-        n_chunks = int(np.ceil(n_jets_infile / chunk_size))
+        # to get all jets. If indices to load is used, this is
+        # zero because one specific is loaded
+        if not indices_to_load:
+            loop_list = range(int(np.ceil(n_jets_infile / chunk_size)))
+
+        else:
+            loop_list = [0]
 
         # Iterate over the file
-        for infile_counter in range(n_chunks):
+        for infile_counter in loop_list:
+
+            if not indices_to_load:
+                lower_index_counter = infile_counter * chunk_size
+                upper_index_counter = (infile_counter + 1) * chunk_size
+
+            else:
+                lower_index_counter = indices_to_load[0]
+                upper_index_counter = indices_to_load[1]
+
             if variables:
                 jets = pd.DataFrame(
                     h5py.File(file, "r")["/jets"].fields(variables_list)[
-                        infile_counter * chunk_size : (infile_counter + 1) * chunk_size
+                        lower_index_counter:upper_index_counter
                     ]
                 )
 
             else:
                 jets = pd.DataFrame(
                     h5py.File(file, "r")["/jets"][
-                        infile_counter * chunk_size : (infile_counter + 1) * chunk_size
+                        lower_index_counter:upper_index_counter
                     ]
                 )
 
@@ -189,6 +218,9 @@ def LoadJetsFromFile(
             if len(indices_toremove) != 0:
                 jets = jets.drop(indices_toremove)
 
+            # Remove the string labels
+            jets = jets.drop(columns=["Umami_string_labels"])
+
             # If not the first file processed, append to the global one
             if j == 0 and infile_counter == 0:
                 all_jets = jets
@@ -203,24 +235,30 @@ def LoadJetsFromFile(
             n_jets_counter += len(jets)
 
             # Break the loop inside the file if enough jets are loaded
+            if indices_to_load is None:
+                if n_jets_counter >= n_jets:
+                    break
+
+        # Break the loop over the files if enough jets are loaded
+        if indices_to_load is None:
             if n_jets_counter >= n_jets:
                 break
 
-        # Break the loop over the files if enough jets are loaded
-        if n_jets_counter >= n_jets:
-            break
-
     if print_logger:
         # Check if enough jets are loaded
-        if n_jets_counter < n_jets:
-            logger.warning(
-                "Requested %i but only %i could be loaded!",
-                n_jets,
-                n_jets_counter,
-            )
+        if indices_to_load is None:
+            if n_jets_counter < n_jets:
+                logger.warning(
+                    "Requested %i but only %i could be loaded!",
+                    n_jets,
+                    n_jets_counter,
+                )
+
+            else:
+                logger.info("Loaded %i jets!", n_jets)
 
         else:
-            logger.info("Loaded %i jets!", n_jets)
+            logger.info("Loaded jets for given indices!")
 
     # Return the jets and internal labels
     return all_jets[:n_jets], all_labels[:n_jets]
@@ -229,11 +267,12 @@ def LoadJetsFromFile(
 def LoadTrksFromFile(
     filepath: str,
     class_labels: list,
-    n_jets: int,
+    n_jets: int = None,
     tracks_name: str = "tracks",
     cut_vars_dict: dict = None,
     print_logger: bool = True,
     chunk_size: int = 1e6,
+    indices_to_load: tuple = None,
 ):
     """
     Load tracks from file. Only jets from classes in class_labels are returned.
@@ -254,6 +293,8 @@ def LoadTrksFromFile(
         Decide if the number of jets loaded from the file is printed.
     chunk_size : int
         Chunk size how much jets are loaded in on go.
+    indices_to_load : int, optional
+        Load the given indices, by default None
 
     Returns
     -------
@@ -265,18 +306,30 @@ def LoadTrksFromFile(
 
     Raises
     ------
+    ValueError
+        If neither n_jets nor indices_to_load is given
+    ValueError
+        If both n_jets and indices_to_load is given
     KeyError
         If filepath is not a list or a string
     RuntimeError
         If no files could be found in filepath
     """
 
-    # Make sure the n_jets argument is an integer
-    n_jets = int(n_jets)
-    chunk_size = int(chunk_size)
+    # Check that either n_jets or indices_to_load is given
+    if n_jets is None and indices_to_load is None:
+        raise ValueError("Neither n_jets nor indices_to_load were given!")
 
-    # Check if the chunk size is small than n_jets, if yes change it
-    chunk_size = chunk_size if chunk_size >= n_jets else n_jets
+    if n_jets is not None and indices_to_load is not None:
+        raise ValueError("You can't give both n_jets and indices_to_load!")
+
+    if n_jets:
+        # Make sure the n_jets argument is an integer
+        n_jets = int(n_jets)
+        chunk_size = int(chunk_size)
+
+        # Check if the chunk size is smaller than n_jets, if yes change it
+        chunk_size = chunk_size if chunk_size >= n_jets else n_jets
 
     if isinstance(filepath, str):
         # Get the paths of the files as a iterable list
@@ -324,11 +377,24 @@ def LoadTrksFromFile(
         n_jets_infile = len(h5py.File(file, "r")["/jets"])
 
         # Check how many times we need to iterate over the file
-        # to get all jets
-        n_chunks = int(np.ceil(n_jets_infile / chunk_size))
+        # to get all jets. If indices to load is used, this is
+        # zero because one specific is loaded
+        if not indices_to_load:
+            loop_list = range(int(np.ceil(n_jets_infile / chunk_size)))
+
+        else:
+            loop_list = [0]
 
         # Iterate over the file
-        for infile_counter in range(n_chunks):
+        for infile_counter in loop_list:
+
+            if not indices_to_load:
+                lower_index_counter = infile_counter * chunk_size
+                upper_index_counter = (infile_counter + 1) * chunk_size
+
+            else:
+                lower_index_counter = indices_to_load[0]
+                upper_index_counter = indices_to_load[1]
 
             # Load the used label variables from file
             with h5py.File(file, "r") as jets:
@@ -336,18 +402,14 @@ def LoadTrksFromFile(
                     if iterator == 0:
                         labels = pd.DataFrame(
                             jets["/jets"][iter_class_var][
-                                infile_counter
-                                * chunk_size : (infile_counter + 1)
-                                * chunk_size
+                                lower_index_counter:upper_index_counter
                             ],
                             columns=[iter_class_var],
                         )
 
                     else:
                         labels[iter_class_var] = jets["/jets"][iter_class_var][
-                            infile_counter
-                            * chunk_size : (infile_counter + 1)
-                            * chunk_size
+                            lower_index_counter:upper_index_counter
                         ]
 
             # Init new column for string labels
@@ -395,7 +457,7 @@ def LoadTrksFromFile(
             # Load tracks
             trks = np.asarray(
                 h5py.File(file, "r")[f"/{tracks_name}"][
-                    infile_counter * chunk_size : (infile_counter + 1) * chunk_size
+                    lower_index_counter:upper_index_counter
                 ]
             )
 
@@ -424,22 +486,30 @@ def LoadTrksFromFile(
             n_jets_counter += len(trks)
 
             # Break the loop inside the file if enough jets are loaded
+            if indices_to_load is None:
+                if n_jets_counter >= n_jets:
+                    break
+
+        # Break the loop over the files if enough jets are loaded
+        if indices_to_load is None:
             if n_jets_counter >= n_jets:
                 break
 
-        # Break the loop over the files if enough jets are loaded
-        if n_jets_counter >= n_jets:
-            break
-
     if print_logger:
         # Check if enough jets are loaded
-        if n_jets_counter < n_jets:
-            logger.warning(
-                "Requested %i but only %i could be loaded!", n_jets, n_jets_counter
-            )
+        if indices_to_load is None:
+            if n_jets_counter < n_jets:
+                logger.warning(
+                    "Requested %i but only %i could be loaded!",
+                    n_jets,
+                    n_jets_counter,
+                )
+
+            else:
+                logger.info("Loaded %i jets!", n_jets)
 
         else:
-            logger.info("Loaded %i jets!", n_jets)
+            logger.info("Loaded jets for given indices!")
 
     # Return Trks and labels
     return all_trks[:n_jets], all_labels[:n_jets]

@@ -10,5 +10,5 @@ Correlations between input variables can be made visible with the `input_correla
 ???+ example "Scatterplot Matrix"
     ![input_correlations](../../ci_assets/scatterplot_matrix.png)
     ```py linenums="114"
-    §§§examples/plotting/input_correlations.py:114:182§§§
+    §§§examples/plotting/input_correlations.py:114:179§§§
     ```
