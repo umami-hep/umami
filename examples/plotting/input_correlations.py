@@ -138,9 +138,6 @@ def ScatterMatrix(
         if upper right triangle plots are plotted
     """
 
-    # drop string coloumn
-    jets = jets.drop(["Umami_string_labels"], axis=1)
-
     # delete NaN
     jets = jets.dropna()
 

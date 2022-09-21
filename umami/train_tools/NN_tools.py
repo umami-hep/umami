@@ -725,7 +725,8 @@ def get_test_sample(
     var_dict: str,
     scale_dict: str,
     class_labels: list,
-    n_jets: int = int(3e5),
+    n_jets: int = None,
+    indices_to_load: tuple = None,
     exclude: list = None,
     cut_vars_dict: dict = None,
     jet_variables: list = None,
@@ -745,8 +746,12 @@ def get_test_sample(
         Path to the scale dict or the loaded scale dict directly.
     class_labels : list
         List of classes used for training of the model.
-    n_jets : int
-        Number of jets that should be loaded.
+    n_jets : int, optional
+        Number of jets that should be loaded. By default None
+    indices_to_load : tuple, optional
+        Tuple of the indices which are to be loaded. First value
+        is the lower index, second value is the upper index. By
+        default None.
     exclude : list
         List of variables that are not loaded.
     cut_vars_dict : dict
@@ -799,6 +804,7 @@ def get_test_sample(
         cut_vars_dict=cut_vars_dict,
         variables=jet_variables,
         print_logger=print_logger,
+        indices_to_load=indices_to_load,
     )
 
     # Binarize Labels
@@ -837,7 +843,8 @@ def get_test_sample_trks(
     scale_dict: str,
     class_labels: list,
     tracks_name: str,
-    n_jets: int = int(3e5),
+    n_jets: int = None,
+    indices_to_load: tuple = None,
     cut_vars_dict: dict = None,
     print_logger: bool = False,
 ):
@@ -857,8 +864,12 @@ def get_test_sample_trks(
         List of classes used for training of the model.
     tracks_name : str
         Name of tracks collection to use.
-    n_jets : int
-        Number of jets that should be loaded.
+    n_jets : int, optional
+        Number of jets that should be loaded. By default None
+    indices_to_load : tuple, optional
+        Tuple of the indices which are to be loaded. First value
+        is the lower index, second value is the upper index. By
+        default None.
     cut_vars_dict : dict
         Dict with the cuts that should be applied.
     print_logger : bool
@@ -878,7 +889,8 @@ def get_test_sample_trks(
     """
 
     # making sure the n_jets argument is an integer
-    n_jets = int(n_jets)
+    if indices_to_load is None:
+        n_jets = int(n_jets)
 
     # Get the paths of the input file as list
     # In case there are multiple files (Wildcard etc.)
@@ -901,6 +913,7 @@ def get_test_sample_trks(
         filepath=filepaths,
         class_labels=class_labels,
         n_jets=n_jets,
+        indices_to_load=indices_to_load,
         tracks_name=tracks_name,
         cut_vars_dict=cut_vars_dict,
         print_logger=print_logger,
@@ -1069,7 +1082,8 @@ def get_test_file(
     scale_dict: str,
     class_labels: list,
     tracks_name: str,
-    n_jets: int,
+    n_jets: int = None,
+    indices_to_load: tuple = None,
     exclude: list = None,
     cut_vars_dict: dict = None,
     jet_variables: list = None,
@@ -1091,8 +1105,12 @@ def get_test_file(
         List of classes used for training of the model.
     tracks_name : str
         Name of the tracks collection to use.
-    n_jets : int
-        Number of jets that should be loaded.
+    n_jets : int, optional
+        Number of jets that should be loaded. By default None
+    indices_to_load : tuple, optional
+        Tuple of the indices which are to be loaded. First value
+        is the lower index, second value is the upper index. By
+        default None.
     exclude : list
         List of variables that are not loaded.
     cut_vars_dict : dict
@@ -1118,7 +1136,8 @@ def get_test_file(
         scale_dict=scale_dict,
         class_labels=class_labels,
         tracks_name=tracks_name,
-        n_jets=int(n_jets),
+        n_jets=n_jets,
+        indices_to_load=indices_to_load,
         cut_vars_dict=cut_vars_dict,
         print_logger=False,
     )
@@ -1128,7 +1147,8 @@ def get_test_file(
         var_dict=var_dict,
         scale_dict=scale_dict,
         class_labels=class_labels,
-        n_jets=int(n_jets),
+        n_jets=n_jets,
+        indices_to_load=indices_to_load,
         exclude=exclude,
         cut_vars_dict=cut_vars_dict,
         jet_variables=jet_variables,
