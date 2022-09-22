@@ -485,10 +485,11 @@ def evaluate_model(
         tagger_fraction_rej_dict = uet.get_rej_per_frac_dict(
             jets=jets,
             y_true=truth_internal_labels,
+            tagger_classes=class_labels,
             tagger_preds=tagger_preds,
             tagger_names=tagger_names,
             tagger_list=tagger_list,
-            class_labels=class_labels,
+            class_labels=classes_to_evaluate,
             main_class=main_class,
             target_eff=working_point,
             step=eval_params.get("frac_step", 0.01),

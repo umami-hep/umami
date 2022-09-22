@@ -87,6 +87,7 @@ def calculate_fraction_dict(
 def get_rej_per_frac_dict(
     jets,
     y_true: np.ndarray,
+    tagger_classes: list,
     tagger_preds: list,
     tagger_names: list,
     tagger_list: list,
@@ -108,6 +109,10 @@ def get_rej_per_frac_dict(
         Dataframe with jets and the probabilites of the comparison taggers as columns.
     y_true : numpy.ndarray
         Truth labels of the jets.
+    tagger_classes: list
+        List of the classes that were used to train the freshly trained tagger.
+        For example, if you want to test the behavior of tau jets in the tagger
+        although the tagger was not trained on taus.
     tagger_preds : list
         Prediction output of the taggers listed. [pred_dips, pred_umami]
     tagger_names : list
@@ -170,8 +175,8 @@ def get_rej_per_frac_dict(
         step=step,
     )
 
-    # Init a tagger-skipped list
-    skipped_taggers = []
+    # Init a tagger-skipped dict
+    skipped_taggers = {tagger: [] for tagger in extended_tagger_list}
 
     # Loop over effs for ROC plots
     for frac_dict in tqdm(dict_list, disable=not progress_bar):
@@ -193,22 +198,52 @@ def get_rej_per_frac_dict(
             if tagger in tagger_names:
                 y_pred = tagger_preds[tagger_names.index(tagger)]
 
+                # Calculate the dimensions that need to be added
+                extra_dim = len(set(class_labels) - set(tagger_classes))
+                if extra_dim > 0:
+                    skipped_taggers[tagger] += list(
+                        set(class_labels) - set(tagger_classes)
+                    )
+                    y_pred = np.append(
+                        y_pred,
+                        np.zeros(shape=(extra_dim, y_pred.shape[0])).transpose(),
+                        axis=1,
+                    )
+
             # If the tagger is from the files, load the probabilities
             else:
-                try:
-                    y_pred = jets[
-                        [
-                            f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
-                            for flav in class_labels
-                        ]
-                    ].values
+                # Shape the probabilities of the comparison taggers like the output of
+                # the networks
+                for flav_index, flav in enumerate(class_labels):
 
-                except KeyError:
-                    # Skipping this tagger if not in all flavours
-                    # or the tagger present in file
-                    logger.debug(tagger)
-                    skipped_taggers.append(tagger)
-                    continue
+                    # Trying to load the output probs of the tagger from file
+                    try:
+                        # Append the output to a flat array
+                        if flav_index == 0:
+                            tmp = jets[
+                                f'{tagger}_{flavour_categories[flav]["prob_var_name"]}'
+                            ].values
+
+                        else:
+                            tmp = np.append(
+                                tmp,
+                                jets[
+                                    f"{tagger}_"
+                                    f'{flavour_categories[flav]["prob_var_name"]}'
+                                ].values,
+                            )
+
+                    except KeyError:
+                        skipped_taggers[tagger].append(flav)
+                        if flav_index == 0:
+                            tmp = np.zeros_like(y_true)
+
+                        else:
+                            tmp = np.append(tmp, np.zeros_like(y_true))
+
+                # Reshape to wrong sorted (transpose change it to correct shape)
+                y_pred = tmp.reshape((len(class_labels), -1))
+                y_pred = np.transpose(y_pred)
 
             # Calculate the rejections for the given tagger
             rej_dict_tmp, _ = umt.get_rejection(
@@ -223,18 +258,36 @@ def get_rej_per_frac_dict(
             # Store the rejections and the fraction values in a new dict
             tagger_rej_dict[f"{tagger}_{dict_key}"] = {**rej_dict_tmp, **frac_dict}
 
-    # Remove double entries and print warning
-    skipped_taggers = list(set(skipped_taggers))
+    # Check which flavours are not present for which tagger
+    tagger_to_remove = []
+    masked_taggers = {}
+    for iter_tagger, labels in skipped_taggers.items():
+        if set(labels) == set(class_labels):
+            tagger_to_remove.append(iter_tagger)
 
-    if skipped_taggers:
+        elif len(labels) != 0:
+            masked_taggers[iter_tagger] = list(set(labels))
+
+    if len(masked_taggers.keys()) != 0:
         logger.warning(
-            "Taggers which do not have probability values for all requested class "
-            "labels are not evaluated."
+            "The following taggers have at least one class not in their output. This "
+            "missing output is masked with zeros:"
+        )
+        for iter_tagger, labels in masked_taggers.items():
+            logger.warning("Tagger: %s, Missing ouputs: %s", iter_tagger, labels)
+
+    if len(tagger_to_remove) != 0:
+        logger.warning(
+            "Following taggers are not present in the h5 files and are skipped: %s",
+            tagger_to_remove,
         )
 
-    # Check if taggers where skipped and print them
-    if len(skipped_taggers) != 0:
-        logger.warning("Following taggers are skipped for file: %s", skipped_taggers)
+    # Remove taggers that are not present in files
+    tagger_rej_dict_keys = list(tagger_rej_dict.keys())
+    for remove_tagger in tagger_to_remove:
+        for tagger_dict_key in tagger_rej_dict_keys:
+            if tagger_dict_key.startwith(remove_tagger):
+                tagger_rej_dict.pop(tagger_dict_key)
 
     return tagger_rej_dict
 
