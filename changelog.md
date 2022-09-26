@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing SHAPley calculation and add it to DL1r integration test [!643](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/643)
 - Adding classes_to_evaluate to rejection per fraction calculation [!642](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/642)
 - Adding function to write model predictions to h5 files [!637](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/637)
 - Fixing ufunc issue in scale/shift application [!641](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/641)

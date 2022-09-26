@@ -241,6 +241,9 @@ def prepareConfig(
         }
         config_file["evaluation_settings"]["working_point"] = 0.85
 
+    if tagger == "dl1r":
+        config_file["evaluation_settings"]["shapley"]["feature_sets"] = 10
+
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
             f"./test_preprocessing_{preprocess_files}/",
@@ -330,6 +333,7 @@ def runTraining(config: dict, tagger: str) -> bool:
             ) from error
 
     logger.info("Test: running evaluate_model.py for %s...", tagger)
+
     run_evaluate_model = run(
         [
             "python",
@@ -342,6 +346,22 @@ def runTraining(config: dict, tagger: str) -> bool:
         ],
         check=True,
     )
+
+    if tagger is not None and tagger.casefold() == "dl1r":
+        run_evaluate_model = run(
+            [
+                "python",
+                "umami/evaluate_model.py",
+                "-c",
+                f"{config}",
+                "-e",
+                "1",
+                "-s",
+                "shapley",
+                "--verbose",
+            ],
+            check=True,
+        )
 
     try:
         run_evaluate_model.check_returncode()
