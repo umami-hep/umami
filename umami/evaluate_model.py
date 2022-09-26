@@ -56,7 +56,9 @@ def get_parser():
         default=None,
         help="""Decide which step of the evaluation to run. If this parameter is not
         given, all steps are run in order. The possible options for this are results,
-        rej_per_eff, rej_per_frac and saliency.""",
+        rej_per_eff, rej_per_frac, saliency (only for DIPS) and shapley (only
+        for DL1*).
+        """,
     )
 
     parser.add_argument(
@@ -73,12 +75,6 @@ def get_parser():
         is provided in the training config file. If no value is provided either in the
         command line or in the training config file it will use all available jets in
         the test files.""",
-    )
-
-    parser.add_argument(
-        "--shapley",
-        action="store_true",
-        help="Calculates feature importance for DL1",
     )
 
     return parser.parse_args()
@@ -115,6 +111,8 @@ def evaluate_model(
         If no epoch is given when evaluating UMAMI.
     ValueError
         If the given tagger argument in train config is not a list.
+    ValueError
+        If Shapley is called but the tagger is not DL1
     """
 
     # Get train parameters
@@ -550,11 +548,16 @@ def evaluate_model(
             ) as pkl_file:
                 pickle.dump(saliency_map_dict, pkl_file)
 
-    if args.shapley:
+    if args.step is not None and args.step == "shapley":
+        if tagger.casefold() != "dl1":
+            raise ValueError(
+                f"SHAPley values are only supported for DL1*, not for {tagger}"
+            )
+
         logger.info("Explaining feature importance with SHAPley")
         FeatureImportance.ShapleyOneFlavor(
             model=model,
-            test_data=x_test,
+            test_data=x_comb,
             model_output=eval_params["shapley"]["model_output"],
             feature_sets=eval_params["shapley"]["feature_sets"],
             plot_size=eval_params["shapley"]["plot_size"],
@@ -565,7 +568,7 @@ def evaluate_model(
         if eval_params["shapley"]["bool_all_flavor_plot"]:
             FeatureImportance.ShapleyAllFlavors(
                 model=model,
-                test_data=x_test,
+                test_data=x_comb,
                 feature_sets=eval_params["shapley"]["feature_sets"],
                 averaged_sets=eval_params["shapley"]["averaged_sets"],
                 plot_size=eval_params["shapley"]["plot_size"],
