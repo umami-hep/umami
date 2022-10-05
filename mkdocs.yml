@@ -45,7 +45,6 @@ nav:
         - Validate your Training: trainings/validate.md
         - Evaluate your Training: trainings/evaluate.md
         - Running GNN: trainings/GNN-instructions.md
-        - Feature Importance: trainings/Feature_Importance.md
         - LWTNN Conversion: trainings/LWTNN-conversion.md
     - Plotting:
         - Overview: plotting/index.md
