@@ -243,6 +243,8 @@ def prepareConfig(
 
     if tagger == "dl1r":
         config_file["evaluation_settings"]["shapley"]["feature_sets"] = 10
+        config_file["evaluation_settings"]["shapley"]["bool_all_flavor_plot"] = True
+        config_file["evaluation_settings"]["shapley"]["averaged_sets"] = 5
 
     if useTFRecords is True:
         config_file["train_file"] = os.path.join(
