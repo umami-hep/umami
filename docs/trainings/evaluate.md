@@ -38,24 +38,6 @@ The important part for the evaluation is the `evaluation_settings` section. In t
     |---------|-----------|---------------------|-------------|
     | `calculate_saliency` | `bool` | Optional | Decide, if the saliency maps are calculated or not. This takes a lot of time and resources! |
 
-??? info "DL1*"
-    #### DL1*
-
-    The following options are used in the feature importance check. A detailed description how to run this, please have a look [here](Feature_Importance.md)
-
-    ```yaml
-    §§§examples/training/DL1r-PFlow-Training-config.yaml:157:178§§§
-    ```
-
-    | Options | Data Type | Necessary, Optional | Explanation |
-    |---------|-----------|---------------------|-------------|
-    | `shapley` | `dict` | Optional | `dict` with the options for the feature importance explanation with SHAPley |
-    | `feature_sets` | `int` | Optional | Over how many full sets of features it should calculate over. Corresponds to the dots in the bee swarm plot. 200 takes like 10-15 min for DL1r on a 32 core-cpu. |
-    | `model_output` | `int` | Optional | Defines which of the model outputs (flavour) you want to explain. This is the index of the flavour in `class_labels`. |
-    | `bool_all_flavor_plot` | `bool` | Optional | You can also choose if you want to plot the magnitude of feature importance for all output nodes (flavors) in another plot. This will give you a bar plot of the mean SHAPley value magnitudes. |
-    | `averaged_sets` | `int` | Optional | As this takes much longer you can average the feature_sets to a smaller set, 50 is a good choice for DL1r. |
-    | `plot_size` | `list` | Optional | Figure size of the SHAPley plot. This is a list with `[width, height]` |
-
 ### Running the Evaluation
 
 After the config is prepared switch to the `umami/umami` folder and run the `evaluate_model.py` by executing the following command:
@@ -94,3 +76,30 @@ evaluate_model.py -c <path to train config file>
 ```
 
 The `evaluate_model.py` will now output a results file like the one from the "regular" usage of the scripts with the difference that only your defined taggers in `tagger` are present in the files and no freshly trained tagger. An explanation how to plot the results is given in [here](https://umami-docs.web.cern.ch/plotting/plotting_umami/).
+
+### Explaining the importance of features with SHAPley (only for DL1*)
+
+[SHAPley](https://github.com/slundberg/shap) is a framework that helps you understand how your training of a machine learning model is affected by the input variables, or in other words from which variables your model possibly learns the most. SHAPley is for now only usable when evaluating a DL1* version. You can run that by executing the command
+
+```bash
+evaluate_model.py -c <path to train config file> -e <epoch to evaluate> -s shapley
+```
+
+which will output a beeswarm plot into `modelname/plots/`. Each dot in this plot is for one whole set of features (or one jet). They are stacked vertically once there is no space horizontally anymore to indicate density. The colour map tells you what the actual value was that entered the model. The SHAP value is basically calculated by removing features, letting the model make a prediction and then observe what would happen if you introduce features again to your prediction. If you do this over all possible combinations you get estimates of a features impact to your model. This is what the x-axis (SHAP value) tells you: the on average(!) contribution of a variable to an output node you are interested in (default is the output node for $b$-jets). In practice, large magnitudes (which is also what these plots are ordered by default in umami) are great, as they give the model a better possibility to discriminate. Features with large negative SHAP values therefore will help the model to better reject, whereas features with large positive SHAP values helps the model to learn that these are most probably jets from the category of interest. If you want to know more about SHAPley values, here is a [talk](https://indico.cern.ch/event/1071129/#4-shapely-for-nn-input-ranking) from one of our FTAG algorithm meeting.
+
+You have some options to play with in the `evaluation_settings` section in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/training/DL1r-PFlow-Training-config.yaml) shown here:
+
+```yaml
+§§§examples/training/DL1r-PFlow-Training-config.yaml:157:178§§§
+```
+
+The options are explained here:
+
+| Options | Data Type | Necessary, Optional | Explanation |
+|---------|-----------|---------------------|-------------|
+| `shapley` | `dict` | Optional | `dict` with the options for the feature importance explanation with SHAPley |
+| `feature_sets` | `int` | Optional | Over how many full sets of features it should calculate over. Corresponds to the dots in the bee swarm plot. 200 takes like 10-15 min for DL1r on a 32 core-cpu. |
+| `model_output` | `int` | Optional | Defines which of the model outputs (flavour) you want to explain. This is the index of the flavour in `class_labels`. |
+| `bool_all_flavor_plot` | `bool` | Optional | You can also choose if you want to plot the magnitude of feature importance for all output nodes (flavors) in another plot. This will give you a bar plot of the mean SHAPley value magnitudes. |
+| `averaged_sets` | `int` | Optional | As this takes much longer you can average the feature_sets to a smaller set, 50 is a good choice for DL1r. |
+| `plot_size` | `list` | Optional | Figure size of the SHAPley plot. This is a list with `[width, height]` |

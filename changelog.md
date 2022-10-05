@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Moving Feature Importance in the evaluation section of the training [!647](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/647)
 - Fixing issue with SHAPley plot naming [!645](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/645)
 - Fixing SHAPley calculation and add it to DL1r integration test [!643](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/643)
 - Adding `yaml` to `requirements.txt` [!644](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/644)
