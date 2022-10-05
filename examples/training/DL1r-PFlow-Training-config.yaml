@@ -162,8 +162,8 @@ evaluation_settings:
         feature_sets: 200
 
         # defines which of the model outputs (flavor) you want to explain
-        # [tau,b,c,u] := [3, 2, 1, 0]
-        model_output: 2
+        # Must be an entry from class_labels! You can also give list of multiple flavours
+        flavour: "bjets"
 
         # You can also choose if you want to plot the magnitude of feature
         # importance for all output nodes (flavors) in another plot. This

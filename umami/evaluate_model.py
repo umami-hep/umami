@@ -3,6 +3,7 @@
 from umami.configuration import global_config, logger, set_log_level  # isort:skip
 import argparse
 import pickle
+from operator import itemgetter
 from pathlib import Path
 
 import h5py
@@ -554,23 +555,35 @@ def evaluate_model(
                 f"SHAPley values are only supported for DL1*, not for {tagger}"
             )
 
-        logger.info("Explaining feature importance with SHAPley")
-        FeatureImportance.ShapleyOneFlavor(
-            model=model,
-            test_data=x_comb,
-            model_output=eval_params["shapley"]["model_output"],
-            feature_sets=eval_params["shapley"]["feature_sets"],
-            plot_size=eval_params["shapley"]["plot_size"],
-            plot_path=f"{train_config.model_name}/",
-            plot_name=data_set_name + "_shapley_b-jets",
-        )
+        # Retrieve the options from the eval params needed for shapley
+        flavour, feature_sets, averaged_sets = itemgetter(
+            "flavour", "feature_sets", "averaged_sets"
+        )(eval_params["shapley"])
+
+        # If the given flavour is a string, convert it to list to be able to
+        # loop over it
+        if isinstance(flavour, str):
+            flavour = [flavour]
+
+        # Loop over flavours
+        for iter_flav in flavour:
+            logger.info("Calculating SHAPley values for %s", iter_flav)
+            FeatureImportance.ShapleyOneFlavor(
+                model=model,
+                test_data=x_comb,
+                model_output=class_labels.index(iter_flav),
+                feature_sets=feature_sets,
+                plot_size=eval_params["shapley"]["plot_size"],
+                plot_path=f"{train_config.model_name}/",
+                plot_name=data_set_name + "_shapley_" + iter_flav,
+            )
 
         if eval_params["shapley"]["bool_all_flavor_plot"]:
             FeatureImportance.ShapleyAllFlavors(
                 model=model,
                 test_data=x_comb,
-                feature_sets=eval_params["shapley"]["feature_sets"],
-                averaged_sets=eval_params["shapley"]["averaged_sets"],
+                feature_sets=feature_sets,
+                averaged_sets=averaged_sets,
                 plot_size=eval_params["shapley"]["plot_size"],
                 plot_path=f"{train_config.model_name}/",
                 plot_name=data_set_name + "_shapley_all_flavors",
