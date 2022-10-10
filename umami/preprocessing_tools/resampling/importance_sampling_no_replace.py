@@ -113,7 +113,11 @@ class UnderSamplingNoReplace(ResamplingTools):
 
         # check if more jets are available as requested in the config file
         # we assume that all classes have the same number of jets now
-        n_jets_requested = self.options.get("n_jets", None)
+        n_jets_requested = (
+            self.options.get("n_jets")
+            if not self.use_validation_samples
+            else self.options.get("n_jets_validation")
+        )
         if n_jets_requested == -1 or n_jets_requested is None:
             logger.info("Maximising number of jets to target distribution.")
         else:

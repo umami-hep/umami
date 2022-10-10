@@ -115,12 +115,19 @@ class UnderSampling(ResamplingTools):
                 )
             indices_to_keep[class_category] = indices_to_keep_tmp.astype(int)
 
+        # Check which n_jets to use (training or validation)
+        n_jets_requested = (
+            self.options["n_jets"]
+            if not self.use_validation_samples
+            else self.options["n_jets_validation"]
+        )
+
         # check if more jets are available as requested in the config file
         # we assume that all classes have the same number of jets now
-        if len(indices_to_keep[reference_class_category]) > self.options[
-            "n_jets"
-        ] // len(self.class_categories):
-            size_per_class = self.options["n_jets"] // len(self.class_categories)
+        if len(indices_to_keep[reference_class_category]) > n_jets_requested // len(
+            self.class_categories
+        ):
+            size_per_class = n_jets_requested // len(self.class_categories)
             for class_category in self.class_categories:
                 indices_to_keep[class_category] = rng.choice(
                     indices_to_keep[class_category],
@@ -136,7 +143,7 @@ class UnderSampling(ResamplingTools):
             )
             logger.warning(
                 "You asked for %i jets, however, only %i are available.",
-                self.options["n_jets"],
+                n_jets_requested,
                 size_total,
             )
 

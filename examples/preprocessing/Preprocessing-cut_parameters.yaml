@@ -31,7 +31,7 @@
         operator: mod_6_<=
         condition: 3
     - pt_btagJes:
-        operator: ">="
+        operator: ">"
         condition: 2.5e5
     - *outlier_cuts
 
@@ -40,6 +40,26 @@
     - eventNumber:
         operator: mod_6_==
         condition: 4
+    - *outlier_cuts
+
+.cuts_template_validation_ttbar_hybrid: &cuts_template_validation_ttbar_hybrid
+  cuts:
+    - eventNumber:
+        operator: mod_6_==
+        condition: 4
+    - pt_btagJes:
+        operator: "<="
+        condition: 2.5e5
+    - *outlier_cuts
+
+.cuts_template_validation_zprime_hybrid: &cuts_template_validation_zprime_hybrid
+  cuts:
+    - eventNumber:
+        operator: mod_6_==
+        condition: 4
+    - pt_btagJes:
+        operator: ">"
+        condition: 2.5e5
     - *outlier_cuts
 
 .cuts_template_testing: &cuts_template_testing

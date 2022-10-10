@@ -6,7 +6,7 @@ After the ntuple production (training-dataset-dumper), the first step of the pre
 As already mentioned in the [overview](preprocessing/Overview.md), the preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:180:190§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:121:132§§§
 ```
 
 | Setting | Type | Explanation |
@@ -19,7 +19,7 @@ As already mentioned in the [overview](preprocessing/Overview.md), the preproces
 The `var_dict` and `dict_file` options are normally set in the [`Preprocessing-parameters.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/Preprocessing-parameters.yaml) file. A snapshot of these two variables is shown here:
 
 ```yaml
-§§§examples/preprocessing/Preprocessing-parameters.yaml:20:24§§§
+§§§examples/preprocessing/Preprocessing-parameters.yaml:16:20§§§
 ```
 
 For the preparation step, we also need the some more parts of the preprocessing config, which are described in the following sections.
@@ -84,13 +84,13 @@ In the `Preparation` section, different options need to be set and files/flavour
 | `file_pattern` | `str` | Dict entry of `ttbar` and `zprime`. This is the specific path to the `.h5` files of the process. The `path` and `file` are in the script merged to form the global path to the `.h5` files. Wildcards are supported! |
 | `randomise` | `bool` | Optional setting to randomise the samples which are read in. can be useful if you have several data taking campaigns and you want a representative sample, especially important for validation and testing. (a random seed is set to maintain reproducibility.) by default `False` |
 
-In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for bb-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
+In the example above, we specify the paths for `ttbar` and `zprime` ntuples. Since we define them there, we can then use these ntuples in the `samples` section. So if you want to use e.g. Z+jets ntuples for $bb$-jets, define the corresponding `zjets` entry in the ntuples section before using it in the `samples` section.
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:16:97§§§
+§§§examples/preprocessing/Preprocessing-samples.yaml§§§
 ```
 
-The last part is the exact splitting of the flavours. In `samples`, you define for each of $t\bar{t}$/$Z'$ and training/validation/testing the flavours you want to use.
+The last part is the exact splitting of the flavours. In `samples`, you define for each of $t\bar{t}$/$Z'$ and training/validation/testing the flavours you want to use. In the example case, these samples are stored in another yaml file called `Preprocessing-samples.yaml` to keep the config file a bit smaller. But you can also simply add them directly to the config file.
 
 The sample are defined as dicts with the following options:
 
@@ -103,7 +103,7 @@ The sample are defined as dicts with the following options:
 | `output_name` | `str` | Name of the output file where the prepared file will be stored. |
 
 
-**Note**: The `n_jets` should be as high as possible for the train files! This is just the number of jets for this flavour which are extraced from the `.h5` files coming from the dumper. The resampling algorithm uses these samples to get the jets for building the final training sample, but it only uses as much as needed! Only for the validation and testing files we suggest to use something around `4e6` (otherwise the loading later on takes quite some time).
+**Note**: The `n_jets` should be as high as possible for the train files! This is just the number of jets for this flavour which are extracted from the `.h5` files coming from the dumper. The resampling algorithm uses these samples to get the jets for building the final training sample, but it only uses as much as needed! Only for the validation and testing files we suggest to use something around `4e6` (otherwise the loading later on takes quite some time).
 
 ??? info "Create samples list automatically"
     If you don't want to define all the different samples one by one, you can also use the [`create_preprocessing_samples.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/create_preprocessing_samples.py) script. To use the script, you just need to adapt it to your needs:

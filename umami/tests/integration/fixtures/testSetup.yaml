@@ -4,7 +4,7 @@ test_preprocessing:
     data_subfolder: 'preprocessing'
     config: 'examples/preprocessing/PFlow-Preprocessing.yaml'
     config_paths: 'examples/preprocessing/Preprocessing-parameters.yaml'
-    add_configs: ['examples/preprocessing/Preprocessing-cut_parameters.yaml']
+    add_configs: ['examples/preprocessing/Preprocessing-cut_parameters.yaml', 'examples/preprocessing/Preprocessing-samples.yaml']
     var_dict_dl1r: 'umami/configs/DL1r_Variables_R22.yaml'
     var_dict_dips: 'umami/configs/Dips_Variables_R22.yaml'
     var_dict_umami: 'umami/configs/Umami_Variables_R22.yaml'

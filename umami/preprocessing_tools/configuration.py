@@ -330,6 +330,7 @@ class PreprocessConfiguration(Configuration):
         option: str = None,
         extension: str = ".h5",
         custom_path: str = None,
+        use_val: bool = False,
     ) -> str:
         """
         Get the file name for different preprocessing steps.
@@ -344,6 +345,10 @@ class PreprocessConfiguration(Configuration):
             File extension, by default ".h5"
         custom_path : str, optional
             Custom path to file, by default None
+        use_val: bool, optinal
+            Decide if the outfile name from the training or
+            from the validation will be loaded. With True, the
+            validation file name will be used. By default False.
 
         Returns
         -------
@@ -356,8 +361,16 @@ class PreprocessConfiguration(Configuration):
             If the outfile is not a .h5 file.
         """
         if option is None and iteration is None:
+            if use_val:
+                return self.config["parameters"]["outfile_name_validation"]
+
             return self.outfile_name
-        out_file = self.outfile_name
+
+        out_file = (
+            self.outfile_name
+            if not use_val
+            else self.config["parameters"]["outfile_name_validation"]
+        )
         try:
             idx = out_file.index(".h5")
         except ValueError as error:
