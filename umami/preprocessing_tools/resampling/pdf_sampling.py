@@ -29,7 +29,11 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
     and a target as importance weights.
     """
 
-    def __init__(self, config: object, flavour: int = None) -> None:
+    def __init__(
+        self,
+        config: object,
+        flavour: int = None,
+    ) -> None:
         """
         Initialise class.  to 'target' or an int corresponding to the index
         of the flavour to process (in the list of samples from config samples).
@@ -59,6 +63,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Check for usage of multiprocessing
         self.use_multiprocessing = True
         self.nProcesses = 4
+
+        # Get the samples which will be used for resampling
+        self.samples_to_resample = (
+            self.options["samples_validation"]
+            if self.use_validation_samples
+            else self.options["samples_training"]
+        )
 
         # Setting some limits: important for good spline approximation
         sampling_var = self.options.get("sampling_variables")
@@ -106,7 +117,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Get the max flavour index
         flavour_index = len(
-            self.options["samples"][list(self.options["samples"].keys())[0]]
+            self.samples_to_resample[list(self.samples_to_resample.keys())[0]]
         )
 
         # Check if flavour is given
@@ -583,32 +594,16 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         (based on UnderSampling one). At this point the arrays of
         the 2 variables are loaded which are used
         for the sampling and saved into class variables.
-
-        Raises
-        ------
-        KeyError
-            If the samples are not provided
         """
-
-        # Get the samples
-        try:
-            samples = self.options["samples"]
-
-        except KeyError as error:
-            raise KeyError(
-                "You chose the 'pdf' option for the sampling but didn't"
-                "provide the samples to use. Please specify them in the"
-                "configuration file!"
-            ) from error
 
         # saving a list of sample categories with associated IDs
         self.sample_categories = {
-            elem: i for i, elem in enumerate(list(samples.keys()))
+            elem: i for i, elem in enumerate(list(self.samples_to_resample.keys()))
         }
-        self.CheckSampleConsistency(samples)
+        self.CheckSampleConsistency(self.samples_to_resample)
 
         self.upsampling_max_rate = {}
-        self.sample_map = {elem: {} for elem in list(samples.keys())}
+        self.sample_map = {elem: {} for elem in list(self.samples_to_resample.keys())}
         self.sample_file_map = {}
         self.max_upsampling = {}
         self.sampling_fraction = {}
@@ -616,7 +611,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         sample_id = 0
         for sample_category in self.sample_categories:
             self.sample_file_map[sample_category] = {}
-            for sample_id, sample in enumerate(samples[sample_category]):
+            for sample_id, sample in enumerate(
+                self.samples_to_resample[sample_category]
+            ):
                 preparation_sample = self.preparation_config.get_sample(sample)
                 self.sample_file_map[sample_category][sample_id] = (
                     sample,
@@ -1374,7 +1371,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         save_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            self.options["samples"][sample_category][sample_id] + "_selected.h5",
+            self.samples_to_resample[sample_category][sample_id] + "_selected.h5",
         )
 
         logger.info("Writing to file %s.", save_name)
@@ -1490,7 +1487,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         """
 
         # Get the sample name of the config
-        sample_name = self.options["samples"][sample_category][sample_id]
+        sample_name = self.samples_to_resample[sample_category][sample_id]
 
         # Get the preparation options of the sample
         _, preparation_sample = self.sample_file_map[sample_category][sample_id]
@@ -1518,7 +1515,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         index_file = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            self.options["samples"][sample_category][sample_id] + "_indices.h5",
+            self.samples_to_resample[sample_category][sample_id] + "_indices.h5",
         )
 
         # Get the generator which loads the indicies from file
@@ -1540,7 +1537,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         save_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            self.options["samples"][sample_category][sample_id] + "_selected.h5",
+            self.samples_to_resample[sample_category][sample_id] + "_selected.h5",
         )
 
         logger.info("Writing to file %s.", save_name)
@@ -1673,7 +1670,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         self.target_histo = {}
 
         # Iterate over the samples
-        for cat_ind, sample_category in enumerate(self.options["samples"]):
+        for cat_ind, sample_category in enumerate(self.samples_to_resample):
             logger.info("Loading target in category %s.", sample_category)
 
             # Get the histogram from selected file
@@ -1696,7 +1693,11 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             self.target_fractions.append(self.options["fractions"][sample_category])
 
         # Correct target numbers
-        n_jets_asked = self.options["n_jets"]
+        n_jets_asked = (
+            self.options["n_jets"]
+            if not self.use_validation_samples
+            else self.options["n_jets_validation"]
+        )
         target_numbers_corr = CorrectFractions(
             N_jets=available_numbers,
             target_fractions=self.target_fractions,
@@ -1723,12 +1724,12 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Add the target number
         self.target_number = {
-            list(self.options["samples"].keys())[ind]: target
+            list(self.samples_to_resample.keys())[ind]: target
             for ind, target in enumerate(target_numbers_corr)
         }
 
         # Iterate over the samples and log the info
-        for cat_ind, sample_category in enumerate(self.options["samples"]):
+        for cat_ind, sample_category in enumerate(self.samples_to_resample):
             logger.info(
                 "target - category %s: selected %i/%i jets, giving the requested "
                 "fraction of %s",
@@ -1786,7 +1787,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         flavour_names = []
 
         # Iterate over the samples
-        for cat_ind, sample_category in enumerate(self.options["samples"]):
+        for cat_ind, sample_category in enumerate(self.samples_to_resample):
 
             # Get the flavour name and append it to list
             flavour_name = self.sample_file_map[sample_category][sample_id][0]
@@ -1803,7 +1804,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
                 # Get the number of asked jets
                 num_asked = target_data["target_number"][
-                    list(self.options["samples"])[cat_ind]
+                    list(self.samples_to_resample)[cat_ind]
                 ]
 
                 # Check if the flavour is in max upsampling
@@ -1850,7 +1851,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 logger.info("For %s, demanding %i jets.", flavour_name, num)
         else:
             for sample_category, flavour_name in zip(
-                self.options["samples"], flavour_names
+                self.samples_to_resample, flavour_names
             ):
                 self.number_to_sample[flavour_name] = target_data["target_number"][
                     sample_category
@@ -1981,13 +1982,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         """
 
         # Get the sample name from config
-        sample_name = self.options["samples"][sample_category][sample_id]
+        sample_name = self.samples_to_resample[sample_category][sample_id]
 
         # Get filepath where to save the indicies
         save_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            self.options["samples"][sample_category][sample_id] + "_indices.h5",
+            self.samples_to_resample[sample_category][sample_id] + "_indices.h5",
         )
 
         # Get filepath of the target data
@@ -2071,7 +2072,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         logger.info(
             "Sampling %s for %s.",
-            self.options["samples"][sample_category][sample_id],
+            self.samples_to_resample[sample_category][sample_id],
             sample_category,
         )
 
@@ -2106,7 +2107,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         """
 
         # Get the output name of the final single file
-        output_name = self.config.get_file_name(option="resampled")
+        output_name = self.config.get_file_name(
+            option="resampled",
+            use_val=self.use_validation_samples,
+        )
 
         # Log infos
         logger.info("Combining all the flavours into a single file.")
@@ -2129,18 +2133,18 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Loop over the different flavour types (like bjets, cjets etc.)
         for sample_id, _ in enumerate(
-            self.options["samples"][list(self.sample_categories.keys())[0]]
+            self.samples_to_resample[list(self.sample_categories.keys())[0]]
         ):
 
             # Iterate over the different sample types (ttbar, zpext)
-            for sample_category in self.options["samples"]:
+            for sample_category in self.samples_to_resample:
 
                 # Get the name of the file where the selected jets are stored in
                 # for the given combination of flavour and sample type
                 load_name = os.path.join(
                     self.resampled_path,
                     "PDF_sampling",
-                    self.options["samples"][sample_category][sample_id]
+                    self.samples_to_resample[sample_category][sample_id]
                     + "_selected.h5",
                 )
 
@@ -2165,7 +2169,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             sample_sum[f"{sample_id}"] = np.sum(
                 [
                     sample_length[f"{sample_category}_{sample_id}"]
-                    for sample_category in self.options["samples"]
+                    for sample_category in self.samples_to_resample
                 ]
             )
 
@@ -2416,11 +2420,11 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             logger.warning("Skipping target computation (not in list to execute).")
 
         for sample_id, sample in enumerate(
-            self.options["samples"][list(self.sample_categories.keys())[0]]
+            self.samples_to_resample[list(self.sample_categories.keys())[0]]
         ):
             # Before starting, get the number to sample
             self.Generate_Number_Sample(sample_id)
-            for cat_ind, sample_category in enumerate(self.options["samples"]):
+            for cat_ind, sample_category in enumerate(self.samples_to_resample):
                 if sample_id not in self.do_flavours:
                     logger.warning(
                         "Skipping %s - %s (not in list to execute).",

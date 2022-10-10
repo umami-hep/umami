@@ -6,6 +6,7 @@
 
 - Moving Feature Importance in the evaluation section of the training [!647](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/647)
 - Fixing issue with SHAPley plot naming [!645](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/645)
+- Adding proper hybrid validation sample creation [!646](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/646)
 - Fixing SHAPley calculation and add it to DL1r integration test [!643](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/643)
 - Adding `yaml` to `requirements.txt` [!644](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/644)
 - Adding classes_to_evaluate to rejection per fraction calculation [!642](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/642)

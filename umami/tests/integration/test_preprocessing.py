@@ -48,6 +48,7 @@ def runPreprocessing(
     test_dir: str,
     flavours_to_process: list = None,
     sample_type_list: list = None,
+    sample_usecase_list: list = None,
 ) -> bool:
     """
     Call all steps of the preprocessing for a certain configuration and variable dict
@@ -73,6 +74,10 @@ def runPreprocessing(
     sample_type_list: list, optional
         List with the sample types to prepare. By default this will be
         ['ttbar', 'zpext']. By default None
+    sample_usecase_list: list, optional
+        List with the sample usecases to prepare. By default this will be
+        ['training', 'validation'] for DL1r and ["training"] for all other
+        taggers. By default None
 
     Raises
     ------
@@ -107,11 +112,19 @@ def runPreprocessing(
     if sample_type_list is None:
         sample_type_list = ["ttbar", "zprime"]
 
+    if sample_usecase_list is None:
+        if tagger == "dl1r":
+            sample_usecase_list = ["training", "validation"]
+
+        else:
+            sample_usecase_list = ["training"]
+
     # Generate list of samples
     sample_list = [
-        f"training_{sample_type}_{flavour}"
+        f"{sample_usecase}_{sample_type}_{flavour}"
         for sample_type in sample_type_list
         for flavour in flavours_to_process
+        for sample_usecase in sample_usecase_list
     ]
 
     # Prepare all samples in sample_list
@@ -156,6 +169,30 @@ def runPreprocessing(
 
     except CalledProcessError as error:
         raise AssertionError("Test failed: preprocessing.py --resampling.") from error
+
+    # Running the hybrid validation resampling
+    if tagger == "dl1r":
+        logger.info("Test: running the hybrid validation resampling...")
+        run_hybird_validation_resampling = run(
+            [
+                "python",
+                "umami/preprocessing.py",
+                "-c",
+                f"{config}",
+                "--resampling",
+                "--verbose",
+                "--hybrid_validation",
+            ],
+            check=True,
+        )
+
+        try:
+            run_hybird_validation_resampling.check_returncode()
+
+        except CalledProcessError as error:
+            raise AssertionError(
+                "Test failed: preprocessing.py --resampling --hybrid_validation."
+            ) from error
 
     logger.info("Test: retrieving scaling and shifting factors...")
     run_scaling = run(
@@ -302,7 +339,17 @@ def runPreprocessing(
         check=True,
     )
     run(
+        [f"rm -rfv {tagger_path}/*_validation_*.h5"],
+        shell=True,
+        check=True,
+    )
+    run(
         [f"rm -rfv {tagger_path}/PFlow-hybrid_70-test-resampled.h5"],
+        shell=True,
+        check=True,
+    )
+    run(
+        [f"rm -rfv {tagger_path}/PFlow-hybrid-validation-test-resampled.h5"],
         shell=True,
         check=True,
     )
@@ -349,7 +396,9 @@ class TestPreprocessing(unittest.TestCase):
         self.var_dict_dips_hits = self.test_dir / var_dict_dips_hits_source.name
         self.scale_dict = self.test_dir / "PFlow-scale_dict.json"
         self.output = self.test_dir / "PFlow-hybrid_70-test.h5"
+        self.output_validation = self.test_dir / "PFlow-hybrid-validation-test.h5"
         self.indices = self.test_dir / "indices.h5"
+        self.indices_validation = self.test_dir / "indices_validation.h5"
 
         logger.info(
             "Preparing config file based on %s in %s ...", config_source, self.config
@@ -388,6 +437,11 @@ class TestPreprocessing(unittest.TestCase):
         )
         replace_line_in_file(
             self.config_paths,
+            "outfile_name_validation:",
+            f"outfile_name_validation: {self.output_validation}",
+        )
+        replace_line_in_file(
+            self.config_paths,
             ".dict_file:",
             f".dict_file: &dict_file {self.scale_dict}",
         )
@@ -395,6 +449,11 @@ class TestPreprocessing(unittest.TestCase):
             self.config_paths,
             ".intermediate_index_file:",
             f".intermediate_index_file: &intermediate_index_file {self.indices}",
+        )
+        replace_line_in_file(
+            self.config_paths,
+            "intermediate_index_file_validation:",
+            f"intermediate_index_file_validation: {self.indices_validation}",
         )
         replace_line_in_file(
             self.config,
@@ -441,7 +500,12 @@ class TestPreprocessing(unittest.TestCase):
         replace_line_in_file(
             self.pdf_config,
             "    n_jets: 25e6",
-            "    n_jets: -1",
+            "    n_jets: 2e4",
+        )
+        replace_line_in_file(
+            self.pdf_config,
+            "    n_jets_validation: 4e6",
+            "    n_jets_validation: 2e4",
         )
         replace_line_in_file(
             self.pdf_config,
@@ -597,6 +661,21 @@ class TestPreprocessing(unittest.TestCase):
         replace_line_in_file(
             self.hits_config,
             "        - training_ttbar_ujets",
+            "",
+        )
+        replace_line_in_file(
+            self.hits_config,
+            "        - validation_ttbar_bjets",
+            "",
+        )
+        replace_line_in_file(
+            self.hits_config,
+            "        - validation_ttbar_cjets",
+            "",
+        )
+        replace_line_in_file(
+            self.hits_config,
+            "        - validation_ttbar_ujets",
             "",
         )
 

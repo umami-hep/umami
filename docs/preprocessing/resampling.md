@@ -14,7 +14,7 @@ The `Weighting Sampling` is not a real resampling, in the same sense as the othe
 The resampling part of the config file starts with the `sampling:` dict.
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:99:105§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:18:24§§§
 ```
 
 In `sampling`, we can define now the method which is used in the preprocessing for resampling. `method` defines the method which is used. Currently available are `count`, `pdf`, `importance_no_replace` and `weighting`. The details of the different sampling methods are explained at their respective sections. The here shown config is for the `count` method.
@@ -24,7 +24,7 @@ An important part are the `class_labels` which are defined here. You can define 
 For an explanation of the resampling function specific `options`, have a look in the section of the resampling method you want to use. The general `options` are explained in the following:
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:141:177§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:78:119§§§
 ```
 
 | Setting | Type | Explanation |
@@ -35,7 +35,7 @@ For an explanation of the resampling function specific `options`, have a look in
 | `tracks_names` | `list` of `str` | Name of the tracks (in the .h5 files coming from the dumper) which are processed. Multiple tracks datasets can be preprocessed simultaneously when two `str` are given in the list. |
 | `save_track_labels` | `bool` | If this value is `True`, the track variables in `track_truth_variables` will be processed as labels without scaling. The will be saved in an extra group in the final training file. The name will be `Y_<track_name>_train`. `<track_name>` is here the name of the track collection. |
 | `track_truth_variables` | `str` or `list` | Track variables that will be handled as truth labels. Multiple can be given in a `list` of `str` or just one in a single string. |
-| `intermediate_index_file` | `str` | For the resampling, the indicies of the jets to use are saved in an intermediate indicies `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/Preprocessing-parameters.yaml). |
+| `intermediate_index_file` | `str` | For the resampling, the indices of the jets to use are saved in an intermediate indices `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/Preprocessing-parameters.yaml). |
 | `n_jets_scaling` | `int` | Number of jets which are used to calculate scaling and shifting values. If `null` is given, all jets in file are used. |
 | `n_jets_to_plot` | `int` | Number of jets which are used for plotting the variables of the jets/tracks after each preprocessing step (resampling, scaling, shuffling/writing). If `null` is given, the plotting is skipped. |
 
@@ -47,14 +47,15 @@ For an explanation of the resampling function specific `options`, have a look in
 Standard undersampling approach. Undersamples all flavours to the statistically lowest flavour used.
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:108:138§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:27:76§§§
 ```
 
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `sampling_variables` | `list` |  Needs exactly 2 variables. Sampling variables which are used for resampling. The example shows this for the `pt_btagJes` and `absEta_btagJes` variables. In case of the `count` method, you define a nested list (one sublist for each category ($t\bar{t}$ or $Z'$)) with the first and last bin edge and the number of bins to use. |
 | `custom_n_jets_initial` | `dict` | Used jets per sample to ensure a smooth hybrid sample of $t\bar{t}$ and $Z'$, we need to define some empirically derived values for the $t\bar{t}$ samples. |
-| `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of $t\bar{t}$ and $Z'$, we need to define some empirically derived values for the $t\bar{t}$ samples in `custom_n_jets_initial`. |
+| `samples_training` | `dict` | You need to define them for both of your samples. By default (if you want to use the standard hybrid of $t\bar{t}$ and $Z'$, they are named `ttbar` and `zprime` but they are just arbitrary names. The samples defined in here are the ones we prepared in the step above which will be used for the training sample. The samples defined in here are the ones we prepared in the step above which will be used for the training sample. To ensure a smooth hybrid sample of $t\bar{t}$ and $Z'$, we need to define some empirically derived values for the $t\bar{t}$ samples in `custom_n_jets_initial`. |
+| `samples_validation` | `dict` | Same as the `samples_training` option but for when you want to produce the hybrid validation sample. |
 
 ### Importance Sampling With Replacement (PDF Sampling)
 
@@ -78,15 +79,29 @@ First are the bins for the two resampling variables. You need to define a nested
           bins: [[0, 2.5, 10], [0, 2.5, 10]]
 
     # Decide, which of the in preparation defined samples are used in the resampling.
-    samples:
+    samples_training:
       ttbar:
         - training_ttbar_bjets
         - training_ttbar_cjets
         - training_ttbar_ujets
+
       zprime:
         - training_zprime_bjets
         - training_zprime_cjets
         - training_zprime_ujets
+
+    # Decide, which of the in preparation defined samples are used in the hybrid
+    # validation resampling.
+    samples_validation:
+      ttbar:
+        - validation_ttbar_bjets
+        - validation_ttbar_cjets
+        - validation_ttbar_ujets
+
+      zprime:
+        - validation_zprime_bjets
+        - validation_zprime_cjets
+        - validation_zprime_ujets
 
     custom_n_jets_initial: # Leave empty for pdf method
 
@@ -95,18 +110,22 @@ First are the bins for the two resampling variables. You need to define a nested
     max_upsampling_ratio:
       training_ttbar_cjets: 5
       training_zprime_cjets: 5
+      validation_ttbar_cjets: 5
+      validation_zprime_cjets: 5
 
     # For PDF sampling, this scales the total number of training jets in the training dataset by
     # given factor, i.e. a factor of 1 has no effect
     sampling_fraction:
       training_ttbar_cjets: 1
+      validation_ttbar_cjets: 1
 ```
 
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `sampling_variables` | `list` |  Needs exactly 2 variables. Sampling variables which are used for resampling. The example shows this for the `pt_btagJes` and `absEta_btagJes` variables. In case of the `pdf` method, you define a nested list (one sublist for each category ($t\bar{t}$ or $Z'$)) with the first and last bin edge and the number of bins to use (np.linespace arguments). |
 | `custom_n_jets_initial` | `None` | These values are used only in the `count` and `weighting` method. |
-| `samples` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above. To ensure a smooth hybrid sample of $t\bar{t}$ and $Z'$, we need to define some empirically derived values for the $t\bar{t}$ samples in `custom_n_jets_initial`. |
+| `samples_training` | `dict` | You need to define them for both of your samples. By default (if you want to use the standard hybrid of $t\bar{t}$ and $Z'$, they are named `ttbar` and `zprime` but they are just arbitrary names. The samples defined in here are the ones we prepared in the step above which will be used for the training sample. |
+| `samples_validation` | `dict` | Same as the `samples_training` option but for when you want to produce the hybrid validation sample. |
 | `max_upsampling_ratio` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a maximal ratio of upsampling. If there are not enough cjets and the `max_upsampling_ratio` is reached, the form of the distribution is applied but not the number. So there can be different numbers of jets per bin per class, but the shape of distributions will still be the same (if you normalise them). |
 |`sampling_fraction` | `dict` | Here you can define for the different samples, which are defined in the `samples` section, a factor to scale the number of jets for this sample in the final training dataset compared to the number of jets defined in `n_jets`. This can be useful if subclasses of u-, c- and/or b-jets are used for training but the overall ratio for u-,c- and b-jet should still be 1:1:1|
 
@@ -136,15 +155,29 @@ sampling:
           bins: [0, 2.5, 9]
 
     # Decide, which of the in preparation defined samples are used in the resampling.
-    samples:
+    samples_training:
       ttbar:
         - training_ttbar_bjets
         - training_ttbar_cjets
         - training_ttbar_ujets
+
       zprime:
         - training_zprime_bjets
         - training_zprime_cjets
         - training_zprime_ujets
+
+    # Decide, which of the in preparation defined samples are used in the hybrid
+    # validation resampling.
+    samples_validation:
+      ttbar:
+        - validation_ttbar_bjets
+        - validation_ttbar_cjets
+        - validation_ttbar_ujets
+
+      zprime:
+        - validation_zprime_bjets
+        - validation_zprime_cjets
+        - validation_zprime_ujets
 
     # Set to -1 or don't include this to use all the available jets
     n_jets: -1
@@ -153,7 +186,8 @@ sampling:
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `sampling_variables` | `list` |  Needs exactly 2 variables. Sampling variables which are used for resampling. The example shows this for the `pt_btagJes` and `absEta_btagJes` variables. In case of the `pdf` method, you define a nested list (one sublist for each category ($t\bar{t}$ or $Z'$)) with the first and last bin edge and the number of bins to use (np.linespace arguments). |
-| `samples` | `dict` | Needs all the different samples for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above.|
+| `samples_training` | `dict` | You need to define them for both of your samples. By default (if you want to use the standard hybrid of $t\bar{t}$ and $Z'$, they are named `ttbar` and `zprime` but they are just arbitrary names. The samples defined in here are the ones we prepared in the step above which will be used for the training sample. |
+| `samples_validation` | `dict` | Same as the `samples_training` option but for when you want to produce the hybrid validation sample. |
 | `target_distribution` | `str` | Target distribution to be used for computing the sampling probabilities relative to. This ensures all the final resampled distributions have the same shape and fraction as the target distribution. Default is the `bjets`. |
 
 ### Weighting Sampling
@@ -176,15 +210,29 @@ Alternatively you can calculate weights between the flavor of bins in the 2d(pt,
           bins: [0, 2.5, 10]
 
     # Decide, which of the in preparation defined samples are used in the resampling.
-    samples:
+    samples_training:
       ttbar:
         - training_ttbar_bjets
         - training_ttbar_cjets
         - training_ttbar_ujets
+
       zprime:
         - training_zprime_bjets
         - training_zprime_cjets
         - training_zprime_ujets
+
+    # Decide, which of the in preparation defined samples are used in the hybrid
+    # validation resampling.
+    samples_validation:
+      ttbar:
+        - validation_ttbar_bjets
+        - validation_ttbar_cjets
+        - validation_ttbar_ujets
+
+      zprime:
+        - validation_zprime_bjets
+        - validation_zprime_cjets
+        - validation_zprime_ujets
 
     # for method: weighting
     # relative to which distribution the weights should be calculated
@@ -196,6 +244,8 @@ Alternatively you can calculate weights between the flavor of bins in the 2d(pt,
 
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
+| `samples_training` | `dict` | You need to define them for `ttbar` and `zprime`. The samples defined in here are the ones we prepared in the step above which will be used for the training sample. |
+| `samples_validation` | `dict` | Same as the `samples_training` option but for when you want to produce the hybrid validation sample. |
 | `weighting_target_flavour` | `str` | To which distribution the weights are relatively calculated to. |
 | `bool_attach_sample_weights` | `bool` | Decide, if you want to attach these weights in the final training config. For all other resampling methods, this should be `False`. |
 
@@ -239,19 +289,27 @@ preprocessing.py --config <path to config file> --resampling
 
 **Note**: The steps defined in here are only performed on the training samples! You do not need to resample the validation/test samples execept you want to also produce the hybrid validation and test samples. For instructions to do that, please look at [ADD ME]().
 
-#### Hybrid validation and testing resampling
+### Create the Resampled Hybrid Validation Sample
 
-To create hybrid `ttbar` and `zprime` validation samples that are also resampled like the training samples see the following file for a full example: [`examples/preprocessing/PFlow-Preprocessing-hybrid-validation.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/PFlow-Preprocessing-hybrid-validation.yaml).
+To properly validate our training and to check against any issue while training (e.g. overfitting), we need a validation sample that is similar resampled as the training sample. When we use our non-resampled validation samples for that, we can't properly check the training behavior due to the difference in composition between the resampled training sample and the non-resampled validation sample(s). 
+To create the hybrid validation sample, you need to define the different flavours in the `Preprocessing-samples.yaml` (in the example, this is already done. They are called `validation_<process>_<flavour>`) and run the [Preparation step](ntuple_preparation.md) again (If you already defined the samples when you ran the preparation the first time, you can skip this).
 
-???+ warning "Do not use for creating training samples"
+After the samples are prepared, you need to check the config files that all settings are correctly set. As for the hybrid validation sample, mostly all options are marked by a `_validation` and shown here:
 
-    This preprocessing config example should only be used to create the hybrid validation or testing samples. This example should be adapted to reflect your training sample resampling method.
+| Setting | Type | Explanation |
+| ------- | ---- | ----------- |
+| `samples_validation` | `dict` | Same as the `samples_training` option but for when you want to produce the hybrid validation sample. Here you need to add the validation samples which will be used for the resampled hybrid validation file. THE ORDER OF THE PROCESSES/FLAVOURS NEEDS TO BE CONSISTENT WITH THE `samples_training`! |
+| `custom_n_jets_initial` | `dict` or `None` | These values are used only in the `count` and `weighting` method! Do not set these for the `pdf` method! For the other methods, these are the used jets per sample to ensure a smooth hybrid sample of $t\bar{t}$ and $Z'$. We need to define some empirically derived values for the $t\bar{t}$ samples. |
+| `n_jets_validation` | `int` | The number of jets in the final hybrid validation file. |
+| `outfile_name_validation` | `str` | Name of the output file of the hybrid validation resampling. The output file will have this name plus `_resampled`. |
+| `intermediate_index_file_validation` | `str` | For the resampling, the indices of the jets to use are saved in an intermediate indices `.h5` file. You can define a name and path in the [Preprocessing-parameters.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/Preprocessing-parameters.yaml). |
 
-Then you can just do:
+???+ warning "DO NOT USE THIS FILES FOR TRAINING"
+
+    This preprocessing config example should only be used to create the hybrid validation samples. This example should be adapted to reflect your training sample resampling method.
+
+After this is all set, you an simple run the following command:
 
 ```bash
-# prepare, apply cuts and split all flavours
-preprocessing.py --config examples/preprocessing/PFlow-Preprocessing-hybrid-validation.yaml --prepare
-# resample and recombine
-preprocessing.py --config examples/preprocessing/PFlow-Preprocessing-hybrid-validation.yaml --resampling
+preprocessing.py --config <path to config file> --resampling --hybrid_validation
 ```

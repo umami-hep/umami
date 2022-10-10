@@ -287,14 +287,14 @@ class UnderSamplingTestCase(unittest.TestCase):
 
     def test_count_no_samples_defined(self):
         """Test no samples defined."""
-        del self.sampling_config["options"]["samples"]
+        del self.sampling_config["options"]["samples_training"]
         us = UnderSampling(self.config)
         with self.assertRaises(KeyError):
             us.InitialiseSamples()
 
     def test_different_samples_per_category(self):
         """Test different samples per category."""
-        del self.sampling_config["options"]["samples"]["zprime"][1]
+        del self.sampling_config["options"]["samples_training"]["zprime"][1]
         us = UnderSampling(self.config)
         with self.assertRaises(RuntimeError):
             us.InitialiseSamples()
@@ -599,14 +599,14 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
 
     def test_no_samples_defined(self):
         """Test no samples defined."""
-        del self.sampling_config["options"]["samples"]
+        del self.sampling_config["options"]["samples_training"]
         us = UnderSamplingNoReplace(self.config)
         with self.assertRaises(KeyError):
             us.InitialiseSamples()
 
     def test_different_samples_per_category(self):
         """Test different samples per category."""
-        del self.sampling_config["options"]["samples"]["zprime"][1]
+        del self.sampling_config["options"]["samples_training"]["zprime"][1]
         us = UnderSamplingNoReplace(self.config)
         with self.assertRaises(RuntimeError):
             us.InitialiseSamples()

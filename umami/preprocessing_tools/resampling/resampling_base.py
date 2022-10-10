@@ -478,9 +478,17 @@ class Resampling:
             else False
         )
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
+        self.use_validation_samples = config.sampling.get(
+            "use_validation_samples", False
+        )
 
-        # Get path attributes
-        self.outfile_name = self.config.get_file_name(option="resampled")
+        # Get the output file name path
+        self.outfile_name = self.config.get_file_name(
+            option="resampled",
+            use_val=self.use_validation_samples,
+        )
+
+        # Get the output and resampled paths
         self.outfile_path = self.config.config["parameters"]["sample_path"]
         self.resampled_path = self.config.config["parameters"]["file_path"]
 
@@ -858,10 +866,7 @@ class Resampling:
 class ResamplingTools(Resampling):
     """Helper class for resampling."""
 
-    def InitialiseSamples(
-        self,
-        n_jets: int = None,
-    ) -> None:
+    def InitialiseSamples(self, n_jets: int = None) -> None:
         """
         At this point the arrays of the 2 variables are loaded which are used
         for the sampling and saved into class variables.
@@ -880,7 +885,12 @@ class ResamplingTools(Resampling):
 
         self.samples = {}
         try:
-            samples = self.options["samples"]
+            if not self.use_validation_samples:
+                samples = self.options["samples_training"]
+
+            else:
+                samples = self.options["samples_validation"]
+
         except KeyError as error:
             raise KeyError(
                 "You chose the 'count', 'weight' or 'importance_no_replace' option "
