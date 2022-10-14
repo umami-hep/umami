@@ -4,6 +4,9 @@
 
 ### Latest
 
+
+### [v0.14](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.14) (14.10.2022)
+
 - Moving Feature Importance in the evaluation section of the training [!647](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/647)
 - Fixing issue with SHAPley plot naming [!645](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/645)
 - Adding proper hybrid validation sample creation [!646](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/646)
