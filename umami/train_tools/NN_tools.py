@@ -926,7 +926,7 @@ def get_test_sample_trks(
     )
 
     # Apply scaling to the tracks
-    trks, _ = apply_scaling_trks(
+    trks, _, _ = apply_scaling_trks(
         trks=trks,
         variable_config=var_dict_loaded,
         scale_dict=scale_dict_loaded,

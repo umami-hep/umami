@@ -30,49 +30,45 @@ class BaseGeneratorTest(unittest.TestCase):
         self.test_dir = f"{self.test_dir_path.name}"
         logger.info("Creating test directory in %s", self.test_dir)
 
-        self.X_Name = "X_train"
-        self.X_trk_Name = "X_trk_train"
-        self.Y_Name = "Y_train"
+        self.X_Name = "jets/inputs"
+        self.X_trk_Name = "tracks_loose/inputs"
+        self.Y_Name = "jets/labels"
         self.batch_size = 100
         self.n_jets = 2500
         self.chunk_size = 500
         self.sample_weights = True
-        self.jet_features = 41
+        self.jet_features = 2
         self.n_tracks_per_jet = 40
-        self.track_features = 15
+        self.track_features = 21
         self.nConds = 2
         self.print_logger = True
 
         self.train_file_path = Path(self.test_dir) / "dummy_train_file.h5"
 
-        key_words = [self.X_Name, self.X_trk_Name, self.Y_Name, "weight"]
-        shapes = [[41], [40, 15], [3], []]
+        # implementaiton for new group setup
+        # jets
+        key_words_jets = ["inputs", "labels", "labels_one_hot", "weight"]
+        shapes_jets = [[self.jet_features], [], [3], []]
+
+        # tracks
+        key_words_tracks = ["inputs", "labels", "valid"]
+        shapes_tracks = [
+            [self.n_tracks_per_jet, self.track_features],
+            [self.n_tracks_per_jet, self.jet_features],
+            [self.n_tracks_per_jet],
+        ]
+
         rng = np.random.default_rng(seed=65)
-
         with h5py.File(self.train_file_path, "w") as f_h5:
-            for key, shape in zip(key_words, shapes):
+            g_jets = f_h5.create_group("jets")
+            for key, shape in zip(key_words_jets, shapes_jets):
                 arr = rng.random((self.n_jets, *shape))
-                f_h5.create_dataset(key, data=arr)
+                g_jets.create_dataset(key, data=arr)
 
-        # # implementaiton for new group setup
-        # # jets
-        # key_words_jets = ["inputs", "labels", "labels_one_hot", "weight"]
-        # shapes_jets = [[41], [], [3], []]
-
-        # # tracks
-        # key_words_tracks = ["inputs", "labels", "valid"]
-        # shapes_tracks = [[40, 21], [40, 2], [40]]
-
-        # with h5py.File(self.train_file_path, "w") as f_h5:
-        #     g_jets = f_h5.create_group("jets")
-        #     for key, shape in zip(key_words_jets, shapes_jets):
-        #         arr = rng.random((self.n_jets, *shape))
-        #         g_jets.create_dataset(key, data=arr)
-
-        #     g_tracks = f_h5.create_group("tracks_loose")
-        #     for key, shape in zip(key_words_tracks, shapes_tracks):
-        #         arr = rng.random((self.n_jets, *shape))
-        #         g_tracks.create_dataset(key, data=arr)
+            g_tracks = f_h5.create_group("tracks_loose")
+            for key, shape in zip(key_words_tracks, shapes_tracks):
+                arr = rng.random((self.n_jets, *shape))
+                g_tracks.create_dataset(key, data=arr)
 
         self.shared_settings = {
             "train_file_path": self.train_file_path,
@@ -112,7 +108,7 @@ class TestModelGenerator(BaseGeneratorTest):
             **self.shared_settings,
         )
 
-        self.assertEqual(base_generator.n_jets, 2500)
+        self.assertEqual(base_generator.n_jets, self.n_jets)
 
     def test_init_no_n_jets_X_trk_Name_given(self):
         """Test case for init without n_jets given with X_trk_Name."""
@@ -124,7 +120,7 @@ class TestModelGenerator(BaseGeneratorTest):
             **self.shared_settings,
         )
 
-        self.assertEqual(base_generator.n_jets, 2500)
+        self.assertEqual(base_generator.n_jets, self.n_jets)
 
     def test_init_no_n_jets_no_X_given(self):
         """Test case for init without n_jets given without X."""

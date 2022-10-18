@@ -145,7 +145,7 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
                 )
                 if self.sample_weights:
                     # load weights
-                    self.weight_in_mem = f["weight"][
+                    self.weight_in_mem = f["jets/weight"][
                         self.step_size * part : self.step_size * (part + 1)
                     ]
 
@@ -156,7 +156,7 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
                 ]
                 if self.sample_weights and self.weight_in_mem is None:
                     # load weights
-                    self.weight_in_mem = f["weight"][
+                    self.weight_in_mem = f["jets/weight"][
                         self.step_size * part : self.step_size * (part + 1)
                     ]
 

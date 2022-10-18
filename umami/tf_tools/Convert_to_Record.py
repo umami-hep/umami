@@ -76,7 +76,7 @@ class h5_to_tf_record_converter:
         with h5py.File(self.path_h5, "r") as hFile:
 
             # Get the number of jets in the file
-            length_dataset = len(hFile["X_train"])
+            length_dataset = len(hFile["jets/inputs"])
             logger.info(
                 "Total length of the dataset is %i. Load %i samples at a time",
                 length_dataset,
@@ -98,24 +98,24 @@ class h5_to_tf_record_converter:
                 end = (i + 1) * self.chunk_size
 
                 # Get the jets
-                X_jets = hFile["X_train"][start:end]
+                X_jets = hFile["jets/inputs"][start:end]
 
                 # Get the labels
-                Y_jets = hFile["Y_train"][start:end]
+                Y_jets = hFile["jets/labels_one_hot"][start:end]
 
                 # Get the weights
-                Weights = hFile["weight"][start:end]
+                Weights = hFile["jets/weight"][start:end]
 
                 if self.tracks_name is not None:
                     # Get a list with all tracks inside
                     X_trks = {
-                        track_name: hFile[f"X_{track_name}_train"][start:end]
+                        track_name: hFile[f"{track_name}/inputs"][start:end]
                         for track_name in self.tracks_name
                     }
 
                     if self.save_track_labels:
                         Y_trks = {
-                            track_name: hFile[f"Y_{track_name}_train"][start:end]
+                            track_name: hFile[f"{track_name}/labels"][start:end]
                             for track_name in self.tracks_name
                         }
 
@@ -128,7 +128,7 @@ class h5_to_tf_record_converter:
 
                 # Check if conditional jet parameters are used or not
                 if self.n_add_vars is not None:
-                    X_Add_Vars = hFile["X_train"][start:end, : self.n_add_vars]
+                    X_Add_Vars = hFile["jets/inputs"][start:end, : self.n_add_vars]
 
                 else:
                     X_Add_Vars = None
@@ -153,31 +153,31 @@ class h5_to_tf_record_converter:
             data = {}
 
             # Get dimensional values of the jets
-            data["n_jets"] = len(h5file["X_train"])
-            data["n_jet_features"] = len(h5file["X_train"][0])
+            data["n_jets"] = len(h5file["jets/inputs"])
+            data["n_jet_features"] = len(h5file["jets/inputs"][0])
 
             # Get the dimensional values of the labels
-            data["n_dim"] = len(h5file["Y_train"][0])
+            data["n_dim"] = len(h5file["jets/labels_one_hot"][0])
 
             # Get the dimensional values of the tracks and save them for each track
             # collection in a dict
             if self.tracks_name is not None:
                 data["n_trks"] = {
-                    track_name: len(h5file[f"X_{track_name}_train"][0])
+                    track_name: len(h5file[f"{track_name}/inputs"][0])
                     for track_name in self.tracks_name
                 }
                 data["n_trk_features"] = {
-                    track_name: len(h5file[f"X_{track_name}_train"][0][0])
+                    track_name: len(h5file[f"{track_name}/inputs"][0][0])
                     for track_name in self.tracks_name
                 }
 
                 if self.save_track_labels:
                     data["n_trks_labels"] = {
-                        track_name: len(h5file[f"Y_{track_name}_train"][0])
+                        track_name: len(h5file[f"{track_name}/labels"][0])
                         for track_name in self.tracks_name
                     }
                     data["n_trks_classes"] = {
-                        track_name: len(h5file[f"Y_{track_name}_train"][0][0])
+                        track_name: len(h5file[f"{track_name}/labels"][0][0])
                         for track_name in self.tracks_name
                     }
 
@@ -265,13 +265,13 @@ class h5_to_tf_record_converter:
                         # Add track collections
                         for key, item in X_trks.items():
                             record_bytes.features.feature[
-                                f"X_{key}_train"
+                                f"{key}/inputs"
                             ].float_list.value.extend(item[iterator].reshape(-1))
 
                         if self.save_track_labels:
                             for key, item in Y_trks.items():
                                 record_bytes.features.feature[
-                                    f"Y_{key}_train"
+                                    f"{key}/labels"
                                 ].int64_list.value.extend(item[iterator].reshape(-1))
 
                     # Add conditional variables if used

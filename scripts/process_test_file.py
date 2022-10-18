@@ -84,9 +84,9 @@ def main():
 
     logger.info("Writing file %s ...", args.out_file)
     with h5py.File(args.out_file, "w") as f_h5:
-        f_h5.create_dataset("X_train", data=X_test_jet)
-        f_h5.create_dataset(f"X_{args.tracks_name}_train", data=X_test_trk)
-        f_h5.create_dataset("Y_train", data=Y_test)
+        f_h5.create_dataset("jets/inputs", data=X_test_jet)
+        f_h5.create_dataset(f"{args.tracks_name}/inputs", data=X_test_trk)
+        f_h5.create_dataset("jets/labels_one_hot", data=Y_test)
     logger.info("Saved file %s ", args.out_file)
 
 

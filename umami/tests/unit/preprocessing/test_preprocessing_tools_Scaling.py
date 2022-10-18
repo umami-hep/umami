@@ -35,18 +35,19 @@ class ApplyScalingTrksTestCase(unittest.TestCase):
             "numberOfPixelHits": {"shift": 4, "scale": 2},
         }
         self.trks = np.array(
-            [(50, 2, 30), (100, 2, 40)],
+            [(50, 2, 30, True), (100, 2, 40, True)],
             dtype=[
                 ("ptfrac", "f4"),
                 ("numberOfPixelHits", "i4"),
                 ("IP3D_signed_d0_significance", "f4"),
+                ("valid", "?"),
             ],
         )
         self.control_trks = np.array([[30, -0.54398847, -1], [40, -0.19741488, -1]])
 
     def test_apply_scaling_trks(self):
         """Test apply scaling fot tracks."""
-        scaled_trks, _ = apply_scaling_trks(
+        scaled_trks, _, _ = apply_scaling_trks(
             trks=self.trks,
             variable_config=self.var_config,
             scale_dict=self.scale_dict,

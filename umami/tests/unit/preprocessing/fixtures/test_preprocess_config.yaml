@@ -127,6 +127,9 @@ compression: null
 # save final output files with specified precision
 precision: float32
 
+# concatenate jet inputs with each track's inputs in the final output file
+concat_jet_tracks: False
+
 # Options for the conversion to tfrecords
 convert_to_tfrecord:
   chunk_size: 5000

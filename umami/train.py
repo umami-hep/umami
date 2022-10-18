@@ -2,6 +2,7 @@
 """Training script to perform various tagger trainings."""
 import argparse
 
+import h5py
 import tensorflow as tf
 
 import umami.models as utm
@@ -54,6 +55,37 @@ def get_parser():
     return parse_args
 
 
+def check_train_file_format(input_file: str):
+    """_summary_
+
+    Parameters
+    ----------
+    input_file : str
+        Path to input h5 file to check
+
+    Raises
+    ------
+    KeyError
+        If the specified key is not present in the input file
+    """
+
+    # If not using h5, don't check
+    if not input_file.endswith(".h5"):
+        return
+
+    # Open the file and check for jets
+    with h5py.File(input_file, "r") as f:
+        if "jets" not in f.keys():
+            raise KeyError(
+                f"The input h5 file {input_file} does not contain a 'jets' "
+                "group, suggesting this file has been produced with a version"
+                "of umami <=0.13. You can fix this problem by checking out "
+                "version 0.13 or older and rerunning this script, or re-make "
+                "the training file in the newer format by re-running the --write "
+                "preprocessing stage with umami >0.13."
+            )
+
+
 if __name__ == "__main__":
     # Get the args from parser
     args = get_parser()
@@ -72,6 +104,9 @@ if __name__ == "__main__":
 
     # Get the tagger which is to be trained from the train config
     tagger_name = train_config.nn_structure["tagger"]
+
+    # Check file format
+    check_train_file_format(train_config.config["train_file"])
 
     # Create the metadatafolder
     utt.create_metadata_folder(

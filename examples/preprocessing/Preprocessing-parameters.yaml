@@ -11,7 +11,7 @@ sample_path: &sample_path !join [*base_path, /prepared_samples]
 file_path: &file_path !join [*base_path, /preprocessed]
 
 # Name of the output file from the preprocessing used for training (has to be a .h5 file, no folder)
-.outfile_name: &outfile_name !join [*base_path, /PFlow-hybrid.h5]
+.outfile_name: &outfile_name !join [*file_path, /PFlow-hybrid.h5]
 
 # List of variables for training (yaml)
 .var_file: &var_file <path_palce_holder>/umami/umami/configs/Dips_Variables.yaml
@@ -20,12 +20,12 @@ file_path: &file_path !join [*base_path, /preprocessed]
 .dict_file: &dict_file !join [*base_path, /scale_dicts/PFlow-scale_dict.json]
 
 # Intermediate file for the training sample indicies used in h5 format
-.intermediate_index_file: &intermediate_index_file !join [*base_path, /preprocessed/indicies.h5]
+.intermediate_index_file: &intermediate_index_file !join [*file_path, /indicies.h5]
 
 # Name of the output file from the preprocessing used for hybrid validation (has to be a .h5 file, no folder)
 # Will be ignored if hybrid validation is not used
-outfile_name_validation: !join [*base_path, /PFlow-hybrid-validation.h5]
+outfile_name_validation: !join [*file_path, /PFlow-hybrid-validation.h5]
 
 # Intermediate file for the hybrid validation sample indicies used in h5 format
 # Will be ignored if hybrid validation is not used
-intermediate_index_file_validation: &intermediate_index_file_validation !join [*base_path, /preprocessed/indicies-hybrid-validation.h5]
+intermediate_index_file_validation: &intermediate_index_file_validation !join [*file_path, /indicies-hybrid-validation.h5]

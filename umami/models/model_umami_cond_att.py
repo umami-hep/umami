@@ -152,10 +152,10 @@ def train_umami_cond_att(args, train_config):
         # Get the shapes for training
         with h5py.File(train_config.train_file, "r") as f:
             metadata["n_jets"], metadata["n_trks"], metadata["n_trk_features"] = f[
-                f"X_{tracks_name}_train"
+                f"{tracks_name}/inputs"
             ].shape
-            _, metadata["n_dim"] = f["Y_train"].shape
-            _, metadata["n_jet_features"] = f["X_train"].shape
+            _, metadata["n_dim"] = f["jets/labels_one_hot"].shape
+            _, metadata["n_jet_features"] = f["jets/inputs"].shape
             if exclude is not None:
                 metadata["n_jet_features"] -= len(excluded_var)
             logger.debug(
@@ -200,9 +200,9 @@ def train_umami_cond_att(args, train_config):
             tf.data.Dataset.from_generator(
                 utf.umami_condition_generator(
                     train_file_path=train_config.train_file,
-                    X_Name="X_train",
-                    X_trk_Name=f"X_{tracks_name}_train",
-                    Y_Name="Y_train",
+                    X_Name="jets/inputs",
+                    X_trk_Name=f"{tracks_name}/inputs",
+                    Y_Name="jets/labels_one_hot",
                     n_jets=int(nn_structure["n_jets_train"])
                     if "n_jets_train" in nn_structure
                     and nn_structure["n_jets_train"] is not None
