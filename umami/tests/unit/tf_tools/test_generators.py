@@ -1,9 +1,11 @@
 """Unit test script for the generator functions of tf_tools."""
 
-import os
 import tempfile
 import unittest
-from subprocess import run
+from pathlib import Path
+
+import h5py
+import numpy as np
 
 from umami.configuration import logger, set_log_level
 from umami.tf_tools.generators import (
@@ -28,29 +30,6 @@ class BaseGeneratorTest(unittest.TestCase):
         self.test_dir = f"{self.test_dir_path.name}"
         logger.info("Creating test directory in %s", self.test_dir)
 
-        logger.info("Downloading test data...")
-        path = os.path.join(
-            "https://umami-ci-provider.web.cern.ch/",
-            "umami",
-            "PFlow-hybrid_70-test-preprocessed_shuffled.h5",
-        )
-
-        logger.info("Retrieving file from path %s", path)
-        run(
-            [
-                "wget",
-                path,
-                "--directory-prefix",
-                self.test_dir,
-            ],
-            check=True,
-        )
-
-        self.train_file_path = os.path.join(
-            self.test_dir,
-            "PFlow-hybrid_70-test-preprocessed_shuffled.h5",
-        )
-
         self.X_Name = "X_train"
         self.X_trk_Name = "X_trk_train"
         self.Y_Name = "Y_train"
@@ -63,6 +42,37 @@ class BaseGeneratorTest(unittest.TestCase):
         self.track_features = 15
         self.nConds = 2
         self.print_logger = True
+
+        self.train_file_path = Path(self.test_dir) / "dummy_train_file.h5"
+
+        key_words = [self.X_Name, self.X_trk_Name, self.Y_Name, "weight"]
+        shapes = [[41], [40, 15], [3], []]
+        rng = np.random.default_rng(seed=65)
+
+        with h5py.File(self.train_file_path, "w") as f_h5:
+            for key, shape in zip(key_words, shapes):
+                arr = rng.random((self.n_jets, *shape))
+                f_h5.create_dataset(key, data=arr)
+
+        # # implementaiton for new group setup
+        # # jets
+        # key_words_jets = ["inputs", "labels", "labels_one_hot", "weight"]
+        # shapes_jets = [[41], [], [3], []]
+
+        # # tracks
+        # key_words_tracks = ["inputs", "labels", "valid"]
+        # shapes_tracks = [[40, 21], [40, 2], [40]]
+
+        # with h5py.File(self.train_file_path, "w") as f_h5:
+        #     g_jets = f_h5.create_group("jets")
+        #     for key, shape in zip(key_words_jets, shapes_jets):
+        #         arr = rng.random((self.n_jets, *shape))
+        #         g_jets.create_dataset(key, data=arr)
+
+        #     g_tracks = f_h5.create_group("tracks_loose")
+        #     for key, shape in zip(key_words_tracks, shapes_tracks):
+        #         arr = rng.random((self.n_jets, *shape))
+        #         g_tracks.create_dataset(key, data=arr)
 
         self.shared_settings = {
             "train_file_path": self.train_file_path,
@@ -102,7 +112,7 @@ class TestModelGenerator(BaseGeneratorTest):
             **self.shared_settings,
         )
 
-        self.assertEqual(base_generator.n_jets, 2517)
+        self.assertEqual(base_generator.n_jets, 2500)
 
     def test_init_no_n_jets_X_trk_Name_given(self):
         """Test case for init without n_jets given with X_trk_Name."""
@@ -114,7 +124,7 @@ class TestModelGenerator(BaseGeneratorTest):
             **self.shared_settings,
         )
 
-        self.assertEqual(base_generator.n_jets, 2517)
+        self.assertEqual(base_generator.n_jets, 2500)
 
     def test_init_no_n_jets_no_X_given(self):
         """Test case for init without n_jets given without X."""

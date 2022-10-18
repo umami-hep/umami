@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Removing file dependency for generator unit tests [!652](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/652)
 
 ### [v0.14](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.14) (14.10.2022)
 
