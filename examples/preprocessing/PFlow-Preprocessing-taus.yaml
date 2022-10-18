@@ -16,100 +16,7 @@ preparation:
       path: *ntuple_path
       file_pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
 
-  samples:
-    training_ttbar_bjets:
-      type: ttbar
-      category: bjets
-      n_jets: 10e6
-      <<: *cuts_template_training_ttbar
-      output_name: !join [*sample_path, /bjets_training_ttbar_PFlow.h5]
-
-
-    training_ttbar_cjets:
-      type: ttbar
-      category: cjets
-      # Number of c jets available in MC16d
-      n_jets: 10e6
-      <<: *cuts_template_training_ttbar
-      output_name: !join [*sample_path, /cjets_training_ttbar_PFlow.h5]
-
-
-    training_ttbar_ujets:
-      type: ttbar
-      category: ujets
-      n_jets: 10e6
-      <<: *cuts_template_training_ttbar
-      output_name: !join [*sample_path, /ujets_training_ttbar_PFlow.h5]
-
-
-    training_ttbar_taujets:
-      type: ttbar
-      category: taujets
-      n_jets: 10e6
-      <<: *cuts_template_training_ttbar
-      output_name: !join [*sample_path, /taujets_training_ttbar_PFlow.h5]
-
-
-    training_zprime_bjets:
-      type: zprime
-      category: bjets
-      n_jets: 10e6
-      <<: *cuts_template_training_zprime
-      output_name: !join [*sample_path, /bjets_training_zprime_PFlow.h5]
-
-
-    training_zprime_cjets:
-      type: zprime
-      category: cjets
-      # Number of c jets available in MC16d
-      n_jets: 10e6
-      <<: *cuts_template_training_zprime
-      output_name: !join [*sample_path, /cjets_training_zprime_PFlow.h5]
-
-
-    training_zprime_ujets:
-      type: zprime
-      category: ujets
-      n_jets: 10e6
-      <<: *cuts_template_training_zprime
-      output_name: !join [*sample_path, /ujets_training_zprime_PFlow.h5]
-
-
-    training_zprime_taujets:
-      type: zprime
-      category: taujets
-      n_jets: 10e6
-      <<: *cuts_template_training_zprime
-      output_name: !join [*sample_path, /taujets_training_zprime_PFlow.h5]
-
-
-    validation_ttbar:
-      type: ttbar
-      category: inclusive
-      <<: *cuts_template_validation
-      output_name: !join [*sample_path, /inclusive_validation_ttbar_PFlow.h5]
-
-
-    testing_ttbar:
-      type: ttbar
-      category: inclusive
-      <<: *cuts_template_testing
-      output_name: !join [*sample_path, /inclusive_testing_ttbar_PFlow.h5]
-
-
-    validation_zprime:
-      type: zprime
-      category: inclusive
-      <<: *cuts_template_validation
-      output_name: !join [*sample_path, /inclusive_validation_zprime_PFlow.h5]
-
-
-    testing_zprime:
-      type: zprime
-      category: inclusive
-      <<: *cuts_template_testing
-      output_name: !join [*sample_path, /inclusive_testing_zprime_PFlow.h5]
-
+  samples: !include Preprocessing-samples.yaml
 
 sampling:
   # Classes which are used in the resampling. Order is important.
@@ -179,6 +86,12 @@ sampling:
     # Name of the track collection to use. Can be null if no track info is saved.
     tracks_names: null
 
+    # Bool, if track labels are processed
+    save_track_labels: False
+
+    # String with the name of the track truth variable
+    track_truth_variables: ["truthOriginLabel", "truthVertexIndex"]
+
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
 
@@ -206,11 +119,14 @@ var_file: *var_file
 # Dictfile for the scaling and shifting (json)
 dict_file: *dict_file
 
-# compression for final output files (null/gzip)
-compression: null
+# compression for final output files (null/gzip/lzf)
+compression: lzf
 
 # save final output files with specified precision
 precision: float32
+
+# concatenate jet inputs with each track's inputs in the final output file
+concat_jet_tracks: False
 
 # Options for the conversion to tfrecords
 convert_to_tfrecord:

@@ -178,10 +178,21 @@ class Preparation:
         ----------
         input_h5 : dict
             dictionary containing input_h5
+
+        Raises
+        ------
+        FileNotFoundError
+            If there are no input h5 files found for a given sample.
         """
         for sample_type, value in input_h5.items():
             path = Path(value.get("path"))
-            file_list = list(path.rglob(value.get("file_pattern")))
+            file_list = sorted(list(path.rglob(value.get("file_pattern"))))
+            if len(file_list) == 0:
+                raise FileNotFoundError(
+                    f"Didn't find any input files for {sample_type}.\n"
+                    f"\t- path: {value['path']}\n"
+                    f"\t- pattern: {value['file_pattern']}"
+                )
             if value.get("randomise"):
                 Random(42).shuffle(file_list)
             self.input_files[sample_type] = file_list
@@ -251,6 +262,7 @@ class GeneralSettings:
     dict_file: str = None
     compression: str = None
     precision: str = None
+    concat_jet_tracks: bool = None
     convert_to_tfrecord: dict = None
 
 

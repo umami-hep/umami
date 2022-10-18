@@ -131,11 +131,14 @@ var_file: *var_file
 # Dictfile for the scaling and shifting (json)
 dict_file: *dict_file
 
-# compression for final output files (null/gzip)
-compression: null
+# compression for final output files (null/gzip/lzf)
+compression: lzf
 
 # save final output files with specified precision
 precision: float32
+
+# concatenate jet inputs with each track's inputs in the final output file
+concat_jet_tracks: False
 
 # Options for the conversion to tfrecords
 convert_to_tfrecord:

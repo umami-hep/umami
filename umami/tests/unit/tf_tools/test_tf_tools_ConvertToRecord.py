@@ -39,10 +39,10 @@ class ConvertTest(unittest.TestCase):
             suffix="-resampled_scaled_shuffled.h5"
         )
         with h5py.File(self.tfh5, "w") as out_file:
-            out_file.create_dataset("X_train", data=x_train)
-            out_file.create_dataset(f"X_{tracks_name}_train", data=x_trks_train)
-            out_file.create_dataset("Y_train", data=y_train)
-            out_file.create_dataset(f"Y_{tracks_name}_train", data=y_trks_train)
+            out_file.create_dataset("jets/inputs", data=x_train)
+            out_file.create_dataset(f"{tracks_name}/inputs", data=x_trks_train)
+            out_file.create_dataset("jets/labels_one_hot", data=y_train)
+            out_file.create_dataset(f"{tracks_name}/labels", data=y_trks_train)
         self.config.outfile_name = self.tfh5.name.replace(
             "-resampled_scaled_shuffled.h5", ".h5"
         )

@@ -74,6 +74,7 @@ var_file: null
 dict_file: null
 compression: null
 precision: float32
+concat_jet_tracks: False
 convert_to_tfrecord:
   chunk_size: 5000
   N_add_vars: null

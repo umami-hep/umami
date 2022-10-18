@@ -227,7 +227,7 @@ class TFRecordReader:
                     metadata["n_trks"][self.tracks_name],
                     metadata["n_trk_features"][self.tracks_name],
                 ]
-                features[f"X_{self.tracks_name}_train"] = tf.io.FixedLenFeature(
+                features[f"{self.tracks_name}/inputs"] = tf.io.FixedLenFeature(
                     shape=shapes[f"shape_X_{self.tracks_name}_train"], dtype=tf.float32
                 )
 
@@ -236,7 +236,7 @@ class TFRecordReader:
                         metadata["n_trks_labels"][self.tracks_name],
                         metadata["n_trks_classes"][self.tracks_name],
                     ]
-                    features[f"Y_{self.tracks_name}_train"] = tf.io.FixedLenFeature(
+                    features[f"{self.tracks_name}/labels"] = tf.io.FixedLenFeature(
                         shape=shapes[f"shape_Y_{self.tracks_name}_train"],
                         dtype=tf.int64,
                     )
@@ -277,7 +277,7 @@ class TFRecordReader:
 
         elif self.tagger_name.casefold() in ("dips", "dips_attention", "cads"):
             input_dir = {
-                "input_1": parse_ex[f"X_{self.tracks_name}_train"],
+                "input_1": parse_ex[f"{self.tracks_name}/inputs"],
             }
 
             if self.n_cond is not None:
@@ -286,14 +286,14 @@ class TFRecordReader:
         elif self.tagger_name.casefold() in ("umami", "umami_cond_att"):
             if self.n_cond is not None:
                 input_dir = {
-                    "input_1": parse_ex[f"X_{self.tracks_name}_train"],
+                    "input_1": parse_ex[f"{self.tracks_name}/inputs"],
                     "input_2": parse_ex["X_Add_Vars"][:, : self.n_cond],
                     "input_3": parse_ex["X_jets"],
                 }
 
             else:
                 input_dir = {
-                    "input_1": parse_ex[f"X_{self.tracks_name}_train"],
+                    "input_1": parse_ex[f"{self.tracks_name}/inputs"],
                     "input_2": parse_ex["X_jets"],
                 }
 
@@ -305,14 +305,14 @@ class TFRecordReader:
                 return (
                     input_dir,
                     parse_ex["Y_jets"],
-                    parse_ex[f"Y_{self.tracks_name}_train"],
+                    parse_ex[f"{self.tracks_name}/labels"],
                     parse_ex["Weights"],
                 )
 
             return (
                 input_dir,
                 parse_ex["Y_jets"],
-                parse_ex[f"Y_{self.tracks_name}_train"],
+                parse_ex[f"{self.tracks_name}/labels"],
             )
 
         if self.sample_weights:

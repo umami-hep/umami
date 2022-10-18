@@ -1,13 +1,20 @@
 ## Writing Train Sample
-In the final step of the preprocessing, the resampled, training jets are scaled/shifted and then written to disk in a format, that can be used for training. For this, the collections of the training sample will get different names and data types. The collections are replaced with datasets with unstructured `numpy.ndarray`s. The names/shapes of these new datasets in the final training file can be found in the table below:
+In the final step of the preprocessing, the resampled, training jets are scaled/shifted and then written to disk in a format, that can be used for training.
+Each type of object is stored within its own group in the output file.
+Each group can contain multiple datasets, for the inputs, weights, and labels for example.
+You can recursively list the contents of all groups using `h5ls -r`.
+For this, the collections of the training sample will get different names and data types.
+The collections are replaced with datasets with unstructured `numpy.ndarray`s.
+The names/shapes of these new datasets in the final training file can be found in the table below:
 
-| Before writing | After writing | Shape | Comment |
-| -------------- | ------------- | ----- | ------- |
-| `jets` | `X_train` | `(n_jets, n_jet_variables)` | |
-| `<tracks_name>` | `X_<tracks_name>_train` | `(n_jets, n_tracks, n_track_variables)` | `<tracks_name>` is the name of the track collection in the `.h5` files coming from the training-dataset-dumper. |
-| `labels` | `Y_train` | `(n_jets, n_jet_classes)` | One-hot encoded truth labels. The `n_jet_classes` are the `class_labels` defined in the preprocessing config. The value `0` here corresponds to the jet origin which is on index `0` in the `class_labels` list. |
-| `labels` | `flavour` | `(n_jets,)` | Sparse representation of the jet labels. The value `0` here corresponds to the jet origin which is on index `0` in the `class_labels` list. |
-| `<tracks_name>_labels` | `Y_<tracks_name>_train` | `(n_jets, n_tracks, n_track_truth_variables)` | This is the sparse representation of the `track_truth_variables`. |
+| **Before Writing**     | **After Writing**      | **Shape**                                     | **Comment**                                                                                                                                                                                                                  |
+|------------------------|------------------------|-----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `jets`                 | `jets/inputs`          | `(n_jets, n_jet_variables)`                   |                                                                                                                                                                                                                              |
+| `labels`               | `jets/labels_one_hot`  | `(n_jets, n_jet_classes)`                     | Old format: one-hot encoded truth labels. The `n_jet_classes` are the `class_labels` defined in the preprocessing config. The value `0` here corresponds to the jet origin which is on index `0` in the `class_labels` list. |
+| `labels`                | `jets/labels`          | `(n_jets,)`                                   | Sparse encoded jet labels                                                                                                                                                                                                    |
+| `<tracks_name>`        | `<tracks_name>/inputs` | `(n_jets, n_tracks, n_track_variables)`       | `<tracks_name>` is the name of the track collection in the .h5 files coming from the training dataset dumper.                                                                                                                |
+| `<tracks_name>_labels` | `<tracks_name>/labels` | `(n_jets, n_tracks, n_track_truth_variables)` | This is the sparse representation of the `track_truth_variables`.                                                                                                                                                            |
+
 
 In the final training file, the column information (and therefore which column corresponds to which variable) is not longer available. You can run `h5ls -v` on the file to get some information about the variables for each of the datasets. The variables for the specific jet and track(s) datasets will be shown as a attribute of the dataset. The order of this variables shown is also the order of the variable columns in the dataset.
 
@@ -15,13 +22,14 @@ In the final training file, the column information (and therefore which column c
 For the final writing step, only a few options are needed. Those are shown/explained below
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:134:143§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:134:146§§§
 ```
 
 | Setting | Explanation |
 | ------- | ----------- |
 | `compression` | Decide, which compression is used for the final training sample. Due to slow loading times, this should be `null`. Possible options are for example `gzip`. |
 | `precision` | The precision of the final output file. The values are saved with the given precision to save space. |
+| `concat_jet_tracks` | If `True`, jet features are concatenated to the features for each track. |
 | `convert_to_tfrecord` | Options for the conversion to tfrecords. Possible options to define are the `chunk_size` which gives the number of samples saved per file and the number of additional variables to be saved in tf records `N_Add_Vars`. |
 
 When you want to train with conditional information, i.e. jet $p_T$ and $\eta$, the corresponding model (CADS) will load the jet information directly from the train file when using `.h5`. When you want to use `TFRecords`, you need to define the amount of variables that are added to extra to the files with `N_Add_Vars`. Until now, when using `2`, this will use the first two available jet variables, which are by default jet $p_T$ and $\eta$.

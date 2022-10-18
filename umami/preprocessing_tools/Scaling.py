@@ -204,6 +204,8 @@ def apply_scaling_trks(
     -------
     scaled_trks : np.ndarray
         The tracks scaled and shifted.
+    valid : np.ndarray
+        Bool array specifying which tracks are valid vs padding.
     trk_labels : np.ndarray
         The track labels, if defined in the variable config.
 
@@ -271,17 +273,15 @@ def apply_scaling_trks(
     scaled_trks = np.stack(var_arr_list, axis=-1)
 
     # track vertex and origin labels
+    trk_labels = None
     if save_track_labels:
         trk_labels = np.stack(
             [np.nan_to_num(trks[v]) for v in track_label_variables],
             axis=-1,
         )
 
-    else:
-        trk_labels = None
-
-    # Return the scaled and tracks and, if defined, the track labels
-    return scaled_trks, trk_labels
+    # Return the scaled and tracks, the valid flag and, if defined, the track labels
+    return scaled_trks, track_mask, trk_labels
 
 
 class CalculateScaling:

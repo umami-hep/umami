@@ -12,7 +12,7 @@ from numpy.lib.recfunctions import (
 )
 from scipy.stats import binned_statistic_2d
 
-from umami.configuration import logger
+from umami.configuration import global_config, logger
 from umami.plotting_tools import preprocessing_plots
 from umami.preprocessing_tools import get_variable_dict
 from umami.preprocessing_tools.Scaling import apply_scaling_jets, apply_scaling_trks
@@ -56,6 +56,7 @@ class TrainSampleWriter:
         self.tracks_names = config.sampling["options"]["tracks_names"]
         self.compression = compression
         self.precision = config.config["precision"]
+        self.concat_jet_tracks = config.config.get("concat_jet_tracks", False)
         self.rnd_seed = 42
         self.variable_config = get_variable_dict(config.var_file)
         self.scale_dict = config.dict_file
@@ -63,6 +64,36 @@ class TrainSampleWriter:
 
         # Adding the full config to retrieve the correct paths
         self.config = config
+
+    def map_flavour_labels(
+        self,
+        flavour: np.ndarray,
+    ):
+        """
+        Map jet flavour labels to ready-to-train format. The labels in
+        the class_labels config are enumerated to define the label used
+        for training.
+
+        Parameters
+        ----------
+        flavour : np.ndarray
+            array of flavour labels, e.g. 0, 4, 5
+
+        Returns
+        -------
+        np.ndarray
+            array of flavour labels, with e.g. 0, 4, 5 -> 0, 1, 2
+        """
+        fcs = global_config.flavour_categories
+        flavour_map = {}
+        for i, class_label in enumerate(self.config.sampling["class_labels"]):
+            class_info = fcs[class_label]
+            flavour_map[class_info["label_value"]] = i
+
+        for k, v in flavour_map.items():
+            flavour[flavour == k] = v
+
+        return flavour
 
     def load_scaled_generator(
         self,
@@ -103,6 +134,8 @@ class TrainSampleWriter:
             Yielded labels
         tracks_labels : np.ndarray
             Yielded track labels
+        valid : np.ndarray
+            Yielded valid flag
         flavour : np.ndarray
             Yielded flavours
         """
@@ -178,7 +211,7 @@ class TrainSampleWriter:
                     yield jets, labels, flavour
 
                 elif self.save_tracks is True:
-                    tracks, track_labels = [], []
+                    tracks, valid, track_labels = [], [], []
 
                     # Loop over track selections
                     for tracks_name in self.tracks_names:
@@ -195,7 +228,7 @@ class TrainSampleWriter:
                         trks = trks[rng_index]
 
                         # Apply scaling to the tracks
-                        trks, trk_labels = apply_scaling_trks(
+                        trks, valid_flag, trk_labels = apply_scaling_trks(
                             trks=trks,
                             variable_config=self.variable_config,
                             scale_dict=trk_scale_dict,
@@ -205,9 +238,10 @@ class TrainSampleWriter:
                         )
 
                         tracks.append(trks)
+                        valid.append(valid_flag)
                         track_labels.append(trk_labels)
 
-                    yield jets, tracks, labels, track_labels, flavour
+                    yield jets, tracks, labels, track_labels, valid, flavour
 
     def better_shuffling(
         self,
@@ -348,6 +382,7 @@ class TrainSampleWriter:
                             tracks,
                             labels,
                             track_labels,
+                            valid,
                             flavour,
                         ) = next(load_generator)
 
@@ -366,118 +401,66 @@ class TrainSampleWriter:
                     # Reform the flavour to unstructured array
                     flavour = repack_fields(flavour[self.variable_config["label"]])
 
+                    # map 0, 4, 5 -> 0, 1 2 for training
+                    flavour = self.map_flavour_labels(flavour)
+
                     if chunk_counter == 0:
-                        h5file.create_dataset(
-                            "X_train",
-                            compression=None,
-                            dtype=self.precision,
-                            shape=(n_jets, jets.shape[1]),
+                        jet_group = self.init_jet_datasets(
+                            h5file,
+                            n_jets,
+                            jets,
+                            labels,
+                            jets_variables,
                         )
 
-                        h5file.create_dataset(
-                            "Y_train",
-                            compression=None,
-                            dtype=np.uint8,
-                            shape=(n_jets, labels.shape[1]),
+                    if chunk_counter == 0 and self.save_tracks:
+                        track_groups = self.init_track_datasets(
+                            h5file,
+                            n_jets,
+                            jets,
+                            tracks,
+                            valid,
+                            track_labels,
+                            jets_variables,
                         )
-
-                        h5file.create_dataset(
-                            "flavour",
-                            compression=None,
-                            dtype=np.uint8,
-                            shape=(n_jets,),
-                        )
-
-                        h5file.create_dataset(
-                            "weight",
-                            compression=None,
-                            dtype=self.precision,
-                            shape=(n_jets,),
-                        )
-
-                        # Writing jet variables as attributes to X_train
-                        h5file["X_train"].attrs["jet_variables"] = jets_variables
-                        h5file["Y_train"].attrs["label_classes"] = self.class_labels
-                        h5file["flavour"].attrs["label_classes"] = self.class_labels
-
-                    if chunk_counter == 0 and self.save_tracks is True:
-                        for i, tracks_name in enumerate(self.tracks_names):
-                            chunks = (
-                                (1,) + tracks[i].shape[1:] if self.compression else None
-                            )
-
-                            h5file.create_dataset(
-                                f"X_{tracks_name}_train",
-                                compression=self.compression,
-                                chunks=chunks,
-                                dtype=self.precision,
-                                shape=(
-                                    n_jets,
-                                    tracks[i].shape[1],
-                                    tracks[i].shape[2],
-                                ),
-                            )
-
-                            if self.save_track_labels:
-                                h5file.create_dataset(
-                                    f"Y_{tracks_name}_train",
-                                    compression=None,
-                                    dtype=np.int8,
-                                    shape=(
-                                        n_jets,
-                                        track_labels[i].shape[1],
-                                        track_labels[i].shape[2],
-                                    ),
-                                )
-
-                                # Add the track truth variables as attribute to the
-                                # track labels dataset
-                                h5file[f"Y_{tracks_name}_train"].attrs[
-                                    tracks_name + "_truth_variables"
-                                ] = self.track_label_variables
-
-                            # Extract the track variables used for training from the
-                            # var config and write them as attribute to the tracks
-                            # dataset
-                            h5file[f"X_{tracks_name}_train"].attrs[
-                                tracks_name + "_variables"
-                            ] = [
-                                trk_var
-                                for trk_header in self.variable_config[
-                                    "track_train_variables"
-                                ][tracks_name]
-                                for trk_var in self.variable_config[
-                                    "track_train_variables"
-                                ][tracks_name][trk_header]
-                            ]
 
                     # Jet inputs
-                    h5file["X_train"][jet_idx:jet_idx_end] = jets
+                    jet_group["inputs"][jet_idx:jet_idx_end] = jets
 
                     # One-hot flavour labels
-                    h5file["Y_train"][jet_idx:jet_idx_end] = labels
+                    jet_group["labels_one_hot"][jet_idx:jet_idx_end] = labels
 
                     # flavour int
-                    h5file["flavour"][jet_idx:jet_idx_end] = flavour
+                    jet_group["labels"][jet_idx:jet_idx_end] = flavour
 
                     # Weights
-                    h5file["weight"][jet_idx:jet_idx_end] = weights
+                    jet_group["weight"][jet_idx:jet_idx_end] = weights
 
                     # Appending tracks if used
                     if self.save_tracks is True:
 
                         # Loop over tracks selections
-                        for i, tracks_name in enumerate(self.tracks_names):
-                            # Track inputs
-                            h5file[f"X_{tracks_name}_train"][
-                                jet_idx:jet_idx_end
-                            ] = tracks[i]
+                        for i, g in enumerate(track_groups):
 
+                            # concatenate jet and track inputs
+                            if self.concat_jet_tracks:
+                                jets_repeated = np.repeat(
+                                    jets[:, None, :], tracks[i].shape[1], axis=1
+                                )
+                                tracks[i] = np.concatenate(
+                                    [jets_repeated, tracks[i]], axis=2
+                                )
+                                tracks[i][~valid[i]] = 0
+
+                            # Track inputs
+                            g["inputs"][jet_idx:jet_idx_end] = tracks[i]
+
+                            # Valid flag
+                            g["valid"][jet_idx:jet_idx_end] = valid[i]
+
+                            # Track labels
                             if self.save_track_labels:
-                                # Track labels
-                                h5file[f"Y_{tracks_name}_train"][
-                                    jet_idx:jet_idx_end
-                                ] = track_labels[i]
+                                g["labels"][jet_idx:jet_idx_end] = track_labels[i]
 
                 except StopIteration:
                     break
@@ -573,3 +556,182 @@ class TrainSampleWriter:
             if not weight:
                 weight = 1
             jets["weight"][i] = weight
+
+    def init_jet_datasets(
+        self,
+        h5file: h5py.File,
+        n_jets: int,
+        jets: np.ndarray,
+        labels_one_hot: np.ndarray,
+        jets_variables: list,
+    ):
+        """
+        Create jet datasets
+
+        Parameters
+        ----------
+        h5file : h5py.File
+            output file
+        n_jets : int
+            total number of jets that will be written
+        jets : np.ndarray
+            jet input feature array
+        labels_one_hot : np.ndarray
+            jet label array, one hot
+        jets_variables : list
+            jet input variable names
+
+        Returns
+        -------
+        h5py.Group
+            h5 group containing jet datasets
+        """
+
+        g = h5file.create_group("jets")
+
+        g.create_dataset(
+            "inputs",
+            compression=None,
+            dtype=self.precision,
+            shape=(n_jets, jets.shape[1]),
+        )
+
+        g.create_dataset(
+            "labels_one_hot",
+            compression=None,
+            dtype=np.uint8,
+            shape=(n_jets, labels_one_hot.shape[1]),
+        )
+
+        g.create_dataset(
+            "labels",
+            compression=None,
+            dtype=np.uint8,
+            shape=(n_jets,),
+        )
+
+        g.create_dataset(
+            "weight",
+            compression=None,
+            dtype=self.precision,
+            shape=(n_jets,),
+        )
+
+        # Writing jet variables as attributes to the jet group datasets
+        g["inputs"].attrs["jet_variables"] = jets_variables
+        g["labels_one_hot"].attrs["label_classes"] = self.class_labels
+        g["labels"].attrs["label_classes"] = self.class_labels
+
+        return g
+
+    def init_track_datasets(
+        self,
+        h5file: h5py.File,
+        n_jets: int,
+        jets: np.ndarray,
+        tracks: list,
+        valid: list,
+        labels: list,
+        jets_variables: list,
+    ):
+        """
+        Create track-like datasets
+
+        Parameters
+        ----------
+        h5file : h5py.File
+            output file
+        n_jets : int
+            total number of jets that will be written
+        jets : np.ndarray
+            jet input feature array
+        tracks : list
+            list of track arrays
+        valid : list
+            list of track valid arrays
+        labels : list
+            list of track label arrays
+        jets_variables : list
+            jet input variable names
+
+        Returns
+        -------
+        list
+            list of track h5 groups
+        """
+
+        track_groups = []
+
+        # for each track-like group
+        for i, tracks_name in enumerate(self.tracks_names):
+
+            # create a group
+            g = h5file.create_group(tracks_name)
+            track_groups.append(g)
+
+            tracks_shape = (n_jets, tracks[i].shape[1], tracks[i].shape[2])
+            if self.concat_jet_tracks:
+                tracks_shape = (
+                    n_jets,
+                    tracks_shape[1],
+                    tracks[i].shape[2] + jets.shape[1],
+                )
+
+            # chunking is jet-wise for optimal random access
+            chunks = (1,) + tracks[i].shape[1:] if self.compression else None
+
+            g.create_dataset(
+                "inputs",
+                compression=self.compression,
+                chunks=chunks,
+                dtype=self.precision,
+                shape=tracks_shape,
+            )
+
+            g.create_dataset(
+                "valid",
+                compression=None,
+                dtype=bool,
+                shape=(
+                    n_jets,
+                    valid[i].shape[1],
+                ),
+            )
+
+            if self.save_track_labels:
+                g.create_dataset(
+                    "labels",
+                    compression=None,
+                    dtype=np.int8,
+                    shape=(
+                        n_jets,
+                        labels[i].shape[1],
+                        labels[i].shape[2],
+                    ),
+                )
+
+                # Add the track truth variables as attribute to the
+                # track labels dataset
+                g["labels"].attrs[
+                    tracks_name + "_truth_variables"
+                ] = self.track_label_variables
+
+            # Extract the track variables used for training from the
+            # var config and write them as attribute to the tracks
+            # dataset
+            track_vars = [
+                trk_var
+                for trk_header in self.variable_config["track_train_variables"][
+                    tracks_name
+                ]
+                for trk_var in self.variable_config["track_train_variables"][
+                    tracks_name
+                ][trk_header]
+            ]
+
+            if self.concat_jet_tracks:
+                track_vars = [f"jet_{v}" for v in jets_variables] + track_vars
+
+            g["inputs"].attrs[tracks_name + "_variables"] = track_vars
+
+        return track_groups

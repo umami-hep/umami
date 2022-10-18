@@ -300,7 +300,7 @@ def preprocessing_plots(
             n_jets_infile = len(f["/jets"])
 
         except KeyError:
-            n_jets_infile = len(f["/X_train"])
+            n_jets_infile = len(f["jets/inputs"])
 
     # Check if random values are used or not
     if use_random_jets is True:
@@ -346,9 +346,8 @@ def preprocessing_plots(
         # Get the labels of the jets to plot
         try:
             labels = infile["/labels"][selected_indicies]
-
         except KeyError:
-            labels = infile["Y_train"][selected_indicies]
+            labels = infile["jets/labels_one_hot"][selected_indicies]
 
         # Check if jet collection is given
         if jet_collection:
@@ -368,9 +367,8 @@ def preprocessing_plots(
                 jets = pd.DataFrame(
                     infile["/jets"].fields(jet_var_list)[selected_indicies]
                 )
-
-            except KeyError:
-                jets = np.asarray(infile["X_train"][selected_indicies])
+            except AttributeError:
+                jets = np.asarray(infile["jets/inputs"][selected_indicies])
 
             # Loop over variables
             for jet_var_counter, jet_var in enumerate(jet_var_list):
@@ -415,9 +413,9 @@ def preprocessing_plots(
             try:
                 tracks = np.asarray(infile[f"/{track_collection}"][selected_indicies])
 
-            except KeyError:
+            except TypeError:
                 tracks = np.asarray(
-                    infile[f"X_{track_collection}_train"][selected_indicies]
+                    infile[f"{track_collection}/inputs"][selected_indicies]
                 )
 
             # Loop over track variables

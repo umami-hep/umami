@@ -146,7 +146,7 @@ class Configuration:
         for item in iterate_list:
             if item in self.config:
                 if item == "tracks_name":
-                    setattr(self, "tracks_key", f"X_{self.config[item]}_train")
+                    setattr(self, "tracks_key", f"{self.config[item]}/inputs")
                 elif item == "preprocess_config":
                     self.preprocess_config = PreprocessConfiguration(self.config[item])
                     self.var_dict = self.preprocess_config.var_file

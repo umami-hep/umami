@@ -1,12 +1,5 @@
 label: HadronConeExclTruthLabelID
 
-tracks_labels: &tracks_labels
-  - truthOriginLabel
-  - truthVertexIndex
-
-tracks_loose_labels:
-  *tracks_labels
-
 train_variables:
   JetKinematics:
     - eta_btagJes

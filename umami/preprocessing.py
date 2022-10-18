@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Execution script to run preprocessing steps."""
 import argparse
+from pathlib import Path
 
 import umami.preprocessing_tools as upt
 from umami.configuration import logger, set_log_level
@@ -145,6 +146,10 @@ if __name__ == "__main__":
 
     # Check for resampling
     elif args.resampling:
+
+        # ensure output dir exists
+        out_dir = Path(config.config["parameters"]["file_path"])
+        out_dir.mkdir(parents=True, exist_ok=True)
 
         # Check if hybrid validation sample should be produced and set the option in
         # the config
