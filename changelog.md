@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Fixing issue in the try except blocks of the preprocessing plots [!655](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/655)
 - Setting default value for concat_jet_tracks [!654](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/654)
 - Various improvements to train file writing (group-based structure) [!648](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/648)
 - Removing file dependency for generator unit tests [!652](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/652)
