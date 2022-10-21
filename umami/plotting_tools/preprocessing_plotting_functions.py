@@ -297,10 +297,10 @@ def preprocessing_plots(
     # Get max number of available jets
     with h5py.File(sample, "r") as f:
         try:
-            n_jets_infile = len(f["/jets"])
+            n_jets_infile = len(f["/jets/inputs"])
 
         except KeyError:
-            n_jets_infile = len(f["jets/inputs"])
+            n_jets_infile = len(f["jets"])
 
     # Check if random values are used or not
     if use_random_jets is True:
@@ -345,9 +345,9 @@ def preprocessing_plots(
     with h5py.File(sample, "r") as infile:
         # Get the labels of the jets to plot
         try:
-            labels = infile["/labels"][selected_indicies]
-        except KeyError:
             labels = infile["jets/labels_one_hot"][selected_indicies]
+        except KeyError:
+            labels = infile["/labels"][selected_indicies]
 
         # Check if jet collection is given
         if jet_collection:
@@ -364,11 +364,12 @@ def preprocessing_plots(
 
             # Get the jets from file
             try:
+                jets = np.asarray(infile["jets/inputs"][selected_indicies])
+
+            except KeyError:
                 jets = pd.DataFrame(
                     infile["/jets"].fields(jet_var_list)[selected_indicies]
                 )
-            except AttributeError:
-                jets = np.asarray(infile["jets/inputs"][selected_indicies])
 
             # Loop over variables
             for jet_var_counter, jet_var in enumerate(jet_var_list):
@@ -411,12 +412,12 @@ def preprocessing_plots(
 
             # Get the tracks from file
             try:
-                tracks = np.asarray(infile[f"/{track_collection}"][selected_indicies])
-
-            except TypeError:
                 tracks = np.asarray(
                     infile[f"{track_collection}/inputs"][selected_indicies]
                 )
+
+            except KeyError:
+                tracks = np.asarray(infile[f"/{track_collection}"][selected_indicies])
 
             # Loop over track variables
             for trk_var_counter, trk_var in enumerate(trksVars):
