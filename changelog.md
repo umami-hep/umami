@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding Appache 2.0 license [!656](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/656)
 - Fixing issue in the try except blocks of the preprocessing plots [!655](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/655)
 - Setting default value for concat_jet_tracks [!654](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/654)
 - Adding support for non-top level and special named jet- and track collections [!653](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/653)
