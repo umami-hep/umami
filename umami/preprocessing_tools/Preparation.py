@@ -78,6 +78,14 @@ class PrepareSamples:
         # Check if tracks are used
         self.save_tracks = self.config.sampling["options"]["save_tracks"]
         self.tracks_names = self.config.sampling["options"]["tracks_names"]
+        self.jets_name = self.config.preparation.settings.get("jets_name", "jets")
+        self.collection_name = self.config.preparation.settings.get(
+            "collection_name", ""
+        )
+
+        # Ensure the / is given
+        if len(self.collection_name) != 0 and not self.collection_name.endswith("/"):
+            self.collection_name += "/"
 
         self.sample.output_name.parent.mkdir(parents=True, exist_ok=True)
 
@@ -105,7 +113,7 @@ class PrepareSamples:
         """
         with h5py.File(filename, "r") as data_set:
             # get total number of jets in file
-            total_n_jets = len(data_set["jets"])
+            total_n_jets = len(data_set[self.collection_name + self.jets_name])
             logger.debug("Total number of jets in file: %i", total_n_jets)
             # first tuple is given by (0, batch_size)
             start_batch = 0
@@ -118,7 +126,10 @@ class PrepareSamples:
                 indices_batches.append((start_batch, end_batch))
         return (filename, indices_batches)
 
-    def jets_generator(self, files_in_batches: list) -> tuple:
+    def jets_generator(
+        self,
+        files_in_batches: list,
+    ) -> tuple:
         """
         Helper function to extract jet and track information from a h5 ntuple.
 
@@ -141,7 +152,9 @@ class PrepareSamples:
             with h5py.File(filename, "r") as data_set:
                 for batch in batches:
                     # load jets in batches
-                    jets = data_set["jets"][batch[0] : batch[1]]
+                    jets = data_set[self.collection_name + self.jets_name][
+                        batch[0] : batch[1]
+                    ]
                     indices_to_remove = get_sample_cuts(jets, self.cuts)
                     jets = np.delete(jets, indices_to_remove)
                     # if tracks should be saved, also load them in batches
@@ -149,7 +162,9 @@ class PrepareSamples:
                     if self.save_tracks:
                         tracks = {}
                         for tracks_name in self.tracks_names:
-                            trk = data_set[tracks_name][batch[0] : batch[1]]
+                            trk = data_set[self.collection_name + tracks_name][
+                                batch[0] : batch[1]
+                            ]
                             trk = np.delete(trk, indices_to_remove, axis=0)
                             tracks.update({tracks_name: trk})
                     else:

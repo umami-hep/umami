@@ -4,6 +4,7 @@
 
 ### Latest
 
+- Adding support for non-top level and special named jet- and track collections [!653](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/653)
 - Various improvements to train file writing (group-based structure) [!648](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/648)
 - Removing file dependency for generator unit tests [!652](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/652)
 
