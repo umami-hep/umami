@@ -189,6 +189,8 @@ if __name__ == "__main__":
 
     # Check for final writing to disk in train format
     elif args.write:
+        # Check if we wish to write the validation files instead
+        config.sampling["use_validation_samples"] = args.hybrid_validation
         # Copy config to output directory
         config.copy_to_out_dir("write")
 
