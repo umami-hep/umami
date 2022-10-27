@@ -1,9 +1,8 @@
 # Changelog
 
-
-
 ### Latest
 
+- Added writing validation files [!659](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/659)
 - Adding Appache 2.0 license [!656](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/656)
 - Fixing issue in the try except blocks of the preprocessing plots [!655](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/655)
 - Setting default value for concat_jet_tracks [!654](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/654)
@@ -151,7 +150,6 @@
 - (Plotting API) Adding support for ATLAS tag offset + Small fix for ratio uncertainty in histogram plots [!490](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/490)
 - Adding support for multiple signal classes [!414](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/414)
 
-
 ### [v0.7](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.7) (18.03.2022)
 
 - Adding Script for input variables correlation plots to examples folder [!474](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/474)
@@ -165,7 +163,7 @@
 - Adding dummy data generation of multi-class classification output [!475](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/475)
 - Move to `matplotlib.figure` API and `atlasify` for plotting python API [!464](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/464)
 - Adding `--prepare` option to `train.py` and fix an issue with the `model_file` not copied into the metadata folder [!472](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/472)
--  Move to `matplotlib.figure` API and `atlasify` for plotting python API [!464](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/464)
+- Move to `matplotlib.figure` API and `atlasify` for plotting python API [!464](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/464)
 - Fixing issue [#157](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/issues/157) with the `ylabel` of the input variable plots [!466](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/466).
 - Adding custom labels for the `taggers_from_files` option in the validation metrics plots.
 - Adding custom labels for the `taggers_from_files` option in the validation metrics plots [!469](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/469).
@@ -189,8 +187,6 @@
 - renamed `nominator` to `numerator` [!447](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/447)
 - Fix of calculation of scaling factor [!441](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/441)
 
-
-
 ### [v0.6](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.6) (16.02.2022)
 
 - CI improvements
@@ -213,7 +209,6 @@
 - flexible validation sample definition in config added
 - fixed all doc strings and enforce now darglint in CI
 
-
 ### [v0.5](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.5) (26.01.2022)
 
 - Adding Multiple Tracks datasets in preprocessing stage in [!285](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/285)
@@ -234,7 +229,6 @@
 - Adding CI pipeline updates
 - Restructuring of functions (where they are saved)
 - Adding multiple updates for the taggers (mostly minor adds, no big change in performance is expected)
-
 
 ### [v0.3](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.3) (01.12.2021)
 

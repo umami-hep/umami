@@ -61,6 +61,7 @@ class TrainSampleWriter:
         self.variable_config = get_variable_dict(config.var_file)
         self.scale_dict = config.dict_file
         self.sampling_options = config.sampling["options"]
+        self.validation = config.sampling["use_validation_samples"]
 
         # Adding the full config to retrieve the correct paths
         self.config = config
@@ -300,13 +301,17 @@ class TrainSampleWriter:
             by default 100_000
         """
 
-        # Get the input files for writing/merging
+        # Get the input files for writing/merging, checking for validation is required
         if input_file is None:
-            input_file = self.config.get_file_name(option="resampled")
+            input_file = self.config.get_file_name(
+                option="resampled", use_val=self.validation
+            )
 
         # Define outfile name
         if output_file is None:
-            out_file = self.config.get_file_name(option="resampled_scaled_shuffled")
+            out_file = self.config.get_file_name(
+                option="resampled_scaled_shuffled", use_val=self.validation
+            )
 
         if self.sampling_options["bool_attach_sample_weights"]:
             file_name = (
