@@ -17,12 +17,12 @@ which will plot either all plots defined using jet- or track variables. You can 
 ### Yaml File
 In the following, the possible configration parameters are listed with a brief description. 
 
-#### Variable dict and number of jets
-Here you can define the number of jets that are used and also the variable dict, where all the variables that are available are saved.
+#### Number of jets
+Here you can define the number of jets that are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:9:14§§§
+    §§§examples/plotting_input_vars.yaml:9:11§§§
     ```
 
 #### Number of Tracks per Jet
@@ -30,7 +30,7 @@ The number of tracks per jet can be plotted for all different files. This can be
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:102:119§§§
+    §§§examples/plotting_input_vars.yaml:103:120§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -51,9 +51,8 @@ To plot the track input variables, the following options are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:121:155§§§
+    §§§examples/plotting_input_vars.yaml:122:160§§§
     ```
-
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
@@ -67,13 +66,15 @@ To plot the track input variables, the following options are used.
 | `label` | `str` | Necessary | Plot label for the plot legend. |
 | `tracks_name` | `str` | Necessary | Name of the tracks inside the h5 files you want to plot. |
 | `plot_settings` | `dict` | Necessary | Here starts the plot settings. See possible parameters in the section below. |
+| `var_dict` | `dict` | Necessary | A dict with all the variables you want to plot inside. The key of the entry is the name of the variable you want to plot (how it is named in the files) and the entry itself is the binning. If you give an `int`, you will get your chosen number of equidistant bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is number of bins. The so arranged numbers are bin edges not bins! If no value is given, the standard value is `100`. If you want, for example, plot the sum of `numberOfPixelHits` and `numberOfSCTHits`, the entry needs to be a dict itself with three entries. `variables`, which is a list of variables you want to add up for example. `operator` which is the operation how to merge them. Available are `"+"`, `"-"`, `"*"` and `"/"`. And last the binning. This is the same as explained before with the `int` and the `list`. An example is given in the config above. The variable is named `number_nPix_nSCT`. You can also apply the log to one variable. This can be done by defining only one variable in the dict and set the operator to `"log"`. |
+| `xlabels` | dict | Optional | Dict with custom xlabels |
 
 #### Input Variables Jets
 To plot the jet input variables, the following options are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:16:100§§§
+    §§§examples/plotting_input_vars.yaml:13:101§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -86,7 +87,7 @@ To plot the jet input variables, the following options are used.
 | `files` | `str` | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
 | `label` | `str` | Necessary | Plot label for the plot legend. |
 | `special_param_jets` | None | Necessary | Here starts the special x axis limits for a variable. If you want to set the x range by hand, add the variable here and also the `lim_left` for xmin and `lift_right` for xmax. |
-| `binning` | None | Necessary | Here starts the binning for each variable. If you give a `int`, there will be so much equal distant bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is the step width. The so arranged numbers are bin edges not bins! If `None` is given, the standard value is `100`. Variables that are not in here are not plotted! |
+| `var_dict` | `dict` | Necessary | A dict with all the variables you want to plot inside. The key of the entry is the name of the variable you want to plot (how it is named in the files) and the entry itself is the binning. If you give an `int`, you will get your chosen number of equidistant bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is number of bins. The so arranged numbers are bin edges not bins! If no value is given, the standard value is `100`. If you want, for example, plot the sum of `rnnip_pc` and `rnnip_pu`, the entry needs to be a dict itself with three entries. `variables`, which is a list of variables you want to add up for example. `operator` which is the operation how to merge them. Available are "+", "-", "*" and "/". And last the binning. This is the same as explained before with the `int` and the `list`. An example is given in the config above. The variable is named `combined_rnnip`. You can also apply the log to one variable. This can be done by defining only one variable in the dict and set the operator to `log`. |
 | `plot_settings` | `dict` | Necessary | Here starts the plot settings. See possible parameters in the section below. |
 | `xlabels` | dict | Optional | Dict with custom xlabels |
 
@@ -106,15 +107,10 @@ If a parameter is only valid for a certain type of plot, this is listed below.
 
 
 ## Plot settings
-You have to specify some parameters for the plots themselves, like for example the
-`binning` of all the variables. *Note that the binning also indicates if a variable is 
-plotted or not.*
-
-You can use the following parameters. Note that some parameters are not supported for all types of plots.
+You can specify some parameters for the plots themselves. You can use the following parameters. Note that some parameters are not supported for all types of plots.
 
 | Options | Plot Type | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|-----------|--------------------|-------------|
-| `binning` | All | `int`, `list` or empty | Necessary | Here starts the binning for each variable. If you give a `int`, there will be that many equal-width bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is number of bins. The so arranged numbers are bin edges not bins! If no value is given, the standard value is `100`. If a variable is not defined here, its not plotted. |
 | `xlabels` | dict | Optional | Dict with custom xlabels |
 | `sorting_variable` | Track variables | `str` | Optional | Variable Name to sort after. |
 | `n_leading` | Track variables | `list` | Optional | `list` of the x leading tracks. If `None`, all tracks will be plotted. If `0` the leading tracks sorted after `sorting variable` will be plotted. You can add like `None`, `0` and `1` for example and it will plot all 3 of them, each in their own folders with according labeling. This must be a `list`! Even if there is only one option given. |

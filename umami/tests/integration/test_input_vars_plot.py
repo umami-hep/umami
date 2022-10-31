@@ -119,7 +119,6 @@ class TestInput_Vars_Plotting(unittest.TestCase):
 
         # Changing eval params
         self.config["Eval_parameters"]["n_jets"] = 3e3
-        self.config["Eval_parameters"]["var_dict"] = "umami/configs/Dips_Variables.yaml"
 
         # Change datasets for all
         for plot in self.config:
@@ -150,9 +149,14 @@ class TestInput_Vars_Plotting(unittest.TestCase):
                 "lim_right": 17,
             },
         }
-        self.config["jets_input_vars"]["binning"] = {
+        self.config["jets_input_vars"]["var_dict"] = {
             "SV1_NGTinSvx": 5,
             "JetFitterSecondaryVertex_nTracks": None,
+            "combined_rnnip": {
+                "variables": ["rnnip_pc", "rnnip_pu"],
+                "binning": 50,
+                "operator": "+",
+            },
         }
 
         # Change tracks params
@@ -160,7 +164,7 @@ class TestInput_Vars_Plotting(unittest.TestCase):
             None,
             0,
         ]
-        self.config["tracks_input_vars"]["binning"] = {
+        self.config["tracks_input_vars"]["var_dict"] = {
             "IP3D_signed_d0_significance": 100,
             "numberOfInnermostPixelLayerHits": [0, 4, 1],
             "dr": None,

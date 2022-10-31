@@ -150,16 +150,15 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test"]
 
         # Change type in plotting_config to string to produce error
-        plotting_config["binning"]["SV1_NGTinSvx"] = "test"
+        plotting_config["var_dict"]["SV1_NGTinSvx"] = "test"
 
         with self.assertRaises(ValueError):
             plot_input_vars_jets(
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
                 datasets_class_labels=class_labels_list,
-                var_dict=self.plot_config["Eval_parameters"]["var_dict"],
+                var_dict=plotting_config["var_dict"],
                 n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-                binning=plotting_config["binning"],
                 output_directory=f"{self.actual_plots_dir}"
                 + plotting_config["folder_to_save"],
                 plot_type="png",
@@ -178,9 +177,8 @@ class JetPlotting_TestCase(unittest.TestCase):
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
             datasets_class_labels=class_labels_list,
-            var_dict=self.plot_config["Eval_parameters"]["var_dict"],
+            var_dict=plotting_config["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-            binning=plotting_config["binning"],
             output_directory=f"{self.actual_plots_dir}"
             # output_directory=f"{self.expected_plots_dir}"
             + plotting_config["folder_to_save"],
@@ -219,16 +217,41 @@ class JetPlotting_TestCase(unittest.TestCase):
         class_labels_list = [["ujets", "cjets"]]
 
         # Change type in plotting_config to string to produce error
-        plotting_config["binning"]["SV1_NGTinSvx"] = "test"
+        plotting_config["var_dict"]["SV1_NGTinSvx"] = "test"
 
         with self.assertRaises(ValueError):
             plot_input_vars_jets(
                 datasets_filepaths=filepath_list,
                 datasets_labels=labels_list,
                 datasets_class_labels=class_labels_list,
-                var_dict=self.plot_config["Eval_parameters"]["var_dict"],
+                var_dict=plotting_config["var_dict"],
                 n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-                binning=plotting_config["binning"],
+                output_directory=os.path.join(self.actual_plots_dir, "comp/"),
+                plot_type="png",
+                special_param_jets=plotting_config["special_param_jets"],
+                **plotting_config["plot_settings"],
+            )
+
+    def test_plot_input_vars_jets_log_ValueError(self):
+        """Test jet input plots error raising for log."""
+        plotting_config = self.plot_config["jets_input_vars"]
+        filepath_list = [self.r21_test_file]
+        labels_list = ["R21 Test"]
+        class_labels_list = [["ujets", "cjets"]]
+
+        # Change type in plotting_config to string to produce error
+        plotting_config["var_dict"]["pt_btagJes_log"]["variables"] = [
+            "rnnip_pc",
+            "rnnip_pu",
+        ]
+
+        with self.assertRaises(ValueError):
+            plot_input_vars_jets(
+                datasets_filepaths=filepath_list,
+                datasets_labels=labels_list,
+                datasets_class_labels=class_labels_list,
+                var_dict=plotting_config["var_dict"],
+                n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
                 output_directory=os.path.join(self.actual_plots_dir, "comp/"),
                 plot_type="png",
                 special_param_jets=plotting_config["special_param_jets"],
@@ -249,9 +272,8 @@ class JetPlotting_TestCase(unittest.TestCase):
             datasets_filepaths=filepath_list,
             datasets_labels=labels_list,
             datasets_class_labels=class_labels_list,
-            var_dict=self.plot_config["Eval_parameters"]["var_dict"],
+            var_dict=plotting_config["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-            binning=plotting_config["binning"],
             output_directory=os.path.join(self.actual_plots_dir, "comp/"),
             # output_directory=os.path.join(self.expected_plots_dir, "comp/"),
             plot_type="png",
@@ -290,7 +312,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test"]
 
         # Change type in plotting_config to string to produce error
-        plotting_config["binning"]["dr"] = "test"
+        plotting_config["var_dict"]["dr"] = "test"
 
         with self.assertRaises(ValueError):
             plot_input_vars_trks(
@@ -298,9 +320,8 @@ class JetPlotting_TestCase(unittest.TestCase):
                 datasets_labels=labels_list,
                 datasets_track_names=tracks_name_list,
                 datasets_class_labels=class_labels_list,
-                var_dict=self.plot_config["Eval_parameters"]["var_dict"],
                 n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-                binning=plotting_config["binning"],
+                var_dict=plotting_config["var_dict"],
                 output_directory=f"{self.actual_plots_dir}",
                 plot_type="png",
                 **plotting_config["plot_settings"],
@@ -319,9 +340,8 @@ class JetPlotting_TestCase(unittest.TestCase):
             datasets_labels=labels_list,
             datasets_class_labels=class_labels_list,
             datasets_track_names=tracks_name_list,
-            var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-            binning=plotting_config["binning"],
+            var_dict=plotting_config["var_dict"],
             output_directory=f"{self.actual_plots_dir}",
             # output_directory=f"{self.expected_plots_dir}",
             plot_type="png",
@@ -407,7 +427,7 @@ class JetPlotting_TestCase(unittest.TestCase):
         labels_list = ["R21 Test"]
 
         # Change type in plotting_config to string to produce error
-        plotting_config["binning"]["dr"] = "test"
+        plotting_config["var_dict"]["dr"] = "test"
 
         with self.assertRaises(ValueError):
             plot_input_vars_trks(
@@ -415,9 +435,35 @@ class JetPlotting_TestCase(unittest.TestCase):
                 datasets_labels=labels_list,
                 datasets_track_names=tracks_name_list,
                 datasets_class_labels=class_labels_list,
-                var_dict=self.plot_config["Eval_parameters"]["var_dict"],
                 n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-                binning=plotting_config["binning"],
+                var_dict=plotting_config["var_dict"],
+                output_directory=os.path.join(self.actual_plots_dir, "comp/"),
+                plot_type="png",
+                **plotting_config["plot_settings"],
+            )
+
+    def test_plot_input_vars_trks_log_error_raise(self):
+        """Test track input variables log ValueError raise."""
+        plotting_config = self.plot_config["Tracks_Test"]
+        filepath_list = [self.r21_test_file]
+        class_labels_list = [["bjets", "cjets", "ujets"]]
+        tracks_name_list = ["tracks"]
+        labels_list = ["R21 Test"]
+
+        # Change type in plotting_config to string to produce error
+        plotting_config["var_dict"]["pt_frac_log"]["variables"] = [
+            "IP3D_signed_d0_significance",
+            "numberOfInnermostPixelLayerHits",
+        ]
+
+        with self.assertRaises(ValueError):
+            plot_input_vars_trks(
+                datasets_filepaths=filepath_list,
+                datasets_labels=labels_list,
+                datasets_track_names=tracks_name_list,
+                datasets_class_labels=class_labels_list,
+                n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
+                var_dict=plotting_config["var_dict"],
                 output_directory=os.path.join(self.actual_plots_dir, "comp/"),
                 plot_type="png",
                 **plotting_config["plot_settings"],
@@ -436,9 +482,8 @@ class JetPlotting_TestCase(unittest.TestCase):
             datasets_labels=labels_list,
             datasets_class_labels=class_labels_list,
             datasets_track_names=tracks_name_list,
-            var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-            binning=plotting_config["binning"],
+            var_dict=plotting_config["var_dict"],
             output_directory=os.path.join(self.actual_plots_dir, "comp_no_norm/"),
             # output_directory=os.path.join(self.expected_plots_dir, "comp_no_norm/"),
             plot_type="png",
@@ -470,9 +515,8 @@ class JetPlotting_TestCase(unittest.TestCase):
             datasets_labels=labels_list,
             datasets_track_names=tracks_name_list,
             datasets_class_labels=class_labels_list,
-            var_dict=self.plot_config["Eval_parameters"]["var_dict"],
             n_jets=int(self.plot_config["Eval_parameters"]["n_jets"]),
-            binning=plotting_config["binning"],
+            var_dict=plotting_config["var_dict"],
             output_directory=os.path.join(self.actual_plots_dir, "comp/"),
             # output_directory=os.path.join(self.expected_plots_dir, "comp/"),
             plot_type="png",
