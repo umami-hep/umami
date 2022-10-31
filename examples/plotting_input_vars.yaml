@@ -10,9 +10,6 @@ Eval_parameters:
   # Number of jets which are used
   n_jets: 3e4
 
-  # Path to variable dict
-  var_dict: <path_palce_holder>/umami/umami/configs/Dips_Variables.yaml
-
 jets_input_vars:
   variables: "jets"
   folder_to_save: jets_input_vars
@@ -56,7 +53,7 @@ jets_input_vars:
     # here you can define xlabels, if a variable is not in this dict, the variable name
     # will be used (i.e. for pT this would be 'pt_btagJes')
     pt_btagJes: "$p_T$ [MeV]"
-  binning:
+  var_dict:
     JetFitter_mass: 100
     JetFitter_energyFraction: 100
     JetFitter_significance3d: 100
@@ -93,6 +90,10 @@ jets_input_vars:
     rnnip_pb: 50
     rnnip_pc: 50
     rnnip_pu: 50
+    combined_rnnip:
+      variables: ["rnnip_pc", "rnnip_pu"]
+      binning: 50
+      operator: "+"
   flavours:
     b: 5
     c: 4
@@ -136,7 +137,7 @@ tracks_input_vars:
     n_leading: [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     ymin_ratio_1: 0.5
     ymax_ratio_1: 1.5
-  binning:
+  var_dict:
     IP3D_signed_d0_significance: 100
     IP3D_signed_z0_significance: 100
     numberOfInnermostPixelLayerHits: [0, 4, 1]
@@ -152,4 +153,8 @@ tracks_input_vars:
     numberOfSCTHits: [0, 19, 1]
     btagIp_d0: 100
     btagIp_z0SinTheta: 100
+    number_nPix_nSCT:
+      variables: ["numberOfPixelHits", "numberOfSCTHits"]
+      binning: [0, 19, 1]
+      operator: "+"
   class_labels: ["bjets", "cjets", "ujets"]

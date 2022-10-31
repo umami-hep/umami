@@ -1,4 +1,5 @@
 """Plots the given input variables of the given files and also a comparison."""
+import operator
 import os
 
 import numpy as np
@@ -8,7 +9,6 @@ from puma import Histogram, HistogramPlot
 import umami.data_tools as udt
 from umami.configuration import global_config, logger
 from umami.plotting_tools.utils import translate_binning
-from umami.preprocessing_tools import get_variable_dict
 
 
 def get_datasets_configuration(plotting_config: dict, tracks: bool = False):
@@ -234,11 +234,10 @@ def plot_input_vars_trks(
     datasets_labels: list,
     datasets_class_labels: list,
     datasets_track_names: list,
-    var_dict: dict,
     n_jets: int,
-    binning: dict,
-    xlabels_dict: dict = None,
+    var_dict: dict,
     sorting_variable: str = "ptfrac",
+    xlabels_dict: dict = None,
     n_leading: list = None,
     output_directory: str = "input_vars_trks",
     plot_type: str = "pdf",
@@ -262,12 +261,10 @@ def plot_input_vars_trks(
         dataset
     datasets_track_names : list
         List with the track names of the files.
-    var_dict : dict
-        Variable dict where all variables of the files are saved.
     n_jets : int
         Number of jets to use for plotting.
-    binning : dict
-        Decide which binning is used.
+    var_dict : dict
+        Dict with all the variables you want to plot inside with their binning.
     sorting_variable : str, optional
         Variable which is used for sorting, by default "ptfrac"
     xlabels_dict : dict, optional
@@ -286,8 +283,16 @@ def plot_input_vars_trks(
     **kwargs: dict
         Keyword arguments passed to the plot. You can use all arguments that are
         supported by the `HistogramPlot` class in the plotting API.
-
     """
+
+    # Define operator dict
+    operator_dict = {
+        "+": operator.iadd,
+        "-": operator.isub,
+        "*": operator.imul,
+        "/": operator.itruediv,
+        "log": "log",
+    }
 
     kwargs = check_kwargs_for_ylabel_and_n_ratio_panel(
         kwargs,
@@ -303,8 +308,13 @@ def plot_input_vars_trks(
 
     # Create dict that stores the binning for all the variables
     bins_dict = {}
-    for variable in binning:
-        bins_dict.update({variable: translate_binning(binning[variable], variable)})
+
+    for variable, entry in var_dict.items():
+        if isinstance(entry, dict):
+            bins_dict.update({variable: translate_binning(entry["binning"], variable)})
+
+        else:
+            bins_dict.update({variable: translate_binning(entry, variable)})
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
@@ -333,52 +343,9 @@ def plot_input_vars_trks(
         # Append trks to dict
         # TODO: change to |= in python 3.9
         trks_dict.update({label: trks})
+
         # TODO: change to |= in python 3.9
         flavour_label_dict.update({label: flavour_labels})
-
-    # Load var dict
-    variable_config = get_variable_dict(var_dict)
-
-    # Loading track variables
-    try:
-        trks_vars = variable_config["tracks"]
-
-    except KeyError:
-        no_norm_vars = variable_config["track_train_variables"][
-            datasets_track_names[0]
-        ]["noNormVars"]
-        log_norm_vars = variable_config["track_train_variables"][
-            datasets_track_names[0]
-        ]["logNormVars"]
-        joint_norm_vars = variable_config["track_train_variables"][
-            datasets_track_names[0]
-        ]["jointNormVars"]
-        trks_vars = no_norm_vars + log_norm_vars + joint_norm_vars
-
-        # Check for variables in the other
-        for counter, track_names in enumerate(datasets_track_names):
-            if counter != 0:
-                no_norm_vars_tmp = variable_config["track_train_variables"][
-                    track_names
-                ]["noNormVars"]
-                log_norm_vars_tmp = variable_config["track_train_variables"][
-                    track_names
-                ]["logNormVars"]
-                joint_norm_vars_tmp = variable_config["track_train_variables"][
-                    track_names
-                ]["jointNormVars"]
-                trks_vars_tmp = (
-                    no_norm_vars_tmp + log_norm_vars_tmp + joint_norm_vars_tmp
-                )
-
-                for iter_var in trks_vars_tmp:
-                    if iter_var not in trks_vars:
-                        logger.warning(
-                            "Variable %s of %s not in %s track collection. Skipping...",
-                            iter_var,
-                            datasets_labels[counter],
-                            datasets_labels[0],
-                        )
 
     for n_lead in n_leading:
         if n_lead == "None":
@@ -402,119 +369,182 @@ def plot_input_vars_trks(
         logger.info("Track origin: %s\n", track_origin)
 
         # Loop over variables
-        for var in trks_vars:
-            if var in bins_dict:
-                logger.info("Plotting %s...", var)
+        for var in bins_dict:
+            logger.info("Plotting %s...", var)
 
-                # Initialise plot for this variable
-                var_plot = HistogramPlot(bins=bins_dict[var], **kwargs)
+            # Initialise plot for this variable
+            var_plot = HistogramPlot(bins=bins_dict.get(var, 100), **kwargs)
 
-                xlabel = xlabels_dict.get(var, var)
+            # Retrieve x label
+            xlabel = xlabels_dict.get(var, var)
 
-                if n_lead is None:
-                    var_plot.xlabel = (
-                        xlabel
-                        if track_origin == "All"
-                        else f"{xlabel} ({track_origin})"
+            if n_lead is None:
+                var_plot.xlabel = (
+                    xlabel if track_origin == "All" else f"{xlabel} ({track_origin})"
+                )
+
+            else:
+                var_plot.xlabel = (
+                    f"{n_lead+1} leading tracks {xlabel}"
+                    if track_origin == "All"
+                    else (f"{n_lead+1} leading tracks {xlabel} ({track_origin})")
+                )
+
+            # Iterate over datasets
+            for dataset_number, (label, linestyle, class_labels) in enumerate(
+                zip(
+                    datasets_labels,
+                    linestyles[: len(datasets_labels)],
+                    datasets_class_labels,
+                )
+            ):
+                # Sort after given variable
+                sorting = np.argsort(-1 * trks_dict[label][sorting_variable])
+
+                try:
+                    if isinstance(var_dict[var], dict):
+                        # Create the list to loop over
+                        var_loop_list = var_dict[var]["variables"]
+
+                        # Get an array to to append to
+                        trks_array = np.zeros_like(trks_dict[label][var_loop_list[0]])
+
+                        # Ensure that if log is used, only one variable is given
+                        if (
+                            var_dict[var]["operator"] == "log"
+                            and len(var_loop_list) != 1
+                        ):
+                            raise ValueError(
+                                f"You defined log for {var} which uses multiple"
+                                " variables. For log, only one variable is supported!"
+                            )
+
+                        if (
+                            var_dict[var]["operator"] == "log"
+                            and len(var_loop_list) == 1
+                        ):
+                            # Get the correct operator to merge the variables
+                            var_operator = "+"
+                            use_log = True
+
+                        else:
+                            # Get the correct operator to merge the variables
+                            var_operator = var_dict[var]["operator"]
+                            use_log = False
+
+                    else:
+                        # Create the list to loop over
+                        var_loop_list = [var]
+
+                        # Get an array to to append to
+                        trks_array = np.zeros_like(trks_dict[label][var])
+
+                        # Get the correct operator to merge the variables
+                        var_operator = "+"
+
+                        # Set use_log to False
+                        use_log = False
+
+                except ValueError:
+                    logger.error(
+                        "Variable %s not available in %s. Skipping it for %s...",
+                        var,
+                        label,
+                        label,
                     )
+                    continue
 
-                else:
-                    var_plot.xlabel = (
-                        f"{n_lead+1} leading tracks {xlabel}"
-                        if track_origin == "All"
-                        else (f"{n_lead+1} leading tracks {xlabel} ({track_origin})")
-                    )
-
-                # Iterate over datasets
-                for dataset_number, (label, linestyle, class_labels) in enumerate(
-                    zip(
-                        datasets_labels,
-                        linestyles[: len(datasets_labels)],
-                        datasets_class_labels,
-                    )
-                ):
-                    # Sort after given variable
-                    sorting = np.argsort(-1 * trks_dict[label][sorting_variable])
+                for iter_var in var_loop_list:
 
                     # Sort the variables and tracks after given variable
                     if track_origin == "All":
-                        trks_array = np.asarray(
-                            [
-                                trks_dict[label][var][k][sorting[k]]
-                                for k in range(len(trks_dict[label][sorting_variable]))
-                            ]
-                        )
-
-                    else:
-                        # Select tracks of a given origin, so keep truthOriginLabel
-                        trks_array = np.asarray(
-                            [
-                                trks_dict[label][[var, "truthOriginLabel"]][k][
-                                    sorting[k]
-                                ]
-                                for k in range(len(trks_dict[label][sorting_variable]))
-                            ]
-                        )
-
-                    # Retrieve the track mask to figure out which track is a placeholder
-                    try:
-                        trk_mask = np.asarray(
-                            [
-                                trks_dict[label]["valid"][k][sorting[k]]
-                                for k in range(len(trks_dict[label][sorting_variable]))
-                            ]
-                        )
-
-                    except ValueError:
-                        trk_mask = ~np.isnan(
+                        trks_array = operator_dict[var_operator](
+                            trks_array,
                             np.asarray(
                                 [
-                                    trks_dict[label]["ptfrac"][k][sorting[k]]
+                                    trks_dict[label][iter_var][k][sorting[k]]
                                     for k in range(
                                         len(trks_dict[label][sorting_variable])
                                     )
                                 ]
-                            )
-                        )
-
-                    for flav_label, flavour in enumerate(class_labels):
-                        # Get the mask for the flavour which is to be plotted
-                        tracks_flav_mask = flavour_label_dict[label] == flav_label
-
-                        # Get the tracks and masks for one specific flavour
-                        tracks = trks_array[tracks_flav_mask][:, n_lead]
-                        tracks_mask = trk_mask[tracks_flav_mask][:, n_lead]
-
-                        # Get number of tracks
-                        if track_origin == "All":
-                            track_values = tracks[tracks_mask]
-
-                        else:
-                            mask_origin = np.asarray(
-                                tracks["truthOriginLabel"]
-                                == global_config.OriginType[track_origin]
-                            )
-                            track_values = tracks[
-                                np.logical_and(tracks_mask, mask_origin)
-                            ][var]
-
-                        # Add histogram to plot
-                        var_plot.add(
-                            Histogram(
-                                values=track_values,
-                                flavour=flavour,
-                                ratio_group=flavour,
-                                label=label,
-                                linestyle=linestyle,
                             ),
-                            reference=not bool(dataset_number),
                         )
 
-                var_plot.draw()
-                var_plot.savefig(f"{filedir}/{var}_{n_lead}_{track_origin}.{plot_type}")
+                    else:
+                        # Select tracks of a given origin, so keep truthOriginLabel
+                        trks_array = operator_dict[var_operator](
+                            trks_array,
+                            np.asarray(
+                                [
+                                    trks_dict[label][[iter_var, "truthOriginLabel"]][k][
+                                        sorting[k]
+                                    ]
+                                    for k in range(
+                                        len(trks_dict[label][sorting_variable])
+                                    )
+                                ]
+                            ),
+                        )
 
-            else:
-                logger.debug("Variable %s not in the binning dict. Skipping ...", var)
+                # Retrieve the track mask to figure out which track is a placeholder
+                try:
+                    trk_mask = np.asarray(
+                        [
+                            trks_dict[label]["valid"][k][sorting[k]]
+                            for k in range(len(trks_dict[label][sorting_variable]))
+                        ]
+                    )
+
+                except ValueError:
+                    trk_mask = ~np.isnan(
+                        np.asarray(
+                            [
+                                trks_dict[label]["ptfrac"][k][sorting[k]]
+                                for k in range(len(trks_dict[label][sorting_variable]))
+                            ]
+                        )
+                    )
+
+                for flav_label, flavour in enumerate(class_labels):
+                    # Get the mask for the flavour which is to be plotted
+                    tracks_flav_mask = flavour_label_dict[label] == flav_label
+
+                    # Get the tracks and masks for one specific flavour
+                    tracks = trks_array[tracks_flav_mask][:, n_lead]
+                    tracks_mask = trk_mask[tracks_flav_mask][:, n_lead]
+
+                    # Get number of tracks
+                    if track_origin == "All":
+                        track_values = tracks[tracks_mask]
+
+                    else:
+                        mask_origin = np.asarray(
+                            tracks["truthOriginLabel"]
+                            == global_config.OriginType[track_origin]
+                        )
+                        track_values = tracks[np.logical_and(tracks_mask, mask_origin)][
+                            var
+                        ]
+
+                    # Apply log if chosen
+                    if use_log:
+                        track_values = np.log(track_values)
+
+                    # Add histogram to plot
+                    var_plot.add(
+                        Histogram(
+                            values=track_values,
+                            flavour=flavour,
+                            ratio_group=flavour,
+                            label=label,
+                            linestyle=linestyle,
+                        ),
+                        reference=not bool(dataset_number),
+                    )
+
+            var_plot.draw()
+            var_plot.savefig(f"{filedir}/{var}_{n_lead}_{track_origin}.{plot_type}")
+
         logger.info("\n%s", 80 * "-")
 
 
@@ -524,7 +554,6 @@ def plot_input_vars_jets(
     datasets_class_labels: list,
     var_dict: dict,
     n_jets: int,
-    binning: dict,
     xlabels_dict: dict = None,
     special_param_jets: dict = None,
     output_directory: str = "input_vars_jets",
@@ -547,11 +576,9 @@ def plot_input_vars_jets(
         to plot light-jets and c-jets for the first but only c-jets for the second
         dataset
     var_dict : dict
-        Variable dict where all variables of the files are saved.
+        Dict with all the variables you want to plot inside with their binning.
     n_jets : int
         Number of jets to use for plotting.
-    binning : dict
-        Decide which binning is used.
     xlabels_dict : dict, optional
         Dict that stores the xlabels of the variables that are plotted. I.e. to
         specify a label for "pt_btagJes", use {"pt_btagJes": "$p_T$ [MeV]"}.
@@ -567,7 +594,20 @@ def plot_input_vars_jets(
     **kwargs: dict
         Keyword arguments passed to the plot. You can use all arguments that are
         supported by the `HistogramPlot` class in the plotting API.
+
+    Raises
+    ------
+    ValueError
+        When operator log is chosen but more than one variable is given
     """
+
+    # Define operator dict
+    operator_dict = {
+        "+": operator.iadd,
+        "-": operator.isub,
+        "*": operator.imul,
+        "/": operator.itruediv,
+    }
 
     if xlabels_dict is None:
         xlabels_dict = {}
@@ -580,8 +620,13 @@ def plot_input_vars_jets(
 
     # Create dict that stores the binning for all the variables
     bins_dict = {}
-    for variable in binning:
-        bins_dict.update({variable: translate_binning(binning[variable], variable)})
+
+    for variable, entry in var_dict.items():
+        if isinstance(entry, dict):
+            bins_dict.update({variable: translate_binning(entry["binning"], variable)})
+
+        else:
+            bins_dict.update({variable: translate_binning(entry, variable)})
 
     # Init Linestyles
     linestyles = ["solid", "dashed", "dotted", "dashdot"]
@@ -606,74 +651,133 @@ def plot_input_vars_jets(
         jets_dict.update({label: jets})
         flavour_label_dict.update({label: flavour_labels})
 
-    variable_config = get_variable_dict(var_dict)
-
-    # Loading jet variables
-    jet_variables = [
-        i
-        for j in variable_config["train_variables"]
-        for i in variable_config["train_variables"][j]
-    ]
-
     # Check if path is existing, if not mkdir
     if not os.path.isdir(f"{output_directory}/"):
         os.makedirs(f"{output_directory}/")
     filedir = f"{output_directory}/"
 
     # Loop over vars
-    for var in jet_variables:
-        if var in bins_dict:
-            # Initialise plot for this variable
-            var_plot = HistogramPlot(
-                bins=bins_dict[var],
-                xlabel=xlabels_dict.get(var, var),
-                **kwargs,
-            )
-            # setting range based on value from config file
-            if special_param_jets is not None and var in special_param_jets:
-                if (
-                    "lim_left" in special_param_jets[var]
-                    and "lim_right" in special_param_jets[var]
-                ):
-                    lim_left = special_param_jets[var]["lim_left"]
-                    lim_right = special_param_jets[var]["lim_right"]
-                    var_plot.bins_range = (lim_left, lim_right)
-
-            logger.info("Plotting %s ...", var)
-
-            # Iterate over datasets
-            for dataset_number, (label, linestyle, class_labels) in enumerate(
-                zip(
-                    datasets_labels,
-                    linestyles[: len(datasets_labels)],
-                    datasets_class_labels,
-                )
+    for var, entry in bins_dict.items():
+        # Initialise plot for this variable
+        var_plot = HistogramPlot(
+            bins=entry,
+            xlabel=xlabels_dict.get(var, var),
+            **kwargs,
+        )
+        # setting range based on value from config file
+        if special_param_jets is not None and var in special_param_jets:
+            if (
+                "lim_left" in special_param_jets[var]
+                and "lim_right" in special_param_jets[var]
             ):
-                # Get variable and the labels of the jets
-                jets_var = jets_dict[label][var]
-                flavour_labels_var = flavour_label_dict[label]
+                lim_left = special_param_jets[var]["lim_left"]
+                lim_right = special_param_jets[var]["lim_right"]
+                var_plot.bins_range = (lim_left, lim_right)
 
-                # Clean both from nans
-                jets_var_clean = jets_var[~np.isnan(jets_var)]
-                flavour_label_clean = flavour_labels_var[~np.isnan(jets_var)]
+        logger.info("Plotting %s ...", var)
 
-                for flav_label, flavour in enumerate(class_labels):
-                    jets_flavour = jets_var_clean[flavour_label_clean == flav_label]
+        # Iterate over datasets
+        for dataset_number, (label, linestyle, class_labels) in enumerate(
+            zip(
+                datasets_labels,
+                linestyles[: len(datasets_labels)],
+                datasets_class_labels,
+            )
+        ):
+            try:
+                if isinstance(var_dict[var], dict):
+                    # Create the list to loop over
+                    var_loop_list = var_dict[var]["variables"]
 
-                    # Add histogram to plot
-                    var_plot.add(
-                        Histogram(
-                            values=jets_flavour,
-                            flavour=flavour,
-                            ratio_group=flavour,
-                            label=label,
-                            linestyle=linestyle,
-                        ),
-                        reference=not bool(dataset_number),
-                    )
+                    # Get an array to append to
+                    jets_array = np.zeros_like(jets_dict[label][var_loop_list[0]])
+                    jets_bool = np.ones_like(jets_dict[label][var_loop_list[0]])
 
-            # Draw and save the plot
-            var_plot.draw()
-            var_plot.savefig(f"{filedir}/{var}.{plot_type}")
+                    # Ensure that if log is used, only one variable is given
+                    if var_dict[var]["operator"] == "log" and len(var_loop_list) != 1:
+                        raise ValueError(
+                            f"You defined log for {var} which uses multiple variables. "
+                            "For log, only one variable is supported!"
+                        )
+
+                    if var_dict[var]["operator"] == "log" and len(var_loop_list) == 1:
+                        # Get the correct operator to merge the variables
+                        var_operator = "+"
+                        use_log = True
+
+                    else:
+                        # Get the correct operator to merge the variables
+                        var_operator = var_dict[var]["operator"]
+                        use_log = False
+
+                else:
+                    # Create the list to loop over
+                    var_loop_list = [var]
+
+                    # Get an array to to append to
+                    jets_array = np.zeros_like(jets_dict[label][var])
+                    jets_bool = np.ones_like(jets_dict[label][var])
+
+                    # Get the correct operator to merge the variables
+                    var_operator = "+"
+
+                    # Set use_log to False
+                    use_log = False
+
+            except KeyError:
+                logger.error(
+                    "Variable %s not available in %s. Skipping it for %s...",
+                    var,
+                    label,
+                    label,
+                )
+                continue
+
+            for iter_var in var_loop_list:
+                # Get the variable from all jets and check for NaNs
+                iter_jets_var = jets_dict[label][iter_var]
+                iter_jets_bool = np.isnan(iter_jets_var)
+
+                # Convert all NaNs to 0
+                iter_jets_var_clean = np.nan_to_num(iter_jets_var)
+
+                # Add them to the prepared zero array
+                jets_array = operator_dict[var_operator](
+                    jets_array,
+                    iter_jets_var_clean,
+                )
+
+                # Combine the info if all given values were NaNs
+                jets_bool = jets_bool & iter_jets_bool
+
+            # Get the labels of the jets
+            flavour_labels_var = flavour_label_dict[label]
+            flavour_label_clean = flavour_labels_var[~jets_bool]
+
+            # Remove all jets where the only NaNs are
+            jets_array = jets_array[~jets_bool]
+
+            for flav_label, flavour in enumerate(class_labels):
+                jets_flavour = jets_array[flavour_label_clean == flav_label]
+
+                # Apply log if chosen
+                if use_log:
+                    jets_flavour = np.log(jets_flavour)
+
+                # Add histogram to plot
+                var_plot.add(
+                    Histogram(
+                        values=jets_flavour,
+                        flavour=flavour,
+                        ratio_group=flavour,
+                        label=label,
+                        linestyle=linestyle,
+                    ),
+                    reference=not bool(dataset_number),
+                )
+
+        # Draw and save the plot
+        var_plot.draw()
+        var_plot.savefig(f"{filedir}/{var}.{plot_type}")
 
     logger.info("\n%s", 80 * "-")
