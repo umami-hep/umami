@@ -430,23 +430,30 @@ class PreprocessConfiguration(Configuration):
         )
 
     def check_tracks_names(self) -> None:
-        """Checks if the option tracks_name is given."""
-        if (
-            "tracks_names" not in self.sampling["options"]
-            or self.sampling["options"]["tracks_names"] is None
-        ):
-            self.sampling["options"]["tracks_names"] = [
-                "tracks",
-            ]
-            if self.sampling["options"]["save_tracks"]:
-                logger.info(
-                    "'tracks_names' option not given or None, using default value"
-                    "'tracks'"
+        """
+        Checks if the option tracks_name is given.
+
+        Raises
+        ------
+        ValueError
+            When save_tracks is True but no tracks_names was given.
+        """
+        if self.sampling["options"].get("save_tracks", False) is True:
+            if isinstance(self.sampling["options"].get("tracks_names"), str):
+                self.sampling["options"]["tracks_names"] = [
+                    self.sampling["options"]["tracks_names"]
+                ]
+
+            elif not isinstance(self.sampling["options"].get("tracks_names"), list):
+                raise ValueError(
+                    "You set save_tracks to True but gave not a string or a "
+                    "list for tracks_names! You gave "
+                    f'{isinstance(self.sampling["options"].get("tracks_names"))}'
                 )
-        elif not isinstance(self.sampling["options"]["tracks_names"], list):
-            self.sampling["options"]["tracks_names"] = [
-                self.sampling["options"]["tracks_names"]
-            ]
+
+        else:
+            self.sampling["options"]["save_tracks"] = False
+            self.sampling["options"]["tracks_names"] = None
 
     def copy_to_out_dir(self, suffix: str, out_dir: str = None) -> None:
         """

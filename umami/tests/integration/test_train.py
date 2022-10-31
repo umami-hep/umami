@@ -494,6 +494,18 @@ class TestTraining(unittest.TestCase):
 
         self.assertTrue(runTraining(config=config, tagger="CADS"))
 
+    def test_train_tfrecords_dl1r(self):
+        """Integration test of train.py for DL1r script with TFRecords."""
+
+        config = prepareConfig(
+            tagger="dl1r",
+            test_dir=self.test_dir,
+            preprocess_files_from="dl1r_base_count",
+            useTFRecords=True,
+        )
+
+        self.assertTrue(runTraining(config=config, tagger="DL1r"))
+
     def test_train_tfrecords_umami(self):
         """Integration test of train.py for UMAMI script with TFRecords."""
 

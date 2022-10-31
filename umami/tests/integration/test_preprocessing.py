@@ -113,11 +113,7 @@ def runPreprocessing(
         sample_type_list = ["ttbar", "zprime"]
 
     if sample_usecase_list is None:
-        if tagger == "dl1r":
-            sample_usecase_list = ["training", "validation"]
-
-        else:
-            sample_usecase_list = ["training"]
+        sample_usecase_list = ["training", "validation"]
 
     # Generate list of samples
     sample_list = [
@@ -171,28 +167,27 @@ def runPreprocessing(
         raise AssertionError("Test failed: preprocessing.py --resampling.") from error
 
     # Running the hybrid validation resampling
-    if tagger == "dl1r":
-        logger.info("Test: running the hybrid validation resampling...")
-        run_hybird_validation_resampling = run(
-            [
-                "python",
-                "umami/preprocessing.py",
-                "-c",
-                f"{config}",
-                "--resampling",
-                "--verbose",
-                "--hybrid_validation",
-            ],
-            check=True,
-        )
+    logger.info("Test: running the hybrid validation resampling...")
+    run_hybrid_validation_resampling = run(
+        [
+            "python",
+            "umami/preprocessing.py",
+            "-c",
+            f"{config}",
+            "--resampling",
+            "--verbose",
+            "--hybrid_validation",
+        ],
+        check=True,
+    )
 
-        try:
-            run_hybird_validation_resampling.check_returncode()
+    try:
+        run_hybrid_validation_resampling.check_returncode()
 
-        except CalledProcessError as error:
-            raise AssertionError(
-                "Test failed: preprocessing.py --resampling --hybrid_validation."
-            ) from error
+    except CalledProcessError as error:
+        raise AssertionError(
+            "Test failed: preprocessing.py --resampling --hybrid_validation."
+        ) from error
 
     logger.info("Test: retrieving scaling and shifting factors...")
     run_scaling = run(
@@ -239,26 +234,23 @@ def runPreprocessing(
         " them to tf record files..."
     )
 
-    if tagger != "dl1r":
-        run_record = run(
-            [
-                "python",
-                "umami/preprocessing.py",
-                "-c",
-                f"{config}",
-                "--to_records",
-                "--verbose",
-            ],
-            check=True,
-        )
+    run_record = run(
+        [
+            "python",
+            "umami/preprocessing.py",
+            "-c",
+            f"{config}",
+            "--to_records",
+            "--verbose",
+        ],
+        check=True,
+    )
 
-        try:
-            run_record.check_returncode()
+    try:
+        run_record.check_returncode()
 
-        except CalledProcessError as error:
-            raise AssertionError(
-                "Test failed: preprocessing.py --to_records."
-            ) from error
+    except CalledProcessError as error:
+        raise AssertionError("Test failed: preprocessing.py --to_records.") from error
 
     tagger_path = Path(f"./test_preprocessing_{tagger}_{string_id}_{method}/")
     tagger_path_full = Path(f"./test_preprocessing_{tagger}_{string_id}_{method}_full/")
@@ -345,11 +337,6 @@ def runPreprocessing(
     )
     run(
         [f"rm -rfv {tagger_path}/PFlow-hybrid_70-test-resampled.h5"],
-        shell=True,
-        check=True,
-    )
-    run(
-        [f"rm -rfv {tagger_path}/PFlow-hybrid-validation-test-resampled.h5"],
         shell=True,
         check=True,
     )
@@ -500,12 +487,12 @@ class TestPreprocessing(unittest.TestCase):
         replace_line_in_file(
             self.pdf_config,
             "    n_jets: 25e6",
-            "    n_jets: 2e4",
+            "    n_jets: 1e4",
         )
         replace_line_in_file(
             self.pdf_config,
             "    n_jets_validation: 4e6",
-            "    n_jets_validation: 2e4",
+            "    n_jets_validation: 1e4",
         )
         replace_line_in_file(
             self.pdf_config,
@@ -520,6 +507,21 @@ class TestPreprocessing(unittest.TestCase):
         replace_line_in_file(
             self.pdf_config,
             "      training_ttbar_ujets: 13.5e6",
+            "",
+        )
+        replace_line_in_file(
+            self.pdf_config,
+            "      validation_ttbar_bjets: 5.5e6",
+            "",
+        )
+        replace_line_in_file(
+            self.pdf_config,
+            "      validation_ttbar_cjets: 11.5e6",
+            "",
+        )
+        replace_line_in_file(
+            self.pdf_config,
+            "      validation_ttbar_ujets: 13.5e6",
             "",
         )
         replace_line_in_file(
@@ -591,6 +593,21 @@ class TestPreprocessing(unittest.TestCase):
         replace_line_in_file(
             self.importance_no_replace_config,
             "      training_ttbar_ujets: 13.5e6",
+            "",
+        )
+        replace_line_in_file(
+            self.importance_no_replace_config,
+            "      validation_ttbar_bjets: 5.5e6",
+            "",
+        )
+        replace_line_in_file(
+            self.importance_no_replace_config,
+            "      validation_ttbar_cjets: 11.5e6",
+            "",
+        )
+        replace_line_in_file(
+            self.importance_no_replace_config,
+            "      validation_ttbar_ujets: 13.5e6",
             "",
         )
         replace_line_in_file(
@@ -785,6 +802,16 @@ class TestPreprocessing(unittest.TestCase):
             "    tracks_names: null",
         )
         replace_line_in_file(
+            self.config,
+            "    save_track_labels:",
+            "    save_track_labels: False",
+        )
+        replace_line_in_file(
+            self.config,
+            "    track_truth_variables:",
+            "    track_truth_variables: null",
+        )
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dl1r}",
@@ -893,6 +920,16 @@ class TestPreprocessing(unittest.TestCase):
             "    tracks_names: null",
         )
         replace_line_in_file(
+            self.config,
+            "    save_track_labels:",
+            "    save_track_labels: False",
+        )
+        replace_line_in_file(
+            self.config,
+            "    track_truth_variables:",
+            "    track_truth_variables: null",
+        )
+        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dl1r}",
@@ -954,6 +991,16 @@ class TestPreprocessing(unittest.TestCase):
             self.config,
             "    tracks_names:",
             "    tracks_names: null",
+        )
+        replace_line_in_file(
+            self.config,
+            "    save_track_labels:",
+            "    save_track_labels: False",
+        )
+        replace_line_in_file(
+            self.config,
+            "    track_truth_variables:",
+            "    track_truth_variables: null",
         )
         replace_line_in_file(
             self.config_paths,

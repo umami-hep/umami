@@ -209,7 +209,9 @@ def read_dataframe_repetition(
 
         # Init a list for the jets and tracks
         jet_ls = []
-        track_ls = {elem: [] for elem in tracks_names}
+
+        if save_tracks:
+            track_ls = {elem: [] for elem in tracks_names}
 
         # Loop over the list of indicies which are to be loaded
         for i, sublist_loading_indices in enumerate(list_loading_indices):
