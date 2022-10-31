@@ -88,10 +88,13 @@ def load_tfrecords_train_dataset(
     # Load metadata in file
     with open(metadata_name, "r") as metadata_file:
         metadata = json.load(metadata_file)
-        metadata["n_trks"] = metadata["n_trks"][tracks_name]
-        metadata["n_trk_features"] = metadata["n_trk_features"][tracks_name]
-        metadata["n_trks_labels"] = metadata["n_trks_labels"][tracks_name]
-        metadata["n_trks_classes"] = metadata["n_trks_classes"][tracks_name]
+
+        # Check if tracks are used or not
+        if tracks_name is not None:
+            metadata["n_trks"] = metadata["n_trks"][tracks_name]
+            metadata["n_trk_features"] = metadata["n_trk_features"][tracks_name]
+            metadata["n_trks_labels"] = metadata["n_trks_labels"][tracks_name]
+            metadata["n_trks_classes"] = metadata["n_trks_classes"][tracks_name]
 
     return train_dataset, metadata
 

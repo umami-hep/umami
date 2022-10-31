@@ -3,6 +3,7 @@
 ### Latest
 
 - Added writing validation files [!659](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/659)
+- Adding integration test for DL1* with tfrecords [!660](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/660)
 - Adding Appache 2.0 license [!656](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/656)
 - Fixing issue in the try except blocks of the preprocessing plots [!655](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/655)
 - Setting default value for concat_jet_tracks [!654](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/654)

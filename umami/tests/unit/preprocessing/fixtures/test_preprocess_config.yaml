@@ -106,7 +106,7 @@ sampling:
       ttbar: 0.65
       zprime: 0.35
     # can change after applying resampling in the hybrid sample creation
-    save_tracks: False
+    save_tracks: True
     tracks_names: "tracks"
     n_jets: 5.5e6
     intermediate_index_file: indices.h5

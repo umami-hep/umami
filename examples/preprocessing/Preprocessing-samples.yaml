@@ -83,6 +83,13 @@ validation_ttbar_ujets:
   <<: *cuts_template_validation_ttbar_hybrid
   output_name: !join [*sample_path, /ujets_validation_ttbar_PFlow.h5]
 
+validation_ttbar_taujets:
+  type: ttbar
+  category: taujets
+  n_jets: 4e6
+  <<: *cuts_template_validation_ttbar_hybrid
+  output_name: !join [*sample_path, /taujets_validation_ttbar_PFlow.h5]
+
 validation_zprime:
   type: zprime
   category: inclusive
@@ -110,6 +117,13 @@ validation_zprime_ujets:
   n_jets: 4e6
   <<: *cuts_template_validation_zprime_hybrid
   output_name: !join [*sample_path, /ujets_validation_zprime_PFlow.h5]
+
+validation_zprime_taujets:
+  type: zprime
+  category: taujets
+  n_jets: 4e6
+  <<: *cuts_template_validation_zprime_hybrid
+  output_name: !join [*sample_path, /taujets_validation_zprime_PFlow.h5]
 
 testing_ttbar:
   type: ttbar

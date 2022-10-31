@@ -33,23 +33,12 @@ class h5_to_tf_record_converter:
                 )
                 self.chunk_size = 5_000
 
-        self.tracks_name = (
-            config.sampling["options"]["tracks_names"]
-            if "tracks_names" in config.sampling["options"]
-            else None
+        self.save_tracks = config.sampling["options"].get("save_tracks", False)
+        self.tracks_name = config.sampling["options"].get("tracks_names")
+        self.save_track_labels = config.sampling["options"].get(
+            "save_track_labels", False
         )
-
-        self.save_track_labels = (
-            config.sampling["options"]["save_track_labels"]
-            if "save_track_labels" in config.sampling["options"]
-            else False
-        )
-
-        self.n_add_vars = (
-            config.convert_to_tfrecord["N_add_vars"]
-            if "N_add_vars" in config.convert_to_tfrecord
-            else None
-        )
+        self.n_add_vars = config.convert_to_tfrecord.get("N_add_vars")
 
     def load_h5File_Train(self):
         """
@@ -106,7 +95,7 @@ class h5_to_tf_record_converter:
                 # Get the weights
                 Weights = hFile["jets/weight"][start:end]
 
-                if self.tracks_name is not None:
+                if self.save_tracks:
                     # Get a list with all tracks inside
                     X_trks = {
                         track_name: hFile[f"{track_name}/inputs"][start:end]
@@ -161,7 +150,7 @@ class h5_to_tf_record_converter:
 
             # Get the dimensional values of the tracks and save them for each track
             # collection in a dict
-            if self.tracks_name is not None:
+            if self.save_tracks:
                 data["n_trks"] = {
                     track_name: len(h5file[f"{track_name}/inputs"][0])
                     for track_name in self.tracks_name
@@ -261,7 +250,7 @@ class h5_to_tf_record_converter:
                         Weights[iterator].reshape(-1)
                     )
 
-                    if self.tracks_name is not None:
+                    if self.save_tracks:
                         # Add track collections
                         for key, item in X_trks.items():
                             record_bytes.features.feature[
