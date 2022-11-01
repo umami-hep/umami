@@ -2,6 +2,8 @@
 
 ### Latest
 
+### [v0.15](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.15) (31.10.2022)
+
 - Added writing validation files [!659](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/659)
 - Adding integration test for DL1* with tfrecords [!660](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/660)
 - Adding Appache 2.0 license [!656](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/656)
