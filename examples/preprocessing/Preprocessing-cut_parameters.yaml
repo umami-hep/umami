@@ -18,8 +18,8 @@
 .cuts_template_training_ttbar: &cuts_template_training_ttbar
   cuts:
     - eventNumber:
-        operator: mod_6_<=
-        condition: 3
+        operator: mod_10_<=
+        condition: 7
     - pt_btagJes:
         operator: "<="
         condition: 2.5e5
@@ -28,8 +28,8 @@
 .cuts_template_training_zprime: &cuts_template_training_zprime
   cuts:
     - eventNumber:
-        operator: mod_6_<=
-        condition: 3
+        operator: mod_10_<=
+        condition: 7
     - pt_btagJes:
         operator: ">"
         condition: 2.5e5
@@ -38,15 +38,15 @@
 .cuts_template_validation: &cuts_template_validation
   cuts:
     - eventNumber:
-        operator: mod_6_==
-        condition: 4
+        operator: mod_10_==
+        condition: 8
     - *outlier_cuts
 
 .cuts_template_validation_ttbar_hybrid: &cuts_template_validation_ttbar_hybrid
   cuts:
     - eventNumber:
-        operator: mod_6_==
-        condition: 4
+        operator: mod_10_==
+        condition: 8
     - pt_btagJes:
         operator: "<="
         condition: 2.5e5
@@ -55,8 +55,8 @@
 .cuts_template_validation_zprime_hybrid: &cuts_template_validation_zprime_hybrid
   cuts:
     - eventNumber:
-        operator: mod_6_==
-        condition: 4
+        operator: mod_10_==
+        condition: 8
     - pt_btagJes:
         operator: ">"
         condition: 2.5e5
@@ -65,6 +65,6 @@
 .cuts_template_testing: &cuts_template_testing
   cuts:
     - eventNumber:
-        operator: mod_6_==
-        condition: 5
+        operator: mod_10_==
+        condition: 9
     - *outlier_cuts

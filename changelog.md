@@ -2,6 +2,8 @@
 
 ### Latest
 
+- Changing default split in train/val/test [!662](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/662)
+
 ### [v0.15](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.15) (31.10.2022)
 
 - Added writing validation files [!659](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/659)
