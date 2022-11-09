@@ -11,6 +11,28 @@ from umami.configuration import logger
 from umami.preprocessing_tools.utils import get_variable_dict
 
 
+def as_full(data_type: np.dtype):
+    """
+    Convert float type to full precision
+
+    Parameters
+    ----------
+    data_type: np.dtype
+        type to check for float
+
+    Returns
+    -------
+    np.dtype
+        Return an element of a dtype as a full precision float if we
+        stored half.
+
+    """
+    data_type = np.dtype(data_type)
+    if data_type.kind == "f" and data_type.itemsize == 2:
+        return np.dtype("f4")
+    return data_type
+
+
 def generate_default_dict(scale_dict: dict) -> dict:
     """
     Generates default value dictionary from scale/shift dictionary.
@@ -106,6 +128,8 @@ def apply_scaling_jets(
         are available in the scale dict.
     ValueError
         If the scale parameter for the variable is either 0 or inf.
+    ValueError
+        If the scaled/shifted variable has infs or NaNs.
     """
 
     # Check type of input
@@ -167,8 +191,16 @@ def apply_scaling_jets(
             )
 
         # Shift and scale the variables
-        jets[var] = jets[var] - scale_dict[var]["shift"]
-        jets[var] = jets[var] / scale_dict[var]["scale"]
+        jets[var] = (jets[var] - scale_dict[var]["shift"]) / scale_dict[var]["scale"]
+
+        # Check for NaNs or Infs and raise an error if so
+        if np.isnan(jets[var]).any() or np.isinf(jets[var]).any():
+            raise ValueError(
+                "Inf or NaN value(s) encountered when applying the scaling/shifting "
+                f"for the jets! The probablematic variable is {var}. "
+                f'Scale value: {scale_dict[var]["scale"]}, '
+                f'Shift value: {scale_dict[var]["shift"]}'
+            )
 
     return jets
 
@@ -213,6 +245,8 @@ def apply_scaling_trks(
     ------
     ValueError
         If scale is found to be 0 or inf for any track variable.
+    ValueError
+        If the scaled/shifted variable has infs or NaNs.
     """
 
     # Init a list for the variables
@@ -247,27 +281,48 @@ def apply_scaling_trks(
     for var in trk_vars:
         x = trks[var]
 
+        # Get the scaling/shifting values for this variable in full precision
+        if var in scale_dict:
+            shift = np.float32(scale_dict[var].get("shift"))
+            scale = np.float32(scale_dict[var].get("scale"))
+
+        else:
+            shift, scale = None, None
+
+        # Check if the variable needs to be in log
         if var in trk_vars_lists_dict["logNormVars"]:
             x = np.log(x)
+
+        # Check if the variable is to be scaled/shifted
         if (
             var in trk_vars_lists_dict["jointNormVars"]
             or var in trk_vars_lists_dict["logNormVars"]
         ):
-            shift = np.float32(scale_dict[var]["shift"])
-            scale = np.float32(scale_dict[var]["scale"])
+
+            # Check against 0 or inf scale value
             if scale == 0 or np.isinf(scale):
                 raise ValueError(f"Scale parameter for track var {var} is {scale}.")
+
+            # Apply scaling and shifting
             x = np.where(
                 track_mask,
-                x - shift,
+                (x - shift) / scale,
                 x,
             )
-            x = np.where(
-                track_mask,
-                x / scale,
-                x,
+
+        # Convert NaNs from padded tracks to zeros
+        x = np.where(~track_mask, np.nan_to_num(x), x)
+
+        # Check for NaNs or Infs and raise an error if so
+        if np.isnan(x).any() or np.isinf(x).any():
+            raise ValueError(
+                "Inf value(s) encountered when applying the scaling/shifting "
+                f"for the tracks! The probablematic variable is {var}. "
+                f"Scale value: {scale}, Shift value: {shift}"
             )
-        var_arr_list.append(np.nan_to_num(x))
+
+        # Append track variable values to list for correct stacking later
+        var_arr_list.append(x)
 
     # Stack the results for new dataset
     scaled_trks = np.stack(var_arr_list, axis=-1)
@@ -849,6 +904,11 @@ class CalculateScaling:
                     ]
                 )
 
+                # Loop over the columns and change all floats to full precision
+                for iter_var in var_list:
+                    if jets[iter_var].dtype.kind == "f":
+                        jets[iter_var] = jets[iter_var].astype(np.float32)
+
                 # Replace inf values
                 jets.replace([np.inf, -np.inf], np.nan, inplace=True)
 
@@ -948,6 +1008,11 @@ class CalculateScaling:
             start_ind = 0
             tupled_indices = []
 
+            # Retrieving the dtypes of the variables to load
+            to_load_dtype = [
+                (n, as_full(x)) for n, x in infile_all[f"/{tracks_name}"].dtype.descr
+            ]
+
             # Loop over indicies
             while start_ind < n_jets:
                 # Calculate end index of the chunk
@@ -967,7 +1032,8 @@ class CalculateScaling:
 
                 # Load tracks
                 trks = np.asarray(
-                    infile_all[f"/{tracks_name}"][index_tuple[0] : index_tuple[1]]
+                    infile_all[f"/{tracks_name}"][index_tuple[0] : index_tuple[1]],
+                    dtype=to_load_dtype,
                 )
 
                 # Get the masking
