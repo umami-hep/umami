@@ -15,7 +15,11 @@ from scipy.stats import binned_statistic_2d
 from umami.configuration import global_config, logger
 from umami.plotting_tools import preprocessing_plots
 from umami.preprocessing_tools import get_variable_dict
-from umami.preprocessing_tools.Scaling import apply_scaling_jets, apply_scaling_trks
+from umami.preprocessing_tools.Scaling import (
+    apply_scaling_jets,
+    apply_scaling_trks,
+    as_full,
+)
 
 
 class TrainSampleWriter:
@@ -142,19 +146,24 @@ class TrainSampleWriter:
         """
 
         # Open the file and load the jets
-        with h5py.File(input_file, "r") as f:
+        with h5py.File(input_file, "r") as in_file:
 
             # Get the indices
             start_ind = 0
-
             tupled_indices = []
+
             while start_ind < n_jets:
+                # Calculate end index of the chunk
                 end_ind = int(start_ind + chunk_size)
+
+                # Check if end index is bigger than n_jets
                 end_ind = min(end_ind, n_jets)
 
+                # Append to list
                 tupled_indices.append((start_ind, end_ind))
+
+                # Set the new start index
                 start_ind = end_ind
-                end_ind = int(start_ind + chunk_size)
 
             for index_tuple in tupled_indices:
 
@@ -172,17 +181,22 @@ class TrainSampleWriter:
 
                 # Check if weights are available in the resampled file
                 if (
-                    "weight" in list(f["/jets"].dtype.fields.keys())
+                    "weight" in list(in_file["/jets"].dtype.fields.keys())
                     and "weight" not in jets_variables
                 ):
                     jets_variables += ["weight"]
 
                 # Load jets
-                jets = f["/jets"].fields(jets_variables)[indices_selected]
-                labels = f["/labels"][indices_selected]
+                jets = in_file["/jets"].fields(jets_variables)[indices_selected]
+                labels = in_file["/labels"][indices_selected]
+
+                # Loop over the columns and change all floats to full precision
+                for iter_var in jets_variables:
+                    if jets[iter_var].dtype.kind == "f":
+                        jets[iter_var] = jets[iter_var].astype(np.float32)
 
                 # keep the jet flavour
-                flavour = f["/jets"].fields([self.variable_config["label"]])[
+                flavour = in_file["/jets"].fields([self.variable_config["label"]])[
                     indices_selected
                 ]
 
@@ -217,14 +231,19 @@ class TrainSampleWriter:
                     # Loop over track selections
                     for tracks_name in self.tracks_names:
 
+                        # Retrieving the dtypes of the variables to load
+                        to_load_dtype = [
+                            (n, as_full(x))
+                            for n, x in in_file[f"/{tracks_name}"].dtype.descr
+                        ]
+
                         # Get the tracks scale dict
                         trk_scale_dict = tracks_scale_dict[tracks_name]
 
                         # Load tracks
                         trks = np.asarray(
-                            h5py.File(input_file, "r")[f"/{tracks_name}"][
-                                indices_selected
-                            ]
+                            in_file[f"/{tracks_name}"][indices_selected],
+                            dtype=to_load_dtype,
                         )
                         trks = trks[rng_index]
 
