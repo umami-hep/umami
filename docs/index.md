@@ -20,3 +20,7 @@ Docker images are available on CERN GitLab container registry and on Docker Hub:
 
 
 An API reference can be found [here](sphinx-docs).
+
+## Tutorial for Umami
+
+At the [FTAG Workshop in 2022 in Amsterdam](https://indico.cern.ch/event/1193206/timetable/?view=standard), we gave a tutorial how to work with Umami. You can find the slides together with a recording of the talk [here](https://indico.cern.ch/event/1193206/timetable/?view=standard#b-477082-day-3-afternoon-tutor). The corresponding step-by-step tutorial can be found in the FTAG docs webpage [here](https://ftag.docs.cern.ch/software/tutorials/tutorial-umami/)

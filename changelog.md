@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Update README.md [!667](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/667)
 - Adding full precision calculation of the scale/shift dicts [!663](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/663)
 - Changing default split in train/val/test [!662](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/662)
 
