@@ -1,7 +1,6 @@
 parameters: !include Preprocessing-parameters.yaml
 cut_parameters: !include Preprocessing-cut_parameters.yaml
 
-
 preparation:
   # Path to the .h5 files from the h5 dumper.
   input_h5:

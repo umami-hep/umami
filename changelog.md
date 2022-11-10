@@ -2,8 +2,10 @@
 
 ### Latest
 
+- Add preprocessing step to merge mc21 single and dileptonic ttbar samples [!651](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/651)
 - Adding full precision calculation of the scale/shift dicts [!663](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/663)
 - Changing default split in train/val/test [!662](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/662)
+
 
 ### [v0.15](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.15) (31.10.2022)
 

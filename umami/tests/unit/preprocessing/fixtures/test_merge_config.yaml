@@ -1,0 +1,22 @@
+parameters: !include test_parameters.yaml
+
+single_lepton:
+  path: *ntuple_path
+  file_pattern: "*single_lepton.h5"
+
+dilepton:
+  path: *ntuple_path
+  file_pattern: "*dilepton.h5"
+
+no_sample:
+  path: *ntuple_path
+  file_pattern: "*no_sample.h5"
+
+index_dir: &index_file !join [*ntuple_path, /indices/]
+
+seed: 42
+merging_ratio: 5
+out_dir: &out_dir !join [*ntuple_path, /merged/]
+
+save_tracks: True
+tracks_names: "tracks"
