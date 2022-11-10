@@ -24,10 +24,14 @@ More details can be found [here](https://umami.docs.cern.ch/setup/development/).
 
 ## Preprocessing
 
-For the training of umami the ntuples are used as specified in the section [MC Samples](https://umami.docs.cern.ch/preprocessing/mc-samples/).
+For the training of umami the ntuples are used as specified in the section [MC Samples](https://ftag.docs.cern.ch/software/samples/).
 
-The ntuples need to be preprocessed following the [preprocessing instructions](https://umami.docs.cern.ch/preprocessing/preprocessing/).
+The ntuples need to be preprocessed following the [Preprocessing Instructions](https://umami-docs.web.cern.ch/preprocessing/Overview/).
 
 ## Training
 
-If you want to train or evaluate DL1r or DIPS please follow the [Training-instructions](https://umami.docs.cern.ch/trainings/train-instructions/).
+If you want to train or evaluate DL1r or DIPS please follow the [Training Instructions](https://umami-docs.web.cern.ch/trainings/Overview/).
+
+## Tutorial for Umami
+
+At the [FTAG Workshop in 2022 in Amsterdam](https://indico.cern.ch/event/1193206/timetable/?view=standard), we gave a tutorial how to work with Umami. You can find the slides together with a recording of the talk [here](https://indico.cern.ch/event/1193206/timetable/?view=standard#b-477082-day-3-afternoon-tutor). The corresponding step-by-step tutorial can be found in the FTAG docs webpage [here](https://ftag.docs.cern.ch/software/tutorials/tutorial-umami/).
