@@ -10,6 +10,13 @@ from umami.preprocessing_tools.Merging import (
     get_size,
 )
 
+from umami.preprocessing_tools.ttbar_merge import (
+    MergeConfig,
+    TTbarMerge,
+    event_list,
+    event_indices,
+)
+
 # from umami.preprocessing_tools.PDF_Sampling import PDFSampling
 from umami.preprocessing_tools.Preparation import PrepareSamples
 from umami.preprocessing_tools.resampling.count_sampling import UnderSampling

@@ -1,0 +1,21 @@
+parameters: !include Preprocessing-parameters.yaml
+
+single_lepton:
+  path: *ntuple_path
+  file_pattern: user.pgadow.601229.e8453_s3873_r13829_p5278.tdd.EMPFlow.22_2_86.22-10-10_run3_v03_output.h5/*.h5
+
+dilepton:
+  path: *ntuple_path
+  file_pattern: user.pgadow.601230.e8453_s3873_r13768_p5226.tdd.EMPFlow.22_2_86.22-08-31_run3_v02_output.h5/*.h5
+
+index_dir: &index_file !join [*ntuple_path, /indices/]
+
+seed: 42
+merging_ratio: 5
+out_file_size: 100_000
+out_dir: &out_dir !join [*ntuple_path, /merged/]
+
+save_tracks: True
+
+# Name(s) of the track collection(s) to use.
+tracks_names: ["tracks_loose"]

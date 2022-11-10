@@ -1,5 +1,7 @@
 """Unit tests for preprocessing_tools."""
 import os
+import shutil
+from pathlib import Path
 import tempfile
 import unittest
 from subprocess import CalledProcessError, run
@@ -15,6 +17,10 @@ from umami.preprocessing_tools import (
     binarise_jet_labels,
     get_scale_dict,
     get_variable_dict,
+    TTbarMerge,
+    MergeConfig,
+    event_list,
+    event_indices,
 )
 
 set_log_level(logger, "DEBUG")
@@ -427,3 +433,161 @@ class PrepareSamplesTestCase(unittest.TestCase):
         ps.sample.output_name = self.output_file.name
         ps.run()
         assert os.path.exists(self.output_file.name) == 1
+
+
+class TTbarMergeTestCase(unittest.TestCase):
+    """
+    Test the implementation of the TTbarMerge class
+    """
+
+    @classmethod
+    def setUpClass(self):  # pylint: disable=C0202
+        self.config_file = os.path.join(
+            os.path.dirname(__file__), "fixtures", "test_merge_config.yaml"
+        )
+
+        self.config = MergeConfig(self.config_file)
+
+        # create temporary h5 files
+        jets_single = pd.DataFrame(
+            {
+                "eventNumber": np.array([0, 1, 2, 3, 4, 4], dtype=np.uint8),
+                global_config.pTvariable: 5e3 * np.random.uniform(size=6),
+            },
+        )
+
+        jets_double = pd.DataFrame(
+            {
+                "eventNumber": np.array([0, 1, 2, 3, 4, 4], dtype=np.uint8),
+                global_config.pTvariable: 5e3 * np.random.uniform(size=6),
+            },
+        )
+
+        tracks = np.ones(shape=(6, 5, 40))
+
+        # pylint: disable=R1732
+        self.tf_single = tempfile.NamedTemporaryFile(
+            suffix="single_lepton.h5", dir=".", delete=False
+        )
+        # pylint: disable=R1732
+        self.tf_double = tempfile.NamedTemporaryFile(
+            suffix="dilepton.h5", dir=".", delete=False
+        )
+
+        with h5py.File(self.tf_single, "w") as out_file:
+            out_file.create_dataset("jets", data=jets_single.to_records())
+            out_file.create_dataset("tracks", data=tracks)
+            out_file.create_dataset("fs_tracks", data=tracks)
+
+        with h5py.File(self.tf_double, "w") as out_file:
+            out_file.create_dataset("jets", data=jets_double.to_records())
+            out_file.create_dataset("tracks", data=tracks)
+            out_file.create_dataset("fs_tracks", data=tracks)
+
+        self.config.config["single_lepton"]["file_patten"] = self.tf_single.name
+        self.config.config["dilepton"]["file_patten"] = self.tf_double.name
+
+    @classmethod
+    def tearDownClass(self):  # pylint: disable=C0202
+        os.remove(self.tf_single.name)
+        os.remove(self.tf_double.name)
+        shutil.rmtree(self.config.config["index_dir"])
+        shutil.rmtree(self.config.config["out_dir"])
+
+    def test_get_input_files(self):
+        """Test get_input_files function."""
+        ttm = TTbarMerge(self.config)
+
+        with self.subTest("Test single lepton"):
+            self.assertEqual(
+                ttm.get_input_files("single_lepton")[0].stem,
+                Path(self.tf_single.name).stem,
+            )
+
+        with self.subTest("Test dilepton"):
+            self.assertEqual(
+                ttm.get_input_files("dilepton")[0].stem, Path(self.tf_double.name).stem
+            )
+
+        with self.subTest("Test no sample found"):
+            self.assertRaises(ValueError, ttm.get_input_files, "no_sample")
+
+        with self.subTest("Test sample channel not found"):
+            self.assertRaises(KeyError, ttm.get_input_files, "no_channel")
+
+    def test_event_list(self):
+        """Test event_list function."""
+        ttm = TTbarMerge(self.config)
+        expected = np.array([0, 1, 2, 3, 4])
+        events_single, _ = event_list(ttm.get_input_files("single_lepton"))
+
+        self.assertTrue(np.array_equal(events_single.astype(int), expected))
+
+    def test_event_indices(self):
+        """Test event_indices function."""
+
+        events_subsample = np.array([0, 4])
+
+        ttm = TTbarMerge(self.config)
+        indices_single = event_indices(
+            ttm.get_input_files("single_lepton"), events_subsample
+        )
+
+        # 1 jet with event number 0, 2 jets with event number 4
+        self.assertEqual(len(indices_single[0]), 3)
+
+    def test_load_events_generator(self):
+        """Test load_events_generator function."""
+
+        ttm = TTbarMerge(self.config)
+        ttm.tracks_names = ["tracks", "fs_tracks"]
+
+        with self.subTest("Load all jets"):
+            input_file = ttm.get_input_files("single_lepton")[0]
+            for jets, tracks in ttm.load_jets_generator(input_file):
+                self.assertEqual(len(jets), 6)
+
+        with self.subTest("Don't load tracks"):
+            input_file = ttm.get_input_files("single_lepton")[0]
+            for jets, tracks in ttm.load_jets_generator(input_file, save_tracks=False):
+                self.assertEqual(tracks, None)
+
+        with self.subTest("Load multiple track collections"):
+            input_file = ttm.get_input_files("single_lepton")[0]
+
+            for jets, tracks in ttm.load_jets_generator(input_file, save_tracks=True):
+                # Expect two track collections - tracks and fs_tracks
+                self.assertEqual(len(tracks), 2)
+
+        with self.subTest("Smaller chunk size"):
+            input_file = ttm.get_input_files("single_lepton")[0]
+            # check with a chunk size smaller than the number of events and
+            # does not divide into the number of events
+            chunk_count = 0
+            for jets, tracks in ttm.load_jets_generator(input_file, chunk_size=4):
+                chunk_count += 1
+
+            self.assertEqual(chunk_count, 2)
+
+        with self.subTest("Indices passed"):
+            input_file = ttm.get_input_files("dilepton")[0]
+            indices = np.array([0, 5])
+            for jets, tracks in ttm.load_jets_generator(input_file, indices=indices):
+                # only 1 jet with event number 0 and 1 jet with event number 4
+                self.assertTrue(np.array_equal(jets["eventNumber"], np.array([0, 4])))
+
+    def test_get_indices(self):
+        """Test get_indices function."""
+
+        ttm = TTbarMerge(self.config)
+
+        with self.subTest("Test not enough events for desired ratio"):
+            ttm.ratio = 0.5
+            self.assertRaises(ValueError, ttm.get_indices)
+
+        with self.subTest("Test ratio 1"):
+            ttm.ratio = 1
+            ttm.get_indices()
+
+            yaml_file = Path(ttm.index_dir) / "ttbar_merge_0.yaml"
+            self.assertTrue(os.path.exists(yaml_file))
