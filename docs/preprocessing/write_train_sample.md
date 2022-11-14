@@ -30,7 +30,7 @@ For the final writing step, only a few options are needed. Those are shown/expla
 | ------- | ----------- |
 | `compression` | Decide, which compression is used for the final training sample. Due to slow loading times, this should be `null`. Possible options are for example `gzip`. |
 | `precision` | The precision of the final output file. The values are saved with the given precision to save space. |
-| `concat_jet_tracks` | If `True`, jet features are concatenated to the features for each track. |
+| `concat_jet_tracks` | If `True`, all jet features are concatenated to the features for each track. You can also provide a list of named jet variables to concatenate if you don't want to use all of them. |
 | `convert_to_tfrecord` | Options for the conversion to tfrecords. Possible options to define are the `chunk_size` which gives the number of samples saved per file and the number of additional variables to be saved in tf records `N_Add_Vars`. |
 
 When you want to train with conditional information, i.e. jet $p_T$ and $\eta$, the corresponding model (CADS) will load the jet information directly from the train file when using `.h5`. When you want to use `TFRecords`, you need to define the amount of variables that are added to extra to the files with `N_Add_Vars`. Until now, when using `2`, this will use the first two available jet variables, which are by default jet $p_T$ and $\eta$.

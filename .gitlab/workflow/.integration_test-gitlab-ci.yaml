@@ -611,5 +611,5 @@ test_scripts:
   script:
     - cd scripts/
     - wget https://umami-ci-provider.web.cern.ch/preprocessing/ci_ttbar_basefile.h5
-    - wget https://umami-ci-provider.web.cern.ch/preprocessing/dips_test_scale_dict.json
-    - python process_test_file.py ci_ttbar_basefile.h5 -t tracks -c ujets cjets bjets -v ../umami/configs/Dips_Variables_R22.yaml -s dips_test_scale_dict.json -n 500 -o scaled_file.h5
+    - wget https://umami-ci-provider.web.cern.ch/preprocessing/test_scale_dict_221108.json
+    - python process_test_file.py ci_ttbar_basefile.h5 -t tracks -c ujets cjets bjets -v ../umami/configs/Dips_Variables_R22.yaml -s test_scale_dict_221108.json -n 500 -o scaled_file.h5

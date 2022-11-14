@@ -103,10 +103,12 @@ class h5_to_tf_record_converter:
                     }
 
                     if self.save_track_labels:
-                        Y_trks = {
-                            track_name: hFile[f"{track_name}/labels"][start:end]
-                            for track_name in self.tracks_name
-                        }
+                        Y_trks = {}
+                        for track_name in self.tracks_name:
+                            Y_trks[track_name] = {
+                                k: hFile[f"{track_name}/labels/{k}"][start:end]
+                                for k in hFile[f"{track_name}/labels/"].keys()
+                            }
 
                     else:
                         Y_trks = None
@@ -162,12 +164,11 @@ class h5_to_tf_record_converter:
 
                 if self.save_track_labels:
                     data["n_trks_labels"] = {
-                        track_name: len(h5file[f"{track_name}/labels"][0])
+                        track_name: len(h5file[f"{track_name}/labels"].keys())
                         for track_name in self.tracks_name
                     }
                     data["n_trks_classes"] = {
-                        track_name: len(h5file[f"{track_name}/labels"][0][0])
-                        for track_name in self.tracks_name
+                        track_name: 8 for track_name in self.tracks_name
                     }
 
                 else:
@@ -258,10 +259,13 @@ class h5_to_tf_record_converter:
                             ].float_list.value.extend(item[iterator].reshape(-1))
 
                         if self.save_track_labels:
-                            for key, item in Y_trks.items():
-                                record_bytes.features.feature[
-                                    f"{key}/labels"
-                                ].int64_list.value.extend(item[iterator].reshape(-1))
+                            for track_name, data in Y_trks.items():
+                                for label_name, array in data.items():
+                                    record_bytes.features.feature[
+                                        f"{track_name}/labels/{label_name}"
+                                    ].int64_list.value.extend(
+                                        array[iterator].reshape(-1)
+                                    )
 
                     # Add conditional variables if used
                     if self.n_add_vars is not None:

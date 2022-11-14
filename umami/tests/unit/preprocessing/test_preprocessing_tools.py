@@ -56,23 +56,29 @@ class GetDictTestCase(unittest.TestCase):
                 "JetKinematics": ["absEta_btagJes", "pt_btagJes"],
             },
         }
-        self.control_scale_dict = [
-            {"name": "eta_btagJes", "shift": 1, "scale": 2, "default": 0},
-            {"name": "pt_btagJes", "shift": 5, "scale": 2, "default": 1},
-        ]
+        self.control_scale_dict = {
+            "jets": {
+                "eta_btagJes": {"shift": 1, "scale": 2, "default": 0},
+                "pt_btagJes": {"shift": 5, "scale": 2, "default": 1},
+            }
+        }
+        self.control_scale_dict_jets = {
+            "eta_btagJes": {"shift": 1, "scale": 2, "default": 0},
+            "pt_btagJes": {"shift": 5, "scale": 2, "default": 1},
+        }
 
     def test_get_scale_dict(self):
         """Testing default behaviour of get_scale_dict."""
 
         with self.subTest("Loading test"):
             scale_dict = get_scale_dict(file_path=self.scale_file, dict_key="jets")
-            self.assertEqual(scale_dict, self.control_scale_dict)
+            self.assertEqual(scale_dict, self.control_scale_dict_jets)
 
         with self.subTest("Already loaded test"):
             scale_dict = get_scale_dict(
                 file_path=self.control_scale_dict, dict_key="jets"
             )
-            self.assertEqual(scale_dict, self.control_scale_dict)
+            self.assertEqual(scale_dict, self.control_scale_dict_jets)
 
         with self.subTest("Already loaded but without key"):
             scale_dict = get_scale_dict(
