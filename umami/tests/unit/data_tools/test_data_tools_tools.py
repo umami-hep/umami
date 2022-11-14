@@ -11,7 +11,7 @@ from umami.data_tools import compare_h5_files_variables
 set_log_level(logger, "DEBUG")
 
 
-class compare_h5_files_variablesTestCase(unittest.TestCase):
+class CompareH5FilesVariablesTestCase(unittest.TestCase):
     """
     Test the implementation of the compare_h5_files_variables function.
     """

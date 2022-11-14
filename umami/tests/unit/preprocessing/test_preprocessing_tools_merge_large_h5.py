@@ -19,7 +19,7 @@ from umami.preprocessing_tools import (
 set_log_level(logger, "DEBUG")
 
 
-class Check_SizeTestCase(unittest.TestCase):
+class CheckSizeTestCase(unittest.TestCase):
     """
     Test the check_size function.
     """
@@ -47,7 +47,7 @@ class Check_SizeTestCase(unittest.TestCase):
             check_size(self.test_h5)
 
 
-class Check_KeysTestCase(unittest.TestCase):
+class CheckKeysTestCase(unittest.TestCase):
     """
     Test the check_keys function.
     """
@@ -80,7 +80,7 @@ class Check_KeysTestCase(unittest.TestCase):
             check_keys(self.test_h5_1, self.test_h5_3)
 
 
-class Check_ShapesTestCase(unittest.TestCase):
+class CheckShapesTestCase(unittest.TestCase):
     """
     Test the check_shapes function.
     """
@@ -113,7 +113,7 @@ class Check_ShapesTestCase(unittest.TestCase):
             check_shapes(self.test_h5_1, self.test_h5_3)
 
 
-class Get_SizeTestCase(unittest.TestCase):
+class GetSizeTestCase(unittest.TestCase):
     """
     Test the get_size function.
     """
@@ -145,7 +145,7 @@ class Get_SizeTestCase(unittest.TestCase):
         self.assertEqual(total_size, 30)
 
 
-class Create_DatasetsTestCase(unittest.TestCase):
+class CreateDatasetsTestCase(unittest.TestCase):
     """
     Test the create_datasets function.
     """
@@ -175,7 +175,7 @@ class Create_DatasetsTestCase(unittest.TestCase):
             create_datasets(output, source, size)
 
 
-class Add_DataTestCase(unittest.TestCase):
+class AddDataTestCase(unittest.TestCase):
     """
     Test the add_data function.
     """

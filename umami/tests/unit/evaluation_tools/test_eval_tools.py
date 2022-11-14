@@ -8,7 +8,7 @@ from umami.evaluation_tools.eval_tools import calculate_fraction_dict
 set_log_level(logger, "DEBUG")
 
 
-class small_functions_TestCase(unittest.TestCase):
+class SmallFunctionsTestCase(unittest.TestCase):
     """Test class for small functions in eval_tools.py"""
 
     def setUp(self):
@@ -39,7 +39,7 @@ class small_functions_TestCase(unittest.TestCase):
 
         self.assertEqual(dict_list, self.control_dict_list)
 
-    def test_calculate_fraction_dict_ValueError(self):
+    def test_calculate_fraction_dict_value_error(self):
         """Test the ValueError behaviour of calculate_fraction_dict."""
         with self.assertRaises(ValueError):
             _ = calculate_fraction_dict(

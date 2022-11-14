@@ -61,7 +61,7 @@ def get_parser():
     return parser.parse_args()
 
 
-def GetTrackVariables(
+def get_trk_variables(
     scale_dict: dict,
     variable_config: dict,
     tracks_name: str,
@@ -89,9 +89,9 @@ def GetTrackVariables(
     """
 
     # Get track variables from variable config
-    noNormVars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
-    logNormVars = variable_config["track_train_variables"][tracks_name]["logNormVars"]
-    jointNormVars = variable_config["track_train_variables"][tracks_name][
+    no_norm_vars = variable_config["track_train_variables"][tracks_name]["noNormVars"]
+    log_norm_vars = variable_config["track_train_variables"][tracks_name]["logNormVars"]
+    joint_norm_vars = variable_config["track_train_variables"][tracks_name][
         "jointNormVars"
     ]
 
@@ -100,7 +100,7 @@ def GetTrackVariables(
     track_variables = []
 
     # Iterate over the not-normalised variables
-    for elem in noNormVars:
+    for elem in no_norm_vars:
         v_dict = {}
         v_dict["name"] = elem
         v_dict["offset"] = 0.0
@@ -108,7 +108,7 @@ def GetTrackVariables(
         track_variables.append(v_dict)
 
     # Iterate over the log-normalised variables
-    for elem in logNormVars:
+    for elem in log_norm_vars:
         v_dict = {}
         if elem == "ptfrac":
             v_dict["name"] = "log_ptfrac"
@@ -123,7 +123,7 @@ def GetTrackVariables(
         track_variables.append(v_dict)
 
     # Iterate over the joint-normalised variables
-    for elem in jointNormVars:
+    for elem in joint_norm_vars:
         v_dict = {}
         v_dict["name"] = elem
         v_dict["offset"] = -1.0 * track_dict[elem]["shift"]
@@ -134,7 +134,7 @@ def GetTrackVariables(
     return track_variables
 
 
-def GetJetVariables(
+def get_jet_variables(
     scale_dict: dict,
     variable_config: dict,
 ) -> list:
@@ -154,7 +154,7 @@ def GetJetVariables(
     """
 
     # Get the training jet variables
-    jetVars = [
+    jet_vars = [
         item
         for sublist in variable_config["train_variables"].values()
         for item in sublist
@@ -163,7 +163,7 @@ def GetJetVariables(
     jet_dict = scale_dict["jets"]
 
     # Process the jet variables and add them to the list
-    for elem in jetVars:
+    for elem in jet_vars:
         v_dict = {}
         if jet_dict[elem]["default"] is not None:
             v_dict["default"] = jet_dict[elem]["default"]
@@ -189,11 +189,11 @@ def __run():
         logger.info("Starting processing DIPS variables.")
 
         # Load the given scale dict
-        with open(args.scale_dict, "r") as f:
-            scale_dict = json.load(f)
+        with open(args.scale_dict, "r") as f_scale:
+            scale_dict = json.load(f_scale)
 
         # Get the track variables with scales ready for json
-        track_variables = GetTrackVariables(
+        track_variables = get_trk_variables(
             scale_dict,
             variable_config,
             args.tracks_name,
@@ -234,11 +234,11 @@ def __run():
         logger.info("Starting processing DL1* variables.")
 
         # Load the given scale dict
-        with open(args.scale_dict, "r") as f:
-            scale_dict = json.load(f)
+        with open(args.scale_dict, "r") as f_scale:
+            scale_dict = json.load(f_scale)
 
         # Get the jet variables with scales ready for json
-        jet_variables = GetJetVariables(
+        jet_variables = get_jet_variables(
             scale_dict,
             variable_config,
         )
@@ -290,17 +290,17 @@ def __run():
         logger.info("Starting processing UMAMI variables.")
 
         # Load the given scale dict
-        with open(args.scale_dict, "r") as f:
-            scale_dict = json.load(f)
+        with open(args.scale_dict, "r") as f_scale:
+            scale_dict = json.load(f_scale)
 
         # Get the jet variables with scales ready for json
-        jet_variables = GetJetVariables(
+        jet_variables = get_jet_variables(
             scale_dict,
             variable_config,
         )
 
         # Get the track variables with scales ready for json
-        track_variables = GetTrackVariables(
+        track_variables = get_trk_variables(
             scale_dict,
             variable_config,
             args.tracks_name,

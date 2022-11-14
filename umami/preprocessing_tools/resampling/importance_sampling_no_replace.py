@@ -28,7 +28,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         self.x_y_after_sampling = None
         self.indices_to_keep = None
 
-    def GetIndices(self) -> dict:
+    def get_indices(self) -> dict:
         """
         Applies the undersampling to the given arrays.
 
@@ -46,20 +46,20 @@ class UnderSamplingNoReplace(ResamplingTools):
 
         try:
             target_distribution = self.options["target_distribution"]
-        except KeyError as Error:
+        except KeyError as error:
             raise ValueError(
                 "Resampling method importance_no_replace requires a target"
                 " distribution class in the options block of the configuration"
                 " file (i.e. bjets, cjets, ujets)."
-            ) from Error
+            ) from error
 
         # Concatenate the samples with the same category into dict which contains the
         # samplevector: array(sample_size x 5)
         # with pt, eta, jet_count, sample_id (ttbar:0, zprime:1), sample_class
-        self.ConcatenateSamples()
+        self.concatenate_samples()
 
         # calculate the 2D bin statistics for each sample
-        self.GetPtEtaBinStatistics()
+        self.get_pt_eta_bin_statistics()
 
         # create dictionary of just the samples' 2D stats
         stats = {
@@ -70,7 +70,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         # Get the sampling probabilities relative to the target.
         # We can do this for all the flavours since the sampling probabilities
         # for the target with respect to the target distribution is just 1
-        sampling_probabilities = self.GetSamplingProbabilities(
+        sampling_probabilities = self.get_sampling_probabilities(
             target_distribution,
             stats,
         )
@@ -145,7 +145,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         self.indices_to_keep = {}
         self.x_y_after_sampling = {}
         size_total = 0
-        with h5py.File(self.options["intermediate_index_file"], "w") as f:
+        with h5py.File(self.options["intermediate_index_file"], "w") as f_index:
             for class_category in self.class_categories:
                 self.x_y_after_sampling[class_category] = self.concat_samples[
                     class_category
@@ -163,7 +163,7 @@ class UnderSamplingNoReplace(ResamplingTools):
                             sample_categories == self.sample_categories[sample_category]
                         ]
                     ).astype(int)
-                    f.create_dataset(
+                    f_index.create_dataset(
                         sample_name,
                         data=self.indices_to_keep[sample_name],
                         compression="gzip",
@@ -174,7 +174,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         logger.info("Using in total %s jets.", size_total)
         return self.indices_to_keep
 
-    def GetSamplingProbability(  # pylint: disable=no-self-use
+    def get_sampling_probability(  # pylint: disable=no-self-use
         self,
         target_stat: np.ndarray,
         original_stat: np.ndarray,
@@ -208,7 +208,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         )
         return ratios
 
-    def GetSamplingProbabilities(
+    def get_sampling_probabilities(
         self,
         target_distribution: str = "bjets",
         stats: dict = None,
@@ -254,7 +254,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         sampling_probabilities = {}
         # For empty stats set the sampling probability to zero
         for flav in stats:
-            sampling_probabilities[flav] = self.GetSamplingProbability(
+            sampling_probabilities[flav] = self.get_sampling_probability(
                 target_stat, stats[flav]
             )
 
@@ -263,8 +263,8 @@ class UnderSamplingNoReplace(ResamplingTools):
     def Run(self):
         """Run function executing full chain."""
         logger.info("Starting undersampling.")
-        self.InitialiseSamples()
-        self.GetIndices()
+        self.initialise_samples()
+        self.get_indices()
 
         # Make the resampling plots for the resampling variables before resampling
         plot_resampling_variables(
@@ -286,7 +286,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         )
 
         # Write file to disk
-        self.WriteFile(self.indices_to_keep)
+        self.write_file(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
         if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:

@@ -29,11 +29,11 @@ class UnderSamplingProp:
         )
         self.eta_bins = np.linspace(0, 2.5, 10)
         self.nbins = np.array([len(self.pt_bins), len(self.eta_bins)])
-        self.pT_var_name = global_config.pTvariable
+        self.pt_var_name = global_config.pTvariable
         self.eta_var_name = global_config.etavariable
         self.rnd_seed = 42
 
-    def GetIndices(self) -> tuple:
+    def get_indices(self) -> tuple:
         """
         Applies the weighted UnderSampling to the given arrays.
         Returns the
@@ -45,11 +45,11 @@ class UnderSamplingProp:
             light jets (as well as taus, optionally).
         """
 
-        binnumbers_b, ind_b, stat_b, total_b = self.GetBins(self.bjets)
-        binnumbers_c, _, stat_c, total_c = self.GetBins(self.cjets)
-        binnumbers_u, _, stat_u, total_u = self.GetBins(self.ujets)
+        binnumbers_b, ind_b, stat_b, total_b = self.get_bins(self.bjets)
+        binnumbers_c, _, stat_c, total_c = self.get_bins(self.cjets)
+        binnumbers_u, _, stat_u, total_u = self.get_bins(self.ujets)
         if self.bool_taujets:
-            binnumbers_tau, _, stat_tau, total_tau = self.GetBins(self.taujets)
+            binnumbers_tau, _, stat_tau, total_tau = self.get_bins(self.taujets)
             min_weight_per_bin = np.amin([stat_b, stat_c, stat_u, stat_tau], axis=0)
         else:
             min_weight_per_bin = np.amin([stat_b, stat_c, stat_u], axis=0)
@@ -105,14 +105,14 @@ class UnderSamplingProp:
             sorted_taujets,
         )
 
-    def GetBins(self, df: dict):
+    def get_bins(self, df_in: dict):
         """
         Retrieving bins.
 
         Parameters
         ----------
-        df : dict
-            Dict with the pT and eta variable inside.
+        df_in : pd.DataFrame
+            DataFrame with the pT and eta variables inside.
 
         Returns
         -------
@@ -122,9 +122,9 @@ class UnderSamplingProp:
         """
 
         statistic, binnumber = binned_statistic_2d(
-            x=df[self.pT_var_name],
-            y=df[self.eta_var_name],
-            values=df[self.pT_var_name],
+            x=df_in[self.pt_var_name],
+            y=df_in[self.eta_var_name],
+            values=df_in[self.pt_var_name],
             statistic="count",
             bins=[self.pt_bins, self.eta_bins],
         )
@@ -134,7 +134,7 @@ class UnderSamplingProp:
             bins_indices_flat_2d, self.nbins + 1
         ).flatten()
 
-        total_count = df.shape[0]
+        total_count = df_in.shape[0]
         weighted_flatten_statistic = statistic.flatten() / total_count
 
         return (

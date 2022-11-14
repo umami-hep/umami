@@ -120,26 +120,26 @@ if __name__ == "__main__":
             "Following files are changed which are used as placeholders",
             placeholder_files_changed,
         )
-        note = (
+        NOTE = (
             "The following files are changed and used as placeholders in the docs:\n"
             + "\n".join(f"* `{elem}`" for elem in placeholder_files_changed)
             + "\n\n**Please check that they are still correct!**"
         )
-        post_note = True
+        POST_NOTE = True
         # go through all discussions in the MR
         for discussion in mr.discussions.list():
             # go through all notes of this discussion
             for note_i in discussion.attributes["notes"]:
-                if note_i["body"] == note:
-                    post_note = False
+                if note_i["body"] == NOTE:
+                    POST_NOTE = False
                     print(
                         "Comment about changed placeholders already exists "
                         "--> not posting."
                     )
                     break
-        if post_note:
+        if POST_NOTE:
             # Post the note to the MR if not already done
-            mr.discussions.create({"body": note})
+            mr.discussions.create({"body": NOTE})
             # Get the id of the discussion that was just created
             discussion_id = mr.discussions.list()[-1].attributes["id"]
             mr_d = mr.discussions.get(discussion_id)
@@ -149,12 +149,12 @@ if __name__ == "__main__":
         mr.save()
 
     # define flag if only documentation is concerned
-    only_docs = (changed_files_in_docs_mr + changelog_changed) == len(changed_files_mr)
+    ONLY_DOCS = (changed_files_in_docs_mr + changelog_changed) == len(changed_files_mr)
     if len(changed_files_mr) == 0:
-        only_docs = False
+        ONLY_DOCS = False
 
     # approve MR if only documentation is concerned
-    if only_docs:
+    if ONLY_DOCS:
         print("MR is being approved - only documentaion is concerned.")
         mr.notes.create({"body": "Only documentation is concerened - approving."})
         try:

@@ -109,22 +109,24 @@ def create_dips_model(
             )
 
         # This is where the magic happens... sum up the track features!
-        F = utf.Sum(name="Sum")(tdd)
+        f_layer = utf.Sum(name="Sum")(tdd)
 
         # Define the main dips structure
-        for j, (F_nodes, dropout_rate_f) in enumerate(
+        for j, (f_nodes, dropout_rate_f) in enumerate(
             zip(nn_structure["dense_sizes"], dropout_rates_f)
         ):
 
-            F = Dense(F_nodes, activation="linear", name=f"F{j}_Dense")(F)
+            f_layer = Dense(f_nodes, activation="linear", name=f"F{j}_Dense")(f_layer)
             if batch_norm:
-                F = BatchNormalization(name=f"F{j}_BatchNormalization")(F)
+                f_layer = BatchNormalization(name=f"F{j}_BatchNormalization")(f_layer)
             if dropout_rate_f != 0:
-                F = Dropout(rate=dropout_rate_f, name=f"F{j}_Dropout")(F)
-            F = Activation(activations.relu, name=f"F{j}_ReLU")(F)
+                f_layer = Dropout(rate=dropout_rate_f, name=f"F{j}_Dropout")(f_layer)
+            f_layer = Activation(activations.relu, name=f"F{j}_ReLU")(f_layer)
 
         # Set output and activation function
-        output = Dense(len(class_labels), activation="softmax", name="Jet_class")(F)
+        output = Dense(len(class_labels), activation="softmax", name="Jet_class")(
+            f_layer
+        )
         dips = Model(inputs=trk_inputs, outputs=output)
 
     if load_optimiser is False:
@@ -184,11 +186,13 @@ def train_dips(args, train_config):
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f:
-            metadata["n_jets"], metadata["n_trks"], metadata["n_trk_features"] = f[
-                f"{tracks_name}/inputs"
-            ].shape
-            _, metadata["n_dim"] = f["jets/labels_one_hot"].shape
+        with h5py.File(train_config.train_file, "r") as f_train:
+            (
+                metadata["n_jets"],
+                metadata["n_trks"],
+                metadata["n_trk_features"],
+            ) = f_train[f"{tracks_name}/inputs"].shape
+            _, metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
 
         if nn_structure["use_sample_weights"]:
             tensor_types = (tf.float32, tf.float32, tf.float32)
@@ -208,10 +212,10 @@ def train_dips(args, train_config):
         # Get training set from generator
         train_dataset = (
             tf.data.Dataset.from_generator(
-                utf.dips_generator(
+                utf.DipsGenerator(
                     train_file_path=train_config.train_file,
-                    X_trk_Name=f"{tracks_name}/inputs",
-                    Y_Name="jets/labels_one_hot",
+                    x_trk_name=f"{tracks_name}/inputs",
+                    y_name="jets/labels_one_hot",
                     n_jets=int(nn_structure["n_jets_train"])
                     if "n_jets_train" in nn_structure
                     and nn_structure["n_jets_train"] is not None
@@ -253,7 +257,7 @@ def train_dips(args, train_config):
         n_epochs = args.epochs
 
     # Set ModelCheckpoint as callback
-    dips_mChkPt = ModelCheckpoint(
+    dips_m_chkpt = ModelCheckpoint(
         f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
@@ -263,7 +267,7 @@ def train_dips(args, train_config):
     )
 
     # Append the callback
-    callbacks.append(dips_mChkPt)
+    callbacks.append(dips_m_chkpt)
 
     if "lrr" in nn_structure and nn_structure["lrr"] is True:
         # Define LearningRate Reducer as Callback

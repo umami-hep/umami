@@ -9,7 +9,7 @@ import numpy as np
 
 from umami.configuration import logger, set_log_level
 from umami.preprocessing_tools import PreprocessConfiguration
-from umami.tf_tools import Convert_to_Record
+from umami.tf_tools import convert_to_record
 
 set_log_level(logger, "DEBUG")
 
@@ -51,10 +51,10 @@ class ConvertTest(unittest.TestCase):
 
     def test_save_parameters(self):
         """Test the saving of the parameters for the tfrecord conversion."""
-        cv = Convert_to_Record.h5_to_tf_record_converter(self.config)
+        conv = convert_to_record.H5ToTFRecords(self.config)
         # create temporary directory where data should be saved
         record_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
-        cv.save_parameters(record_dir.name)
+        conv.save_parameters(record_dir.name)
         parameters = {
             "n_jets": 3,
             "n_jet_features": 41,
@@ -73,11 +73,11 @@ class ConvertTest(unittest.TestCase):
     def test_save_parameters_nadd_vars(self):
         """Test the saving of the parameters for the tfrecord conversion
         with conditional info added."""
-        cv = Convert_to_Record.h5_to_tf_record_converter(self.config)
+        conv = convert_to_record.H5ToTFRecords(self.config)
         # create temporary directory where data should be saved
         record_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
-        cv.n_add_vars = 4
-        cv.save_parameters(record_dir.name)
+        conv.n_add_vars = 4
+        conv.save_parameters(record_dir.name)
         parameters = {
             "n_jets": 3,
             "n_jet_features": 41,
@@ -95,6 +95,6 @@ class ConvertTest(unittest.TestCase):
 
     def test_faulty_setup(self):
         """Test raising of an error for a faulty setup."""
-        cv = Convert_to_Record.h5_to_tf_record_converter(self.faulty_config)
+        conv = convert_to_record.H5ToTFRecords(self.faulty_config)
         default_chunk_size = 5_000
-        self.assertEqual(cv.chunk_size, default_chunk_size)
+        self.assertEqual(conv.chunk_size, default_chunk_size)

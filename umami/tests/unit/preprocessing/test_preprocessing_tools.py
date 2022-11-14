@@ -1,9 +1,9 @@
 """Unit tests for preprocessing_tools."""
 import os
 import shutil
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 from subprocess import CalledProcessError, run
 
 import h5py
@@ -12,15 +12,15 @@ import pandas as pd
 
 from umami.configuration import global_config, logger, set_log_level
 from umami.preprocessing_tools import (
+    MergeConfig,
     PrepareSamples,
     PreprocessConfiguration,
+    TTbarMerge,
     binarise_jet_labels,
+    event_indices,
+    event_list,
     get_scale_dict,
     get_variable_dict,
-    TTbarMerge,
-    MergeConfig,
-    event_list,
-    event_indices,
 )
 
 set_log_level(logger, "DEBUG")
@@ -200,12 +200,12 @@ class BinariseJetLabelsTestCase(unittest.TestCase):
 
     def setUp(self):
         """Create a default dataset for testing."""
-        self.y = np.concatenate(
+        self.labels = np.concatenate(
             [np.zeros(12), np.ones(35), 2 * np.ones(5), 3 * np.ones(35)]
         )
         np.random.seed(42)
-        np.random.shuffle(self.y)
-        self.df = pd.DataFrame({"label": self.y})
+        np.random.shuffle(self.labels)
+        self.df_label = pd.DataFrame({"label": self.labels})
         self.two_classes_y = np.asarray([0, 1, 1, 0, 1])
         self.four_classes_y = np.asarray([0, 1, 2, 3, 2])
 
@@ -267,41 +267,41 @@ class BinariseJetLabelsTestCase(unittest.TestCase):
         """Test wrong input type case."""
         with self.assertRaises(ValueError):
             binarise_jet_labels(
-                labels=self.y,
+                labels=self.labels,
                 internal_labels=list(range(3)),
             )
 
     def test_shape_array(self):
         """Test shape for array input."""
         y_categ = binarise_jet_labels(
-            labels=self.y,
+            labels=self.labels,
             internal_labels=list(range(4)),
             column="label",
         )
-        self.assertEqual(y_categ.shape, (len(self.y), 4))
+        self.assertEqual(y_categ.shape, (len(self.labels), 4))
 
-    def test_shape_DataFrame(self):
+    def test_shape_data_frame(self):
         """Test shape for DataFrame input."""
         y_categ = binarise_jet_labels(
-            labels=self.df,
+            labels=self.df_label,
             internal_labels=list(range(4)),
             column="label",
         )
-        self.assertEqual(y_categ.shape, (len(self.y), 4))
+        self.assertEqual(y_categ.shape, (len(self.labels), 4))
 
     def test_shape_2_classes(self):
         """Test 2 classes"""
-        y = np.concatenate([np.zeros(12), np.ones(35)])
+        labels = np.concatenate([np.zeros(12), np.ones(35)])
         np.random.seed(42)
-        np.random.shuffle(y)
-        df_two_classes = pd.DataFrame({"label": y})
+        np.random.shuffle(labels)
+        df_two_classes = pd.DataFrame({"label": labels})
 
         y_categ = binarise_jet_labels(
             labels=df_two_classes,
             internal_labels=list(range(2)),
             column="label",
         )
-        self.assertEqual(y_categ.shape, (len(y), 2))
+        self.assertEqual(y_categ.shape, (len(labels), 2))
 
 
 class PrepareSamplesTestCase(unittest.TestCase):
@@ -309,7 +309,7 @@ class PrepareSamplesTestCase(unittest.TestCase):
     Test the implementation of the PrepareSamples class.
     """
 
-    class c_args:
+    class CArgs:
         """Helper class replacing command line arguments."""
 
         def __init__(self) -> None:
@@ -321,7 +321,7 @@ class PrepareSamplesTestCase(unittest.TestCase):
             self.shuffle_array = True
 
     def setUp(self):
-        self.args = self.c_args()
+        self.args = self.CArgs()
         self.config_file = os.path.join(
             os.path.dirname(__file__), self.args.config_file
         )
@@ -338,8 +338,8 @@ class PrepareSamplesTestCase(unittest.TestCase):
             },
         )
         tracks = np.ones(shape=(3, 5, 40))
-        self.tf = tempfile.NamedTemporaryFile()  # pylint: disable=R1732
-        with h5py.File(self.tf, "w") as out_file:
+        self.f_tmp = tempfile.NamedTemporaryFile()  # pylint: disable=R1732
+        with h5py.File(self.f_tmp, "w") as out_file:
             out_file.create_dataset("jets", data=jets.to_records())
             out_file.create_dataset("tracks", data=tracks)
             out_file.create_dataset("fs_tracks", data=tracks)
@@ -365,11 +365,11 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_get_batches_per_file(self):
         """Test batches per file."""
-        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
-        ps = PrepareSamples(self.args, self.config)
+        self.config.preparation.input_files[self.args.sample] = [self.f_tmp.name]
+        prep_s = PrepareSamples(self.args, self.config)
         files_in_batches = map(
-            ps.get_batches_per_file,
-            ps.config.preparation.get_input_files(self.args.sample),
+            prep_s.get_batches_per_file,
+            prep_s.config.preparation.get_input_files(self.args.sample),
         )
         for batch_tuple in list(files_in_batches):
             # first entry of tuples is the filename
@@ -382,15 +382,15 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_jets_generator_fullcuts_wotracks(self):
         """Test jet generator without tracks."""
-        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
-        ps = PrepareSamples(self.args, self.config)
+        self.config.preparation.input_files[self.args.sample] = [self.f_tmp.name]
+        prep_s = PrepareSamples(self.args, self.config)
         files_in_batches = map(
-            ps.get_batches_per_file,
-            ps.config.preparation.get_input_files(self.args.sample),
+            prep_s.get_batches_per_file,
+            prep_s.config.preparation.get_input_files(self.args.sample),
         )
-        ps.save_tracks = None
+        prep_s.save_tracks = None
         expected_jets = np.array([])
-        for num, (jets, tracks) in enumerate(ps.jets_generator(files_in_batches)):
+        for num, (jets, tracks) in enumerate(prep_s.jets_generator(files_in_batches)):
             with self.subTest("sub test track", i=num):
                 self.assertEqual(tracks, None)
             with self.subTest("sub test jets", i=num):
@@ -398,17 +398,17 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_jets_generator_fullcuts(self):
         """Test jet generator including tracks with full cuts."""
-        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
-        ps = PrepareSamples(self.args, self.config)
+        self.config.preparation.input_files[self.args.sample] = [self.f_tmp.name]
+        prep_s = PrepareSamples(self.args, self.config)
         files_in_batches = map(
-            ps.get_batches_per_file,
-            ps.config.preparation.get_input_files(self.args.sample),
+            prep_s.get_batches_per_file,
+            prep_s.config.preparation.get_input_files(self.args.sample),
         )
-        ps.save_tracks = True
+        prep_s.save_tracks = True
         expected_jets = np.array([])
         expected_tracks = np.array([])
-        for jets, tracks in ps.jets_generator(files_in_batches):
-            for tracks_name in ps.tracks_names:
+        for jets, tracks in prep_s.jets_generator(files_in_batches):
+            for tracks_name in prep_s.tracks_names:
                 with self.subTest(f"sub test track {tracks_name}"):
                     self.assertEqual(len(tracks[tracks_name]), len(expected_tracks))
             with self.subTest():
@@ -416,17 +416,17 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_jets_generator_lightcut(self):
         """Test jet generator including tracks with cut on light jets."""
-        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
-        ps = PrepareSamples(self.args, self.config)
+        self.config.preparation.input_files[self.args.sample] = [self.f_tmp.name]
+        prep_s = PrepareSamples(self.args, self.config)
         files_in_batches = map(
-            ps.get_batches_per_file,
-            ps.config.preparation.get_input_files(self.args.sample),
+            prep_s.get_batches_per_file,
+            prep_s.config.preparation.get_input_files(self.args.sample),
         )
-        ps.save_tracks = True
-        ps.cuts = [{"eventNumber": {"operator": "==", "condition": 0}}]
+        prep_s.save_tracks = True
+        prep_s.cuts = [{"eventNumber": {"operator": "==", "condition": 0}}]
         expected_jets_len = expected_tracks_len = 1
-        for jets, tracks in ps.jets_generator(files_in_batches):
-            for tracks_name in ps.tracks_names:
+        for jets, tracks in prep_s.jets_generator(files_in_batches):
+            for tracks_name in prep_s.tracks_names:
                 with self.subTest(f"sub test track {tracks_name}"):
                     self.assertEqual(len(tracks[tracks_name]), expected_tracks_len)
             with self.subTest():
@@ -434,10 +434,10 @@ class PrepareSamplesTestCase(unittest.TestCase):
 
     def test_run(self):
         """Test the run function."""
-        self.config.preparation.input_files[self.args.sample] = [self.tf.name]
-        ps = PrepareSamples(self.args, self.config)
-        ps.sample.output_name = self.output_file.name
-        ps.run()
+        self.config.preparation.input_files[self.args.sample] = [self.f_tmp.name]
+        prep_s = PrepareSamples(self.args, self.config)
+        prep_s.sample.output_name = self.output_file.name
+        prep_s.run()
         assert os.path.exists(self.output_file.name) == 1
 
 

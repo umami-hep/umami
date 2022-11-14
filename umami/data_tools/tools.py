@@ -33,8 +33,8 @@ def compare_h5_files_variables(*h5_files, key):
         raise ValueError("No input files provided.")
     files_vars = []
     for h5_file in h5_files:
-        with h5py.File(h5_file, "r") as f:
-            files_vars.append(set(f[key][:1].dtype.names))
+        with h5py.File(h5_file, "r") as f_h5:
+            files_vars.append(set(f_h5[key][:1].dtype.names))
 
     # get all possible combinations of input variable sets
     combinations = list(itertools.combinations(files_vars, 2))

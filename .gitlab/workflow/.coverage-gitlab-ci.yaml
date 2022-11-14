@@ -75,4 +75,4 @@ test_coverage_post_report:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
   script:
-    - python .gitlab/workflow/gitlab-mr-coverage-api-post.py
+    - python .gitlab/workflow/gitlab_mr_coverage_api_post.py

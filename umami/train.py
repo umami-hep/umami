@@ -74,8 +74,8 @@ def check_train_file_format(input_file: str):
         return
 
     # Open the file and check for jets
-    with h5py.File(input_file, "r") as f:
-        if "jets" not in f.keys():
+    with h5py.File(input_file, "r") as f_h5:
+        if "jets" not in f_h5.keys():
             raise KeyError(
                 f"The input h5 file {input_file} does not contain a 'jets' "
                 "group, suggesting this file has been produced with a version"

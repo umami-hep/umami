@@ -48,7 +48,7 @@ def create_cads_model(
 
     if cads is None:
         # Init a new cads/dips attention model
-        cads = utf.Deepsets_model(
+        cads = utf.deepsets_model(
             repeat_input_shape=input_shape,
             num_conditions=nn_structure["n_conditions"],
             num_set_features=nn_structure["ppm_sizes"][-1],
@@ -122,11 +122,13 @@ def train_cads(args, train_config):
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f:
-            metadata["n_jets"], metadata["n_trks"], metadata["n_trk_features"] = f[
-                f"{tracks_name}/inputs"
-            ].shape
-            _, metadata["n_dim"] = f["jets/labels_one_hot"].shape
+        with h5py.File(train_config.train_file, "r") as f_train:
+            (
+                metadata["n_jets"],
+                metadata["n_trks"],
+                metadata["n_trk_features"],
+            ) = f_train[f"{tracks_name}/inputs"].shape
+            _, metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
 
         if nn_structure["use_sample_weights"]:
             tensor_types = (
@@ -162,17 +164,17 @@ def train_cads(args, train_config):
         # Get training set from generator
         train_dataset = (
             tf.data.Dataset.from_generator(
-                utf.cads_generator(
+                utf.CadsGenerator(
                     train_file_path=train_config.train_file,
-                    X_Name="jets/inputs",
-                    X_trk_Name=f"{tracks_name}/inputs",
-                    Y_Name="jets/labels_one_hot",
+                    x_name="jets/inputs",
+                    x_trk_name=f"{tracks_name}/inputs",
+                    y_name="jets/labels_one_hot",
                     n_jets=int(nn_structure["n_jets_train"])
                     if "n_jets_train" in nn_structure
                     and nn_structure["n_jets_train"] is not None
                     else metadata["n_jets"],
                     batch_size=nn_structure["batch_size"],
-                    nConds=nn_structure["n_conditions"],
+                    n_conds=nn_structure["n_conditions"],
                     chunk_size=int(1e6),
                     sample_weights=nn_structure["use_sample_weights"],
                 ),
@@ -237,7 +239,7 @@ def train_cads(args, train_config):
             n_jets=n_jets_val,
             convert_to_tensor=True,
             jets_var_list=["absEta_btagJes", "pt_btagJes"],
-            nCond=nn_structure["n_conditions"],
+            n_cond=nn_structure["n_conditions"],
         )
 
         # TODO: Add a representative validation dataset for training (shown in

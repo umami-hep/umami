@@ -18,7 +18,7 @@ from umami.plotting_tools.preprocessing_plotting_functions import (
 set_log_level(logger, "DEBUG")
 
 
-class preprocessing_plots_TestCase(unittest.TestCase):
+class PreprocessingPlotsTestCase(unittest.TestCase):
     """Test class for the preprocessing plot functions."""
 
     def setUp(self):
@@ -101,7 +101,7 @@ class preprocessing_plots_TestCase(unittest.TestCase):
             )
 
 
-class plot_resampling_variables_TestCase(unittest.TestCase):
+class PlotResamplingVariablesTestCase(unittest.TestCase):
     """Test class for the plot resampling variables functions."""
 
     def setUp(self):

@@ -10,7 +10,7 @@ from umami.helper_tools import hist_ratio, hist_w_unc, save_divide
 set_log_level(logger, "DEBUG")
 
 
-class hist_w_unc_TestCase(unittest.TestCase):
+class HistWUncTestCase(unittest.TestCase):
     """Test class for the hist_w_unc function."""
 
     def setUp(self):
@@ -26,7 +26,7 @@ class hist_w_unc_TestCase(unittest.TestCase):
     def test_hist_w_unc_zero_case(self):  # pylint: disable=R0201
         """Test the zero case for empty arrays."""
         bins, hist, unc, band = hist_w_unc(
-            a=[],
+            arr=[],
             bins=[],
         )
 
@@ -42,7 +42,7 @@ class hist_w_unc_TestCase(unittest.TestCase):
     def test_hist_w_unc_normed(self):
         """Test normed case."""
         bins, hist, unc, band = hist_w_unc(
-            a=self.input,
+            arr=self.input,
             bins=self.bin_edges,
         )
 
@@ -58,7 +58,7 @@ class hist_w_unc_TestCase(unittest.TestCase):
     def test_hist_w_unc_not_normed(self):
         """Test the non-normed case."""
         bins, hist, unc, band = hist_w_unc(
-            a=self.input,
+            arr=self.input,
             bins=self.bin_edges,
             normed=False,
         )
@@ -73,7 +73,7 @@ class hist_w_unc_TestCase(unittest.TestCase):
             np.testing.assert_almost_equal(band, self.band)
 
 
-class save_divide_TestCase(unittest.TestCase):
+class SaveDivideTestCase(unittest.TestCase):
     """Test class for the save_divide function."""
 
     def test_zero_case(self):  # pylint: disable=R0201
@@ -102,7 +102,7 @@ class save_divide_TestCase(unittest.TestCase):
         np.testing.assert_equal(steps, 0.5 * np.ones(2))
 
 
-class hist_ratio_TestCase(unittest.TestCase):
+class HistRatioTestCase(unittest.TestCase):
     """Test class for hist_ratio function."""
 
     def setUp(self):

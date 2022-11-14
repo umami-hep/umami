@@ -23,7 +23,7 @@ from umami.plotting_tools.eval_plotting_functions import (
 set_log_level(logger, "DEBUG")
 
 
-class Eval_plots_TestCase(unittest.TestCase):
+class EvalPlotsTestCase(unittest.TestCase):
     """Test class for the eval plot functions."""
 
     def setUp(self):

@@ -16,7 +16,7 @@ import umami.data_tools as udt
 import umami.evaluation_tools as uet
 import umami.tf_tools as utf
 import umami.train_tools as utt
-from umami.evaluation_tools import FeatureImportance
+from umami.evaluation_tools import feature_importance
 from umami.helper_tools import get_class_label_variables, get_class_prob_var_names
 
 # from plottingFunctions import sigBkgEff
@@ -391,7 +391,7 @@ def evaluate_model(
         )
 
     # Load the jets and truth labels (internal) with selected variables
-    jets, truth_internal_labels = udt.LoadJetsFromFile(
+    jets, truth_internal_labels = udt.load_jets_from_file(
         filepath=test_file,
         class_labels=classes_to_evaluate,
         n_jets=n_jets,
@@ -529,14 +529,14 @@ def evaluate_model(
             saliency_map_dict = uet.get_saliency_map_dict(
                 model=model,
                 model_pred=pred_dips,
-                X_test=x_comb,
-                Y_test=y_test,
+                x_test=x_comb,
+                y_test=y_test,
                 class_labels=class_labels,
                 main_class=main_class,
                 frac_dict=eval_params["frac_values"],
                 var_dict_path=train_config.var_dict,
                 tracks_name=tracks_name,
-                nTracks=eval_params.get("saliency_ntrks"),
+                n_trks=eval_params.get("saliency_ntrks"),
                 effs=eval_params.get("saliency_effs"),
             )
 
@@ -568,7 +568,7 @@ def evaluate_model(
         # Loop over flavours
         for iter_flav in flavour:
             logger.info("Calculating SHAPley values for %s", iter_flav)
-            FeatureImportance.ShapleyOneFlavor(
+            feature_importance.shapley_one_flavour(
                 model=model,
                 test_data=x_comb,
                 model_output=class_labels.index(iter_flav),
@@ -579,7 +579,7 @@ def evaluate_model(
             )
 
         if eval_params["shapley"]["bool_all_flavor_plot"]:
-            FeatureImportance.ShapleyAllFlavors(
+            feature_importance.shapley_all_flavours(
                 model=model,
                 test_data=x_comb,
                 feature_sets=feature_sets,

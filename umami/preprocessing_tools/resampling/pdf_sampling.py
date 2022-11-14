@@ -14,11 +14,11 @@ from umami.configuration import logger
 from umami.data_tools import compare_h5_files_variables
 from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
 from umami.preprocessing_tools.resampling.resampling_base import (
-    CorrectFractions,
     JsonNumpyEncoder,
     ResamplingTools,
-    SamplingGenerator,
+    correct_fractions,
     read_dataframe_repetition,
+    sampling_generator,
 )
 from umami.preprocessing_tools.utils import binarise_jet_labels, get_variable_dict
 
@@ -62,7 +62,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Check for usage of multiprocessing
         self.use_multiprocessing = True
-        self.nProcesses = 4
+        self.n_processes = 4
 
         # Get the samples which will be used for resampling
         self.samples_to_resample = (
@@ -149,7 +149,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             self.do_flavours = np.arange(flavour_index)
 
     @property
-    def Ratio(self):
+    def ratio(self):
         """
         Return the dict with the ratios inside.
 
@@ -161,7 +161,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         return self._ratio_dict
 
     @property
-    def Inter_Func_Dict(self):
+    def inter_func(self):
         """
         Return the dict with the interpolation functions inside.
 
@@ -172,7 +172,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         """
         return self.inter_func_dict
 
-    def Load_Samples_Generator(
+    def load_samples_generator(
         self,
         sample_category: str,
         sample_id: int,
@@ -214,10 +214,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         ).output_name
 
         # Open input file
-        with h5py.File(in_file, "r") as f:
+        with h5py.File(in_file, "r") as f_in:
 
             # Get the number of jets inside the file
-            n_jets_initial = len(f["jets"])
+            n_jets_initial = len(f_in["jets"])
 
             # Check if custom inital n_jets are given for this sample
             if (
@@ -272,7 +272,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             for index_tuple in tupled_indices:
 
                 # Get the chunk of jets that is to be loaded
-                to_load = f["jets"][index_tuple[0] : index_tuple[1]]
+                to_load = f_in["jets"][index_tuple[0] : index_tuple[1]]
 
                 # Load the two resampling variables from the jets
                 jets_x = np.asarray(to_load[self.var_x])
@@ -295,7 +295,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     1
                 ] != n_jets_initial, n_jets_initial, index_tuple[0]
 
-    def Load_Index_Generator(self, in_file: str, chunk_size: int):
+    def load_index_generator(self, in_file: str, chunk_size: int):
         """
         Generator that yields the indicies of the jets that are
         to be loaded.
@@ -316,10 +316,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         """
 
         # Open input file
-        with h5py.File(in_file, "r") as f:
+        with h5py.File(in_file, "r") as f_in:
 
             # Get the number of available jets
-            Nindices = len(f["jets"])
+            n_indices = len(f_in["jets"])
 
             # Set start and end index
             start_ind = 0
@@ -330,10 +330,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # Get the start and end index pairs for the given
             # chunk size
-            while end_ind <= Nindices or start_ind == 0:
-                if end_ind + chunk_size > Nindices:
+            while end_ind <= n_indices or start_ind == 0:
+                if end_ind + chunk_size > n_indices:
                     # Missing less then a chunk, joining to last chunk
-                    end_ind = Nindices
+                    end_ind = n_indices
 
                 # Create the tuple and append it
                 tupled_indices.append((start_ind, end_ind))
@@ -349,12 +349,12 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 loading_indices = np.arange(index_tuple[0], index_tuple[1])
 
                 # Get the jets based on their indicies
-                indices = np.asarray(f["jets"][loading_indices])
+                indices = np.asarray(f_in["jets"][loading_indices])
 
                 # Yield the indicies
-                yield indices, index_tuple[1] != Nindices
+                yield indices, index_tuple[1] != n_indices
 
-    def Load_Samples(self, sample_category: str, sample_id: int):
+    def load_samples(self, sample_category: str, sample_id: int):
         """
         Load the input file of the specified category and id.
 
@@ -380,9 +380,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         in_file = self.config.preparation.get_sample(preparation_sample).output_name
 
         # Open input file
-        with h5py.File(in_file, "r") as f:
+        with h5py.File(in_file, "r") as f_in:
             # Get the number of jets inside the file
-            n_jets_initial = len(f["jets"])
+            n_jets_initial = len(f_in["jets"])
 
             # Check if custom inital n_jets are given for this sample
             if (
@@ -408,7 +408,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     n_jets_initial = n_jets_asked
 
             # Get the jets which are to be loaded
-            to_load = f["jets"][:n_jets_initial]
+            to_load = f_in["jets"][:n_jets_initial]
 
             # Retrieve the resampling variables from the jets
             jets_x = np.asarray(to_load[self.var_x])
@@ -433,7 +433,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Return sample name and the dict
         return sample, samples
 
-    def File_to_histogram(
+    def file_to_histogram(
         self,
         sample_category: str,
         category_ind: int,
@@ -486,7 +486,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Check if the iterative method is used
         if iterator:
             # Get the generator which loads the sample
-            generator = self.Load_Samples_Generator(
+            generator = self.load_samples_generator(
                 sample_category=sample_category,
                 sample_id=sample_id,
                 chunk_size=chunk_size,
@@ -556,7 +556,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         else:
 
             # Get the target dist from the sample
-            _, target_dist = self.Load_Samples(sample_category, sample_id)
+            _, target_dist = self.load_samples(sample_category, sample_id)
 
             # Get the number of available jets
             available_numbers = len(target_dist["sample_vector"])
@@ -588,7 +588,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Return the dict with the 2d histogram info
         return return_dict
 
-    def Initialise_Flavour_Samples(self) -> None:
+    def initialise_flavour_samples(self) -> None:
         """
         Initialising input files: this one just creates the map.
         (based on UnderSampling one). At this point the arrays of
@@ -600,7 +600,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         self.sample_categories = {
             elem: i for i, elem in enumerate(list(self.samples_to_resample.keys()))
         }
-        self.CheckSampleConsistency(self.samples_to_resample)
+        self.check_sample_consistency(self.samples_to_resample)
 
         self.upsampling_max_rate = {}
         self.sample_map = {elem: {} for elem in list(self.samples_to_resample.keys())}
@@ -629,8 +629,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     in_file = self.config.preparation.get_sample(
                         preparation_sample.name
                     ).output_name
-                    with h5py.File(in_file, "r") as f:
-                        num_available = len(f["jets"])
+                    with h5py.File(in_file, "r") as f_h5:
+                        num_available = len(f_h5["jets"])
                     self.max_upsampling[sample] = (
                         max_upsampling,
                         num_available,
@@ -644,7 +644,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         sample
                     ]
 
-    def CheckSampleConsistency(self, samples: dict) -> None:
+    def check_sample_consistency(self, samples: dict) -> None:
         """
         Helper function to check if each sample category has the same amount
         of samples with same category (e.g. Z' and ttbar both have b, c & light)
@@ -706,7 +706,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Get the class categories
         self.class_categories = check_consistency[next(iter(self.sample_categories))]
 
-    def CalculatePDF(
+    def calculate_pdf(
         self,
         store_key: str,
         x_y_original: tuple = None,
@@ -804,7 +804,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             )
 
         # Calculate the PDF Ratio
-        self.CalculatePDFRatio(
+        self.calculate_pdf_ratio(
             store_key=store_key,
             h_target=h_target,
             h_original=h_original,
@@ -812,7 +812,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             y_bin_edges=self._y_bin_edges,
         )
 
-    def CalculatePDFRatio(
+    def calculate_pdf_ratio(
         self,
         store_key: str,
         h_target: np.ndarray,
@@ -824,7 +824,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         Receives the histograms of the target and original data, the bins
         and a max ratio value. Latter is optional. Provides the PDF
         interpolation function which is used for sampling.
-        This can be returned with Inter_Func_Dict. It is a property of the class.
+        This can be returned with inter_func. It is a property of the class.
 
         Parameters
         ----------
@@ -961,7 +961,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         return inter_func
 
-    def inMemoryResample(
+    def in_memory_resample(
         self,
         x_values: np.ndarray,
         y_values: np.ndarray,
@@ -1014,7 +1014,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             raise ValueError("x_values and y_values need to have same size!")
 
         # Evaluate the datapoints with the PDF function
-        r_resamp = self.Return_unnormalised_PDF_weights(x_values, y_values, store_key)
+        r_resamp = self.return_unnormalised_pdf_weights(x_values, y_values, store_key)
 
         # Normalise the datapoints for sampling
         r_resamp = r_resamp / np.sum(r_resamp)
@@ -1027,18 +1027,18 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
 
             # Histogram the x values with and without weights
-            n, _ = np.histogram(x_values, bins=self._x_bin_edges)
-            sy, _ = np.histogram(x_values, bins=self._x_bin_edges, weights=r_resamp)
+            h_n, _ = np.histogram(x_values, bins=self._x_bin_edges)
+            h_sy, _ = np.histogram(x_values, bins=self._x_bin_edges, weights=r_resamp)
 
             # Get mean
             mean = np.divide(
-                sy,
-                n,
+                h_sy,
+                h_n,
                 out=np.zeros(
-                    sy.shape,
+                    h_sy.shape,
                     dtype=float,
                 ),
-                where=(n != 0),
+                where=(h_n != 0),
             )
 
             # Plot the Distributions with and without weights
@@ -1051,7 +1051,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             plt.savefig(f"{store_key}_weights.pdf")
 
             plt.figure()
-            plt.plot(self.x_bins, n, label=f"Distribution {store_key}")
+            plt.plot(self.x_bins, h_n, label=f"Distribution {store_key}")
             plt.legend(loc="best", ncol=1, fontsize=7)
             plt.xlabel("pT (MeV)")
             plt.ylabel("Weights")
@@ -1059,12 +1059,12 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             plt.savefig(f"{store_key}_distribution.pdf")
 
         # Resample the datapoints based on their PDF Ratio value
-        sampled_indices = self.Resample_chunk(r_resamp, size, replacement)
+        sampled_indices = self.resample_chunk(r_resamp, size, replacement)
 
         # Return sampled jet indicies
         return sampled_indices
 
-    def Return_unnormalised_PDF_weights(
+    def return_unnormalised_pdf_weights(
         self,
         x_values: np.ndarray,
         y_values: np.ndarray,
@@ -1109,7 +1109,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Return the evaluated result
         return r_resamp
 
-    def Resample_chunk(
+    def resample_chunk(
         self,
         r_resamp: np.ndarray,
         size: int,
@@ -1139,7 +1139,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         return sampled_indices
 
-    def Resample_Iterator(
+    def resample_iterator(
         self,
         sample_category: str,
         sample_id: int,
@@ -1217,7 +1217,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         load_chunk = True
 
         # Get the generator which loads the samples
-        generator = self.Load_Samples_Generator(
+        generator = self.load_samples_generator(
             sample_category=sample_category,
             sample_id=sample_id,
             chunk_size=chunk_size,
@@ -1245,7 +1245,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             load_chunk = load_more
 
             # Get the unnormalised PDF weights of the chunk
-            weights = self.Return_unnormalised_PDF_weights(
+            weights = self.return_unnormalised_pdf_weights(
                 target_dist["sample_vector"][:, 0],
                 target_dist["sample_vector"][:, 1],
                 store_key=store_key,
@@ -1267,7 +1267,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             weights = weights / np.sum(weights)
 
             # Get the selected indicies based on the normalised weights
-            selected_ind = self.Resample_chunk(weights, size=round(to_sample))
+            selected_ind = self.resample_chunk(weights, size=round(to_sample))
 
             # Sort the selected indicies
             selected_indices = np.sort(selected_ind).astype(int)
@@ -1284,10 +1284,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
                 # Set the creation to false
                 create_file = False
-                with h5py.File(save_name, "w") as f:
+                with h5py.File(save_name, "w") as f_h5:
 
                     # Create new dataset with the indicies inside
-                    f.create_dataset(
+                    f_h5.create_dataset(
                         "jets",
                         data=selected_indices,
                         compression=self.config.compression,
@@ -1298,18 +1298,18 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             # If this is not the first chunk, extend existing file
             else:
 
-                with h5py.File(save_name, "a") as f:
+                with h5py.File(save_name, "a") as f_h5:
                     # Append indicies to existing ones
-                    f["jets"].resize(
-                        (f["jets"].shape[0] + selected_indices.shape[0]),
+                    f_h5["jets"].resize(
+                        (f_h5["jets"].shape[0] + selected_indices.shape[0]),
                         axis=0,
                     )
-                    f["jets"][-selected_indices.shape[0] :] = selected_indices
+                    f_h5["jets"][-selected_indices.shape[0] :] = selected_indices
 
         # Close progress bar
         pbar.close()
 
-    def Save_partial_iterator(
+    def save_partial_iterator(
         self,
         sample_category: str,
         sample_id: int,
@@ -1352,7 +1352,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         chunk_sizes = sample_lengths / n_chunks
 
         # Get the sampling generator
-        generators = SamplingGenerator(
+        generators = sampling_generator(
             file=in_file,
             indices=selected_indices,
             chunk_size=chunk_sizes,
@@ -1466,7 +1466,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Close progress bar
         pbar.close()
 
-    def Save_complete_iterator(
+    def save_complete_iterator(
         self,
         sample_category: str,
         sample_id: int,
@@ -1519,7 +1519,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         )
 
         # Get the generator which loads the indicies from file
-        index_generator = self.Load_Index_Generator(
+        index_generator = self.load_index_generator(
             in_file=index_file,
             chunk_size=chunk_size,
         )
@@ -1651,7 +1651,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Close the progress bar
         pbar.close()
 
-    def Generate_Target_PDF(self, iterator: bool = True) -> None:
+    def generate_target_pdf(self, iterator: bool = True) -> None:
         """
         This method creates the target distribution (seperated) and store the associated
         histogram in memory (use for sampling) as well as the target numbers.
@@ -1674,7 +1674,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             logger.info("Loading target in category %s.", sample_category)
 
             # Get the histogram from selected file
-            reading_dict = self.File_to_histogram(
+            reading_dict = self.file_to_histogram(
                 sample_category=sample_category,
                 category_ind=cat_ind,
                 sample_id=0,
@@ -1698,8 +1698,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             if not self.use_validation_samples
             else self.options["n_jets_validation"]
         )
-        target_numbers_corr = CorrectFractions(
-            N_jets=available_numbers,
+        target_numbers_corr = correct_fractions(
+            n_jets=available_numbers,
             target_fractions=self.target_fractions,
             verbose=False,
         )
@@ -1761,7 +1761,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         with open(save_name, "w") as write_file:
             json.dump(save_data, write_file, cls=JsonNumpyEncoder)
 
-    def Generate_Number_Sample(self, sample_id: int) -> None:
+    def generate_number_sample(self, sample_id: int) -> None:
         """
         For a given sample, sets the target numbers, respecting flavour ratio and
         upsampling max ratio (if given).
@@ -1841,8 +1841,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     asked_num.append(num_asked)
 
             # Correct the number of asked jets
-            asked_num_corr = CorrectFractions(
-                N_jets=asked_num,
+            asked_num_corr = correct_fractions(
+                n_jets=asked_num,
                 target_fractions=target_data["target_fraction"],
                 verbose=False,
             )
@@ -1874,7 +1874,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         with open(load_name, "w") as load_file:
             json.dump(target_data, load_file, cls=JsonNumpyEncoder)
 
-    def Generate_Flavour_PDF(
+    def generate_flavour_pdf(
         self,
         sample_category: str,
         category_id: int,
@@ -1919,7 +1919,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             target_data = json.load(load_file)
 
         # Create the histogram dict with the target info
-        reading_dict = self.File_to_histogram(
+        reading_dict = self.file_to_histogram(
             sample_category=sample_category,
             category_ind=category_id,
             sample_id=sample_id,
@@ -1930,7 +1930,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         )
 
         # Calculate the PDF
-        self.CalculatePDF(
+        self.calculate_pdf(
             store_key=f"{sample_category}_{reading_dict['category']}",
             target_hist=np.asarray(
                 target_data["target_histo"][sample_category]["hist"]
@@ -1949,7 +1949,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         return reading_dict["target_dist"]
 
-    def Sample_Flavour(
+    def sample_flavour(
         self,
         sample_category: str,
         sample_id: int,
@@ -2009,7 +2009,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Use the resample iterator if iterator is True
         if flavour_distribution is None or iterator:
             logger.info("Using iterating approach.")
-            self.Resample_Iterator(
+            self.resample_iterator(
                 sample_category=sample_category,
                 sample_id=sample_id,
                 save_name=save_name,
@@ -2020,7 +2020,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         logger.info("Using in-memory approach.")
 
         # Resample in Memory
-        selected_ind = self.inMemoryResample(
+        selected_ind = self.in_memory_resample(
             x_values=flavour_distribution["sample_vector"][:, 0],
             y_values=flavour_distribution["sample_vector"][:, 1],
             size=number_to_sample,
@@ -2028,13 +2028,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         )
 
         # Open file where the indicies will be saved
-        with h5py.File(save_name, "w") as f:
+        with h5py.File(save_name, "w") as f_h5:
 
             # Sort the indicies
             selected_indices = np.sort(selected_ind).astype(int)
 
             # Create new dataset with the indicies
-            f.create_dataset(
+            f_h5.create_dataset(
                 "jets",
                 data=selected_indices,
                 compression=self.config.compression,
@@ -2043,7 +2043,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Return the selected indicies
         return selected_indices
 
-    def Save_Flavour(
+    def save_flavour(
         self,
         sample_category: str,
         sample_id: int,
@@ -2078,7 +2078,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         if iterator or selected_indices is None:
             logger.info("Using complete iterating approach for saving.")
-            self.Save_complete_iterator(
+            self.save_complete_iterator(
                 sample_category,
                 sample_id,
                 chunk_size,
@@ -2088,14 +2088,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             logger.info(
                 "Using partial iterating approach for saving (indices in memory)."
             )
-            self.Save_partial_iterator(
+            self.save_partial_iterator(
                 sample_category,
                 sample_id,
                 selected_indices,
                 chunk_size,
             )
 
-    def Combine_Flavours(self, chunk_size: int = 1e6):
+    def combine_flavours(self, chunk_size: int = 1e6):
         """
         This method loads the stored resampled flavour samples and combines
         them iteratively into a single file.
@@ -2212,7 +2212,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         while chunk_number < number_of_chunks:
 
             # Loop over the files
-            for file_counter, (dict_key, df) in enumerate(sample_dict.items()):
+            for file_counter, (dict_key, df_in) in enumerate(sample_dict.items()):
 
                 # Get the chunk size for this file
                 chunk_size_file = int(
@@ -2231,15 +2231,15 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
                 # Get a chunk of labels, tracks and jets
                 if file_counter == 0:
-                    jets = df["jets"][
+                    jets = df_in["jets"][
                         sample_start_ind[dict_key] : sample_end_ind[dict_key]
                     ]
-                    labels = df["labels"][
+                    labels = df_in["labels"][
                         sample_start_ind[dict_key] : sample_end_ind[dict_key]
                     ]
                     if self.save_tracks:
                         tracks = [
-                            df[tracks_name][
+                            df_in[tracks_name][
                                 sample_start_ind[dict_key] : sample_end_ind[dict_key]
                             ]
                             for tracks_name in self.tracks_names
@@ -2249,7 +2249,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     jets = np.lib.recfunctions.stack_arrays(
                         [
                             jets,
-                            df["jets"][
+                            df_in["jets"][
                                 sample_start_ind[dict_key] : sample_end_ind[dict_key]
                             ],
                         ]
@@ -2257,7 +2257,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     labels = np.vstack(
                         (
                             labels,
-                            df["labels"][
+                            df_in["labels"][
                                 sample_start_ind[dict_key] : sample_end_ind[dict_key]
                             ],
                         )
@@ -2267,7 +2267,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                             tracks[track_counter] = np.vstack(
                                 (
                                     tracks[track_counter],
-                                    df[tracks_name][
+                                    df_in[tracks_name][
                                         sample_start_ind[dict_key] : sample_end_ind[
                                             dict_key
                                         ]
@@ -2382,8 +2382,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         if self.do_plotting:
             logger.info("Start plotting resampling variables before sampling.")
             # Get the samples from the files and concatenate them for plotting
-            self.InitialiseSamples(n_jets=int(1e6))
-            self.ConcatenateSamples()
+            self.initialise_samples(n_jets=int(1e6))
+            self.concatenate_samples()
 
             # Make the resampling plots for the resampling variables before resampling
             plot_resampling_variables(
@@ -2407,14 +2407,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         logger.info("Starting PDFsampling...")
 
         # Get the samples for pdf sampling
-        self.Initialise_Flavour_Samples()
+        self.initialise_flavour_samples()
 
         # Whether to use iterator approach or in-memory (one file at a time).
         iterator = True
 
         # Retrieve the PDF between target and all distribution
         if self.do_target:
-            self.Generate_Target_PDF(iterator=iterator)
+            self.generate_target_pdf(iterator=iterator)
 
         else:
             logger.warning("Skipping target computation (not in list to execute).")
@@ -2423,7 +2423,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             self.samples_to_resample[list(self.sample_categories.keys())[0]]
         ):
             # Before starting, get the number to sample
-            self.Generate_Number_Sample(sample_id)
+            self.generate_number_sample(sample_id)
             for cat_ind, sample_category in enumerate(self.samples_to_resample):
                 if sample_id not in self.do_flavours:
                     logger.warning(
@@ -2434,7 +2434,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     continue
 
                 # First step: generate the PDF of the Flavour to Target.
-                flavour_dist = self.Generate_Flavour_PDF(
+                flavour_dist = self.generate_flavour_pdf(
                     sample_category=sample_category,
                     category_id=cat_ind,
                     sample_id=sample_id,
@@ -2442,7 +2442,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 )
 
                 # Second step: use the flavour pdf to select indices (target included)
-                selected_indices = self.Sample_Flavour(
+                selected_indices = self.sample_flavour(
                     sample_category=sample_category,
                     sample_id=sample_id,
                     flavour_distribution=flavour_dist,
@@ -2450,7 +2450,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 )
 
                 # Third step: use the selected indices to save the thus sampled file
-                self.Save_Flavour(
+                self.save_flavour(
                     sample_category=sample_category,
                     sample_id=sample_id,
                     selected_indices=selected_indices,
@@ -2461,7 +2461,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Now that everything is saved, load each file and concatenate them into a
         # single large file
         if self.do_combination:
-            self.Combine_Flavours()
+            self.combine_flavours()
 
             # Plot the variables from the output file of the resampling process
             if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:

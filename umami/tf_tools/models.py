@@ -138,7 +138,7 @@ def prepare_model(
     return model, init_epoch, load_optimiser
 
 
-def Deepsets_model(
+def deepsets_model(
     repeat_input_shape,
     num_conditions: int,
     num_set_features: int,
@@ -333,13 +333,13 @@ def Deepsets_model(
     return deepsets
 
 
-def Deepsets_model_umami(
+def deepsets_model_umami(
     trk_input_shape,
     jet_input_shape,
     num_conditions,
     num_set_features,
-    DIPS_sets_nodes,
-    F_classif_nodes,
+    dips_sets_nodes,
+    f_classif_nodes,
     classif_output,
     intermediate_units,
     dl1_units,
@@ -369,10 +369,10 @@ def Deepsets_model_umami(
     num_set_features : int
         Number of neurons of the last layer of the deep
         set.
-    DIPS_sets_nodes : list
+    dips_sets_nodes : list
         List with the number of neurons for the deep
         sets hidden layers.
-    F_classif_nodes : list
+    f_classif_nodes : list
         List with the number of neurons for the classification
         network (the F network after the deep sets part).
     classif_output : int
@@ -437,7 +437,7 @@ def Deepsets_model_umami(
     if condition_sets is True:
         # Get conditional deep sets layer
         layers = ConditionalDeepSet(
-            DIPS_sets_nodes + [num_set_features],
+            dips_sets_nodes + [num_set_features],
             activation=activation,
             batch_norm=sets_batch_norm,
             name="CondDeepSets",
@@ -446,7 +446,7 @@ def Deepsets_model_umami(
     else:
         # Get normal Deep sets_layer
         layers = DeepSet(
-            DIPS_sets_nodes + [num_set_features],
+            dips_sets_nodes + [num_set_features],
             activation=activation,
             batch_norm=sets_batch_norm,
             name="DeepSets",
@@ -515,7 +515,7 @@ def Deepsets_model_umami(
 
     # Get the dense net which further processes the output of the deep sets
     sec_to_last, dips_output = DenseNet(
-        F_classif_nodes,
+        f_classif_nodes,
         classif_output,
         activation=activation,
         batch_norm=classif_batch_norm,
@@ -526,17 +526,17 @@ def Deepsets_model_umami(
     # Check if conditional inputs are needed somewhere and build model
     jets_inputs = Input(shape=jet_input_shape)
 
-    x = jets_inputs
+    layer = jets_inputs
     for unit in intermediate_units:
-        x = Dense(
+        layer = Dense(
             units=unit,
             activation="linear",
             kernel_initializer="glorot_uniform",
-        )(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
+        )(layer)
+        layer = BatchNormalization()(layer)
+        layer = Activation("relu")(layer)
 
-    umami_in = Concatenate()([sec_to_last, x])
+    umami_in = Concatenate()([sec_to_last, layer])
 
     umami_out = DenseNet(
         dl1_units,

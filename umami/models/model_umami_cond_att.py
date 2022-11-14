@@ -54,13 +54,13 @@ def create_umami_cond_att_model(
     if umami is None:
         logger.info("No modelfile provided! Initialize a new one!")
 
-        umami = utf.Deepsets_model_umami(
+        umami = utf.deepsets_model_umami(
             trk_input_shape=input_shape,
             jet_input_shape=njet_features,
             num_conditions=nn_structure["n_conditions"],
             num_set_features=nn_structure["dips_ppm_units"][-1],
-            DIPS_sets_nodes=nn_structure["dips_ppm_units"][:-1],
-            F_classif_nodes=nn_structure["dips_dense_units"],
+            dips_sets_nodes=nn_structure["dips_ppm_units"][:-1],
+            f_classif_nodes=nn_structure["dips_dense_units"],
             classif_output=len(nn_structure["class_labels"]),
             intermediate_units=nn_structure["intermediate_units"],
             dl1_units=nn_structure["dl1_units"],
@@ -150,12 +150,14 @@ def train_umami_cond_att(args, train_config):
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f:
-            metadata["n_jets"], metadata["n_trks"], metadata["n_trk_features"] = f[
-                f"{tracks_name}/inputs"
-            ].shape
-            _, metadata["n_dim"] = f["jets/labels_one_hot"].shape
-            _, metadata["n_jet_features"] = f["jets/inputs"].shape
+        with h5py.File(train_config.train_file, "r") as f_train:
+            (
+                metadata["n_jets"],
+                metadata["n_trks"],
+                metadata["n_trk_features"],
+            ) = f_train[f"{tracks_name}/inputs"].shape
+            _, metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
+            _, metadata["n_jet_features"] = f_train["jets/inputs"].shape
             if exclude is not None:
                 metadata["n_jet_features"] -= len(excluded_var)
             logger.debug(
@@ -198,17 +200,17 @@ def train_umami_cond_att(args, train_config):
 
         train_dataset = (
             tf.data.Dataset.from_generator(
-                utf.umami_condition_generator(
+                utf.UmamiConditionGenerator(
                     train_file_path=train_config.train_file,
-                    X_Name="jets/inputs",
-                    X_trk_Name=f"{tracks_name}/inputs",
-                    Y_Name="jets/labels_one_hot",
+                    x_name="jets/inputs",
+                    x_trk_name=f"{tracks_name}/inputs",
+                    y_name="jets/labels_one_hot",
                     n_jets=int(nn_structure["n_jets_train"])
                     if "n_jets_train" in nn_structure
                     and nn_structure["n_jets_train"] is not None
                     else metadata["n_jets"],
                     batch_size=nn_structure["batch_size"],
-                    nConds=nn_structure["n_conditions"],
+                    n_conds=nn_structure["n_conditions"],
                     chunk_size=int(1e6),
                     excluded_var=excluded_var,
                     sample_weights=nn_structure["use_sample_weights"],
@@ -247,7 +249,7 @@ def train_umami_cond_att(args, train_config):
         n_epochs = args.epochs
 
     # Set ModelCheckpoint as callback
-    umami_mChkPt = ModelCheckpoint(
+    umami_m_chk_pt = ModelCheckpoint(
         f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
@@ -257,7 +259,7 @@ def train_umami_cond_att(args, train_config):
     )
 
     # Append the callback
-    callbacks.append(umami_mChkPt)
+    callbacks.append(umami_m_chk_pt)
 
     if "lrr" in nn_structure and nn_structure["lrr"] is True:
         # Define LearningRate Reducer as Callback
@@ -273,7 +275,7 @@ def train_umami_cond_att(args, train_config):
             train_config=train_config,
             n_jets=n_jets_val,
             convert_to_tensor=True,
-            nCond=nn_structure["n_conditions"],
+            n_cond=nn_structure["n_conditions"],
         )
 
     # Init the Umami callback

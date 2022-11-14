@@ -17,7 +17,7 @@ from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-e
 
 import umami.metrics as umt
 import umami.tf_tools as utf
-from umami.data_tools import LoadJetsFromFile, LoadTrksFromFile
+from umami.data_tools import load_jets_from_file, load_trks_from_file
 from umami.preprocessing_tools import (
     PreprocessConfiguration,
     apply_scaling_jets,
@@ -207,14 +207,16 @@ def get_parameters_from_validation_dict_name(dict_name: str) -> dict:
     """
 
     # Split the path and only get the dict name
-    sp = dict_name.split("/")[-1].split("_")
+    split_name = dict_name.split("/")[-1].split("_")
 
     # Init a new dict for the parameters
     parameters = {}
 
     # Get the parameters from the name and add them to the dict
-    parameters["working_point"] = float(sp[1].replace("WP", "").replace("p", "."))
-    parameters["n_jets"] = int(sp[2].replace("jets", ""))
+    parameters["working_point"] = float(
+        split_name[1].replace("WP", "").replace("p", ".")
+    )
+    parameters["n_jets"] = int(split_name[2].replace("jets", ""))
     parameters["dir_name"] = str(Path(dict_name).parent)
 
     # Check if the values are correctly extracted. Try to build the name
@@ -797,7 +799,7 @@ def get_test_sample(
     var_dict_loaded = get_variable_dict(var_dict)
     scale_dict_loaded = get_scale_dict(file_path=scale_dict, dict_key="jets")
 
-    jets, Umami_labels = LoadJetsFromFile(
+    jets, umami_labels = load_jets_from_file(
         filepath=filepaths,
         class_labels=class_labels,
         n_jets=n_jets,
@@ -809,7 +811,7 @@ def get_test_sample(
 
     # Binarize Labels
     labels = binarise_jet_labels(
-        labels=Umami_labels,
+        labels=umami_labels,
         internal_labels=list(range(len(class_labels))),
     )
 
@@ -909,7 +911,7 @@ def get_test_sample_trks(
     var_dict_loaded = get_variable_dict(var_dict)
     scale_dict_loaded = get_scale_dict(file_path=scale_dict, dict_key=str(tracks_name))
 
-    trks, labels = LoadTrksFromFile(
+    trks, labels = load_trks_from_file(
         filepath=filepaths,
         class_labels=class_labels,
         n_jets=n_jets,
@@ -941,7 +943,7 @@ def load_validation_data(
     n_jets: int,
     jets_var_list: list = None,
     convert_to_tensor: bool = False,
-    nCond: int = None,
+    n_cond: int = None,
 ) -> dict:
     """
     Load the validation data for UMAMI.
@@ -957,7 +959,7 @@ def load_validation_data(
     convert_to_tensor : bool
         Decide, if the validation data are converted to
         tensorflow tensors to avoid memory leaks.
-    nCond: int
+    n_cond: int
         Number of addittional variables used for attention
 
     Returns
@@ -1003,11 +1005,11 @@ def load_validation_data(
         )
 
         # Set default to None and change it if used
-        X_valid, X_valid_trk, Y_valid = None, None, None
+        x_valid, x_valid_trk, y_valid = None, None, None
 
         # Check which tagger is used and load the neede data
         if tagger.casefold() in ("dips", "dips_attention"):
-            (X_valid, Y_valid,) = get_test_sample_trks(
+            (x_valid, y_valid,) = get_test_sample_trks(
                 input_file=val_file_config["path"],
                 var_dict=train_config.var_dict,
                 scale_dict=train_config.preprocess_config.dict_file,
@@ -1018,7 +1020,7 @@ def load_validation_data(
             )
 
         elif tagger.casefold() in ("dl1"):
-            (X_valid, Y_valid,) = get_test_sample(
+            (x_valid, y_valid,) = get_test_sample(
                 input_file=val_file_config["path"],
                 var_dict=train_config.var_dict,
                 scale_dict=train_config.preprocess_config.dict_file,
@@ -1029,7 +1031,7 @@ def load_validation_data(
             )
 
         elif tagger.casefold() in ("umami", "umami_cond_att", "cads"):
-            (X_valid, X_valid_trk, Y_valid,) = get_test_file(
+            (x_valid, x_valid_trk, y_valid,) = get_test_file(
                 input_file=val_file_config["path"],
                 var_dict=train_config.var_dict,
                 scale_dict=train_config.preprocess_config.dict_file,
@@ -1044,32 +1046,32 @@ def load_validation_data(
         else:
             raise ValueError(f"The defined tagger {tagger} is not supported!")
 
-        if X_valid is not None:
+        if x_valid is not None:
             val_data_dict[f"X_valid_{val_file_identifier}"] = (
-                tf.convert_to_tensor(X_valid, dtype=tf.float32)
+                tf.convert_to_tensor(x_valid, dtype=tf.float32)
                 if convert_to_tensor
-                else X_valid
+                else x_valid
             )
 
-        if X_valid_trk is not None:
+        if x_valid_trk is not None:
             val_data_dict[f"X_valid_trk_{val_file_identifier}"] = (
-                tf.convert_to_tensor(X_valid_trk, dtype=tf.float32)
+                tf.convert_to_tensor(x_valid_trk, dtype=tf.float32)
                 if convert_to_tensor
-                else X_valid_trk
+                else x_valid_trk
             )
 
-        if Y_valid is not None:
+        if y_valid is not None:
             val_data_dict[f"Y_valid_{val_file_identifier}"] = (
-                tf.convert_to_tensor(Y_valid, dtype=tf.uint8)
+                tf.convert_to_tensor(y_valid, dtype=tf.uint8)
                 if convert_to_tensor
-                else Y_valid
+                else y_valid
             )
 
-        if nCond is not None:
+        if n_cond is not None:
             val_data_dict[f"X_valid_addvars_{val_file_identifier}"] = (
-                tf.convert_to_tensor(X_valid.iloc[:, :nCond], dtype=tf.float32)
+                tf.convert_to_tensor(x_valid.iloc[:, :n_cond], dtype=tf.float32)
                 if convert_to_tensor
-                else X_valid.iloc[:, :nCond]
+                else x_valid.iloc[:, :n_cond]
             )
 
     # Return the val data dict
@@ -1122,15 +1124,15 @@ def get_test_file(
 
     Returns
     -------
-    X : numpy.ndarray
+    x_test : numpy.ndarray
         X values of the jets ready to be used in the NN's.
-    X_trk : numpy.ndarray
+    x_trk : numpy.ndarray
         X values of the tracks ready to be used in the NN's.
-    Y : numpy.ndarray
+    y_test : numpy.ndarray
         Y values ready to be used in the NN's.
     """
 
-    X_trk, Y_trk = get_test_sample_trks(
+    x_trk, y_trk = get_test_sample_trks(
         input_file=input_file,
         var_dict=var_dict,
         scale_dict=scale_dict,
@@ -1142,7 +1144,7 @@ def get_test_file(
         print_logger=False,
     )
 
-    X, Y = get_test_sample(
+    x_test, y_test = get_test_sample(
         input_file=input_file,
         var_dict=var_dict,
         scale_dict=scale_dict,
@@ -1155,9 +1157,9 @@ def get_test_file(
         print_logger=print_logger,
     )
 
-    assert np.equal(Y, Y_trk).all()
+    assert np.equal(y_test, y_trk).all()
 
-    return X, X_trk, Y
+    return x_test, x_trk, y_test
 
 
 def evaluate_model_umami(
@@ -1212,18 +1214,18 @@ def evaluate_model_umami(
         # Check which input data need to be used
         # Calculate accuracy andloss of UMAMI and Dips part
         if f"X_valid_addvars_{val_file_identifier}" in data_dict:
-            x = [
+            x_valid = [
                 data_dict[f"X_valid_trk_{val_file_identifier}"],
                 data_dict[f"X_valid_addvars_{val_file_identifier}"],
                 data_dict[f"X_valid_{val_file_identifier}"],
             ]
         else:
-            x = [
+            x_valid = [
                 data_dict[f"X_valid_trk_{val_file_identifier}"],
                 data_dict[f"X_valid_{val_file_identifier}"],
             ]
         (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
-            x,
+            x_valid,
             data_dict[f"Y_valid_{val_file_identifier}"],
             batch_size=batch_size,
             use_multiprocessing=True,
@@ -1233,7 +1235,7 @@ def evaluate_model_umami(
 
         # Evaluate with the model for predictions
         y_pred_dips, y_pred_umami = model.predict(
-            x,
+            x_valid,
             batch_size=batch_size,
             use_multiprocessing=True,
             workers=8,
@@ -1336,7 +1338,7 @@ def evaluate_model(
             f"X_valid_trk_{val_file_identifier}" in data_dict
             and f"X_valid_{val_file_identifier}" in data_dict
         ):
-            x = [
+            x_valid = [
                 data_dict[f"X_valid_trk_{val_file_identifier}"],
                 data_dict[f"X_valid_{val_file_identifier}"],
             ]
@@ -1345,13 +1347,13 @@ def evaluate_model(
             f"X_valid_trk_{val_file_identifier}" in data_dict
             and f"X_valid_{val_file_identifier}" not in data_dict
         ):
-            x = data_dict[f"X_valid_trk_{val_file_identifier}"]
+            x_valid = data_dict[f"X_valid_trk_{val_file_identifier}"]
 
         else:
-            x = data_dict[f"X_valid_{val_file_identifier}"]
+            x_valid = data_dict[f"X_valid_{val_file_identifier}"]
 
         loss, accuracy = model.evaluate(
-            x=x,
+            x=x_valid,
             y=data_dict[f"Y_valid_{val_file_identifier}"],
             batch_size=batch_size,
             use_multiprocessing=True,
@@ -1360,7 +1362,7 @@ def evaluate_model(
         )
 
         y_pred_dips = model.predict(
-            x=x,
+            x=x_valid,
             batch_size=batch_size,
             use_multiprocessing=True,
             workers=8,
@@ -1497,8 +1499,8 @@ def calc_validation_metrics(
     )
 
     # Loop over the different model savepoints at each epoch
-    for n, model_file in enumerate(sorted(training_output, key=natural_keys)):
-        logger.info("Working on %i/%i input files", n + 1, len(training_output))
+    for iteration, model_file in enumerate(sorted(training_output, key=natural_keys)):
+        logger.info("Working on %i/%i input files", iteration + 1, len(training_output))
 
         # Init results dict to save to
         result_dict = {}
@@ -1613,8 +1615,8 @@ def calc_validation_metrics(
             raise ValueError(f"Tagger {tagger} is not supported!")
 
         # Save results in dict
-        for k, v in val_result_dict.items():
-            result_dict[k] = v
+        for key, val in val_result_dict.items():
+            result_dict[key] = val
 
         # Append results dict to list
         results.append(result_dict)

@@ -228,9 +228,9 @@ class Configuration:
                                 self.config["validation_settings"]["val_batch_size"]
                             )
 
-                    except KeyError as Error:
+                    except KeyError as error:
                         if bool_evaluate_trained_model:
-                            raise ValueError("No batch size given!") from Error
+                            raise ValueError("No batch size given!") from error
 
                 setattr(self, item, self.config[item])
 

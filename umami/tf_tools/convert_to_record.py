@@ -9,7 +9,7 @@ import tensorflow as tf
 import tqdm
 
 
-class h5_to_tf_record_converter:
+class H5ToTFRecords:
     """h5 converter to tf records."""
 
     def __init__(self, config):
@@ -40,7 +40,7 @@ class h5_to_tf_record_converter:
         )
         self.n_add_vars = config.convert_to_tfrecord.get("N_add_vars")
 
-    def load_h5File_Train(self):
+    def load_h5file_train(self):
         """
         load the numbers of entries given by the chunk size for the jets,
         tracks and labels from train file.
@@ -62,10 +62,10 @@ class h5_to_tf_record_converter:
         """
 
         # Open the h5 output file
-        with h5py.File(self.path_h5, "r") as hFile:
+        with h5py.File(self.path_h5, "r") as f_h5:
 
             # Get the number of jets in the file
-            length_dataset = len(hFile["jets/inputs"])
+            length_dataset = len(f_h5["jets/inputs"])
             logger.info(
                 "Total length of the dataset is %i. Load %i samples at a time",
                 length_dataset,
@@ -87,45 +87,45 @@ class h5_to_tf_record_converter:
                 end = (i + 1) * self.chunk_size
 
                 # Get the jets
-                X_jets = hFile["jets/inputs"][start:end]
+                x_jets = f_h5["jets/inputs"][start:end]
 
                 # Get the labels
-                Y_jets = hFile["jets/labels_one_hot"][start:end]
+                y_jets = f_h5["jets/labels_one_hot"][start:end]
 
                 # Get the weights
-                Weights = hFile["jets/weight"][start:end]
+                weights = f_h5["jets/weight"][start:end]
 
                 if self.save_tracks:
                     # Get a list with all tracks inside
-                    X_trks = {
-                        track_name: hFile[f"{track_name}/inputs"][start:end]
+                    x_trks = {
+                        track_name: f_h5[f"{track_name}/inputs"][start:end]
                         for track_name in self.tracks_name
                     }
 
                     if self.save_track_labels:
-                        Y_trks = {}
+                        y_trks = {}
                         for track_name in self.tracks_name:
-                            Y_trks[track_name] = {
-                                k: hFile[f"{track_name}/labels/{k}"][start:end]
-                                for k in hFile[f"{track_name}/labels/"].keys()
+                            y_trks[track_name] = {
+                                k: f_h5[f"{track_name}/labels/{k}"][start:end]
+                                for k in f_h5[f"{track_name}/labels/"].keys()
                             }
 
                     else:
-                        Y_trks = None
+                        y_trks = None
 
                 else:
-                    X_trks = None
-                    Y_trks = None
+                    x_trks = None
+                    y_trks = None
 
                 # Check if conditional jet parameters are used or not
                 if self.n_add_vars is not None:
-                    X_Add_Vars = hFile["jets/inputs"][start:end, : self.n_add_vars]
+                    x_add_vars = f_h5["jets/inputs"][start:end, : self.n_add_vars]
 
                 else:
-                    X_Add_Vars = None
+                    x_add_vars = None
 
                 # Yield the chunk
-                yield X_jets, X_trks, Y_jets, Y_trks, Weights, X_Add_Vars
+                yield x_jets, x_trks, y_jets, y_trks, weights, x_add_vars
 
     def save_parameters(self, record_dir):
         """
@@ -207,18 +207,18 @@ class h5_to_tf_record_converter:
 
         # Get filename
         tf_filename_start = record_dir.split("/")[-1]
-        n = 0
+        iteration = 0
 
         # Iterate over chunks
         for (
-            X_jets,
-            X_trks,
-            Y_jets,
-            Y_trks,
-            Weights,
-            X_Add_Vars,
-        ) in self.load_h5File_Train():
-            n += 1
+            x_jets,
+            x_trks,
+            y_jets,
+            y_trks,
+            weights,
+            x_add_vars,
+        ) in self.load_h5file_train():
+            iteration += 1
 
             # Get filename of the chunk
             filename = (
@@ -226,40 +226,40 @@ class h5_to_tf_record_converter:
                 + "/"
                 + tf_filename_start
                 + "_"
-                + str(n).zfill(4)
+                + str(iteration).zfill(4)
                 + ".tfrecord"
             )
 
             with tf.io.TFRecordWriter(filename) as file_writer:
-                for iterator, _ in enumerate(X_jets):
+                for iterator, _ in enumerate(x_jets):
 
                     # Get record bytes example
                     record_bytes = tf.train.Example()
 
                     # Add jets
                     record_bytes.features.feature["X_jets"].float_list.value.extend(
-                        X_jets[iterator].reshape(-1)
+                        x_jets[iterator].reshape(-1)
                     )
 
                     # Add labels
                     record_bytes.features.feature["Y_jets"].int64_list.value.extend(
-                        Y_jets[iterator]
+                        y_jets[iterator]
                     )
 
                     # Add weights
                     record_bytes.features.feature["Weights"].float_list.value.extend(
-                        Weights[iterator].reshape(-1)
+                        weights[iterator].reshape(-1)
                     )
 
                     if self.save_tracks:
                         # Add track collections
-                        for key, item in X_trks.items():
+                        for key, item in x_trks.items():
                             record_bytes.features.feature[
                                 f"{key}/inputs"
                             ].float_list.value.extend(item[iterator].reshape(-1))
 
                         if self.save_track_labels:
-                            for track_name, data in Y_trks.items():
+                            for track_name, data in y_trks.items():
                                 for label_name, array in data.items():
                                     record_bytes.features.feature[
                                         f"{track_name}/labels/{label_name}"
@@ -271,7 +271,7 @@ class h5_to_tf_record_converter:
                     if self.n_add_vars is not None:
                         record_bytes.features.feature[
                             "X_Add_Vars"
-                        ].float_list.value.extend(X_Add_Vars[iterator].reshape(-1))
+                        ].float_list.value.extend(x_add_vars[iterator].reshape(-1))
 
                     # Write to file
                     file_writer.write(record_bytes.SerializeToString())

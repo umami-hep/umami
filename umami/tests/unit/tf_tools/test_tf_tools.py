@@ -14,7 +14,7 @@ from umami.tf_tools import Attention, DeepSet, DenseNet, prepare_model
 set_log_level(logger, "DEBUG")
 
 
-class test_Attention(tf.test.TestCase):
+class AttentionTestCase(tf.test.TestCase):
     """Test class for the attention layer."""
 
     def setUp(self):
@@ -124,7 +124,7 @@ class test_Attention(tf.test.TestCase):
         # Test output
         np.testing.assert_almost_equal(expected_output, out)
 
-    def test_call_AssertionError(self):
+    def test_call_assertion_error(self):
         """Test call functions assertion error."""
         inputs = np.array([[0, 1, 1], [1, 1, 0]])
 
@@ -149,7 +149,7 @@ class test_Attention(tf.test.TestCase):
 
         self.assertAllEqual(mask, expected_output)
 
-    def test_compute_mask_Errors(self):
+    def test_compute_mask_errors(self):
         """Test error of the masking."""
         _ = Attention(
             nodes=self.nodes,
@@ -166,7 +166,7 @@ class test_Attention(tf.test.TestCase):
         )
 
 
-class test_DeepSet(tf.test.TestCase):
+class DeepSetTestCase(tf.test.TestCase):
     """Test class for the DeepSet."""
 
     def setUp(self):
@@ -282,7 +282,7 @@ class test_DeepSet(tf.test.TestCase):
         # Test output
         np.testing.assert_almost_equal(expected_output, out)
 
-    def test_call_AssertionError(self):
+    def test_call_assertion_error(self):
         """Test call functions assertion error."""
         inputs = np.array([[0, 1, 1], [1, 1, 0]])
 
@@ -308,7 +308,7 @@ class test_DeepSet(tf.test.TestCase):
         self.assertAllEqual(mask, expected_output)
 
 
-class test_DenseNet(tf.test.TestCase):
+class DenseNetTestCase(tf.test.TestCase):
     """The class for the DenseNet"""
 
     def setUp(self):
@@ -359,7 +359,7 @@ class test_DenseNet(tf.test.TestCase):
         np.testing.assert_almost_equal(expected_output, out)
 
 
-class prepare_model_TestCase(unittest.TestCase):
+class PrepareModelTestCase(unittest.TestCase):
     """Test the prepare_model function."""
 
     def setUp(self) -> None:
@@ -429,7 +429,7 @@ class prepare_model_TestCase(unittest.TestCase):
         with self.subTest("Check load_optimiser"):
             self.assertFalse(load_optimiser)
 
-    def test_load_optimiser_ValueError(self):
+    def test_load_optimiser_value_rrror(self):
         """Test load optimiser error."""
         self.nn_structure = {"load_optimiser": True}
 

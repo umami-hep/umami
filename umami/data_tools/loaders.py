@@ -7,12 +7,12 @@ import numpy as np
 import pandas as pd
 
 from umami.configuration import logger
-from umami.data_tools.Cuts import get_sample_cuts
+from umami.data_tools.cuts import get_sample_cuts
 from umami.helper_tools import get_class_label_ids, get_class_label_variables
 from umami.tools import natural_keys
 
 
-def LoadJetsFromFile(
+def load_jets_from_file(
     filepath: str,
     class_labels: list,
     n_jets: int = None,
@@ -264,7 +264,7 @@ def LoadJetsFromFile(
     return all_jets[:n_jets], all_labels[:n_jets]
 
 
-def LoadTrksFromFile(
+def load_trks_from_file(
     filepath: str,
     class_labels: list,
     n_jets: int = None,

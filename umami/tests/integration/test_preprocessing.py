@@ -40,7 +40,7 @@ def get_configuration():
     return conf_setup
 
 
-def runPreprocessing(
+def run_preprocessing(
     config: dict,
     tagger: str,
     method: str,
@@ -744,7 +744,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.config,
                 tagger="umami",
                 method="count",
@@ -761,7 +761,7 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_dips}",
         )
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.config,
                 tagger="dips",
                 method="count",
@@ -779,7 +779,7 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_dips_hits}",
         )
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.hits_config,
                 tagger="dips",
                 method="count",
@@ -818,7 +818,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.config,
                 tagger="dl1r",
                 method="count",
@@ -836,7 +836,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.pdf_config,
                 tagger="umami",
                 method="pdf",
@@ -854,7 +854,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.pdf_config,
                 tagger="dips",
                 method="pdf",
@@ -897,7 +897,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.pdf_config,
                 tagger="dips",
                 method="pdf",
@@ -936,7 +936,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.pdf_config,
                 tagger="dl1r",
                 method="pdf",
@@ -954,7 +954,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.weight_config,
                 tagger="umami",
                 method="weighting",
@@ -971,7 +971,7 @@ class TestPreprocessing(unittest.TestCase):
             f".var_file: &var_file {self.var_dict_dips}",
         )
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.weight_config,
                 tagger="dips",
                 method="weighting",
@@ -1009,7 +1009,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.weight_config,
                 tagger="dl1r",
                 method="weighting",
@@ -1027,7 +1027,7 @@ class TestPreprocessing(unittest.TestCase):
         )
 
         self.assertTrue(
-            runPreprocessing(
+            run_preprocessing(
                 self.importance_no_replace_config,
                 tagger="umami",
                 method="importance_no_replace",

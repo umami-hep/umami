@@ -7,7 +7,7 @@ from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-e
 import umami.tf_tools as utf
 import umami.train_tools as utt
 from umami.configuration import global_config, logger
-from umami.data_tools import LoadJetsFromFile
+from umami.data_tools import load_jets_from_file
 
 
 def decorate_tagger_probabilites(
@@ -212,7 +212,7 @@ def decorate_tagger_probabilites(
         )
 
         # Load the jets which are to be decorated
-        jets, _ = LoadJetsFromFile(
+        jets, _ = load_jets_from_file(
             filepath=input_file,
             class_labels=class_labels,
             indices_to_load=indices_to_load,

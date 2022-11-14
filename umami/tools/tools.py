@@ -10,7 +10,7 @@ from umami.configuration.configuration import logger
 # scientific notation
 # TODO: This should be replaced everywhere with the new YAML loader which
 # also allows !include
-yaml_loader = yaml.SafeLoader
+yaml_loader = yaml.SafeLoader  # pylint: disable=invalid-name
 yaml_loader.add_implicit_resolver(
     "tag:yaml.org,2002:float",
     re.compile(
@@ -82,8 +82,8 @@ def replace_line_in_file(file, key, new_line, only_first=False):
     filedata = ""
 
     replaced_line = False
-    with open(file, "r") as f:
-        for line in f:
+    with open(file, "r") as f_out:
+        for line in f_out:
             if key in line:
                 if (only_first and not replaced_line) or not only_first:
                     compare_leading_spaces(line, new_line)
@@ -94,8 +94,8 @@ def replace_line_in_file(file, key, new_line, only_first=False):
         if replaced_line is False:
             raise AttributeError(f'No line could be found matching "{key}"')
 
-    with open(file, "w") as f:
-        f.write(filedata)
+    with open(file, "w") as f_out:
+        f_out.write(filedata)
 
 
 def atoi(text):

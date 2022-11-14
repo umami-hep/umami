@@ -12,7 +12,7 @@ from umami.plotting_tools.utils import translate_kwargs
 
 
 def plot_variable(
-    df,
+    df_in,
     labels: np.ndarray,
     variable: str,
     variable_index: int,
@@ -27,7 +27,7 @@ def plot_variable(
 
     Parameters
     ----------
-    df : pd.DataFrame or np.ndarray
+    df_in : pd.DataFrame or np.ndarray
         DataFrame (for jets) or ndarray (for tracks) with
         the jets/tracks inside.
     labels : np.ndarray
@@ -74,21 +74,23 @@ def plot_variable(
 
         # This is the case if a pandas Dataframe is given
         try:
-            flavour_jets = df[variable][labels[:, flav_counter] == 1].values.flatten()
+            flavour_jets = df_in[variable][
+                labels[:, flav_counter] == 1
+            ].values.flatten()
 
         # This is the case when a numpy ndarray is given
         except AttributeError:
-            flavour_jets = df[variable][labels[:, flav_counter] == 1].flatten()
+            flavour_jets = df_in[variable][labels[:, flav_counter] == 1].flatten()
 
         # This is the case if the training set is already converted to X_train etc.
         except IndexError as error:
             if var_type.casefold() == "jets":
-                flavour_jets = df[:, variable_index][
+                flavour_jets = df_in[:, variable_index][
                     labels[:, flav_counter] == 1
                 ].flatten()
 
             elif var_type.casefold() == "tracks":
-                flavour_jets = df[:, :, variable_index][
+                flavour_jets = df_in[:, :, variable_index][
                     labels[:, flav_counter] == 1
                 ].flatten()
 
@@ -295,12 +297,12 @@ def preprocessing_plots(
     """
     logger.info("Plots will be saved in the directory %s", plots_dir)
     # Get max number of available jets
-    with h5py.File(sample, "r") as f:
+    with h5py.File(sample, "r") as f_h5:
         try:
-            n_jets_infile = len(f["/jets/inputs"])
+            n_jets_infile = len(f_h5["/jets/inputs"])
 
         except KeyError:
-            n_jets_infile = len(f["jets"])
+            n_jets_infile = len(f_h5["jets"])
 
     # Check if random values are used or not
     if use_random_jets is True:
@@ -376,7 +378,7 @@ def preprocessing_plots(
 
                 # Plotting
                 plot_variable(
-                    df=jets,
+                    df_in=jets,
                     labels=labels,
                     variable=jet_var,
                     variable_index=jet_var_counter,
@@ -399,16 +401,16 @@ def preprocessing_plots(
             )
 
             # Loading track variables for given collection
-            noNormVars = var_dict["track_train_variables"][track_collection][
+            no_norm_vars = var_dict["track_train_variables"][track_collection][
                 "noNormVars"
             ]
-            logNormVars = var_dict["track_train_variables"][track_collection][
+            log_norm_vars = var_dict["track_train_variables"][track_collection][
                 "logNormVars"
             ]
-            jointNormVars = var_dict["track_train_variables"][track_collection][
+            joint_norm_vars = var_dict["track_train_variables"][track_collection][
                 "jointNormVars"
             ]
-            trksVars = noNormVars + logNormVars + jointNormVars
+            trks_vars = no_norm_vars + log_norm_vars + joint_norm_vars
 
             # Get the tracks from file
             try:
@@ -420,11 +422,11 @@ def preprocessing_plots(
                 tracks = np.asarray(infile[f"/{track_collection}"][selected_indicies])
 
             # Loop over track variables
-            for trk_var_counter, trk_var in enumerate(trksVars):
+            for trk_var_counter, trk_var in enumerate(trks_vars):
 
                 # Plotting
                 plot_variable(
-                    df=tracks,
+                    df_in=tracks,
                     labels=labels,
                     variable=trk_var,
                     variable_index=trk_var_counter,

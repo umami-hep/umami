@@ -68,7 +68,7 @@ Splitting the model into architecture `arch_file` and weight file `hdf5_file` ca
  python scripts/conv_lwtnn_model.py -m <model.h5>
 ```
 This script will return two files which are in this case `architecture-lwtnn_model.json` and `weights-lwtnn_model.h5`. If you want to change the basename of
-those files, which per default `lwtnn_model`, you can give the command line option `-o` or `--output_base` and your desired basename. 
+those files, which per default `lwtnn_model`, you can give the command line option `-o` or `--output_base` and your desired basename.
 
 ### Final JSON File
 Finally, the three produced files can be merged via [kerasfunc2json.py](https://github.com/lwtnn/lwtnn/blob/master/converters/kerasfunc2json.py).
@@ -84,7 +84,7 @@ To test if the created model is properly working you can use the [training-datas
 
 An explanation how to run on the grid with the TDD can be found [here](https://training-dataset-dumper.docs.cern.ch/basic_usage/#running-on-the-grid).
 
-After having the hdf5 ntuples produced, the script [`check_lwtnn-model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn-model.py) can be used to compare the athena evaluation with the keras evaluation. The script requiries a short config files which can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/check_lwtnn-model_config.yaml). This looks like this:
+After having the hdf5 ntuples produced, the script [`check_lwtnn_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn_model.py) can be used to compare the athena evaluation with the keras evaluation. The script requiries a short config files which can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/check_lwtnn-model_config.yaml). This looks like this:
 
 ```
 §§§scripts/check_lwtnn-model_config.yaml§§§
@@ -93,7 +93,7 @@ After having the hdf5 ntuples produced, the script [`check_lwtnn-model.py`](http
 You can simply run the script via
 
 ```bash
-python scripts/check_lwtnn-model.py -c examples/check_lwtnn-model_config.yaml
+python scripts/check_lwtnn_model.py -c examples/check_lwtnn-model_config.yaml
 ```
 
 the `-c` option is the path to the config file.

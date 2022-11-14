@@ -22,11 +22,11 @@ note = (
 )
 mr = project.mergerequests.get(mr_id)
 
-post_coverage = True
+POST_COVERAGE = True
 for note_i in mr.notes.list():
     if note_i.body == note:
-        post_coverage = False
+        POST_COVERAGE = False
         break
-if post_coverage:
+if POST_COVERAGE:
     # Post the note to the MR if not already done
     mr.notes.create({"body": note})

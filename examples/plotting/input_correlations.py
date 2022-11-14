@@ -20,17 +20,17 @@ from umami.configuration import logger
 from umami.preprocessing_tools import get_variable_dict
 
 # get test data
-test_data = (
+TESTDATA = (
     "https://umami-ci-provider.web.cern.ch/plot_input_vars/plot_input_vars_r22_check.h5"
 )
-test_dir = "/tmp/umami/plot_input_vars/"
-test_file = "plot_input_vars_r22_check.h5"
-file_exists = os.path.isfile(test_dir + test_file)
-if not file_exists:
-    os.makedirs(test_dir, exist_ok=True)
-    run(["wget", test_data, "--directory-prefix", test_dir], check=True)
+TESTDIR = "/tmp/umami/plot_input_vars/"
+TESTFILE = "plot_input_vars_r22_check.h5"
+FILEEXISTS = os.path.isfile(TESTDIR + TESTFILE)
+if not FILEEXISTS:
+    os.makedirs(TESTDIR, exist_ok=True)
+    run(["wget", TESTDATA, "--directory-prefix", TESTDIR], check=True)
 
-test_var = {
+TESTVAR = {
     "train_variables": {
         "some_vars": [
             "pt_btagJes",
@@ -42,33 +42,33 @@ test_var = {
         ]
     }
 }
-with open(test_dir + "test_var.yaml", "w") as outfile:
-    yaml.dump(test_var, outfile, default_flow_style=False)
+with open(TESTDIR + "test_var.yaml", "w") as outfile:
+    yaml.dump(TESTVAR, outfile, default_flow_style=False)
 
 # adjust it to your h5 ntuple path and yaml variable file
-filepath = test_dir + test_file
-var_file = test_dir + "test_var.yaml"
-n_jets = 1000
+FILEPATH = TESTDIR + TESTFILE
+VARFILE = TESTDIR + "test_var.yaml"
+NJETS = 1000
 
 # load jets
 class_labels = ["bjets", "cjets", "ujets"]
-variable_config = get_variable_dict(var_file)
+variable_config = get_variable_dict(VARFILE)
 jetsVarsAll = [
     i
     for j in variable_config["train_variables"]
     for i in variable_config["train_variables"][j]
 ]
 
-jetsAll, _ = udt.LoadJetsFromFile(
-    filepath=filepath,
+jetsAll, _ = udt.load_jets_from_file(
+    filepath=FILEPATH,
     class_labels=class_labels,
     variables=jetsVarsAll,
-    n_jets=n_jets,
+    n_jets=NJETS,
     print_logger=False,
 )
 
 
-def CorrelationMatrix(jets, jetsVars, fig_size=(9, 11)) -> None:
+def correlation_matrix(jets, jet_vars, fig_size=(9, 11)) -> None:
     """
     Plots a Correlation Matrix
 
@@ -76,7 +76,7 @@ def CorrelationMatrix(jets, jetsVars, fig_size=(9, 11)) -> None:
     ----------
     jets : pandas.DataFrame
         The jets as numpy ndarray
-    jetsVars : list
+    jet_vars : list
         List of variables to plot
     fig_size : tuple(int, int)
         size of figure
@@ -84,7 +84,7 @@ def CorrelationMatrix(jets, jetsVars, fig_size=(9, 11)) -> None:
 
     logger.info("Plotting Correlation Matrix ...")
 
-    jets = jets[jetsVars]
+    jets = jets[jet_vars]
     corr = jets.corr()
 
     # Generate a mask for the upper triangle
@@ -111,9 +111,9 @@ def CorrelationMatrix(jets, jetsVars, fig_size=(9, 11)) -> None:
     plt.savefig("correlation_matrix.png")
 
 
-def ScatterMatrix(
+def scatter_matrix(
     jets,
-    jetsVars,
+    jet_vars,
     std_outliers=5,
     show_contours=True,
     contour_level=4,
@@ -126,7 +126,7 @@ def ScatterMatrix(
     ----------
     jets : pandas.DataFrame
         The jets as numpy ndarray
-    jetsVars : list
+    jet_vars : list
         List of variables to plot
     std_outliers : float
         outside of how many std's distance sort out outliers
@@ -153,15 +153,15 @@ def ScatterMatrix(
     logger.info("Plotting Scatter Matrix ... ")
     logger.info("This can take a while depending on the amount of variables and jets.")
 
-    jetsVars.append("Flavour")
-    jets_for_plot = jets[jetsVars]
+    jet_vars.append("Flavour")
+    jets_for_plot = jets[jet_vars]
 
     # seaborn plot
     sns.set_theme(style="ticks")
     #   b: "#1f77b4"
     #   c: "#ff7f0e"
     #   u: "#2ca02c"
-    g = sns.pairplot(
+    graph = sns.pairplot(
         jets_for_plot,
         hue="Flavour",
         palette=[
@@ -174,10 +174,10 @@ def ScatterMatrix(
     )
 
     if show_contours is True:
-        g.map_lower(sns.kdeplot, levels=contour_level, fill=True, alpha=0.4)
+        graph.map_lower(sns.kdeplot, levels=contour_level, fill=True, alpha=0.4)
     plt.tight_layout()
     plt.savefig("scatterplot_matrix.png")
 
 
-CorrelationMatrix(jetsAll, jetsVarsAll)
-ScatterMatrix(jetsAll, jetsVarsAll, std_outliers=5)
+correlation_matrix(jetsAll, jetsVarsAll)
+scatter_matrix(jetsAll, jetsVarsAll, std_outliers=5)

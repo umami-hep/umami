@@ -74,35 +74,35 @@ def create_dl1_model(
         inputs = Input(shape=input_shape)
 
         # Define layers
-        x = inputs
+        layer = inputs
         for i, unit in enumerate(nn_structure["dense_sizes"]):
-            x = Dense(
+            layer = Dense(
                 units=unit,
                 activation="linear",
                 kernel_initializer="glorot_uniform",
-            )(x)
+            )(layer)
 
             # Add Batch Normalization if True
             if batch_norm:
-                x = BatchNormalization()(x)
+                layer = BatchNormalization()(layer)
 
             # Add dropout layer if dropout rate is non-zero for this layer
             if dropout_rates[i] != 0:
-                x = Dropout(dropout_rates[i])(x)
+                layer = Dropout(dropout_rates[i])(layer)
 
             # Define activation for the layer
-            x = Activation(nn_structure["activations"][i])(x)
+            layer = Activation(nn_structure["activations"][i])(layer)
 
         if feature_connect_indices is not None:
-            x = tf.keras.layers.concatenate(
-                [x, tf.gather(inputs, feature_connect_indices, axis=1)], 1
+            layer = tf.keras.layers.concatenate(
+                [layer, tf.gather(inputs, feature_connect_indices, axis=1)], 1
             )
 
         predictions = Dense(
             units=len(class_labels),
             activation="softmax",
             kernel_initializer="glorot_uniform",
-        )(x)
+        )(layer)
         model = Model(inputs=inputs, outputs=predictions)
 
     if load_optimiser is False:
@@ -187,9 +187,9 @@ def train_dl1(args, train_config):
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f:
-            metadata["n_jets"], metadata["n_dim"] = f["jets/labels_one_hot"].shape
-            _, metadata["n_jet_features"] = f["jets/inputs"].shape
+        with h5py.File(train_config.train_file, "r") as f_train:
+            metadata["n_jets"], metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
+            _, metadata["n_jet_features"] = f_train["jets/inputs"].shape
             if exclude is not None:
                 metadata["n_jet_features"] -= len(excluded_var)
             logger.debug("Input shape of training set: %s", metadata["n_jet_features"])
@@ -211,10 +211,10 @@ def train_dl1(args, train_config):
         # Build train_datasets for training
         train_dataset = (
             tf.data.Dataset.from_generator(
-                utf.dl1_generator(
+                utf.Dl1Generator(
                     train_file_path=train_config.train_file,
-                    X_Name="jets/inputs",
-                    Y_Name="jets/labels_one_hot",
+                    x_name="jets/inputs",
+                    y_name="jets/labels_one_hot",
                     n_jets=int(nn_structure["n_jets_train"])
                     if "n_jets_train" in nn_structure
                     and nn_structure["n_jets_train"] is not None
@@ -258,7 +258,7 @@ def train_dl1(args, train_config):
         n_epochs = args.epochs
 
     # Set ModelCheckpoint as callback
-    dl1_mChkPt = ModelCheckpoint(
+    dl1_m_chkpt = ModelCheckpoint(
         f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
@@ -268,7 +268,7 @@ def train_dl1(args, train_config):
     )
 
     # Append the callback
-    callbacks.append(dl1_mChkPt)
+    callbacks.append(dl1_m_chkpt)
 
     if "lrr" in nn_structure and nn_structure["lrr"] is True:
         # Define LearningRate Reducer as Callback

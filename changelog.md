@@ -1,6 +1,9 @@
 # Changelog
 
 ### Latest
+- Fixing `invalid-name` pylint errors [!669](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/669)
+- Update scale dict and track label saving [!665](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/665)
+
 
 - Update scale dict and track label saving [!665](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/665)
 

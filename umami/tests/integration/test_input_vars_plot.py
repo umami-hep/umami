@@ -39,7 +39,7 @@ def get_configuration() -> object:
     return conf_setup
 
 
-def runPlotInputVars(config: str) -> bool:
+def run_plot_input_vars(config: str) -> bool:
     """Call plot_input_vars.py.
 
     Parameters
@@ -53,7 +53,7 @@ def runPlotInputVars(config: str) -> bool:
         True if tests pass, False if tests fail.
     """
 
-    isSuccess = True
+    is_success = True
 
     logger.info("Test: running plot_input_vars.py tracks...")
     run_plot_input_vars_trks = run(
@@ -71,7 +71,7 @@ def runPlotInputVars(config: str) -> bool:
         run_plot_input_vars_trks.check_returncode()
     except CalledProcessError:
         logger.info("Test failed: plot_input_variables.py.")
-        isSuccess = False
+        is_success = False
 
     logger.info("Test: running plot_input_vars.py jets...")
     run_plot_input_vars_jets = run(
@@ -89,12 +89,12 @@ def runPlotInputVars(config: str) -> bool:
         run_plot_input_vars_jets.check_returncode()
     except CalledProcessError:
         logger.info("Test failed: plot_input_variables.py.")
-        isSuccess = False
+        is_success = False
 
-    return isSuccess
+    return is_success
 
 
-class TestInput_Vars_Plotting(unittest.TestCase):
+class TestInputVarsPlotting(unittest.TestCase):
     """Integration tests for variable plotting."""
 
     def setUp(self):
@@ -187,4 +187,4 @@ class TestInput_Vars_Plotting(unittest.TestCase):
 
     def test_plot_input_vars(self):
         """Integration test of plot_input_vars.py script."""
-        self.assertTrue(runPlotInputVars(self.config_path))
+        self.assertTrue(run_plot_input_vars(self.config_path))

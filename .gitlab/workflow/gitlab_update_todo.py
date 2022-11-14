@@ -35,26 +35,26 @@ def pylint_fixmes():
 
 if __name__ == "__main__":
     todo_files, todo_msgs = pylint_fixmes()
-    issue_description = (
+    ISSUE_DESCRIPTION = (
         "This issue shows the TODOs specified in the code. "
         "It is updated each time the CI in the master branch is running.\n"
         "(**Please do not modify the issue description - it will be overwritten**)\n\n"
         "## General TODOs\n\n"
     )
 
-    python_3_9_todos = "\n\n## TODOs related to new features in Python 3.9\n"
-    python_3_10_todos = "\n\n## TODOs related to new features in Python 3.10\n"
+    PYTHON_3_9_TODOS = "\n\n## TODOs related to new features in Python 3.9\n"
+    PYTHON_3_10_TODOS = "\n\n## TODOs related to new features in Python 3.10\n"
     for files, msgs in zip(todo_files, todo_msgs):
         if "python 3.9".casefold() in msgs.casefold():
-            python_3_9_todos += f"- [ ] {files} - *{msgs}*\n"
+            PYTHON_3_9_TODOS += f"- [ ] {files} - *{msgs}*\n"
             continue
         if "python 3.10".casefold() in msgs.casefold():
-            python_3_10_todos += f"- [ ] {files} - *{msgs}*\n"
+            PYTHON_3_10_TODOS += f"- [ ] {files} - *{msgs}*\n"
             continue
-        issue_description += f"- [ ] {files} - *{msgs}*\n"
-    issue_description += python_3_9_todos
-    issue_description += python_3_10_todos
-    print(issue_description)
+        ISSUE_DESCRIPTION += f"- [ ] {files} - *{msgs}*\n"
+    ISSUE_DESCRIPTION += PYTHON_3_9_TODOS
+    ISSUE_DESCRIPTION += PYTHON_3_10_TODOS
+    print(ISSUE_DESCRIPTION)
     # connecting to the CERN gitlab API
     gl = gitlab.Gitlab(
         "https://gitlab.cern.ch",
@@ -66,5 +66,5 @@ if __name__ == "__main__":
     # issue used to track changes
     issue = project.issues.get(120)
     # post new issue description
-    issue.description = issue_description
+    issue.description = ISSUE_DESCRIPTION
     issue.save()

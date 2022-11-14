@@ -40,13 +40,13 @@ def get_configuration():
     return conf_setup
 
 
-def prepareConfig(
+def prepare_config(
     tagger: str,
     test_dir: str,
     var_file_from: str = None,
     preprocess_files_from: str = None,
     four_classes_case: bool = False,
-    useTFRecords: bool = False,
+    use_tf_records: bool = False,
 ) -> dict:
     """
     Prepare the train config for the given tagger and save it.
@@ -66,7 +66,7 @@ def prepareConfig(
         the preprocessing files from the tagger will be tried to use.
     four_classes_case : bool
         Decide, if you want to run the test with four classes (light, c-, b- and tau)
-    useTFRecords : bool
+    use_tf_records : bool
         Decide, if the TFRecords files are used for training or not.
 
     Returns
@@ -246,7 +246,7 @@ def prepareConfig(
         config_file["evaluation_settings"]["shapley"]["bool_all_flavor_plot"] = True
         config_file["evaluation_settings"]["shapley"]["averaged_sets"] = 5
 
-    if useTFRecords is True:
+    if use_tf_records is True:
         config_file["train_file"] = os.path.join(
             f"./test_preprocessing_{preprocess_files}/",
             "PFlow-hybrid_70-test-resampled_scaled_shuffled",
@@ -263,7 +263,7 @@ def prepareConfig(
     return config
 
 
-def runTraining(config: dict, tagger: str) -> bool:
+def run_training(config: dict, tagger: str) -> bool:
     """Call train.py for the given tagger.
     Return value `True` if training succeeded, `False` if one step did not succees.
 
@@ -402,18 +402,18 @@ class TestTraining(unittest.TestCase):
     def test_train_dips_no_attention(self):
         """Integration test of train.py for DIPS script."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="dips",
             test_dir=self.test_dir,
             preprocess_files_from="dips_base_count",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="DIPS"))
+        self.assertTrue(run_training(config=config, tagger="DIPS"))
 
     def test_train_dips_four_classes(self):
         """Integration test of train.py for DIPS script with four classes."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="dips_four_classes",
             test_dir=self.test_dir,
             preprocess_files_from="dips_four_classes_pdf",
@@ -421,115 +421,115 @@ class TestTraining(unittest.TestCase):
             var_file_from="dips",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="DIPS"))
+        self.assertTrue(run_training(config=config, tagger="DIPS"))
 
     def test_train_cads(self):
         """Integration test of train.py for CADS script."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="cads",
             test_dir=self.test_dir,
             preprocess_files_from="umami_base_count",
             var_file_from="umami",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="CADS"))
+        self.assertTrue(run_training(config=config, tagger="CADS"))
 
     def test_train_dl1r(self):
         """Integration test of train.py for DL1r script."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="dl1r",
             test_dir=self.test_dir,
             preprocess_files_from="dl1r_base_count",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="DL1r"))
+        self.assertTrue(run_training(config=config, tagger="DL1r"))
 
     def test_train_umami(self):
         """Integration test of train.py for UMAMI script."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="umami",
             test_dir=self.test_dir,
             preprocess_files_from="umami_base_count",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="UMAMI"))
+        self.assertTrue(run_training(config=config, tagger="UMAMI"))
 
     def test_train_cond_att_umami(self):
         """Integration test of train.py for UMAMI Cond Att script."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="umami_cond_att",
             test_dir=self.test_dir,
             preprocess_files_from="umami_base_count",
             var_file_from="umami",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="UMAMI Cond Att"))
+        self.assertTrue(run_training(config=config, tagger="UMAMI Cond Att"))
 
     def test_train_tfrecords_dips(self):
         """Integration test of train.py for DIPS script with TFRecords."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="dips",
             test_dir=self.test_dir,
             preprocess_files_from="dips_base_count",
-            useTFRecords=True,
+            use_tf_records=True,
         )
 
-        self.assertTrue(runTraining(config=config, tagger="DIPS"))
+        self.assertTrue(run_training(config=config, tagger="DIPS"))
 
     def test_train_tfrecords_cads(self):
         """Integration test of train.py for CADS script with TFRecords."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="cads",
             test_dir=self.test_dir,
             preprocess_files_from="umami_base_count",
-            useTFRecords=True,
+            use_tf_records=True,
             var_file_from="umami",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="CADS"))
+        self.assertTrue(run_training(config=config, tagger="CADS"))
 
     def test_train_tfrecords_dl1r(self):
         """Integration test of train.py for DL1r script with TFRecords."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="dl1r",
             test_dir=self.test_dir,
             preprocess_files_from="dl1r_base_count",
-            useTFRecords=True,
+            use_tf_records=True,
         )
 
-        self.assertTrue(runTraining(config=config, tagger="DL1r"))
+        self.assertTrue(run_training(config=config, tagger="DL1r"))
 
     def test_train_tfrecords_umami(self):
         """Integration test of train.py for UMAMI script with TFRecords."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="umami",
             test_dir=self.test_dir,
             preprocess_files_from="umami_base_count",
-            useTFRecords=True,
+            use_tf_records=True,
         )
 
-        self.assertTrue(runTraining(config=config, tagger="UMAMI"))
+        self.assertTrue(run_training(config=config, tagger="UMAMI"))
 
     def test_train_tfrecords_cond_att_umami(self):
         """Integration test of train.py for UMAMI Cond Att script with TFRecords."""
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="umami_cond_att",
             test_dir=self.test_dir,
             preprocess_files_from="umami_base_count",
-            useTFRecords=True,
+            use_tf_records=True,
             var_file_from="umami",
         )
 
-        self.assertTrue(runTraining(config=config, tagger="UMAMI Cond Att"))
+        self.assertTrue(run_training(config=config, tagger="UMAMI Cond Att"))
 
     def test_evaluate_tagger_in_files(self):
         """
@@ -537,9 +537,9 @@ class TestTraining(unittest.TestCase):
         the files.
         """
 
-        config = prepareConfig(
+        config = prepare_config(
             tagger="evaluate_comp_taggers",
             test_dir=self.test_dir,
         )
 
-        self.assertTrue(runTraining(config=config, tagger=None))
+        self.assertTrue(run_training(config=config, tagger=None))

@@ -4,7 +4,7 @@ import h5py
 import numpy as np
 
 
-class Model_Generator:  # pylint: disable=too-few-public-methods
+class ModelGenerator:  # pylint: disable=too-few-public-methods
     """Base class for the generators of the datasets for the models.
 
     This class provides the base functionalites for the different
@@ -14,15 +14,15 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         train_file_path: str,
-        Y_Name: str,
+        y_name: str,
         n_jets: int,
         batch_size: int,
         sample_weights: bool,
         chunk_size: int = 1e5,
-        X_Name: str = None,
-        X_trk_Name: str = None,
+        x_name: str = None,
+        x_trk_name: str = None,
         excluded_var: list = None,
-        nConds: int = None,
+        n_conds: int = None,
         print_logger: bool = False,
     ):
         """Init the parameters needed for the generators.
@@ -31,7 +31,7 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
         ----------
         train_file_path : str
             Path to the train file that is to be used.
-        Y_Name : str
+        y_name : str
             Name of the truth info inside the train file.
         n_jets : int
             Number of jets that is to be used for training.
@@ -43,14 +43,14 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
             the values are ones.
         chunk_size : int
             Chunk size for loading the training jets.
-        X_Name : str
+        x_name : str
             Name of the jet variables inside the train file.
-        X_trk_Name : str
+        x_trk_name : str
             Name of the track variables inside the train file.
         excluded_var : list
             List with excluded variables. Only available for
             DL1 training.
-        nConds : int
+        n_conds : int
             Number of conditions used for training of CADS.
         print_logger : bool
             Decide, if the logger outputs are printed or not.
@@ -58,29 +58,29 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
         Raises
         ------
         ValueError
-            If neither X_Name or X_Trk_Name is given.
+            If neither x_name or x_trk_name is given.
         """
 
         self.train_file_path = train_file_path
-        self.X_Name = X_Name
-        self.X_trk_Name = X_trk_Name
-        self.Y_Name = Y_Name
+        self.x_name = x_name
+        self.x_trk_name = x_trk_name
+        self.y_name = y_name
         self.batch_size = batch_size
         self.excluded_var = excluded_var
-        self.nConds = nConds
+        self.n_conds = n_conds
         self.chunk_size = chunk_size
         self.print_logger = print_logger
         self.sample_weights = sample_weights
         if n_jets is not None:
             self.n_jets = int(n_jets)
         else:
-            if X_Name is not None:
-                with h5py.File(self.train_file_path, "r") as f:
-                    self.n_jets = int(len(f[self.X_Name]))
+            if x_name is not None:
+                with h5py.File(self.train_file_path, "r") as f_train:
+                    self.n_jets = int(len(f_train[self.x_name]))
 
-            elif X_trk_Name is not None:
-                with h5py.File(self.train_file_path, "r") as f:
-                    self.n_jets = int(len(f[self.X_trk_Name]))
+            elif x_trk_name is not None:
+                with h5py.File(self.train_file_path, "r") as f_train:
+                    self.n_jets = int(len(f_train[self.x_trk_name]))
 
             else:
                 raise ValueError(
@@ -119,21 +119,21 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
             )
 
         # Check that the correct X_Name and X_trk_Name is given
-        if load_jets is True and self.X_Name is None:
+        if load_jets is True and self.x_name is None:
             raise ValueError(
                 "X_Name needs to be given when jet features are to be loaded!"
             )
 
-        if load_tracks is True and self.X_trk_Name is None:
+        if load_tracks is True and self.x_trk_name is None:
             raise ValueError(
                 "X_trk_Name needs to be given when track features are to be loaded!"
             )
 
         # Open train file
-        with h5py.File(self.train_file_path, "r") as f:
+        with h5py.File(self.train_file_path, "r") as f_train:
             # Load jets if wanted
             if load_jets:
-                self.x_in_mem = f[self.X_Name][
+                self.x_in_mem = f_train[self.x_name][
                     self.step_size * part : self.step_size * (part + 1)
                 ]
 
@@ -145,28 +145,28 @@ class Model_Generator:  # pylint: disable=too-few-public-methods
                 )
                 if self.sample_weights:
                     # load weights
-                    self.weight_in_mem = f["jets/weight"][
+                    self.weight_in_mem = f_train["jets/weight"][
                         self.step_size * part : self.step_size * (part + 1)
                     ]
 
             # Load tracks if wanted
             if load_tracks:
-                self.x_trk_in_mem = f[self.X_trk_Name][
+                self.x_trk_in_mem = f_train[self.x_trk_name][
                     self.step_size * part : self.step_size * (part + 1)
                 ]
                 if self.sample_weights and self.weight_in_mem is None:
                     # load weights
-                    self.weight_in_mem = f["jets/weight"][
+                    self.weight_in_mem = f_train["jets/weight"][
                         self.step_size * part : self.step_size * (part + 1)
                     ]
 
             # Load truth labels
-            self.y_in_mem = f[self.Y_Name][
+            self.y_in_mem = f_train[self.y_name][
                 self.step_size * part : self.step_size * (part + 1)
             ]
 
 
-class dips_generator(Model_Generator):
+class DipsGenerator(ModelGenerator):
     """Generator class for DIPS.
 
     This class provides the a generator that loads the training dataset
@@ -184,12 +184,12 @@ class dips_generator(Model_Generator):
         """
 
         self.load_in_memory(part=0, load_jets=False, load_tracks=True)
-        n = 1
+        iteration = 1
         small_step = 0
         for idx in range(self.length):
-            if (idx + 1) * self.batch_size > self.step_size * n:
-                self.load_in_memory(part=n, load_jets=False, load_tracks=True)
-                n += 1
+            if (idx + 1) * self.batch_size > self.step_size * iteration:
+                self.load_in_memory(part=iteration, load_jets=False, load_tracks=True)
+                iteration += 1
                 small_step = 0
             batch_x_trk = self.x_trk_in_mem[
                 small_step * self.batch_size : (1 + small_step) * self.batch_size
@@ -208,7 +208,7 @@ class dips_generator(Model_Generator):
                 yield (batch_x_trk, batch_y)
 
 
-class dl1_generator(Model_Generator):
+class Dl1Generator(ModelGenerator):
     """Generator class for DL1*.
 
     This class provides the a generator that loads the training dataset
@@ -226,12 +226,12 @@ class dl1_generator(Model_Generator):
         """
 
         self.load_in_memory(part=0, load_jets=True, load_tracks=False)
-        n = 1
+        iteration = 1
         small_step = 0
         for idx in range(self.length):
-            if (idx + 1) * self.batch_size > self.step_size * n:
-                self.load_in_memory(part=n, load_jets=True, load_tracks=False)
-                n += 1
+            if (idx + 1) * self.batch_size > self.step_size * iteration:
+                self.load_in_memory(part=iteration, load_jets=True, load_tracks=False)
+                iteration += 1
                 small_step = 0
             batch_x = self.x_in_mem[
                 small_step * self.batch_size : (1 + small_step) * self.batch_size
@@ -250,7 +250,7 @@ class dl1_generator(Model_Generator):
                 yield (batch_x, batch_y)
 
 
-class umami_generator(Model_Generator):
+class UmamiGenerator(ModelGenerator):
     """Generator class for UMAMI.
 
     This class provides the a generator that loads the training dataset
@@ -268,12 +268,12 @@ class umami_generator(Model_Generator):
         """
 
         self.load_in_memory(part=0, load_jets=True, load_tracks=True)
-        n = 1
+        iteration = 1
         small_step = 0
         for idx in range(self.length):
-            if (idx + 1) * self.batch_size > self.step_size * n:
-                self.load_in_memory(part=n, load_jets=True, load_tracks=True)
-                n += 1
+            if (idx + 1) * self.batch_size > self.step_size * iteration:
+                self.load_in_memory(part=iteration, load_jets=True, load_tracks=True)
+                iteration += 1
                 small_step = 0
             batch_x = self.x_in_mem[
                 small_step * self.batch_size : (1 + small_step) * self.batch_size
@@ -288,7 +288,7 @@ class umami_generator(Model_Generator):
             yield {"input_1": batch_x_trk, "input_2": batch_x}, batch_y
 
 
-class cads_generator(Model_Generator):
+class CadsGenerator(ModelGenerator):
     """Generator class for CADS.
 
     This class provides the a generator that loads the training dataset
@@ -306,16 +306,16 @@ class cads_generator(Model_Generator):
         """
 
         self.load_in_memory(part=0, load_jets=True, load_tracks=True)
-        n = 1
+        iteration = 1
         small_step = 0
         for idx in range(self.length):
-            if (idx + 1) * self.batch_size > self.step_size * n:
-                self.load_in_memory(part=n, load_jets=True, load_tracks=True)
-                n += 1
+            if (idx + 1) * self.batch_size > self.step_size * iteration:
+                self.load_in_memory(part=iteration, load_jets=True, load_tracks=True)
+                iteration += 1
                 small_step = 0
             batch_x = self.x_in_mem[
                 small_step * self.batch_size : (1 + small_step) * self.batch_size,
-                : self.nConds,
+                : self.n_conds,
             ]
             batch_x_trk = self.x_trk_in_mem[
                 small_step * self.batch_size : (1 + small_step) * self.batch_size
@@ -327,7 +327,7 @@ class cads_generator(Model_Generator):
             yield {"input_1": batch_x_trk, "input_2": batch_x}, batch_y
 
 
-class umami_condition_generator(Model_Generator):
+class UmamiConditionGenerator(ModelGenerator):
     """Generator class for UMAMI with conditional attention.
 
     This class provides the a generator that loads the training dataset
@@ -336,19 +336,19 @@ class umami_condition_generator(Model_Generator):
 
     def __call__(self):
         self.load_in_memory(part=0, load_jets=True, load_tracks=True)
-        n = 1
+        iteration = 1
         small_step = 0
         for idx in range(self.length):
-            if (idx + 1) * self.batch_size > self.step_size * n:
-                self.load_in_memory(part=n, load_jets=True, load_tracks=True)
-                n += 1
+            if (idx + 1) * self.batch_size > self.step_size * iteration:
+                self.load_in_memory(part=iteration, load_jets=True, load_tracks=True)
+                iteration += 1
                 small_step = 0
             batch_x = self.x_in_mem[
                 small_step * self.batch_size : (1 + small_step) * self.batch_size
             ]
             batch_x_cond = self.x_in_mem[
                 small_step * self.batch_size : (1 + small_step) * self.batch_size,
-                : self.nConds,
+                : self.n_conds,
             ]
             batch_x_trk = self.x_trk_in_mem[
                 small_step * self.batch_size : (1 + small_step) * self.batch_size

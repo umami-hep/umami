@@ -15,7 +15,7 @@ from scipy.stats import binned_statistic_2d
 from umami.configuration import global_config, logger
 from umami.plotting_tools import preprocessing_plots
 from umami.preprocessing_tools import get_variable_dict
-from umami.preprocessing_tools.Scaling import (
+from umami.preprocessing_tools.scaling import (
     apply_scaling_jets,
     apply_scaling_trks,
     as_full,
@@ -107,8 +107,8 @@ class TrainSampleWriter:
             class_info = fcs[class_label]
             flavour_map[class_info["label_value"]] = i
 
-        for k, v in flavour_map.items():
-            flavour[flavour == k] = v
+        for key, val in flavour_map.items():
+            flavour[flavour == key] = val
 
         return flavour
 

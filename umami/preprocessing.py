@@ -200,7 +200,7 @@ if __name__ == "__main__":
     elif args.to_records:
         import umami.tf_tools as utft
 
-        Converter = utft.h5_to_tf_record_converter(config)
+        Converter = utft.H5ToTFRecords(config)
         Converter.write_tfrecord()
 
     # Give error when nothing is used

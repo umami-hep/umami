@@ -16,7 +16,7 @@ from umami.configuration import logger
 from umami.data_tools import compare_h5_files_variables
 
 
-def SamplingGenerator(
+def sampling_generator(
     file: str,
     indices: np.ndarray,
     label: int,
@@ -74,7 +74,7 @@ def SamplingGenerator(
     tracks_names = tracks_names or ["tracks"]
 
     # Open the file to read the jets
-    with h5py.File(file, "r") as f:
+    with h5py.File(file, "r") as f_h5:
         start_ind = 0
         end_ind = int(start_ind + chunk_size)
 
@@ -129,13 +129,13 @@ def SamplingGenerator(
                 for i, sublist_loading_indices in enumerate(list_loading_indices):
 
                     # Loading the jets
-                    jet_ls.append(f["jets"][sublist_loading_indices])
+                    jet_ls.append(f_h5["jets"][sublist_loading_indices])
 
                     # Appending tracks and track labels
                     if save_tracks:
                         for tracks_name in tracks_names:
                             track_ls[tracks_name].append(
-                                f[tracks_name][sublist_loading_indices]
+                                f_h5[tracks_name][sublist_loading_indices]
                             )
 
                 # Concatenate the jets, tracks and track labels
@@ -155,13 +155,14 @@ def SamplingGenerator(
                 # No duplicate indices, fancy indexing of H5 working.
                 if save_tracks:
                     tracks = [
-                        f[tracks_name][loading_indices] for tracks_name in tracks_names
+                        f_h5[tracks_name][loading_indices]
+                        for tracks_name in tracks_names
                     ]
 
-                    yield f["jets"][loading_indices], tracks, labels
+                    yield f_h5["jets"][loading_indices], tracks, labels
 
                 else:
-                    yield f["jets"][loading_indices], labels
+                    yield f_h5["jets"][loading_indices], labels
 
 
 def read_dataframe_repetition(
@@ -284,8 +285,8 @@ class JsonNumpyEncoder(JSONEncoder):
         return super().default(o)
 
 
-def CorrectFractions(
-    N_jets: list,
+def correct_fractions(
+    n_jets: list,
     target_fractions: list,
     class_names: list = None,
     verbose: bool = True,
@@ -295,7 +296,7 @@ def CorrectFractions(
 
     Parameters
     ----------
-    N_jets : list
+    n_jets : list
         List actual number of available jets per class
     target_fractions : list
         List of the target fraction per class
@@ -317,67 +318,70 @@ def CorrectFractions(
         If the 'target_fractions' don't add up to one.
     """
 
-    if not np.all(N_jets):
+    if not np.all(n_jets):
         raise ValueError("Each N_jets entry needs to be >0.")
-    assert len(N_jets) == len(target_fractions)
+    assert len(n_jets) == len(target_fractions)
     if not np.isclose(np.sum(target_fractions), 1):
         raise ValueError("The 'target_fractions' have to sum up to 1.")
 
-    df = pd.DataFrame(
+    df_summary = pd.DataFrame(
         {
-            "N_jets": N_jets,
+            "N_jets": n_jets,
             "target_fractions": target_fractions,
-            "original_order": range(len(N_jets)),
-            "target_N_jets": N_jets,
+            "original_order": range(len(n_jets)),
+            "target_N_jets": n_jets,
         }
     )
     if class_names is not None:
-        assert len(N_jets) == len(class_names)
-        df["class_names"] = class_names
-    df.sort_values("target_fractions", ascending=False, inplace=True, ignore_index=True)
+        assert len(n_jets) == len(class_names)
+        df_summary["class_names"] = class_names
+    df_summary.sort_values(
+        "target_fractions", ascending=False, inplace=True, ignore_index=True
+    )
 
     # start with the class with the highest fraction and use it as reference
-    for i in range(1, len(df)):
+    for i in range(1, len(df_summary)):
         # check next highest target fraction
         relative_fraction = (
-            df.iloc[0]["target_N_jets"]
-            / df.iloc[i]["N_jets"]
-            / df.iloc[0]["target_fractions"]
-            * df.iloc[i]["target_fractions"]
+            df_summary.iloc[0]["target_N_jets"]
+            / df_summary.iloc[i]["N_jets"]
+            / df_summary.iloc[0]["target_fractions"]
+            * df_summary.iloc[i]["target_fractions"]
         )
         if relative_fraction == 1:
             continue
         if relative_fraction < 1:
             # need to correct now the fractions of the class with the smaller fraction
             # calculate how much jets need to be subtracted
-            x = df["N_jets"][i] - (
-                df["target_N_jets"][0]
-                * df["target_fractions"][i]
-                / df["target_fractions"][0]
+            n_jets_correction = df_summary["N_jets"][i] - (
+                df_summary["target_N_jets"][0]
+                * df_summary["target_fractions"][i]
+                / df_summary["target_fractions"][0]
             )
-            df.at[i, "target_N_jets"] -= x
+            df_summary.at[i, "target_N_jets"] -= n_jets_correction
 
         else:
             # correct the higher fraction one
-            x = df["N_jets"][0] - (
-                df["target_N_jets"][i]
-                * df["target_fractions"][0]
-                / df["target_fractions"][i]
+            n_jets_correction = df_summary["N_jets"][0] - (
+                df_summary["target_N_jets"][i]
+                * df_summary["target_fractions"][0]
+                / df_summary["target_fractions"][i]
             )
-            target_N_jets_reference = df["target_N_jets"][0] - x
+            target_n_jets_reference = df_summary["target_N_jets"][0] - n_jets_correction
             # adapt the fractions of all already corrected one
-            target_N_jets_reference_fraction = (
-                target_N_jets_reference / df["target_N_jets"][0]
+            target_n_jets_reference_fraction = (
+                target_n_jets_reference / df_summary["target_N_jets"][0]
             )
-            df.loc[: i - 1, "target_N_jets"] = (
-                df.loc[: i - 1, "target_N_jets"] * target_N_jets_reference_fraction
+            df_summary.loc[: i - 1, "target_N_jets"] = (
+                df_summary.loc[: i - 1, "target_N_jets"]
+                * target_n_jets_reference_fraction
             ).astype(int)
 
     # print some information
-    df.sort_values("original_order", inplace=True)
+    df_summary.sort_values("original_order", inplace=True)
     if verbose:
-        for i in range(len(df)):
-            entry = df.iloc[i]
+        for i in range(len(df_summary)):
+            entry = df_summary.iloc[i]
             if class_names is None:
                 logger.info(
                     "class %i: selected %i/%i jets per class giving the requested "
@@ -396,17 +400,17 @@ def CorrectFractions(
                     entry["N_jets"],
                     entry["target_fractions"],
                 )
-    return df["target_N_jets"].astype(int).values
+    return df_summary["target_N_jets"].astype(int).values
 
 
-def quick_check_duplicates(X: list) -> bool:
+def quick_check_duplicates(arr: list) -> bool:
     """
-    This performs a quick duplicate check in list X.
+    This performs a quick duplicate check in list arr.
     If a duplicate is found, returns directly True.
 
     Parameters
     ----------
-    X : list
+    arr : list
         List with entries.
 
     Returns
@@ -416,15 +420,15 @@ def quick_check_duplicates(X: list) -> bool:
         False if not.
     """
 
-    set_X = set()
-    for item in X:
-        if item in set_X:
+    set_x = set()
+    for item in arr:
+        if item in set_x:
             return True
-        set_X.add(item)
+        set_x.add(item)
     return False
 
 
-def CalculateBinning(bins: list) -> np.ndarray:
+def calculate_binning(bins: list) -> np.ndarray:
     """
     Calculate and return the bin egdes for the provided
     bins.
@@ -471,7 +475,7 @@ class Resampling:
         self.options = config.sampling.get("options")
         self.preparation_config = config.preparation
         # filling self.[var_x var_y bins_x bins_y]
-        self._GetBinning()
+        self._get_binning()
         self.rnd_seed = 42
         self.jets_key = "jets"
         self.save_tracks = (
@@ -518,7 +522,7 @@ class Resampling:
                 " the sampling block in your config!"
             ) from error
 
-    def _GetBinning(self):
+    def _get_binning(self):
         """
         Retrieves the binning and the corresponding variables which are used
         for the resampling. Saves the bins and variables to class variables
@@ -546,13 +550,13 @@ class Resampling:
         # Calculate the binning of the variables with the provided info about
         # the binning
         logger.info("Using %s and %s for resampling.", variables[0], variables[1])
-        self.bins_x = CalculateBinning(sampling_variables[0][self.var_x]["bins"])
-        self.bins_y = CalculateBinning(sampling_variables[1][self.var_y]["bins"])
+        self.bins_x = calculate_binning(sampling_variables[0][self.var_x]["bins"])
+        self.bins_y = calculate_binning(sampling_variables[1][self.var_y]["bins"])
 
         # Get number of bins
         self.nbins = np.array([len(self.bins_x), len(self.bins_y)])
 
-    def GetBins(self, x: np.ndarray, y: np.ndarray):
+    def get_bins(self, x_vals: np.ndarray, y_vals: np.ndarray):
         """
         Calculates the bin statistics for a 2D histogram. This post might be
         helpful to understand the flattened bin numbering:
@@ -560,9 +564,9 @@ class Resampling:
 
         Parameters
         ----------
-        x : np.ndarray
+        x_vals : np.ndarray
             Array with values from variable x.
-        y : np.ndarray
+        y_vals : np.ndarray
             Array with values from variable y and same length as x
 
         Returns
@@ -576,13 +580,13 @@ class Resampling:
         """
 
         # Assert same shape of x and y
-        assert len(x) == len(y)
+        assert len(x_vals) == len(y_vals)
 
         # Get the statistic and binnumbers for the provided binning
         statistic, _, _, binnumber = binned_statistic_2d(
-            x=x,
-            y=y,
-            values=x,
+            x=x_vals,
+            y=y_vals,
+            values=x_vals,
             statistic="count",
             bins=[self.bins_x, self.bins_y],
         )
@@ -598,7 +602,7 @@ class Resampling:
         # Return the binnumer, the flat bin indicies and the flatten statistic
         return binnumber, bins_indices_flat, statistic.flatten()
 
-    def ResamplingGenerator(
+    def resampling_generator(
         self,
         file: str,
         indices: list,
@@ -648,7 +652,7 @@ class Resampling:
         tracks_names = tracks_names or ["tracks"]
 
         # Open the h5 file
-        with h5py.File(file, "r") as f:
+        with h5py.File(file, "r") as f_h5:
 
             # Set the start and end index for the given chunk
             start_ind = 0
@@ -683,18 +687,22 @@ class Resampling:
                 # If tracks are used, also yield the tracks
                 if save_tracks:
                     tracks = [
-                        f[tracks_name].fields(variables[tracks_name])[loading_indices]
+                        f_h5[tracks_name].fields(variables[tracks_name])[
+                            loading_indices
+                        ]
                         for tracks_name in tracks_names
                     ]
 
-                    yield f["jets"].fields(variables["jets"])[
+                    yield f_h5["jets"].fields(variables["jets"])[
                         loading_indices
                     ], tracks, labels
 
                 else:
-                    yield f["jets"].fields(variables["jets"])[loading_indices], labels
+                    yield f_h5["jets"].fields(variables["jets"])[
+                        loading_indices
+                    ], labels
 
-    def WriteFile(self, indices: dict, chunk_size: int = 10_000):
+    def write_file(self, indices: dict, chunk_size: int = 10_000):
         """
         Takes the indices as input calculated in the GetIndices function and
         reads them in and writes them to disk.
@@ -742,7 +750,7 @@ class Resampling:
                 logger.warning("These variables are ignored in all further steps.")
 
         generators = [
-            self.ResamplingGenerator(
+            self.resampling_generator(
                 file=self.sample_file_map[sample],
                 indices=indices[sample],
                 chunk_size=chunk_sizes[i],
@@ -868,7 +876,7 @@ class Resampling:
 class ResamplingTools(Resampling):
     """Helper class for resampling."""
 
-    def InitialiseSamples(self, n_jets: int = None) -> None:
+    def initialise_samples(self, n_jets: int = None) -> None:
         """
         At this point the arrays of the 2 variables are loaded which are used
         for the sampling and saved into class variables.
@@ -901,7 +909,7 @@ class ResamplingTools(Resampling):
             ) from error
 
         # list of sample classes, bjets, cjets, etc
-        valid_class_categories = self.GetValidClassCategories(samples)
+        valid_class_categories = self.get_valid_class_categories(samples)
         self.class_categories = valid_class_categories[next(iter(samples.keys()))]
         # map of sample categories and indexes as IDs
         self.sample_categories = {
@@ -921,7 +929,7 @@ class ResamplingTools(Resampling):
                 logger.info(
                     "Loading sampling variables from %s", preparation_sample_path
                 )
-                with h5py.File(preparation_sample_path, "r") as f:
+                with h5py.File(preparation_sample_path, "r") as f_prep:
 
                     # Check for custom initial jets
                     if (
@@ -945,8 +953,12 @@ class ResamplingTools(Resampling):
                     else:
                         n_jets_initial = None
 
-                    jets_x = np.asarray(f["jets"].fields(self.var_x)[:n_jets_initial])
-                    jets_y = np.asarray(f["jets"].fields(self.var_y)[:n_jets_initial])
+                    jets_x = np.asarray(
+                        f_prep["jets"].fields(self.var_x)[:n_jets_initial]
+                    )
+                    jets_y = np.asarray(
+                        f_prep["jets"].fields(self.var_y)[:n_jets_initial]
+                    )
                 logger.info(
                     "Loaded %s %s jets from %s.",
                     len(jets_x),
@@ -978,7 +990,7 @@ class ResamplingTools(Resampling):
                     self.preparation_config.get_sample(sample).category: sample,
                 }
 
-    def GetValidClassCategories(self, samples: dict):
+    def get_valid_class_categories(self, samples: dict):
         """
         Helper function to check sample categories requested in resampling were
         also defined in the sample preparation step. Returns sample classes.
@@ -1019,7 +1031,7 @@ class ResamplingTools(Resampling):
             )
         return check_consistency
 
-    def ConcatenateSamples(self):
+    def concatenate_samples(self):
         """
         Takes initialized object from InitialiseSamples() and concatenates
         samples with the same category into dict which contains the
@@ -1053,12 +1065,12 @@ class ResamplingTools(Resampling):
         self.concat_samples = concat_samples
         return concat_samples
 
-    def GetPtEtaBinStatistics(self):
+    def get_pt_eta_bin_statistics(self):
         """Retrieve pt and eta bin statistics."""
         # calculate the 2D bin statistics for each sample and add it to
         # concat_samples dict with keys 'binnumbers','bin_indices_flat', 'stat'
         for class_category in self.class_categories:
-            binnumbers, ind, stat = self.GetBins(
+            binnumbers, ind, stat = self.get_bins(
                 self.concat_samples[class_category]["jets"][:, 0],
                 self.concat_samples[class_category]["jets"][:, 1],
             )
