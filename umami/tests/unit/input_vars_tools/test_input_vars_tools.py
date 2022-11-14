@@ -20,7 +20,7 @@ from umami.tools import yaml_loader
 set_log_level(logger, "DEBUG")
 
 
-class HelperFunction_TestCase(unittest.TestCase):
+class HelperFunctionTestCase(unittest.TestCase):
     """Test class for helper functions."""
 
     def setUp(self):
@@ -95,7 +95,7 @@ class HelperFunction_TestCase(unittest.TestCase):
             self.assertEqual(exp_tracks_name_list, tracks_name_list)
 
 
-class JetPlotting_TestCase(unittest.TestCase):
+class JetPlottingTestCase(unittest.TestCase):
     """Test class for jet plotting functions."""
 
     def setUp(self):
@@ -232,7 +232,7 @@ class JetPlotting_TestCase(unittest.TestCase):
                 **plotting_config["plot_settings"],
             )
 
-    def test_plot_input_vars_jets_log_ValueError(self):
+    def test_plot_input_vars_jets_log_value_error(self):
         """Test jet input plots error raising for log."""
         plotting_config = self.plot_config["jets_input_vars"]
         filepath_list = [self.r21_test_file]

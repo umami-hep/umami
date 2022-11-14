@@ -123,13 +123,13 @@ class GetCategoryCutsTestCase(unittest.TestCase):
         self.label_var = "HadronConeExclTruthLabelID"
         self.label_value = 5
 
-    def test_WrongTypeProvided(self):
+    def test_wrong_type_provided(self):
         """Testing wrong type provided."""
         self.label_value = "5"
         with self.assertRaises(ValueError):
             get_category_cuts(self.label_var, self.label_value)
 
-    def test_IntegerCase(self):
+    def test_integer_case(self):
         """Testing ints."""
         cuts = get_category_cuts(self.label_var, self.label_value)
         expected_cuts = [
@@ -137,7 +137,7 @@ class GetCategoryCutsTestCase(unittest.TestCase):
         ]
         self.assertEqual(cuts, expected_cuts)
 
-    def test_FloatCase(self):
+    def test_float_case(self):
         """Testing floats."""
         self.label_value = 5.0
         cuts = get_category_cuts(self.label_var, self.label_value)
@@ -146,7 +146,7 @@ class GetCategoryCutsTestCase(unittest.TestCase):
         ]
         self.assertEqual(cuts, expected_cuts)
 
-    def test_ListCase(self):
+    def test_list_case(self):
         """Testing lists."""
         self.label_value = [5, 55]
         cuts = get_category_cuts(self.label_var, self.label_value)

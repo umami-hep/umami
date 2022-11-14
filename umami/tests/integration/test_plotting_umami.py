@@ -42,7 +42,7 @@ def get_configuration():
     return conf_setup
 
 
-def runPlotting(config, tagger):
+def run_plotting(config, tagger):
     """
     Call plotting_umami.py and try to plot the results of the previous tests.
     Return value `True` if training succeeded, `False` if one step did not succeed.
@@ -158,7 +158,7 @@ class TestPlottingUmami(unittest.TestCase):
             "  epoch: 1",
         )
 
-        self.assertTrue(runPlotting(self.config_dips, "dips"))
+        self.assertTrue(run_plotting(self.config_dips, "dips"))
 
     def test_plotting_umami_umami(self):
         """
@@ -183,7 +183,7 @@ class TestPlottingUmami(unittest.TestCase):
             "  epoch: 1",
         )
 
-        self.assertTrue(runPlotting(self.config_umami, "umami"))
+        self.assertTrue(run_plotting(self.config_umami, "umami"))
 
     def test_plotting_umami_dl1r(self):
         """
@@ -209,4 +209,4 @@ class TestPlottingUmami(unittest.TestCase):
             "  epoch: 1",
         )
 
-        self.assertTrue(runPlotting(self.config_dl1r, "dl1r"))
+        self.assertTrue(run_plotting(self.config_dl1r, "dl1r"))

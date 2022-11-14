@@ -113,10 +113,10 @@ def get_size(filelist: list):
     total_size = 0
     ranges = {}
 
-    for f in filelist:
-        data = h5py.File(f, "r")
+    for file in filelist:
+        data = h5py.File(file, "r")
         size = check_size(data)
-        ranges[f] = [total_size, total_size + size]
+        ranges[file] = [total_size, total_size + size]
         total_size = total_size + size
         data.close()
 

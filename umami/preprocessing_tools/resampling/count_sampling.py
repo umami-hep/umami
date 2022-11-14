@@ -8,8 +8,8 @@ import numpy as np
 from umami.configuration import logger
 from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
 from umami.preprocessing_tools.resampling.resampling_base import (
-    CorrectFractions,
     ResamplingTools,
+    correct_fractions,
 )
 from umami.preprocessing_tools.utils import get_variable_dict
 
@@ -22,7 +22,7 @@ class UnderSampling(ResamplingTools):
         self.indices_to_keep = None
         self.x_y_after_sampling = None
 
-    def GetIndices(self):
+    def get_indices(self):
         """
         Applies the UnderSampling to the given arrays.
 
@@ -35,10 +35,10 @@ class UnderSampling(ResamplingTools):
         # concatenate samples with the same category
         # no fraction between different samples is ensured at this stage,
         # this will be done at the end
-        self.ConcatenateSamples()
+        self.concatenate_samples()
 
         # calculate the 2D bin statistics for each sample
-        self.GetPtEtaBinStatistics()
+        self.get_pt_eta_bin_statistics()
 
         min_count_per_bin = np.amin(
             [self.concat_samples[sample]["stat"] for sample in self.concat_samples],
@@ -71,27 +71,27 @@ class UnderSampling(ResamplingTools):
         # TODO: could be done for each of them
         reference_class_category = self.class_categories[0]
         target_fractions = []
-        N_jets = []
+        n_jets = []
         sample_categories = self.concat_samples[reference_class_category]["jets"][
             indices_to_keep[reference_class_category], 4
         ]
         for sample_category in self.sample_categories:
             target_fractions.append(self.options["fractions"][sample_category])
-            N_jets.append(
+            n_jets.append(
                 len(
                     np.nonzero(
                         sample_categories == self.sample_categories[sample_category]
                     )[0]
                 )
             )
-        target_N_jets = CorrectFractions(
-            N_jets=N_jets,
+        target_n_jets = correct_fractions(
+            n_jets=n_jets,
             target_fractions=target_fractions,
             class_names=list(self.sample_categories.keys()),
         )
-        target_N_jets = {
-            list(self.sample_categories.keys())[i]: target_N_jets[i]
-            for i in range(len(target_N_jets))
+        target_n_jets = {
+            list(self.sample_categories.keys())[i]: target_n_jets[i]
+            for i in range(len(target_n_jets))
         }
         for class_category in self.class_categories:
             sample_categories = self.concat_samples[class_category]["jets"][
@@ -106,8 +106,8 @@ class UnderSampling(ResamplingTools):
                     indices_to_keep_tmp,
                     rng.choice(
                         indices_to_keep[class_category][location],
-                        size=target_N_jets[sample_category]
-                        if target_N_jets[sample_category]
+                        size=target_n_jets[sample_category]
+                        if target_n_jets[sample_category]
                         <= len(indices_to_keep[class_category][location])
                         else len(indices_to_keep[class_category][location]),
                         replace=False,
@@ -151,7 +151,7 @@ class UnderSampling(ResamplingTools):
         self.indices_to_keep = {}
         self.x_y_after_sampling = {}
         size_total = 0
-        with h5py.File(self.options["intermediate_index_file"], "w") as f:
+        with h5py.File(self.options["intermediate_index_file"], "w") as f_index:
             for class_category in self.class_categories:
                 self.x_y_after_sampling[class_category] = self.concat_samples[
                     class_category
@@ -169,7 +169,7 @@ class UnderSampling(ResamplingTools):
                             sample_categories == self.sample_categories[sample_category]
                         ]
                     ).astype(int)
-                    f.create_dataset(
+                    f_index.create_dataset(
                         sample_name,
                         data=self.indices_to_keep[sample_name],
                         compression="gzip",
@@ -183,8 +183,8 @@ class UnderSampling(ResamplingTools):
     def Run(self):
         """Run function executing full chain."""
         logger.info("Starting undersampling.")
-        self.InitialiseSamples()
-        self.GetIndices()
+        self.initialise_samples()
+        self.get_indices()
 
         # Make the resampling plots for the resampling variables before resampling
         plot_resampling_variables(
@@ -206,7 +206,7 @@ class UnderSampling(ResamplingTools):
         )
 
         # Resample the files and write them to disk
-        self.WriteFile(self.indices_to_keep)
+        self.write_file(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
         if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:

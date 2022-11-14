@@ -56,10 +56,10 @@ def calculate_fraction_dict(
     for iterator in combinations:
 
         # Add up the values
-        Sum = np.sum(np.round(iterator, decimals=4))
+        summation = np.sum(np.round(iterator, decimals=4))
 
         # Check if the values add up to one
-        if Sum == 1:
+        if summation == 1:
             # Round the values in the tuple to 4 decimals
             iterator = tuple(
                 map(lambda x: isinstance(x, float) and round(x, 4) or x, iterator)
@@ -691,14 +691,14 @@ def get_scores_probs_dict(
 def get_saliency_map_dict(
     model: object,
     model_pred: np.ndarray,
-    X_test: np.ndarray,
-    Y_test: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
     class_labels: list,
     main_class: str,
     frac_dict: dict,
     var_dict_path: str,
     tracks_name: str,
-    nTracks: int = None,
+    n_trks: int = None,
     effs: list = None,
     n_jets: int = int(10e4),
 ) -> dict:
@@ -711,9 +711,9 @@ def get_saliency_map_dict(
         Loaded Keras model.
     model_pred : numpy.ndarray
         Model predictions of the model.
-    X_test : numpy.ndarray
+    x_test : numpy.ndarray
         Inputs to the model.
-    Y_test : numpy.ndarray
+    y_test : numpy.ndarray
         Truth labels in one-hot-encoded format.
     class_labels : list
         List of class labels which are used.
@@ -726,7 +726,7 @@ def get_saliency_map_dict(
         (to retrieve the inputs).
     tracks_name : str
         Name of the tracks which are used in the training.
-    nTracks : int
+    n_trks : int
         Number of tracks each jet needs to have. Saliency maps can
         only be calculated for a fixed number of tracks per jet.
         Only jets with this amount of tracks are used for calculation.
@@ -752,8 +752,8 @@ def get_saliency_map_dict(
     logger.info("Calculate gradients for inputs")
 
     # Check if default nTracks must be used
-    if nTracks is None:
-        nTracks = 8
+    if n_trks is None:
+        n_trks = 8
 
     # Check effs for None
     if effs is None:
@@ -787,13 +787,13 @@ def get_saliency_map_dict(
     model = Model(model.inputs, disc)
 
     # Define boolean mask to filter placeholder tracks
-    boolMask = (np.sum(X_test, axis=-1) != 0).astype(bool)
+    bool_mask = (np.sum(x_test, axis=-1) != 0).astype(bool)
 
     # Define the number of true tracks per jet as a mask
-    nTrks = np.sum(boolMask, axis=-1)
+    n_trks_true = np.sum(bool_mask, axis=-1)
 
     # Get score for the dips prediction
-    Disc_values = umt.get_score(
+    disc_values = umt.get_score(
         y_pred=model_pred,
         class_labels=class_labels,
         main_class=main_class,
@@ -818,27 +818,27 @@ def get_saliency_map_dict(
     # Iterate over different beff, jet flavours and passed options
     for target_beff in effs:
         for (jet_flavour, class_index) in zip(class_labels, class_indices):
-            for PassBool in [True, False]:
+            for pass_bool in [True, False]:
 
                 # Get the Disc_values value for a specific flavour
-                Disc_values_flavour = Disc_values[Y_test[:, class_index].astype(bool)]
+                disc_values_flavour = disc_values[y_test[:, class_index].astype(bool)]
 
                 # Get the cutvalue for the specific WP
-                cutvalue = np.percentile(Disc_values_flavour, (100 - target_beff))
+                cutvalue = np.percentile(disc_values_flavour, (100 - target_beff))
 
                 # Check for correct flavour and number of tracks
-                mask = Y_test[:, class_index].astype(bool)
-                mask = mask & (nTrks == nTracks)
+                mask = y_test[:, class_index].astype(bool)
+                mask = mask & (n_trks == n_trks_true)
 
                 # Set PassBool masking
-                if PassBool:
-                    mask = mask & (Disc_values > cutvalue)
+                if pass_bool:
+                    mask = mask & (disc_values > cutvalue)
 
                 else:
-                    mask = mask & (Disc_values < cutvalue)
+                    mask = mask & (disc_values < cutvalue)
 
                 # Get gradient map
-                gradient_map = umt.get_gradients(model, X_test[mask], n_jets)
+                gradient_map = umt.get_gradients(model, x_test[mask], n_jets)
 
                 # Turn gradient map for plotting
                 gradient_map = np.swapaxes(gradient_map, 1, 2)
@@ -847,14 +847,14 @@ def get_saliency_map_dict(
                 gradient_map = np.mean(gradient_map, axis=0)
 
                 map_dict.update(
-                    {f"{target_beff}_{jet_flavour}_{PassBool}": gradient_map}
+                    {f"{target_beff}_{jet_flavour}_{pass_bool}": gradient_map}
                 )
 
     return map_dict
 
 
 def recompute_score(
-    df,
+    df_probs,
     model_tagger: str,
     main_class: str,
     model_frac_values: dict,
@@ -865,7 +865,7 @@ def recompute_score(
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    df_probs : pandas.DataFrame
         Dataframe with the tagger probabilities inside.
     model_tagger : str
         Name of the tagger to use.
@@ -888,13 +888,13 @@ def recompute_score(
     # Shape the probability dataframe
     for flav_index, flav in enumerate(model_class_labels):
         if flav_index == 0:
-            unshaped_proba = df[
+            unshaped_proba = df_probs[
                 f"{model_tagger}_{flavour_categories[flav]['prob_var_name']}"
             ]
         else:
             unshaped_proba = np.append(
                 unshaped_proba,
-                df[
+                df_probs[
                     f"{model_tagger}_{flavour_categories[flav]['prob_var_name']}"
                 ].values,
             )

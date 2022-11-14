@@ -12,7 +12,7 @@ from umami.helper_tools import (
 set_log_level(logger, "DEBUG")
 
 
-class get_class_TestCase(unittest.TestCase):
+class GetClassTestCase(unittest.TestCase):
     """Test class for the get_class_labels method."""
 
     def setUp(self):

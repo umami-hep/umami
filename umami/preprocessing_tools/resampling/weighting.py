@@ -15,7 +15,7 @@ from umami.preprocessing_tools.utils import get_variable_dict
 class Weighting(ResamplingTools):
     """Weighting class."""
 
-    def GetFlavourWeights(self):
+    def get_flavour_weights(self):
         """
         Calculate ratios (weights) from bins in 2d (pt,eta) histogram between
         different flavours.
@@ -23,7 +23,7 @@ class Weighting(ResamplingTools):
 
         # calculate the 2D bin statistics for each sample and add it to
         # concat_samples dict with keys 'binnumbers','bin_indices_flat', 'stat'
-        self.GetPtEtaBinStatistics()
+        self.get_pt_eta_bin_statistics()
 
         # target distribution
         target_jets_stats = self.concat_samples[
@@ -58,7 +58,7 @@ class Weighting(ResamplingTools):
             pickle.dump(weights_dict, file)
         logger.info("Saved flavour weights to: %s", save_name)
 
-    def GetIndices(self):
+    def get_indices(self):
         """
         Applies the UnderSampling to the given arrays.
 
@@ -79,7 +79,7 @@ class Weighting(ResamplingTools):
         # "training_ttbar_bjets"
         size_total = 0
         self.indices_to_keep = {}  # pylint: disable=attribute-defined-outside-init
-        with h5py.File(self.options["intermediate_index_file"], "w") as f:
+        with h5py.File(self.options["intermediate_index_file"], "w") as f_index:
             for class_category in self.class_categories:
                 sample_categories = self.concat_samples[class_category]["jets"][
                     indices_to_keep[class_category], 4
@@ -94,7 +94,7 @@ class Weighting(ResamplingTools):
                             sample_categories == self.sample_categories[sample_category]
                         ]
                     ).astype(int)
-                    f.create_dataset(
+                    f_index.create_dataset(
                         sample_name,
                         data=self.indices_to_keep[sample_name],
                         compression="gzip",
@@ -109,14 +109,14 @@ class Weighting(ResamplingTools):
         """Run function for Weighting class."""
         logger.info("Starting weights calculation")
         # loading pt and eta from files and put them into dict
-        self.InitialiseSamples()
+        self.initialise_samples()
         # put ttbar and zprime together
-        self.ConcatenateSamples()
+        self.concatenate_samples()
         # calculate ratios between 2d (pt,eta) bin distributions of different
         # flavours
-        self.GetFlavourWeights()
+        self.get_flavour_weights()
         # write out indices.h5 to use preprocessing chain
-        self.GetIndices()
+        self.get_indices()
 
         # Make the resampling plots for the resampling variables before resampling
         plot_resampling_variables(
@@ -137,7 +137,7 @@ class Weighting(ResamplingTools):
             ylabel="Normalised number of jets",
         )
 
-        self.WriteFile(self.indices_to_keep)
+        self.write_file(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
         if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:

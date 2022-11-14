@@ -34,7 +34,7 @@ def get_parser():
 
 
 # workaround to not use the full preprocessing config
-class minimal_preprocessing_config:
+class MinimalPreprocessingConfig:
     """
     Minimal implementation of preprocessing config. Sets a few
     values which are needed here.
@@ -69,7 +69,7 @@ def main():
     args = get_parser()
     logger.info("Start processing")
 
-    X_test_jet, X_test_trk, Y_test = get_test_file(
+    x_test_jet, x_test_trk, y_test = get_test_file(
         input_file=args.input_file,
         var_dict=args.var_dict,
         scale_dict=args.scale_dict,
@@ -77,16 +77,16 @@ def main():
         tracks_name=args.tracks_name,
         n_jets=int(args.n_jets),
     )
-    logger.info("Shape of X_test_jet: %s", np.shape(X_test_jet))
-    logger.info("Shape of X_test_trk: %s", np.shape(X_test_trk))
-    logger.info("Shape of Y_test: %s", np.shape(Y_test))
+    logger.info("Shape of X_test_jet: %s", np.shape(x_test_jet))
+    logger.info("Shape of X_test_trk: %s", np.shape(x_test_trk))
+    logger.info("Shape of Y_test: %s", np.shape(y_test))
     # TODO: also add track labels
 
     logger.info("Writing file %s ...", args.out_file)
     with h5py.File(args.out_file, "w") as f_h5:
-        f_h5.create_dataset("jets/inputs", data=X_test_jet)
-        f_h5.create_dataset(f"{args.tracks_name}/inputs", data=X_test_trk)
-        f_h5.create_dataset("jets/labels_one_hot", data=Y_test)
+        f_h5.create_dataset("jets/inputs", data=x_test_jet)
+        f_h5.create_dataset(f"{args.tracks_name}/inputs", data=x_test_trk)
+        f_h5.create_dataset("jets/labels_one_hot", data=y_test)
     logger.info("Saved file %s ", args.out_file)
 
 

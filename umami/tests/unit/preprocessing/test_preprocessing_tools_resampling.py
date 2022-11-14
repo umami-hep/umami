@@ -10,12 +10,12 @@ import pandas as pd
 
 from umami.configuration import global_config, logger, set_log_level
 from umami.preprocessing_tools import (  # PDFSampling,
-    CalculateBinning,
-    CorrectFractions,
     PreprocessConfiguration,
-    SamplingGenerator,
     UnderSampling,
     UnderSamplingNoReplace,
+    calculate_binning,
+    correct_fractions,
+    sampling_generator,
 )
 
 set_log_level(logger, "DEBUG")
@@ -29,51 +29,51 @@ class CorrectFractionsTestCase(unittest.TestCase):
     def test_zero_length(self):
         """Tests zero length."""
         with self.assertRaises(ValueError):
-            CorrectFractions([], [])
+            correct_fractions([], [])
 
     def test_different_input_lengths(self):
         """Test different input lengths."""
         with self.assertRaises(AssertionError):
-            CorrectFractions([1, 2, 3, 4], [0.2, 0.8, 0.0])
+            correct_fractions([1, 2, 3, 4], [0.2, 0.8, 0.0])
 
     def test_not_fraction_sum_one(self):
         """Test not fraction sum one."""
         with self.assertRaises(ValueError):
-            CorrectFractions([1, 2, 3, 4], [0.2, 0.5, 0.2, 0.2])
+            correct_fractions([1, 2, 3, 4], [0.2, 0.5, 0.2, 0.2])
 
     def test_different_input_length_class_names(self):
         """Test different input length class names."""
         with self.assertRaises(AssertionError):
-            CorrectFractions([5000, 6000, 3000], [0.2, 0.6, 0.2], ["Zjets", "ttbar"])
+            correct_fractions([5000, 6000, 3000], [0.2, 0.6, 0.2], ["Zjets", "ttbar"])
 
     def test_zero_n_jets(self):
         """Test zero n_jets."""
         with self.assertRaises(ValueError):
-            CorrectFractions([0, 6000, 3000], [0.2, 0.6, 0.2])
+            correct_fractions([0, 6000, 3000], [0.2, 0.6, 0.2])
 
     def test_twice_same_fractions(self):
         """Test twice same fractions."""
         self.assertListEqual(
-            list(CorrectFractions([1000, 6000, 3000], [0.2, 0.6, 0.2])),
+            list(correct_fractions([1000, 6000, 3000], [0.2, 0.6, 0.2])),
             [1000, 3000, 1000],
         )
 
     def test_input_correct_fractions(self):
         """Test input correct fractions."""
-        N_jets = [2000, 6000, 2000]
-        self.assertListEqual(list(CorrectFractions(N_jets, [0.2, 0.6, 0.2])), N_jets)
+        n_jets = [2000, 6000, 2000]
+        self.assertListEqual(list(correct_fractions(n_jets, [0.2, 0.6, 0.2])), n_jets)
 
     def test_scaling_down_largest(self):
         """Test scaling down largest."""
         self.assertListEqual(
-            list(CorrectFractions([3000, 6000, 3000], [0.3, 0.5, 0.2])),
+            list(correct_fractions([3000, 6000, 3000], [0.3, 0.5, 0.2])),
             [3000, 5000, 2000],
         )
 
     def test_scaling_down_small(self):
         """Test scaling down small."""
         self.assertListEqual(
-            list(CorrectFractions([10000, 6000, 7000], [0.4, 0.5, 0.1])),
+            list(correct_fractions([10000, 6000, 7000], [0.4, 0.5, 0.1])),
             [4800, 6000, 1200],
         )
 
@@ -86,19 +86,21 @@ class CalculateBinningTestCase(unittest.TestCase):
     def test_non_list_case(self):
         """Test no list case."""
         with self.assertRaises(TypeError):
-            CalculateBinning(1)
+            calculate_binning(1)
 
     @staticmethod
     def test_single_list_case():
         """Test single list case."""
-        np.testing.assert_array_equal(CalculateBinning([1, 2, 3]), np.linspace(1, 2, 3))
+        np.testing.assert_array_equal(
+            calculate_binning([1, 2, 3]), np.linspace(1, 2, 3)
+        )
 
     @staticmethod
     def test_nested_list_case():
         """Test nested lists."""
         bins = [[1, 2, 3], [3, 4, 5]]
         expected_outcome = np.concatenate([np.linspace(*elem) for elem in bins])
-        np.testing.assert_array_equal(CalculateBinning(bins), expected_outcome)
+        np.testing.assert_array_equal(calculate_binning(bins), expected_outcome)
 
 
 class SamplingGeneratorTestCase(unittest.TestCase):
@@ -134,7 +136,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
 
     def test_no_tracks(self):
         """Testing no tracks yield"""
-        generator = SamplingGenerator(
+        generator = sampling_generator(
             file=self.test_file,
             indices=self.indices,
             label=self.label,
@@ -156,7 +158,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
 
     def test_tracks(self):
         """Testing with tracks yield"""
-        generator = SamplingGenerator(
+        generator = sampling_generator(
             file=self.test_file,
             indices=self.indices,
             label=self.label,
@@ -181,7 +183,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
 
     def test_no_duplicate(self):
         """Testing with tracks yield with no duplicates."""
-        generator = SamplingGenerator(
+        generator = sampling_generator(
             file=self.test_file,
             indices=np.arange(0, 3000, 1),
             label=self.label,
@@ -206,7 +208,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
 
     def test_no_duplicate_no_tracks(self):
         """Testing no tracks yield with no duplicates."""
-        generator = SamplingGenerator(
+        generator = sampling_generator(
             file=self.test_file,
             indices=np.arange(0, 3000, 1),
             label=self.label,
@@ -228,7 +230,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
     def test_duplicate_error(self):
         """Test duplicate TypeError."""
         with self.assertRaises(TypeError):
-            generator = SamplingGenerator(
+            generator = sampling_generator(
                 file=self.test_file,
                 indices=self.indices,
                 label=self.label,
@@ -288,16 +290,16 @@ class UnderSamplingTestCase(unittest.TestCase):
     def test_count_no_samples_defined(self):
         """Test no samples defined."""
         del self.sampling_config["options"]["samples_training"]
-        us = UnderSampling(self.config)
+        us_norepl = UnderSampling(self.config)
         with self.assertRaises(KeyError):
-            us.InitialiseSamples()
+            us_norepl.initialise_samples()
 
     def test_different_samples_per_category(self):
         """Test different samples per category."""
         del self.sampling_config["options"]["samples_training"]["zprime"][1]
-        us = UnderSampling(self.config)
+        us_norepl = UnderSampling(self.config)
         with self.assertRaises(RuntimeError):
-            us.InitialiseSamples()
+            us_norepl.initialise_samples()
 
 
 # TODO: this can be used to extend the UnderSamplingTestCase
@@ -468,8 +470,8 @@ class PDFResamplingTestCase(unittest.TestCase):
         ]
         for sample in training_ttbar_samples:
             test_h5_file_name = self.config.preparation.output_name
-            with h5py.File(test_h5_file_name, "w") as f:
-                jets = f.create_dataset(
+            with h5py.File(test_h5_file_name, "w") as f_h5:
+                jets = f_h5.create_dataset(
                     "jets",
                     (10000),
                     dtype=np.dtype(
@@ -579,8 +581,8 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
         ]
         for sample in training_ttbar_samples:
             test_h5_file_name = self.config.preparation.get_sample(sample).output_name
-            with h5py.File(test_h5_file_name, "w") as f:
-                jets = f.create_dataset(
+            with h5py.File(test_h5_file_name, "w") as f_h5:
+                jets = f_h5.create_dataset(
                     "jets",
                     (10000),
                     dtype=np.dtype(
@@ -600,22 +602,22 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
     def test_no_samples_defined(self):
         """Test no samples defined."""
         del self.sampling_config["options"]["samples_training"]
-        us = UnderSamplingNoReplace(self.config)
+        us_norepl = UnderSamplingNoReplace(self.config)
         with self.assertRaises(KeyError):
-            us.InitialiseSamples()
+            us_norepl.initialise_samples()
 
     def test_different_samples_per_category(self):
         """Test different samples per category."""
         del self.sampling_config["options"]["samples_training"]["zprime"][1]
-        us = UnderSamplingNoReplace(self.config)
+        us_norepl = UnderSamplingNoReplace(self.config)
         with self.assertRaises(RuntimeError):
-            us.InitialiseSamples()
+            us_norepl.initialise_samples()
 
     def test_equal_fractions(self):
         """Test equal fractions."""
-        us = UnderSamplingNoReplace(self.config)
-        us.InitialiseSamples()
-        indices = us.GetIndices()
+        us_norepl = UnderSamplingNoReplace(self.config)
+        us_norepl.initialise_samples()
+        indices = us_norepl.get_indices()
         with self.subTest():
             self.assertEqual(
                 len(indices["training_ttbar_bjets"])

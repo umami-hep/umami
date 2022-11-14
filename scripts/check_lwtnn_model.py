@@ -44,7 +44,7 @@ def get_parser():
     return parser.parse_args()
 
 
-def prepareConfig(yaml_config: str) -> dict:
+def prepare_config(yaml_config: str) -> dict:
     """
     Load the config for checking the model
     and return the values in a dict.
@@ -108,8 +108,8 @@ def prepareConfig(yaml_config: str) -> dict:
 
 def load_model_umami(
     model_file: str,
-    X_test_trk: np.ndarray,
-    X_test_jet: np.ndarray,
+    x_test_trk: np.ndarray,
+    x_test_jet: np.ndarray,
     batch_size: int = 5000,
 ):
     """Load umami model
@@ -118,9 +118,9 @@ def load_model_umami(
     ----------
     model_file : str
         file name of the model to load
-    X_test_trk : np.ndarray
+    x_test_trk : np.ndarray
         test array for tracks
-    X_test_jet : np.ndarray
+    x_test_jet : np.ndarray
         test array for jets
     batch_size : int, optional
         Number of jets used per batch for
@@ -136,7 +136,7 @@ def load_model_umami(
     with CustomObjectScope({"Sum": Sum}):
         model = load_model(model_file)
     pred_dips, pred_umami = model.predict(
-        [X_test_trk, X_test_jet],
+        [x_test_trk, x_test_jet],
         batch_size=batch_size,
         verbose=0,
     )
@@ -145,7 +145,7 @@ def load_model_umami(
 
 
 # workaround to not use the full preprocessing config
-class minimal_preprocessing_config:
+class MinimalPreprocessingConfig:
     """
     Minimal implementation of preprocessing config. Sets a few
     values which are needed here.
@@ -184,7 +184,7 @@ def main():
     args = get_parser()
 
     # Load the config file
-    eval_config = prepareConfig(args.config)
+    eval_config = prepare_config(args.config)
     scale_dict = eval_config["scale_dict"]
     class_labels = eval_config["class_labels"]
     tracks_name = eval_config["tracks_name"]
@@ -202,17 +202,17 @@ def main():
 
     # Load the input file
     with h5py.File(input_file, "r") as file:
-        df = pd.DataFrame(file["jets"][:])
+        df_in = pd.DataFrame(file["jets"][:])
 
     # Remove all jets which are not trained on
-    df.query(f"HadronConeExclTruthLabelID in {class_ids}", inplace=True)
+    df_in.query(f"HadronConeExclTruthLabelID in {class_ids}", inplace=True)
 
     # Init a pred_model
     pred_model = None
 
     # Get prediction for umami
     if "umami" in tagger.casefold():
-        X_test_jet, X_test_trk, Y_test = utt.get_test_file(
+        x_test_jet, x_test_trk, y_test = utt.get_test_file(
             input_file=input_file,
             var_dict=var_dict,
             scale_dict=scale_dict,
@@ -221,20 +221,20 @@ def main():
             n_jets=int(10e6),
             exclude=None,
         )
-        logger.info("Evaluated jets: %i", len(Y_test))
+        logger.info("Evaluated jets: %i", len(y_test))
 
         # Get the umami and dips predictions
         pred_dips, pred_umami = load_model_umami(
             model_file,
-            X_test_trk,
-            X_test_jet,
+            x_test_trk,
+            x_test_jet,
             batch_size=batch_size,
         )
         pred_model = pred_dips if "dips" in tagger.casefold() else pred_umami
 
     # Get prediction for dips
     elif "dips" in tagger.casefold():
-        X_test_trk, Y_test = utt.get_test_sample_trks(
+        x_test_trk, y_test = utt.get_test_sample_trks(
             input_file=input_file,
             var_dict=var_dict,
             scale_dict=scale_dict,
@@ -242,7 +242,7 @@ def main():
             tracks_name=tracks_name,
             n_jets=int(10e6),
         )
-        logger.info("Evaluated jets: %i", len(Y_test))
+        logger.info("Evaluated jets: %i", len(y_test))
 
         # Load the model
         with CustomObjectScope({"Sum": Sum}):
@@ -250,14 +250,14 @@ def main():
 
         # Predict the test sample with the loaded model
         pred_model = model.predict(
-            X_test_trk,
+            x_test_trk,
             batch_size=batch_size,
             verbose=0,
         )
 
     # Get prediction for dl1
     elif "dl1" in tagger.casefold():
-        X_test_jet, Y_test = utt.get_test_sample(
+        x_test_jet, y_test = utt.get_test_sample(
             input_file=input_file,
             var_dict=var_dict,
             scale_dict=scale_dict,
@@ -265,7 +265,7 @@ def main():
             n_jets=int(10e6),
             exclude=None,
         )
-        logger.info("Evaluated jets: %i", len(Y_test))
+        logger.info("Evaluated jets: %i", len(y_test))
 
         # Load the model
         with CustomObjectScope({"Sum": Sum}):
@@ -273,42 +273,42 @@ def main():
 
         # Predict the test sample with the loaded model
         pred_model = model.predict(
-            X_test_jet,
+            x_test_jet,
             batch_size=batch_size,
             verbose=0,
         )
 
     if "dips" in tagger.casefold() or "umami" in tagger.casefold():
-        trk_mask = np.sum(X_test_trk, axis=-1) != 0
+        trk_mask = np.sum(x_test_trk, axis=-1) != 0
         ntrks = trk_mask.sum(axis=1)
-        df["ntrks"] = ntrks
+        df_in["ntrks"] = ntrks
 
     else:
-        df["ntrks"] = -1 * np.ones(len(Y_test))
+        df_in["ntrks"] = -1 * np.ones(len(y_test))
 
     for counter, key in enumerate(class_labels):
         # Get the probability short form of the class
         prob_key = global_config.flavour_categories[key]["prob_var_name"]
 
         # Add the evaluation probabilites to the dict
-        df[f"eval_prob_{prob_key}"] = pred_model[:, counter]
+        df_in[f"eval_prob_{prob_key}"] = pred_model[:, counter]
 
     # Add an index to the dataframe
-    df["index"] = range(len(df))
+    df_in["index"] = range(len(df_in))
 
     # Add the truth to the dataframe
-    df["y"] = np.argmax(Y_test, axis=1)
-    logger.info("Jets: %i", len(df))
+    df_in["y"] = np.argmax(y_test, axis=1)
+    logger.info("Jets: %i", len(df_in))
 
     # Get the first class defined in class labels to calculate the difference
     prob_key = global_config.flavour_categories[class_labels[0]]["prob_var_name"]
     evaluated = f"eval_prob_{prob_key}"
 
     # Calculate the difference between the lwtnn output and the keras model output
-    df["diff"] = abs(df[evaluated] - df[f"{tagger}_{prob_key}"])
+    df_in["diff"] = abs(df_in[evaluated] - df_in[f"{tagger}_{prob_key}"])
 
     # Define the difference regions
-    sampleDiffs = np.array(
+    sample_diffs = np.array(
         [
             np.linspace(1e-6, 5e-6, 5),
             np.linspace(1e-5, 5e-5, 5),
@@ -320,15 +320,15 @@ def main():
     ).flatten()
 
     # Iterate over the different difference regions
-    for sampleDiff in sampleDiffs:
-        df_select = df.query(f"diff>{sampleDiff} and ntrks<{ntracks_max}")
-        diff = round(len(df_select) / len(df[df["ntrks"] < ntracks_max]) * 100, 2)
-        print(f"Differences off {sampleDiff:.1e} {diff}%")
+    for sample_diff in sample_diffs:
+        df_select = df_in.query(f"diff>{sample_diff} and ntrks<{ntracks_max}")
+        diff = round(len(df_select) / len(df_in[df_in["ntrks"] < ntracks_max]) * 100, 2)
+        print(f"Differences off {sample_diff:.1e} {diff}%")
         if diff == 0:
             break
 
     if args.output is not None:
-        df_select = df[
+        df_select = df_in[
             [
                 "diff",
                 "eval_pu",

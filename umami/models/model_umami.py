@@ -288,11 +288,11 @@ def train_umami(args, train_config):
         # Get training set from generator
         train_dataset = (
             tf.data.Dataset.from_generator(
-                utf.umami_generator(
+                utf.UmamiGenerator(
                     train_file_path=train_config.train_file,
-                    X_Name="jets/inputs",
-                    X_trk_Name=f"{tracks_name}/inputs",
-                    Y_Name="jets/labels_one_hot",
+                    x_name="jets/inputs",
+                    x_trk_name=f"{tracks_name}/inputs",
+                    y_name="jets/labels_one_hot",
                     n_jets=int(nn_structure["n_jets_train"])
                     if "n_jets_train" in nn_structure
                     and nn_structure["n_jets_train"] is not None

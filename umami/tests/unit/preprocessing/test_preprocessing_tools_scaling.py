@@ -126,7 +126,7 @@ class ApplyScalingJetsTestCase(unittest.TestCase):
             with self.subTest(f"Testing variable {var}"):
                 np.testing.assert_array_almost_equal(jets[var], self.control_jets[var])
 
-    def test_KeyError_scale_dict(self):
+    def test_key_error_scale_dict(self):
         """Test error raise if variable not in scale dict."""
         with self.assertRaises(KeyError):
             apply_scaling_jets(
@@ -135,7 +135,7 @@ class ApplyScalingJetsTestCase(unittest.TestCase):
                 scale_dict=self.scale_dict,
             )
 
-    def test_ValueError_scale_value(self):
+    def test_value_error_scale_value(self):
         """Test error raise if variable not in scale dict."""
         faulty_scale_dict = {
             "absEta_btagJes": {
@@ -194,7 +194,7 @@ class ScalingTestCase(unittest.TestCase):
 
         scaling_class = CalculateScaling(self.config)
 
-        combined_scale_dict, combined_nTrks = scaling_class.join_scale_dicts(
+        combined_scale_dict, combined_n_trks = scaling_class.join_scale_dicts(
             first_scale_dict=self.first_scale_dict,
             second_scale_dict=self.second_scale_dict,
             first_n=10,
@@ -202,7 +202,7 @@ class ScalingTestCase(unittest.TestCase):
         )
 
         with self.subTest():
-            self.assertEqual(combined_nTrks, 25)
+            self.assertEqual(combined_n_trks, 25)
 
         for key, var in combined_scale_dict.items():
             with self.subTest():
@@ -273,7 +273,7 @@ class ScalingTestCase(unittest.TestCase):
         self.data = u2s(np.arange(0, 240, 1).reshape((njet, ntrack, nvar)), dtype)
         self.track_mask = np.ones((njet, ntrack)).astype(bool)
 
-        self.nTrks_control = 120
+        self.n_trks_control = 120
         self.scale_dict_control = {
             "variable": {"shift": 119, "scale": 69.27962493896484},
             "variable_2": {"shift": 120, "scale": 69.27962493896484},
@@ -288,7 +288,7 @@ class ScalingTestCase(unittest.TestCase):
         )
 
         with self.subTest():
-            self.assertEqual(n_trk, self.nTrks_control)
+            self.assertEqual(n_trk, self.n_trks_control)
 
         for key, var in scale_dict.items():
             with self.subTest():
@@ -305,7 +305,7 @@ class ScalingTestCase(unittest.TestCase):
     def test_get_scaling(self):
         """Test retrieving scaling."""
         self.vec = np.arange(0, 100, 1)
-        self.w = np.ones_like(self.vec)
+        self.weight = np.ones_like(self.vec)
         self.varname = "variable"
         self.custom_defaults_vars = {"variable_2": 1}
 

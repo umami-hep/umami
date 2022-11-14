@@ -25,7 +25,7 @@ from umami.plotting_tools.train_plotting_functions import (
 set_log_level(logger, "DEBUG")
 
 
-class Train_Plots_TestCase(unittest.TestCase):
+class TrainPlotsTestCase(unittest.TestCase):
     """Test class for the train plot function."""
 
     def setUp(self):
@@ -318,7 +318,7 @@ class Train_Plots_TestCase(unittest.TestCase):
         )
 
 
-class get_comp_tagger_rej_dict_TestCase(unittest.TestCase):
+class GetCompTaggerRejDictTestCase(unittest.TestCase):
     """Test the rejection dict calculation."""
 
     def setUp(self):

@@ -16,7 +16,7 @@ from umami.tools.yaml_tools import YAML
 set_log_level(logger, "DEBUG")
 
 
-class check_main_class_input_TestCase(unittest.TestCase):
+class CheckMainClassInputTestCase(unittest.TestCase):
     """Testing the check function for the main class."""
 
     def setUp(self) -> None:
@@ -50,7 +50,7 @@ class check_main_class_input_TestCase(unittest.TestCase):
             _ = check_main_class_input(self.main_class_int)
 
 
-class replaceLineInFile_TestCase(unittest.TestCase):
+class ReplaceLineInFileTestCase(unittest.TestCase):
     """Testing the replaceLineInFile function."""
 
     def setUp(self) -> None:
@@ -78,7 +78,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         """
         return self.yaml.load(self.dummy_file)
 
-    def test_replaceLineInFile_Single_Line(self) -> None:
+    def test_line(self) -> None:
         """Test the standard behaviour of the function."""
 
         # Change the model_name
@@ -93,7 +93,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         config = self.load_file()
         self.assertEqual(config["model_name"], "Unittest_Testname")
 
-    def test_replaceLineInFile_Single_Line_Fail(self) -> None:
+    def test_line_fail(self) -> None:
         """Test the raise error behaviour of the function."""
 
         # Change the model_name
@@ -105,7 +105,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
                 only_first=True,
             )
 
-    def test_replaceLineInFile_Multiple_Lines(self) -> None:
+    def test_multiple_lines(self) -> None:
         """Test the standard behaviour of the function."""
 
         # Change the model_name
@@ -119,7 +119,7 @@ class replaceLineInFile_TestCase(unittest.TestCase):
         config = self.load_file()
         self.assertEqual(config["model_name"], "Unittest_Testname")
 
-    def test_replaceLineInFile_Multiple_Lines_Fail(self) -> None:
+    def test_multiple_lines_fail(self) -> None:
         """Test the raise error behaviour of the function."""
 
         # Change the model_name

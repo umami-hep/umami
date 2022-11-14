@@ -882,7 +882,7 @@ class Sum(Layer):
         """
         pass  # pylint: disable=unnecessary-pass
 
-    def call(self, x, mask: float = None):  # pylint: disable=no-self-use
+    def call(self, x, mask: float = None):  # pylint: disable=no-self-use,invalid-name
         """
         Return the output of the layer.
 

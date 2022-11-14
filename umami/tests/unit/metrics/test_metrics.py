@@ -15,7 +15,7 @@ from umami.metrics.metrics import (
 set_log_level(logger, "DEBUG")
 
 
-class Metrics_Small_TestCase(unittest.TestCase):
+class MetricsSmallTestCase(unittest.TestCase):
     """Test class for the umami.metrics functions."""
 
     def setUp(self):
@@ -28,7 +28,7 @@ class Metrics_Small_TestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(out, [[1, 2, 3]])
 
 
-class CalcDiscValues_TestCase(unittest.TestCase):
+class CalcDiscValuesTestCase(unittest.TestCase):
     """Test class for the calc_disc_values function."""
 
     def setUp(self):
@@ -52,21 +52,21 @@ class CalcDiscValues_TestCase(unittest.TestCase):
             "cjets": 0.018,
         }
 
-        self.jets_dict_4_Classes = {
+        self.jets_dict_4_classes = {
             "bjets": np.random.uniform(0, 1, size=(100, 4)),
             "cjets": np.random.uniform(0, 1, size=(100, 4)),
             "ujets": np.random.uniform(0, 1, size=(100, 4)),
             "taujets": np.random.uniform(0, 1, size=(100, 4)),
         }
-        self.index_dict_4_Classes = {
+        self.index_dict_4_classes = {
             "bjets": 0,
             "cjets": 1,
             "ujets": 2,
             "taujets": 3,
         }
-        self.main_class_4_Classes = ["bjets", "taujets"]
+        self.main_class_4_classes = ["bjets", "taujets"]
         self.rej_class = "cjets"
-        self.frac_dict_4_Classes = {
+        self.frac_dict_4_classes = {
             "cjets": 0.018,
             "ujets": 0.782,
             "taujets": 0.2,
@@ -83,7 +83,7 @@ class CalcDiscValues_TestCase(unittest.TestCase):
 
         self.assertEqual(len(disc_score), len(self.jets_dict["bjets"]))
 
-    def test_calc_disc_values_Rejection(self):
+    def test_calc_disc_values_rejection(self):
         """Test calc_disc_values for three classes and cjets (not-main class)."""
         disc_score = calc_disc_values(
             jets_dict=self.jets_dict,
@@ -95,39 +95,39 @@ class CalcDiscValues_TestCase(unittest.TestCase):
 
         self.assertEqual(len(disc_score), len(self.jets_dict["bjets"]))
 
-    def test_calc_disc_values_2Singal_Classes(self):
+    def test_calc_disc_values_2singal_classes(self):
         """Test calc_disc_values for three classes and cjets (not-main class)."""
 
         disc_score = calc_disc_values(
-            jets_dict=self.jets_dict_4_Classes,
-            index_dict=self.index_dict_4_Classes,
-            main_class=self.main_class_4_Classes,
-            frac_dict=self.frac_dict_4_Classes,
+            jets_dict=self.jets_dict_4_classes,
+            index_dict=self.index_dict_4_classes,
+            main_class=self.main_class_4_classes,
+            frac_dict=self.frac_dict_4_classes,
         )
 
         self.assertEqual(
             len(disc_score),
-            len(self.jets_dict_4_Classes["bjets"])
-            + len(self.jets_dict_4_Classes["taujets"]),
+            len(self.jets_dict_4_classes["bjets"])
+            + len(self.jets_dict_4_classes["taujets"]),
         )
 
-    def test_calc_disc_values_2Signal_Classes_bkg_jets(self):
+    def test_calc_disc_values_2signal_classes_bkg_jets(self):
         """
         Test calc_disc_values for four classes and 2 signal classes
         and calculation of scores for background class (not-main class).
         """
 
         disc_score = calc_disc_values(
-            jets_dict=self.jets_dict_4_Classes,
-            index_dict=self.index_dict_4_Classes,
-            main_class=self.main_class_4_Classes,
-            frac_dict=self.frac_dict_4_Classes,
+            jets_dict=self.jets_dict_4_classes,
+            index_dict=self.index_dict_4_classes,
+            main_class=self.main_class_4_classes,
+            frac_dict=self.frac_dict_4_classes,
             rej_class=self.rej_class,
         )
 
         self.assertEqual(
             len(disc_score),
-            len(self.jets_dict_4_Classes["cjets"]),
+            len(self.jets_dict_4_classes["cjets"]),
         )
 
     def test_calc_disc_values_error(self):
@@ -143,7 +143,7 @@ class CalcDiscValues_TestCase(unittest.TestCase):
             )
 
 
-class GetRejection_TestCase(unittest.TestCase):
+class GetRejectionTestCase(unittest.TestCase):
     """Test class for the GetRejection function."""
 
     def setUp(self):
@@ -174,7 +174,7 @@ class GetRejection_TestCase(unittest.TestCase):
             "taujets": 0.2,
         }
 
-    def test_GetRejection(self):
+    def test_get_rejection(self):
         """Test GetRejection for three classes."""
 
         rej_dict, _ = get_rejection(
@@ -188,7 +188,7 @@ class GetRejection_TestCase(unittest.TestCase):
 
         self.assertTrue(("cjets_rej" in rej_dict and "ujets_rej" in rej_dict))
 
-    def test_GetRejection_4_classes(self):
+    def test_get_rejection_4_classes(self):
         """Test GetRejection for four classes."""
 
         rej_dict, _ = get_rejection(
@@ -206,7 +206,7 @@ class GetRejection_TestCase(unittest.TestCase):
             and "taujets_rej" in rej_dict
         )
 
-    def test_GetRejection_wrong_shapes(self):
+    def test_get_rejection_wrong_shapes(self):
         """
         Test GetRejection with incorrect shapes in y_pred and y_true.
         Also checking if incorrect shapes between y_* and class_labels.
@@ -223,7 +223,7 @@ class GetRejection_TestCase(unittest.TestCase):
             )
 
 
-class GetScore_TestCase(unittest.TestCase):
+class GetScoreTestCase(unittest.TestCase):
     """Test class for the GetScore function."""
 
     def setUp(self):
@@ -254,7 +254,7 @@ class GetScore_TestCase(unittest.TestCase):
             "taujets": 0.2,
         }
 
-    def test_GetScore(self):
+    def test_get_score(self):
         """Test GetScore for three classes."""
         disc_scores = get_score(
             y_pred=self.y_pred,
@@ -266,7 +266,7 @@ class GetScore_TestCase(unittest.TestCase):
         self.assertEqual(len(disc_scores), len(self.y_pred))
         self.assertAlmostEqual(disc_scores[0], -0.09494753279842187)
 
-    def test_GetScore4Classes(self):
+    def test_get_score_4classes(self):
         """Test GetScore for four classes."""
         disc_scores = get_score(
             y_pred=self.y_pred_tau,

@@ -5,12 +5,12 @@ import unittest
 from subprocess import run
 
 from umami.configuration import global_config, logger, set_log_level
-from umami.data_tools.Loaders import LoadJetsFromFile, LoadTrksFromFile
+from umami.data_tools.loaders import load_jets_from_file, load_trks_from_file
 
 set_log_level(logger, "DEBUG")
 
 
-class Load_Files_TestCase(unittest.TestCase):
+class LoadFilesTestCase(unittest.TestCase):
     """Test class for the different loading functions."""
 
     def setUp(self):
@@ -30,9 +30,9 @@ class Load_Files_TestCase(unittest.TestCase):
             check=True,
         )
 
-    def test_LoadJetsFromFile(self):
+    def test_load_jets_from_file(self):
         """Test the loading of the jet variables from file."""
-        jets, labels = LoadJetsFromFile(
+        jets, labels = load_jets_from_file(
             filepath=os.path.join(
                 self.tmp_test_dir,
                 "ci_ttbar_testing.h5",
@@ -43,10 +43,10 @@ class Load_Files_TestCase(unittest.TestCase):
 
         self.assertEqual(len(jets), len(labels))
 
-    def test_LoadJetsFromFile_h5_errors(self):
+    def test_h5_errors(self):
         """Test the raise of errors for wrong h5 file."""
         with self.assertRaises(RuntimeError):
-            LoadJetsFromFile(
+            load_jets_from_file(
                 filepath=os.path.join(
                     self.tmp_test_dir,
                     "test_to_fail*.h5",
@@ -56,7 +56,7 @@ class Load_Files_TestCase(unittest.TestCase):
             )
 
         with self.assertRaises(KeyError):
-            LoadJetsFromFile(
+            load_jets_from_file(
                 filepath=os.path.join(
                     self.tmp_test_dir,
                     "ci_ttbar_testing.h5",
@@ -73,11 +73,11 @@ class Load_Files_TestCase(unittest.TestCase):
                 ],
             )
 
-    def test_LoadJetsFromFile_cut_operators(self):
+    def test_cut_operators(self):
         """Test different operators for the cuts."""
         for operator in ["<=", "==", ">=", "<", ">"]:
             with self.subTest(f"Testing operator {operator}"):
-                jets, labels = LoadJetsFromFile(
+                jets, labels = load_jets_from_file(
                     filepath=os.path.join(
                         self.tmp_test_dir,
                         "ci_ttbar_testing.h5",
@@ -96,9 +96,9 @@ class Load_Files_TestCase(unittest.TestCase):
 
                 self.assertEqual(len(jets), len(labels))
 
-    def test_LoadJetsFromFile_different_chunk_size(self):
+    def test_different_chunk_size(self):
         """Test different chunk size."""
-        jets, labels = LoadJetsFromFile(
+        jets, labels = load_jets_from_file(
             filepath=os.path.join(
                 self.tmp_test_dir,
                 "ci_ttbar_testing.h5",
@@ -110,9 +110,9 @@ class Load_Files_TestCase(unittest.TestCase):
 
         self.assertEqual(len(jets), len(labels))
 
-    def test_LoadJetsFromFile_cut_vars(self):
+    def test_cut_vars(self):
         """Test cut vars."""
-        jets, labels = LoadJetsFromFile(
+        jets, labels = load_jets_from_file(
             filepath=os.path.join(
                 self.tmp_test_dir,
                 "ci_ttbar_testing.h5",
@@ -137,25 +137,25 @@ class Load_Files_TestCase(unittest.TestCase):
 
         self.assertEqual(len(jets), len(labels))
 
-    def test_LoadJetsFromFile_wrong_filepath(self):
+    def test_wrong_filepath(self):
         """Test raise of error for wrong filepath."""
         with self.assertRaises(KeyError):
-            LoadJetsFromFile(
+            load_jets_from_file(
                 filepath=666,
                 class_labels=self.class_labels,
                 n_jets=self.n_jets,
             )
 
         with self.assertRaises(RuntimeError):
-            LoadJetsFromFile(
+            load_jets_from_file(
                 filepath="",
                 class_labels=self.class_labels,
                 n_jets=self.n_jets,
             )
 
-    def test_LoadTrksFromFile(self):
+    def test_load_trks_from_file(self):
         """Test the correct loading of the track variables."""
-        trks, labels = LoadTrksFromFile(
+        trks, labels = load_trks_from_file(
             filepath=os.path.join(
                 self.tmp_test_dir,
                 "ci_ttbar_testing.h5",
@@ -166,11 +166,11 @@ class Load_Files_TestCase(unittest.TestCase):
 
         self.assertEqual(len(trks), len(labels))
 
-    def test_LoadTrksFromFile_different_operators(self):
+    def test_trks_different_operators(self):
         """Test different operators."""
         for operator in ["<=", "==", ">=", "<", ">"]:
             with self.subTest(f"Testing operator {operator}"):
-                trks, labels = LoadTrksFromFile(
+                trks, labels = load_trks_from_file(
                     filepath=os.path.join(
                         self.tmp_test_dir,
                         "ci_ttbar_testing.h5",
@@ -189,9 +189,9 @@ class Load_Files_TestCase(unittest.TestCase):
 
                 self.assertEqual(len(trks), len(labels))
 
-    def test_LoadTrksFromFile_different_chunk_size(self):
+    def test_trks_different_chunk_size(self):
         """Test different chunk size."""
-        trks, labels = LoadTrksFromFile(
+        trks, labels = load_trks_from_file(
             filepath=os.path.join(
                 self.tmp_test_dir,
                 "ci_ttbar_testing.h5",
@@ -203,10 +203,10 @@ class Load_Files_TestCase(unittest.TestCase):
 
         self.assertEqual(len(trks), len(labels))
 
-    def test_LoadTrksFromFile_raise_errors(self):
+    def test_trks_raise_errors(self):
         """Test the raise of the different errors."""
         with self.assertRaises(RuntimeError):
-            LoadTrksFromFile(
+            load_trks_from_file(
                 filepath=os.path.join(
                     self.tmp_test_dir,
                     "test_to_fail*.h5",
@@ -216,7 +216,7 @@ class Load_Files_TestCase(unittest.TestCase):
             )
 
         with self.assertRaises(KeyError):
-            LoadTrksFromFile(
+            load_trks_from_file(
                 filepath=os.path.join(
                     self.tmp_test_dir,
                     "ci_ttbar_testing.h5",
@@ -234,14 +234,14 @@ class Load_Files_TestCase(unittest.TestCase):
             )
 
         with self.assertRaises(KeyError):
-            LoadTrksFromFile(
+            load_trks_from_file(
                 filepath=666,
                 class_labels=self.class_labels,
                 n_jets=self.n_jets,
             )
 
         with self.assertRaises(RuntimeError):
-            LoadTrksFromFile(
+            load_trks_from_file(
                 filepath="",
                 class_labels=self.class_labels,
                 n_jets=self.n_jets,

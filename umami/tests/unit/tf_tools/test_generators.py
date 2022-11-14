@@ -9,12 +9,12 @@ import numpy as np
 
 from umami.configuration import logger, set_log_level
 from umami.tf_tools.generators import (
-    Model_Generator,
-    cads_generator,
-    dips_generator,
-    dl1_generator,
-    umami_condition_generator,
-    umami_generator,
+    CadsGenerator,
+    DipsGenerator,
+    Dl1Generator,
+    ModelGenerator,
+    UmamiConditionGenerator,
+    UmamiGenerator,
 )
 
 set_log_level(logger, "DEBUG")
@@ -30,9 +30,9 @@ class BaseGeneratorTest(unittest.TestCase):
         self.test_dir = f"{self.test_dir_path.name}"
         logger.info("Creating test directory in %s", self.test_dir)
 
-        self.X_Name = "jets/inputs"
-        self.X_trk_Name = "tracks_loose/inputs"
-        self.Y_Name = "jets/labels"
+        self.x_name = "jets/inputs"
+        self.x_trk_name = "tracks_loose/inputs"
+        self.y_name = "jets/labels"
         self.batch_size = 100
         self.n_jets = 2500
         self.chunk_size = 500
@@ -40,7 +40,7 @@ class BaseGeneratorTest(unittest.TestCase):
         self.jet_features = 2
         self.n_tracks_per_jet = 40
         self.track_features = 21
-        self.nConds = 2
+        self.n_conds = 2
         self.print_logger = True
 
         self.train_file_path = Path(self.test_dir) / "dummy_train_file.h5"
@@ -72,7 +72,7 @@ class BaseGeneratorTest(unittest.TestCase):
 
         self.shared_settings = {
             "train_file_path": self.train_file_path,
-            "Y_Name": self.Y_Name,
+            "y_name": self.y_name,
             "batch_size": self.batch_size,
             "chunk_size": self.chunk_size,
             "print_logger": self.print_logger,
@@ -84,9 +84,9 @@ class TestModelGenerator(BaseGeneratorTest):
 
     def test_init(self):
         """Test the init from the base class"""
-        base_generator = Model_Generator(
-            X_Name=self.X_Name,
-            X_trk_Name=self.X_trk_Name,
+        base_generator = ModelGenerator(
+            x_name=self.x_name,
+            x_trk_name=self.x_trk_name,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
             **self.shared_settings,
@@ -98,11 +98,11 @@ class TestModelGenerator(BaseGeneratorTest):
         with self.subTest("n_jets check"):
             self.assertEqual(base_generator.n_jets, int(self.n_jets))
 
-    def test_init_no_n_jets_X_Name_given(self):
+    def test_init_no_n_jets_x_name_given(self):
         """Test case for init without n_jets given with X_Name."""
-        base_generator = Model_Generator(
-            X_Name=self.X_Name,
-            X_trk_Name=None,
+        base_generator = ModelGenerator(
+            x_name=self.x_name,
+            x_trk_name=None,
             n_jets=None,
             sample_weights=self.sample_weights,
             **self.shared_settings,
@@ -110,11 +110,11 @@ class TestModelGenerator(BaseGeneratorTest):
 
         self.assertEqual(base_generator.n_jets, self.n_jets)
 
-    def test_init_no_n_jets_X_trk_Name_given(self):
+    def test_init_no_n_jets_x_trk_name_given(self):
         """Test case for init without n_jets given with X_trk_Name."""
-        base_generator = Model_Generator(
-            X_Name=None,
-            X_trk_Name=self.X_trk_Name,
+        base_generator = ModelGenerator(
+            x_name=None,
+            x_trk_name=self.x_trk_name,
             n_jets=None,
             sample_weights=self.sample_weights,
             **self.shared_settings,
@@ -122,13 +122,13 @@ class TestModelGenerator(BaseGeneratorTest):
 
         self.assertEqual(base_generator.n_jets, self.n_jets)
 
-    def test_init_no_n_jets_no_X_given(self):
+    def test_init_no_n_jets_no_x_given(self):
         """Test case for init without n_jets given without X."""
 
         with self.assertRaises(ValueError):
-            _ = Model_Generator(
-                X_Name=None,
-                X_trk_Name=None,
+            _ = ModelGenerator(
+                x_name=None,
+                x_trk_name=None,
                 n_jets=None,
                 sample_weights=self.sample_weights,
                 **self.shared_settings,
@@ -136,9 +136,9 @@ class TestModelGenerator(BaseGeneratorTest):
 
     def test_load_in_memory(self):
         """Test the basic load_in_memory function."""
-        base_generator = Model_Generator(
-            X_Name=self.X_Name,
-            X_trk_Name=self.X_trk_Name,
+        base_generator = ModelGenerator(
+            x_name=self.x_name,
+            x_trk_name=self.x_trk_name,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
             **self.shared_settings,
@@ -159,11 +159,11 @@ class TestModelGenerator(BaseGeneratorTest):
         with self.subTest("Check length labels in memory"):
             self.assertEqual(len(base_generator.y_in_mem), self.chunk_size)
 
-    def test_load_in_memory_X_Name_error(self):
+    def test_load_in_memory_x_name_error(self):
         """Test the error when trying to load jets without X_Name given."""
-        base_generator = Model_Generator(
-            X_Name=None,
-            X_trk_Name=self.X_trk_Name,
+        base_generator = ModelGenerator(
+            x_name=None,
+            x_trk_name=self.x_trk_name,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
             **self.shared_settings,
@@ -175,11 +175,11 @@ class TestModelGenerator(BaseGeneratorTest):
                 load_tracks=True,
             )
 
-    def test_load_in_memory_X_trk_Name_error(self):
+    def test_load_in_memory_x_trk_name_error(self):
         """Test the error when trying to load tracks without X_trk_Name given."""
-        base_generator = Model_Generator(
-            X_Name=self.X_Name,
-            X_trk_Name=None,
+        base_generator = ModelGenerator(
+            x_name=self.x_name,
+            x_trk_name=None,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
             **self.shared_settings,
@@ -197,24 +197,24 @@ class TestCadsGenerator(BaseGeneratorTest):
 
     def test_call(self):
         """Test the call of the generator."""
-        CADS_generator = cads_generator(
-            X_Name=self.X_Name,
-            X_trk_Name=self.X_trk_Name,
+        cads_generator = CadsGenerator(
+            x_name=self.x_name,
+            x_trk_name=self.x_trk_name,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
-            nConds=self.nConds,
+            n_conds=self.n_conds,
             **self.shared_settings,
         )
 
         # Get the generator
-        generator = CADS_generator()
+        generator = cads_generator()
 
-        for _ in range(CADS_generator.length):
-            X_input, Y_input = next(generator)
+        for _ in range(cads_generator.length):
+            x_input, y_input = next(generator)
 
             with self.subTest("Check shape of tracks yielded by the generator"):
                 self.assertEqual(
-                    X_input["input_1"].shape,
+                    x_input["input_1"].shape,
                     (
                         self.batch_size,
                         self.n_tracks_per_jet,
@@ -226,15 +226,15 @@ class TestCadsGenerator(BaseGeneratorTest):
                 "Check shape of conditional info yielded by the generator"
             ):
                 self.assertEqual(
-                    X_input["input_2"].shape,
+                    x_input["input_2"].shape,
                     (
                         self.batch_size,
-                        self.nConds,
+                        self.n_conds,
                     ),
                 )
 
             with self.subTest("Check shape of labels yielded by the generator"):
-                self.assertEqual(len(Y_input), self.batch_size)
+                self.assertEqual(len(y_input), self.batch_size)
 
 
 class TestDipsGenerator(BaseGeneratorTest):
@@ -242,23 +242,23 @@ class TestDipsGenerator(BaseGeneratorTest):
 
     def test_call(self):
         """Test the call of the generator."""
-        DIPS_generator = dips_generator(
-            X_Name=None,
-            X_trk_Name=self.X_trk_Name,
+        dips_generator = DipsGenerator(
+            x_name=None,
+            x_trk_name=self.x_trk_name,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
             **self.shared_settings,
         )
 
         # Get the generator
-        generator = DIPS_generator()
+        generator = dips_generator()
 
-        for _ in range(DIPS_generator.length):
-            X_input, Y_input, weights = next(generator)
+        for _ in range(dips_generator.length):
+            x_input, y_input, weights = next(generator)
 
             with self.subTest("Check shape of tracks yielded by the generator"):
                 self.assertEqual(
-                    X_input.shape,
+                    x_input.shape,
                     (
                         self.batch_size,
                         self.n_tracks_per_jet,
@@ -267,30 +267,30 @@ class TestDipsGenerator(BaseGeneratorTest):
                 )
 
             with self.subTest("Check length of labels yielded by the generator"):
-                self.assertEqual(len(Y_input), self.batch_size)
+                self.assertEqual(len(y_input), self.batch_size)
 
             with self.subTest("Check length of weights yielded by the generator"):
                 self.assertEqual(len(weights), self.batch_size)
 
     def test_call_without_weights(self):
         """Test the call of the generator."""
-        DIPS_generator = dips_generator(
-            X_Name=None,
-            X_trk_Name=self.X_trk_Name,
+        dips_generator = DipsGenerator(
+            x_name=None,
+            x_trk_name=self.x_trk_name,
             n_jets=self.n_jets,
             sample_weights=False,
             **self.shared_settings,
         )
 
         # Get the generator
-        generator = DIPS_generator()
+        generator = dips_generator()
 
-        for _ in range(DIPS_generator.length):
-            X_input, Y_input = next(generator)
+        for _ in range(dips_generator.length):
+            x_input, y_input = next(generator)
 
             with self.subTest("Check shape of tracks yielded by the generator"):
                 self.assertEqual(
-                    X_input.shape,
+                    x_input.shape,
                     (
                         self.batch_size,
                         self.n_tracks_per_jet,
@@ -299,7 +299,7 @@ class TestDipsGenerator(BaseGeneratorTest):
                 )
 
             with self.subTest("Check shape of labels yielded by the generator"):
-                self.assertEqual(len(Y_input), self.batch_size)
+                self.assertEqual(len(y_input), self.batch_size)
 
 
 class TestDL1Generator(BaseGeneratorTest):
@@ -307,23 +307,23 @@ class TestDL1Generator(BaseGeneratorTest):
 
     def test_call(self):
         """Test the call of the generator."""
-        DL1_generator = dl1_generator(
-            X_Name=self.X_Name,
-            X_trk_Name=None,
+        dl1_generator = Dl1Generator(
+            x_name=self.x_name,
+            x_trk_name=None,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
             **self.shared_settings,
         )
 
         # Get the generator
-        generator = DL1_generator()
+        generator = dl1_generator()
 
-        for _ in range(DL1_generator.length):
-            X_input, Y_input, weights = next(generator)
+        for _ in range(dl1_generator.length):
+            x_input, y_input, weights = next(generator)
 
             with self.subTest("Check shape of jets yielded by the generator"):
                 self.assertEqual(
-                    X_input.shape,
+                    x_input.shape,
                     (
                         self.batch_size,
                         self.jet_features,
@@ -331,30 +331,30 @@ class TestDL1Generator(BaseGeneratorTest):
                 )
 
             with self.subTest("Check length of labels yielded by the generator"):
-                self.assertEqual(len(Y_input), self.batch_size)
+                self.assertEqual(len(y_input), self.batch_size)
 
             with self.subTest("Check length of weights yielded by the generator"):
                 self.assertEqual(len(weights), self.batch_size)
 
     def test_call_without_weights(self):
         """Test the call of the generator."""
-        DL1_generator = dl1_generator(
-            X_Name=self.X_Name,
-            X_trk_Name=None,
+        dl1_generator = Dl1Generator(
+            x_name=self.x_name,
+            x_trk_name=None,
             n_jets=self.n_jets,
             sample_weights=False,
             **self.shared_settings,
         )
 
         # Get the generator
-        generator = DL1_generator()
+        generator = dl1_generator()
 
-        for _ in range(DL1_generator.length):
-            X_input, Y_input = next(generator)
+        for _ in range(dl1_generator.length):
+            x_input, y_input = next(generator)
 
             with self.subTest("Check shape of jets yielded by the generator"):
                 self.assertEqual(
-                    X_input.shape,
+                    x_input.shape,
                     (
                         self.batch_size,
                         self.jet_features,
@@ -362,7 +362,7 @@ class TestDL1Generator(BaseGeneratorTest):
                 )
 
             with self.subTest("Check length of labels yielded by the generator"):
-                self.assertEqual(len(Y_input), self.batch_size)
+                self.assertEqual(len(y_input), self.batch_size)
 
 
 class TestUmamiCondAttGenerator(BaseGeneratorTest):
@@ -370,24 +370,24 @@ class TestUmamiCondAttGenerator(BaseGeneratorTest):
 
     def test_call(self):
         """Test the call of the generator."""
-        UmamiCondAtt_generator = umami_condition_generator(
-            X_Name=self.X_Name,
-            X_trk_Name=self.X_trk_Name,
+        umami_cond_att_generator = UmamiConditionGenerator(
+            x_name=self.x_name,
+            x_trk_name=self.x_trk_name,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
-            nConds=self.nConds,
+            n_conds=self.n_conds,
             **self.shared_settings,
         )
 
         # Get the generator
-        generator = UmamiCondAtt_generator()
+        generator = umami_cond_att_generator()
 
-        for _ in range(UmamiCondAtt_generator.length):
-            X_input, Y_input = next(generator)
+        for _ in range(umami_cond_att_generator.length):
+            x_input, y_input = next(generator)
 
             with self.subTest("Check shape of tracks yielded by the generator"):
                 self.assertEqual(
-                    X_input["input_1"].shape,
+                    x_input["input_1"].shape,
                     (
                         self.batch_size,
                         self.n_tracks_per_jet,
@@ -399,16 +399,16 @@ class TestUmamiCondAttGenerator(BaseGeneratorTest):
                 "Check shape of conditional info yielded by the generator"
             ):
                 self.assertEqual(
-                    X_input["input_2"].shape,
+                    x_input["input_2"].shape,
                     (
                         self.batch_size,
-                        self.nConds,
+                        self.n_conds,
                     ),
                 )
 
             with self.subTest("Check shape of jets yielded by the generator"):
                 self.assertEqual(
-                    X_input["input_3"].shape,
+                    x_input["input_3"].shape,
                     (
                         self.batch_size,
                         self.jet_features,
@@ -416,7 +416,7 @@ class TestUmamiCondAttGenerator(BaseGeneratorTest):
                 )
 
             with self.subTest("Check length of labels yielded by the generator"):
-                self.assertEqual(len(Y_input), self.batch_size)
+                self.assertEqual(len(y_input), self.batch_size)
 
 
 class TestUmamiGenerator(BaseGeneratorTest):
@@ -424,23 +424,23 @@ class TestUmamiGenerator(BaseGeneratorTest):
 
     def test_call(self):
         """Test the call of the generator."""
-        Umami_generator = umami_generator(
-            X_Name=self.X_Name,
-            X_trk_Name=self.X_trk_Name,
+        umami_generator = UmamiGenerator(
+            x_name=self.x_name,
+            x_trk_name=self.x_trk_name,
             n_jets=self.n_jets,
             sample_weights=self.sample_weights,
             **self.shared_settings,
         )
 
         # Get the generator
-        generator = Umami_generator()
+        generator = umami_generator()
 
-        for _ in range(Umami_generator.length):
-            X_input, Y_input = next(generator)
+        for _ in range(umami_generator.length):
+            x_input, y_input = next(generator)
 
             with self.subTest("Check shape of tracks yielded by the generator"):
                 self.assertEqual(
-                    X_input["input_1"].shape,
+                    x_input["input_1"].shape,
                     (
                         self.batch_size,
                         self.n_tracks_per_jet,
@@ -452,7 +452,7 @@ class TestUmamiGenerator(BaseGeneratorTest):
                 "Check shape of conditional info yielded by the generator"
             ):
                 self.assertEqual(
-                    X_input["input_2"].shape,
+                    x_input["input_2"].shape,
                     (
                         self.batch_size,
                         self.jet_features,
@@ -460,4 +460,4 @@ class TestUmamiGenerator(BaseGeneratorTest):
                 )
 
             with self.subTest("Check length of labels yielded by the generator"):
-                self.assertEqual(len(Y_input), self.batch_size)
+                self.assertEqual(len(y_input), self.batch_size)

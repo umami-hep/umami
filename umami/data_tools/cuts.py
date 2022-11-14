@@ -76,7 +76,7 @@ def get_sample_cuts(jets: np.ndarray, cuts: list) -> np.ndarray:
         properties = cut_entry[cut]
         cut_op = properties["operator"]
         cond = properties["condition"]
-        NaNCheck = properties.get("NaNcheck", False)
+        nan_check = properties.get("NaNcheck", False)
         # modulo operation: assume structure mod_[N]_[operator]
         # - [N] denoting "modulo N "
         # - [operator] denoting operator used for comparison to condition
@@ -112,7 +112,7 @@ def get_sample_cuts(jets: np.ndarray, cuts: list) -> np.ndarray:
                 else:
                     cond = float(cond)
                     cut_rejection = inverted_ops[cut_op](jets[cut], cond)
-                    if NaNCheck:
+                    if nan_check:
                         cut_rejection = cut_rejection & (jets[cut] == jets[cut])
             else:
                 raise KeyError(

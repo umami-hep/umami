@@ -7,7 +7,7 @@ import shap
 from matplotlib import colors
 
 
-def ShapleyOneFlavor(
+def shapley_one_flavour(
     model: object,
     test_data: np.ndarray,
     model_output: int = 2,
@@ -65,7 +65,7 @@ def ShapleyOneFlavor(
     plt.close("all")
 
 
-def ShapleyAllFlavors(
+def shapley_all_flavours(
     model: object,
     test_data: np.ndarray,
     feature_sets: int = 200,

@@ -10,7 +10,7 @@ from matplotlib.ticker import MaxNLocator
 from puma import Line2D, Line2DPlot
 
 from umami.configuration import global_config, logger
-from umami.data_tools import LoadJetsFromFile
+from umami.data_tools import load_jets_from_file
 from umami.metrics import get_rejection
 from umami.preprocessing_tools.utils import binarise_jet_labels
 from umami.tools import check_main_class_input
@@ -117,7 +117,7 @@ def get_comp_tagger_rej_dict(
         Dict with the rejections for against the main class for all given flavours.
     """
 
-    df, labels = LoadJetsFromFile(
+    df, labels = load_jets_from_file(
         filepath=file,
         class_labels=class_labels,
         n_jets=n_jets,

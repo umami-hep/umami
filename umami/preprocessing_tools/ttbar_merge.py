@@ -1,9 +1,10 @@
 """Helper functions for merging single leptonic and dileptonic ttbar samples."""
-import h5py
-import yaml
-import numpy as np
 import os
 from pathlib import Path
+
+import h5py
+import numpy as np
+import yaml
 from tqdm import tqdm
 
 from umami.configuration import Configuration, logger
@@ -129,8 +130,8 @@ class TTbarMerge:
 
             # save in index directory specified in config
             index_file = Path(self.index_dir) / f"ttbar_merge_{i}.yaml"
-            with open(index_file, "w") as f:
-                yaml.dump(index_dict, f)
+            with open(index_file, "w") as f_index:
+                yaml.dump(index_dict, f_index)
 
     def merge(self, file_range: list, index_dir: str) -> None:
         """
@@ -156,8 +157,8 @@ class TTbarMerge:
         # loop over index files loading the indices and merging the samples
         logger.info("Merging samples into output files")
         for index_file in tqdm(index_files):
-            with open(index_file, "r") as f:
-                index_dict = yaml.load(f, Loader=yaml.FullLoader)
+            with open(index_file, "r") as f_index:
+                index_dict = yaml.load(f_index, Loader=yaml.FullLoader)
 
             # get the output file name
             output_file = Path(self.out_dir) / index_file.name.replace("yaml", "h5")
@@ -244,8 +245,8 @@ class TTbarMerge:
         """
         try:
             input_channel = self.config.config[channel]
-        except KeyError as e:
-            raise KeyError(f"No input files for channel {channel}") from e
+        except KeyError as error:
+            raise KeyError(f"No input files for channel {channel}") from error
 
         input_path = Path(input_channel["path"])
         file_list = list(input_path.rglob(input_channel["file_pattern"]))
