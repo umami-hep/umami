@@ -195,7 +195,7 @@ if __name__ == "__main__":
         config.copy_to_out_dir("write")
 
         Writer = upt.TrainSampleWriter(config, compression=config.config["compression"])
-        Writer.write_train_sample()
+        Writer.write_train_sample(chunk_size=args.chunk_size)
 
     elif args.to_records:
         import umami.tf_tools as utft

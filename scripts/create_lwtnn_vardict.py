@@ -160,11 +160,7 @@ def GetJetVariables(
         for item in sublist
     ]
     jet_variables = []
-    jet_dict = {}
-
-    # Iterate over the jet variables in the scale dict
-    for elem in scale_dict["jets"]:
-        jet_dict[elem["name"]] = elem
+    jet_dict = scale_dict["jets"]
 
     # Process the jet variables and add them to the list
     for elem in jetVars:

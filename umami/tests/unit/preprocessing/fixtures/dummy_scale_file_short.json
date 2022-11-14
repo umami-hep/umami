@@ -1,16 +1,14 @@
 {
-    "jets": [
-        {
-            "name": "eta_btagJes",
+    "jets": {
+        "eta_btagJes": {
             "shift": 1,
             "scale": 2,
             "default": 0
         },
-        {
-            "name": "pt_btagJes",
+        "pt_btagJes": {
             "shift": 5,
             "scale": 2,
             "default": 1
         }
-    ]
+    }
 }

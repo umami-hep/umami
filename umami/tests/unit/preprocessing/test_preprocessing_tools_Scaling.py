@@ -5,6 +5,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
+from numpy.lib.recfunctions import unstructured_to_structured as u2s
 
 from umami.configuration import logger, set_log_level
 from umami.preprocessing_tools import (
@@ -92,15 +93,14 @@ class ApplyScalingJetsTestCase(unittest.TestCase):
                 "JetFitter_isDefaults": np.ones(5) * 2,
             }
         )
-        self.scale_dict = [
-            {
-                "name": var,
+        self.scale_dict = {
+            var: {
                 "shift": 1,
                 "scale": 2,
                 "default": 0,
             }
             for var in self.variable_list
-        ]
+        }
 
     def test_scaling_jets(self):
         """Testing the default behaviour."""
@@ -137,26 +137,23 @@ class ApplyScalingJetsTestCase(unittest.TestCase):
 
     def test_ValueError_scale_value(self):
         """Test error raise if variable not in scale dict."""
-        faulty_scale_dict = [
-            {
-                "name": "absEta_btagJes",
+        faulty_scale_dict = {
+            "absEta_btagJes": {
                 "shift": 1,
                 "scale": 0,
                 "default": 0,
             },
-            {
-                "name": "absEta_btagJes",
+            "pt_btagJes": {
                 "shift": 1,
                 "scale": np.inf,
                 "default": 0,
             },
-            {
-                "name": "absEta_btagJes",
+            "JetFitter_mass": {
                 "shift": 1,
                 "scale": 0,
                 "default": 0,
             },
-        ]
+        }
 
         with self.assertRaises(ValueError):
             apply_scaling_jets(
@@ -180,28 +177,6 @@ class ScalingTestCase(unittest.TestCase):
             os.path.dirname(__file__), "fixtures/dummy_var_file.yaml"
         )
 
-    def test_join_mean_scale(self):
-        """Test joining the scaled mean."""
-        self.first_scale_dict = {"variable": {"shift": 5, "scale": 2}}
-        self.second_scale_dict = {"variable": {"shift": 3, "scale": 1}}
-        self.combined_mean = 3.8
-        self.combined_std = 1.7776388834631178
-
-        scaling_class = CalculateScaling(self.config)
-
-        combined_mean, combined_std = scaling_class.join_mean_scale(
-            first_scale_dict=self.first_scale_dict,
-            second_scale_dict=self.second_scale_dict,
-            variable="variable",
-            first_N=10,
-            second_N=15,
-        )
-
-        with self.subTest():
-            self.assertEqual(combined_mean, self.combined_mean)
-        with self.subTest():
-            self.assertEqual(combined_std, self.combined_std)
-
     def test_join_scale_dicts_trks(self):
         """Test joining of track scale dicts."""
         self.first_scale_dict = {
@@ -219,11 +194,11 @@ class ScalingTestCase(unittest.TestCase):
 
         scaling_class = CalculateScaling(self.config)
 
-        combined_scale_dict, combined_nTrks = scaling_class.join_scale_dicts_trks(
+        combined_scale_dict, combined_nTrks = scaling_class.join_scale_dicts(
             first_scale_dict=self.first_scale_dict,
             second_scale_dict=self.second_scale_dict,
-            first_nTrks=10,
-            second_nTrks=15,
+            first_n=10,
+            second_n=15,
         )
 
         with self.subTest():
@@ -241,87 +216,51 @@ class ScalingTestCase(unittest.TestCase):
                     self.control_dict[key]["scale"],
                 )
 
-    def test_join_scale_dicts_jets(self):
+    def test_join_scale_dicts(self):
         """Test joining scale dicts of jets."""
-        self.first_scale_dict = [
-            {"name": "variable", "shift": 5, "scale": 2, "default": None},
-            {"name": "variable_2", "shift": 4, "scale": 2, "default": None},
-        ]
-        self.second_scale_dict = [
-            {"name": "variable", "shift": 3, "scale": 1, "default": None},
-            {"name": "variable_2", "shift": 1, "scale": 0.5, "default": None},
-        ]
-        self.control_dict = [
-            {
-                "name": "variable",
+        self.first_scale_dict = {
+            "variable": {"shift": 5, "scale": 2, "default": None},
+            "variable_2": {"shift": 4, "scale": 2, "default": None},
+        }
+        self.second_scale_dict = {
+            "variable": {"shift": 3, "scale": 1, "default": None},
+            "variable_2": {"shift": 1, "scale": 0.5, "default": None},
+        }
+        self.control_dict = {
+            "variable": {
                 "shift": 3.8,
                 "scale": 1.7776388834631178,
                 "default": None,
             },
-            {
-                "name": "variable_2",
+            "variable_2": {
                 "shift": 2.2,
                 "scale": 1.977371993328519,
                 "default": None,
             },
-        ]
+        }
 
         scaling_class = CalculateScaling(self.config)
 
-        combined_scale_dict, combined_n_jets = scaling_class.join_scale_dicts_jets(
+        combined_scale_dict, combined_n_jets = scaling_class.join_scale_dicts(
             first_scale_dict=self.first_scale_dict,
             second_scale_dict=self.second_scale_dict,
-            first_n_jets=10,
-            second_n_jets=15,
+            first_n=10,
+            second_n=15,
         )
 
         with self.subTest():
             self.assertEqual(combined_n_jets, 25)
 
-        for var, _ in enumerate(combined_scale_dict):
+        for varname, scale_dict in combined_scale_dict.items():
             with self.subTest():
                 self.assertEqual(
-                    combined_scale_dict[var]["name"],
-                    self.control_dict[var]["name"],
+                    scale_dict["shift"],
+                    self.control_dict[varname]["shift"],
                 )
             with self.subTest():
                 self.assertEqual(
-                    combined_scale_dict[var]["shift"],
-                    self.control_dict[var]["shift"],
-                )
-            with self.subTest():
-                self.assertEqual(
-                    combined_scale_dict[var]["scale"],
-                    self.control_dict[var]["scale"],
-                )
-
-    def test_dict_in(self):
-        """Test dictionary."""
-        self.varname = "variable"
-        self.average = 2
-        self.std = 1
-        self.default = None
-        self.control_dict = {
-            "name": self.varname,
-            "shift": self.average,
-            "scale": self.std,
-            "default": self.default,
-        }
-
-        scaling_class = CalculateScaling(self.config)
-
-        combined_scale_dict = scaling_class.dict_in(
-            varname=self.varname,
-            average=self.average,
-            std=self.std,
-            default=self.default,
-        )
-
-        for key, opt in combined_scale_dict.items():
-            with self.subTest():
-                self.assertEqual(
-                    opt,
-                    self.control_dict[key],
+                    scale_dict["scale"],
+                    self.control_dict[varname]["scale"],
                 )
 
     def test_get_scaling_tracks(self):
@@ -329,26 +268,27 @@ class ScalingTestCase(unittest.TestCase):
         njet = 3
         ntrack = 40
         nvar = 2
-        self.data = np.arange(0, 240, 1).reshape((njet, ntrack, nvar))
         self.var_names = ["variable", "variable_2"]
+        dtype = np.dtype([(n, "f4") for n in self.var_names])
+        self.data = u2s(np.arange(0, 240, 1).reshape((njet, ntrack, nvar)), dtype)
         self.track_mask = np.ones((njet, ntrack)).astype(bool)
 
         self.nTrks_control = 120
         self.scale_dict_control = {
-            "variable": {"shift": 119, "scale": 69.27962663486768},
-            "variable_2": {"shift": 120, "scale": 69.27962663486768},
+            "variable": {"shift": 119, "scale": 69.27962493896484},
+            "variable_2": {"shift": 120, "scale": 69.27962493896484},
         }
 
         scaling_class = CalculateScaling(self.config)
 
-        scale_dict, nTrks = scaling_class.get_scaling_tracks(
+        n_trk, scale_dict, _ = scaling_class.get_scaling_tracks(
             data=self.data,
             var_names=self.var_names,
             track_mask=self.track_mask,
         )
 
         with self.subTest():
-            self.assertEqual(nTrks, self.nTrks_control)
+            self.assertEqual(n_trk, self.nTrks_control)
 
         for key, var in scale_dict.items():
             with self.subTest():
@@ -374,7 +314,7 @@ class ScalingTestCase(unittest.TestCase):
 
         scaling_class = CalculateScaling(self.config)
 
-        varname, average, std, default = scaling_class.get_scaling(
+        varname, scale_dict = scaling_class.get_scaling(
             vec=self.vec,
             varname=self.varname,
             custom_defaults_vars=self.custom_defaults_vars,
@@ -383,13 +323,13 @@ class ScalingTestCase(unittest.TestCase):
         with self.subTest():
             self.assertEqual(varname, self.varname)
         with self.subTest():
-            self.assertEqual(average, self.average_control)
+            self.assertEqual(scale_dict["shift"], self.average_control)
         with self.subTest():
-            self.assertEqual(std, self.std_control)
+            self.assertEqual(scale_dict["scale"], self.std_control)
         with self.subTest():
-            self.assertEqual(default, self.average_control)
+            self.assertEqual(scale_dict["default"], self.average_control)
 
-        varname, average, std, default = scaling_class.get_scaling(
+        varname, scale_dict = scaling_class.get_scaling(
             vec=self.vec,
             varname="variable_2",
             custom_defaults_vars=self.custom_defaults_vars,
@@ -398,8 +338,8 @@ class ScalingTestCase(unittest.TestCase):
         with self.subTest():
             self.assertEqual(varname, "variable_2")
         with self.subTest():
-            self.assertEqual(average, self.average_control)
+            self.assertEqual(scale_dict["shift"], self.average_control)
         with self.subTest():
-            self.assertEqual(std, self.std_control)
+            self.assertEqual(scale_dict["scale"], self.std_control)
         with self.subTest():
-            self.assertEqual(default, 1)
+            self.assertEqual(scale_dict["default"], 1)

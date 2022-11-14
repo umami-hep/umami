@@ -33,7 +33,7 @@ class ConvertTest(unittest.TestCase):
         x_train = np.ones(shape=(3, 41))
         x_trks_train = np.ones(shape=(3, 40, 5))
         y_train = np.ones(shape=(3, 3))
-        y_trks_train = np.ones(shape=(3, 40, 9))
+        y_trks_train = np.ones(shape=(3, 40))
         # save dummy data to temporary file
         self.tfh5 = tempfile.NamedTemporaryFile(  # pylint: disable=R1732
             suffix="-resampled_scaled_shuffled.h5"
@@ -42,7 +42,9 @@ class ConvertTest(unittest.TestCase):
             out_file.create_dataset("jets/inputs", data=x_train)
             out_file.create_dataset(f"{tracks_name}/inputs", data=x_trks_train)
             out_file.create_dataset("jets/labels_one_hot", data=y_train)
-            out_file.create_dataset(f"{tracks_name}/labels", data=y_trks_train)
+            out_file.create_dataset(
+                f"{tracks_name}/labels/truthOriginLabel", data=y_trks_train
+            )
         self.config.outfile_name = self.tfh5.name.replace(
             "-resampled_scaled_shuffled.h5", ".h5"
         )
@@ -60,8 +62,8 @@ class ConvertTest(unittest.TestCase):
             "n_trks": {"tracks": 40},
             "n_trk_features": {"tracks": 5},
             "n_add_vars": None,
-            "n_trks_classes": {"tracks": 9},
-            "n_trks_labels": {"tracks": 40},
+            "n_trks_classes": {"tracks": 8},
+            "n_trks_labels": {"tracks": 1},
         }
         metadata_file = os.path.join(record_dir.name, "metadata.json")
         with open(metadata_file, "r") as metadata:
@@ -83,8 +85,8 @@ class ConvertTest(unittest.TestCase):
             "n_trks": {"tracks": 40},
             "n_trk_features": {"tracks": 5},
             "n_add_vars": 4,
-            "n_trks_classes": {"tracks": 9},
-            "n_trks_labels": {"tracks": 40},
+            "n_trks_classes": {"tracks": 8},
+            "n_trks_labels": {"tracks": 1},
         }
         metadata_file = os.path.join(record_dir.name, "metadata.json")
         with open(metadata_file, "r") as metadata:

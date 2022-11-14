@@ -495,15 +495,14 @@ class PreprocessConfiguration(Configuration):
         # if scale dict file exists, copy it as well
         if Path(self.dict_file).is_file():
             logger.info("Scale dict exists and will be copied.")
-            new_scale_dict_path = out_dir / Path(self.dict_file).name
-            config["dict_file"] = str(new_scale_dict_path.resolve())
-            config["parameters"][".dict_file"] = str(new_scale_dict_path.resolve())
-            logger.info("Copying config file to %s", new_scale_dict_path)
-            if new_scale_dict_path.is_file():
-                logger.warning(
-                    "Overwriting existing scale dict at %s", new_scale_dict_path
-                )
-            shutil.copyfile(self.dict_file, new_scale_dict_path)
+            new_sd_path = out_dir / Path(self.dict_file).name
+            config["dict_file"] = str(new_sd_path.resolve())
+            config["parameters"][".dict_file"] = str(new_sd_path.resolve())
+            logger.info("Copying config file to %s", new_sd_path)
+            if new_sd_path.is_file():
+                logger.warning("Overwriting existing scale dict at %s", new_sd_path)
+            if self.dict_file != str(new_sd_path):
+                shutil.copyfile(self.dict_file, new_sd_path)
 
         # copy config
         logger.info("Copying config file to %s", new_config_path)

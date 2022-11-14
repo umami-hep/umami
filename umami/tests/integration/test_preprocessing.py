@@ -381,7 +381,7 @@ class TestPreprocessing(unittest.TestCase):
         self.var_dict_dips = self.test_dir / var_dict_dips_source.name
         self.var_dict_dl1r = self.test_dir / var_dict_dl1r_source.name
         self.var_dict_dips_hits = self.test_dir / var_dict_dips_hits_source.name
-        self.scale_dict = self.test_dir / "PFlow-scale_dict.json"
+        self.scale_dict = self.test_dir / "scale_dict.json"
         self.output = self.test_dir / "PFlow-hybrid_70-test.h5"
         self.output_validation = self.test_dir / "PFlow-hybrid-validation-test.h5"
         self.indices = self.test_dir / "indices.h5"

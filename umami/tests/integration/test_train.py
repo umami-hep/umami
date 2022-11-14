@@ -116,7 +116,7 @@ def prepareConfig(
         train_file = (
             preprocess_dir / "PFlow-hybrid_70-test-resampled_scaled_shuffled.h5"
         )
-        scale_dict = preprocess_dir / "PFlow-scale_dict.json"
+        scale_dict = preprocess_dir / "scale_dict.json"
 
         # Copy preprocess configs and var dict
         copyfile(preprocessing_config_source, preprocessing_config)

@@ -5,7 +5,7 @@ ntuple_path: &ntuple_path <path_palce_holder>/ntuples/
 .base_path: &base_path <base_path_palce_holder>
 
 # Path where the hybrid samples will be saved
-sample_path: &sample_path !join [*base_path, /prepared_samples]
+sample_path: &sample_path !join [*base_path, /prepared]
 
 # Path where the merged and ready-to-train samples are saved
 file_path: &file_path !join [*base_path, /preprocessed]
@@ -17,7 +17,7 @@ file_path: &file_path !join [*base_path, /preprocessed]
 .var_file: &var_file <path_palce_holder>/umami/umami/configs/Dips_Variables.yaml
 
 # Dictfile for the scaling and shifting (json)
-.dict_file: &dict_file !join [*base_path, /scale_dicts/PFlow-scale_dict.json]
+.dict_file: &dict_file !join [*base_path, /scale_dict.json]
 
 # Intermediate file for the training sample indicies used in h5 format
 .intermediate_index_file: &intermediate_index_file !join [*file_path, /indicies.h5]

@@ -134,7 +134,7 @@ dict_file: *dict_file
 compression: lzf
 
 # save final output files with specified precision
-precision: float32
+precision: float16
 
 # concatenate jet inputs with each track's inputs in the final output file
 concat_jet_tracks: False

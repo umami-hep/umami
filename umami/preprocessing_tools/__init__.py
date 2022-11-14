@@ -37,7 +37,6 @@ from umami.preprocessing_tools.Scaling import (
     CalculateScaling,
     apply_scaling_jets,
     apply_scaling_trks,
-    generate_default_dict,
     get_track_mask,
 )
 from umami.preprocessing_tools.utils import (
