@@ -1,6 +1,7 @@
 # Changelog
 
 ### Latest
+- Fixing check if argument --file_range is passed when using sample_merger, adding a warning if not used [!674](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/674)
 - Fixing `invalid-name` pylint errors [!669](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/669)
 - Update scale dict and track label saving [!665](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/665)
 

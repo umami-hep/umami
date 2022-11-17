@@ -143,6 +143,12 @@ class TTbarMerge:
             List of output files to merge, allows splitting across multiple jobs.
         index_dir : str
             Directory containing index file dictionaries.
+
+         Raises
+        ------
+        ValueError
+            If the file range passed via --file_range does not
+            consist of two arguments
         """
 
         if index_dir is None:
@@ -150,9 +156,22 @@ class TTbarMerge:
 
         # load index files from index directory or subset if file_range is specified
         index_files = list(Path(index_dir).rglob("ttbar_merge_*.yaml"))
-        if len(file_range) != 0:
-            print(f"Using files {file_range[0]} to {file_range[1]}")
+        if file_range is not None:
+            if len(file_range) != 2:
+                raise ValueError(
+                    'Please pass the file range as "--filerange <file number start>'
+                    ' <file number end>". The passed argument for the file range is'
+                    f" {file_range}."
+                )
+            logger.info("Using files %s to %s", file_range[0], int(file_range[1]) - 1)
             index_files = index_files[int(file_range[0]) : int(file_range[1])]
+        else:
+            logger.warning(
+                "You did not specify a file range for the merging procedure.Consider"
+                ' using the option "--filerange <file number start> <file number end>"'
+                " to split the merging across multiple jobs. The <file number end> is"
+                " exclusive."
+            )
 
         # loop over index files loading the indices and merging the samples
         logger.info("Merging samples into output files")
