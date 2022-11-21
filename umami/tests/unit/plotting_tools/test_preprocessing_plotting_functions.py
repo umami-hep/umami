@@ -31,7 +31,9 @@ class PreprocessingPlotsTestCase(unittest.TestCase):
 
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
-        self.actual_plots_dir = f"{self.tmp_dir.name}/"
+        self.actual_plots_dir = os.path.join(
+            os.path.dirname(__file__), "plots_act/"
+        )  # f"{self.tmp_dir.name}/"
         self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
 
         run(
@@ -40,7 +42,7 @@ class PreprocessingPlotsTestCase(unittest.TestCase):
                 os.path.join(
                     "https://umami-ci-provider.web.cern.ch/",
                     "preprocessing",
-                    "ci_preprocessing_plotting.h5",
+                    "ci_preprocessing_plotting_20221117.h5",
                 ),
                 "--directory-prefix",
                 self.actual_plots_dir,
@@ -53,7 +55,7 @@ class PreprocessingPlotsTestCase(unittest.TestCase):
         preprocessing_plots(
             sample=os.path.join(
                 self.actual_plots_dir,
-                "ci_preprocessing_plotting.h5",
+                "ci_preprocessing_plotting_20221117.h5",
             ),
             var_dict={
                 "train_variables": {"JetKinematics": ["absEta_btagJes", "pt_btagJes"]},

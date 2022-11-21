@@ -12,9 +12,9 @@ from numpy.lib.recfunctions import (
 )
 from scipy.stats import binned_statistic_2d
 
-from umami.configuration import global_config, logger
+from umami.configuration import logger
 from umami.plotting_tools import preprocessing_plots
-from umami.preprocessing_tools import get_variable_dict
+from umami.preprocessing_tools import binarise_jet_labels, get_variable_dict
 from umami.preprocessing_tools.scaling import (
     apply_scaling_jets,
     apply_scaling_trks,
@@ -81,36 +81,6 @@ class TrainSampleWriter:
         self.h5file = None
         self.jet_group = None
         self.track_groups = None
-
-    def map_flavour_labels(
-        self,
-        flavour: np.ndarray,
-    ):
-        """
-        Map jet flavour labels to ready-to-train format. The labels in
-        the class_labels config are enumerated to define the label used
-        for training.
-
-        Parameters
-        ----------
-        flavour : np.ndarray
-            array of flavour labels, e.g. 0, 4, 5
-
-        Returns
-        -------
-        np.ndarray
-            array of flavour labels, with e.g. 0, 4, 5 -> 0, 1, 2
-        """
-        fcs = global_config.flavour_categories
-        flavour_map = {}
-        for i, class_label in enumerate(self.config.sampling["class_labels"]):
-            class_info = fcs[class_label]
-            flavour_map[class_info["label_value"]] = i
-
-        for key, val in flavour_map.items():
-            flavour[flavour == key] = val
-
-        return flavour
 
     def load_scaled_generator(
         self,
@@ -192,16 +162,15 @@ class TrainSampleWriter:
                 # Load jets
                 jets = in_file["/jets"].fields(self.jet_vars)[indices_selected]
                 labels = in_file["/labels"][indices_selected]
+                label_classes = list(range(len(self.class_labels)))
+                labels_one_hot = binarise_jet_labels(
+                    labels=labels, internal_labels=label_classes
+                )
 
                 # Loop over the columns and change all floats to full precision
                 for iter_var in self.jet_vars:
                     if jets[iter_var].dtype.kind == "f":
                         jets[iter_var] = jets[iter_var].astype(np.float32)
-
-                # keep the jet flavour
-                flavour = in_file["/jets"].fields([self.variable_config["label"]])[
-                    indices_selected
-                ]
 
                 # If no weights are available, init ones as weights
                 if "weight" not in self.jet_vars:
@@ -216,7 +185,7 @@ class TrainSampleWriter:
                 rng.shuffle(rng_index)
                 jets = jets[rng_index]
                 labels = labels[rng_index]
-                flavour = flavour[rng_index]
+                labels_one_hot = labels_one_hot[rng_index]
 
                 # Apply the scaling for the jet variables
                 jets = apply_scaling_jets(
@@ -263,7 +232,7 @@ class TrainSampleWriter:
                         valid.append(valid_flag)
                         track_labels.append(trk_labels)
 
-                yield jets, tracks, labels, track_labels, valid, flavour
+                yield jets, tracks, labels, labels_one_hot, track_labels, valid
 
     def better_shuffling(
         self,
@@ -514,17 +483,17 @@ class TrainSampleWriter:
         )
 
         jet_group.create_dataset(
-            "labels_one_hot",
-            compression=None,
-            dtype=np.uint8,
-            shape=(n_jets, labels_one_hot.shape[1]),
-        )
-
-        jet_group.create_dataset(
             "labels",
             compression=None,
             dtype=np.uint8,
             shape=(n_jets,),
+        )
+
+        jet_group.create_dataset(
+            "labels_one_hot",
+            compression=None,
+            dtype=np.uint8,
+            shape=(n_jets, labels_one_hot.shape[1]),
         )
 
         jet_group.create_dataset(
@@ -656,9 +625,9 @@ class TrainSampleWriter:
             jets,
             tracks,
             labels,
+            labels_one_hot,
             track_labels,
             valid,
-            flavour,
         ) = next(load_generator)
 
         # final absolute jet index of this chunk
@@ -673,17 +642,11 @@ class TrainSampleWriter:
         jets = repack_fields(jets[self.jet_vars])
         jets = structured_to_unstructured(jets)
 
-        # Reform the flavour to unstructured array
-        flavour = repack_fields(flavour[self.variable_config["label"]])
-
-        # map 0, 4, 5 -> 0, 1 2 for training
-        flavour = self.map_flavour_labels(flavour)
-
         if chunk_counter == 0:
             self.jet_group = self.init_jet_datasets(
                 n_jets,
                 jets,
-                labels,
+                labels_one_hot,
             )
 
         if chunk_counter == 0 and self.save_tracks:
@@ -696,8 +659,8 @@ class TrainSampleWriter:
 
         # write jets
         self.jet_group["inputs"][jet_idx:jet_idx_end] = jets
-        self.jet_group["labels_one_hot"][jet_idx:jet_idx_end] = labels
-        self.jet_group["labels"][jet_idx:jet_idx_end] = flavour
+        self.jet_group["labels"][jet_idx:jet_idx_end] = labels
+        self.jet_group["labels_one_hot"][jet_idx:jet_idx_end] = labels_one_hot
         self.jet_group["weight"][jet_idx:jet_idx_end] = weights
 
         # write tracks

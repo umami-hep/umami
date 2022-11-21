@@ -71,27 +71,24 @@ def plot_variable(
 
     # Loop over the flavours
     for flav_counter, flavour in enumerate(class_labels):
-
         # This is the case if a pandas Dataframe is given
         try:
-            flavour_jets = df_in[variable][
-                labels[:, flav_counter] == 1
-            ].values.flatten()
+            flavour_jets = df_in[variable][labels == flav_counter].values.flatten()
 
         # This is the case when a numpy ndarray is given
         except AttributeError:
-            flavour_jets = df_in[variable][labels[:, flav_counter] == 1].flatten()
+            flavour_jets = df_in[variable][labels == flav_counter].flatten()
 
         # This is the case if the training set is already converted to X_train etc.
         except IndexError as error:
             if var_type.casefold() == "jets":
                 flavour_jets = df_in[:, variable_index][
-                    labels[:, flav_counter] == 1
+                    labels == flav_counter
                 ].flatten()
 
             elif var_type.casefold() == "tracks":
                 flavour_jets = df_in[:, :, variable_index][
-                    labels[:, flav_counter] == 1
+                    labels == flav_counter
                 ].flatten()
 
             else:
@@ -347,7 +344,7 @@ def preprocessing_plots(
     with h5py.File(sample, "r") as infile:
         # Get the labels of the jets to plot
         try:
-            labels = infile["jets/labels_one_hot"][selected_indicies]
+            labels = infile["jets/labels"][selected_indicies]
         except KeyError:
             labels = infile["/labels"][selected_indicies]
 
