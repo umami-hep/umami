@@ -9,7 +9,6 @@ import h5py
 import numpy as np
 import pandas as pd
 from scipy.stats import binned_statistic_2d
-from sklearn.preprocessing import label_binarize
 from tqdm import tqdm
 
 from umami.configuration import logger
@@ -98,12 +97,9 @@ def sampling_generator(
             # Get the indicies which are to be loaded
             loading_indices = indices[index_tuple[0] : index_tuple[1]]
 
-            # Binarize the jet labels
+            # save labels as int labels 0, 1, ..., nclasses-1
             label_classes.append(-1)
-            labels = label_binarize(
-                (np.ones(index_tuple[1] - index_tuple[0]) * label),
-                classes=label_classes,
-            )[:, :-1]
+            labels = (np.ones(index_tuple[1] - index_tuple[0]) * label).astype(int)
             label_classes.pop()
 
             # Check for duplicates
@@ -677,11 +673,9 @@ class Resampling:
             for index_tuple in tupled_indices:
                 loading_indices = indices[index_tuple[0] : index_tuple[1]]
                 label_classes.append(-1)
-                # One hot encode the labels
-                labels = label_binarize(
-                    (np.ones(index_tuple[1] - index_tuple[0]) * label),
-                    classes=label_classes,
-                )[:, :-1]
+                # save labels as int labels 0, 1, ..., nclasses-1
+                labels = (np.ones(index_tuple[1] - index_tuple[0]) * label).astype(int)
+
                 label_classes.pop()
                 # Yield the jets and labels
                 # If tracks are used, also yield the tracks
@@ -836,7 +830,7 @@ class Resampling:
                         data=labels,
                         compression="gzip",
                         chunks=True,
-                        maxshape=(None, labels.shape[1]),
+                        maxshape=(None,),
                     )
                     if self.save_tracks:
                         for i, tracks_name in enumerate(self.tracks_names):

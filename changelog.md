@@ -1,11 +1,9 @@
 # Changelog
 
 ### Latest
+- Simplifying mapping function one-hot labels -> labels in the writing step of the preprocessing, remove one-hot labels in resampling step, add them in writing step[!664](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/664)
 - Fixing check if argument --file_range is passed when using sample_merger, adding a warning if not used [!674](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/674)
 - Fixing `invalid-name` pylint errors [!669](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/669)
-- Update scale dict and track label saving [!665](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/665)
-
-
 - Update scale dict and track label saving [!665](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/665)
 
 ### [v0.16](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.16) (11.11.2022)

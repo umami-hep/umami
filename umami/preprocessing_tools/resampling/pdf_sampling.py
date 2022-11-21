@@ -20,7 +20,7 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     read_dataframe_repetition,
     sampling_generator,
 )
-from umami.preprocessing_tools.utils import binarise_jet_labels, get_variable_dict
+from umami.preprocessing_tools.utils import get_variable_dict
 
 
 class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
@@ -1527,9 +1527,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Get the labels
         label = self.class_labels_map[preparation_sample.category]
 
-        # Get the label classes
-        label_classes = list(range(len(self.class_labels_map)))
-
         # Set duplicate to True for resampling
         duplicate = True
 
@@ -1561,11 +1558,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             # Check if another chunk can be loaded
             load_chunk = load_more
 
-            # One hot encode the loaded labels
-            labels = binarise_jet_labels(
-                labels=(np.ones(len(indices)) * label),
-                internal_labels=label_classes,
-            )
+            # save labels as int labels 0, 1, ..., nclasses-1
+            labels = (np.ones(len(indices)) * label).astype(int)
 
             # Open the input file and read the jets and tracks
             # in a fancy way which allows double index loading
@@ -1614,7 +1608,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         data=labels,
                         compression=self.config.compression,
                         chunks=True,
-                        maxshape=(None, labels.shape[1]),
+                        maxshape=(None,),
                     )
                     if self.save_tracks:
                         for i, tracks_name in enumerate(self.tracks_names):
@@ -2254,7 +2248,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                             ],
                         ]
                     )
-                    labels = np.vstack(
+                    labels = np.concatenate(
                         (
                             labels,
                             df_in["labels"][
@@ -2314,7 +2308,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         data=labels,
                         compression="gzip",
                         chunks=True,
-                        maxshape=(None, labels.shape[1]),
+                        maxshape=(None,),
                     )
 
                     # If tracks are used, save them also

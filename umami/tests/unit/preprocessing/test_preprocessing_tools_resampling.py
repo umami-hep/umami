@@ -154,7 +154,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
             self.assertEqual(jets.shape, (self.chunk_size,))
 
         with self.subTest("Test labels shape"):
-            self.assertEqual(labels.shape, (self.chunk_size, len(self.label_classes)))
+            self.assertEqual(labels.shape, (self.chunk_size,))
 
     def test_tracks(self):
         """Testing with tracks yield"""
@@ -179,7 +179,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
             self.assertEqual(tracks[1].shape, (self.chunk_size, self.n_tracks))
 
         with self.subTest("Test labels shape"):
-            self.assertEqual(labels.shape, (self.chunk_size, len(self.label_classes)))
+            self.assertEqual(labels.shape, (self.chunk_size,))
 
     def test_no_duplicate(self):
         """Testing with tracks yield with no duplicates."""
@@ -204,7 +204,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
             self.assertEqual(tracks[1].shape, (self.chunk_size, self.n_tracks))
 
         with self.subTest("Test labels shape"):
-            self.assertEqual(labels.shape, (self.chunk_size, len(self.label_classes)))
+            self.assertEqual(labels.shape, (self.chunk_size,))
 
     def test_no_duplicate_no_tracks(self):
         """Testing no tracks yield with no duplicates."""
@@ -225,7 +225,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
             self.assertEqual(jets.shape, (self.chunk_size,))
 
         with self.subTest("Test labels shape"):
-            self.assertEqual(labels.shape, (self.chunk_size, len(self.label_classes)))
+            self.assertEqual(labels.shape, (self.chunk_size,))
 
     def test_duplicate_error(self):
         """Test duplicate TypeError."""
