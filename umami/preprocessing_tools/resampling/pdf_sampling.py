@@ -884,7 +884,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         save_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            f"inter_func_{store_key}",
+            f"inter_func_{store_key}_training"
+            if not self.use_validation_samples
+            else f"inter_func_{store_key}_validation",
         )
 
         # Save the interpolation function to file
@@ -1093,7 +1095,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         load_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            f"inter_func_{store_key}",
+            f"inter_func_{store_key}_training"
+            if not self.use_validation_samples
+            else f"inter_func_{store_key}_validation",
         )
 
         # Load the interpolation function
@@ -1178,7 +1182,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         load_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            "target_data.json",
+            "target_data_training.json"
+            if not self.use_validation_samples
+            else "target_data_validation.json",
         )
 
         # Load the target info from file
@@ -1501,7 +1507,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         load_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            "target_data.json",
+            "target_data_training.json"
+            if not self.use_validation_samples
+            else "target_data_validation.json",
         )
 
         # Load the target info from file
@@ -1745,7 +1753,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         save_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            "target_data.json",
+            "target_data_training.json"
+            if not self.use_validation_samples
+            else "target_data_validation.json",
         )
 
         # Ensure the output path exists
@@ -1770,7 +1780,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         load_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            "target_data.json",
+            "target_data_training.json"
+            if not self.use_validation_samples
+            else "target_data_validation.json",
         )
 
         # Load target data
@@ -1905,7 +1917,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         load_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            "target_data.json",
+            "target_data_training.json"
+            if not self.use_validation_samples
+            else "target_data_validation.json",
         )
 
         # Load the target data
@@ -1989,7 +2003,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         load_name = os.path.join(
             self.resampled_path,
             "PDF_sampling",
-            "target_data.json",
+            "target_data_training.json"
+            if not self.use_validation_samples
+            else "target_data_validation.json",
         )
 
         # Load number to sample
