@@ -284,6 +284,7 @@ class PreprocessConfiguration(Configuration):
         )
         self.load_config_file()
         self.get_configuration()
+        self.check_resampling_options()
         self.check_tracks_names()
         self.check_deprecated_keys()
 
@@ -335,6 +336,47 @@ class PreprocessConfiguration(Configuration):
                     "Setting %s to default value %s", elem, self.default_config[elem]
                 )
                 setattr(self, elem, self.default_config[elem])
+
+    def check_resampling_options(self):
+        """
+        Checking that n_jets* are defined correctly for the given resampling method.
+
+        Raises
+        ------
+        ValueError
+            If the value is smaller than 1 for all methods beside pdf
+        """
+
+        used_method = self.sampling["method"]
+        n_jets = int(self.sampling["options"]["n_jets"])
+        n_jets_val = (
+            int(self.sampling["options"]["n_jets_validation"])
+            if "n_jets_validation" in self.sampling["options"]
+            else None
+        )
+
+        # Loop over the n_jets which are to check
+        for n_jets_iter, name_iter in zip(
+            (n_jets, n_jets_val),
+            ("n_jets", "n_jets_validation"),
+        ):
+            if n_jets_iter is not None:
+                # Check that n_jets
+                if used_method != "pdf":
+                    if n_jets_iter <= 0:
+                        raise ValueError(
+                            f"You defined resampling method {used_method} with"
+                            f" {name_iter} <= 0! Only values above zero are support for"
+                            " this method!"
+                        )
+
+                else:
+                    if n_jets_iter < 1 and n_jets_iter != -1:
+                        raise ValueError(
+                            f"You defined resampling method {used_method} with"
+                            f" {name_iter} <= 0! Only values above zero and -1 are"
+                            " support for this method!"
+                        )
 
     def get_file_name(
         self,
