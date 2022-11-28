@@ -30,7 +30,7 @@ For an explanation of the resampling function specific `options`, have a look in
 | Setting | Type | Explanation |
 | ------- | ---- | ----------- |
 | `fractions` | `dict` | Gives the fractions of $t\bar{t}$ and $Z'$ in the final training sample. These values need to add up to 1! |
-| `n_jets`  | `int` |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class in the final training sample, while for other methods it is the total number of jets after resampling. For the `pdf` method, setting this value to `-1` maximises the number of jets in the training sample. |
+| `n_jets`  | `int` |  Number of target jets to be taken. For PDF sampling, this is the number of jets per class in the final training sample, while for other methods it is the total number of jets after resampling. For the `pdf` method, setting this value to `-1` maximises the number of jets in the training sample. **Note**: The `-1` option is only available for the `pdf` method! |
 | `save_tracks` | `bool` | Define if tracks are processed or not. These are not needed to train DL1r/DL1d |
 | `tracks_names` | `list` of `str` | Name of the tracks (in the .h5 files coming from the dumper) which are processed. Multiple tracks datasets can be preprocessed simultaneously when two `str` are given in the list. |
 | `save_track_labels` | `bool` | If this value is `True`, the track variables in `track_truth_variables` will be processed as labels without scaling. The will be saved in an extra group in the final training file. The name will be `Y_<track_name>_train`. `<track_name>` is here the name of the track collection. |
