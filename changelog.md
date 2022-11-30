@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Update Puma Version to 0.1.9 [!680](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/680)
 - Adding boosted flavour categories to umami/configs/global_config.yaml for boosted Xbb/Xcc tagging. [!678](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/678)
 - Adding checkup against n_jets <= 0 for all methods beside pdf [!677](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/677)
 - Fixing PDF file naming issue [!676](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/676)
