@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Adding boosted flavour categories to umami/configs/global_config.yaml for boosted Xbb/Xcc tagging. [!678](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/678)
 - Adding checkup against n_jets <= 0 for all methods beside pdf [!677](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/677)
 - Fixing PDF file naming issue [!676](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/676)
 - Simplifying mapping function one-hot labels -> labels in the writing step of the preprocessing, remove one-hot labels in resampling step, add them in writing step[!664](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/664)
