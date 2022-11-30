@@ -58,6 +58,30 @@ flavour_categories:
     colour: ""
     legend_label: $cc$-jets
     prob_var_name: "pcc"
+  Hbb:
+    label_var: HadronConeExclTruthLabelID
+    label_value: 55
+    colour: "#1f77b4"  # blue
+    legend_label: $Hbb$-jets
+    prob_var_name: "pHbb"
+  Hcc:
+    label_var: HadronConeExclTruthLabelID
+    label_value: 44
+    colour: "#B45F06"  # Tenne (dark orange)
+    legend_label: $Hcc$-jets
+    prob_var_name: "pHcc"
+  top:
+    label_var: HadronConeExclTruthLabelID
+    label_value: 33
+    colour: "#A300A3" # dark magenta
+    legend_label: $Top$-jets
+    prob_var_name: "ptop"
+  dijets:
+    label_var: HadronConeExclTruthLabelID
+    label_value: 22
+    colour: "#38761D" # Bilbao (dark green)
+    legend_label: light-dijets
+    prob_var_name: "puu"
   upjets:
     label_var: PartonTruthLabelID
     label_value: 1
