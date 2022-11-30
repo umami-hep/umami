@@ -209,6 +209,9 @@ class H5ToTFRecords:
         tf_filename_start = record_dir.split("/")[-1]
         iteration = 0
 
+        # Log where the files are written to
+        logger.info("Writing TFRecords files to %s", record_dir)
+
         # Iterate over chunks
         for (
             x_jets,
@@ -275,5 +278,5 @@ class H5ToTFRecords:
 
                     # Write to file
                     file_writer.write(record_bytes.SerializeToString())
-                logger.info("Data written in %s", filename)
+                logger.debug("Data written in %s", filename)
         self.save_parameters(record_dir=record_dir)

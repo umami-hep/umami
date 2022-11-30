@@ -95,7 +95,7 @@ sampling:
     save_tracks: True
 
     # Name(s) of the track collection(s) to use.
-    tracks_names: ["tracks_loose"]
+    tracks_names: ["tracks"]
 
     # Bool, if track labels are processed
     save_track_labels: True

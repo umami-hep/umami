@@ -18,4 +18,4 @@ out_dir: &out_dir !join [*ntuple_path, /merged/]
 save_tracks: True
 
 # Name(s) of the track collection(s) to use.
-tracks_names: ["tracks_loose"]
+tracks_names: ["tracks"]
