@@ -1,8 +1,11 @@
 # Changelog
 
 ### Latest
-- rewrite the selection in global config and replace functions reading cuts, correct reading of cuts from test file[!649](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/649)
 
+
+### [v0.17](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.17) (05.12.2022)
+
+- rewrite the selection in global config and replace functions reading cuts, correct reading of cuts from test file[!649](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/649)
 - Update Puma Version to 0.1.9 [!680](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/680)
 - Change default tracks name and update a logger printout [!679](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/679)
 - Adding boosted flavour categories to umami/configs/global_config.yaml for boosted Xbb/Xcc tagging. [!678](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/678)
