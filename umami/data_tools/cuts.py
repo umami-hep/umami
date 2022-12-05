@@ -5,7 +5,7 @@ from functools import reduce
 
 import numpy as np
 
-from umami.configuration import logger
+from umami.configuration import global_config, logger
 from umami.tools.tools import flatten_list
 
 
@@ -174,3 +174,72 @@ def get_category_cuts(label_var: str, label_value: float, cut_op: str = "==") ->
         )
 
     return cut_object
+
+
+def get_cut_list(class_labels: list):
+    """
+    Returns a dict of cuts used to define the classes.
+
+    Parameters
+    ----------
+    class_labels : list
+        List with the class labels.
+
+    Returns
+    -------
+    cut_dict : dict
+        dict with cuts per class label
+    """
+    flavour_categories = global_config.flavour_categories
+    cut_dict = {}
+    for class_label in class_labels:
+        cut_strings = []
+        for cut_values in flavour_categories[class_label]["cuts"]:
+            cut_var = list(cut_values.keys())[0]
+            cut_op = list(cut_values.values())[0]["operator"]
+            cond = list(cut_values.values())[0]["condition"]
+            cut_string = f"{cut_var} {cut_op} {cond}"
+            cut_strings.append(cut_string)
+        cut_dict[class_label] = cut_strings
+
+    return cut_dict
+
+
+def retrieve_cut_string(class_labels: list) -> tuple:
+    """
+    Retrieve the cut string for a list of class labels
+
+    Parameters
+    ----------
+    class_labels : list
+        List with the classes to retrieve. Like ["bjets", "cjets", "ujets"]
+
+    Returns
+    -------
+    dict
+        Dict with the cut string for each flavour
+    """
+
+    # Get global config for flavours
+    flav_cat = global_config.flavour_categories
+
+    operator_dict = {
+        "==": "in",
+        "!=": "not in",
+    }
+
+    cut_strings = {}
+    for class_label in class_labels:
+        for i, cut in enumerate(flav_cat[class_label]["cuts"]):
+            var = list(cut.keys())[0]
+            cut_op = operator_dict.get(cut[var]["operator"], cut[var]["operator"])
+            cut_val = cut[var]["condition"]
+            if not isinstance(cut_val, list):
+                cut_val = [cut_val]
+            if i == 0:
+                cut_string = f"{var} {cut_op} {cut_val}"
+            else:
+                cut_string += f" and {var} {cut_op} {cut_val}"
+        cut_strings[class_label] = cut_string
+
+    return cut_strings

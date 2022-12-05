@@ -6,9 +6,9 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from umami.configuration import logger
+from umami.configuration import global_config, logger
 from umami.data_tools.cuts import get_sample_cuts
-from umami.helper_tools import get_class_label_ids, get_class_label_variables
+from umami.helper_tools import get_class_label_variables
 from umami.tools import natural_keys
 
 
@@ -99,8 +99,7 @@ def load_jets_from_file(
         )
 
     # Get class_labels variables etc. from global config
-    class_ids = get_class_label_ids(class_labels)
-    class_label_vars, flatten_class_labels = get_class_label_variables(class_labels)
+    class_label_vars = get_class_label_variables(class_labels)
 
     if variables:
 
@@ -178,22 +177,24 @@ def load_jets_from_file(
             jets["Umami_string_labels"] = np.zeros_like(jets[class_label_vars[0]])
             jets["Umami_labels"] = np.zeros_like(jets[class_label_vars[0]])
 
-            # Change type of column to string
+            # Change type of column to strings
             jets = jets.astype({"Umami_string_labels": "str"})
 
-            # Iterate over the classes and add the correct labels to Umami columns
-            for class_id, class_label_var, class_label in zip(
-                class_ids, class_label_vars, flatten_class_labels
-            ):
-                indices_tochange = np.where(jets[class_label_var].values == class_id)
+            flavour_categories = global_config.flavour_categories
+            for class_label in class_labels:
+                cuts = flavour_categories[class_label]["cuts"]
+                indices_tochange = np.ones_like(jets["Umami_labels"]).astype(bool)
+                indices_toremove = get_sample_cuts(jets=jets, cuts=cuts)
+                indices_tochange[indices_toremove] = False
 
-                # Add a string description which this class is
                 jets["Umami_string_labels"].values[indices_tochange] = class_label
 
                 # Add the right column label to class
                 jets["Umami_labels"].values[indices_tochange] = class_labels.index(
                     class_label
                 )
+
+            # Iterate over the classes and add the correct labels to Umami columns
 
             # Define the conditions to remove
             toremove_conditions = jets["Umami_string_labels"] == "0"
@@ -351,8 +352,7 @@ def load_trks_from_file(
         )
 
     # Get class_labels variables etc. from global config
-    class_ids = get_class_label_ids(class_labels)
-    class_label_vars, flatten_class_labels = get_class_label_variables(class_labels)
+    class_label_vars = get_class_label_variables(class_labels)
 
     # Define the labels which are needed
     jet_vars_to_load = list(dict.fromkeys(class_label_vars))
@@ -419,13 +419,14 @@ def load_trks_from_file(
             # Change type of column to string
             labels = labels.astype({"Umami_string_labels": "str"})
 
+            flavour_categories = global_config.flavour_categories
+
             # Iterate over the classes and add the correct labels to Umami columns
-            for (class_id, class_label_var, class_label) in zip(
-                class_ids, class_label_vars, flatten_class_labels
-            ):
-                indices_tochange = np.where(labels[class_label_var].values == class_id)[
-                    0
-                ]
+            for class_label in class_labels:
+                cuts = flavour_categories[class_label]["cuts"]
+                indices_tochange = np.ones_like(labels["Umami_labels"]).astype(bool)
+                indices_toremove = get_sample_cuts(jets=labels, cuts=cuts)
+                indices_tochange[indices_toremove] = False
 
                 # Add a string description which this class is
                 labels["Umami_string_labels"].values[indices_tochange] = class_label

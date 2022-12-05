@@ -10,7 +10,7 @@ from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=E0401
 
 import umami.train_tools as utt
 from umami.configuration import global_config, logger
-from umami.helper_tools import get_class_label_ids
+from umami.data_tools import retrieve_cut_string
 from umami.tf_tools import Sum
 from umami.tools import yaml_loader
 
@@ -196,7 +196,7 @@ def main():
     batch_size = eval_config["batch_size"]
 
     # Get the class ids for removing
-    class_ids = get_class_label_ids(class_labels)
+    cut_strings = retrieve_cut_string(class_labels)
 
     logger.info("Evaluating %s", model_file)
 
@@ -205,7 +205,10 @@ def main():
         df_in = pd.DataFrame(file["jets"][:])
 
     # Remove all jets which are not trained on
-    df_in.query(f"HadronConeExclTruthLabelID in {class_ids}", inplace=True)
+    df_in.query(
+        "|".join([cut_strings[class_label] for class_label in class_labels]),
+        inplace=True,
+    )
 
     # Init a pred_model
     pred_model = None

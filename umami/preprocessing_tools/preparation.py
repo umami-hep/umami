@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 
 from umami.configuration import global_config, logger
-from umami.data_tools import get_category_cuts, get_sample_cuts
+from umami.data_tools import get_sample_cuts
 
 
 class PrepareSamples:
@@ -55,10 +55,9 @@ class PrepareSamples:
         # load list of samples
         self.sample = self.config.preparation.get_sample(args.sample)
 
-        cuts = self.sample.cuts
-        if self.sample.category == "inclusive":
-            self.cuts = cuts
-        else:
+        self.cuts = self.sample.cuts
+
+        if self.sample.category != "inclusive":
             try:
                 category_setup = global_config.flavour_categories[self.sample.category]
             except KeyError as error:
@@ -68,12 +67,7 @@ class PrepareSamples:
                 ) from error
 
             # retrieving the cuts for the category selection
-            category_cuts = get_category_cuts(
-                category_setup.get("label_var"),
-                category_setup.get("label_value"),
-                category_setup.get("operator"),
-            )
-            self.cuts = cuts + category_cuts
+            self.cuts += category_setup["cuts"]
 
         # Check if tracks are used
         self.save_tracks = self.config.sampling["options"]["save_tracks"]
