@@ -3,7 +3,7 @@
 import unittest
 
 from umami.configuration import logger, set_log_level
-from umami.plotting_tools.utils import retrieve_truth_label_var_value
+from umami.data_tools import retrieve_cut_string
 
 set_log_level(logger, "DEBUG")
 
@@ -15,49 +15,30 @@ class RetrieveTruthLabelVarValueTestCase(unittest.TestCase):
         self.class_labels = ["bjets", "cjets", "ujets"]
         self.class_labels_extended = ["singlebjets", "cjets", "ujets", "bbjets"]
 
-        self.control_label_dict = {
-            "bjets": 5,
-            "cjets": 4,
-            "ujets": 0,
+        self.control_cut_strings = {
+            "bjets": "HadronConeExclTruthLabelID in [5]",
+            "cjets": "HadronConeExclTruthLabelID in [4]",
+            "ujets": "HadronConeExclTruthLabelID in [0]",
         }
-        self.control_label_dict_extended = {
-            "singlebjets": [5, 54],
-            "cjets": 4,
-            "ujets": 0,
-            "bbjets": 55,
-        }
-        self.control_label_var_dict = {
-            "bjets": "HadronConeExclTruthLabelID",
-            "cjets": "HadronConeExclTruthLabelID",
-            "ujets": "HadronConeExclTruthLabelID",
-        }
-        self.control_label_var_dict_extended = {
-            "singlebjets": "HadronConeExclExtendedTruthLabelID",
-            "cjets": "HadronConeExclTruthLabelID",
-            "ujets": "HadronConeExclTruthLabelID",
-            "bbjets": "HadronConeExclExtendedTruthLabelID",
+        self.control_cut_strings_extended = {
+            "singlebjets": "HadronConeExclExtendedTruthLabelID in [5, 54]",
+            "cjets": "HadronConeExclTruthLabelID in [4]",
+            "ujets": "HadronConeExclTruthLabelID in [0]",
+            "bbjets": "HadronConeExclExtendedTruthLabelID in [55]",
         }
 
     def test_3_classes(self):
         """Test nomimal behaviour for 3 classes without extended labeling"""
 
-        label_dict, label_var_dict = retrieve_truth_label_var_value(self.class_labels)
-
-        with self.subTest("Test Label dict"):
-            self.assertEqual(label_dict, self.control_label_dict)
+        string_cuts = retrieve_cut_string(self.class_labels)
 
         with self.subTest("Test label variable dict"):
-            self.assertEqual(label_var_dict, self.control_label_var_dict)
+            self.assertEqual(string_cuts, self.control_cut_strings)
 
     def test_4_classes(self):
         """Test nomimal behaviour for 4 classes without extended labeling"""
 
-        label_dict, label_var_dict = retrieve_truth_label_var_value(
-            self.class_labels_extended
-        )
+        string_cuts = retrieve_cut_string(self.class_labels_extended)
 
         with self.subTest("Test Label dict"):
-            self.assertEqual(label_dict, self.control_label_dict_extended)
-
-        with self.subTest("Test label variable dict"):
-            self.assertEqual(label_var_dict, self.control_label_var_dict_extended)
+            self.assertEqual(string_cuts, self.control_cut_strings_extended)

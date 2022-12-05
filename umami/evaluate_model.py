@@ -379,7 +379,7 @@ def evaluate_model(
         variables.extend(add_variables_available)
 
     # Adding all needed truth info variables
-    label_var_list, _ = get_class_label_variables(
+    label_var_list = get_class_label_variables(
         class_labels=classes_to_evaluate,
     )
     variables += list(set(label_var_list))

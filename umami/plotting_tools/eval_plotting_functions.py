@@ -20,7 +20,8 @@ from puma import (
 )
 
 from umami.configuration import global_config, logger
-from umami.plotting_tools.utils import retrieve_truth_label_var_value, translate_kwargs
+from umami.data_tools import retrieve_cut_string
+from umami.plotting_tools.utils import translate_kwargs
 
 
 def plot_var_vs_eff(
@@ -645,9 +646,7 @@ def plot_score(
     flav_cat = global_config.flavour_categories
 
     # Get the truth value and the truth variable to use for the used flavours
-    label_dict, label_var_dict = retrieve_truth_label_var_value(
-        class_labels_list[0] + [main_class]
-    )
+    cut_strings = retrieve_cut_string(class_labels_list[0] + [main_class])
 
     # Init the Histogram plot object
     score_plot = HistogramPlot(**kwargs)
@@ -665,9 +664,7 @@ def plot_score(
         for working_point in sorted(working_points, reverse=True):
             working_point_xvalues.append(
                 np.percentile(
-                    df_list[0].query(
-                        f"{label_var_dict[main_class]}=={label_dict[main_class]}"
-                    )[f"disc_{tagger_list[0]}"],
+                    df_list[0].query(cut_strings[main_class])[f"disc_{tagger_list[0]}"],
                     (1 - working_point) * 100,
                 )
             )
@@ -695,14 +692,14 @@ def plot_score(
         )
     ):
         # Get the truth value and the truth variable to use for the used flavours
-        label_dict, label_var_dict = retrieve_truth_label_var_value(class_labels)
+        cut_strings = retrieve_cut_string(class_labels)
 
         for iter_flavour in class_labels:
             score_plot.add(
                 Histogram(
-                    values=df_results.query(
-                        f"{label_var_dict[iter_flavour]}=={label_dict[iter_flavour]}"
-                    )[f"disc_{tagger}"],
+                    values=df_results.query(cut_strings[iter_flavour])[
+                        f"disc_{tagger}"
+                    ],
                     flavour=iter_flavour,
                     ratio_group=iter_flavour,
                     label=model_label if len(model_labels) > 1 else None,
@@ -785,14 +782,14 @@ def plot_prob(
         )
     ):
         # Get the truth value and the truth variable to use for the used flavours
-        label_dict, label_var_dict = retrieve_truth_label_var_value(class_labels)
+        cut_strings = retrieve_cut_string(class_labels)
 
         for iter_flavour in class_labels:
             prob_plot.add(
                 Histogram(
-                    values=df_results.query(
-                        f"{label_var_dict[iter_flavour]}=={label_dict[iter_flavour]}"
-                    )[f'{tagger}_{flav_cat[flavour]["prob_var_name"]}'],
+                    values=df_results.query(cut_strings[iter_flavour])[
+                        f'{tagger}_{flav_cat[flavour]["prob_var_name"]}'
+                    ],
                     flavour=iter_flavour,
                     ratio_group=iter_flavour,
                     label=model_label if len(model_labels) > 1 else None,

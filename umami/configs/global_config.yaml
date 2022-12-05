@@ -6,143 +6,193 @@ MPLPlottingBackend: Agg
 # definition of the flavour categories
 flavour_categories:
   bjets:
-    # for now HadronConeExclTruthLabelID and HadronConeExclExtendedTruthLabelID
-    # more to come hopefully
-    label_var: HadronConeExclTruthLabelID
-    # EDM ID
-    label_value: 5
-    # colour used to plot this category
-    colour: "#1f77b4"  # blue
-    # label used in the plotting
+    cuts:
+      - HadronConeExclTruthLabelID:
+          operator: "=="
+          condition: 5
+    colour: #1f77b4
     legend_label: $b$-jets
-    prob_var_name: "pb"
+    prob_var_name: pb
   cjets:
-    label_var: HadronConeExclTruthLabelID
-    label_value: 4
-    colour: "#ff7f0e"  # orange
+    cuts:
+      - HadronConeExclTruthLabelID:
+          operator: "=="
+          condition: 4
+    colour: #ff7f0e
     legend_label: $c$-jets
-    prob_var_name: "pc"
+    prob_var_name: pc
   ujets:
-    label_var: HadronConeExclTruthLabelID
-    label_value: 0
-    colour: "#2ca02c"  # green
+    cuts:
+      - HadronConeExclTruthLabelID:
+          operator: "=="
+          condition: 0
+    colour: #2ca02c
     legend_label: light-flavour jets
-    prob_var_name: "pu"
+    prob_var_name: pu
   taujets:
-    label_var: HadronConeExclTruthLabelID
-    label_value: 15
-    colour: "#7c5295"  # purple
+    cuts:
+      - HadronConeExclTruthLabelID:
+          operator: "=="
+          condition: 15
+    colour: #7c5295
     legend_label: $\tau$-jets
-    prob_var_name: "ptau"
+    prob_var_name: ptau
   singlebjets:
-    label_var: HadronConeExclExtendedTruthLabelID
-    label_value: [5, 54]
-    colour: "#1f77b4"  # blue (same as bjets)
+    cuts:
+      - HadronConeExclExtendedTruthLabelID:
+          operator: "=="
+          condition: [5, 54]
+    colour: #1f77b4
     legend_label: $b$-jets
-    prob_var_name: "pb"
+    prob_var_name: pb
   bbjets:
-    label_var: HadronConeExclExtendedTruthLabelID
-    label_value: 55
-    colour: "#012F51"  # dark blue
+    cuts:
+      - HadronConeExclExtendedTruthLabelID:
+          operator: "=="
+          condition: 55
+    colour: #012F51
     legend_label: $bb$-jets
-    prob_var_name: "pbb"
+    prob_var_name: pbb
   singlecjets:
-    label_var: HadronConeExclExtendedTruthLabelID
-    label_value: 4
-    colour: "#ff7f0e"  # orange (same as cjets)
+    cuts:
+      - HadronConeExclExtendedTruthLabelID:
+          operator: "=="
+          condition: 4
+    colour: #ff7f0e
     legend_label: $c$-jets
-    prob_var_name: "pc"
+    prob_var_name: pc
   ccjets:
-    label_var: HadronConeExclExtendedTruthLabelID
-    label_value: 44
-    colour: ""
+    cuts:
+      - HadronConeExclExtendedTruthLabelID:
+          operator: "=="
+          condition: 44
+    colour:
     legend_label: $cc$-jets
     prob_var_name: "pcc"
   Hbb:
-    label_var: HadronConeExclTruthLabelID
-    label_value: 55
+    cuts:
+      - HadronConeExclTruthLabelID:
+        operator: "=="
+        condition: 55
     colour: "#1f77b4"  # blue
     legend_label: $Hbb$-jets
     prob_var_name: "pHbb"
   Hcc:
-    label_var: HadronConeExclTruthLabelID
-    label_value: 44
+    cuts:
+      - HadronConeExclTruthLabelID:
+        operator: "=="
+        condition: 44
     colour: "#B45F06"  # Tenne (dark orange)
     legend_label: $Hcc$-jets
     prob_var_name: "pHcc"
   top:
-    label_var: HadronConeExclTruthLabelID
-    label_value: 33
+    cuts:
+      - HadronConeExclTruthLabelID:
+        operator: "=="
+        condition: 33
     colour: "#A300A3" # dark magenta
     legend_label: $Top$-jets
     prob_var_name: "ptop"
   dijets:
-    label_var: HadronConeExclTruthLabelID
-    label_value: 22
+    cuts:
+      - HadronConeExclTruthLabelID:
+        operator: "=="
+        condition: 22
     colour: "#38761D" # Bilbao (dark green)
     legend_label: light-dijets
     prob_var_name: "puu"
   upjets:
-    label_var: PartonTruthLabelID
-    label_value: 1
-    colour: "#9ed670"
+    cuts:
+      - PartonTruthLabelID:
+          operator: "=="
+          condition: 1
+    colour: #9ed670
     legend_label: $u$-jets
-    prob_var_name: "pup"
+    prob_var_name: pup
   djets:
-    label_var: PartonTruthLabelID
-    label_value: 2
-    colour: "#274e13"
+    cuts:
+      - PartonTruthLabelID:
+          operator: "=="
+          condition: 2
+    colour: #274e13
     legend_label: $d$-jets
-    prob_var_name: "pd"
+    prob_var_name: pd
   sjets:
-    label_var: PartonTruthLabelID
-    label_value: 3
-    colour: "#00bfaf"
+    cuts:
+      - PartonTruthLabelID:
+          operator: "=="
+          condition: 3
+    colour: #00bfaf
     legend_label: $s$-jets
-    prob_var_name: "ps"
+    prob_var_name: ps
   gluon_jets:
-    label_var: PartonTruthLabelID
-    label_value: 21
-    colour: "#7b4e24"
+    cuts:
+      - HadronConeExclTruthLabelID:
+          operator: "=="
+          condition: 0
+      - PartonTruthLabelID:
+          operator: "=="
+          condition: 21
+    colour: #7b4e24
     legend_label: gluon-jets
-    prob_var_name: "pg"
+    prob_var_name: pg
   lquarkjets:
-    label_var: PartonTruthLabelID
-    label_value: [1,2,3]
-    colour: "#a05252"
+    cuts:
+      - HadronConeExclTruthLabelID:
+          operator: "=="
+          condition: 0
+      - PartonTruthLabelID:
+          operator: "!="
+          condition: 21
+    colour: #a05252
     legend_label: light-jets w/o gluons
-    prob_var_name: "plq"
-  hadrcbjets:
-    label_var: LeptonDecayLabel
-    label_value: 0
-    colour: "#264653"
+    prob_var_name: plq
+  hadrbjets:
+    cuts:
+      - HadronConeExclTruthLabelID:
+          operator: "=="
+          condition: 5
+      - LeptonDecayLabel:
+          operator: "=="
+          condition: 0
+    colour: #264653
     legend_label: hadronic $b$-hadron decay
-    prob_var_name: "phadrb"
-  lepcbjets:
-    label_var: LeptonDecayLabel
-    label_value: [0, -999]
-    operator: "!="
-    colour: "#190099"
+    prob_var_name: phadrb
+  lepbjets:
+    cuts:
+      - HadronConeExclTruthLabelID:
+          operator: "=="
+          condition: 5
+      - LeptonDecayLabel:
+          operator: "!="
+          condition: [0, -99]
+    colour: #190099
     legend_label: leptonic $b$-hadron decay
-    prob_var_name: "plebb"
+    prob_var_name: plebb
   singleebdecay:
-    label_var: LeptonDecayLabel
-    label_value: 1
-    colour: "#e9c46a"
+    cuts:
+      - LeptonDecayLabel:
+          operator: "=="
+          condition: 1
+    colour: #e9c46a
     legend_label: $e$'s in $b$- or $c$-hadron decay
-    prob_var_name: "pe"
+    prob_var_name: pe
   singlemubdecay:
-    label_var: LeptonDecayLabel
-    label_value: 2
-    colour: "#f4a261"
+    cuts:
+      - LeptonDecayLabel:
+          operator: "=="
+          condition: 2
+    colour: #f4a261
     legend_label: $\\mu$'s in $b$- or $c$-hadron decay
-    prob_var_name: "pmu"
+    prob_var_name: pmu
   singletaubdecay:
-    label_var: LeptonDecayLabel
-    label_value: 3
-    colour: "#e76f51"
-    legend_label: \u03C4's in $b$- or $c$-hadron decay # \u03C4: unicode for small tau
-    prob_var_name: "pbtau"
+    cuts:
+      - LeptonDecayLabel:
+          operator: "=="
+          condition: 3
+    colour: #e76f51
+    legend_label: \u03C4's in $b$- or $c$-hadron decay
+    prob_var_name: pbtau
 
 # plot style definitions
 hist_err_style:
