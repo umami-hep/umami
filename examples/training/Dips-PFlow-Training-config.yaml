@@ -1,6 +1,6 @@
 # Set modelname and path to Pflow preprocessing config file
 model_name: dips_lr_0.001_bs_15000_epoch_200_nTrainJets_Full
-preprocess_config: <path_place_holder>/umami/examples/preprocessing/PFlow-Preprocessing.yaml
+preprocess_config: examples/preprocessing/PFlow-Preprocessing.yaml
 
 # Add here a pretrained model to start with.
 # Leave empty for a fresh start
@@ -63,7 +63,7 @@ nn_structure:
     tagger: "dips"
 
     # NN Training parameters
-    lr: 0.001
+    learning_rate: 0.001
     batch_size: 15000
     epochs: 200
 

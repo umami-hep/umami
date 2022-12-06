@@ -54,14 +54,14 @@ def get_dropout_rates(dropout_rates_name: str, layer_sizes_name: str, config: di
     """
 
     # Read dropout rates, set to zero if not specified
-    dropout_rates = config.get(
-        dropout_rates_name, np.zeros(len(config.get(layer_sizes_name)))
+    dropout_rates = (
+        getattr(config, dropout_rates_name)
+        if getattr(config, dropout_rates_name) is not None
+        else np.zeros(len(getattr(config, layer_sizes_name)))
     )
-    if dropout_rates is None:
-        np.zeros(len(config.get(layer_sizes_name)))
 
     # Raise error if dropout rate is not defined for each layer
-    if len(dropout_rates) != len(config.get(layer_sizes_name)):
+    if len(dropout_rates) != len(getattr(config, layer_sizes_name)):
         raise ValueError(
             f"`{dropout_rates_name}` has to be a list of same length as "
             f"`{layer_sizes_name}`. Please check these parameters in your training "
@@ -976,23 +976,19 @@ def load_validation_data(
         jets_var_list = []
 
     # Get class labels and tagger name
-    class_labels = train_config.nn_structure["class_labels"]
-    tagger = train_config.nn_structure["tagger"]
+    class_labels = train_config.nn_structure.class_labels
+    tagger = train_config.nn_structure.tagger
 
     # Init a new dict for the loaded val data
     val_data_dict = {}
-    val_files = train_config.validation_files
+    val_files = train_config.general.validation_files
 
     # Set the tracks collection name
-    if hasattr(train_config, "tracks_name"):
-        tracks_name = train_config.tracks_name
-        logger.debug("Using tracks_name value '%s' for validation", tracks_name)
-
-    else:
-        tracks_name = None
+    tracks_name = train_config.general.tracks_name
+    logger.debug("Using tracks_name value '%s' for validation", tracks_name)
 
     # Check for excluded variables
-    exclude = train_config.config.get("exclude", None)
+    exclude = train_config.general.exclude
 
     # Loop over the different validation files
     for val_file_identifier, val_file_config in val_files.items():
@@ -1011,8 +1007,8 @@ def load_validation_data(
         if tagger.casefold() in ("dips", "dips_attention"):
             (x_valid, y_valid,) = get_test_sample_trks(
                 input_file=val_file_config["path"],
-                var_dict=train_config.var_dict,
-                scale_dict=train_config.preprocess_config.dict_file,
+                var_dict=train_config.general.var_dict,
+                scale_dict=train_config.general.preprocess_config.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -1022,8 +1018,8 @@ def load_validation_data(
         elif tagger.casefold() in ("dl1"):
             (x_valid, y_valid,) = get_test_sample(
                 input_file=val_file_config["path"],
-                var_dict=train_config.var_dict,
-                scale_dict=train_config.preprocess_config.dict_file,
+                var_dict=train_config.general.var_dict,
+                scale_dict=train_config.general.preprocess_config.dict_file,
                 class_labels=class_labels,
                 n_jets=n_jets,
                 exclude=exclude,
@@ -1033,8 +1029,8 @@ def load_validation_data(
         elif tagger.casefold() in ("umami", "umami_cond_att", "cads"):
             (x_valid, x_valid_trk, y_valid,) = get_test_file(
                 input_file=val_file_config["path"],
-                var_dict=train_config.var_dict,
-                scale_dict=train_config.preprocess_config.dict_file,
+                var_dict=train_config.general.var_dict,
+                scale_dict=train_config.general.preprocess_config.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -1443,8 +1439,8 @@ def calc_validation_metrics(
 
     # Make a list with the model epochs saves
     training_output = [
-        os.path.join(f"{train_config.model_name}/model_files/", f)
-        for f in os.listdir(f"{train_config.model_name}/model_files/")
+        os.path.join(f"{train_config.general.model_name}/model_files/", f)
+        for f in os.listdir(f"{train_config.general.model_name}/model_files/")
         if model_string in f
     ]
 
@@ -1458,8 +1454,8 @@ def calc_validation_metrics(
 
         # Make a list with the model epochs saves with second model name string
         training_output = [
-            os.path.join(f"{train_config.model_name}/model_files/", f)
-            for f in os.listdir(f"{train_config.model_name}/model_files/")
+            os.path.join(f"{train_config.general.model_name}/model_files/", f)
+            for f in os.listdir(f"{train_config.general.model_name}/model_files/")
             if model_string in f
         ]
 
@@ -1468,9 +1464,9 @@ def calc_validation_metrics(
 
         # Get val dict file name
         _, val_output_file_path = get_metrics_file_name(
-            working_point=eval_parameters["working_point"],
-            n_jets=eval_parameters["n_jets"],
-            dir_name=train_config.model_name,
+            working_point=eval_parameters.working_point,
+            n_jets=eval_parameters.n_jets,
+            dir_name=train_config.general.model_name,
         )
 
         with open(val_output_file_path, "r") as training_out_json:
@@ -1479,7 +1475,7 @@ def calc_validation_metrics(
     except FileNotFoundError:
         logger.info("No callback json file with validation metrics found! Make new one")
         training_output_list = [
-            {"epoch": n} for n in range(train_config.nn_structure["epochs"])
+            {"epoch": n} for n in range(train_config.nn_structure.epochs)
         ]
 
     # Init a results list
@@ -1535,11 +1531,11 @@ def calc_validation_metrics(
             val_result_dict = evaluate_model_umami(
                 model=umami,
                 data_dict=data_dict,
-                class_labels=nn_structure["class_labels"],
-                main_class=nn_structure["main_class"],
+                class_labels=nn_structure.class_labels,
+                main_class=nn_structure.main_class,
                 target_beff=target_beff,
-                frac_dict=eval_parameters["frac_values"],
-                batch_size=val_params["val_batch_size"],
+                frac_dict=eval_parameters.frac_values,
+                batch_size=val_params.val_batch_size,
             )
 
             # Delete model
@@ -1553,11 +1549,11 @@ def calc_validation_metrics(
             val_result_dict = evaluate_model(
                 model=dl1,
                 data_dict=data_dict,
-                class_labels=nn_structure["class_labels"],
-                main_class=nn_structure["main_class"],
+                class_labels=nn_structure.class_labels,
+                main_class=nn_structure.main_class,
                 target_beff=target_beff,
-                frac_dict=eval_parameters["frac_values"],
-                batch_size=val_params["val_batch_size"],
+                frac_dict=eval_parameters.frac_values,
+                batch_size=val_params.val_batch_size,
             )
 
             # Delete model
@@ -1572,11 +1568,11 @@ def calc_validation_metrics(
             val_result_dict = evaluate_model(
                 model=dips,
                 data_dict=data_dict,
-                class_labels=nn_structure["class_labels"],
-                main_class=nn_structure["main_class"],
+                class_labels=nn_structure.class_labels,
+                main_class=nn_structure.main_class,
                 target_beff=target_beff,
-                frac_dict=eval_parameters["frac_values"],
-                batch_size=val_params["val_batch_size"],
+                frac_dict=eval_parameters.frac_values,
+                batch_size=val_params.val_batch_size,
             )
 
             # Delete model
@@ -1601,11 +1597,11 @@ def calc_validation_metrics(
             val_result_dict = evaluate_model(
                 model=cads,
                 data_dict=data_dict,
-                class_labels=nn_structure["class_labels"],
-                main_class=nn_structure["main_class"],
+                class_labels=nn_structure.class_labels,
+                main_class=nn_structure.main_class,
                 target_beff=target_beff,
-                frac_dict=eval_parameters["frac_values"],
-                batch_size=val_params["val_batch_size"],
+                frac_dict=eval_parameters.frac_values,
+                batch_size=val_params.val_batch_size,
             )
 
             # Delete model
@@ -1628,7 +1624,7 @@ def calc_validation_metrics(
     _, val_output_file_path = get_metrics_file_name(
         working_point=target_beff,
         n_jets=n_jets,
-        dir_name=train_config.model_name,
+        dir_name=train_config.general.model_name,
     )
 
     # Dump dict into json

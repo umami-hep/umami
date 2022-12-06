@@ -44,7 +44,7 @@ The next section in the train config is the `nn_structure`. Here we define all t
 | Options | Data Type | Necessary, Optional | Explanation |
 |---------|-----------|---------------------|-------------|
 | `tagger` | `str` | Necessary | Name of the tagger that is used/to be trained. The currently supported taggers are `dips`, `dips_attention`, `cads`, `dl1`, `umami`, `umami` and `umami_cond_att`. **Note** All version of DL1* (like DL1r or DL1d) uses the `tagger` `dl1`! |
-| `lr` | `float` | Necessary | Learning rate which is used for training. |
+| `learning_rate` | `float` | Necessary | Learning rate which is used for training. |
 | `batch_size` | `int` | Necessary | Batch size which is used for training. |
 | `epochs` | `int` | Necessary | Number of epochs of the training. |
 | `n_jets_train` | `int` | Necessary | Number of jets used for training. Leave empty to use all. |
@@ -63,7 +63,7 @@ The next section in the train config is the `nn_structure`. Here we define all t
 | `lrr_verbose` | `int` | Optional | 0: Quiet, 1: Update messages. Default: 1 |
 | `lrr_mode` | `str` | Optional | One of `{"auto", "min", "max"}`. In "min" mode, the learning rate will be reduced when the quantity monitored has stopped decreasing; in "max" mode it will be reduced when the quantity monitored has stopped increasing; in "auto" mode, the direction is automatically inferred from the name of the monitored quantity. Default: "auto" |
 | `lrr_cooldown` | `int` | Optional | Number of epochs to wait before resuming normal operation after lr has been reduced. Default: 5 |
-| `lrr_min_lr` | `float` | Optional | Lower bound on the learning rate. Default: 0.000001 |
+| `lrr_min_learning_rate` | `float` | Optional | Lower bound on the learning rate. Default: 0.000001 |
 
 ??? info "DIPS"
     #### DIPS
@@ -87,13 +87,13 @@ The next section in the train config is the `nn_structure`. Here we define all t
     | Options | Data Type | Necessary, Optional | Explanation |
     |---------|-----------|---------------------|-------------|
     | `activations` | `list` | Necessary | List of activations per layer defined in `dense_sizes`. Every entry is the activation for one hidden layer. The entries must be `str` and activations supported by `Keras`. |
-    | `activations` | `list` | Optional | List of input variables that are folded into the output of the penultimate layer. This is then feeded into the last layer. |
+    | `repeat_end` | `list` | Optional | List of input variables that are folded into the output of the penultimate layer. This is then feeded into the last layer. |
 
 ??? info "Umami"
     #### Umami
 
     ```yaml
-    §§§examples/training/umami-PFlow-Training-config.yaml:82:93§§§
+    §§§examples/training/umami-PFlow-Training-config.yaml:76:100§§§
     ```
 
     | Options | Data Type | Necessary, Optional | Explanation |
@@ -110,7 +110,7 @@ The next section in the train config is the `nn_structure`. Here we define all t
     The different between the `tagger` here is the `*_condition` options. If all `*_condition` options are `False`, the tagger to use is `dips_attention` while if one `*_condition` option is `True`, the tagger to use is `cads`.
 
     ```yaml
-    §§§examples/training/CADS-PFlow-Training-config.yaml:87:109§§§
+    §§§examples/training/CADS-PFlow-Training-config.yaml:84:111§§§
     ```
 
     | Options | Data Type | Necessary, Optional | Explanation |

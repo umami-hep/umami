@@ -17,7 +17,6 @@ def create_umami_cond_att_model(
     train_config: object,
     input_shape: tuple,
     njet_features: int,
-    continue_training: bool = False,
 ):
     """Keras model definition of UMAMI tagger.
 
@@ -29,9 +28,6 @@ def create_umami_cond_att_model(
         dataset input shape
     njet_features: int
         number of jet features
-    continue_training : bool, optional
-        Decide, if the training is continued using the latest
-        model file, by default False
 
     Returns
     -------
@@ -46,10 +42,7 @@ def create_umami_cond_att_model(
     nn_structure = train_config.nn_structure
 
     # Check if a prepared model is used or not
-    umami, init_epoch, load_optimiser = utf.prepare_model(
-        train_config=train_config,
-        continue_training=continue_training,
-    )
+    umami, init_epoch, load_optimiser = utf.prepare_model(train_config=train_config)
 
     if umami is None:
         logger.info("No modelfile provided! Initialize a new one!")
@@ -57,31 +50,31 @@ def create_umami_cond_att_model(
         umami = utf.deepsets_model_umami(
             trk_input_shape=input_shape,
             jet_input_shape=njet_features,
-            num_conditions=nn_structure["n_conditions"],
-            num_set_features=nn_structure["dips_ppm_units"][-1],
-            dips_sets_nodes=nn_structure["dips_ppm_units"][:-1],
-            f_classif_nodes=nn_structure["dips_dense_units"],
-            classif_output=len(nn_structure["class_labels"]),
-            intermediate_units=nn_structure["intermediate_units"],
-            dl1_units=nn_structure["dl1_units"],
-            pooling="attention",
-            attention_nodes=nn_structure["attention_units"],
-            condition_sets=nn_structure["dips_ppm_condition"],
-            condition_attention=nn_structure["attention_condition"],
-            condition_classifier=nn_structure["dense_condition"],
+            num_conditions=nn_structure.n_conditions,
+            num_set_features=nn_structure.dips_ppm_units[-1],
+            dips_sets_nodes=nn_structure.dips_ppm_units[:-1],
+            f_classif_nodes=nn_structure.dips_dense_units,
+            classif_output=len(nn_structure.class_labels),
+            intermediate_units=nn_structure.intermediate_units,
+            dl1_units=nn_structure.dl1_units,
+            pooling=nn_structure.pooling,
+            attention_nodes=nn_structure.attention_sizes,
+            condition_sets=nn_structure.dips_ppm_condition,
+            condition_attention=nn_structure.attention_condition,
+            condition_classifier=nn_structure.dense_condition,
             shortcut_inputs=False,
-            sets_batch_norm=nn_structure["batch_normalisation"],
-            classif_batch_norm=nn_structure["batch_normalisation"],
+            sets_batch_norm=nn_structure.batch_normalisation,
+            classif_batch_norm=nn_structure.batch_normalisation,
             activation="relu",
             attention_softmax=False,
         )
 
     if load_optimiser is False:
         # Set optimier and loss
-        model_optimizer = Adam(learning_rate=nn_structure["lr"])
+        model_optimizer = Adam(learning_rate=nn_structure.learning_rate)
         umami.compile(
             loss="categorical_crossentropy",
-            loss_weights={"dips": nn_structure["dips_loss_weight"], "umami": 1},
+            loss_weights={"dips": nn_structure.dips_loss_weight, "umami": 1},
             optimizer=model_optimizer,
             metrics=["accuracy"],
         )
@@ -90,7 +83,7 @@ def create_umami_cond_att_model(
     if logger.level <= 20:
         umami.summary()
 
-    return umami, nn_structure["epochs"], init_epoch
+    return umami, nn_structure.epochs, init_epoch
 
 
 def train_umami_cond_att(args, train_config):
@@ -112,32 +105,21 @@ def train_umami_cond_att(args, train_config):
     nn_structure = train_config.nn_structure
     val_params = train_config.validation_settings
     eval_params = train_config.evaluation_settings
-    tracks_name = train_config.tracks_name
+    tracks_name = train_config.general.tracks_name
 
     # Init a list for the callbacks
     callbacks = []
 
     # Get needed variable from the train config
-    working_point = (
-        float(val_params["working_point"])
-        if "working_point" in val_params
-        else float(eval_params["working_point"])
-    )
-    n_jets_val = (
-        int(val_params["n_jets"])
-        if "n_jets" in val_params
-        else int(eval_params["n_jets"])
-    )
+    working_point = val_params.working_point
+    n_jets_val = val_params.n_jets
 
     # Load the excluded variables from train_config
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
-
-    else:
-        exclude = None
+    exclude = train_config.general.exclude
+    logger.debug("Exclude option specified with values %s.", exclude)
 
     # Load variable config
-    with open(train_config.var_dict, "r") as conf:
+    with open(train_config.general.var_dict, "r") as conf:
         variable_config = yaml.load(conf, Loader=yaml_loader)
 
     # Get excluded variables
@@ -145,12 +127,12 @@ def train_umami_cond_att(args, train_config):
         variable_config["train_variables"], exclude
     )
 
-    if ".h5" in train_config.train_file:
+    if ".h5" in train_config.general.train_file:
         # Init a metadata dict
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f_train:
+        with h5py.File(train_config.general.train_file, "r") as f_train:
             (
                 metadata["n_jets"],
                 metadata["n_trks"],
@@ -164,7 +146,7 @@ def train_umami_cond_att(args, train_config):
                 "Input shape of jet training set: %s", metadata["n_jet_features"]
             )
 
-        if nn_structure["use_sample_weights"]:
+        if nn_structure.use_sample_weights:
             tensor_types = (
                 {"input_1": tf.float32, "input_2": tf.float32, "input_3": tf.float32},
                 tf.float32,
@@ -175,7 +157,7 @@ def train_umami_cond_att(args, train_config):
                     "input_1": tf.TensorShape(
                         [None, metadata["n_trks"], metadata["n_trk_features"]]
                     ),
-                    "input_2": tf.TensorShape([None, nn_structure["n_conditions"]]),
+                    "input_2": tf.TensorShape([None, nn_structure.n_conditions]),
                     "input_3": tf.TensorShape([None, metadata["n_jet_features"]]),
                 },
                 tf.TensorShape([None, metadata["n_dim"]]),
@@ -192,7 +174,7 @@ def train_umami_cond_att(args, train_config):
                     "input_1": tf.TensorShape(
                         [None, metadata["n_trks"], metadata["n_trk_features"]]
                     ),
-                    "input_2": tf.TensorShape([None, nn_structure["n_conditions"]]),
+                    "input_2": tf.TensorShape([None, nn_structure.n_conditions]),
                     "input_3": tf.TensorShape([None, metadata["n_jet_features"]]),
                 },
                 tf.TensorShape([None, metadata["n_dim"]]),
@@ -201,19 +183,18 @@ def train_umami_cond_att(args, train_config):
         train_dataset = (
             tf.data.Dataset.from_generator(
                 utf.UmamiConditionGenerator(
-                    train_file_path=train_config.train_file,
+                    train_file_path=train_config.general.train_file,
                     x_name="jets/inputs",
                     x_trk_name=f"{tracks_name}/inputs",
                     y_name="jets/labels_one_hot",
-                    n_jets=int(nn_structure["n_jets_train"])
-                    if "n_jets_train" in nn_structure
-                    and nn_structure["n_jets_train"] is not None
+                    n_jets=int(nn_structure.n_jets_train)
+                    if nn_structure.n_jets_train is not None
                     else metadata["n_jets"],
-                    batch_size=nn_structure["batch_size"],
-                    n_conds=nn_structure["n_conditions"],
+                    batch_size=nn_structure.batch_size,
+                    n_conds=nn_structure.n_conditions,
                     chunk_size=int(1e6),
                     excluded_var=excluded_var,
-                    sample_weights=nn_structure["use_sample_weights"],
+                    sample_weights=nn_structure.use_sample_weights,
                 ),
                 output_types=tensor_types,
                 output_shapes=tensor_shapes,
@@ -222,14 +203,14 @@ def train_umami_cond_att(args, train_config):
             .prefetch(tf.data.AUTOTUNE)
         )
 
-    elif os.path.isdir(train_config.train_file):
+    elif os.path.isdir(train_config.general.train_file):
         train_dataset, metadata = utf.load_tfrecords_train_dataset(
             train_config=train_config
         )
 
     else:
         raise ValueError(
-            f"input file {train_config.train_file} is neither a .h5 file nor "
+            f"input file {train_config.general.train_file} is neither a .h5 file nor "
             "a directory with TF Record Files. You should check this."
         )
 
@@ -237,12 +218,11 @@ def train_umami_cond_att(args, train_config):
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
         njet_features=metadata["n_jet_features"],
-        continue_training=train_config.continue_training,
     )
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
-        n_epochs = nn_structure["epochs"]
+        n_epochs = nn_structure.epochs
 
     # If not, use epochs from config file
     else:
@@ -250,20 +230,20 @@ def train_umami_cond_att(args, train_config):
 
     # Set ModelCheckpoint as callback
     umami_m_chk_pt = ModelCheckpoint(
-        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.general.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=nn_structure["batch_size"],
+        validation_batch_size=nn_structure.batch_size,
         save_weights_only=False,
     )
 
     # Append the callback
     callbacks.append(umami_m_chk_pt)
 
-    if "lrr" in nn_structure and nn_structure["lrr"] is True:
+    if nn_structure.lrr:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -275,21 +255,21 @@ def train_umami_cond_att(args, train_config):
             train_config=train_config,
             n_jets=n_jets_val,
             convert_to_tensor=True,
-            n_cond=nn_structure["n_conditions"],
+            n_cond=nn_structure.n_conditions,
         )
 
     # Init the Umami callback
     my_callback = utt.MyCallbackUmami(
-        model_name=train_config.model_name,
-        class_labels=nn_structure["class_labels"],
-        main_class=nn_structure["main_class"],
+        model_name=train_config.general.model_name,
+        class_labels=nn_structure.class_labels,
+        main_class=nn_structure.main_class,
         val_data_dict=val_data_dict,
         target_beff=working_point,
-        frac_dict=eval_params["frac_values"],
+        frac_dict=eval_params.frac_values,
         n_jets=n_jets_val,
-        continue_training=train_config.continue_training,
-        batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
+        continue_training=train_config.general.continue_training,
+        batch_size=val_params.val_batch_size,
+        use_lrr=nn_structure.lrr,
     )
 
     # Append the callback
@@ -301,9 +281,9 @@ def train_umami_cond_att(args, train_config):
         train_dataset,
         epochs=n_epochs,
         callbacks=callbacks,
-        steps_per_epoch=int(nn_structure["n_jets_train"]) / nn_structure["batch_size"]
-        if "n_jets_train" in nn_structure and nn_structure["n_jets_train"] is not None
-        else metadata["n_jets"] / nn_structure["batch_size"],
+        steps_per_epoch=int(nn_structure.n_jets_train) / nn_structure.batch_size
+        if nn_structure.n_jets_train is not None
+        else metadata["n_jets"] / nn_structure.batch_size,
         use_multiprocessing=True,
         workers=8,
         initial_epoch=init_epoch,

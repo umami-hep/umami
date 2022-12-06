@@ -163,7 +163,6 @@ def prepare_config(
     if tagger != "evaluate_comp_taggers":
         config_file["preprocess_config"] = f"{preprocessing_config}"
         config_file["train_file"] = f"{train_file}"
-        config_file["var_dict"] = f"{var_dict}"
         config_file["nn_structure"]["batch_size"] = 50
         config_file["nn_structure"]["epochs"] = 2
         config_file["nn_structure"]["n_jets_train"] = 100
@@ -224,8 +223,8 @@ def prepare_config(
             "bjets",
             "taujets",
         ]
-        config_file["validation_settings"]["taggers_from_file"] = None
-        config_file["evaluation_settings"]["tagger"] = None
+        del config_file["validation_settings"]["taggers_from_file"]
+        del config_file["evaluation_settings"]["tagger"]
         config_file["evaluation_settings"]["calculate_saliency"] = False
 
     if tagger == "dips":

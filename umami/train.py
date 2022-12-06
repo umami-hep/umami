@@ -100,22 +100,22 @@ if __name__ == "__main__":
         tf.config.experimental.set_memory_growth(gpu, True)
 
     # Get the train and preprocess config
-    train_config = utt.Configuration(args.config_file)
+    train_config = utt.TrainConfiguration(args.config_file)
 
     # Get the tagger which is to be trained from the train config
-    tagger_name = train_config.nn_structure["tagger"]
+    tagger_name = train_config.nn_structure.tagger
 
     # Check file format
-    check_train_file_format(train_config.config["train_file"])
+    check_train_file_format(train_config.general.train_file)
 
     # Create the metadatafolder
     utt.create_metadata_folder(
         train_config_path=args.config_file,
-        var_dict_path=train_config.var_dict,
-        model_name=train_config.model_name,
-        preprocess_config_path=train_config.preprocess_config.yaml_config,
+        var_dict_path=train_config.general.var_dict,
+        model_name=train_config.general.model_name,
+        preprocess_config_path=train_config.general.preprocess_config.yaml_config,
         overwrite_config=bool(args.overwrite_config),
-        model_file_path=train_config.model_file,
+        model_file_path=train_config.general.model_file,
     )
 
     if not args.prepare:

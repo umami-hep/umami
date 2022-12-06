@@ -117,53 +117,27 @@ def evaluate_model(
     """
 
     # Get train parameters
-    test_set_config = train_config.test_files[data_set_name]
+    test_set_config = train_config.general.test_files[data_set_name]
     eval_params = train_config.evaluation_settings
-    class_labels = train_config.nn_structure["class_labels"]
-    main_class = train_config.nn_structure["main_class"]
-    frac_values_comp = eval_params.get("frac_values_comp")
-    working_point = eval_params["working_point"]
-    add_variables = eval_params.get("add_eval_variables")
-    classes_to_evaluate = class_labels + eval_params.get(
-        "extra_classes_to_evaluate", []
-    )
-    tracks_name = (
-        train_config.tracks_name if hasattr(train_config, "tracks_name") else None
-    )
+    class_labels = train_config.nn_structure.class_labels
+    main_class = train_config.nn_structure.main_class
+    frac_values_comp = eval_params.frac_values_comp
+    working_point = eval_params.working_point
+    add_variables = eval_params.add_eval_variables
+    classes_to_evaluate = class_labels + eval_params.extra_classes_to_evaluate
+    tracks_name = train_config.general.tracks_name
     var_cuts = test_set_config.get("variable_cuts")
-    tagger_from_file = eval_params.get("tagger")
+    tagger_from_file = eval_params.tagger
+    results_filename_extension = eval_params.results_filename_extension
+    eval_model_bool = train_config.general.evaluate_trained_model
 
-    # Test if multiple taggers are given or not
-    if isinstance(tagger_from_file, str):
-        tagger_list = [tagger_from_file]
-
-    elif isinstance(tagger_from_file, list):
-        tagger_list = tagger_from_file
-
-    elif tagger_from_file is None:
-        tagger_list = []
-
-    else:
-        raise ValueError(
-            """
-            Tagger given in evaluation_settings
-            is not a string or a list!
-            """
-        )
-
-    if (
-        "results_filename_extension" in eval_params
-        and eval_params["results_filename_extension"] is not None
-    ):
-        results_filename_extension = eval_params["results_filename_extension"]
+    if results_filename_extension != "":
         logger.warning(
             "Results filename extension is set to %s. "
             "This means you have to specify the 'evaluation_file' when plotting your "
             "results.",
             results_filename_extension,
         )
-    else:
-        results_filename_extension = ""
 
     # Print a warning that no variable cuts are used for the file
     if var_cuts is None:
@@ -177,14 +151,7 @@ def evaluate_model(
     tagger_preds = None
 
     # Set number of n_jets for testing
-    n_jets = int(eval_params["n_jets"]) if not args.n_jets else args.n_jets
-
-    # Check the config if the trained model is also to be evaluated
-    try:
-        eval_model_bool = train_config.evaluate_trained_model
-
-    except AttributeError:
-        eval_model_bool = True
+    n_jets = int(eval_params.n_jets) if not args.n_jets else args.n_jets
 
     # Set epoch to use for evaluation of trained model or dummy value if
     # tagger scores from derivations should be used
@@ -197,7 +164,7 @@ def evaluate_model(
 
         # Get model file path
         model_file = utt.get_model_path(
-            model_name=train_config.model_name,
+            model_name=train_config.general.model_name,
             epoch=args.epoch,
         )
         logger.info("Evaluating %s", model_file)
@@ -217,17 +184,15 @@ def evaluate_model(
             model = load_model(model_file)
 
         # Define excluded variables and laod them
-        exclude = None
-        if "exclude" in train_config.config:
-            exclude = train_config.config["exclude"]
+        exclude = train_config.general.exclude
 
         # Check which test files need to be loaded depending on the umami version
         logger.info("Start loading %s test file", data_set_name)
         if tagger.casefold() == "dl1":
             x_comb, _ = utt.get_test_sample(
                 input_file=test_file,
-                var_dict=train_config.var_dict,
-                scale_dict=train_config.preprocess_config.dict_file,
+                var_dict=train_config.general.var_dict,
+                scale_dict=train_config.general.preprocess_config.dict_file,
                 class_labels=classes_to_evaluate,
                 n_jets=n_jets,
                 exclude=exclude,
@@ -237,7 +202,7 @@ def evaluate_model(
             # Predict the output of the model on the test jets
             pred_dl1 = model.predict(
                 x_comb,
-                batch_size=eval_params["eval_batch_size"],
+                batch_size=eval_params.eval_batch_size,
                 verbose=0,
             )
 
@@ -246,14 +211,14 @@ def evaluate_model(
             tagger_preds = [pred_dl1]
 
             # Define fraction value dict
-            frac_values = {tagger.casefold(): eval_params["frac_values"]}
+            frac_values = {tagger.casefold(): eval_params.frac_values}
 
         elif tagger.casefold() == "cads":
             # Load the test jets
             x_test, x_test_trk, y_test = utt.get_test_file(
                 input_file=test_file,
-                var_dict=train_config.var_dict,
-                scale_dict=train_config.preprocess_config.dict_file,
+                var_dict=train_config.general.var_dict,
+                scale_dict=train_config.general.preprocess_config.dict_file,
                 class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -271,7 +236,7 @@ def evaluate_model(
             # Get predictions from trained model
             pred_cads = model.predict(
                 x_comb,
-                batch_size=eval_params["eval_batch_size"],
+                batch_size=eval_params.eval_batch_size,
                 verbose=0,
             )
 
@@ -280,14 +245,14 @@ def evaluate_model(
             tagger_preds = [pred_cads]
 
             # Define fraction value dict
-            frac_values = {tagger.casefold(): eval_params["frac_values"]}
+            frac_values = {tagger.casefold(): eval_params.frac_values}
 
         elif tagger.casefold() in ("dips", "dips_attention"):
             # Load the test jets
             x_comb, y_test = utt.get_test_sample_trks(
                 input_file=test_file,
-                var_dict=train_config.var_dict,
-                scale_dict=train_config.preprocess_config.dict_file,
+                var_dict=train_config.general.var_dict,
+                scale_dict=train_config.general.preprocess_config.dict_file,
                 class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -297,7 +262,7 @@ def evaluate_model(
             # Get predictions from trained model
             pred_dips = model.predict(
                 x_comb,
-                batch_size=eval_params["eval_batch_size"],
+                batch_size=eval_params.eval_batch_size,
                 verbose=0,
             )
 
@@ -306,14 +271,14 @@ def evaluate_model(
             tagger_preds = [pred_dips]
 
             # Define fraction value dict
-            frac_values = {tagger.casefold(): eval_params["frac_values"]}
+            frac_values = {tagger.casefold(): eval_params.frac_values}
 
         elif tagger.casefold() in ("umami", "umami_cond_att"):
             # Get the testfile with the needed configs
             x_test, x_test_trk, _ = utt.get_test_file(
                 input_file=test_file,
-                var_dict=train_config.var_dict,
-                scale_dict=train_config.preprocess_config.dict_file,
+                var_dict=train_config.general.var_dict,
+                scale_dict=train_config.general.preprocess_config.dict_file,
                 class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -340,7 +305,7 @@ def evaluate_model(
             # Predict the output of the model on the test jets
             pred_dips, pred_umami = model.predict(
                 x_comb,
-                batch_size=eval_params["eval_batch_size"],
+                batch_size=eval_params.eval_batch_size,
                 verbose=0,
             )
 
@@ -350,8 +315,8 @@ def evaluate_model(
 
             # Define fraction value dict
             frac_values = {
-                "dips": eval_params["frac_values"]["dips"],
-                "umami": eval_params["frac_values"]["umami"],
+                "dips": eval_params.frac_values["dips"],
+                "umami": eval_params.frac_values["umami"],
             }
 
         else:
@@ -385,7 +350,7 @@ def evaluate_model(
     variables += list(set(label_var_list))
 
     # Add the predictions labels for the defined taggers to variables list
-    for tagger_iter in tagger_list:
+    for tagger_iter in tagger_from_file:
         variables += get_class_prob_var_names(
             tagger_name=f"{tagger_iter}", class_labels=classes_to_evaluate
         )
@@ -400,7 +365,9 @@ def evaluate_model(
     )
 
     # Create results dir
-    Path(f"{train_config.model_name}/results").mkdir(parents=True, exist_ok=True)
+    Path(f"{train_config.general.model_name}/results").mkdir(
+        parents=True, exist_ok=True
+    )
 
     if args.step in (None, "results"):
         # Get the discriminant values and probabilities of each tagger for each jet
@@ -410,7 +377,7 @@ def evaluate_model(
             tagger_classes=class_labels,
             tagger_preds=tagger_preds,
             tagger_names=tagger_names,
-            tagger_list=tagger_list,
+            tagger_list=tagger_from_file,
             class_labels=classes_to_evaluate,
             main_class=main_class,
             frac_values=frac_values if tagger_preds else None,
@@ -433,7 +400,7 @@ def evaluate_model(
 
         # Save dataframe to h5
         df_discs.to_hdf(
-            f"{train_config.model_name}/results/"
+            f"{train_config.general.model_name}/results/"
             f"results{results_filename_extension}-{epoch}.h5",
             data_set_name,
         )
@@ -446,14 +413,14 @@ def evaluate_model(
             tagger_classes=class_labels,
             tagger_preds=tagger_preds,
             tagger_names=tagger_names,
-            tagger_list=tagger_list,
+            tagger_list=tagger_from_file,
             class_labels=classes_to_evaluate,
             main_class=main_class,
             frac_values=frac_values if tagger_preds else None,
             frac_values_comp=frac_values_comp,
-            eff_min=eval_params.get("eff_min", 0.49),
-            eff_max=eval_params.get("eff_max", 1.0),
-            x_axis_granularity=eval_params.get("x_axis_granularity", 100),
+            eff_min=eval_params.eff_min,
+            eff_max=eval_params.eff_max,
+            x_axis_granularity=eval_params.x_axis_granularity,
             progress_bar=bool(args.verbose),
         )
 
@@ -461,7 +428,7 @@ def evaluate_model(
         del tagger_rej_dicts
 
         df_eff_rej.to_hdf(
-            f"{train_config.model_name}/results/"
+            f"{train_config.general.model_name}/results/"
             f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
             data_set_name,
         )
@@ -469,7 +436,7 @@ def evaluate_model(
         # Save the number of jets in the test file to the h5 file.
         # This is needed to calculate the binomial errors
         with h5py.File(
-            f"{train_config.model_name}/results/"
+            f"{train_config.general.model_name}/results/"
             f"results{results_filename_extension}-rej_per_eff-{epoch}.h5",
             "a",
         ) as h5_file:
@@ -487,13 +454,13 @@ def evaluate_model(
             tagger_classes=class_labels,
             tagger_preds=tagger_preds,
             tagger_names=tagger_names,
-            tagger_list=tagger_list,
+            tagger_list=tagger_from_file,
             class_labels=classes_to_evaluate,
             main_class=main_class,
             target_eff=working_point,
-            step=eval_params.get("frac_step", 0.01),
-            frac_min=eval_params.get("frac_min", 0.01),
-            frac_max=eval_params.get("frac_max", 1.0),
+            step=eval_params.frac_step,
+            frac_min=eval_params.frac_min,
+            frac_max=eval_params.frac_max,
             progress_bar=bool(args.verbose),
         )
 
@@ -502,7 +469,7 @@ def evaluate_model(
         del tagger_fraction_rej_dict
 
         df_frac_rej.to_hdf(
-            f"{train_config.model_name}/results/"
+            f"{train_config.general.model_name}/results/"
             f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
             data_set_name,
         )
@@ -510,7 +477,7 @@ def evaluate_model(
         # Save the number of jets in the test file to the h5 file.
         # This is needed to calculate the binomial errors
         with h5py.File(
-            f"{train_config.model_name}/results/"
+            f"{train_config.general.model_name}/results/"
             f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
             "a",
         ) as h5_file:
@@ -521,10 +488,7 @@ def evaluate_model(
                 )
 
     if args.step in (None, "saliency"):
-        if (
-            "calculate_saliency" in eval_params
-            and eval_params["calculate_saliency"] is True
-        ):
+        if eval_params.calculate_saliency is True:
             # Get the saliency map dict
             saliency_map_dict = uet.get_saliency_map_dict(
                 model=model,
@@ -533,16 +497,16 @@ def evaluate_model(
                 y_test=y_test,
                 class_labels=class_labels,
                 main_class=main_class,
-                frac_dict=eval_params["frac_values"],
-                var_dict_path=train_config.var_dict,
+                frac_dict=eval_params.frac_values,
+                var_dict_path=train_config.general.var_dict,
                 tracks_name=tracks_name,
-                n_trks=eval_params.get("saliency_ntrks"),
-                effs=eval_params.get("saliency_effs"),
+                n_trks=eval_params.saliency_ntrks,
+                effs=eval_params.saliency_effs,
             )
 
             # Pickle file
             with open(
-                f"{train_config.model_name}"
+                f"{train_config.general.model_name}"
                 f"/results/saliency{results_filename_extension}"
                 f"_{args.epoch}_{data_set_name}.pkl",
                 "wb",
@@ -558,7 +522,7 @@ def evaluate_model(
         # Retrieve the options from the eval params needed for shapley
         flavour, feature_sets, averaged_sets = itemgetter(
             "flavour", "feature_sets", "averaged_sets"
-        )(eval_params["shapley"])
+        )(eval_params.shapley)
 
         # If the given flavour is a string, convert it to list to be able to
         # loop over it
@@ -573,19 +537,19 @@ def evaluate_model(
                 test_data=x_comb,
                 model_output=class_labels.index(iter_flav),
                 feature_sets=feature_sets,
-                plot_size=eval_params["shapley"]["plot_size"],
-                plot_path=f"{train_config.model_name}/",
+                plot_size=eval_params.shapley["plot_size"],
+                plot_path=f"{train_config.general.model_name}/",
                 plot_name=data_set_name + "_shapley_" + iter_flav,
             )
 
-        if eval_params["shapley"]["bool_all_flavor_plot"]:
+        if eval_params.shapley["bool_all_flavor_plot"]:
             feature_importance.shapley_all_flavours(
                 model=model,
                 test_data=x_comb,
                 feature_sets=feature_sets,
                 averaged_sets=averaged_sets,
-                plot_size=eval_params["shapley"]["plot_size"],
-                plot_path=f"{train_config.model_name}/",
+                plot_size=eval_params.shapley["plot_size"],
+                plot_path=f"{train_config.general.model_name}/",
                 plot_name=data_set_name + "_shapley_all_flavors",
             )
 
@@ -597,10 +561,10 @@ if __name__ == "__main__":
     if arg_parser.verbose:
         set_log_level(logger, "DEBUG")
 
-    training_config = utt.Configuration(arg_parser.config_file)
+    training_config = utt.TrainConfiguration(arg_parser.config_file)
 
     # Retrieve tagger name from train config
-    tagger_name = training_config.nn_structure.get("tagger")
+    tagger_name = training_config.nn_structure.tagger
     if tagger_name is None:
         logger.info(
             "No tagger defined. Running evaluation without a freshly trained model!"
@@ -608,14 +572,8 @@ if __name__ == "__main__":
 
     # Check for evaluation only (= evaluation of tagger scores in files) is used:
     # if nothing is specified, assume that freshly trained tagger is evaluated
-    try:
-        evaluate_trained_model = training_config.evaluate_trained_model
-
-    except AttributeError:
-        evaluate_trained_model = True  # pylint: disable=invalid-name
-
     # TODO Change this in python 3.10
-    if evaluate_trained_model:
+    if training_config.general.evaluate_trained_model:
         logger.info("Start evaluating %s with test files...", tagger_name)
 
     else:
@@ -624,7 +582,7 @@ if __name__ == "__main__":
     for (
         test_file_identifier,
         test_file_config,
-    ) in training_config.test_files.items():
+    ) in training_config.general.test_files.items():
         evaluate_model(
             args=arg_parser,
             train_config=training_config,

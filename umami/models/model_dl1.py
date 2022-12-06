@@ -26,7 +26,6 @@ def create_dl1_model(
     train_config: object,
     input_shape: tuple,
     feature_connect_indices: list = None,
-    continue_training: bool = False,
 ):
     """
     Constructs or loads the DL1 model
@@ -40,15 +39,12 @@ def create_dl1_model(
         Size of the input: (nFeatures,).
     feature_connect_indices : list
         List with features that are feeded in another time.
-    continue_training : bool, optional
-        Decide, if the training is continued using the latest
-        model file, by default False
 
     Returns
     -------
     model : keras model
         Keras model.
-    nn_structure["epochs"] :
+    nn_structure.epochs :
         number of epochs to be trained
     init_epoch : int
         Starting epoch number
@@ -58,16 +54,13 @@ def create_dl1_model(
     nn_structure = train_config.nn_structure
 
     # Set NN options
-    batch_norm = nn_structure["batch_normalisation"]
-    class_labels = nn_structure["class_labels"]
+    batch_norm = nn_structure.batch_normalisation
+    class_labels = nn_structure.class_labels
     # Read dropout rates, set to zero if not specified
     dropout_rates = utt.get_dropout_rates("dropout_rate", "dense_sizes", nn_structure)
 
     # Check if a prepared model is used or not
-    model, init_epoch, load_optimiser = utf.prepare_model(
-        train_config=train_config,
-        continue_training=continue_training,
-    )
+    model, init_epoch, load_optimiser = utf.prepare_model(train_config=train_config)
 
     if model is None:
         # Define input
@@ -75,7 +68,7 @@ def create_dl1_model(
 
         # Define layers
         layer = inputs
-        for i, unit in enumerate(nn_structure["dense_sizes"]):
+        for i, unit in enumerate(nn_structure.dense_sizes):
             layer = Dense(
                 units=unit,
                 activation="linear",
@@ -91,7 +84,7 @@ def create_dl1_model(
                 layer = Dropout(dropout_rates[i])(layer)
 
             # Define activation for the layer
-            layer = Activation(nn_structure["activations"][i])(layer)
+            layer = Activation(nn_structure.activations[i])(layer)
 
         if feature_connect_indices is not None:
             layer = tf.keras.layers.concatenate(
@@ -107,7 +100,7 @@ def create_dl1_model(
 
     if load_optimiser is False:
         # Compile model with given optimiser
-        model_optimiser = Adam(learning_rate=nn_structure["lr"])
+        model_optimiser = Adam(learning_rate=nn_structure.learning_rate)
         model.compile(
             loss="categorical_crossentropy",
             optimizer=model_optimiser,
@@ -118,7 +111,7 @@ def create_dl1_model(
     if logger.level <= 20:
         model.summary()
 
-    return model, nn_structure["epochs"], init_epoch
+    return model, nn_structure.epochs, init_epoch
 
 
 def train_dl1(args, train_config):
@@ -146,27 +139,15 @@ def train_dl1(args, train_config):
     callbacks = []
 
     # Get needed variable from the train config
-    working_point = (
-        float(val_params["working_point"])
-        if "working_point" in val_params
-        else float(eval_params["working_point"])
-    )
-    n_jets_val = (
-        int(val_params["n_jets"])
-        if "n_jets" in val_params
-        else int(eval_params["n_jets"])
-    )
+    working_point = val_params.working_point
+    n_jets_val = val_params.n_jets
 
     # Load the excluded variables from train_config
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
-        logger.debug("Exclude option specified with values %s.", exclude)
-
-    else:
-        exclude = None
+    exclude = train_config.general.exclude
+    logger.debug("Exclude option specified with values %s.", exclude)
 
     # Load variable config
-    variable_config = get_variable_dict(train_config.var_dict)
+    variable_config = get_variable_dict(train_config.general.var_dict)
 
     # Get excluded variables
     variables, _, excluded_var = utt.get_jet_feature_indices(
@@ -175,26 +156,26 @@ def train_dl1(args, train_config):
 
     # Get variables to bring back in last layer
     feature_connect_indices = None
-    if "repeat_end" in nn_structure and nn_structure["repeat_end"] is not None:
-        repeat_end = nn_structure["repeat_end"]
+    if nn_structure.repeat_end is not None:
+        repeat_end = nn_structure.repeat_end
         logger.info(
             "Repeating the following variables in the last layer %s", repeat_end
         )
         feature_connect_indices = utt.get_jet_feature_position(repeat_end, variables)
 
-    if ".h5" in train_config.train_file:
+    if ".h5" in train_config.general.train_file:
         # Init a metadata dict
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f_train:
+        with h5py.File(train_config.general.train_file, "r") as f_train:
             metadata["n_jets"], metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
             _, metadata["n_jet_features"] = f_train["jets/inputs"].shape
             if exclude is not None:
                 metadata["n_jet_features"] -= len(excluded_var)
             logger.debug("Input shape of training set: %s", metadata["n_jet_features"])
 
-        if nn_structure["use_sample_weights"]:
+        if nn_structure.use_sample_weights:
             tensor_types = (tf.float32, tf.float32, tf.float32)
             tensor_shapes = (
                 tf.TensorShape([None, metadata["n_jet_features"]]),
@@ -212,16 +193,15 @@ def train_dl1(args, train_config):
         train_dataset = (
             tf.data.Dataset.from_generator(
                 utf.Dl1Generator(
-                    train_file_path=train_config.train_file,
+                    train_file_path=train_config.general.train_file,
                     x_name="jets/inputs",
                     y_name="jets/labels_one_hot",
-                    n_jets=int(nn_structure["n_jets_train"])
-                    if "n_jets_train" in nn_structure
-                    and nn_structure["n_jets_train"] is not None
+                    n_jets=int(nn_structure.n_jets_train)
+                    if nn_structure.n_jets_train is not None
                     else metadata["n_jets"],
-                    batch_size=nn_structure["batch_size"],
+                    batch_size=nn_structure.batch_size,
                     excluded_var=excluded_var,
-                    sample_weights=nn_structure["use_sample_weights"],
+                    sample_weights=nn_structure.use_sample_weights,
                 ),
                 tensor_types,
                 tensor_shapes,
@@ -230,14 +210,14 @@ def train_dl1(args, train_config):
             .prefetch(tf.data.AUTOTUNE)
         )
 
-    elif os.path.isdir(train_config.train_file):
+    elif os.path.isdir(train_config.general.train_file):
         train_dataset, metadata = utf.load_tfrecords_train_dataset(
             train_config=train_config
         )
 
     else:
         raise ValueError(
-            f"input file {train_config.train_file} is neither a .h5 file nor a"
+            f"input file {train_config.general.train_file} is neither a .h5 file nor a"
             " directory with TF Record Files. You should check this."
         )
 
@@ -246,7 +226,6 @@ def train_dl1(args, train_config):
         train_config=train_config,
         input_shape=(metadata["n_jet_features"],),
         feature_connect_indices=feature_connect_indices,
-        continue_training=train_config.continue_training,
     )
 
     # Check if epochs is set via argparser or not
@@ -259,20 +238,20 @@ def train_dl1(args, train_config):
 
     # Set ModelCheckpoint as callback
     dl1_m_chkpt = ModelCheckpoint(
-        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.general.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=nn_structure["batch_size"],
+        validation_batch_size=nn_structure.batch_size,
         save_weights_only=False,
     )
 
     # Append the callback
     callbacks.append(dl1_m_chkpt)
 
-    if "lrr" in nn_structure and nn_structure["lrr"] is True:
+    if nn_structure.lrr:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -289,16 +268,16 @@ def train_dl1(args, train_config):
     # Set my_callback as callback. Writes history information
     # to json file.
     my_callback = utt.MyCallback(
-        model_name=train_config.model_name,
-        class_labels=nn_structure["class_labels"],
-        main_class=nn_structure["main_class"],
+        model_name=train_config.general.model_name,
+        class_labels=nn_structure.class_labels,
+        main_class=nn_structure.main_class,
         val_data_dict=val_data_dict,
         target_beff=working_point,
-        frac_dict=eval_params["frac_values"],
+        frac_dict=eval_params.frac_values,
         n_jets=n_jets_val,
-        continue_training=train_config.continue_training,
-        batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
+        continue_training=train_config.general.continue_training,
+        batch_size=val_params.val_batch_size,
+        use_lrr=nn_structure.lrr,
     )
 
     # Append the callback
@@ -311,9 +290,9 @@ def train_dl1(args, train_config):
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=callbacks,
-        steps_per_epoch=int(nn_structure["n_jets_train"]) / nn_structure["batch_size"]
-        if "n_jets_train" in nn_structure and nn_structure["n_jets_train"] is not None
-        else metadata["n_jets"] / nn_structure["batch_size"],
+        steps_per_epoch=int(nn_structure.n_jets_train) / nn_structure.batch_size
+        if nn_structure.n_jets_train is not None
+        else metadata["n_jets"] / nn_structure.batch_size,
         use_multiprocessing=True,
         workers=8,
         initial_epoch=init_epoch,
