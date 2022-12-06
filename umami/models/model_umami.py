@@ -28,7 +28,6 @@ def create_umami_model(
     train_config: object,
     input_shape: tuple,
     njet_features: int,
-    continue_training: bool = False,
 ):
     """Keras model definition of UMAMI tagger.
 
@@ -40,9 +39,6 @@ def create_umami_model(
         dataset input shape
     njet_features: int
         number of jet features
-    continue_training : bool, optional
-        Decide, if the training is continued using the latest
-        model file, by default False
 
     Returns
     -------
@@ -57,15 +53,18 @@ def create_umami_model(
     nn_structure = train_config.nn_structure
 
     # Set NN options
-    batch_norm = nn_structure["batch_normalisation"]
-    dropout = nn_structure["dropout"]
-    class_labels = nn_structure["class_labels"]
+    batch_norm = nn_structure.batch_normalisation
+    dropout_rates_phi = utt.get_dropout_rates(
+        "dropout_rate_phi", "dips_ppm_units", nn_structure
+    )
+    dropout_rates_f = utt.get_dropout_rates(
+        "dropout_rate_f", "dips_dense_units", nn_structure
+    )
+    dropout_rates_dl1 = utt.get_dropout_rates("dropout_rate", "dl1_units", nn_structure)
+    class_labels = nn_structure.class_labels
 
     # Check if a prepared model is used or not
-    umami, init_epoch, load_optimiser = utf.prepare_model(
-        train_config=train_config,
-        continue_training=continue_training,
-    )
+    umami, init_epoch, load_optimiser = utf.prepare_model(train_config=train_config)
 
     if umami is None:
         logger.info("No modelfile provided! Initialising a new one!")
@@ -78,7 +77,9 @@ def create_umami_model(
         tdd = masked_inputs
 
         # Define the TimeDistributed layers for the different tracks
-        for i, phi_nodes in enumerate(nn_structure["dips_ppm_units"]):
+        for i, (phi_nodes, dropout_rate_phi) in enumerate(
+            zip(nn_structure.dips_ppm_units, dropout_rates_phi)
+        ):
 
             tdd = TimeDistributed(
                 Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
@@ -89,10 +90,10 @@ def create_umami_model(
                     BatchNormalization(), name=f"Phi{i}_BatchNormalization"
                 )(tdd)
 
-            if dropout != 0:
-                tdd = TimeDistributed(Dropout(rate=dropout), name=f"Phi{i}_Dropout")(
-                    tdd
-                )
+            if dropout_rate_phi != 0:
+                tdd = TimeDistributed(
+                    Dropout(rate=dropout_rate_phi), name=f"Phi{i}_Dropout"
+                )(tdd)
 
             tdd = TimeDistributed(Activation(activations.relu), name=f"Phi{i}_ReLU")(
                 tdd
@@ -101,18 +102,16 @@ def create_umami_model(
         # This is where the magic happens... sum up the track features!
         f_net = utf.Sum(name="Sum")(tdd)
 
-        for j, (f_nodes, drop_rate) in enumerate(
-            zip(
-                nn_structure["dips_dense_units"],
-                [dropout] * len(nn_structure["dips_dense_units"][:-1]) + [0],
-            )
+        # Define the main dips structure
+        for j, (f_nodes, dropout_rate_f) in enumerate(
+            zip(nn_structure.dips_dense_units, dropout_rates_f)
         ):
 
             f_net = Dense(f_nodes, activation="linear", name=f"F{j}_Dense")(f_net)
             if batch_norm:
                 f_net = BatchNormalization(name=f"F{j}_BatchNormalization")(f_net)
-            if dropout != 0:
-                f_net = Dropout(rate=drop_rate, name=f"F{j}_Dropout")(f_net)
+            if dropout_rate_f != 0:
+                f_net = Dropout(rate=dropout_rate_f, name=f"F{j}_Dropout")(f_net)
             f_net = Activation(activations.relu, name=f"F{j}_ReLU")(f_net)
 
         dips_output = Dense(len(class_labels), activation="softmax", name="dips")(f_net)
@@ -122,7 +121,7 @@ def create_umami_model(
 
         # Adding the intermediate dense layers for DL1
         x_net = jet_inputs
-        for unit in nn_structure["intermediate_units"]:
+        for unit in nn_structure.intermediate_units:
             x_net = Dense(
                 units=unit,
                 activation="linear",
@@ -135,13 +134,23 @@ def create_umami_model(
         x_net = Concatenate()([f_net, x_net])
 
         # Loop to initialise the hidden layers
-        for unit in nn_structure["dl1_units"]:
+        for i, (unit, dropout_rate_dl1) in enumerate(
+            zip(nn_structure.dl1_units, dropout_rates_dl1)
+        ):
             x_net = Dense(
                 units=unit,
                 activation="linear",
                 kernel_initializer="glorot_uniform",
             )(x_net)
-            x_net = BatchNormalization()(x_net)
+
+            # Add Batch Normalization if True
+            if batch_norm:
+                x_net = BatchNormalization()(x_net)
+
+            # Add dropout layer if dropout rate is non-zero for this layer
+            if dropout_rate_dl1 != 0:
+                x_net = Dropout(dropout_rate_dl1)(x_net)
+
             x_net = Activation("relu")(x_net)
 
         jet_output = Dense(
@@ -157,10 +166,10 @@ def create_umami_model(
 
     if load_optimiser is False:
         # Set optimier and loss
-        model_optimiser = Adam(learning_rate=nn_structure["lr"])
+        model_optimiser = Adam(learning_rate=nn_structure.learning_rate)
         umami.compile(
             loss="categorical_crossentropy",
-            loss_weights={"dips": nn_structure["dips_loss_weight"], "umami": 1},
+            loss_weights={"dips": nn_structure.dips_loss_weight, "umami": 1},
             optimizer=model_optimiser,
             metrics=["accuracy"],
         )
@@ -169,7 +178,7 @@ def create_umami_model(
     if logger.level <= 20:
         umami.summary()
 
-    return umami, nn_structure["epochs"], init_epoch
+    return umami, nn_structure.epochs, init_epoch
 
 
 def train_umami(args, train_config):
@@ -197,19 +206,11 @@ def train_umami(args, train_config):
     callbacks = []
 
     # Set the tracks collection name
-    tracks_name = train_config.tracks_name
+    tracks_name = train_config.general.tracks_name
 
     # Get needed variable from the train config
-    working_point = (
-        float(val_params["working_point"])
-        if "working_point" in val_params
-        else float(eval_params["working_point"])
-    )
-    n_jets_val = (
-        int(val_params["n_jets"])
-        if "n_jets" in val_params
-        else int(eval_params["n_jets"])
-    )
+    working_point = val_params.working_point
+    n_jets_val = val_params.n_jets
 
     val_data_dict = None
     if n_jets_val > 0:
@@ -220,26 +221,23 @@ def train_umami(args, train_config):
         )
 
     # Load the excluded variables from train_config
-    if "exclude" in train_config.config:
-        exclude = train_config.config["exclude"]
-
-    else:
-        exclude = None
+    exclude = train_config.general.exclude
+    logger.debug("Exclude option specified with values %s.", exclude)
 
     # Load variable config
-    variable_config = get_variable_dict(train_config.var_dict)
+    variable_config = get_variable_dict(train_config.general.var_dict)
 
     # Get excluded variables
     _, _, excluded_var = utt.get_jet_feature_indices(
         variable_config["train_variables"], exclude
     )
 
-    if ".h5" in train_config.train_file:
+    if ".h5" in train_config.general.train_file:
         # Init a metadata dict
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as h5_file:
+        with h5py.File(train_config.general.train_file, "r") as h5_file:
             (
                 metadata["n_jets"],
                 metadata["n_trks"],
@@ -253,7 +251,7 @@ def train_umami(args, train_config):
                 "Input shape of jet training set: %s", metadata["n_jet_features"]
             )
 
-        if nn_structure["use_sample_weights"]:
+        if nn_structure.use_sample_weights:
             tensor_types = (
                 {"input_1": tf.float32, "input_2": tf.float32},
                 tf.float32,
@@ -289,17 +287,16 @@ def train_umami(args, train_config):
         train_dataset = (
             tf.data.Dataset.from_generator(
                 utf.UmamiGenerator(
-                    train_file_path=train_config.train_file,
+                    train_file_path=train_config.general.train_file,
                     x_name="jets/inputs",
                     x_trk_name=f"{tracks_name}/inputs",
                     y_name="jets/labels_one_hot",
-                    n_jets=int(nn_structure["n_jets_train"])
-                    if "n_jets_train" in nn_structure
-                    and nn_structure["n_jets_train"] is not None
+                    n_jets=int(nn_structure.n_jets_train)
+                    if nn_structure.n_jets_train is not None
                     else metadata["n_jets"],
-                    batch_size=nn_structure["batch_size"],
+                    batch_size=nn_structure.batch_size,
                     excluded_var=excluded_var,
-                    sample_weights=nn_structure["use_sample_weights"],
+                    sample_weights=nn_structure.use_sample_weights,
                 ),
                 output_types=tensor_types,
                 output_shapes=tensor_shapes,
@@ -308,14 +305,14 @@ def train_umami(args, train_config):
             .prefetch(tf.data.AUTOTUNE)
         )
 
-    elif os.path.isdir(train_config.train_file):
+    elif os.path.isdir(train_config.general.train_file):
         train_dataset, metadata = utf.load_tfrecords_train_dataset(
             train_config=train_config
         )
 
     else:
         raise ValueError(
-            f"input file {train_config.train_file} is neither a .h5 file nor a"
+            f"input file {train_config.general.train_file} is neither a .h5 file nor a"
             " directory with TF Record Files. You should check this."
         )
 
@@ -323,31 +320,30 @@ def train_umami(args, train_config):
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
         njet_features=metadata["n_jet_features"],
-        continue_training=train_config.continue_training,
     )
 
     # Check if epochs is set via argparser or not
     if args.epochs is None:
-        n_epochs = nn_structure["epochs"]
+        n_epochs = nn_structure.epochs
 
     # If not, use epochs from config file
     else:
         n_epochs = args.epochs
 
-    if "lrr" in nn_structure and nn_structure["lrr"] is True:
+    if nn_structure.lrr:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
 
     # Set ModelCheckpoint as callback
     umami_model_checkpoint = ModelCheckpoint(
-        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.general.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=nn_structure["batch_size"],
+        validation_batch_size=nn_structure.batch_size,
         save_weights_only=False,
     )
 
@@ -356,16 +352,16 @@ def train_umami(args, train_config):
 
     # Init the Umami callback
     my_callback = utt.MyCallbackUmami(
-        model_name=train_config.model_name,
-        class_labels=nn_structure["class_labels"],
-        main_class=nn_structure["main_class"],
+        model_name=train_config.general.model_name,
+        class_labels=nn_structure.class_labels,
+        main_class=nn_structure.main_class,
         val_data_dict=val_data_dict,
         target_beff=working_point,
-        frac_dict=eval_params["frac_values"],
+        frac_dict=eval_params.frac_values,
         n_jets=n_jets_val,
-        continue_training=train_config.continue_training,
-        batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
+        continue_training=train_config.general.continue_training,
+        batch_size=val_params.val_batch_size,
+        use_lrr=nn_structure.lrr,
     )
 
     # Append the callback
@@ -385,9 +381,9 @@ def train_umami(args, train_config):
         #     val_data_dict["Y_valid"],
         # ),
         callbacks=callbacks,
-        steps_per_epoch=int(nn_structure["n_jets_train"]) / nn_structure["batch_size"]
-        if "n_jets_train" in nn_structure and nn_structure["n_jets_train"] is not None
-        else metadata["n_jets"] / nn_structure["batch_size"],
+        steps_per_epoch=int(nn_structure.n_jets_train) / nn_structure.batch_size
+        if nn_structure.n_jets_train is not None
+        else metadata["n_jets"] / nn_structure.batch_size,
         use_multiprocessing=True,
         workers=8,
         initial_epoch=init_epoch,

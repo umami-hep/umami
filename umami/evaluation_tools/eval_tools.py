@@ -751,10 +751,6 @@ def get_saliency_map_dict(
 
     logger.info("Calculate gradients for inputs")
 
-    # Check if default nTracks must be used
-    if n_trks is None:
-        n_trks = 8
-
     # Check effs for None
     if effs is None:
         effs = [60, 70, 77, 85]

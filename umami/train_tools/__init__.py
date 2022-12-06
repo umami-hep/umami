@@ -1,6 +1,6 @@
 # flake8: noqa
 # pylint: skip-file
-from umami.train_tools.configuration import Configuration
+from umami.train_tools.configuration import TrainConfiguration
 from umami.train_tools.nn_tools import (
     MyCallback,
     MyCallbackUmami,

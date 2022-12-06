@@ -106,30 +106,22 @@ def main(args, train_config):
     """ """"""
     # Get the eval and val params from the train config
     val_params = train_config.validation_settings
-    eval_params = train_config.evaluation_settings
 
     # Check for format option
     if args.format:
-        train_config.validation_settings["plot_datatype"] = args.format
+        train_config.validation_settings.plot_datatype = args.format
 
     # Check for n_jets args
     if args.n_jets is None:
-        n_jets = (
-            int(val_params["n_jets"])
-            if "n_jets" in val_params
-            else int(eval_params["n_jets"])
-        )
+        n_jets = val_params.n_jets
 
     else:
         n_jets = args.n_jets
 
     # Get the b eff
     if args.beff is None:
-        working_point = (
-            float(val_params["working_point"])
-            if "working_point" in val_params
-            else float(eval_params["working_point"])
-        )
+        working_point = val_params.working_point
+
     else:
         working_point = args.beff
 
@@ -138,7 +130,7 @@ def main(args, train_config):
         tagger = args.tagger
 
     else:
-        tagger = train_config.nn_structure["tagger"]
+        tagger = train_config.nn_structure.tagger
 
     # Check if the tagger given is supported
     if tagger.casefold() in [
@@ -161,7 +153,7 @@ def main(args, train_config):
             train_metrics_file_name, _ = utt.get_metrics_file_name(
                 working_point=working_point,
                 n_jets=n_jets,
-                dir_name=train_config.model_name,
+                dir_name=train_config.general.model_name,
             )
 
             # Calculate the validation metrics and save them
@@ -180,16 +172,16 @@ def main(args, train_config):
             ) = utt.get_metrics_file_name(
                 working_point=working_point,
                 n_jets=n_jets,
-                dir_name=train_config.model_name,
+                dir_name=train_config.general.model_name,
             )
             beff = working_point
 
         # Get the comparison tagger variables
-        if val_params["taggers_from_file"]:
+        if val_params.taggers_from_file:
             comp_tagger_list = (
-                val_params["taggers_from_file"].keys()
-                if isinstance(val_params["taggers_from_file"], dict)
-                else val_params["taggers_from_file"]
+                val_params.taggers_from_file.keys()
+                if isinstance(val_params.taggers_from_file, dict)
+                else val_params.taggers_from_file
             )
 
         # Run the Performance check with the values from the dict and plot them
@@ -199,12 +191,11 @@ def main(args, train_config):
             tagger_comp_vars={
                 f"{comp_tagger}": get_class_prob_var_names(
                     tagger_name=f"{comp_tagger}",
-                    class_labels=train_config.nn_structure["class_labels"],
+                    class_labels=train_config.nn_structure.class_labels,
                 )
                 for comp_tagger in comp_tagger_list
             }
-            if "taggers_from_file" in val_params
-            and val_params["taggers_from_file"] is not None
+            if val_params.taggers_from_file is not None
             else None,
             train_metrics_file_name=train_metrics_file_name,
             val_metrics_file_name=val_metrics_file_name,
@@ -232,5 +223,5 @@ if __name__ == "__main__":
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
 
-    training_config = utt.Configuration(arg_parser.config_file)
+    training_config = utt.TrainConfiguration(arg_parser.config_file)
     main(arg_parser, training_config)

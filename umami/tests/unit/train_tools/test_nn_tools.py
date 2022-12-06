@@ -11,7 +11,7 @@ import numpy as np
 
 from umami.configuration import logger, set_log_level
 from umami.tools import replace_line_in_file
-from umami.train_tools.configuration import Configuration
+from umami.train_tools.configuration import TrainConfiguration
 from umami.train_tools.nn_tools import (
     CallbackBase,
     MyCallback,
@@ -33,6 +33,10 @@ from umami.train_tools.nn_tools import (
 )
 
 set_log_level(logger, "DEBUG")
+
+
+class ConfigObject:
+    """Object class with attributes."""
 
 
 class MinimalPreprocessingConfig:
@@ -352,80 +356,107 @@ class ConfigurationTestCase(unittest.TestCase):
         """
         Set a example config file.
         """
-        self.config_file = (
-            Path(os.path.dirname(__file__)) / "fixtures/test_train_config.yaml"
+        self.config_file_dl1r = (
+            Path(os.path.dirname(__file__))
+            / "../../../../examples/training/DL1r-PFlow-Training-config.yaml"
         )
+        self.config_file_dips = (
+            Path(os.path.dirname(__file__))
+            / "../../../../examples/training/Dips-PFlow-Training-config.yaml"
+        )
+        self.config_file_cads = (
+            Path(os.path.dirname(__file__))
+            / "../../../../examples/training/CADS-PFlow-Training-config.yaml"
+        )
+        self.config_file_umami = (
+            Path(os.path.dirname(__file__))
+            / "../../../../examples/training/umami-PFlow-Training-config.yaml"
+        )
+
+    def test_dips_config(self):
+        """Test call of DIPS configuration file."""
+        _ = TrainConfiguration(self.config_file_dips)
+
+    def test_cads_config(self):
+        """Test call of CADS configuration file."""
+        _ = TrainConfiguration(self.config_file_cads)
+
+    def test_umami_config(self):
+        """Test call of Umami configuration file."""
+        _ = TrainConfiguration(self.config_file_umami)
 
     def test_no_val_no_eval_batch_size(self):
         """Test the no validation and no evaluation batch size given case."""
-        config = Configuration(self.config_file)
+        config = TrainConfiguration(self.config_file_dl1r)
 
         with self.subTest("Test validation batch size"):
             self.assertEqual(
-                config.nn_structure["batch_size"],
-                config.validation_settings["val_batch_size"],
+                config.nn_structure.batch_size,
+                config.validation_settings.val_batch_size,
             )
 
         with self.subTest("Test evaluation batch size"):
             self.assertEqual(
-                config.validation_settings["val_batch_size"],
-                config.evaluation_settings["eval_batch_size"],
+                config.validation_settings.val_batch_size,
+                config.evaluation_settings.eval_batch_size,
             )
 
     def test_no_val_batch_size(self):
         """Test the no validation batch size given case."""
-        config = Configuration(self.config_file)
-        config.evaluation_settings["eval_batch_size"] = 50
+        config = TrainConfiguration(self.config_file_dl1r)
+        config.config["evaluation_settings"]["eval_batch_size"] = 50
+        config.get_configuration()
 
         with self.subTest("Test validation batch size"):
             self.assertEqual(
-                config.nn_structure["batch_size"],
-                config.validation_settings["val_batch_size"],
+                config.nn_structure.batch_size,
+                config.validation_settings.val_batch_size,
             )
 
         with self.subTest("Test evaluation batch size"):
             self.assertNotEqual(
-                config.validation_settings["val_batch_size"],
-                config.evaluation_settings["eval_batch_size"],
+                config.validation_settings.val_batch_size,
+                config.evaluation_settings.eval_batch_size,
             )
 
     def test_no_eval_batch_size(self):
         """Test the no evaluation batch size given case."""
-        config = Configuration(self.config_file)
-        config.validation_settings["val_batch_size"] = 50
+        config = TrainConfiguration(self.config_file_dl1r)
+        config.config["validation_settings"]["val_batch_size"] = 50
+        config.get_configuration()
 
         with self.subTest("Test evaluation batch size"):
             self.assertEqual(
-                config.nn_structure["batch_size"],
-                config.evaluation_settings["eval_batch_size"],
+                config.nn_structure.batch_size,
+                config.evaluation_settings.eval_batch_size,
             )
 
         with self.subTest("Test different val and eval batch sizes"):
             self.assertNotEqual(
-                config.validation_settings["val_batch_size"],
-                config.evaluation_settings["eval_batch_size"],
+                config.validation_settings.val_batch_size,
+                config.evaluation_settings.eval_batch_size,
             )
 
     def test_no_batch_size(self):
         """Test no batch size given error."""
-        config = Configuration(self.config_file)
-        del config.config["nn_structure"]["batch_size"]
-        del config.config["validation_settings"]["val_batch_size"]
-        del config.config["evaluation_settings"]["eval_batch_size"]
+        config = TrainConfiguration(self.config_file_dl1r)
+        config.config["nn_structure"]["batch_size"] = None
+        config.config["validation_settings"]["val_batch_size"] = None
+        config.config["evaluation_settings"]["eval_batch_size"] = None
         with self.assertRaises(ValueError):
             config.get_configuration()
 
     def test_missing_key_error(self):
         """Test missing key error."""
-        config = Configuration(self.config_file)
+        config = TrainConfiguration(self.config_file_dl1r)
         del config.config["model_name"]
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             config.get_configuration()
 
     def test_double_label_value(self):
         """Test double label error."""
-        config = Configuration(self.config_file)
-        config.nn_structure["class_labels"] = [
+        config = TrainConfiguration(self.config_file_dl1r)
+        config.config["nn_structure"]["class_labels"] = [
             "bjets",
             "singlebjets",
             "cjets",
@@ -437,8 +468,8 @@ class ConfigurationTestCase(unittest.TestCase):
 
     def test_double_defined_b_jets(self):
         """Test double defined bjets error."""
-        config = Configuration(self.config_file)
-        config.nn_structure["class_labels"] = [
+        config = TrainConfiguration(self.config_file_dl1r)
+        config.config["nn_structure"]["class_labels"] = [
             "bjets",
             "bbjets",
             "cjets",
@@ -450,8 +481,8 @@ class ConfigurationTestCase(unittest.TestCase):
 
     def test_double_defined_c_jets(self):
         """Test double defined cjets error."""
-        config = Configuration(self.config_file)
-        config.nn_structure["class_labels"] = [
+        config = TrainConfiguration(self.config_file_dl1r)
+        config.config["nn_structure"]["class_labels"] = [
             "bjets",
             "ccjets",
             "cjets",
@@ -463,18 +494,18 @@ class ConfigurationTestCase(unittest.TestCase):
 
     def test_cads_without_cond_info(self):
         """Test cads without conditions error."""
-        config = Configuration(self.config_file)
-        config.nn_structure["n_conditions"] = 0
-        config.nn_structure["tagger"] = "cads"
+        config = TrainConfiguration(self.config_file_dl1r)
+        config.config["nn_structure"]["n_conditions"] = 0
+        config.config["nn_structure"]["tagger"] = "cads"
 
         with self.assertRaises(ValueError):
             config.get_configuration()
 
     def test_dips_att_with_cond_info(self):
         """Test dips attention with conditions error."""
-        config = Configuration(self.config_file)
-        config.nn_structure["n_conditions"] = 2
-        config.nn_structure["tagger"] = "dips_attention"
+        config = TrainConfiguration(self.config_file_dl1r)
+        config.config["nn_structure"]["n_conditions"] = 2
+        config.config["nn_structure"]["tagger"] = "dips_attention"
 
         with self.assertRaises(ValueError):
             config.get_configuration()
@@ -791,6 +822,18 @@ class GetSamplesTestCase(unittest.TestCase):
             scale_dict=self.dict_file,
         )
 
+        # object wise train config
+        self.test_object = ConfigObject()
+        self.test_object.general = ConfigObject()
+        self.test_object.nn_structure = ConfigObject()
+        self.test_object.nn_structure.class_labels = self.nn_structure["class_labels"]
+        self.test_object.nn_structure.tagger = self.nn_structure["tagger"]
+        self.test_object.general.exclude = self.exclude
+        self.test_object.general.tracks_name = self.tracks_name
+        self.test_object.general.validation_files = self.validation_files
+        self.test_object.general.var_dict = self.var_dict
+        self.test_object.general.preprocess_config = self.preprocess_config
+
     def test_get_test_sample_trks(self):
         """Test nominal behaviour."""
         x_trk, y_trk = get_test_sample_trks(
@@ -965,10 +1008,10 @@ class GetSamplesTestCase(unittest.TestCase):
         for convert_to_tensor in [True, False]:
             for iter_tagger in ["umami", "umami_cond_att", "cads"]:
                 with self.subTest(f"{iter_tagger}_tensor_{convert_to_tensor}"):
-                    self.nn_structure["tagger"] = iter_tagger
+                    self.test_object.nn_structure.tagger = iter_tagger
 
                     val_data_dict = load_validation_data(
-                        train_config=self,
+                        train_config=self.test_object,
                         n_jets=self.n_jets,
                         convert_to_tensor=convert_to_tensor,
                     )
@@ -987,10 +1030,10 @@ class GetSamplesTestCase(unittest.TestCase):
 
             for iter_tagger in ["dips", "dips_attention", "dl1"]:
                 with self.subTest(f"{iter_tagger}_tensor_{convert_to_tensor}"):
-                    self.nn_structure["tagger"] = iter_tagger
+                    self.test_object.nn_structure.tagger = iter_tagger
 
                     val_data_dict = load_validation_data(
-                        train_config=self,
+                        train_config=self.test_object,
                         n_jets=self.n_jets,
                         convert_to_tensor=convert_to_tensor,
                     )
@@ -1007,20 +1050,20 @@ class GetSamplesTestCase(unittest.TestCase):
 
     def test_load_validation_data_unsupported_tagger(self):
         """Test behaviour when not supported tagger is provided."""
-        self.nn_structure["tagger"] = "not_supported_tagger"
+        self.test_object.nn_structure.tagger = "not_supported_tagger"
 
         with self.assertRaises(ValueError):
             load_validation_data(
-                train_config=self,
+                train_config=self.test_object,
                 n_jets=self.n_jets,
             )
 
     def test_load_validation_data_no_var_cuts(self):
         """Test the loading of the validation data for umami with no variable cuts."""
-        self.nn_structure["tagger"] = "umami"
+        self.test_object.nn_structure.tagger = "umami"
 
         val_data_dict = load_validation_data(
-            train_config=self,
+            train_config=self.test_object,
             n_jets=self.n_jets,
         )
 
@@ -1041,31 +1084,26 @@ class GetDropoutRatesTestCase(unittest.TestCase):
     """Test class for the helper function get_dropout_rates."""
 
     def setUp(self) -> None:
-        self.testdict_dips = {
-            "ppm_sizes": [100, 100, 128],
-            "dropout_rates_phi": [0, 0.1, 0],
-            "dense_sizes": [100, 100, 100, 30],
-            "dropout_rate": [0.1, 0.1, 0.1, 0.1],
-        }
+        self.ppm_sizes = [100, 100, 128]
+        self.dropout_rates_phi = [0, 0.1, 0]
+        self.dense_sizes = [100, 100, 100, 30]
+        self.dropout_rate = [0.1, 0.1, 0.1, 0.1]
 
     def test_correct_config_dips(self):
         """Test the case for DIPS"""
         with self.subTest():
             self.assertListEqual(
                 [0, 0.1, 0],
-                get_dropout_rates("dropout_rates_phi", "ppm_sizes", self.testdict_dips),
+                get_dropout_rates("dropout_rates_phi", "ppm_sizes", self),
             )
         with self.subTest():
             self.assertListEqual(
                 [0.1, 0.1, 0.1, 0.1],
-                get_dropout_rates("dropout_rate", "dense_sizes", self.testdict_dips),
+                get_dropout_rates("dropout_rate", "dense_sizes", self),
             )
 
     def test_wrong_length(self):
         """Test if error is raised if dropout rate is not defined for each layer."""
-        testdict_wrong_length = {
-            "dense_sizes": [100, 100, 128],
-            "dropout_rate": [0.1, 0],
-        }
+        self.dropout_rate = [0.1, 0]
         with self.assertRaises(ValueError):
-            get_dropout_rates("dropout_rate", "dense_sizes", testdict_wrong_length)
+            get_dropout_rates("dropout_rate", "dense_sizes", self)

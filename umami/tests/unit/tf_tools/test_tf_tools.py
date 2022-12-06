@@ -14,6 +14,10 @@ from umami.tf_tools import Attention, DeepSet, DenseNet, prepare_model
 set_log_level(logger, "DEBUG")
 
 
+class ConfigObject:
+    """Object class with attributes."""
+
+
 class AttentionTestCase(tf.test.TestCase):
     """Test class for the attention layer."""
 
@@ -390,14 +394,17 @@ class PrepareModelTestCase(unittest.TestCase):
         self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
         self.tmp_test_dir = f"{self.tmp_dir.name}/"
 
-        self.model_name = self.tmp_test_dir + "Test_prepare_model"
-        self.model_file = None
-        self.nn_structure = {"load_optimiser": False}
+        self.nn_structure = ConfigObject()
+        self.general = ConfigObject()
+        self.general.model_name = self.tmp_test_dir + "Test_prepare_model"
+        self.general.model_file = None
+        self.general.continue_training = False
+        self.nn_structure.load_optimiser = False
 
         os.makedirs(
             os.path.join(
                 self.tmp_test_dir,
-                self.model_name,
+                self.general.model_name,
                 "model_files",
             )
         )
@@ -417,7 +424,7 @@ class PrepareModelTestCase(unittest.TestCase):
                 "cp",
                 os.path.join(self.tmp_test_dir, "test_model_file.h5"),
                 os.path.join(
-                    self.model_name,
+                    self.general.model_name,
                     "model_files",
                     "model_epoch001.h5",
                 ),
@@ -440,7 +447,7 @@ class PrepareModelTestCase(unittest.TestCase):
 
     def test_init_fresh_model_no_load_optimiser_given(self):
         """Test fresh model init with no load_optimiser given."""
-        self.nn_structure = {}
+        self.nn_structure.load_optimiser = None
 
         model, init_epoch, load_optimiser = prepare_model(train_config=self)
 
@@ -455,14 +462,14 @@ class PrepareModelTestCase(unittest.TestCase):
 
     def test_load_optimiser_value_rrror(self):
         """Test load optimiser error."""
-        self.nn_structure = {"load_optimiser": True}
+        self.nn_structure.load_optimiser = True
 
         with self.assertRaises(ValueError):
             prepare_model(train_config=self)
 
     def test_load_model_without_continue_training(self):
         """Test loading of a model without continuation."""
-        self.model_file = os.path.join(
+        self.general.model_file = os.path.join(
             self.tmp_test_dir,
             "test_model_file.h5",
         )
@@ -480,10 +487,8 @@ class PrepareModelTestCase(unittest.TestCase):
 
     def test_load_model_with_continue_training(self):
         """Test loading of a model without continuation."""
-        model, init_epoch, load_optimiser = prepare_model(
-            train_config=self,
-            continue_training=True,
-        )
+        self.general.continue_training = True
+        model, init_epoch, load_optimiser = prepare_model(train_config=self)
 
         with self.subTest("Check Model"):
             self.assertTrue(isinstance(model, object))

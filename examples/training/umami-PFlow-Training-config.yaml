@@ -1,6 +1,6 @@
 # Set modelname and path to Pflow preprocessing config file
 model_name: umami_dev
-preprocess_config: <path_palce_holder>/PFlow-Preprocessing-DESY.yaml
+preprocess_config: examples/preprocessing/PFlow-Preprocessing.yaml
 
 # Add here a pretrained model to start with.
 # Leave empty for a fresh start
@@ -57,24 +57,18 @@ exclude: null
 # Tracks dataset name
 tracks_name: "tracks"
 
-# number of files to be loaded in parallel when using TF Records as input files
-nfiles: 5
-
 nn_structure:
     # Decide, which tagger is used
     tagger: "umami"
 
     # NN Training parameters
-    lr: 0.01
+    learning_rate: 0.01
     batch_size: 5000
     epochs: 200
 
     # Number of jets used for training
     # To use all: Fill nothing
     n_jets_train:
-
-    # Dropout rate for the DIPS block. If = 0, dropout is disabled
-    dropout: 0
 
     # Decide if Batch Normalisation is used in the DIPS block
     batch_normalisation: True
@@ -90,7 +84,7 @@ nn_structure:
     dl1_units: [57, 60, 48, 36, 24, 12, 6]
 
     # total loss = loss(umami) + dips_loss_weight * loss(dips)
-    dips_loss_weight: 1
+    dips_loss_weight: 1.0
 
     # Define which classes are used for training
     # These are defined in the global_config
@@ -109,6 +103,9 @@ nn_structure:
 validation_settings:
     # Number of jets used for validation
     n_jets: 3e5
+
+    # Label for the freshly trained tagger
+    tagger_label: "Umami"
 
     # Define which taggers should also be plotted
     taggers_from_file:

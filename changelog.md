@@ -3,6 +3,7 @@
 ### Latest
 
 - Update Tensorflow Version to 2.11.0 [!681](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/681)
+- Rewriting train config Configuration [!675](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/675)
 
 ### [v0.17](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.17) (05.12.2022)
 

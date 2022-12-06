@@ -31,19 +31,13 @@ from .layers import (
 )
 
 
-def prepare_model(
-    train_config: object,
-    continue_training: bool = False,
-):
+def prepare_model(train_config: object):
     """Prepare the keras model.
 
     Parameters
     ----------
     train_config : object
         Loaded train config file.
-    continue_training : bool, optional
-        Decide if the training is continued (True) or if the given model is used
-        as start weights (False), by default False
 
     Returns
     -------
@@ -64,14 +58,10 @@ def prepare_model(
         If load_optimiser is True and no model file is given.
     """
     # Load NN Structure and training parameter from file
-    load_optimiser = (
-        train_config.nn_structure["load_optimiser"]
-        if "load_optimiser" in train_config.nn_structure
-        else False
-    )
+    load_optimiser = train_config.nn_structure.load_optimiser
 
     # Check that load optimiser is only valid when a model file is given
-    if load_optimiser is True and train_config.model_file is None:
+    if load_optimiser is True and train_config.general.model_file is None:
         raise ValueError(
             "You can't load the optimiser state from a model if not model is given!"
         )
@@ -79,14 +69,17 @@ def prepare_model(
     # Init the init_epoch
     init_epoch = 0
 
-    if train_config.model_file is not None and continue_training is False:
-        logger.info("Loading model from: %s", train_config.model_file)
-        model_file = train_config.model_file
+    if (
+        train_config.general.model_file is not None
+        and train_config.general.continue_training is False
+    ):
+        logger.info("Loading model from: %s", train_config.general.model_file)
+        model_file = train_config.general.model_file
 
-    elif continue_training is True:
+    elif train_config.general.continue_training is True:
         # Get the lastest epoch available
         model_file_name = sorted(
-            os.listdir(os.path.join(train_config.model_name, "model_files")),
+            os.listdir(os.path.join(train_config.general.model_name, "model_files")),
             key=natural_keys,
         )[-1]
 
@@ -106,7 +99,7 @@ def prepare_model(
 
         # Get the path of the selected model
         model_file = os.path.join(
-            train_config.model_name,
+            train_config.general.model_name,
             "model_files",
             model_file_name,
         )

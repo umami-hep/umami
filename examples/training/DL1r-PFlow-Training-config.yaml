@@ -59,7 +59,7 @@ nn_structure:
     tagger: "dl1"
 
     # NN Training parameters
-    lr: 0.001
+    learning_rate: 0.001
     batch_size: 15000
     epochs: 200
 

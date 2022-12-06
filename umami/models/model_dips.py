@@ -25,7 +25,6 @@ import umami.train_tools as utt
 def create_dips_model(
     train_config: object,
     input_shape: tuple,
-    continue_training: bool = False,
 ):
     """Keras model definition of DIPS.
 
@@ -35,9 +34,6 @@ def create_dips_model(
         training config
     input_shape : tuple
         dataset input shape
-    continue_training : bool, optional
-        Decide, if the training is continued using the latest
-        model file, by default False
 
     Returns
     -------
@@ -47,33 +43,22 @@ def create_dips_model(
         Number of epochs
     int
         Starting epoch number
-
-    Raises
-    ------
-    ValueError
-        If the deprecated global `dropout` parameter is used.
     """
     # Load NN Structure and training parameter from file
     nn_structure = train_config.nn_structure
 
     # Set NN options
-    batch_norm = nn_structure["batch_normalisation"]
-    class_labels = nn_structure["class_labels"]
+    batch_norm = nn_structure.batch_normalisation
+    class_labels = nn_structure.class_labels
 
+    # Get the dropout rates for the different parts of the model
     dropout_rates_phi = utt.get_dropout_rates(
         "dropout_rate_phi", "ppm_sizes", nn_structure
     )
     dropout_rates_f = utt.get_dropout_rates("dropout_rate", "dense_sizes", nn_structure)
-    if "dropout" in nn_structure:
-        raise ValueError(
-            "The global parameter `dropout` is deprecated. Please specify a "
-            "dropout rate for each layer."
-        )
+
     # Check if a prepared model is used or not
-    dips, init_epoch, load_optimiser = utf.prepare_model(
-        train_config=train_config,
-        continue_training=continue_training,
-    )
+    dips, init_epoch, load_optimiser = utf.prepare_model(train_config=train_config)
 
     if dips is None:
         logger.info("No modelfile provided! Initialising a new one!")
@@ -87,7 +72,7 @@ def create_dips_model(
 
         # Define the TimeDistributed layers for the different tracks
         for i, (phi_nodes, dropout_rate_phi) in enumerate(
-            zip(nn_structure["ppm_sizes"], dropout_rates_phi)
+            zip(nn_structure.ppm_sizes, dropout_rates_phi)
         ):
 
             tdd = TimeDistributed(
@@ -113,7 +98,7 @@ def create_dips_model(
 
         # Define the main dips structure
         for j, (f_nodes, dropout_rate_f) in enumerate(
-            zip(nn_structure["dense_sizes"], dropout_rates_f)
+            zip(nn_structure.dense_sizes, dropout_rates_f)
         ):
 
             f_layer = Dense(f_nodes, activation="linear", name=f"F{j}_Dense")(f_layer)
@@ -131,7 +116,7 @@ def create_dips_model(
 
     if load_optimiser is False:
         # Set optimier and loss
-        model_optimiser = Adam(learning_rate=nn_structure["lr"])
+        model_optimiser = Adam(learning_rate=nn_structure.learning_rate)
         dips.compile(
             loss="categorical_crossentropy",
             optimizer=model_optimiser,
@@ -142,7 +127,7 @@ def create_dips_model(
     if logger.level <= 20:
         dips.summary()
 
-    return dips, nn_structure["epochs"], init_epoch
+    return dips, nn_structure.epochs, init_epoch
 
 
 def train_dips(args, train_config):
@@ -164,29 +149,21 @@ def train_dips(args, train_config):
     nn_structure = train_config.nn_structure
     val_params = train_config.validation_settings
     eval_params = train_config.evaluation_settings
-    tracks_name = train_config.tracks_name
+    tracks_name = train_config.general.tracks_name
 
     # Init a list for the callbacks
     callbacks = []
 
     # Get needed variable from the train config
-    working_point = (
-        float(val_params["working_point"])
-        if "working_point" in val_params
-        else float(eval_params["working_point"])
-    )
-    n_jets_val = (
-        int(val_params["n_jets"])
-        if "n_jets" in val_params
-        else int(eval_params["n_jets"])
-    )
+    working_point = val_params.working_point
+    n_jets_val = val_params.n_jets
 
-    if ".h5" in train_config.train_file:
+    if ".h5" in train_config.general.train_file:
         # Init a metadata dict
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f_train:
+        with h5py.File(train_config.general.train_file, "r") as f_train:
             (
                 metadata["n_jets"],
                 metadata["n_trks"],
@@ -194,7 +171,7 @@ def train_dips(args, train_config):
             ) = f_train[f"{tracks_name}/inputs"].shape
             _, metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
 
-        if nn_structure["use_sample_weights"]:
+        if nn_structure.use_sample_weights:
             tensor_types = (tf.float32, tf.float32, tf.float32)
             tensor_shapes = (
                 tf.TensorShape([None, metadata["n_trks"], metadata["n_trk_features"]]),
@@ -213,15 +190,14 @@ def train_dips(args, train_config):
         train_dataset = (
             tf.data.Dataset.from_generator(
                 utf.DipsGenerator(
-                    train_file_path=train_config.train_file,
+                    train_file_path=train_config.general.train_file,
                     x_trk_name=f"{tracks_name}/inputs",
                     y_name="jets/labels_one_hot",
-                    n_jets=int(nn_structure["n_jets_train"])
-                    if "n_jets_train" in nn_structure
-                    and nn_structure["n_jets_train"] is not None
+                    n_jets=int(nn_structure.n_jets_train)
+                    if nn_structure.n_jets_train is not None
                     else metadata["n_jets"],
-                    batch_size=nn_structure["batch_size"],
-                    sample_weights=nn_structure["use_sample_weights"],
+                    batch_size=nn_structure.batch_size,
+                    sample_weights=nn_structure.use_sample_weights,
                 ),
                 tensor_types,
                 tensor_shapes,
@@ -230,14 +206,14 @@ def train_dips(args, train_config):
             .prefetch(tf.data.AUTOTUNE)
         )
 
-    elif os.path.isdir(train_config.train_file):
+    elif os.path.isdir(train_config.general.train_file):
         train_dataset, metadata = utf.load_tfrecords_train_dataset(
             train_config=train_config
         )
 
     else:
         raise ValueError(
-            f"input file {train_config.train_file} is neither a .h5 file nor "
+            f"input file {train_config.general.train_file} is neither a .h5 file nor "
             "a directory with TF Record Files. You should check this."
         )
 
@@ -245,7 +221,6 @@ def train_dips(args, train_config):
     dips_model, epochs, init_epoch = create_dips_model(
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
-        continue_training=train_config.continue_training,
     )
 
     # Check if epochs is set via argparser or not
@@ -258,20 +233,20 @@ def train_dips(args, train_config):
 
     # Set ModelCheckpoint as callback
     dips_m_chkpt = ModelCheckpoint(
-        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.general.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=nn_structure["batch_size"],
+        validation_batch_size=nn_structure.batch_size,
         save_weights_only=False,
     )
 
     # Append the callback
     callbacks.append(dips_m_chkpt)
 
-    if "lrr" in nn_structure and nn_structure["lrr"] is True:
+    if nn_structure.lrr:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -288,16 +263,16 @@ def train_dips(args, train_config):
     # Set my_callback as callback. Writes history information
     # to json file.
     my_callback = utt.MyCallback(
-        model_name=train_config.model_name,
-        class_labels=nn_structure["class_labels"],
-        main_class=nn_structure["main_class"],
+        model_name=train_config.general.model_name,
+        class_labels=nn_structure.class_labels,
+        main_class=nn_structure.main_class,
         val_data_dict=val_data_dict,
         target_beff=working_point,
-        frac_dict=eval_params["frac_values"],
+        frac_dict=eval_params.frac_values,
         n_jets=n_jets_val,
-        continue_training=train_config.continue_training,
-        batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
+        continue_training=train_config.general.continue_training,
+        batch_size=val_params.val_batch_size,
+        use_lrr=nn_structure.lrr,
     )
 
     # Append the callback
@@ -310,9 +285,9 @@ def train_dips(args, train_config):
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=(val_data_dict["X_valid"], val_data_dict["Y_valid"]),
         callbacks=callbacks,
-        steps_per_epoch=int(nn_structure["n_jets_train"]) / nn_structure["batch_size"]
-        if "n_jets_train" in nn_structure and nn_structure["n_jets_train"] is not None
-        else metadata["n_jets"] / nn_structure["batch_size"],
+        steps_per_epoch=int(nn_structure.n_jets_train) / nn_structure.batch_size
+        if nn_structure.n_jets_train is not None
+        else metadata["n_jets"] / nn_structure.batch_size,
         use_multiprocessing=True,
         workers=8,
         initial_epoch=init_epoch,

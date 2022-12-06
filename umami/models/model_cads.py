@@ -14,7 +14,6 @@ import umami.train_tools as utt
 def create_cads_model(
     train_config: object,
     input_shape: tuple,
-    continue_training: bool = False,
 ):
     """Keras model definition of CADS.
 
@@ -24,9 +23,6 @@ def create_cads_model(
         training config
     input_shape : tuple
         dataset input shape
-    continue_training : bool, optional
-        Decide, if the training is continued using the latest
-        model file, by default False
 
     Returns
     -------
@@ -41,35 +37,32 @@ def create_cads_model(
     nn_structure = train_config.nn_structure
 
     # Check if a prepared model is used or not
-    cads, init_epoch, load_optimiser = utf.prepare_model(
-        train_config=train_config,
-        continue_training=continue_training,
-    )
+    cads, init_epoch, load_optimiser = utf.prepare_model(train_config=train_config)
 
     if cads is None:
         # Init a new cads/dips attention model
         cads = utf.deepsets_model(
             repeat_input_shape=input_shape,
-            num_conditions=nn_structure["n_conditions"],
-            num_set_features=nn_structure["ppm_sizes"][-1],
-            sets_nodes=nn_structure["ppm_sizes"][:-1],
-            classif_nodes=nn_structure["dense_sizes"],
-            classif_output=len(nn_structure["class_labels"]),
-            pooling="attention",
-            attention_nodes=nn_structure["attention_sizes"],
-            condition_sets=nn_structure["ppm_condition"],
-            condition_attention=nn_structure["attention_condition"],
-            condition_classifier=nn_structure["dense_condition"],
+            num_conditions=nn_structure.n_conditions,
+            num_set_features=nn_structure.ppm_sizes[-1],
+            sets_nodes=nn_structure.ppm_sizes[:-1],
+            classif_nodes=nn_structure.dense_sizes,
+            classif_output=len(nn_structure.class_labels),
+            pooling=nn_structure.pooling,
+            attention_nodes=nn_structure.attention_sizes,
+            condition_sets=nn_structure.ppm_condition,
+            condition_attention=nn_structure.attention_condition,
+            condition_classifier=nn_structure.dense_condition,
             shortcut_inputs=False,
-            sets_batch_norm=nn_structure["batch_normalisation"],
-            classif_batch_norm=nn_structure["batch_normalisation"],
+            sets_batch_norm=nn_structure.batch_normalisation,
+            classif_batch_norm=nn_structure.batch_normalisation,
             activation="relu",
             attention_softmax=False,
         )
 
     if load_optimiser is False:
         # Set optimiser and loss
-        model_optimiser = Adam(learning_rate=nn_structure["lr"])
+        model_optimiser = Adam(learning_rate=nn_structure.learning_rate)
         cads.compile(
             loss="categorical_crossentropy",
             optimizer=model_optimiser,
@@ -80,7 +73,7 @@ def create_cads_model(
     if logger.level <= 20:
         cads.summary()
 
-    return cads, nn_structure["epochs"], init_epoch
+    return cads, nn_structure.epochs, init_epoch
 
 
 def train_cads(args, train_config):
@@ -104,25 +97,21 @@ def train_cads(args, train_config):
     nn_structure = train_config.nn_structure
     val_params = train_config.validation_settings
     eval_params = train_config.evaluation_settings
-    tracks_name = train_config.tracks_name
+    tracks_name = train_config.general.tracks_name
 
     # Init a list for the callbacks
     callbacks = []
 
     # Get needed variable from the train config
-    working_point = float(val_params.get("working_point", eval_params["working_point"]))
-    n_jets_val = (
-        int(val_params["n_jets"])
-        if "n_jets" in val_params
-        else int(eval_params["n_jets"])
-    )
+    working_point = val_params.working_point
+    n_jets_val = val_params.n_jets
 
-    if ".h5" in train_config.train_file:
+    if ".h5" in train_config.general.train_file:
         # Init a metadata dict
         metadata = {}
 
         # Get the shapes for training
-        with h5py.File(train_config.train_file, "r") as f_train:
+        with h5py.File(train_config.general.train_file, "r") as f_train:
             (
                 metadata["n_jets"],
                 metadata["n_trks"],
@@ -130,7 +119,7 @@ def train_cads(args, train_config):
             ) = f_train[f"{tracks_name}/inputs"].shape
             _, metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
 
-        if nn_structure["use_sample_weights"]:
+        if nn_structure.use_sample_weights:
             tensor_types = (
                 {"input_1": tf.float32, "input_2": tf.float32},
                 tf.float32,
@@ -141,7 +130,7 @@ def train_cads(args, train_config):
                     "input_1": tf.TensorShape(
                         [None, metadata["n_trks"], metadata["n_trk_features"]]
                     ),
-                    "input_2": tf.TensorShape([None, nn_structure["n_conditions"]]),
+                    "input_2": tf.TensorShape([None, nn_structure.n_conditions]),
                 },
                 tf.TensorShape([None, metadata["n_dim"]]),
                 tf.TensorShape([None]),
@@ -156,7 +145,7 @@ def train_cads(args, train_config):
                     "input_1": tf.TensorShape(
                         [None, metadata["n_trks"], metadata["n_trk_features"]]
                     ),
-                    "input_2": tf.TensorShape([None, nn_structure["n_conditions"]]),
+                    "input_2": tf.TensorShape([None, nn_structure.n_conditions]),
                 },
                 tf.TensorShape([None, metadata["n_dim"]]),
             )
@@ -165,18 +154,17 @@ def train_cads(args, train_config):
         train_dataset = (
             tf.data.Dataset.from_generator(
                 utf.CadsGenerator(
-                    train_file_path=train_config.train_file,
+                    train_file_path=train_config.general.train_file,
                     x_name="jets/inputs",
                     x_trk_name=f"{tracks_name}/inputs",
                     y_name="jets/labels_one_hot",
-                    n_jets=int(nn_structure["n_jets_train"])
-                    if "n_jets_train" in nn_structure
-                    and nn_structure["n_jets_train"] is not None
+                    n_jets=int(nn_structure.n_jets_train)
+                    if nn_structure.n_jets_train is not None
                     else metadata["n_jets"],
-                    batch_size=nn_structure["batch_size"],
-                    n_conds=nn_structure["n_conditions"],
+                    batch_size=nn_structure.batch_size,
+                    n_conds=nn_structure.n_conditions,
                     chunk_size=int(1e6),
-                    sample_weights=nn_structure["use_sample_weights"],
+                    sample_weights=nn_structure.use_sample_weights,
                 ),
                 output_types=tensor_types,
                 output_shapes=tensor_shapes,
@@ -185,14 +173,14 @@ def train_cads(args, train_config):
             .prefetch(tf.data.AUTOTUNE)
         )
 
-    elif os.path.isdir(train_config.train_file):
+    elif os.path.isdir(train_config.general.train_file):
         train_dataset, metadata = utf.load_tfrecords_train_dataset(
             train_config=train_config
         )
 
     else:
         raise ValueError(
-            f"input file {train_config.train_file} is neither a .h5 file nor "
+            f"input file {train_config.general.train_file} is neither a .h5 file nor "
             "a directory with TF Record Files. You should check this."
         )
 
@@ -200,7 +188,6 @@ def train_cads(args, train_config):
     cads_model, epochs, init_epoch = create_cads_model(
         train_config=train_config,
         input_shape=(metadata["n_trks"], metadata["n_trk_features"]),
-        continue_training=train_config.continue_training,
     )
 
     # Check if epochs is set via argparser or not
@@ -213,20 +200,20 @@ def train_cads(args, train_config):
 
     # Set ModelCheckpoint as callback
     cads_model_checkpoint = ModelCheckpoint(
-        f"{train_config.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
+        f"{train_config.general.model_name}/model_files" + "/model_epoch{epoch:03d}.h5",
         monitor="val_loss",
         verbose=True,
         save_best_only=False,
-        validation_batch_size=nn_structure["batch_size"],
+        validation_batch_size=nn_structure.batch_size,
         save_weights_only=False,
     )
 
     # Append the callback
     callbacks.append(cads_model_checkpoint)
 
-    if "lrr" in nn_structure and nn_structure["lrr"] is True:
+    if nn_structure.lrr:
         # Define LearningRate Reducer as Callback
-        reduce_lr = utf.get_learning_rate_reducer(**nn_structure)
+        reduce_lr = utf.get_learning_rate_reducer(nn_structure)
 
         # Append the callback
         callbacks.append(reduce_lr)
@@ -239,7 +226,7 @@ def train_cads(args, train_config):
             n_jets=n_jets_val,
             convert_to_tensor=True,
             jets_var_list=["absEta_btagJes", "pt_btagJes"],
-            n_cond=nn_structure["n_conditions"],
+            n_cond=nn_structure.n_conditions,
         )
 
         # TODO: Add a representative validation dataset for training (shown in
@@ -256,16 +243,16 @@ def train_cads(args, train_config):
     # Set my_callback as callback. Writes history information
     # to json file.
     my_callback = utt.MyCallback(
-        model_name=train_config.model_name,
-        class_labels=nn_structure["class_labels"],
-        main_class=nn_structure["main_class"],
+        model_name=train_config.general.model_name,
+        class_labels=nn_structure.class_labels,
+        main_class=nn_structure.main_class,
         val_data_dict=val_data_dict,
         target_beff=working_point,
-        frac_dict=eval_params["frac_values"],
+        frac_dict=eval_params.frac_values,
         n_jets=n_jets_val,
-        continue_training=train_config.continue_training,
-        batch_size=val_params["val_batch_size"],
-        use_lrr=nn_structure["lrr"] if "lrr" in nn_structure else False,
+        continue_training=train_config.general.continue_training,
+        batch_size=val_params.val_batch_size,
+        use_lrr=nn_structure.lrr,
     )
 
     # Append the callback
@@ -278,9 +265,9 @@ def train_cads(args, train_config):
         # TODO: Add a representative validation dataset for training (shown in stdout)
         # validation_data=validation_data,
         callbacks=callbacks,
-        steps_per_epoch=int(nn_structure["n_jets_train"]) / nn_structure["batch_size"]
-        if "n_jets_train" in nn_structure and nn_structure["n_jets_train"] is not None
-        else metadata["n_jets"] / nn_structure["batch_size"],
+        steps_per_epoch=int(nn_structure.n_jets_train) / nn_structure.batch_size
+        if nn_structure.n_jets_train is not None
+        else metadata["n_jets"] / nn_structure.batch_size,
         use_multiprocessing=True,
         workers=8,
         initial_epoch=init_epoch,
