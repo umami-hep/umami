@@ -9,7 +9,13 @@ import numpy as np
 import tensorflow as tf
 
 from umami.configuration import logger, set_log_level
-from umami.tf_tools import Attention, DeepSet, DenseNet, prepare_model
+from umami.tf_tools import (
+    Attention,
+    DeepSet,
+    ConditionalDeepSet,
+    DenseNet,
+    prepare_model,
+)
 
 set_log_level(logger, "DEBUG")
 
@@ -502,3 +508,89 @@ class PrepareModelTestCase(unittest.TestCase):
 
         with self.subTest("Check load_optimiser"):
             self.assertTrue(load_optimiser)
+
+
+class ConditionalDeepSetTestCase(tf.test.TestCase):
+    """Test class for the DeepSet."""
+
+    def setUp(self):
+        """
+        Setting up the DeepSet network
+        """
+
+        self.nodes = [2, 2, 2]
+        self.activation = "relu"
+        self.mask_zero = True
+        self.batch_norm = True
+        super().setUp()
+
+        self.my_deepset = ConditionalDeepSet(
+            nodes=self.nodes,
+            activation=self.activation,
+            batch_norm=self.batch_norm,
+            mask_zero=self.mask_zero,
+        )
+
+    def test_get_config(self):
+        """Test the returning of the config values."""
+        # Get configs from Dense Net
+        configs = self.my_deepset.get_config()
+
+        # Test configs
+        with self.subTest("Test architecture values which are returned"):
+            self.assertEqual(self.nodes, configs["nodes"])
+            self.assertEqual(self.activation, configs["activation"])
+            self.assertEqual(self.batch_norm, configs["batch_norm"])
+            self.assertEqual(self.mask_zero, configs["mask_zero"])
+
+    def test_call(self):
+        """Test call function."""
+        # Define an input
+        inputs = (
+            np.array(
+                [
+                    [[0, 1, 1], [1, 1, 0], [1, 1, 1]],
+                    [[0, 1, 1], [1, 1, 0], [1, 1, 1]],
+                ]
+            ),
+            np.array([[1], [0]]),
+        )
+
+        # Get the control output
+        expected_output = np.array(
+            [
+                [
+                    [0.9283064, 1.1913085],
+                    [0.6515773, 0.8361782],
+                    [0.7973309, 1.0232258],
+                ],
+                [
+                    [0.56370866, 0.72341514],
+                    [0.28619894, 0.36728305],
+                    [0.43273303, 0.5553323],
+                ],
+            ]
+        )
+
+        # Get network output
+        out = self.my_deepset(inputs=inputs)
+
+        # Test output
+        np.testing.assert_almost_equal(expected_output, out)
+
+    def test_compute_mask_no_mask(self):
+        """Test compute_mask function."""
+        tmp = self.my_deepset.mask_zero
+        self.my_deepset.mask_zero = False
+        inputs = np.array(
+            [
+                [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
+                [[0, 0, 0], [1, 2, 0], [1, 2, 1]],
+            ]
+        )
+        mask = self.my_deepset.compute_mask(
+            inputs=inputs,
+            mask=None,
+        )
+        self.my_deepset.mask_zero = tmp
+        self.assertAllEqual(mask, None)
