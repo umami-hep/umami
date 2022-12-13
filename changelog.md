@@ -2,6 +2,8 @@
 
 ### Latest
 - Added unit tests for ConditionalDeepSet layer[!684](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/684)
+
+- Fix bug with Hbb/Hcc/top/dijets categories in global config [!683](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/683)
 - Update Tensorflow Version to 2.11.0 [!681](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/681)
 - Rewriting train config Configuration [!675](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/675)
 
