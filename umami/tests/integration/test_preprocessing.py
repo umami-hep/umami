@@ -373,12 +373,14 @@ class TestPreprocessing(unittest.TestCase):
         config_paths_source = Path(data["config_paths"])
         var_dict_umami_source = Path(data["var_dict_umami"])
         var_dict_dips_source = Path(data["var_dict_dips"])
+        var_dict_gn1_source = Path(data["var_dict_gn1"])
         var_dict_dl1r_source = Path(data["var_dict_dl1r"])
         var_dict_dips_hits_source = Path(data["var_dict_dips_hits"])
         self.config = self.test_dir / os.path.basename(config_source)
         self.config_paths = self.test_dir / config_paths_source.name
         self.var_dict_umami = self.test_dir / var_dict_umami_source.name
         self.var_dict_dips = self.test_dir / var_dict_dips_source.name
+        self.var_dict_gn1 = self.test_dir / var_dict_gn1_source.name
         self.var_dict_dl1r = self.test_dir / var_dict_dl1r_source.name
         self.var_dict_dips_hits = self.test_dir / var_dict_dips_hits_source.name
         self.scale_dict = self.test_dir / "scale_dict.json"
@@ -394,6 +396,7 @@ class TestPreprocessing(unittest.TestCase):
         copyfile(config_paths_source, self.config_paths)
         copyfile(var_dict_umami_source, self.var_dict_umami)
         copyfile(var_dict_dips_source, self.var_dict_dips)
+        copyfile(var_dict_gn1_source, self.var_dict_gn1)
         copyfile(var_dict_dl1r_source, self.var_dict_dl1r)
         copyfile(var_dict_dips_hits_source, self.var_dict_dips_hits)
 
@@ -733,6 +736,24 @@ class TestPreprocessing(unittest.TestCase):
                 os.path.join(self.test_dir, "zpext", "ci_hits_basefile.h5"),
             ],
             check=True,
+        )
+
+    def test_preprocessing_additional_jet_labels(self):
+        """Integration test of preprocessing.py script using GN1 variables, and
+        allowing for additional jet labels"""
+        replace_line_in_file(
+            self.config_paths,
+            ".var_file:",
+            f".var_file: &var_file {self.var_dict_gn1}",
+        )
+        self.assertTrue(
+            run_preprocessing(
+                self.config,
+                tagger="dips",
+                method="count",
+                string_id="base",
+                test_dir=self.test_dir,
+            )
         )
 
     def test_preprocessing_umami_count(self):
