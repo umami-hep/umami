@@ -135,7 +135,7 @@ class TestInputVarsPlotting(unittest.TestCase):
                     "tracks_name"
                 ] = "tracks_loose"
                 self.config[plot]["plot_settings"][
-                    "SecondTag"
+                    "atlas_second_tag"
                 ] = "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow Jets \n3000 Jets"
 
         # Change jets input vars params

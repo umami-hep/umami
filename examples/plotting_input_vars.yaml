@@ -6,6 +6,12 @@
     y_scale: 2
     figsize: [7, 5]
 
+.ttbar_cuts: &ttbar_cuts
+  cut_vars_dict:
+    - pt_btagJes:
+        operator: ">"
+        condition: 2.0e4
+
 Eval_parameters:
   # Number of jets which are used
   n_jets: 3e4
@@ -30,6 +36,7 @@ jets_input_vars:
   plot_settings:
     <<: *default_plot_settings
   class_labels: ["bjets", "cjets", "ujets"]
+  <<: *ttbar_cuts
   special_param_jets:
     SV1_NGTinSvx:
       lim_left: 0
@@ -113,6 +120,7 @@ nTracks:
       files: <path_palce_holder>/user.alfroch.410470.btagTraining.e6337_s3126_r12305_r12253_r12305_p4441.EMPFlow_loose.2021-04-20-T171733-R21211_output.h5/*
       label: "R22 Loose"
       tracks_name: "tracks"
+  <<: *ttbar_cuts
   plot_settings:
     <<: *default_plot_settings
     ymin_ratio_1: 0.5
@@ -137,6 +145,7 @@ tracks_input_vars:
     n_leading: [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     ymin_ratio_1: 0.5
     ymax_ratio_1: 1.5
+  <<: *ttbar_cuts
   var_dict:
     IP3D_signed_d0_significance: 100
     IP3D_signed_z0_significance: 100

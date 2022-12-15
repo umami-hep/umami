@@ -107,6 +107,7 @@ def plot_trks_variables(plot_config, plot_type):
                     datasets_class_labels=class_labels_list,
                     datasets_track_names=tracks_name_list,
                     n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
+                    cut_vars_dict=plotting_config["cut_vars_dict"],
                     output_directory=plotting_config["folder_to_save"]
                     if plotting_config["folder_to_save"]
                     else "input_vars_trks/",
@@ -123,6 +124,7 @@ def plot_trks_variables(plot_config, plot_type):
                     datasets_track_names=tracks_name_list,
                     n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
                     var_dict=plotting_config["var_dict"],
+                    cut_vars_dict=plotting_config["cut_vars_dict"],
                     xlabels_dict=plotting_config.get("xlabels"),
                     output_directory=plotting_config["folder_to_save"]
                     if plotting_config["folder_to_save"]
@@ -169,6 +171,7 @@ def plot_jets_variables(plot_config, plot_type):
             datasets_labels=labels_list,
             datasets_class_labels=class_labels_list,
             var_dict=plotting_config["var_dict"],
+            cut_vars_dict=plotting_config["cut_vars_dict"],
             n_jets=int(plot_config["Eval_parameters"]["n_jets"]),
             output_directory=plotting_config["folder_to_save"]
             if plotting_config["folder_to_save"]

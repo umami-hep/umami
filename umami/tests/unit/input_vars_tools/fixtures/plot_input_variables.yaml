@@ -10,6 +10,12 @@
     leg_loc: "upper right"
     transparent: False
 
+.input_var_cuts: &input_var_cuts
+  cut_vars_dict:
+    - pt_btagJes:
+        operator: ">"
+        condition: 2.0e4
+
 Eval_parameters:
   n_jets: 3e3
 
@@ -26,6 +32,7 @@ jets_input_vars:
   plot_settings:
     <<: *default_plot_settings
     ylabel: "Normalised number of jets"
+  <<: *input_var_cuts
   special_param_jets:
     SV1_NGTinSvx:
       lim_left: 0
@@ -61,6 +68,7 @@ nTracks_Test:
     bin_width_in_ylabel: False
     bins_range: [-0.5, 39.5]
     bins: 40
+  <<: *input_var_cuts
   class_labels: ["bjets", "cjets", "ujets"]
 
 Tracks_Test:
@@ -80,6 +88,7 @@ Tracks_Test:
     y_scale: 1.5
     ymin_ratio_1: 0.5
     ymax_ratio_1: 1.5
+  <<: *input_var_cuts
   var_dict:
     IP3D_signed_d0_significance: 100
     numberOfInnermostPixelLayerHits: [0, 4, 1]
@@ -108,6 +117,7 @@ tracks_test_not_normalised:
     ymin_ratio_1: 0.5
     ymax_ratio_1: 1.5
     norm: False
+  <<: *input_var_cuts
   var_dict:
     IP3D_signed_d0_significance: 100
   class_labels: ["bjets", "cjets", "ujets"]
