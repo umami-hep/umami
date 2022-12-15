@@ -1,5 +1,9 @@
 label: HadronConeExclTruthLabelID
 
+additional_labels:
+  - pt
+  - mass
+
 train_variables:
   JetKinematics:
     - eta_btagJes

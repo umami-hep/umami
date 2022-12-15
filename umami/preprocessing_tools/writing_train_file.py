@@ -67,6 +67,17 @@ class TrainSampleWriter:
         self.sampling_options = config.sampling["options"]
         self.validation = config.sampling["use_validation_samples"]
 
+        # Check if additional jet variables are required
+        self.additional_labels = self.variable_config.get("additional_labels", None)
+
+        if self.additional_labels:
+            assert isinstance(
+                self.additional_labels, list
+            ), "additional_labels must be a list"
+            assert isinstance(
+                self.additional_labels[0], str
+            ), "Additional labels must be a list of strings"
+
         # Adding the full config to retrieve the correct paths
         self.config = config
 
@@ -88,6 +99,7 @@ class TrainSampleWriter:
         index: list,
         n_jets: int,
         scale_dict: dict,
+        jet_add_labels: list = None,
         chunk_size: int = 100_000,
     ):
         """
@@ -102,6 +114,9 @@ class TrainSampleWriter:
             List with the indicies.
         n_jets : int
             Number of jets used.
+        jet_add_labels : list, optional
+            List of additional per-jet labels to include in the
+            output file, by default None
         scale_dict : dict
             Scale dict of the jet and track variables.
         chunk_size : int, optional
@@ -122,6 +137,8 @@ class TrainSampleWriter:
             Yielded valid flag
         flavour : np.ndarray
             Yielded flavours
+        jet_additional_labels : np.ndarray
+            Yielded additional jet labels
         """
 
         # Open the file and load the jets
@@ -172,6 +189,20 @@ class TrainSampleWriter:
                     if jets[iter_var].dtype.kind == "f":
                         jets[iter_var] = jets[iter_var].astype(np.float32)
 
+                # Get additional jet labels if required
+                if jet_add_labels:
+                    # We store additional labels as a dict of arrays, this allows us
+                    # to respect initial data types
+                    jet_additional_labels = {}
+                    for var in jet_add_labels:
+                        add_label = in_file["/jets"].fields(var)[indices_selected]
+                        if np.any(np.isnan(add_label)):
+                            jet_additional_labels[var] = np.nan_to_num(add_label)
+                        else:
+                            jet_additional_labels[var] = add_label
+
+                else:
+                    jet_additional_labels = None
                 # If no weights are available, init ones as weights
                 if "weight" not in self.jet_vars:
                     length = n_jets if n_jets < chunk_size else len(jets)
@@ -187,6 +218,12 @@ class TrainSampleWriter:
                 labels = labels[rng_index]
                 labels_one_hot = labels_one_hot[rng_index]
 
+                if jet_add_labels:
+                    jet_additional_labels = {
+                        var: data[rng_index]
+                        for (var, data) in jet_additional_labels.items()
+                    }
+
                 # Apply the scaling for the jet variables
                 jets = apply_scaling_jets(
                     jets=jets,
@@ -194,9 +231,7 @@ class TrainSampleWriter:
                     scale_dict=scale_dict["jets"],
                 )
 
-                if self.save_tracks is False:
-                    tracks, valid, track_labels = None, None, None
-                else:
+                if self.save_tracks is True:
                     tracks, valid, track_labels = [], [], []
 
                     # Loop over track selections
@@ -232,7 +267,18 @@ class TrainSampleWriter:
                         valid.append(valid_flag)
                         track_labels.append(trk_labels)
 
-                yield jets, tracks, labels, labels_one_hot, track_labels, valid
+                else:
+                    tracks, valid, track_labels = None, None, None
+
+                yield (
+                    jets,
+                    tracks,
+                    labels,
+                    labels_one_hot,
+                    track_labels,
+                    valid,
+                    jet_additional_labels,
+                )
 
     def better_shuffling(
         self,
@@ -324,13 +370,13 @@ class TrainSampleWriter:
         # Create an absolute index list for the file and shuffle it
         absolute_index = np.arange(n_jets)
         absolute_index = self.better_shuffling(absolute_index, n_jets)
-
         # Init the generator which loads/shuffles/scales the jet/track variables
         load_generator = self.load_scaled_generator(
             input_file=input_file,
             index=absolute_index,
             n_jets=n_jets,
             scale_dict=scale_dict,
+            jet_add_labels=self.additional_labels,
             chunk_size=chunk_size,
         )
 
@@ -454,6 +500,7 @@ class TrainSampleWriter:
         n_jets: int,
         jets: np.ndarray,
         labels_one_hot: np.ndarray,
+        additional_var_labels: list,
     ):
         """
         Create jet datasets
@@ -466,7 +513,8 @@ class TrainSampleWriter:
             jet input feature array
         labels_one_hot : np.ndarray
             jet label array, one hot
-
+        additional_var_labels : list
+            list of additional variables to be saved
         Returns
         -------
         h5py.Group
@@ -502,6 +550,20 @@ class TrainSampleWriter:
             dtype=self.precision,
             shape=(n_jets,),
         )
+
+        # Create additional variables group
+        if additional_var_labels:
+            add_vars_group = jet_group.create_group(
+                "add_labels",
+            )
+            # Add a new entry to the group for each additional variable
+            for add_var in additional_var_labels.keys():
+                add_vars_group.create_dataset(
+                    add_var,
+                    compression=None,
+                    dtype=additional_var_labels[add_var].dtype,
+                    shape=(n_jets,),
+                )
 
         # Writing jet variables as attributes to the jet group datasets
         jet_group["inputs"].attrs["jet_variables"] = self.jet_vars
@@ -628,6 +690,7 @@ class TrainSampleWriter:
             labels_one_hot,
             track_labels,
             valid,
+            additional_jet_labels,
         ) = next(load_generator)
 
         # final absolute jet index of this chunk
@@ -647,6 +710,7 @@ class TrainSampleWriter:
                 n_jets,
                 jets,
                 labels_one_hot,
+                additional_jet_labels,
             )
 
         if chunk_counter == 0 and self.save_tracks:
@@ -662,6 +726,10 @@ class TrainSampleWriter:
         self.jet_group["labels"][jet_idx:jet_idx_end] = labels
         self.jet_group["labels_one_hot"][jet_idx:jet_idx_end] = labels_one_hot
         self.jet_group["weight"][jet_idx:jet_idx_end] = weights
+
+        if additional_jet_labels:
+            for (add_label, add_data) in additional_jet_labels.items():
+                self.jet_group["add_labels"][add_label][jet_idx:jet_idx_end] = add_data
 
         # write tracks
         if self.save_tracks is True:

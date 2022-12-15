@@ -35,6 +35,19 @@ For the final writing step, only a few options are needed. Those are shown/expla
 
 When you want to train with conditional information, i.e. jet $p_T$ and $\eta$, the corresponding model (CADS) will load the jet information directly from the train file when using `.h5`. When you want to use `TFRecords`, you need to define the amount of variables that are added to extra to the files with `N_Add_Vars`. Until now, when using `2`, this will use the first two available jet variables, which are by default jet $p_T$ and $\eta$.
 
+### Saving Additional Jet Labels
+
+There is support to store additional per-jet labels, such as those used as regression targets. To include, simply add:
+
+```yaml
+additional_labels: 
+  - jet_label_1
+  - jet_label_2
+  - jet_label_3
+```
+
+To the variable config. NaN values will be replaced by 0, and no scaling is applied.
+
 ### Running the Writing Step
 
 The writing of the final training sample can be started via the command
