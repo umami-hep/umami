@@ -22,7 +22,7 @@ Here you can define the number of jets that are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:9:11§§§
+    §§§examples/plotting_input_vars.yaml:15:17§§§
     ```
 
 #### Number of Tracks per Jet
@@ -30,7 +30,7 @@ The number of tracks per jet can be plotted for all different files. This can be
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:103:120§§§
+    §§§examples/plotting_input_vars.yaml:110:128§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -44,6 +44,7 @@ The number of tracks per jet can be plotted for all different files. This can be
 | `files` | `str` | Necessary | Path to a file which is to be used for plotting. Wildcard is supported. The function will load as much files as needed to achieve the number of jets given in the `Eval_parameters`. |
 | `label` | `str` | Necessary | Plot label for the plot legend. |
 | `tracks_name` | `str` | Necessary | Name of the tracks inside the h5 files you want to plot. |
+| `cut_vars_dict` | `list` | Necessary | A dict with cuts on the jet variables that should be applied when creating the input variable plots. Technically, this is implemented as a list of `dict` entries, which have as the key the name of the variable which is used for the cut (e.g. `pt_btagJes`) and then as sub-entries the operator used for the cut (`operator`) and the condition used for the cut (`condition`). |
 | `plot_settings` | `dict` | Necessary | Here starts the plot settings. See possible parameters in the section below. |
 
 #### Input Variables Tracks
@@ -51,7 +52,7 @@ To plot the track input variables, the following options are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:122:160§§§
+    §§§examples/plotting_input_vars.yaml:130:170§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -67,14 +68,15 @@ To plot the track input variables, the following options are used.
 | `tracks_name` | `str` | Necessary | Name of the tracks inside the h5 files you want to plot. |
 | `plot_settings` | `dict` | Necessary | Here starts the plot settings. See possible parameters in the section below. |
 | `var_dict` | `dict` | Necessary | A dict with all the variables you want to plot inside. The key of the entry is the name of the variable you want to plot (how it is named in the files) and the entry itself is the binning. If you give an `int`, you will get your chosen number of equidistant bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is number of bins. The so arranged numbers are bin edges not bins! If no value is given, the standard value is `100`. If you want, for example, plot the sum of `numberOfPixelHits` and `numberOfSCTHits`, the entry needs to be a dict itself with three entries. `variables`, which is a list of variables you want to add up for example. `operator` which is the operation how to merge them. Available are `"+"`, `"-"`, `"*"` and `"/"`. And last the binning. This is the same as explained before with the `int` and the `list`. An example is given in the config above. The variable is named `number_nPix_nSCT`. You can also apply the log to one variable. This can be done by defining only one variable in the dict and set the operator to `"log"`. |
-| `xlabels` | dict | Optional | Dict with custom xlabels |
+| `cut_vars_dict` | `list` | Necessary | A dict with cuts on the jet variables that should be applied when creating the input variable plots. Technically, this is implemented as a list of `dict` entries, which have as the key the name of the variable which is used for the cut (e.g. `pt_btagJes`) and then as sub-entries the operator used for the cut (`operator`) and the condition used for the cut (`condition`). |
+| `xlabels` | `dict` | Optional | Dict with custom xlabels |
 
 #### Input Variables Jets
 To plot the jet input variables, the following options are used.
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:13:101§§§
+    §§§examples/plotting_input_vars.yaml:19:108§§§
     ```
 
 | Options | Data Type | Necessary/Optional | Explanation |
@@ -88,6 +90,7 @@ To plot the jet input variables, the following options are used.
 | `label` | `str` | Necessary | Plot label for the plot legend. |
 | `special_param_jets` | None | Necessary | Here starts the special x axis limits for a variable. If you want to set the x range by hand, add the variable here and also the `lim_left` for xmin and `lift_right` for xmax. |
 | `var_dict` | `dict` | Necessary | A dict with all the variables you want to plot inside. The key of the entry is the name of the variable you want to plot (how it is named in the files) and the entry itself is the binning. If you give an `int`, you will get your chosen number of equidistant bins. You can also give a three element `list` which will be used in the `numpy.arange` function. The first element is start, second is stop and third is number of bins. The so arranged numbers are bin edges not bins! If no value is given, the standard value is `100`. If you want, for example, plot the sum of `rnnip_pc` and `rnnip_pu`, the entry needs to be a dict itself with three entries. `variables`, which is a list of variables you want to add up for example. `operator` which is the operation how to merge them. Available are "+", "-", "*" and "/". And last the binning. This is the same as explained before with the `int` and the `list`. An example is given in the config above. The variable is named `combined_rnnip`. You can also apply the log to one variable. This can be done by defining only one variable in the dict and set the operator to `log`. |
+| `cut_vars_dict` | `list` | Necessary | A dict with cuts on the jet variables that should be applied when creating the input variable plots. Technically, this is implemented as a list of `dict` entries, which have as the key the name of the variable which is used for the cut (e.g. `pt_btagJes`) and then as sub-entries the operator used for the cut (`operator`) and the condition used for the cut (`condition`). |
 | `plot_settings` | `dict` | Necessary | Here starts the plot settings. See possible parameters in the section below. |
 | `xlabels` | dict | Optional | Dict with custom xlabels |
 
@@ -98,7 +101,7 @@ as shown here:
 
 ??? example "Click to see corresponding code in the [example config file](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/plotting_input_vars.yaml)"
     ```yaml
-    §§§examples/plotting_input_vars.yaml:1:7§§§
+    §§§examples/plotting_input_vars.yaml:1:13§§§
     ```
 
 Most of the plot settings are valid for all types of input variable plots 

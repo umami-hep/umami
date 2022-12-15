@@ -107,6 +107,7 @@ def plot_n_tracks_per_jet(
     datasets_class_labels: list,
     datasets_track_names: list,
     n_jets: int,
+    cut_vars_dict: dict,
     output_directory: str = "input_vars_trks",
     plot_type: str = "pdf",
     track_origin: str = "All",
@@ -131,6 +132,8 @@ def plot_n_tracks_per_jet(
         List with the track names of the files.
     n_jets : int
         Number of jets to use.
+    cut_vars_dict : dict
+        Dict with cuts on variables applied to the input datasets.
     output_directory : str
         Name of the output directory. Only the dir name not path!
     plot_type: str, optional
@@ -164,6 +167,7 @@ def plot_n_tracks_per_jet(
             class_labels=class_labels,
             n_jets=n_jets,
             tracks_name=tracks_name,
+            cut_vars_dict=cut_vars_dict,
             print_logger=True,
         )
 
@@ -236,6 +240,7 @@ def plot_input_vars_trks(
     datasets_track_names: list,
     n_jets: int,
     var_dict: dict,
+    cut_vars_dict: dict,
     sorting_variable: str = "ptfrac",
     xlabels_dict: dict = None,
     n_leading: list = None,
@@ -265,6 +270,8 @@ def plot_input_vars_trks(
         Number of jets to use for plotting.
     var_dict : dict
         Dict with all the variables you want to plot inside with their binning.
+    cut_vars_dict : dict
+        Dict with cuts on variables applied to the input datasets.
     sorting_variable : str, optional
         Variable which is used for sorting, by default "ptfrac"
     xlabels_dict : dict, optional
@@ -335,6 +342,7 @@ def plot_input_vars_trks(
         trks, flavour_labels = udt.load_trks_from_file(
             filepath=filepath,
             class_labels=class_labels,
+            cut_vars_dict=cut_vars_dict,
             n_jets=n_jets,
             tracks_name=tracks_name,
             print_logger=False,
@@ -553,6 +561,7 @@ def plot_input_vars_jets(
     datasets_labels: list,
     datasets_class_labels: list,
     var_dict: dict,
+    cut_vars_dict: dict,
     n_jets: int,
     xlabels_dict: dict = None,
     special_param_jets: dict = None,
@@ -577,6 +586,8 @@ def plot_input_vars_jets(
         dataset
     var_dict : dict
         Dict with all the variables you want to plot inside with their binning.
+    cut_vars_dict : dict
+        Dict with cuts on variables applied to the input datasets.
     n_jets : int
         Number of jets to use for plotting.
     xlabels_dict : dict, optional
@@ -644,6 +655,7 @@ def plot_input_vars_jets(
             filepath=filepath,
             class_labels=class_labels,
             n_jets=n_jets,
+            cut_vars_dict=cut_vars_dict,
             print_logger=False,
         )
 
