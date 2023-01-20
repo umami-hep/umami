@@ -389,23 +389,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 "custom_n_jets_initial" in self.options
                 and self.options["custom_n_jets_initial"] is not None
                 and sample in list(self.options["custom_n_jets_initial"])
+                and self.options["custom_n_jets_initial"][sample] is not None
             ):
-
-                # Get the number of jets that are asked for in the config
-                n_jets_asked = int(self.options["custom_n_jets_initial"][sample])
-
-                # Check that enough jets are there. If not, changed asked n_jets
-                if n_jets_initial <= n_jets_asked:
-                    logger.warning(
-                        "For sample %s, demanding more initial jets (%i) than available"
-                        " (%i). Forcing to available.",
-                        sample,
-                        n_jets_asked,
-                        n_jets_initial,
-                    )
-
-                else:
-                    n_jets_initial = n_jets_asked
+                logger.warning(
+                    "You selected the PDF resampling method but provided "
+                    "custom_n_jets_initial! This option can't be used with "
+                    "the PDF sampling! Ignoring custom_n_jets_initial!"
+                )
 
             # Get the jets which are to be loaded
             to_load = f_in["jets"][:n_jets_initial]
