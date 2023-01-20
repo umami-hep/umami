@@ -509,7 +509,7 @@ class Resampling:
         try:
             self.class_labels_map = {
                 label: label_id
-                for label_id, label in enumerate(config.sampling["class_labels"])
+                for label_id, label in enumerate(self.config.sampling["class_labels"])
             }
         except KeyError as error:
             raise KeyError(
@@ -930,6 +930,7 @@ class ResamplingTools(Resampling):
                         "custom_n_jets_initial" in self.options
                         and self.options["custom_n_jets_initial"] is not None
                         and sample in list(self.options["custom_n_jets_initial"])
+                        and self.config.sampling["method"] != "pdf"
                     ):
                         n_jets_initial = int(
                             self.options["custom_n_jets_initial"][sample]
