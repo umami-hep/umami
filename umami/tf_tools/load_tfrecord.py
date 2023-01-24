@@ -89,8 +89,15 @@ def load_tfrecords_train_dataset(
         if tracks_name is not None:
             metadata["n_trks"] = metadata["n_trks"][tracks_name]
             metadata["n_trk_features"] = metadata["n_trk_features"][tracks_name]
-            metadata["n_trks_labels"] = metadata["n_trks_labels"][tracks_name]
-            metadata["n_trks_classes"] = metadata["n_trks_classes"][tracks_name]
+            if (
+                metadata["n_trks_labels"] is not None
+                and metadata["n_trks_classes"] is not None
+            ):
+                metadata["n_trks_labels"] = metadata["n_trks_labels"][tracks_name]
+                metadata["n_trks_classes"] = metadata["n_trks_classes"][tracks_name]
+            else:
+                metadata["n_trks_labels"] = None
+                metadata["n_trks_classes"] = None
 
     return train_dataset, metadata
 
