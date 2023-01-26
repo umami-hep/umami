@@ -398,6 +398,7 @@ class ValidationSettingsConfig:
     atlas_first_tag: str = "Simulation Internal"
     atlas_second_tag: str = "$\\sqrt{s}=13$ TeV, PFlow jets"
     val_batch_size: int = None
+    figsize: list = field(default_factory=lambda: [6, 4])
 
     @property
     def plot_args(self):
@@ -439,6 +440,7 @@ class ValidationSettingsConfig:
             (self.atlas_first_tag, "atlas_first_tag", str, True),
             (self.atlas_second_tag, "atlas_second_tag", str, True),
             (self.val_batch_size, "val_batch_size", int, False),
+            (self.figsize, "figsize", list, True),
         ]
 
         # Check option definition
@@ -475,6 +477,7 @@ class EvaluationSettingsConfig:
     saliency_ntrks: int = 8
     saliency_effs: list = None
     x_axis_granularity: int = 100
+    figsize: list = field(default_factory=lambda: [6, 4])
 
     def __post_init__(self):
         """
@@ -502,6 +505,7 @@ class EvaluationSettingsConfig:
             (self.saliency_ntrks, "saliency_ntrks", int, False),
             (self.saliency_effs, "saliency_effs", list, False),
             (self.x_axis_granularity, "x_axis_granularity", int, True),
+            (self.figsize, "figsize", list, True),
         ]
 
         if self.evaluate_traind_model:
