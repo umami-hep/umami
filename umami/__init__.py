@@ -1,2 +1,2 @@
 """Umami framework used in ATLAS FTAG for dataset preparation and tagger training."""
-__version__ = "0.17"
+__version__ = "0.18"

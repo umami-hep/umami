@@ -2,6 +2,10 @@
 
 ### Latest
 
+
+
+### [v0.18](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.18) (27.01.2023)
+
 - Fixing LWTNN vardict conversion [!693](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/693)
 - Adding figsize argument to train configuration [!692](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/692)
 - Adding check if track are used for training with tf records but no track labels [!691](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/691)
@@ -12,7 +16,6 @@
 - Fix bug with Hbb/Hcc/top/dijets categories in global config [!683](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/683)
 - Update Tensorflow Version to 2.11.0 [!681](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/681)
 - Rewriting train config Configuration [!675](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/675)
-
 
 ### [v0.17](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.17) (05.12.2022)
 
@@ -33,7 +36,6 @@
 - Add preprocessing step to merge mc21 single and dileptonic ttbar samples [!651](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/651)
 - Adding full precision calculation of the scale/shift dicts [!663](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/663)
 - Changing default split in train/val/test [!662](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/662)
-
 
 ### [v0.15](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.15) (31.10.2022)
 
