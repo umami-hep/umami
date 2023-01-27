@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Fixing LWTNN vardict conversion [!693](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/693)
 - Adding figsize argument to train configuration [!692](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/692)
 - Adding check if track are used for training with tf records but no track labels [!691](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/691)
 - Adding check if custom initial jets is set for PDF Sampling [!690](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/690)

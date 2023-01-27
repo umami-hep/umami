@@ -165,15 +165,27 @@ def get_jet_variables(
     # Process the jet variables and add them to the list
     for elem in jet_vars:
         v_dict = {}
-        if jet_dict[elem]["default"] is not None:
-            v_dict["default"] = jet_dict[elem]["default"]
-        if jet_dict[elem]["name"] == "absEta_btagJes":
-            jet_dict[elem]["name"] = "abs_eta"
-        if jet_dict[elem]["name"] == "pt_btagJes":
-            jet_dict[elem]["name"] = "pt"
-        v_dict["name"] = jet_dict[elem]["name"]
+
+        # Check the name of the variable
+        # TODO change to case syntax in Python 3.10
+        if elem == "pt_btagJes":
+            v_dict["name"] = "pt"
+
+        elif elem == "absEta_btagJes":
+            v_dict["name"] = "abs_eta"
+
+        else:
+            v_dict["name"] = elem
+
+        # Transfer the scale and shift values as they are needed in LWTNN
         v_dict["offset"] = -1.0 * jet_dict[elem]["shift"]
         v_dict["scale"] = 1.0 / jet_dict[elem]["scale"]
+
+        # Check for default value which is used.
+        if jet_dict[elem]["default"] is not None:
+            v_dict["default"] = jet_dict[elem]["default"]
+
+        # Append the dict to a list
         jet_variables.append(v_dict)
 
     # Return the jet variables ready for the json.
