@@ -331,11 +331,9 @@ def correct_fractions(
     if class_names is not None:
         assert len(n_jets) == len(class_names)
         df_summary["class_names"] = class_names
-    df_summary.sort_values(
-        "target_fractions", ascending=False, inplace=True, ignore_index=True
-    )
+    df_summary.sort_values("N_jets", ascending=True, inplace=True, ignore_index=True)
 
-    # start with the class with the highest fraction and use it as reference
+    # start with the class with the lowest number of jets and use it as reference
     for i in range(1, len(df_summary)):
         # check next highest target fraction
         relative_fraction = (

@@ -1,6 +1,7 @@
 # Changelog
 
 ### Latest
+- Add VR track jet configs and fix bug in pdf sampling for a third sample category [!657](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/657)
 
 
 

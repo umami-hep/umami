@@ -1,0 +1,121 @@
+# Defining anchor with outlier cuts that are used over and over again
+.outlier_cuts: &outlier_cuts
+  - JetFitterSecondaryVertex_mass:
+      operator: <
+      condition: 25000
+      NaNcheck: True
+  - JetFitterSecondaryVertex_energy:
+      operator: <
+      condition: 1e8
+      NaNcheck: True
+  - JetFitter_deltaR:
+      operator: <
+      condition: 0.6
+      NaNcheck: True
+  - relativeDeltaRToVRJet:
+      operator: ">"
+      condition: 1.0
+      NaNcheck: False
+
+.ttbar_vr_cuts: &ttbar_vr_cuts
+  - jetPtRank:
+      operator: "<="
+      condition: 4
+
+.zprime_vr_cuts: &zprime_vr_cuts
+  - jetPtRank:
+      operator: "<="
+      condition: 2
+
+# Defining yaml anchors to be used later, avoiding duplication
+.cuts_template_training_ttbar: &cuts_template_training_ttbar
+  cuts:
+    - eventNumber:
+        operator: mod_6_<=
+        condition: 3
+    - pt_btagJes:
+        operator: "<="
+        condition: 4e5
+    - *ttbar_vr_cuts
+    - *outlier_cuts
+
+.cuts_template_zprime_train: &cuts_template_training_zprime
+  cuts:
+    - eventNumber:
+        operator: mod_6_<=
+        condition: 3
+    - pt_btagJes:
+        operator: ">="
+        condition: 1.25e5
+    - pt_btagJes:
+        operator: "<"
+        condition: 3e6
+    - *zprime_vr_cuts
+    - *outlier_cuts
+
+.cuts_template_training_graviton: &cuts_template_training_graviton
+  <<: *cuts_template_training_zprime
+
+.cuts_template_validation: &cuts_template_validation
+  - eventNumber:
+      operator: mod_6_==
+      condition: 4
+  - *outlier_cuts
+
+.cuts_template_validation_ttbar_hybrid: &cuts_template_validation_ttbar_hybrid
+  cuts:
+    - eventNumber:
+        operator: mod_6_==
+        condition: 4
+    - pt_btagJes:
+        operator: "<="
+        condition: 4e5
+    - *outlier_cuts
+
+.cuts_template_validation_zprime_hybrid: &cuts_template_validation_zprime_hybrid
+  cuts:
+    - eventNumber:
+        operator: mod_6_==
+        condition: 4
+    - pt_btagJes:
+        operator: ">="
+        condition: 1.25e5
+    - pt_btagJes:
+        operator: "<"
+        condition: 3e6
+    - *outlier_cuts
+
+.cuts_template_validation_graviton_hybrid: &cuts_template_validation_graviton_hybrid
+  <<: *cuts_template_validation_zprime_hybrid
+
+.cuts_template_test: &cuts_template_testing
+  - eventNumber:
+      operator: mod_6_==
+      condition: 5
+  - *outlier_cuts
+
+.cuts_template_validation_ttbar: &cuts_template_validation_ttbar
+  cuts:
+    - *cuts_template_validation
+    - *ttbar_vr_cuts
+
+.cuts_template_validation_zprime: &cuts_template_validation_zprime
+  cuts:
+    - *cuts_template_validation
+    - *zprime_vr_cuts
+
+.cuts_template_validation_graviton: &cuts_template_validation_graviton
+  <<: *cuts_template_validation_zprime
+
+.cuts_template_testing_ttbar: &cuts_template_testing_ttbar
+  cuts:
+    - *cuts_template_testing
+    - *ttbar_vr_cuts
+
+.cuts_template_testing_zprime: &cuts_template_testing_zprime
+  cuts:
+    - *cuts_template_testing
+    - *zprime_vr_cuts
+
+.cuts_template_testing_graviton: &cuts_template_testing_graviton
+  <<: *cuts_template_testing_zprime
