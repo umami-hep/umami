@@ -1,0 +1,167 @@
+training_ttbar_bjets:
+  type: ttbar
+  category: bjets
+  n_jets: 1e9
+  <<: *cuts_template_training_ttbar
+  output_name: !join [*sample_path, /bjets_training_ttbar_VR.h5]
+
+training_ttbar_cjets:
+  type: ttbar
+  category: cjets
+  n_jets: 1e9
+  <<: *cuts_template_training_ttbar
+  output_name: !join [*sample_path, /cjets_training_ttbar_VR.h5]
+
+training_ttbar_ujets:
+  type: ttbar
+  category: ujets
+  n_jets: 1e9
+  <<: *cuts_template_training_ttbar
+  output_name: !join [*sample_path, /ujets_training_ttbar_VR.h5]
+
+training_zprime_bjets:
+  type: zprime
+  category: bjets
+  n_jets: 1e9
+  <<: *cuts_template_training_zprime
+  output_name: !join [*sample_path, /bjets_training_zprime_VR.h5]
+
+training_zprime_cjets:
+  type: zprime
+  category: cjets
+  n_jets: 1e9
+  <<: *cuts_template_training_zprime
+  output_name: !join [*sample_path, /cjets_training_zprime_VR.h5]
+
+training_zprime_ujets:
+  type: zprime
+  category: ujets
+  n_jets: 1e9
+  <<: *cuts_template_training_zprime
+  output_name: !join [*sample_path, /ujets_training_zprime_VR.h5]
+
+training_graviton_bjets:
+  type: graviton
+  category: bjets
+  n_jets: 1e9
+  <<: *cuts_template_training_graviton
+  output_name: !join [*sample_path, /bjets_training_graviton_VR.h5]
+
+training_graviton_cjets:
+  type: graviton
+  category: cjets
+  n_jets: 1e9
+  <<: *cuts_template_training_graviton
+  output_name: !join [*sample_path, /cjets_training_graviton_VR.h5]
+
+training_graviton_ujets:
+  type: graviton
+  category: ujets
+  n_jets: 1e9
+  <<: *cuts_template_training_graviton
+  output_name: !join [*sample_path, /ujets_training_graviton_VR.h5]
+
+validation_ttbar:
+  type: ttbar
+  category: inclusive
+  n_jets: 4e6
+  <<: *cuts_template_validation_ttbar
+  output_name: !join [*sample_path, /inclusive_validation_ttbar_VR.h5]
+
+testing_ttbar:
+  type: ttbar
+  category: inclusive
+  n_jets: 4e6
+  <<: *cuts_template_testing_ttbar
+  output_name: !join [*sample_path, /inclusive_testing_ttbar_VR.h5]
+
+validation_zprime:
+  type: zprime
+  category: inclusive
+  n_jets: 4e6
+  <<: *cuts_template_validation_zprime
+  output_name: !join [*sample_path, /inclusive_validation_zprime_VR.h5]
+
+testing_zprime:
+  type: zprime
+  category: inclusive
+  n_jets: 4e6
+  <<: *cuts_template_testing_zprime
+  output_name: !join [*sample_path, /inclusive_testing_zprime_VR.h5]
+
+validation_graviton:
+  type: graviton
+  category: inclusive
+  n_jets: 4e6
+  <<: *cuts_template_validation_graviton
+  output_name: !join [*sample_path, /inclusive_validation_graviton_VR.h5]
+
+testing_graviton:
+  type: graviton
+  category: inclusive
+  n_jets: 4e6
+  <<: *cuts_template_testing_graviton
+  output_name: !join [*sample_path, /inclusive_testing_graviton_VR.h5]
+
+validation_ttbar_bjets:
+  type: ttbar
+  category: bjets
+  n_jets: 4e6
+  <<: *cuts_template_validation_ttbar_hybrid
+  output_name: !join [*sample_path, /bjets_validation_ttbar_VR.h5]
+
+validation_ttbar_cjets:
+  type: ttbar
+  category: cjets
+  n_jets: 4e6
+  <<: *cuts_template_validation_ttbar_hybrid
+  output_name: !join [*sample_path, /cjets_validation_ttbar_VR.h5]
+
+validation_ttbar_ujets:
+  type: ttbar
+  category: ujets
+  n_jets: 4e6
+  <<: *cuts_template_validation_ttbar_hybrid
+  output_name: !join [*sample_path, /ujets_validation_ttbar_VR.h5]
+
+validation_zprime_bjets:
+  type: zprime
+  category: bjets
+  n_jets: 4e6
+  <<: *cuts_template_validation_zprime_hybrid
+  output_name: !join [*sample_path, /bjets_validation_zprime_VR.h5]
+
+validation_zprime_cjets:
+  type: zprime
+  category: cjets
+  n_jets: 4e6
+  <<: *cuts_template_validation_zprime_hybrid
+  output_name: !join [*sample_path, /cjets_validation_zprime_VR.h5]
+
+validation_zprime_ujets:
+  type: zprime
+  category: ujets
+  n_jets: 4e6
+  <<: *cuts_template_validation_zprime_hybrid
+  output_name: !join [*sample_path, /ujets_validation_zprime_VR.h5]
+
+validation_graviton_bjets:
+  type: graviton
+  category: bjets
+  n_jets: 4e6
+  <<: *cuts_template_validation_graviton_hybrid
+  output_name: !join [*sample_path, /bjets_validation_graviton_VR.h5]
+
+validation_graviton_cjets:
+  type: graviton
+  category: cjets
+  n_jets: 4e6
+  <<: *cuts_template_validation_graviton_hybrid
+  output_name: !join [*sample_path, /cjets_validation_graviton_VR.h5]
+
+validation_graviton_ujets:
+  type: graviton
+  category: ujets
+  n_jets: 4e6
+  <<: *cuts_template_validation_graviton_hybrid
+  output_name: !join [*sample_path, /ujets_validation_graviton_VR.h5]

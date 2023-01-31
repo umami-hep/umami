@@ -155,6 +155,16 @@ The result of the commands are the prepared samples which are ready for resampli
 preprocessing.py --config <path to config file> --prepare --sample testing_ttbar
 ```
 
+## Ntuple Preparation for VR track jets
+
+The preparation of VR track jet input files for training, validation, and testing datasets is very similar to the workflow described above for PFlow jets.
+The main difference is that a special set of config files is used, which accounts for the different hybrid sample composition when using VR track jets. The main differences to PFlow jets are:
+
+- implementation of the VR track jet overlap removal
+- only the four leading jets in pt are used for the ttbar sample
+- only the two leading jets in pt are used for the Z' sample
+- the transition from ttbar to Z' occurs in a region in pt and not by a fixed pt cut
+
 ## Ntuple Preparation for bb-jets
 
 TODO: Rewrite this!

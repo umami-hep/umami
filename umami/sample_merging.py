@@ -28,8 +28,10 @@ def get_parser():
         type=str,
         required=False,
         default=None,
-        help="Enter the directory containing the index files to pass "
-        "to the merging script. (Optional)",
+        help=(
+            "Enter the directory containing the index files to pass "
+            "to the merging script. (Optional)"
+        ),
     )
     parser.add_argument(
         "-p",
@@ -45,9 +47,11 @@ def get_parser():
     parser.add_argument(
         "--file_range",
         nargs=2,
-        help="The start and end output file number that this script "
-        "should merge. e.g. if you want to merge files 0-10, then"
-        "you would pass 0 11 (end is exclusive).",
+        help=(
+            "The start and end output file number that this script "
+            "should merge. e.g. if you want to merge files 0-10, then"
+            "you would pass 0 11 (end is exclusive)."
+        ),
     )
 
     return parser.parse_args()

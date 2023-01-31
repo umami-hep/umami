@@ -11,8 +11,8 @@ import tensorflow as tf
 from umami.configuration import logger, set_log_level
 from umami.tf_tools import (
     Attention,
-    DeepSet,
     ConditionalDeepSet,
+    DeepSet,
     DenseNet,
     prepare_model,
 )

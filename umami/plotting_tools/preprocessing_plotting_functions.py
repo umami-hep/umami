@@ -168,8 +168,8 @@ def plot_resampling_variables(
         exist_ok=True,
     )
 
-    # Defining two linestyles for the resampling variables
-    linestyles = ["-", "--"]
+    # Defining linestyles for the resampling variables
+    linestyles = ["-", "--", "-."]
 
     # Translate the kwargs to new naming scheme
     kwargs = translate_kwargs(kwargs)
