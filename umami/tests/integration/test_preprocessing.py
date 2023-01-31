@@ -749,9 +749,9 @@ class TestPreprocessing(unittest.TestCase):
         self.assertTrue(
             run_preprocessing(
                 self.config,
-                tagger="dips",
+                tagger="gn1",
                 method="count",
-                string_id="base",
+                string_id="additional_jet_labels",
                 test_dir=self.test_dir,
             )
         )

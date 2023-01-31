@@ -2,7 +2,7 @@
 
 ### Latest
 
-
+- Enabling additional jet labels integration test [!695](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/695)
 
 ### [v0.18](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.18) (27.01.2023)
 

@@ -184,6 +184,18 @@ test_preprocessing_dips_hits_count:
       - test_preprocessing_dips_hits_count/
       - coverage_files/
 
+test_preprocessing_additional_jet_labels:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing.py -k "test_preprocessing_additional_jet_labels" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_additional_jet_labels
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_preprocessing_gn1_additional_jet_labels_count/
+      - coverage_files/
+
 test_train_dips:
   extends: .test_template
   stage: integration_test_tagger
@@ -196,10 +208,12 @@ test_train_dips:
     - test_preprocessing_dips_count
     - test_preprocessing_dips_pdf
     - test_preprocessing_dips_weighting
+    - test_preprocessing_dips_hits_count
   dependencies:
     - test_preprocessing_dips_count
     - test_preprocessing_dips_pdf
     - test_preprocessing_dips_weighting
+    - test_preprocessing_dips_hits_count
     - build_umamibase_cpu_MR
     - build_umamibase_cpu
     - linter
@@ -388,10 +402,12 @@ test_train_umami:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
+    - test_preprocessing_umami_importance_no_replace
   dependencies:
     - test_preprocessing_umami_count
     - test_preprocessing_umami_pdf
     - test_preprocessing_umami_weighting
+    - test_preprocessing_umami_importance_no_replace
     - build_umamibase_cpu_MR
     - build_umamibase_cpu
     - linter
@@ -519,6 +535,9 @@ test_plotting_umami_dips:
   needs:
     - test_train_dips
     - test_train_tfrecords_dips
+    - test_train_dips_four_classes
+    - test_train_cads
+    - test_train_tfrecords_cads
     - job: build_umamibase_cpu_MR
       optional: true
     - job: build_umamibase_cpu
@@ -571,6 +590,8 @@ test_plotting_umami_umami:
   needs:
     - test_train_umami
     - test_train_tfrecords_umami
+    - test_train_cond_att_umami
+    - test_train_tfrecords_cond_att_umami
     - job: build_umamibase_cpu_MR
       optional: true
     - job: build_umamibase_cpu
