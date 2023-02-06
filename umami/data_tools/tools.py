@@ -31,7 +31,11 @@ def compare_h5_files_variables(*h5_files, key):
     # return None if no positional arguments given
     if not h5_files:
         raise ValueError("No input files provided.")
+
+    # Init a list for the variables in the file
     files_vars = []
+
+    # Iterate over the h5 files and get the available variables
     for h5_file in h5_files:
         with h5py.File(h5_file, "r") as f_h5:
             files_vars.append(set(f_h5[key][:1].dtype.names))
