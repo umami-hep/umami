@@ -11,7 +11,6 @@ from scipy.interpolate import RectBivariateSpline
 from tqdm import tqdm
 
 from umami.configuration import logger
-from umami.data_tools import compare_h5_files_variables
 from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
 from umami.preprocessing_tools.resampling.resampling_base import (
     JsonNumpyEncoder,
@@ -2173,27 +2172,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 ]
             )
 
-        # Check if all jets, tracks have the same variables
-        common_vars = {}
-        for dataset in ["jets"] + self.tracks_names if self.save_tracks else ["jets"]:
-            common_vars_i, diff_vars = compare_h5_files_variables(
-                *sample_paths, key=dataset
-            )
-            common_vars[dataset] = common_vars_i
-            logger.debug("Common vars in %s: %s", dataset, common_vars_i)
-            logger.debug("Diff vars in %s: %s", dataset, diff_vars)
-            if diff_vars:
-                logger.warning(
-                    "The %s in your specified samples don't have the same "
-                    " variables. The following variables are different: %s",
-                    dataset,
-                    diff_vars,
-                )
-                logger.warning(
-                    "All variables which are not present in all samples are "
-                    "padded in the files where they are not present! Please "
-                    "check that you are not training with them!"
-                )
+        # Check for variable differences in the files and get the common variables
+        # available for all input files
+        common_vars = self.retrieve_common_variables(sample_paths=sample_paths)
 
         # Set the counter for the chunks
         chunk_number = 0
@@ -2231,7 +2212,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
                 # Get a chunk of labels, tracks and jets
                 if file_counter == 0:
-                    jets = df_in["jets"][
+                    jets = df_in["jets"].fields(common_vars["jets"])[
                         sample_start_ind[dict_key] : sample_end_ind[dict_key]
                     ]
                     labels = df_in["labels"][
@@ -2239,7 +2220,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     ]
                     if self.save_tracks:
                         tracks = [
-                            df_in[tracks_name][
+                            df_in[tracks_name].fields(common_vars[tracks_name])[
                                 sample_start_ind[dict_key] : sample_end_ind[dict_key]
                             ]
                             for tracks_name in self.tracks_names
@@ -2249,7 +2230,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     jets = np.lib.recfunctions.stack_arrays(
                         [
                             jets,
-                            df_in["jets"][
+                            df_in["jets"].fields(common_vars["jets"])[
                                 sample_start_ind[dict_key] : sample_end_ind[dict_key]
                             ],
                         ]
@@ -2267,7 +2248,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                             tracks[track_counter] = np.vstack(
                                 (
                                     tracks[track_counter],
-                                    df_in[tracks_name][
+                                    df_in[tracks_name].fields(common_vars[tracks_name])[
                                         sample_start_ind[dict_key] : sample_end_ind[
                                             dict_key
                                         ]

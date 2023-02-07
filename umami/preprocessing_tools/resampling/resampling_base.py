@@ -596,6 +596,60 @@ class Resampling:
         # Return the binnumer, the flat bin indicies and the flatten statistic
         return binnumber, bins_indices_flat, statistic.flatten()
 
+    def retrieve_common_variables(
+        self,
+        sample_paths: list,
+    ):
+        """
+        Check if all samples have the same variables. If not, warnings are printed.
+        It also returns the common variables which are available in all samples.
+
+        Parameters
+        ----------
+        sample_paths : list
+            Paths of all inputs files which are to be prepared.
+
+        Returns
+        -------
+        dict
+            Dict with the common vars for the different datasets (jets, tracks).
+            Key is the dataset name and the value is a list with all common vars.
+        """
+
+        # Init a common vars dict
+        common_vars = {}
+
+        # Iterate over the different jets/tracks groups
+        for dataset in ["jets"] + self.tracks_names if self.save_tracks else ["jets"]:
+
+            # Retrieve the common and diff vars for the given dataset for the files
+            common_vars_i, diff_vars = compare_h5_files_variables(
+                *sample_paths,
+                key=dataset,
+            )
+
+            # Put the common variable list into the dict
+            common_vars[dataset] = common_vars_i
+
+            # Print the list for debug
+            logger.debug("Common vars in %s: %s", dataset, common_vars_i)
+            logger.debug("Diff vars in %s: %s", dataset, diff_vars)
+
+            # If varibles are not present in all files, print warning
+            if diff_vars:
+                logger.warning(
+                    "The %s in your specified samples don't have the same "
+                    " variables. The following variables are different: %s",
+                    dataset,
+                    diff_vars,
+                )
+                logger.warning(
+                    "All variables which are not present in all samples are "
+                    "not written out in the resampled file!"
+                )
+
+        return common_vars
+
     def resampling_generator(
         self,
         file: str,
@@ -724,23 +778,12 @@ class Resampling:
 
         # check if all specified samples have the same variables
         sample_paths = list(self.sample_file_map.values())
-        common_vars = {}
-        for dataset in ["jets"] + self.tracks_names if self.save_tracks else ["jets"]:
-            common_vars_i, diff_vars = compare_h5_files_variables(
-                *sample_paths, key=dataset
-            )
-            common_vars[dataset] = common_vars_i
-            logger.debug("Common vars in %s: %s", dataset, common_vars_i)
-            logger.debug("Diff vars in %s: %s", dataset, diff_vars)
-            if diff_vars:
-                logger.warning(
-                    "The %s in your specified samples don't have the same "
-                    " variables. The following variables are different: %s",
-                    dataset,
-                    diff_vars,
-                )
-                logger.warning("These variables are ignored in all further steps.")
 
+        # Check for variable differences in the files and get the common variables
+        # available for all input files
+        common_vars = self.retrieve_common_variables(sample_paths=sample_paths)
+
+        # Get the resampling generators for the different samples
         generators = [
             self.resampling_generator(
                 file=self.sample_file_map[sample],
