@@ -56,10 +56,19 @@ The `--sequence_name` or `-n` option defines the required track selection in ath
 
 #### Track Selection
 
-There are different track selections [defined in Athena](https://gitlab.cern.ch/atlas/athena/blob/21.2/PhysicsAnalysis/JetTagging/FlavorTagDiscriminants/Root/DL2.cxx#L302-355) which can be used and are specified in the lwtnn json file with their definitions [here](https://gitlab.cern.ch/atlas/athena/-/blob/21.2/PhysicsAnalysis/JetTagging/FlavorTagDiscriminants/Root/DL2HighLevel.cxx#L148-156) together with the sort order of the tracks. The following options are usually used for DIPS:
+There are different track selections [defined in Athena](https://gitlab.cern.ch/atlas/athena/-/blob/master/PhysicsAnalysis/JetTagging/FlavorTagDiscriminants/Root/DataPrepUtilities.cxx#L398-531) which can be used and are specified in the lwtnn json file with their definitions [here](https://gitlab.cern.ch/atlas/athena/-/blob/master/PhysicsAnalysis/JetTagging/FlavorTagDiscriminants/Root/DataPrepUtilities.cxx#L739-759) together with the sort order of the tracks. The following options are usually used for DIPS:
+
+* Standard (R22): `tracks_r22default_sd0sort`
+* Loose (R22): `tracks_r22loose_sd0sort`
+
+There are also other track selections, which have been used in the past or are used for specialised R&D studies:
 
 * Standard: `tracks_ip3d_sd0sort`
 * Loose: `tracks_dipsLoose202102_sd0sort`
+* Tight (Run-4 Upgrade): `tracks_dipsTightUpgrade_sd0sort`
+* Loose (Run-4 Upgrade): `tracks_dipsLooseUpgrade_sd0sort`
+* Loose (no IP cuts): `tracks_loose202102NoIpCuts_sd0sort`
+* All: `tracks_all_sd0sort`
 
 ### Architecture and Weight File
 Splitting the model into architecture `arch_file` and weight file `hdf5_file` can be done via
@@ -80,11 +89,13 @@ git clone git@github.com:lwtnn/lwtnn.git
 python lwtnn/converters/kerasfunc2json.py architecture-lwtnn_model.json weights-lwtnn_model.h5 lwtnn_vars.json > FINAL-model.json
 ```
 
-To test if the created model is properly working you can use the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and add the created model to a config (e.g. [EMPFlow.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/configs/single-b-tag/EMPFlow.json)). This is explained a bit more detailed [here](https://training-dataset-dumper.docs.cern.ch/configuration/#dl2-config). To add the values also to the output, you need to add your probability variables also to the [single-btag-variables-all.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/configs/single-b-tag/fragments/single-btag-variables-all.json) or whatever variables file you are using. Just add them to the other tagger probability values.
+To test if the created model is properly working you can use the [training-dataset-dumper](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper) and add the created model to a config (e.g. [EMPFlow.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/configs/EMPFlow.json)). This is explained a bit more detailed [here](https://training-dataset-dumper.docs.cern.ch/configuration/#dl2-config). To add the values also to the output, you need to add your probability variables also to the [single-btag-variables-all.json](https://gitlab.cern.ch/atlas-flavor-tagging-tools/training-dataset-dumper/-/blob/r22/configs/fragments/pflow-variables-all.json) or whatever variables file you are using. Just add them to the other tagger probability values.
 
-An explanation how to run on the grid with the TDD can be found [here](https://training-dataset-dumper.docs.cern.ch/basic_usage/#running-on-the-grid).
+The training-dataset-dumper provides documentation for [running locally](https://training-dataset-dumper.docs.cern.ch/basic_usage/) and for [running on the grid](https://training-dataset-dumper.docs.cern.ch/grid/).
 
-After having the hdf5 ntuples produced, the script [`check_lwtnn_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn_model.py) can be used to compare the athena evaluation with the keras evaluation. The script requiries a short config files which can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/check_lwtnn-model_config.yaml). This looks like this:
+In both cases **it is critically important** that you run with full precision, as the flavour tagging algorithms in Athena are also evaluated with full precision (32bit). For local dumps this can be achieved with the command line argument `--force-full-precision`. 
+
+After having the hdf5 ntuples produced, the script [`check_lwtnn_model.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn_model.py) can be used to compare the athena evaluation with the keras evaluation. The script requiries a short config files which can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/scripts/check_lwtnn-model_config.yaml). This looks like this:
 
 ```
 §§§scripts/check_lwtnn-model_config.yaml§§§
@@ -93,7 +104,7 @@ After having the hdf5 ntuples produced, the script [`check_lwtnn_model.py`](http
 You can simply run the script via
 
 ```bash
-python scripts/check_lwtnn_model.py -c examples/check_lwtnn-model_config.yaml
+python scripts/check_lwtnn_model.py -c scripts/check_lwtnn-model_config.yaml
 ```
 
 the `-c` option is the path to the config file.
