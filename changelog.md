@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Improve scale dict copy logic [!698](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/698)
 - Fixing common variable bug in PDF sampling [!685](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/685)
 - Add VR track jet configs and fix bug in pdf sampling for a third sample category [!657](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/657)
 - Enabling additional jet labels integration test [!695](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/695)
