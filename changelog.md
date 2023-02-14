@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Adding Check against zeros/negative values in log variables [!700](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/700)
 - Improve scale dict copy logic [!698](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/698)
 - update LWTNN-conversion documentation [!699](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/699)
 - Fixing common variable bug in PDF sampling [!685](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/685)
