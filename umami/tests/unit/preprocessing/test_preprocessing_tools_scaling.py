@@ -173,7 +173,7 @@ class ScalingTestCase(unittest.TestCase):
             os.path.dirname(__file__), "fixtures", "test_preprocess_config.yaml"
         )
         self.config = PreprocessConfiguration(self.config_file)
-        self.config.var_file = os.path.join(
+        self.config.general.var_file = os.path.join(
             os.path.dirname(__file__), "fixtures/dummy_var_file.yaml"
         )
 

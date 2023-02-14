@@ -66,20 +66,20 @@ class PreprocessConfigurationTestCase(unittest.TestCase):
         """Test missing key error."""
         config = PreprocessConfiguration(self.config_file)
         del config.config["outfile_name"]
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             config.get_configuration()
 
     def test_get_file_name_no_input(self):
         """Test filename without input."""
         config = PreprocessConfiguration(self.config_file)
         out_file = config.get_file_name()
-        self.assertEqual(out_file, config.outfile_name)
+        self.assertEqual(out_file, config.general.outfile_name)
 
     def test_get_file_name_no_iterations(self):
         """Test no iterations"""
         config = PreprocessConfiguration(self.config_file)
         with self.subTest():
-            self.assertNotIn("test", config.outfile_name)
+            self.assertNotIn("test", config.general.outfile_name)
         out_file = config.get_file_name(option="test")
         with self.subTest():
             self.assertIn("test", out_file)
@@ -88,4 +88,4 @@ class PreprocessConfigurationTestCase(unittest.TestCase):
         """Test no iterations and no input."""
         config = PreprocessConfiguration(self.config_file)
         out_file = config.get_file_name()
-        self.assertEqual(config.outfile_name, out_file)
+        self.assertEqual(config.general.outfile_name, out_file)

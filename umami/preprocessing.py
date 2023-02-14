@@ -153,34 +153,34 @@ if __name__ == "__main__":
 
         # Check if hybrid validation sample should be produced and set the option in
         # the config
-        config.sampling["use_validation_samples"] = args.hybrid_validation
+        config.sampling.use_validation_samples = args.hybrid_validation
 
         # Copy config to output directory
         config.copy_to_out_dir("resampling")
 
         # Check the method which should be used for resampling
-        if config.sampling["method"] == "count":
+        if config.sampling.method == "count":
             sampler = upt.UnderSampling(config=config)
 
-        elif config.sampling["method"] == "pdf":
+        elif config.sampling.method == "pdf":
             sampler = upt.PDFSampling(config=config, flavour=args.flavour)
 
-        elif config.sampling["method"] == "importance_no_replace":
+        elif config.sampling.method == "importance_no_replace":
             sampler = upt.UnderSamplingNoReplace(config=config)
 
-        elif config.sampling["method"] == "weighting":
+        elif config.sampling.method == "weighting":
             sampler = upt.Weighting(config=config)
 
         else:
             raise ValueError(
-                f'{config.sampling["method"]} as sampling method is not supported!'
+                f"{config.sampling.method} as sampling method is not supported!"
             )
 
         # Run the sampling with the selected method
         sampler.Run()
 
         # Set the option back to False to ensure correct naming
-        config.sampling["use_validation_samples"] = False
+        config.sampling.use_validation_samples = False
 
     # Calculate the scale dicts of the previous resampled files
     elif args.scaling:
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     # Check for final writing to disk in train format
     elif args.write:
         # Check if we wish to write the validation files instead
-        config.sampling["use_validation_samples"] = args.hybrid_validation
+        config.sampling.use_validation_samples = args.hybrid_validation
         # Copy config to output directory
         config.copy_to_out_dir("write")
 

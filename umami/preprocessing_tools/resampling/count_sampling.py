@@ -76,7 +76,7 @@ class UnderSampling(ResamplingTools):
             indices_to_keep[reference_class_category], 4
         ]
         for sample_category in self.sample_categories:
-            target_fractions.append(self.options["fractions"][sample_category])
+            target_fractions.append(self.options.fractions[sample_category])
             n_jets.append(
                 len(
                     np.nonzero(
@@ -117,9 +117,9 @@ class UnderSampling(ResamplingTools):
 
         # Check which n_jets to use (training or validation)
         n_jets_requested = (
-            self.options["n_jets"]
+            self.options.n_jets
             if not self.use_validation_samples
-            else self.options["n_jets_validation"]
+            else self.options.n_jets_validation
         )
 
         # check if more jets are available as requested in the config file
@@ -151,7 +151,15 @@ class UnderSampling(ResamplingTools):
         self.indices_to_keep = {}
         self.x_y_after_sampling = {}
         size_total = 0
-        with h5py.File(self.options["intermediate_index_file"], "w") as f_index:
+
+        # decide which index file to use
+        index_file = (
+            self.options.intermediate_index_file_validation
+            if self.use_validation_samples
+            else self.options.intermediate_index_file
+        )
+
+        with h5py.File(index_file, "w") as f_index:
             for class_category in self.class_categories:
                 self.x_y_after_sampling[class_category] = self.concat_samples[
                     class_category
@@ -200,7 +208,7 @@ class UnderSampling(ResamplingTools):
                 self.var_x: 200,
                 self.var_y: 20,
             },
-            atlas_second_tag=self.config.plot_sample_label,
+            atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
             ylabel="Normalised number of jets",
         )
@@ -209,7 +217,7 @@ class UnderSampling(ResamplingTools):
         self.write_file(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
-        if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
+        if self.options.n_jets_to_plot:
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.get_file_name(option="resampled"),
@@ -219,13 +227,11 @@ class UnderSampling(ResamplingTools):
                     self.resampled_path,
                     "plots/resampling/",
                 ),
-                track_collection_list=self.options["tracks_names"]
-                if "tracks_names" in self.options
-                and "save_tracks" in self.options
-                and self.options["save_tracks"] is True
+                track_collection_list=self.options.tracks_names
+                if self.options.save_tracks is True
                 else None,
-                n_jets=self.options["n_jets_to_plot"],
-                atlas_second_tag=self.config.plot_sample_label,
+                n_jets=self.options.n_jets_to_plot,
+                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
             )
