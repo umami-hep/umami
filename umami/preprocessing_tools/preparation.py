@@ -70,8 +70,8 @@ class PrepareSamples:
             self.cuts += category_setup["cuts"]
 
         # Check if tracks are used
-        self.save_tracks = self.config.sampling["options"]["save_tracks"]
-        self.tracks_names = self.config.sampling["options"]["tracks_names"]
+        self.save_tracks = self.config.sampling.options.save_tracks
+        self.tracks_names = self.config.sampling.options.tracks_names
         self.jets_name = self.config.preparation.settings.get("jets_name", "jets")
         self.collection_name = self.config.preparation.settings.get(
             "collection_name", ""

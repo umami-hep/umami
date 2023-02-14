@@ -24,8 +24,8 @@ file_path: &file_path !join [*base_path, /preprocessed]
 
 # Name of the output file from the preprocessing used for hybrid validation (has to be a .h5 file, no folder)
 # Will be ignored if hybrid validation is not used
-outfile_name_validation: !join [*file_path, /PFlow-hybrid-validation.h5]
+.outfile_name_validation: &outfile_name_validation !join [*file_path, /PFlow-hybrid-validation.h5]
 
 # Intermediate file for the hybrid validation sample indicies used in h5 format
 # Will be ignored if hybrid validation is not used
-intermediate_index_file_validation: &intermediate_index_file_validation !join [*file_path, /indicies-hybrid-validation.h5]
+.intermediate_index_file_validation: &intermediate_index_file_validation !join [*file_path, /indicies-hybrid-validation.h5]

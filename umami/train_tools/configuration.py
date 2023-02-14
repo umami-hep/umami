@@ -9,75 +9,7 @@ from umami.configuration import logger
 from umami.data_tools import get_cut_list
 from umami.plotting_tools.utils import translate_kwargs
 from umami.preprocessing_tools import PreprocessConfiguration
-from umami.tools import yaml_loader
-
-
-def check_option_defintion(
-    variable_to_check,
-    variable_name: str,
-    needed_type: list,
-    check_for_nan: bool,
-) -> None:
-    """
-    Check if the given variable is correctly defined.
-
-    Parameters
-    ----------
-    variable_to_check
-        Variable which is to be checked.
-    variable_name : str
-        Name of the variable (for logger).
-    needed_type : list
-        List of allowed types for the variable.
-    check_for_nan : bool
-        Bool, if the variable needs to be set (True) or if a NaN
-        value is also allowed (False).
-
-    Raises
-    ------
-    ValueError
-        If you havn't/wronly defined a variable which is needed.
-    """
-    # Check that needed_types is a list to loop over
-    if not isinstance(needed_type, list):
-        needed_type = [needed_type]
-
-    # If given values is a int, continue
-    if type(variable_to_check) in needed_type:
-        return
-
-    # Check case where the given type is string but you need a list
-    if (
-        isinstance(variable_to_check, str)
-        and list in needed_type
-        and str not in needed_type
-    ):
-        variable_to_check = [variable_to_check]
-
-    # If a flaot value was found but it should be int
-    elif (
-        isinstance(variable_to_check, float)
-        and int in needed_type
-        and float not in needed_type
-    ):
-        logger.warning(
-            "You defined a float for %s! Translating to int value %s",
-            variable_name,
-            int(variable_to_check),
-        )
-        variable_to_check = int(variable_to_check)
-
-    else:
-        # Check if the value is allowed to be None
-        if check_for_nan is False and variable_to_check is None:
-            return
-
-        # Raise error for all other cases
-        raise ValueError(
-            f"You havn't/wrongly defined {variable_name}! "
-            f"You gave a {type(variable_to_check)} but it should be one of these types "
-            f"{needed_type}. Please define this correctly!"
-        )
+from umami.tools import check_option_definition, yaml_loader
 
 
 @dataclass
@@ -128,7 +60,7 @@ class TrainConfigurationObject:
 
         # Check option definition
         for iter_var in needed_args:
-            check_option_defintion(
+            check_option_definition(
                 variable_to_check=iter_var[0],
                 variable_name=iter_var[1],
                 needed_type=iter_var[2],
@@ -138,7 +70,7 @@ class TrainConfigurationObject:
         if self.evaluate_trained_model:
             # Load the preprocessing config and var dict
             self.preprocess_config = PreprocessConfiguration(self.preprocess_config)
-            self.var_dict = self.preprocess_config.var_file
+            self.var_dict = self.preprocess_config.general.var_file
 
         # Setting the tracks key
         self.tracks_key = f"{self.tracks_name}/inputs" if self.tracks_name else None
@@ -313,7 +245,7 @@ class NNStructureConfig:
 
         # Check option definition
         for iter_var in needed_args:
-            check_option_defintion(
+            check_option_definition(
                 variable_to_check=iter_var[0],
                 variable_name=iter_var[1],
                 needed_type=iter_var[2],
@@ -445,7 +377,7 @@ class ValidationSettingsConfig:
 
         # Check option definition
         for iter_var in needed_args:
-            check_option_defintion(
+            check_option_definition(
                 variable_to_check=iter_var[0],
                 variable_name=iter_var[1],
                 needed_type=iter_var[2],
@@ -523,7 +455,7 @@ class EvaluationSettingsConfig:
 
         # Check option definition
         for iter_var in needed_args:
-            check_option_defintion(
+            check_option_definition(
                 variable_to_check=iter_var[0],
                 variable_name=iter_var[1],
                 needed_type=iter_var[2],

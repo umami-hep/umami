@@ -3,11 +3,13 @@ import copy
 import os
 import shutil
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PosixPath
 from random import Random
 
+import pydash
+
 from umami.configuration import Configuration, logger
-from umami.tools import flatten_list
+from umami.tools import check_option_definition, flatten_list
 
 
 def check_key(location, old_key: str, new_key: str) -> None:
@@ -65,6 +67,241 @@ class Sample:
             f"{self.name=}, {self.type=}, {self.category=}, {self.n_jets=}, "
             f"{self.cuts=}, {self.output_name=}"
         )
+
+    def __post_init__(self):
+        """
+        Process options and perform checks on them.
+        """
+
+        # List of tuples for check. Each tuple contains:
+        # The variable, the name of the variable, which type the variable should be
+        # and if the variable needs to be set (True if None is not ok, False if
+        # None is ok)
+        needed_args = [
+            (self.name, "name", str, True),
+            (self.type, "type", str, True),
+            (self.category, "category", str, True),
+            (self.n_jets, "n_jets", int, True),
+            (self.cuts, "cuts", list, False),
+            (self.output_name, "output_name", [str, PosixPath], True),
+        ]
+
+        # Check option definition
+        for iter_var in needed_args:
+            check_option_definition(
+                variable_to_check=iter_var[0],
+                variable_name=iter_var[1],
+                needed_type=iter_var[2],
+                check_for_nan=iter_var[3],
+            )
+
+
+@dataclass
+class Sampling:
+    """Class handling preprocessing options in `sampling` block."""
+
+    class_labels: list = None
+    method: str = None
+    options: object = None
+    use_validation_samples: bool = False
+
+    def __post_init__(self):
+        """
+        Process options and perform checks on them.
+        """
+
+        # List of tuples for check. Each tuple contains:
+        # The variable, the name of the variable, which type the variable should be
+        # and if the variable needs to be set (True if None is not ok, False if
+        # None is ok)
+        needed_args = [
+            (self.class_labels, "class_labels", list, True),
+            (self.method, "method", str, True),
+            (self.use_validation_samples, "use_validation_samples", bool, True),
+        ]
+
+        # Check option definition
+        for iter_var in needed_args:
+            check_option_definition(
+                variable_to_check=iter_var[0],
+                variable_name=iter_var[1],
+                needed_type=iter_var[2],
+                check_for_nan=iter_var[3],
+            )
+
+
+@dataclass
+class SamplingOptions:
+    """Class handling preprocessing options in `sampling` block."""
+
+    sampling_variables: list = None
+    samples_training: dict = None
+    samples_validation: dict = None
+    custom_n_jets_initial: dict = None
+    fractions: dict = None
+    max_upsampling_ratio: dict = None
+    sampling_fraction: dict = None
+    n_jets: int = None
+    n_jets_validation: int = None
+    n_jets_scaling: int = None
+    save_tracks: bool = False
+    tracks_names: list = None
+    save_track_labels: bool = False
+    track_truth_variables: list = None
+    intermediate_index_file: str = None
+    intermediate_index_file_validation: str = None
+    weighting_target_flavour: str = None
+    bool_attach_sample_weights: bool = None
+    n_jets_to_plot: int = None
+    target_distribution: str = None
+
+    def __post_init__(self):
+        """
+        Process options and perform checks on them.
+
+        Raises
+        ------
+        ValueError
+            If save_tracks is True but no tracks_names are given.
+        ValueError
+            if save_track_labels is True but no track_truth_variables
+            are given.
+        """
+
+        # List of tuples for check. Each tuple contains:
+        # The variable, the name of the variable, which type the variable should be
+        # and if the variable needs to be set (True if None is not ok, False if
+        # None is ok)
+        needed_args = [
+            (self.sampling_variables, "sampling_variables", list, True),
+            (self.samples_training, "samples", dict, True),
+            (self.samples_validation, "samples", dict, True),
+            (self.custom_n_jets_initial, "custom_n_jets_initial", dict, False),
+            (self.fractions, "fractions", dict, False),
+            (self.max_upsampling_ratio, "max_upsampling_ratio", dict, False),
+            (self.sampling_fraction, "max_upsampling_ratio", dict, False),
+            (self.n_jets, "n_jets", int, True),
+            (self.n_jets_validation, "n_jets_validation", int, False),
+            (self.n_jets_scaling, "n_jets_scaling", int, False),
+            (self.save_tracks, "save_tracks", bool, True),
+            (self.tracks_names, "tracks_names", list, False),
+            (self.save_track_labels, "save_track_labels", bool, True),
+            (self.track_truth_variables, "track_truth_variables", list, False),
+            (self.intermediate_index_file, "intermediate_index_file", str, True),
+            (
+                self.intermediate_index_file_validation,
+                "intermediate_index_file_validation",
+                str,
+                False,
+            ),
+            (self.weighting_target_flavour, "weighting_target_flavour", str, False),
+            (
+                self.bool_attach_sample_weights,
+                "bool_attach_sample_weights",
+                bool,
+                False,
+            ),
+            (self.n_jets_to_plot, "n_jets_to_plot", int, False),
+            (self.target_distribution, "target_distribution", str, False),
+        ]
+
+        # Check option definition
+        for iter_var in needed_args:
+            check_option_definition(
+                variable_to_check=iter_var[0],
+                variable_name=iter_var[1],
+                needed_type=iter_var[2],
+                check_for_nan=iter_var[3],
+            )
+
+        # Check that tracks_name is correctly defined if save tracks is true
+        if self.save_tracks and self.tracks_names is None:
+            raise ValueError(
+                "You defined save_tracks as True but gave no tracks_names! "
+                "Please define them!"
+            )
+
+        # Check track truth labels
+        if self.save_track_labels and self.track_truth_variables is None:
+            raise ValueError(
+                "You defined save_track_labels as True but gave no"
+                " track_truth_variables! Please define them!"
+            )
+
+
+@dataclass
+class GeneralSettings:
+    """Class handling general preprocessing options."""
+
+    outfile_name: str = None
+    outfile_name_validation: str = None
+    plot_name: str = None
+    plot_sample_label: str = None
+    var_file: str = None
+    dict_file: str = None
+    compression: str = None
+    precision: str = None
+    concat_jet_tracks: bool = False
+    convert_to_tfrecord: dict = None
+
+    def __post_init__(self):
+        """
+        Process options and perform checks on them.
+
+        Raises
+        ------
+        ValueError
+            If the one of the filenames does not have the right file extension.
+        """
+
+        # List of tuples for check. Each tuple contains:
+        # The variable, the name of the variable, which type the variable should be
+        # and if the variable needs to be set (True if None is not ok, False if
+        # None is ok)
+        needed_args = [
+            (self.outfile_name, "outfile_name", str, True),
+            (self.outfile_name_validation, "outfile_name_validation", str, False),
+            (self.plot_name, "plot_name", str, True),
+            (self.plot_sample_label, "plot_sample_label", str, False),
+            (self.var_file, "var_file", str, True),
+            (self.dict_file, "dict_file", str, True),
+            (self.compression, "compression", str, False),
+            (self.precision, "precision", str, True),
+            (self.concat_jet_tracks, "concat_jet_tracks", bool, True),
+            (self.convert_to_tfrecord, "convert_to_tfrecord", dict, False),
+        ]
+
+        # Check option definition
+        for iter_var in needed_args:
+            check_option_definition(
+                variable_to_check=iter_var[0],
+                variable_name=iter_var[1],
+                needed_type=iter_var[2],
+                check_for_nan=iter_var[3],
+            )
+
+        # Check that .h5 files have the h5 in the name
+        for varname, var, needed_extension in zip(
+            ["outfile_name", "outfile_name_validation", "var_file", "dict_file"],
+            [
+                self.outfile_name,
+                self.outfile_name_validation,
+                self.var_file,
+                self.dict_file,
+            ],
+            [".h5", ".h5", ".yaml", ".json"],
+        ):
+
+            # Skip variable if its None
+            if not var:
+                continue
+
+            # Check that the given variable has the correct extension
+            if not var.endswith(needed_extension):
+                raise ValueError(
+                    f"Your specified `{varname}` has to be a {needed_extension} file. "
+                    f"You defined in the preprocessing config {var}"
+                )
 
 
 class Preparation:
@@ -146,28 +383,20 @@ class Preparation:
                     "You specified both `f_output` and `output_name` in your"
                     f"`{sample_name}`, you can only specify one of them."
                 )
-            sample = Sample()
-            sample.name = sample_name
-            f_output = sample_settings.get("f_output", None)
-            if f_output is None:
-                sample.output_name = Path(sample_settings.get("output_name"))
-            else:
-                sample.output_name = Path(f_output.get("path", ".")) / f_output.get(
-                    "file"
-                )
-            sample.type = sample_settings.get("type")
-            sample.category = sample_settings.get("category")
-            if "n_jets" in sample_settings:
-                sample.n_jets = int(sample_settings.get("n_jets"))
-            else:
-                sample.n_jets = int(4e6)
-                logger.info(
-                    "`n_jets` not specified for sample %s. It will be set to 10M.",
-                    sample_name,
-                )
-            sample.cuts = flatten_list(sample_settings.get("cuts"))
-            if sample.cuts is None:
-                sample.cuts = []
+
+            # Get the f_output and the cuts
+            f_output = sample_settings.get("f_output")
+            cuts = sample_settings.get("cuts", [])
+            sample = Sample(
+                name=sample_name,
+                type=sample_settings.get("type"),
+                category=sample_settings.get("category"),
+                n_jets=int(sample_settings.get("n_jets")),
+                output_name=Path(f_output.get("path", ".")) / f_output.get("file")
+                if f_output
+                else Path(sample_settings.get("output_name")),
+                cuts=flatten_list(cuts),
+            )
             self.samples[sample_name] = sample
             logger.debug("Read in sample %s", sample)
 
@@ -221,51 +450,6 @@ class Preparation:
         return self.input_files.get(sample_type)
 
 
-@dataclass
-class Sampling:
-    """Class handling preprocessing options in `sampling` block."""
-
-    class_labels: list = None
-    method: str = None
-    options: object = None
-
-
-@dataclass
-class SamplingOptions:
-    """Class handling preprocessing options in `sampling` block."""
-
-    sampling_variables: list = None
-    samples: dict = None
-    custom_n_jets_initial: dict = None
-    fractions: dict = None
-    max_upsampling_ratio: dict = None
-    n_jets: int = None
-    n_jets_scaling: int = None
-    save_tracks: bool = None
-    tracks_names: list = None
-    save_track_labels: bool = None
-    track_truth_variables: list = None
-    intermediate_index_file: str = None
-    weighting_target_flavour: str = None
-    bool_attach_sample_weights: bool = None
-    n_jets_to_plot: int = None
-
-
-@dataclass
-class GeneralSettings:
-    """Class handling general preprocessing options."""
-
-    outfile_name: str = None
-    plot_name: str = None
-    plot_sample_label: str = None
-    var_file: str = None
-    dict_file: str = None
-    compression: str = None
-    precision: str = None
-    concat_jet_tracks: bool = None
-    convert_to_tfrecord: dict = None
-
-
 class PreprocessConfiguration(Configuration):
     """Preprocessing Configuration class."""
 
@@ -285,57 +469,29 @@ class PreprocessConfiguration(Configuration):
         self.load_config_file()
         self.get_configuration()
         self.check_resampling_options()
-        self.check_tracks_names()
-        self.check_deprecated_keys()
-
-        # here the new syntax starts
-        logger.info("Initialising preparation configuration.")
-        self.preparation = Preparation(self.config.get("preparation"))
 
     def get_configuration(self) -> None:
-        """Assign configuration from file to class variables.
-
-        Raises
-        ------
-        KeyError
-            if required config option is not present in passed config file
         """
-        for elem in self.default_config:
-            if elem == "preparation":
-                continue
-            if elem in self.config:
-                if isinstance(self.config[elem], dict) and "f_" in elem:
-                    if "file" not in self.config[elem]:
-                        raise KeyError(
-                            "You need to specify the 'file' for"
-                            f"{elem} in your config file!"
-                        )
-                    if self.config[elem]["file"] is None:
-                        raise KeyError(
-                            "You need to specify the 'file' for"
-                            f" {elem} in your config file!"
-                        )
-                    if "path" in self.config[elem]:
-                        setattr(
-                            self,
-                            elem,
-                            os.path.join(
-                                self.config[elem]["path"],
-                                self.config[elem]["file"],
-                            ),
-                        )
-                    else:
-                        setattr(self, elem, self.config[elem]["file"])
+        Assign configuration from file to class variables.
+        """
 
-                else:
-                    setattr(self, elem, self.config[elem])
-            elif self.default_config[elem] is None:
-                raise KeyError(f"You need to specify {elem} in yourconfig file!")
-            else:
-                logger.warning(
-                    "Setting %s to default value %s", elem, self.default_config[elem]
-                )
-                setattr(self, elem, self.default_config[elem])
+        # Init the preparation block
+        self.preparation = Preparation(self.config.get("preparation"))
+
+        # Init the sampling block
+        self.sampling = Sampling(
+            class_labels=self.config["sampling"].get("class_labels"),
+            method=self.config["sampling"].get("method"),
+            options=SamplingOptions(**self.config["sampling"]["options"]),
+        )
+
+        # Get the parameters and cut parameters
+        setattr(self, "parameters", self.config["parameters"])
+        setattr(self, "cut_parameters", self.config["cut_parameters"])
+
+        # Arguments in the config file which are not general
+        non_general_args = ["preparation", "sampling", "parameters", "cut_parameters"]
+        self.general = GeneralSettings(**pydash.omit(self.config, non_general_args))
 
     def check_resampling_options(self):
         """
@@ -347,40 +503,40 @@ class PreprocessConfiguration(Configuration):
             If the value is smaller than 1 for all methods beside pdf
         """
 
-        used_method = self.sampling["method"]
-        n_jets = int(self.sampling["options"]["n_jets"])
-        n_jets_val = (
-            int(self.sampling["options"]["n_jets_validation"])
-            if "n_jets_validation" in self.sampling["options"]
-            else None
-        )
-
         # Loop over the n_jets which are to check
         for n_jets_iter, name_iter in zip(
-            (n_jets, n_jets_val),
+            (self.sampling.options.n_jets, self.sampling.options.n_jets_validation),
             ("n_jets", "n_jets_validation"),
         ):
             if n_jets_iter is not None:
                 # Check that n_jets
-                if used_method != "pdf":
+                if self.sampling.method != "pdf":
                     if n_jets_iter <= 0:
                         raise ValueError(
-                            f"You defined resampling method {used_method} with"
-                            f" {name_iter} <= 0! Only values above zero are support for"
-                            " this method!"
+                            f"You defined resampling method {self.sampling.method} "
+                            f"with {name_iter} <= 0! Only values above zero are "
+                            "support for this method!"
                         )
 
                 else:
                     if n_jets_iter < 1 and n_jets_iter != -1:
                         raise ValueError(
-                            f"You defined resampling method {used_method} with"
-                            f" {name_iter} <= 0! Only values above zero and -1 are"
+                            f"You defined resampling method {self.sampling.method} "
+                            f"with {name_iter} <= 0! Only values above zero and -1 are"
                             " support for this method!"
                         )
 
+        # Check that fractions is set except for the importance sampling
+        if (
+            self.sampling.options.fractions is None
+            and self.sampling.method != "importance_no_replace"
+        ):
+            raise ValueError(
+                "You havn't defined the target fractions for your resampling!"
+            )
+
     def get_file_name(
         self,
-        iteration: int = None,
         option: str = None,
         extension: str = ".h5",
         custom_path: str = None,
@@ -391,8 +547,6 @@ class PreprocessConfiguration(Configuration):
 
         Parameters
         ----------
-        iteration : int, optional
-            Number of iterations, by default None
         option : str, optional
             Option name for file, by default None
         extension : str, optional
@@ -408,94 +562,34 @@ class PreprocessConfiguration(Configuration):
         -------
         str
             Path of the output file.
-
-        Raises
-        ------
-        ValueError
-            If the outfile is not a .h5 file.
         """
-        if option is None and iteration is None:
-            if use_val:
-                return self.config["parameters"]["outfile_name_validation"]
 
-            return self.outfile_name
-
+        # Get the defined base output file name
         out_file = (
-            self.outfile_name
-            if not use_val
-            else self.config["parameters"]["outfile_name_validation"]
+            self.general.outfile_name_validation
+            if use_val
+            else self.general.outfile_name
         )
-        try:
-            idx = out_file.index(".h5")
-        except ValueError as error:
-            raise ValueError(
-                "Your specified `outfile_name` has to be a .h5 file. "
-                f"You defined in the preprocessing config {out_file}"
-            ) from error
 
-        if iteration is None:
-            if option is None:
-                inserttxt = ""
-            else:
-                inserttxt = f"-{option}"
-        else:
-            if option is None:
-                inserttxt = (
-                    f"-file-{iteration:.0f}"
-                    f"_{self.sampling['options']['iterations']:.0f}"
-                )
-            else:
-                inserttxt = (
-                    f"-{option}-file-{iteration:.0f}"
-                    f"_{self.sampling['options']['iterations']:.0f}"
-                )
+        # Get the index of the file extension
+        idx = out_file.index(".h5")
+
+        # Insert the option into the output file name
+        inserttxt = "" if option is None else f"-{option}"
+
+        # Check for a custom path
         if custom_path is not None:
-            name_base = out_file.split("/")[-1]
+            name_base = out_file.rsplit("/", maxsplit=1)[-1]
             idx = name_base.index(".h5")
             return custom_path + name_base[:idx] + inserttxt + extension
 
+        # Check if the pure base output file name should be returned
+        if option is None:
+            return out_file
+
+        # Create the new outfile name
         out_file = out_file[:idx] + inserttxt + extension
         return out_file
-
-    def check_deprecated_keys(self) -> None:
-        """Checks if deprecated keys are used in the config file and raise an error."""
-
-        check_key(
-            self.sampling["options"].keys(),
-            "custom_njets_initial",
-            "custom_n_jets_initial",
-        )
-        check_key(
-            self.sampling["options"].keys(),
-            "njets",
-            "n_jets",
-        )
-
-    def check_tracks_names(self) -> None:
-        """
-        Checks if the option tracks_name is given.
-
-        Raises
-        ------
-        ValueError
-            When save_tracks is True but no tracks_names was given.
-        """
-        if self.sampling["options"].get("save_tracks", False) is True:
-            if isinstance(self.sampling["options"].get("tracks_names"), str):
-                self.sampling["options"]["tracks_names"] = [
-                    self.sampling["options"]["tracks_names"]
-                ]
-
-            elif not isinstance(self.sampling["options"].get("tracks_names"), list):
-                raise ValueError(
-                    "You set save_tracks to True but gave not a string or a "
-                    "list for tracks_names! You gave "
-                    f'{isinstance(self.sampling["options"].get("tracks_names"))}'
-                )
-
-        else:
-            self.sampling["options"]["save_tracks"] = False
-            self.sampling["options"]["tracks_names"] = None
 
     def copy_to_out_dir(self, suffix: str, out_dir: str = None) -> None:
         """
@@ -530,21 +624,21 @@ class PreprocessConfiguration(Configuration):
         )
 
         # get new var dict path and update copied config
-        new_var_dict_path = out_dir / Path(self.var_file).name
+        new_var_dict_path = out_dir / Path(self.general.var_file).name
         config["var_file"] = str(new_var_dict_path.resolve())
         config["parameters"]["var_file"] = str(new_var_dict_path.resolve())
 
         # if scale dict file exists, copy it as well
-        if Path(self.dict_file).is_file():
+        if Path(self.general.dict_file).is_file():
             logger.info("Scale dict exists and will be copied.")
-            new_sd_path = out_dir / Path(self.dict_file).name
+            new_sd_path = out_dir / Path(self.general.dict_file).name
             config["dict_file"] = str(new_sd_path.resolve())
             config["parameters"][".dict_file"] = str(new_sd_path.resolve())
             logger.info("Copying config file to %s", new_sd_path)
             if new_sd_path.is_file():
                 logger.warning("Overwriting existing scale dict at %s", new_sd_path)
-            if self.dict_file != str(new_sd_path):
-                shutil.copyfile(self.dict_file, new_sd_path)
+            if self.general.dict_file != str(new_sd_path):
+                shutil.copyfile(self.general.dict_file, new_sd_path)
 
         # copy config
         logger.info("Copying config file to %s", new_config_path)
@@ -558,4 +652,4 @@ class PreprocessConfiguration(Configuration):
             logger.warning(
                 "Overwriting existing variable dict at %s", new_var_dict_path
             )
-        shutil.copyfile(self.var_file, new_var_dict_path)
+        shutil.copyfile(self.general.var_file, new_var_dict_path)

@@ -192,7 +192,7 @@ def evaluate_model(
             x_comb, _ = utt.get_test_sample(
                 input_file=test_file,
                 var_dict=train_config.general.var_dict,
-                scale_dict=train_config.general.preprocess_config.dict_file,
+                scale_dict=train_config.general.preprocess_config.general.dict_file,
                 class_labels=classes_to_evaluate,
                 n_jets=n_jets,
                 exclude=exclude,
@@ -218,7 +218,7 @@ def evaluate_model(
             x_test, x_test_trk, y_test = utt.get_test_file(
                 input_file=test_file,
                 var_dict=train_config.general.var_dict,
-                scale_dict=train_config.general.preprocess_config.dict_file,
+                scale_dict=train_config.general.preprocess_config.general.dict_file,
                 class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -252,7 +252,7 @@ def evaluate_model(
             x_comb, y_test = utt.get_test_sample_trks(
                 input_file=test_file,
                 var_dict=train_config.general.var_dict,
-                scale_dict=train_config.general.preprocess_config.dict_file,
+                scale_dict=train_config.general.preprocess_config.general.dict_file,
                 class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -278,7 +278,7 @@ def evaluate_model(
             x_test, x_test_trk, _ = utt.get_test_file(
                 input_file=test_file,
                 var_dict=train_config.general.var_dict,
-                scale_dict=train_config.general.preprocess_config.dict_file,
+                scale_dict=train_config.general.preprocess_config.general.dict_file,
                 class_labels=classes_to_evaluate,
                 tracks_name=tracks_name,
                 n_jets=n_jets,

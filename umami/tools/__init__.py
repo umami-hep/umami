@@ -3,6 +3,7 @@
 from umami.tools.tools import (
     atoi,
     check_main_class_input,
+    check_option_definition,
     compare_leading_spaces,
     flatten_list,
     natural_keys,

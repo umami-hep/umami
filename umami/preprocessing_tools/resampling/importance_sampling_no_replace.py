@@ -45,7 +45,7 @@ class UnderSamplingNoReplace(ResamplingTools):
         """
 
         try:
-            target_distribution = self.options["target_distribution"]
+            target_distribution = self.options.target_distribution
         except KeyError as error:
             raise ValueError(
                 "Resampling method importance_no_replace requires a target"
@@ -114,9 +114,9 @@ class UnderSamplingNoReplace(ResamplingTools):
         # check if more jets are available as requested in the config file
         # we assume that all classes have the same number of jets now
         n_jets_requested = (
-            self.options.get("n_jets")
+            self.options.n_jets
             if not self.use_validation_samples
-            else self.options.get("n_jets_validation")
+            else self.options.n_jets_validation
         )
         if n_jets_requested == -1 or n_jets_requested is None:
             logger.info("Maximising number of jets to target distribution.")
@@ -145,7 +145,15 @@ class UnderSamplingNoReplace(ResamplingTools):
         self.indices_to_keep = {}
         self.x_y_after_sampling = {}
         size_total = 0
-        with h5py.File(self.options["intermediate_index_file"], "w") as f_index:
+
+        # decide which index file to use
+        index_file = (
+            self.options.intermediate_index_file_validation
+            if self.use_validation_samples
+            else self.options.intermediate_index_file
+        )
+
+        with h5py.File(index_file, "w") as f_index:
             for class_category in self.class_categories:
                 self.x_y_after_sampling[class_category] = self.concat_samples[
                     class_category
@@ -280,7 +288,7 @@ class UnderSamplingNoReplace(ResamplingTools):
                 self.var_x: 200,
                 self.var_y: 20,
             },
-            atlas_second_tag=self.config.plot_sample_label,
+            atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
             ylabel="Normalised number of jets",
         )
@@ -289,23 +297,21 @@ class UnderSamplingNoReplace(ResamplingTools):
         self.write_file(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
-        if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
+        if self.options.n_jets_to_plot:
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.get_file_name(option="resampled"),
-                var_dict=get_variable_dict(self.config.var_file),
-                class_labels=self.config.sampling["class_labels"],
+                var_dict=get_variable_dict(self.config.general.var_file),
+                class_labels=self.config.sampling.class_labels,
                 plots_dir=os.path.join(
                     self.resampled_path,
                     "plots/resampling/",
                 ),
-                track_collection_list=self.options["tracks_names"]
-                if "tracks_names" in self.options
-                and "save_tracks" in self.options
-                and self.options["save_tracks"] is True
+                track_collection_list=self.options.tracks_names
+                if self.options.save_tracks is True
                 else None,
-                n_jets=self.options["n_jets_to_plot"],
-                atlas_second_tag=self.config.plot_sample_label,
+                n_jets=self.options.n_jets_to_plot,
+                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
             )
