@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Save resampling plots in dedicated directory for hybrid validation file [!703](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/703)
 - Adding Check against zeros/negative values in log variables [!700](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/700)
 - Improve scale dict copy logic [!698](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/698)
 - update LWTNN-conversion documentation [!699](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/699)
