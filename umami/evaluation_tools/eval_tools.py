@@ -95,7 +95,7 @@ def get_rej_per_frac_dict(
     main_class: str,
     target_eff: float,
     step: float = 0.01,
-    frac_min: float = 0.01,
+    frac_min: float = 0.0,
     frac_max: float = 1.0,
     progress_bar: bool = False,
 ) -> dict:
@@ -128,7 +128,7 @@ def get_rej_per_frac_dict(
     step : float, optional
         Step size of the change of the fraction values, by default 0.01
     frac_min : float
-        Minimum value of the fractions, by default 0.01.
+        Minimum value of the fractions, by default 0.0.
     frac_max : float
         Minimum value of the fractions, by default 1.0.
     progress_bar : bool, optional

@@ -115,6 +115,10 @@ def calc_disc_values(
     [-0.03536714, -0.11867153]
     """
 
+    # Enfore full precision
+    for key, item in jets_dict.items():
+        jets_dict[key] = item.astype("float32")
+
     # Check the main class input and transform it into a set
     main_class = check_main_class_input(main_class)
 
@@ -251,6 +255,10 @@ def get_score(
 
     # Check if y_pred and class_labels has the needed similar shapes
     assert np.shape(y_pred)[1] == len(class_labels)
+
+    # Ensure that y_pred is in full precision (float32)
+    if isinstance(y_pred, np.ndarray):
+        y_pred = y_pred.astype("float32")
 
     # Init index dict
     index_dict = {}
