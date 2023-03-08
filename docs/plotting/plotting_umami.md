@@ -147,7 +147,9 @@ To evaluate the impact of the track variables to the final b-tagging discriminan
 | `nFixedTrks` | `int` | Necessary | The saliency maps can only be calculated for jets with a fixed number of tracks. This number of tracks can be set with this parameter. For example, if this value is `8`, than only jets which have exactly 8 tracks are used for the saliency maps. This value needs to be set in the train config when you run the evaluation! If you run the evaluation with, for example `5`, you can't plot the saliency map for `8`. |
 
 #### Fraction Contour Plot
-Plot two rejections against each other for a given working point with different fraction values.
+Plot two rejections against each other for a given working point with different fraction values. This is very helpful when you want to tune the fraction values for the different background classes for your model.
+
+**Note**: This is a 2D plot. So you can only plot 2 different rejections, one per axis. If you have a training with more than 2 background classes (for example a training with tau jets), you need to fix the fraction value to a certain value here and vary the other two. This can be done with the 
 
 ```yaml
 §§§examples/plotting_umami_config_dips.yaml:9:33§§§
@@ -155,8 +157,9 @@ Plot two rejections against each other for a given working point with different 
 
 | Options | Data Type | Necessary/Optional | Explanation |
 |---------|-----------|--------------------|-------------|
-| `rejections` | `list` | Necessary | List with two items. These are the rejections that are plotted against each other. Only background classes can be plotted like this. |
+| `rejections` | `list` | Necessary | List with two items. These are the rejections that are plotted against each other. Only background classes can be plotted like this. Note: If you have more than two background classes, you need to fix one to a certain value. This needs to be done for every model you define in the plot. Have a closer look at `fixed_rejections` for that. |
 | `tagger_name` | `str` | Necessary | Name of the tagger which is to be plotted. This is the name of the tagger either from the `.h5` files or your freshly trained tagger (look [here](https://umami-docs.web.cern.ch/plotting/plotting_umami/#yaml-config-file) for an explanation of the freshly trained tagger names). **IMPORTANT: If you want to use a tagger from the `.h5` files, you must run the `evaluate_model.py` script with the names of taggers in the train config in the `evaluation_settings` section. There you need to enter the name to the `tagger` list and the fraction values to the `frac_values_comp` dict. The key is the name of the tagger. |
+| `fixed_rejections` | `dict` | Optional | Dict with the fractions you want to fix to a certain value. The flavour is the key and the fraction value is the value. |
 | `colour` | `str` | Optional | Give a specific colour to the tagger. |
 | `linestyle` | `str` | Optional | Give a specific linestyle to the tagger. |
 | `label` | `str` | Necessary | Give a label for the tagger that will be printed to the legend. |
