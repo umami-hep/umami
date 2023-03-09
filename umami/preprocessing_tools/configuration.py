@@ -536,7 +536,7 @@ class PreprocessConfiguration(Configuration):
 
         # if scale dict file exists, copy it as well
         new_sd_path = out_dir / Path(self.dict_file).name
-        if Path(self.dict_file).is_file() and self.dict_file != str(new_sd_path):
+        if Path(self.dict_file).is_file() and not new_sd_path.is_file():
             logger.info("Scale dict exists and will be copied.")
             config["dict_file"] = str(new_sd_path.resolve())
             config["parameters"][".dict_file"] = str(new_sd_path.resolve())
