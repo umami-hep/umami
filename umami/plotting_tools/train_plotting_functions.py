@@ -115,6 +115,14 @@ def get_comp_tagger_rej_dict(
     -------
     dict
         Dict with the rejections for against the main class for all given flavours.
+
+    Raises
+    ------
+    ValueError
+        If none of the given tagger comp vars (the probability variables) are
+        given in the dataset.
+    ValueError
+        If the given tagger comp vars don't match with the given class labels.
     """
 
     df, labels = load_jets_from_file(
@@ -136,34 +144,61 @@ def get_comp_tagger_rej_dict(
     # Get a list with all per-jets variables loaded
     avai_variables = list(df.keys())
 
-    # Init a bool if the rejection should be skipped
-    Skip_rej_calc = False
+    # Check that at least one of the flavour variables is available
+    if len(list(set(avai_variables).intersection(tagger_comp_var))) == 0:
+        raise ValueError(
+            f"None of the tagger output values is available in {unique_identifier}!"
+            f"The given tagger output values are {tagger_comp_var}"
+        )
 
-    # Check if the tagger variables are available
-    for tagger_var in tagger_comp_var:
-        if tagger_var not in avai_variables:
+    # Check that the amount of comp vars fits the class labels
+    if len(class_labels) != len(tagger_comp_var):
+        raise ValueError(
+            "Given Tagger probability values don't match the given class labels!"
+            f"Tagger probability values given: {tagger_comp_var}"
+            f"Class labels given: {class_labels}"
+        )
+
+    # Loop over the tagger variables that are needed
+    for iter_counter, tagger_var in enumerate(tagger_comp_var):
+
+        # Try to retrieve the values of the tagger prob variable
+        try:
+            if iter_counter == 0:
+                y_pred = df[tagger_var].values
+
+            else:
+                y_pred = np.append(y_pred, df[tagger_var].values)
+
+        # If not available, the probability is masked with zeros
+        except KeyError:
+            if iter_counter == 0:
+                y_pred = np.zeros_like(labels)
+
+            else:
+                y_pred = np.append(y_pred, np.zeros_like(labels))
+
             logger.warning(
-                "Tagger probability %s not in validation file %s. Skipping ...",
+                "Tagger probability %s not in validation file %s. "
+                "This missing output is masked with zeros!",
                 tagger_var,
                 os.path.basename(file),
             )
-            Skip_rej_calc = True
 
-    # Init an empty dict so the loop while plotting will not break
-    if Skip_rej_calc:
-        recomm_rej_dict = {}
+    # Reshape and transpose
+    y_pred = y_pred.reshape((len(class_labels), -1))
+    y_pred = np.transpose(y_pred)
 
-    else:
-        # Calculate rejections
-        recomm_rej_dict, _ = get_rejection(
-            y_pred=df[tagger_comp_var].values,
-            y_true=y_true,
-            unique_identifier=unique_identifier,
-            class_labels=class_labels,
-            main_class=main_class,
-            frac_dict=recommended_frac_dict,
-            target_eff=working_point,
-        )
+    # Calculate rejections
+    recomm_rej_dict, _ = get_rejection(
+        y_pred=y_pred,
+        y_true=y_true,
+        unique_identifier=unique_identifier,
+        class_labels=class_labels,
+        main_class=main_class,
+        frac_dict=recommended_frac_dict,
+        target_eff=working_point,
+    )
 
     return recomm_rej_dict
 

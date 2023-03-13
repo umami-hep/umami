@@ -399,3 +399,38 @@ class GetCompTaggerRejDictTestCase(unittest.TestCase):
             self.assertFalse(
                 f"bjets_rej_{self.validation_unique_identifiers[0]}" in comp_rej_dict
             )
+
+    def test_get_comp_tagger_rej_dict_errors(self):
+        """Test get_comp_tagger_rej_dict error raising."""
+
+        with self.subTest(
+            "Test raise if tagger_comp_var does not match the class labels"
+        ):
+            with self.assertRaises(ValueError):
+                _ = get_comp_tagger_rej_dict(
+                    file=self.validation_files[self.validation_unique_identifiers[0]][
+                        "path"
+                    ],
+                    unique_identifier=self.validation_unique_identifiers[0],
+                    tagger_comp_var=self.tagger_comp_var_dl1r + ["error_prob"],
+                    recommended_frac_dict=self.recommended_frac_dict,
+                    n_jets=5000,
+                    working_point=self.working_point,
+                    class_labels=self.class_labels,
+                    main_class=self.main_class,
+                )
+
+        with self.subTest("Test signal"):
+            with self.assertRaises(ValueError):
+                _ = get_comp_tagger_rej_dict(
+                    file=self.validation_files[self.validation_unique_identifiers[0]][
+                        "path"
+                    ],
+                    unique_identifier=self.validation_unique_identifiers[0],
+                    tagger_comp_var=["dl1r_ptau", "dl1r_pbb", "dl1r_phh"],
+                    recommended_frac_dict=self.recommended_frac_dict,
+                    n_jets=5000,
+                    working_point=self.working_point,
+                    class_labels=self.class_labels,
+                    main_class=self.main_class,
+                )
