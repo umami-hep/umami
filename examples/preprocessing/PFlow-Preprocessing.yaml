@@ -106,6 +106,9 @@ sampling:
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
 
+    # this stores the indices per sample for the hybrid validation
+    intermediate_index_file_validation: *intermediate_index_file_validation
+
     # for method: weighting
     # relative to which distribution the weights should be calculated
     weighting_target_flavour: 'bjets'
@@ -119,6 +122,11 @@ sampling:
 
 # Name of the output file from the preprocessing
 outfile_name: *outfile_name
+
+# outfile name for the validation sample
+outfile_name_validation: *outfile_name_validation
+
+# Name of the plot
 plot_name: PFlow_ext-hybrid
 
 # Label for the distribution plots of the resampling

@@ -4,6 +4,19 @@ parameters:
   ntuple_path: &ntuple_path ./
   sample_path: &sample_path ./
 
+cut_parameters:
+  # cut definitions to be applied to remove outliers
+# possible operators: <, ==, >, >=, <=
+  cuts:
+    - JetFitterSecondaryVertex_mass:
+        operator: <
+        condition: 25000
+        NaNcheck: True
+    - JetFitterSecondaryVertex_energy:
+        operator: <
+        condition: 1e8
+        NaNcheck: True
+
 
 preparation:
   ntuples:
@@ -98,7 +111,7 @@ sampling:
           bins: [[0, 600000, 351], [650000, 6000000, 84]]
       - absEta_btagJes:
           bins: [0, 2.5, 10]
-    samples:
+    samples_training:
       ttbar:
         - training_ttbar_bjets
         - training_ttbar_cjets
@@ -107,18 +120,25 @@ sampling:
         - training_zprime_bjets
         - training_zprime_cjets
         - training_zprime_ujets
+    samples_validation:
+      ttbar:
+        - validation_ttbar_bjets
+        - validation_ttbar_cjets
+        - validation_ttbar_ujets
+      zprime:
+        - validation_zprime_bjets
+        - validation_zprime_cjets
+        - validation_zprime_ujets
     fractions:
       ttbar: 0.65
       zprime: 0.35
     # can change after applying resampling in the hybrid sample creation
     save_tracks: True
-    tracks_names: "tracks"
+    tracks_names: ["tracks"]
     save_track_labels: True
     track_truth_variables: ["truthOriginLabel", "truthVertexIndex"]
     n_jets: 5.5e6
     intermediate_index_file: indices.h5
-    # outputfiles are split into 5
-    iterations: 5
 
 outfile_name: dummy_out.h5
 plot_name: dummy_plot
@@ -140,15 +160,3 @@ concat_jet_tracks: False
 # Options for the conversion to tfrecords
 convert_to_tfrecord:
   chunk_size: 5000
-
-# cut definitions to be applied to remove outliers
-# possible operators: <, ==, >, >=, <=
-cuts:
-  JetFitterSecondaryVertex_mass:
-    operator: <
-    condition: 25000
-    NaNcheck: True
-  JetFitterSecondaryVertex_energy:
-    operator: <
-    condition: 1e8
-    NaNcheck: True

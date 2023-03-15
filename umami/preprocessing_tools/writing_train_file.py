@@ -41,31 +41,19 @@ class TrainSampleWriter:
             Type of compression which should be used, by default None
         """
 
-        self.save_tracks = (
-            config.sampling["options"]["save_tracks"]
-            if "save_tracks" in config.sampling["options"].keys()
-            else False
-        )
-        self.save_track_labels = (
-            config.sampling["options"]["save_track_labels"]
-            if "save_track_labels" in config.sampling["options"].keys()
-            else False
-        )
-        self.track_label_variables = (
-            config.sampling["options"]["track_truth_variables"]
-            if "track_truth_variables" in config.sampling["options"].keys()
-            else None
-        )
-        self.class_labels = config.sampling["class_labels"]
-        self.tracks_names = config.sampling["options"]["tracks_names"]
+        self.save_tracks = config.sampling.options.save_tracks
+        self.save_track_labels = config.sampling.options.save_track_labels
+        self.track_label_variables = config.sampling.options.track_truth_variables
+        self.class_labels = config.sampling.class_labels
+        self.tracks_names = config.sampling.options.tracks_names
         self.compression = compression
-        self.precision = config.config["precision"]
+        self.precision = config.general.precision
         self.rnd_seed = 42
-        self.variable_config = get_variable_dict(config.var_file)
+        self.variable_config = get_variable_dict(config.general.var_file)
         self.jet_vars = sum(self.variable_config["train_variables"].values(), [])
-        self.scale_dict = config.dict_file
-        self.sampling_options = config.sampling["options"]
-        self.validation = config.sampling["use_validation_samples"]
+        self.scale_dict = config.general.dict_file
+        self.sampling_options = config.sampling.options
+        self.validation = config.sampling.use_validation_samples
 
         # Check if additional jet variables are required
         self.additional_labels = self.variable_config.get("additional_labels", None)
@@ -82,7 +70,7 @@ class TrainSampleWriter:
         self.config = config
 
         # if set to true, use all jet vars
-        self.concat_jet_tracks = config.config.get("concat_jet_tracks", False)
+        self.concat_jet_tracks = config.general.concat_jet_tracks
         if isinstance(self.concat_jet_tracks, bool) and self.concat_jet_tracks:
             self.concat_jet_tracks = self.jet_vars
         if self.concat_jet_tracks:
@@ -350,10 +338,8 @@ class TrainSampleWriter:
             )
 
         weights_dict = None
-        if self.sampling_options["bool_attach_sample_weights"]:
-            file_name = (
-                self.config.config["parameters"]["sample_path"] + "/flavour_weights"
-            )
+        if self.sampling_options.bool_attach_sample_weights:
+            file_name = self.config.parameters["sample_path"] + "/flavour_weights"
             with open(file_name, "rb") as file:
                 weights_dict = pickle.load(file)
 
@@ -408,29 +394,24 @@ class TrainSampleWriter:
                 chunk_counter += 1
 
         # Plot the variables from the output file of the resampling process
-        if (
-            "n_jets_to_plot" in self.sampling_options
-            and self.sampling_options["n_jets_to_plot"]
-        ):
+        if self.sampling_options.n_jets_to_plot:
             logger.info("Plotting prepared training dataset distributions...")
             preprocessing_plots(
                 sample=self.config.get_file_name(
                     option="resampled_scaled_shuffled", use_val=self.validation
                 ),
                 var_dict=self.variable_config,
-                class_labels=self.config.sampling["class_labels"],
+                class_labels=self.config.sampling.class_labels,
                 plots_dir=os.path.join(
-                    self.config.config["parameters"]["file_path"],
+                    self.config.parameters["file_path"],
                     "plots/resampling_scaled_shuffled/",
                     "validation/" if self.validation else "",
                 ),
-                track_collection_list=self.sampling_options["tracks_names"]
-                if "tracks_names" in self.sampling_options
-                and "save_tracks" in self.sampling_options
-                and self.sampling_options["save_tracks"] is True
+                track_collection_list=self.sampling_options.tracks_names
+                if self.sampling_options.save_tracks is True
                 else None,
-                n_jets=self.sampling_options["n_jets_to_plot"],
-                atlas_second_tag=self.config.plot_sample_label,
+                n_jets=self.sampling_options.n_jets_to_plot,
+                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
             )
@@ -699,7 +680,7 @@ class TrainSampleWriter:
         # final absolute jet index of this chunk
         jet_idx_end = jet_idx + len(jets)
 
-        if self.sampling_options["bool_attach_sample_weights"]:
+        if self.sampling_options.bool_attach_sample_weights:
             self.calculate_weights(weights_dict, jets, labels)
 
         weights = jets["weight"]

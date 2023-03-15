@@ -1008,7 +1008,7 @@ def load_validation_data(
             (x_valid, y_valid,) = get_test_sample_trks(
                 input_file=val_file_config["path"],
                 var_dict=train_config.general.var_dict,
-                scale_dict=train_config.general.preprocess_config.dict_file,
+                scale_dict=train_config.general.preprocess_config.general.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,
@@ -1019,7 +1019,7 @@ def load_validation_data(
             (x_valid, y_valid,) = get_test_sample(
                 input_file=val_file_config["path"],
                 var_dict=train_config.general.var_dict,
-                scale_dict=train_config.general.preprocess_config.dict_file,
+                scale_dict=train_config.general.preprocess_config.general.dict_file,
                 class_labels=class_labels,
                 n_jets=n_jets,
                 exclude=exclude,
@@ -1030,7 +1030,7 @@ def load_validation_data(
             (x_valid, x_valid_trk, y_valid,) = get_test_file(
                 input_file=val_file_config["path"],
                 var_dict=train_config.general.var_dict,
-                scale_dict=train_config.general.preprocess_config.dict_file,
+                scale_dict=train_config.general.preprocess_config.general.dict_file,
                 class_labels=class_labels,
                 tracks_name=tracks_name,
                 n_jets=n_jets,

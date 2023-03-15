@@ -466,21 +466,15 @@ class Resampling:
 
         # Get options as attributes of self
         self.config = config
-        self.options = config.sampling.get("options")
+        self.options = config.sampling.options
         self.preparation_config = config.preparation
         # filling self.[var_x var_y bins_x bins_y]
         self._get_binning()
         self.rnd_seed = 42
         self.jets_key = "jets"
-        self.save_tracks = (
-            self.options["save_tracks"]
-            if "save_tracks" in self.options.keys()
-            else False
-        )
-        self.tracks_names = self.config.sampling["options"]["tracks_names"]
-        self.use_validation_samples = config.sampling.get(
-            "use_validation_samples", False
-        )
+        self.save_tracks = self.options.save_tracks
+        self.tracks_names = self.options.tracks_names
+        self.use_validation_samples = config.sampling.use_validation_samples
 
         # Get the output file name path
         self.outfile_name = self.config.get_file_name(
@@ -489,8 +483,8 @@ class Resampling:
         )
 
         # Get the output and resampled paths
-        self.outfile_path = self.config.config["parameters"]["sample_path"]
-        self.resampled_path = self.config.config["parameters"]["file_path"]
+        self.outfile_path = self.config.parameters["sample_path"]
+        self.resampled_path = self.config.parameters["file_path"]
 
         # Check if the directory for the outfile is existing
         out_dir = os.path.dirname(self.outfile_name)
@@ -507,7 +501,7 @@ class Resampling:
         try:
             self.class_labels_map = {
                 label: label_id
-                for label_id, label in enumerate(self.config.sampling["class_labels"])
+                for label_id, label in enumerate(self.config.sampling.class_labels)
             }
         except KeyError as error:
             raise KeyError(
@@ -528,7 +522,7 @@ class Resampling:
         """
 
         # Get the sampling variables
-        sampling_variables = self.options.get("sampling_variables")
+        sampling_variables = self.options.sampling_variables
 
         # Check that not more than two variables are given
         if len(sampling_variables) != 2:
@@ -929,19 +923,18 @@ class ResamplingTools(Resampling):
         """
 
         self.samples = {}
-        try:
-            if not self.use_validation_samples:
-                samples = self.options["samples_training"]
+        if not self.use_validation_samples:
+            samples = self.options.samples_training
 
-            else:
-                samples = self.options["samples_validation"]
+        else:
+            samples = self.options.samples_validation
 
-        except KeyError as error:
+        if not samples:
             raise KeyError(
                 "You chose the 'count', 'weight' or 'importance_no_replace' option "
                 "for the sampling but didn't provide the samples to use. "
                 "Please specify them in the configuration file!"
-            ) from error
+            )
 
         # list of sample classes, bjets, cjets, etc
         valid_class_categories = self.get_valid_class_categories(samples)
@@ -968,14 +961,11 @@ class ResamplingTools(Resampling):
 
                     # Check for custom initial jets
                     if (
-                        "custom_n_jets_initial" in self.options
-                        and self.options["custom_n_jets_initial"] is not None
-                        and sample in list(self.options["custom_n_jets_initial"])
-                        and self.config.sampling["method"] != "pdf"
+                        self.options.custom_n_jets_initial is not None
+                        and sample in list(self.options.custom_n_jets_initial)
+                        and self.config.sampling.method != "pdf"
                     ):
-                        n_jets_initial = int(
-                            self.options["custom_n_jets_initial"][sample]
-                        )
+                        n_jets_initial = int(self.options.custom_n_jets_initial[sample])
                         logger.debug(
                             "Using custom_n_jets_initial for %s of %i from config",
                             sample,
