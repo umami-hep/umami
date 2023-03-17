@@ -397,12 +397,15 @@ class TrainSampleWriter:
         if self.sampling_options.n_jets_to_plot:
             logger.info("Plotting prepared training dataset distributions...")
             preprocessing_plots(
-                sample=self.config.get_file_name(option="resampled_scaled_shuffled"),
+                sample=self.config.get_file_name(
+                    option="resampled_scaled_shuffled", use_val=self.validation
+                ),
                 var_dict=self.variable_config,
                 class_labels=self.config.sampling.class_labels,
                 plots_dir=os.path.join(
                     self.config.parameters["file_path"],
                     "plots/resampling_scaled_shuffled/",
+                    "validation/" if self.validation else "",
                 ),
                 track_collection_list=self.sampling_options.tracks_names
                 if self.sampling_options.save_tracks is True

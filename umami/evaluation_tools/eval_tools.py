@@ -95,7 +95,7 @@ def get_rej_per_frac_dict(
     main_class: str,
     target_eff: float,
     step: float = 0.01,
-    frac_min: float = 0.01,
+    frac_min: float = 0.0,
     frac_max: float = 1.0,
     progress_bar: bool = False,
 ) -> dict:
@@ -128,7 +128,7 @@ def get_rej_per_frac_dict(
     step : float, optional
         Step size of the change of the fraction values, by default 0.01
     frac_min : float
-        Minimum value of the fractions, by default 0.01.
+        Minimum value of the fractions, by default 0.0.
     frac_max : float
         Minimum value of the fractions, by default 1.0.
     progress_bar : bool, optional
@@ -390,22 +390,48 @@ def get_rej_per_eff_dict(
 
     # Loop over effs for ROC plots
     for eff in tqdm(effs, disable=not progress_bar):
+
+        # Loop over the taggers which are to be evaluated
         for tagger in extended_tagger_list:
+
+            # Check if the tagger is a freshly trained tagger
             if tagger in tagger_names:
-                y_pred = tagger_preds[tagger_names.index(tagger)]
+                tagger_pred_tmp = tagger_preds[tagger_names.index(tagger)]
 
-                # Calculate the dimensions that need to be added
-                extra_dim = len(set(class_labels) - set(tagger_classes))
-                if extra_dim > 0:
-                    skipped_taggers[tagger] += list(
-                        set(class_labels) - set(tagger_classes)
-                    )
-                    y_pred = np.append(
-                        y_pred,
-                        np.zeros(shape=(extra_dim, y_pred.shape[0])).transpose(),
-                        axis=1,
-                    )
+                # Iterate over the flavours which are to be evaluated
+                for iter_counter, iter_class in enumerate(class_labels):
 
+                    # Try to get the probability output values for the given class
+                    try:
+                        if iter_counter == 0:
+                            y_pred = tagger_pred_tmp[
+                                :, tagger_classes.index(iter_class)
+                            ]
+
+                        else:
+                            y_pred = np.append(
+                                y_pred,
+                                tagger_pred_tmp[:, tagger_classes.index(iter_class)],
+                            )
+
+                    # If no probabilty output values are available for the given class,
+                    # mask them with zeros
+                    except ValueError:
+                        skipped_taggers[tagger].append(iter_class)
+                        if iter_counter == 0:
+                            y_pred = np.zeros(tagger_pred_tmp.shape[0])
+
+                        else:
+                            y_pred = np.append(
+                                y_pred,
+                                np.zeros(tagger_pred_tmp.shape[0]),
+                            )
+
+                # Reshape and transpose
+                y_pred = y_pred.reshape((len(class_labels), -1))
+                y_pred = np.transpose(y_pred)
+
+            # Check if the tagger is a comparison tagger (from h5 file)
             else:
                 # Shape the probabilities of the comparison taggers like the output of
                 # the networks

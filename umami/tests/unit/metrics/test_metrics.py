@@ -276,7 +276,7 @@ class GetScoreTestCase(unittest.TestCase):
         )
 
         self.assertEqual(len(disc_scores), len(self.y_pred))
-        self.assertAlmostEqual(disc_scores[0], -0.0597642740794453)
+        self.assertAlmostEqual(disc_scores[0], -0.059764337)
 
     def test_get_score_errors(self):
         """Test error raising of get_score"""

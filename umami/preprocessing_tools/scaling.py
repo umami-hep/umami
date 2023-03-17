@@ -219,6 +219,9 @@ def apply_scaling_trks(
     Raises
     ------
     ValueError
+        If a value of a variable which is to be used in log form
+        is zero/negative.
+    ValueError
         If scale is found to be 0 or inf for any track variable.
     ValueError
         If the scaled/shifted variable has infs or NaNs.
@@ -266,6 +269,25 @@ def apply_scaling_trks(
 
         # Check if the variable needs to be in log
         if var in trk_vars_lists_dict["logNormVars"]:
+
+            # Check for negative values in the log vars
+            if (trk_array < 0).any():
+                raise ValueError(
+                    f"Negative values encountered in {var}! "
+                    "This variable is supposed to "
+                    "be used in log and is not allowed to be zero! Please check!"
+                )
+
+            # Check for 0 values in the variables that are to
+            # be used in log
+            if (trk_array == 0).any():
+                raise ValueError(
+                    f"Zeros encountered in {var}! "
+                    "This variable is supposed to "
+                    "be used in log and is not allowed to be zero! Please check "
+                    "the precision that was used for this variable!"
+                )
+
             trk_array = np.log(trk_array)
 
         # Check if the variable is to be scaled/shifted

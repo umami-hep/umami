@@ -165,7 +165,7 @@ def evaluate_model(
         # Get model file path
         model_file = utt.get_model_path(
             model_name=train_config.general.model_name,
-            epoch=args.epoch,
+            epoch=epoch,
         )
         logger.info("Evaluating %s", model_file)
 
@@ -330,7 +330,7 @@ def evaluate_model(
 
     # Load extra variables
     add_variables_available = None
-    if add_variables is not None:
+    if add_variables is not None and len(add_variables) != 0:
         # Get list with all available variables
         available_variables = list(
             h5py.File(test_file, "r")["/jets"].dtype.fields.keys()
@@ -356,6 +356,7 @@ def evaluate_model(
         )
 
     # Load the jets and truth labels (internal) with selected variables
+    logger.info("Start loading %s test file", data_set_name)
     jets, truth_internal_labels = udt.load_jets_from_file(
         filepath=test_file,
         class_labels=classes_to_evaluate,
@@ -470,7 +471,7 @@ def evaluate_model(
 
         df_frac_rej.to_hdf(
             f"{train_config.general.model_name}/results/"
-            f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
+            f"results{results_filename_extension}-rej_per_fractions-{epoch}.h5",
             data_set_name,
         )
 
@@ -478,7 +479,7 @@ def evaluate_model(
         # This is needed to calculate the binomial errors
         with h5py.File(
             f"{train_config.general.model_name}/results/"
-            f"results{results_filename_extension}-rej_per_fractions-{args.epoch}.h5",
+            f"results{results_filename_extension}-rej_per_fractions-{epoch}.h5",
             "a",
         ) as h5_file:
             # Put the number of jets per class in the dict for unc calculation
@@ -508,7 +509,7 @@ def evaluate_model(
             with open(
                 f"{train_config.general.model_name}"
                 f"/results/saliency{results_filename_extension}"
-                f"_{args.epoch}_{data_set_name}.pkl",
+                f"_{epoch}_{data_set_name}.pkl",
                 "wb",
             ) as pkl_file:
                 pickle.dump(saliency_map_dict, pkl_file)

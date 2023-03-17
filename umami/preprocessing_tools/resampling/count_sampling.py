@@ -203,6 +203,7 @@ class UnderSampling(ResamplingTools):
             output_dir=os.path.join(
                 self.resampled_path,
                 "plots/resampling/",
+                "validation/" if self.use_validation_samples else "",
             ),
             bins_dict={
                 self.var_x: 200,
@@ -220,12 +221,15 @@ class UnderSampling(ResamplingTools):
         if self.options.n_jets_to_plot:
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
-                sample=self.config.get_file_name(option="resampled"),
+                sample=self.config.get_file_name(
+                    option="resampled", use_val=self.use_validation_samples
+                ),
                 var_dict=get_variable_dict(self.config.var_file),
                 class_labels=self.config.sampling["class_labels"],
                 plots_dir=os.path.join(
                     self.resampled_path,
                     "plots/resampling/",
+                    "validation/" if self.use_validation_samples else "",
                 ),
                 track_collection_list=self.options.tracks_names
                 if self.options.save_tracks is True
