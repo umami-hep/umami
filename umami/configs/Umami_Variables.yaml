@@ -72,7 +72,14 @@ custom_defaults_vars:
     - btagIp_d0
     - btagIp_z0SinTheta
 
-
 track_train_variables:
   tracks:
     <<: *tracks_variables
+
+track_truth_variables:
+  tracks:
+    - truthOriginLabel
+    - truthVertexIndex
+  tracks_loose:
+    - truthOriginLabel
+    - truthVertexIndex

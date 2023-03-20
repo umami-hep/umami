@@ -1,6 +1,7 @@
 # Changelog
 
 ### Latest
+- Add support for different labels for each track-like group [!688](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/688)
 
 - 
 
