@@ -11,6 +11,7 @@
 - Improve scale dict copy logic [!698](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/698)
 - update LWTNN-conversion documentation [!699](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/699)
 
+- Enable multidimensional count resampling [!687](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/687)
 - Enable correct usage of dataclasses in preprocessing config [!696](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/696)
 - Fixing common variable bug in PDF sampling [!685](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/685)
 - Add VR track jet configs and fix bug in pdf sampling for a third sample category [!657](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/657)

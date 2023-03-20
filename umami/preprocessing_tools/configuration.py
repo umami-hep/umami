@@ -651,4 +651,5 @@ class PreprocessConfiguration(Configuration):
             logger.warning(
                 "Overwriting existing variable dict at %s", new_var_dict_path
             )
-        shutil.copyfile(self.general.var_file, new_var_dict_path)
+        if self.general.var_file != str(new_var_dict_path):
+            shutil.copyfile(self.general.var_file, new_var_dict_path)

@@ -278,15 +278,15 @@ class UnderSamplingNoReplace(ResamplingTools):
         plot_resampling_variables(
             concat_samples=self.concat_samples,
             var_positions=[0, 1],
-            variable_names=[self.var_x, self.var_y],
+            variable_names=self.resampling_variables,
             sample_categories=self.config.preparation.sample_categories,
             output_dir=os.path.join(
                 self.resampled_path,
                 "plots/resampling/",
             ),
             bins_dict={
-                self.var_x: 200,
-                self.var_y: 20,
+                self.resampling_variables[0]: 200,
+                self.resampling_variables[1]: 20,
             },
             atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
