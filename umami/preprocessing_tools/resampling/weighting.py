@@ -32,6 +32,7 @@ class Weighting(ResamplingTools):
 
         # Write out weights_dict for later use
         weights_dict = {}
+
         # calculate weights between flavours of pt, eta distribution
         for flavour in self.class_categories:
             # jets by flavours to be ratioed
@@ -43,15 +44,24 @@ class Weighting(ResamplingTools):
                 out=np.zeros_like(target_jets_stats),
                 where=flavour_jets_stats != 0,
             )
-        # Some additional infos
-        weights_dict["bins_x"] = self.bins_x
-        weights_dict["bins_y"] = self.bins_y
+        # Add the binning
+        for variable_name, bin_values in self.resampling_bins.items():
+            weights_dict[variable_name] = bin_values
+
+        # Add the flat bin indices
         weights_dict["bin_indices_flat"] = self.bin_indices_flat
+
+        # Add the resampling variables/bins to the weights dict
+        weights_dict["resampling_variables"] = self.resampling_variables
+        weights_dict["resampling_bins"] = self.resampling_bins
+
         # map inverse -> {0: 'ujets', 1: 'cjets', 2: 'bjets'}
         weights_dict["label_map"] = {v: k for k, v in self.class_labels_map.items()}
         save_name = os.path.join(
             self.outfile_path,
-            "flavour_weights",
+            "flavour_weights_training"
+            if not self.use_validation_samples
+            else "flavour_weights_validation",
         )
 
         with open(save_name, "wb") as file:
@@ -130,15 +140,15 @@ class Weighting(ResamplingTools):
         plot_resampling_variables(
             concat_samples=self.concat_samples,
             var_positions=[0, 1],
-            variable_names=[self.var_x, self.var_y],
+            variable_names=self.resampling_variables,
             sample_categories=self.config.preparation.sample_categories,
             output_dir=os.path.join(
                 self.resampled_path,
                 "plots/resampling/",
             ),
             bins_dict={
-                self.var_x: 200,
-                self.var_y: 20,
+                self.resampling_variables[0]: 200,
+                self.resampling_variables[1]: 20,
             },
             atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,

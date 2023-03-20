@@ -260,12 +260,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 # Get the chunk of jets that is to be loaded
                 to_load = f_in["jets"][index_tuple[0] : index_tuple[1]]
 
-                # Load the two resampling variables from the jets
-                jets_x = np.asarray(to_load[self.var_x])
-                jets_y = np.asarray(to_load[self.var_y])
-
                 # Stack the jet variables
-                sample_vector = np.column_stack((jets_x, jets_y))
+                sample_vector = np.column_stack(
+                    [
+                        np.asarray(to_load[variable])
+                        for variable in self.resampling_variables
+                    ]
+                )
 
                 # Get a dict with the file, the stacked jets and the category
                 samples = {
@@ -386,18 +387,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             # Get the jets which are to be loaded
             to_load = f_in["jets"][:n_jets_initial]
 
-            # Retrieve the resampling variables from the jets
-            jets_x = np.asarray(to_load[self.var_x])
-            jets_y = np.asarray(to_load[self.var_y])
-            logger.info(
-                "Loaded %i %s jets from %s.",
-                len(jets_x),
-                preparation_sample.category,
-                sample,
+            # Stack the jet variables
+            sample_vector = np.column_stack(
+                [
+                    np.asarray(to_load[variable])
+                    for variable in self.resampling_variables
+                ]
             )
-
-        # Stack the jets
-        sample_vector = np.column_stack((jets_x, jets_y))
 
         # Create dict with the info for resampling
         samples = {
@@ -2353,15 +2349,15 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             plot_resampling_variables(
                 concat_samples=self.concat_samples,
                 var_positions=[0, 1],
-                variable_names=[self.var_x, self.var_y],
+                variable_names=self.resampling_variables,
                 sample_categories=self.config.preparation.sample_categories,
                 output_dir=os.path.join(
                     self.resampled_path,
                     "plots/resampling/",
                 ),
                 bins_dict={
-                    self.var_x: 200,
-                    self.var_y: 20,
+                    self.resampling_variables[0]: 200,
+                    self.resampling_variables[1]: 20,
                 },
                 atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,

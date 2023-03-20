@@ -10,7 +10,7 @@ from numpy.lib.recfunctions import (
     repack_fields,
     structured_to_unstructured,
 )
-from scipy.stats import binned_statistic_2d
+from scipy.stats import binned_statistic_dd
 
 from umami.configuration import logger
 from umami.plotting_tools import preprocessing_plots
@@ -53,7 +53,7 @@ class TrainSampleWriter:
         self.jet_vars = sum(self.variable_config["train_variables"].values(), [])
         self.scale_dict = config.general.dict_file
         self.sampling_options = config.sampling.options
-        self.validation = config.sampling.use_validation_samples
+        self.use_validation_samples = config.sampling.use_validation_samples
 
         # Check if additional jet variables are required
         self.additional_labels = self.variable_config.get("additional_labels", None)
@@ -328,18 +328,29 @@ class TrainSampleWriter:
         # Get the input files for writing/merging, checking for validation is required
         if input_file is None:
             input_file = self.config.get_file_name(
-                option="resampled", use_val=self.validation
+                option="resampled", use_val=self.use_validation_samples
             )
 
         # Define outfile name
         if output_file is None:
             out_file = self.config.get_file_name(
-                option="resampled_scaled_shuffled", use_val=self.validation
+                option="resampled_scaled_shuffled", use_val=self.use_validation_samples
             )
 
         weights_dict = None
         if self.sampling_options.bool_attach_sample_weights:
-            file_name = self.config.parameters["sample_path"] + "/flavour_weights"
+
+            if self.use_validation_samples:
+                file_name = (
+                    self.config.parameters["sample_path"] + "/flavour_weights_training"
+                )
+
+            else:
+                file_name = (
+                    self.config.parameters["sample_path"]
+                    + "/flavour_weights_validation"
+                )
+
             with open(file_name, "rb") as file:
                 weights_dict = pickle.load(file)
 
@@ -398,14 +409,15 @@ class TrainSampleWriter:
             logger.info("Plotting prepared training dataset distributions...")
             preprocessing_plots(
                 sample=self.config.get_file_name(
-                    option="resampled_scaled_shuffled", use_val=self.validation
+                    option="resampled_scaled_shuffled",
+                    use_val=self.use_validation_samples,
                 ),
                 var_dict=self.variable_config,
                 class_labels=self.config.sampling.class_labels,
                 plots_dir=os.path.join(
                     self.config.parameters["file_path"],
                     "plots/resampling_scaled_shuffled/",
-                    "validation/" if self.validation else "",
+                    "validation/" if self.use_validation_samples else "",
                 ),
                 track_collection_list=self.sampling_options.tracks_names
                 if self.sampling_options.save_tracks is True
@@ -444,27 +456,31 @@ class TrainSampleWriter:
             Binarized truth value of flavor for jet with shape
             (n_jets x (nFlavor x 1))
         """
+        # Get the resampling variables and bins from the weight dict
+        resampling_variables = weights_dict["resampling_variables"]
+        resampling_bins = weights_dict["resampling_bins"]
+
         # scale to original values for binning
         with open(self.scale_dict, "r") as infile:
             jets_scale_dict = json.load(infile)
         for varname, scale_dict in jets_scale_dict["jets"].items():
-            if varname == "pt_btagJes":
-                jets[varname] *= scale_dict["scale"]
-                jets[varname] += scale_dict["shift"]
-            if varname == "absEta_btagJes":
+            if varname in resampling_variables:
                 jets[varname] *= scale_dict["scale"]
                 jets[varname] += scale_dict["shift"]
 
+        # Stack the jet variables
+        sample_vector = np.column_stack(
+            [np.asarray(jets[variable]) for variable in resampling_variables]
+        )
+
         # Get binnumber of jet from 2D pt,eta grid
-        _, _, _, binnumbers = binned_statistic_2d(
-            x=jets["pt_btagJes"],
-            y=jets["absEta_btagJes"],
-            values=jets["pt_btagJes"],
+        _, _, binnumbers = binned_statistic_dd(
+            sample=np.column_stack(
+                [sample_vector[:, i] for i in range(sample_vector.shape[1])]
+            ),
+            values=None,
             statistic="count",
-            bins=[
-                weights_dict["bins_x"],
-                weights_dict["bins_y"],
-            ],
+            bins=[value for _, value in resampling_bins.items()],
         )
 
         # transfrom labels into "bjets", "cjets"...

@@ -8,7 +8,7 @@ from json import JSONEncoder
 import h5py
 import numpy as np
 import pandas as pd
-from scipy.stats import binned_statistic_2d
+from scipy.stats import binned_statistic_dd
 from tqdm import tqdm
 
 from umami.configuration import logger
@@ -514,77 +514,74 @@ class Resampling:
         """
         Retrieves the binning and the corresponding variables which are used
         for the resampling. Saves the bins and variables to class variables
-
-        Raises
-        ------
-        ValueError
-            If more than two resampling variables are given.
         """
 
         # Get the sampling variables
         sampling_variables = self.options.sampling_variables
 
-        # Check that not more than two variables are given
-        if len(sampling_variables) != 2:
-            raise ValueError("Resampling is so far only supporting 2 variables.")
-
         # Get the variable names as list
-        variables = [list(elem.keys())[0] for elem in sampling_variables]
-
-        # Get the two variables from the list
-        self.var_x = variables[0]
-        self.var_y = variables[1]
+        self.resampling_variables = [
+            list(elem.keys())[0] for elem in sampling_variables
+        ]
 
         # Calculate the binning of the variables with the provided info about
         # the binning
-        logger.info("Using %s and %s for resampling.", variables[0], variables[1])
-        self.bins_x = calculate_binning(sampling_variables[0][self.var_x]["bins"])
-        self.bins_y = calculate_binning(sampling_variables[1][self.var_y]["bins"])
+        logger.info(
+            "Using the following variables for resampling: %s",
+            self.resampling_variables,
+        )
+        self.resampling_bins = {}
+
+        # Iterate over the variables which are used for resampling
+        for iter_counter, _ in enumerate(self.resampling_variables):
+
+            # Get the name of the variable
+            iter_var = self.resampling_variables[iter_counter]
+            iter_bins = sampling_variables[iter_counter][iter_var]["bins"]
+
+            # Add the bins to the resampling bins dict
+            self.resampling_bins[iter_var] = calculate_binning(iter_bins)
 
         # Get number of bins
-        self.nbins = np.array([len(self.bins_x), len(self.bins_y)])
+        self.nbins = np.array([len(value) for _, value in self.resampling_bins.items()])
 
-    def get_bins(self, x_vals: np.ndarray, y_vals: np.ndarray):
+    def get_bins(self, sample_vector: np.ndarray):
         """
-        Calculates the bin statistics for a 2D histogram. This post might be
+        Calculates the bin statistics for a DD histogram. This post might be
         helpful to understand the flattened bin numbering:
         https://stackoverflow.com/questions/63275441/can-i-get-binned-statistic-2d-to-return-bin-numbers-for-only-bins-in-range
 
         Parameters
         ----------
-        x_vals : np.ndarray
-            Array with values from variable x.
-        y_vals : np.ndarray
-            Array with values from variable y and same length as x
+        sample_vector: np.ndarray
+            The sample_vector from which we derive the bins
 
         Returns
         -------
         binnumber : np.ndarray
             Array with bin number of each jet with same length as x and y
         bins_indices_flat : np.ndarray
-            Array with flat bin numbers mapped from 2D with length nBins
+            Array with flat bin numbers mapped from DD with length nBins
         statistic : np.ndarray
             Array with counts per bin, length nBins
         """
 
-        # Assert same shape of x and y
-        assert len(x_vals) == len(y_vals)
-
         # Get the statistic and binnumbers for the provided binning
-        statistic, _, _, binnumber = binned_statistic_2d(
-            x=x_vals,
-            y=y_vals,
-            values=x_vals,
+        statistic, _, binnumber = binned_statistic_dd(
+            sample=np.column_stack(
+                [sample_vector[:, i] for i in range(sample_vector.shape[1] - 3)]
+            ),
+            values=None,
             statistic="count",
-            bins=[self.bins_x, self.bins_y],
+            bins=[value for _, value in self.resampling_bins.items()],
         )
 
         # Get the flat bin indices for 2d
-        bins_indices_flat_2d = np.indices(self.nbins - 1) + 1
+        bins_indices_flat_dd = np.indices(self.nbins - 1) + 1
 
         # Get the flat bin indices for 1d
         bins_indices_flat = np.ravel_multi_index(
-            bins_indices_flat_2d, self.nbins + 1
+            bins_indices_flat_dd, self.nbins + 1
         ).flatten()
 
         # Return the binnumer, the flat bin indicies and the flatten statistic
@@ -979,29 +976,44 @@ class ResamplingTools(Resampling):
                     else:
                         n_jets_initial = None
 
-                    jets_x = np.asarray(
-                        f_prep["jets"].fields(self.var_x)[:n_jets_initial]
-                    )
-                    jets_y = np.asarray(
-                        f_prep["jets"].fields(self.var_y)[:n_jets_initial]
-                    )
+                    jets_vars = {}
+                    for iter_var in self.resampling_variables:
+                        jets_vars[iter_var] = np.asarray(
+                            f_prep["jets"].fields(iter_var)[:n_jets_initial]
+                        )
+
                 logger.info(
                     "Loaded %s %s jets from %s.",
-                    len(jets_x),
+                    len(jets_vars[self.resampling_variables[0]]),
                     self.preparation_config.get_sample(sample).category,
                     sample,
                 )
-                # construct a flat array with 5 columns:
-                # x, y, index, sample_id, sample_class
-                sample_vector = np.asarray(
-                    [
-                        jets_x,
-                        jets_y,
-                        range(len(jets_x)),
-                        np.ones(len(jets_x)) * sample_id,
-                        np.ones(len(jets_x)) * self.sample_categories[sample_category],
-                    ]
-                ).T
+                # construct a flat array with a column for each resampling variable
+                # plus index, sample_id, sample_class
+
+                # Create the sample vector list with the resampling variables
+                sample_vector = [value for _, value in jets_vars.items()]
+
+                # Aüüend the index
+                sample_vector.append(
+                    range(len(jets_vars[self.resampling_variables[0]]))
+                )
+
+                # Append the sample id
+                sample_vector.append(
+                    np.ones(len(jets_vars[self.resampling_variables[0]])) * sample_id
+                )
+
+                # Append the sample_class
+                sample_vector.append(
+                    np.ones(len(jets_vars[self.resampling_variables[0]]))
+                    * self.sample_categories[sample_category]
+                )
+
+                # Transpose the sample vector and transform it to numpy
+                sample_vector = np.asarray(sample_vector).T
+
+                # Create entry in the samples dict
                 self.samples[sample_category].append(
                     {
                         "file": preparation_sample_path,
@@ -1097,8 +1109,7 @@ class ResamplingTools(Resampling):
         # concat_samples dict with keys 'binnumbers','bin_indices_flat', 'stat'
         for class_category in self.class_categories:
             binnumbers, ind, stat = self.get_bins(
-                self.concat_samples[class_category]["jets"][:, 0],
-                self.concat_samples[class_category]["jets"][:, 1],
+                sample_vector=self.concat_samples[class_category]["jets"]
             )
             self.concat_samples[class_category]["binnumbers"] = binnumbers
             self.concat_samples[class_category]["stat"] = stat
