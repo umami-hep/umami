@@ -3,7 +3,7 @@ train_variables:
   JetKinematics:
     - absEta_btagJes
     - pt_btagJes
- #   - actualInteractionsPerCrossing
+  #   - actualInteractionsPerCrossing
   JetFitter:
     - JetFitter_isDefaults
     - JetFitter_mass
@@ -25,9 +25,9 @@ train_variables:
     - JetFitterSecondaryVertex_maximumTrackRelativeEta
     - JetFitterSecondaryVertex_minimumTrackRelativeEta
     - JetFitterSecondaryVertex_averageTrackRelativeEta
-    - JetFitterSecondaryVertex_maximumAllJetTrackRelativeEta  # Modified name in R22. Was: maximumTrackRelativeEta
-    - JetFitterSecondaryVertex_minimumAllJetTrackRelativeEta  # Modified name in R22. Was: minimumTrackRelativeEta
-    - JetFitterSecondaryVertex_averageAllJetTrackRelativeEta  # Modified name in R22. Was: averageTrackRelativeEta
+    - JetFitterSecondaryVertex_maximumAllJetTrackRelativeEta # Modified name in R22. Was: maximumTrackRelativeEta
+    - JetFitterSecondaryVertex_minimumAllJetTrackRelativeEta # Modified name in R22. Was: minimumTrackRelativeEta
+    - JetFitterSecondaryVertex_averageAllJetTrackRelativeEta # Modified name in R22. Was: averageTrackRelativeEta
   SV1:
     - SV1_isDefaults
     - SV1_NGTinSvx

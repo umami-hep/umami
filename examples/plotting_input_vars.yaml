@@ -1,10 +1,10 @@
 .default_plot_settings: &default_plot_settings
-    logy: True
-    use_atlas_tag: True
-    atlas_first_tag: "Simulation Internal"
-    atlas_second_tag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow jets \n30000 jets"
-    y_scale: 2
-    figsize: [7, 5]
+  logy: True
+  use_atlas_tag: True
+  atlas_first_tag: "Simulation Internal"
+  atlas_second_tag: "$\\sqrt{s}$ = 13 TeV, $t\\bar{t}$ PFlow jets \n30000 jets"
+  y_scale: 2
+  figsize: [7, 5]
 
 .ttbar_cuts: &ttbar_cuts
   cut_vars_dict:

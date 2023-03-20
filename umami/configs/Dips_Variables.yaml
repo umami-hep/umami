@@ -77,3 +77,11 @@ track_train_variables:
     <<: *tracks_variables
   tracks_loose:
     <<: *tracks_variables
+
+track_truth_variables:
+  tracks:
+    - truthOriginLabel
+    - truthVertexIndex
+  tracks_loose:
+    - truthOriginLabel
+    - truthVertexIndex

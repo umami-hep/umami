@@ -285,6 +285,7 @@ class ScalingTestCase(unittest.TestCase):
             data=self.data,
             var_names=self.var_names,
             track_mask=self.track_mask,
+            tracks_name="tracks",
         )
 
         with self.subTest():

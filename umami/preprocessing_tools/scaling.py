@@ -326,7 +326,7 @@ def apply_scaling_trks(
 
     # track vertex and origin labels
     trk_labels = None
-    if save_track_labels:
+    if save_track_labels and track_label_variables:
         trk_labels = np.stack(
             [np.nan_to_num(trks[v]) for v in track_label_variables],
             axis=-1,
@@ -370,23 +370,6 @@ class CalculateScaling:
             if "save_track_labels" in config.sampling["options"].keys()
             else False
         )
-        self.track_label_variables = (
-            config.sampling["options"]["track_truth_variables"]
-            if "track_truth_variables" in config.sampling["options"].keys()
-            else None
-        )
-
-        if self.save_track_labels:
-            if isinstance(self.track_label_variables, str):
-                self.track_label_variables = [self.track_label_variables]
-
-            elif not isinstance(self.track_label_variables, list):
-                raise ValueError(
-                    """
-                    Given track truth label variables are not a list nor a
-                    single string!
-                    """
-                )
 
         self.tracks_names = config.sampling["options"]["tracks_names"]
         self.compression = config.compression
@@ -394,6 +377,26 @@ class CalculateScaling:
         logger.info("Using variable dict at %s", config.var_file)
         self.variable_config = get_variable_dict(config.var_file)
 
+        self.track_label_variables = self.variable_config.get(
+            "track_truth_variables", None
+        )
+
+        if self.save_track_labels:
+            if isinstance(self.track_label_variables, str):
+                self.track_label_variables = {
+                    self.tracks_names[0]: [self.track_label_variables]
+                }
+            elif isinstance(self.track_label_variables, list):
+                self.track_label_variables = {
+                    self.tracks_names[0]: self.track_label_variables
+                }
+            elif not isinstance(self.track_label_variables, dict):
+                raise ValueError(
+                    """
+                    Given track truth label variables are not a dict nor a list nor a
+                    single string!
+                    """
+                )
         # Adding the full config to retrieve the correct paths
         self.config = config
 
@@ -467,6 +470,7 @@ class CalculateScaling:
         data: np.ndarray,
         var_names: list,
         track_mask: np.ndarray,
+        tracks_name: str,
     ):
         """
         Calculate the scale dict for the tracks and return the dict.
@@ -480,7 +484,8 @@ class CalculateScaling:
         track_mask : np.ndarray
             Boolen array where False denotes padded tracks,
             with shape (n_jets, n_trks)
-
+        tracks_name : str
+            Name of used tracks collection
         Returns
         -------
         scale_dict : dict
@@ -506,8 +511,8 @@ class CalculateScaling:
         origin_weights = {}
         if (
             self.save_track_labels
-            and self.track_label_variables
-            and "truthOriginLabel" in self.track_label_variables
+            and self.track_label_variables.get(tracks_name, [])
+            and "truthOriginLabel" in self.track_label_variables[tracks_name]
         ):
             counts = np.unique(data["truthOriginLabel"], return_counts=True)
             counts = dict(zip(*counts))
@@ -934,6 +939,7 @@ class CalculateScaling:
                     data=trks,
                     var_names=trk_vars,
                     track_mask=track_mask,
+                    tracks_name=tracks_name,
                 )
 
                 yield n_trks, scale_dict, origin_weights

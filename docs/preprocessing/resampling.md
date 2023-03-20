@@ -24,7 +24,7 @@ An important part are the `class_labels` which are defined here. You can define 
 For an explanation of the resampling function specific `options`, have a look in the section of the resampling method you want to use. The general `options` are explained in the following:
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:78:119§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:78:116§§§
 ```
 
 | Setting | Type | Explanation |

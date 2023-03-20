@@ -39,6 +39,12 @@ class TrainSampleWriter:
             Loaded config file for the preprocessing.
         compression : str, optional
             Type of compression which should be used, by default None
+
+        Raises
+        ------
+        ValueError
+            If save_track_labels is True and given track_label_variables
+              is not a list or a string
         """
 
         self.save_tracks = (
@@ -51,11 +57,7 @@ class TrainSampleWriter:
             if "save_track_labels" in config.sampling["options"].keys()
             else False
         )
-        self.track_label_variables = (
-            config.sampling["options"]["track_truth_variables"]
-            if "track_truth_variables" in config.sampling["options"].keys()
-            else None
-        )
+
         self.class_labels = config.sampling["class_labels"]
         self.tracks_names = config.sampling["options"]["tracks_names"]
         self.compression = compression
@@ -92,6 +94,26 @@ class TrainSampleWriter:
         self.h5file = None
         self.jet_group = None
         self.track_groups = None
+
+        # get and check track_labels
+        self.track_label_variables = self.variable_config.get("track_truth_variables")
+
+        if self.save_track_labels:
+            if isinstance(self.track_label_variables, str):
+                self.track_label_variables = {
+                    self.tracks_names[0]: [self.track_label_variables]
+                }
+            elif isinstance(self.track_label_variables, list):
+                self.track_label_variables = {
+                    self.tracks_names[0]: self.track_label_variables
+                }
+            elif not isinstance(self.track_label_variables, dict):
+                raise ValueError(
+                    """
+                    Given track truth label variables are not a dict nor a list nor a
+                    single string!
+                    """
+                )
 
     def load_scaled_generator(
         self,
@@ -260,7 +282,11 @@ class TrainSampleWriter:
                             scale_dict=trk_scale_dict,
                             tracks_name=tracks_name,
                             save_track_labels=self.save_track_labels,
-                            track_label_variables=self.track_label_variables,
+                            track_label_variables=self.track_label_variables.get(
+                                tracks_name
+                            )
+                            if self.save_track_labels
+                            else None,
                         )
 
                         tracks.append(trks)
@@ -638,7 +664,7 @@ class TrainSampleWriter:
 
             if self.save_track_labels:
 
-                for label in self.track_label_variables:
+                for label in self.track_label_variables.get(tracks_name, []):
                     track_group.create_dataset(
                         f"labels/{label}",
                         chunks=(1, trk_i.shape[1]),
@@ -756,7 +782,9 @@ class TrainSampleWriter:
 
                 # Track labels
                 if self.save_track_labels:
-                    for idx, label in enumerate(self.track_label_variables):
+                    for idx, label in enumerate(
+                        self.track_label_variables.get(self.tracks_names[i], [])
+                    ):
                         track_group[f"labels/{label}"][
                             jet_idx:jet_idx_end
                         ] = track_labels[i][..., idx]

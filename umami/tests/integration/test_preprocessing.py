@@ -828,11 +828,6 @@ class TestPreprocessing(unittest.TestCase):
             "    save_track_labels: False",
         )
         replace_line_in_file(
-            self.config,
-            "    track_truth_variables:",
-            "    track_truth_variables: null",
-        )
-        replace_line_in_file(
             self.config_paths,
             ".var_file:",
             f".var_file: &var_file {self.var_dict_dl1r}",
@@ -936,19 +931,14 @@ class TestPreprocessing(unittest.TestCase):
             "    save_tracks: False",
         )
         replace_line_in_file(
-            self.config,
+            self.pdf_config,
             "    tracks_names:",
             "    tracks_names: null",
         )
         replace_line_in_file(
-            self.config,
+            self.pdf_config,
             "    save_track_labels:",
             "    save_track_labels: False",
-        )
-        replace_line_in_file(
-            self.config,
-            "    track_truth_variables:",
-            "    track_truth_variables: null",
         )
         replace_line_in_file(
             self.config_paths,
@@ -1009,19 +999,14 @@ class TestPreprocessing(unittest.TestCase):
             "    save_tracks: False",
         )
         replace_line_in_file(
-            self.config,
+            self.weight_config,
             "    tracks_names:",
             "    tracks_names: null",
         )
         replace_line_in_file(
-            self.config,
+            self.weight_config,
             "    save_track_labels:",
             "    save_track_labels: False",
-        )
-        replace_line_in_file(
-            self.config,
-            "    track_truth_variables:",
-            "    track_truth_variables: null",
         )
         replace_line_in_file(
             self.config_paths,
