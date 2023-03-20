@@ -1,10 +1,14 @@
 # Changelog
 
 ### Latest
+
+- 
+
+### [v0.19](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.19) (20.03.2023)
+
 - Minor change to configuration.py [!706](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/706)
 - Adding more docs for fraction contour plots [!707](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/707)
 - Save resampling plots in dedicated directory for hybrid validation file [!703](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/703)
-
 - Ensure correct probability masking if evaluating with non-present class [!702](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/702)
 - Adding Check against zeros/negative values in log variables [!700](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/700)
 - Fixing precision problem in discriminant calculation [!701](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/701)
