@@ -5,6 +5,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path, PosixPath
 from random import Random
+from subprocess import check_output
 
 import pydash
 
@@ -469,6 +470,11 @@ class PreprocessConfiguration(Configuration):
         self.load_config_file()
         self.get_configuration()
         self.check_resampling_options()
+
+        # Get the git hash
+        self.git_hash = (
+            check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
+        )
 
     def get_configuration(self) -> None:
         """

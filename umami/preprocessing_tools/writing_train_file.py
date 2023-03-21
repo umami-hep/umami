@@ -721,6 +721,9 @@ class TrainSampleWriter:
                 track_labels,
             )
 
+        # Set git hash as attribute of the file
+        self.h5file.attrs["git_hash"] = self.config.git_hash
+
         # write jets
         self.jet_group["inputs"][jet_idx:jet_idx_end] = jets
         self.jet_group["labels"][jet_idx:jet_idx_end] = labels
