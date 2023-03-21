@@ -27,7 +27,7 @@ class ConvertTest(unittest.TestCase):
             os.path.dirname(__file__), "fixtures", "test_preprocess_faulty_config.yaml"
         )
         self.config = PreprocessConfiguration(self.config_file)
-        tracks_name = self.config.sampling["options"]["tracks_names"][0]
+        tracks_name = self.config.sampling.options.tracks_names[0]
         self.faulty_config = PreprocessConfiguration(self.faulty_config_file)
         # create dummy data
         x_train = np.ones(shape=(3, 41))
@@ -45,7 +45,7 @@ class ConvertTest(unittest.TestCase):
             out_file.create_dataset(
                 f"{tracks_name}/labels/truthOriginLabel", data=y_trks_train
             )
-        self.config.outfile_name = self.tfh5.name.replace(
+        self.config.general.outfile_name = self.tfh5.name.replace(
             "-resampled_scaled_shuffled.h5", ".h5"
         )
 
@@ -95,6 +95,5 @@ class ConvertTest(unittest.TestCase):
 
     def test_faulty_setup(self):
         """Test raising of an error for a faulty setup."""
-        conv = convert_to_record.H5ToTFRecords(self.faulty_config)
-        default_chunk_size = 5_000
-        self.assertEqual(conv.chunk_size, default_chunk_size)
+        with self.assertRaises(ValueError):
+            _ = convert_to_record.H5ToTFRecords(self.faulty_config)

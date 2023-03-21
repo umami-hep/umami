@@ -289,14 +289,14 @@ class UnderSamplingTestCase(unittest.TestCase):
 
     def test_count_no_samples_defined(self):
         """Test no samples defined."""
-        del self.sampling_config["options"]["samples_training"]
+        del self.sampling_config.options.samples_training
         us_norepl = UnderSampling(self.config)
         with self.assertRaises(KeyError):
             us_norepl.initialise_samples()
 
     def test_different_samples_per_category(self):
         """Test different samples per category."""
-        del self.sampling_config["options"]["samples_training"]["zprime"][1]
+        del self.sampling_config.options.samples_training["zprime"][1]
         us_norepl = UnderSampling(self.config)
         with self.assertRaises(RuntimeError):
             us_norepl.initialise_samples()
@@ -412,15 +412,15 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
         )
         self.config = PreprocessConfiguration(self.config_file)
         sampling_config = self.config.sampling
-        sampling_config["options"]["target_distribution"] = "bjets"
-        sampling_config["options"]["sampling_variables"][0][global_config.pTvariable][
+        sampling_config.options.target_distribution = "bjets"
+        sampling_config.options.sampling_variables[0][global_config.pTvariable][
             "bins"
         ] = [
             0,
             15e5,
             21,
         ]
-        sampling_config["options"]["sampling_variables"][1][global_config.etavariable][
+        sampling_config.options.sampling_variables[1][global_config.etavariable][
             "bins"
         ] = [
             0,
@@ -508,14 +508,14 @@ class UnderSamplingNoReplaceTestCase(unittest.TestCase):
 
     def test_no_samples_defined(self):
         """Test no samples defined."""
-        del self.sampling_config["options"]["samples_training"]
+        del self.sampling_config.options.samples_training
         us_norepl = UnderSamplingNoReplace(self.config)
         with self.assertRaises(KeyError):
             us_norepl.initialise_samples()
 
     def test_different_samples_per_category(self):
         """Test different samples per category."""
-        del self.sampling_config["options"]["samples_training"]["zprime"][1]
+        del self.sampling_config.options.samples_training["zprime"][1]
         us_norepl = UnderSamplingNoReplace(self.config)
         with self.assertRaises(RuntimeError):
             us_norepl.initialise_samples()
