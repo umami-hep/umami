@@ -5,6 +5,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path, PosixPath
 from random import Random
+from subprocess import check_output
 
 import pydash
 
@@ -147,7 +148,6 @@ class SamplingOptions:
     save_tracks: bool = False
     tracks_names: list = None
     save_track_labels: bool = False
-    track_truth_variables: list = None
     intermediate_index_file: str = None
     intermediate_index_file_validation: str = None
     weighting_target_flavour: str = None
@@ -163,9 +163,6 @@ class SamplingOptions:
         ------
         ValueError
             If save_tracks is True but no tracks_names are given.
-        ValueError
-            if save_track_labels is True but no track_truth_variables
-            are given.
         """
 
         # List of tuples for check. Each tuple contains:
@@ -186,7 +183,6 @@ class SamplingOptions:
             (self.save_tracks, "save_tracks", bool, True),
             (self.tracks_names, "tracks_names", list, False),
             (self.save_track_labels, "save_track_labels", bool, True),
-            (self.track_truth_variables, "track_truth_variables", list, False),
             (self.intermediate_index_file, "intermediate_index_file", str, True),
             (
                 self.intermediate_index_file_validation,
@@ -219,13 +215,6 @@ class SamplingOptions:
             raise ValueError(
                 "You defined save_tracks as True but gave no tracks_names! "
                 "Please define them!"
-            )
-
-        # Check track truth labels
-        if self.save_track_labels and self.track_truth_variables is None:
-            raise ValueError(
-                "You defined save_track_labels as True but gave no"
-                " track_truth_variables! Please define them!"
             )
 
 
@@ -469,6 +458,11 @@ class PreprocessConfiguration(Configuration):
         self.load_config_file()
         self.get_configuration()
         self.check_resampling_options()
+
+        # Get the git hash
+        self.git_hash = (
+            check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
+        )
 
     def get_configuration(self) -> None:
         """

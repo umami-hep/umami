@@ -362,7 +362,16 @@ class CalculateScaling:
         self.sampling_options = config.sampling.options
         self.save_tracks = self.sampling_options.save_tracks
         self.save_track_labels = self.sampling_options.save_track_labels
-        self.track_label_variables = self.sampling_options.track_truth_variables
+        self.tracks_names = self.sampling_options.tracks_names
+        self.compression = config.general.compression
+
+        logger.info("Using variable dict at %s", config.general.var_file)
+        self.variable_config = get_variable_dict(config.general.var_file)
+
+        self.track_label_variables = self.variable_config.get("track_truth_variables")
+
+        # Adding the full config to retrieve the correct paths
+        self.config = config
 
         if self.save_track_labels:
             if isinstance(self.track_label_variables, str):
@@ -380,15 +389,6 @@ class CalculateScaling:
                     single string!
                     """
                 )
-
-        self.tracks_names = self.sampling_options.tracks_names
-        self.compression = config.general.compression
-
-        logger.info("Using variable dict at %s", config.general.var_file)
-        self.variable_config = get_variable_dict(config.general.var_file)
-
-        # Adding the full config to retrieve the correct paths
-        self.config = config
 
     def join_scale_dicts(
         self,

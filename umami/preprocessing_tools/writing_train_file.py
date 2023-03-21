@@ -49,7 +49,6 @@ class TrainSampleWriter:
 
         self.save_tracks = config.sampling.options.save_tracks
         self.save_track_labels = config.sampling.options.save_track_labels
-        self.track_label_variables = config.sampling.options.track_truth_variables
         self.class_labels = config.sampling.class_labels
         self.tracks_names = config.sampling.options.tracks_names
         self.compression = compression
@@ -750,6 +749,9 @@ class TrainSampleWriter:
                 valid,
                 track_labels,
             )
+
+        # Set git hash as attribute of the file
+        self.h5file.attrs["git_hash"] = self.config.git_hash
 
         # write jets
         self.jet_group["inputs"][jet_idx:jet_idx_end] = jets
