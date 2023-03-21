@@ -1260,6 +1260,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 create_file = False
                 with h5py.File(save_name, "w") as f_h5:
 
+                    # Set git hash as attribute of the file
+                    f_h5.attrs["git_hash"] = self.config.git_hash
+
                     # Create new dataset with the indicies inside
                     f_h5.create_dataset(
                         "jets",
@@ -1388,6 +1391,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
                 # Write to file by creating dataset
                 with h5py.File(save_name, "w") as out_file:
+
+                    # Set git hash as attribute of the file
+                    out_file.attrs["git_hash"] = self.config.git_hash
+
                     out_file.create_dataset(
                         "jets",
                         data=jets,
@@ -1572,6 +1579,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
                 # write to file by creating dataset
                 with h5py.File(save_name, "w") as out_file:
+
+                    # Set git hash as attribute of the file
+                    out_file.attrs["git_hash"] = self.config.git_hash
+
                     out_file.create_dataset(
                         "jets",
                         data=jets,
@@ -2008,6 +2019,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Open file where the indicies will be saved
         with h5py.File(save_name, "w") as f_h5:
 
+            # Set git hash as attribute of the file
+            f_h5.attrs["git_hash"] = self.config.git_hash
+
             # Sort the indicies
             selected_indices = np.sort(selected_ind).astype(int)
 
@@ -2262,6 +2276,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 # Open the final output file and create the datasets
                 # needed.
                 with h5py.File(output_name, "w") as out_file:
+
+                    # Set git hash as attribute of the file
+                    out_file.attrs["git_hash"] = self.config.git_hash
+
                     out_file.create_dataset(
                         "jets",
                         data=jets,

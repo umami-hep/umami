@@ -850,6 +850,10 @@ class Resampling:
                 create_file = False
                 # write to file by creating dataset
                 with h5py.File(self.outfile_name, "w") as out_file:
+
+                    # Set git hash as attribute of the file
+                    out_file.attrs["git_hash"] = self.config.git_hash
+
                     out_file.create_dataset(
                         "jets",
                         data=jets,
