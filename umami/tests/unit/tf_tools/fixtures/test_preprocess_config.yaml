@@ -136,7 +136,6 @@ sampling:
     save_tracks: True
     tracks_names: ["tracks"]
     save_track_labels: True
-    track_truth_variables: ["truthOriginLabel", "truthVertexIndex"]
     n_jets: 5.5e6
     intermediate_index_file: indices.h5
 

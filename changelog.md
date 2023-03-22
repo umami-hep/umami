@@ -8,6 +8,10 @@
 
 ### Latest
 
+- Add support for different labels for each track-like group [!688](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/688)
+
+### [v0.19](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.19) (20.03.2023)
+
 - Minor change to configuration.py [!706](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/706)
 - Adding more docs for fraction contour plots [!707](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/707)
 - Save resampling plots in dedicated directory for hybrid validation file [!703](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/703)

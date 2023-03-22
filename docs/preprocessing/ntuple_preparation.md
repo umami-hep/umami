@@ -6,7 +6,7 @@ After the ntuple production (training-dataset-dumper), the first step of the pre
 As already mentioned in the [overview](preprocessing/Overview.md), the preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:123:137§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:121:136§§§
 ```
 
 | Setting | Type | Explanation |

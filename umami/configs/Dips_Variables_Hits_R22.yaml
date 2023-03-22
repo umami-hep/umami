@@ -22,7 +22,7 @@ train_variables:
   jointNormVars:
     - numberOfPixelHits
     - numberOfSCTHits
-    - d0         # Modified name in R22. Was: btagIp_d0
+    - d0 # Modified name in R22. Was: btagIp_d0
     - z0SinTheta # Modified name in R22. Was: btagIp_z0SinTheta
 
 # Defining basic hit variables
