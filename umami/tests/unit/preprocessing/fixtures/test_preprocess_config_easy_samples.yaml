@@ -1,0 +1,151 @@
+parameters: !include test_parameters_for_resampling.yaml
+
+cut_parameters:
+ # cut definitions to be applied to remove outliers
+# possible operators: <, ==, >, >=, <=
+  cuts:
+    - JetFitterSecondaryVertex_mass:
+        operator: <
+        condition: 25000
+        NaNcheck: True
+    - JetFitterSecondaryVertex_energy:
+        operator: <
+        condition: 1e8
+        NaNcheck: True
+
+preparation:
+  ntuples:
+    ttbar:
+      path: *ntuple_path
+      file_pattern: "*.h5"
+
+    zprime:
+      path: *ntuple_path
+      file_pattern: "*.h5"
+
+  samples:
+    ttbar:
+      type: ttbar
+      category: bjets
+      n_jets: 1
+      cuts:
+        - eventNumber:
+            operator: mod_2_==
+            condition: 0
+        - pt_btagJes:
+            operator: <=
+            condition: 2.5e5
+        - pt_btagJes:
+            operator: ">"
+            condition: 1.5e5
+      f_output:
+        path: *file_path
+        file: dummy.h5
+    training_ttbar_bjets:
+      type: ttbar
+      category: bjets
+      n_jets: 10e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_ttbar_bjets.h5
+
+    training_ttbar_cjets:
+      type: ttbar
+      category: cjets
+      # Number of c jets available in MC16d
+      n_jets: 12745953
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_ttbar_cjets.h5
+
+    training_ttbar_ujets:
+      type: ttbar
+      category: ujets
+      n_jets: 20e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_ttbar_ujets.h5
+
+    training_zprime_bjets:
+      type: zprime
+      category: bjets
+      n_jets: 10e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_zprime_bjets.h5
+
+    training_zprime_cjets:
+      type: zprime
+      category: cjets
+      # Number of c jets available in MC16d
+      n_jets: 10e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_zprime_cjets.h5
+
+    training_zprime_ujets:
+      type: zprime
+      category: ujets
+      n_jets: 10e6
+      cuts:
+      f_output:
+        path: *sample_path
+        file: dummy-training_zprime_ujets.h5
+
+
+sampling:
+  class_labels: [bjets, cjets, ujets]
+  method: count
+  # The options depend on the sampling method
+  options:
+    sampling_variables:
+      - pt_btagJes:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          bins: [0, 6000000, 35]
+      - absEta_btagJes:
+          bins: [0, 2, 10]
+    samples_training:
+      ttbar:
+        - training_ttbar_bjets
+        - training_ttbar_cjets
+        - training_ttbar_ujets
+    samples_validation:
+      ttbar:
+        - validation_ttbar_bjets
+        - validation_ttbar_cjets
+        - validation_ttbar_ujets
+    fractions:
+      ttbar: 1
+    # can change after applying resampling in the hybrid sample creation
+    save_tracks: False
+    tracks_names: "tracks"
+    n_jets: 9000
+    n_jets_to_plot: 9000
+    intermediate_index_file: indices.h5
+
+outfile_name: !join [*base_path, /preprocessed/dummy_out.h5]
+plot_name: dummy_plot
+
+var_file: "umami/tests/unit/preprocessing/fixtures/dummy_var_file_micro.yaml"
+
+# Dictfile for the scaling and shifting (json)
+dict_file: "test.json"
+
+# compression for final output files (null/gzip)
+compression: null
+
+# save final output files with specified precision
+precision: float32
+
+# concatenate jet inputs with each track's inputs in the final output file
+concat_jet_tracks: False
+
+# Options for the conversion to tfrecords
+convert_to_tfrecord:
+  chunk_size: 5000
