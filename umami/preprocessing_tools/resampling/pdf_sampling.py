@@ -1105,7 +1105,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             Indicies of the resampled jets which are to use.
         """
 
-        sampled_indices = np.random.default_rng().choice(
+        sampled_indices = np.random.default_rng(seed=self.rnd_seed).choice(
             len(r_resamp), p=r_resamp, size=size, replace=replacement
         )
 

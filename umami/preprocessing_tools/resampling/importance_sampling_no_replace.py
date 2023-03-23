@@ -1,17 +1,12 @@
 """Importance sampling without replacement module handling data preprocessing."""
 # pylint: disable=attribute-defined-outside-init,no-self-use
-import os
-
-import h5py
 import numpy as np
 
 from umami.configuration import logger
-from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
-from umami.preprocessing_tools.resampling.resampling_base import ResamplingTools
-from umami.preprocessing_tools.utils import get_variable_dict
+from umami.preprocessing_tools.resampling.count_sampling import SimpleSamplingBase
 
 
-class UnderSamplingNoReplace(ResamplingTools):
+class UnderSamplingNoReplace(SimpleSamplingBase):
     """
     The UnderSamplingNoReplace is used to prepare the training dataset.
     It makes sure that all flavour fractions are equal and the flavour distributions
@@ -22,11 +17,6 @@ class UnderSamplingNoReplace(ResamplingTools):
     This method also ensures that the final fractions are equal.
     Does not work well with taus as of now.
     """
-
-    def __init__(self, config) -> None:
-        super().__init__(config)
-        self.x_y_after_sampling = None
-        self.indices_to_keep = None
 
     def get_indices(self) -> dict:
         """
@@ -142,44 +132,8 @@ class UnderSamplingNoReplace(ResamplingTools):
                 )
 
         # get indices per single sample
-        self.indices_to_keep = {}
-        self.x_y_after_sampling = {}
-        size_total = 0
-
-        # decide which index file to use
-        index_file = (
-            self.options.intermediate_index_file_validation
-            if self.use_validation_samples
-            else self.options.intermediate_index_file
-        )
-
-        with h5py.File(index_file, "w") as f_index:
-            for class_category in self.class_categories:
-                self.x_y_after_sampling[class_category] = self.concat_samples[
-                    class_category
-                ]["jets"][indices_to_keep[class_category], :2]
-                sample_categories = self.concat_samples[class_category]["jets"][
-                    indices_to_keep[class_category], 4
-                ]
-                sample_indices = self.concat_samples[class_category]["jets"][
-                    indices_to_keep[class_category], 2
-                ]
-                for sample_category in self.sample_categories:
-                    sample_name = self.sample_map[sample_category][class_category]
-                    self.indices_to_keep[sample_name] = np.sort(
-                        sample_indices[
-                            sample_categories == self.sample_categories[sample_category]
-                        ]
-                    ).astype(int)
-                    f_index.create_dataset(
-                        sample_name,
-                        data=self.indices_to_keep[sample_name],
-                        compression="gzip",
-                    )
-                    sample_size = len(self.indices_to_keep[sample_name])
-                    size_total += sample_size
-                    logger.info("Using %s jets from %s.", sample_size, sample_name)
-        logger.info("Using in total %s jets.", size_total)
+        self.indices_to_keep = self._indices_concat_to_per_sample(indices_to_keep)
+        self._save_indices()
         return self.indices_to_keep
 
     def get_sampling_probability(  # pylint: disable=no-self-use
@@ -267,51 +221,3 @@ class UnderSamplingNoReplace(ResamplingTools):
             )
 
         return sampling_probabilities
-
-    def Run(self):
-        """Run function executing full chain."""
-        logger.info("Starting undersampling.")
-        self.initialise_samples()
-        self.get_indices()
-
-        # Make the resampling plots for the resampling variables before resampling
-        plot_resampling_variables(
-            concat_samples=self.concat_samples,
-            var_positions=[0, 1],
-            variable_names=self.resampling_variables,
-            sample_categories=self.config.preparation.sample_categories,
-            output_dir=os.path.join(
-                self.resampled_path,
-                "plots/resampling/",
-            ),
-            bins_dict={
-                self.resampling_variables[0]: 200,
-                self.resampling_variables[1]: 20,
-            },
-            atlas_second_tag=self.config.general.plot_sample_label,
-            logy=True,
-            ylabel="Normalised number of jets",
-        )
-
-        # Write file to disk
-        self.write_file(self.indices_to_keep)
-
-        # Plot the variables from the output file of the resampling process
-        if self.options.n_jets_to_plot:
-            logger.info("Plotting resampled distributions...")
-            preprocessing_plots(
-                sample=self.config.get_file_name(option="resampled"),
-                var_dict=get_variable_dict(self.config.general.var_file),
-                class_labels=self.config.sampling.class_labels,
-                plots_dir=os.path.join(
-                    self.resampled_path,
-                    "plots/resampling/",
-                ),
-                track_collection_list=self.options.tracks_names
-                if self.options.save_tracks is True
-                else None,
-                n_jets=self.options.n_jets_to_plot,
-                atlas_second_tag=self.config.general.plot_sample_label,
-                logy=True,
-                ylabel="Normalised number of jets",
-            )

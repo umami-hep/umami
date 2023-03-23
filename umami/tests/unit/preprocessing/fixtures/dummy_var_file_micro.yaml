@@ -1,0 +1,4 @@
+train_variables:
+  JetKinematics:
+    - absEta_btagJes
+    - pt_btagJes
