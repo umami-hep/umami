@@ -51,4 +51,12 @@ track_truth_variables:
     - truthOriginLabel
     - truthVertexIndex
 
+track_weight_variables:
+  tracks:
+    - truthOriginLabel
+    - truthVertexIndex
+  tracks_loose:
+    - truthOriginLabel
+    - truthVertexIndex
+
 custom_defaults_vars:

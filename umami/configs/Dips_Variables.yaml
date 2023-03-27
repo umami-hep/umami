@@ -85,3 +85,11 @@ track_truth_variables:
   tracks_loose:
     - truthOriginLabel
     - truthVertexIndex
+
+track_weight_variables:
+  tracks:
+    - truthOriginLabel
+    - truthVertexIndex
+  tracks_loose:
+    - truthOriginLabel
+    - truthVertexIndex
