@@ -598,6 +598,7 @@ class TrainSampleWriter:
         jet_group["inputs"].attrs["jet_variables"] = self.jet_vars
         jet_group["labels_one_hot"].attrs["label_classes"] = self.class_labels
         jet_group["labels"].attrs["label_classes"] = self.class_labels
+        jet_group.attrs["flavour_label"] = self.class_labels
 
         return jet_group
 

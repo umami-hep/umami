@@ -172,3 +172,26 @@ def binarise_jet_labels(
     internal_labels.pop()
 
     return labels
+
+
+def join_structured_arrays(arrays: list):
+    """Join a list of structured numpy arrays.
+
+    See https://github.com/umami-hep/atlas-ftag-tools/blob/main/ftag/hdf5/h5utils.py
+
+    Parameters
+    ----------
+    arrays : list
+        List of structured numpy arrays to join
+
+    Returns
+    -------
+    np.array
+        A merged structured array
+    """
+    dtype: list = sum((array.dtype.descr for array in arrays), [])
+    newrecarray = np.empty(arrays[0].shape, dtype=dtype)
+    for array in arrays:
+        for name in array.dtype.names:
+            newrecarray[name] = array[name]
+    return newrecarray
