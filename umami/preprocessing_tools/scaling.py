@@ -356,6 +356,12 @@ class CalculateScaling:
         ValueError
             If the given track label variables are not a list
             nor a string
+        ValueError
+            If the defined track weight variables are not a dict
+            or a single string
+        ValueError
+            If for a track collection, the defined track weight variable
+            is not defined in the track label variables
         """
 
         self.scale_dict_path = config.dict_file
@@ -377,9 +383,11 @@ class CalculateScaling:
         logger.info("Using variable dict at %s", config.var_file)
         self.variable_config = get_variable_dict(config.var_file)
 
-        self.track_label_variables = self.variable_config.get(
-            "track_truth_variables", None
-        )
+        self.track_label_variables = self.variable_config.get("track_truth_variables")
+        self.track_weight_variables = self.variable_config.get("track_weight_variables")
+
+        # Adding the full config to retrieve the correct paths
+        self.config = config
 
         if self.save_track_labels:
             if isinstance(self.track_label_variables, str):
@@ -397,8 +405,60 @@ class CalculateScaling:
                     single string!
                     """
                 )
-        # Adding the full config to retrieve the correct paths
-        self.config = config
+
+        # Check that the track weight variable can be used
+        if self.track_weight_variables:
+            if isinstance(self.track_weight_variables, str):
+                self.track_weight_variables = {
+                    self.tracks_names[0]: [self.track_weight_variables]
+                }
+
+            elif isinstance(self.track_weight_variables, list):
+                self.track_weight_variables = {
+                    self.tracks_names[0]: self.track_weight_variables
+                }
+
+            elif isinstance(self.track_weight_variables, dict):
+                for (
+                    trk_collection,
+                    trk_weight_var,
+                ) in self.track_weight_variables.items():
+                    if isinstance(trk_weight_var, str):
+                        self.track_weight_variables[trk_collection] = [trk_weight_var]
+
+                    elif not isinstance(trk_weight_var, list):
+                        raise ValueError(
+                            f"""
+                            The track weight variables given for {trk_collection} are
+                            not a string nor a list of strings!
+                            """
+                        )
+
+            elif not isinstance(self.track_weight_variables, dict):
+                raise ValueError(
+                    """
+                    Given track weight variables are not a dict! Please
+                    define them as a dict with the track collection name
+                    as the key and the track weight variable for this
+                    track collection as the item!
+                    """
+                )
+
+            for track_collection in self.tracks_names:
+                if self.track_weight_variables[track_collection] is not None:
+                    for trk_wght_var in self.track_weight_variables[track_collection]:
+                        if (
+                            trk_wght_var
+                            not in self.track_label_variables[track_collection]
+                        ):
+                            raise ValueError(
+                                f"""
+                                Given track weight variable {trk_wght_var} for
+                                track group
+                                {track_collection} is not given in the track
+                                label variables! Please define it also there!
+                                """
+                            )
 
     def join_scale_dicts(
         self,
@@ -493,7 +553,9 @@ class CalculateScaling:
         n_trks : int
             Number of tracks used to calculate the scaling/shifting
         """
-        # TODO add weight support for tracks
+
+        # Get origin weights
+        origin_weights = {}
 
         # Initalise scale dict
         scale_dict = {}
@@ -507,17 +569,22 @@ class CalculateScaling:
             mean, scale = array.mean(), array.std()
             scale_dict[var] = {"shift": float(mean), "scale": float(scale)}
 
-        # Get origin weights
-        origin_weights = {}
-        if (
-            self.save_track_labels
-            and self.track_label_variables.get(tracks_name, [])
-            and "truthOriginLabel" in self.track_label_variables[tracks_name]
-        ):
-            counts = np.unique(data["truthOriginLabel"], return_counts=True)
-            counts = dict(zip(*counts))
-            counts.pop(-1, None)
-            origin_weights = {str(lab): n for lab, n in counts.items()}
+        if self.save_track_labels:
+
+            # Get the track label variables and the track weight variable
+            trk_label_variables = self.track_label_variables.get(tracks_name)
+            trk_weight_variables = self.track_weight_variables.get(tracks_name)
+
+            # If everything is defined, calculate the track weights by their number
+            # of appearance
+            if trk_weight_variables is not None and trk_label_variables is not None:
+                for trk_weight_var in trk_weight_variables:
+                    counts = np.unique(data[trk_weight_var], return_counts=True)
+                    counts = dict(zip(*counts))
+                    counts.pop(-1, None)
+                    origin_weights[trk_weight_var] = {
+                        str(lab): n for lab, n in counts.items()
+                    }
 
         return n_trks, scale_dict, origin_weights
 
@@ -685,8 +752,11 @@ class CalculateScaling:
                         )
 
                         # combine origin counts
-                        for k in origin_weights:
-                            origin_weights[k] += tmp_ow.get(k, 0)
+                        for trk_weight_var in origin_weights:
+                            for k in origin_weights[trk_weight_var]:
+                                origin_weights[trk_weight_var][k] += tmp_ow[
+                                    trk_weight_var
+                                ].get(k, 0)
 
                 # Checking for inf values in scaling/shifting values
                 inf_error = False
@@ -708,19 +778,23 @@ class CalculateScaling:
                         " values equal to infinity!"
                     )
 
+                # Add a dict for the origin weights for this track collection
+                scale_dict_trk_all[f"{tracks_name}_origin_weights"] = {}
+
                 # turn origin counts into weights
-                origin_weights = {
-                    k: sum(origin_weights.values()) / weight
-                    for k, weight in origin_weights.items()
-                }
+                for trk_wgh_var in origin_weights:
+                    origin_weights[trk_wgh_var] = {
+                        k: sum(origin_weights[trk_wgh_var].values()) / weight
+                        for k, weight in origin_weights[trk_wgh_var].items()
+                    }
+
+                    # Add the origin weights to the scale dict
+                    scale_dict_trk_all[f"{tracks_name}_origin_weights"][
+                        f"{trk_wgh_var}"
+                    ] = origin_weights[trk_wgh_var]
 
                 # Add scale dict for given tracks selection to the more general one
-                scale_dict_trk_all.update(
-                    {
-                        tracks_name: scale_dict_trk,
-                        f"{tracks_name}_origin_weights": origin_weights,
-                    }
-                )
+                scale_dict_trk_all[tracks_name] = scale_dict_trk
 
         # TODO: change in python 3.9
         # save scale/shift dictionary to json file
