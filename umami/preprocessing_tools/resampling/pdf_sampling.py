@@ -19,7 +19,7 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     read_dataframe_repetition,
     sampling_generator,
 )
-from umami.preprocessing_tools.utils import get_variable_dict
+from umami.preprocessing_tools.utils import get_variable_dict, join_structured_arrays
 
 
 class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
@@ -1416,6 +1416,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         chunks=True,
                         maxshape=(None,),
                     )
+                    out_file["jets"].attrs["flavour_label"] = self.class_labels
                     out_file.create_dataset(
                         "labels",
                         data=labels,
@@ -1600,6 +1601,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         chunks=True,
                         maxshape=(None,),
                     )
+                    out_file["jets"].attrs["flavour_label"] = self.class_labels
                     out_file.create_dataset(
                         "labels",
                         data=labels,
@@ -2268,7 +2270,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             # Shuffle jets, labels and tracks
             jets = jets[idx_array]
             labels = labels[idx_array]
-
+            jets_with_labels = join_structured_arrays(
+                [jets, np.array(labels, dtype=[("flavour_label", int)])]
+            )
             if self.save_tracks:
                 for track_counter, _ in enumerate(tracks):
                     tracks[track_counter] = tracks[track_counter][idx_array]
@@ -2285,11 +2289,12 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 with h5py.File(output_name, "w") as out_file:
                     out_file.create_dataset(
                         "jets",
-                        data=jets,
+                        data=jets_with_labels,
                         compression="gzip",
                         chunks=True,
                         maxshape=(None,),
                     )
+                    out_file["jets"].attrs["flavour_label"] = self.class_labels
                     out_file.create_dataset(
                         "labels",
                         data=labels,

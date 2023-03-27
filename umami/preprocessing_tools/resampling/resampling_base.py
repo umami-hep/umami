@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from umami.configuration import logger
 from umami.data_tools import compare_h5_files_variables
+from umami.preprocessing_tools.utils import join_structured_arrays
 
 
 def sampling_generator(
@@ -468,6 +469,7 @@ class Resampling:
         self.config = config
         self.options = config.sampling.get("options")
         self.preparation_config = config.preparation
+        self.class_labels = config.sampling["class_labels"]
         # filling self.[var_x var_y bins_x bins_y]
         self._get_binning()
         self.rnd_seed = 42
@@ -852,6 +854,9 @@ class Resampling:
             # Shuffle the jets, labels (and tracks)
             jets = jets[rng_index]
             labels = labels[rng_index]
+            jets_with_labels = join_structured_arrays(
+                [jets, np.array(labels, dtype=[("flavour_label", int)])]
+            )
             if self.save_tracks:
                 tracks = [trk[rng_index] for trk in tracks]
 
@@ -861,11 +866,12 @@ class Resampling:
                 with h5py.File(self.outfile_name, "w") as out_file:
                     out_file.create_dataset(
                         "jets",
-                        data=jets,
+                        data=jets_with_labels,
                         compression="gzip",
                         chunks=True,
                         maxshape=(None,),
                     )
+                    out_file["jets"].attrs["flavour_label"] = self.class_labels
                     out_file.create_dataset(
                         "labels",
                         data=labels,
