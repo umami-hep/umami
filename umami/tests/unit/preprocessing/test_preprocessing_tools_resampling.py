@@ -273,6 +273,9 @@ class ResamplingTestCaseComplexDistr(unittest.TestCase):
                         np.random.normal(250000, 30000, 10000)
                     ),
                     global_config.etavariable: abs(np.random.normal(1.25, 1, 10000)),
+                    "HadronConeExclTruthLabelID": np.ones(10000) * 5,
+                    "eventNumber": np.arange(0, 10000, 1),
+                    "jetPtRank": np.random.random_integers(1, 4, 10000),
                 }
             ),
             "training_ttbar_cjets": pd.DataFrame(
@@ -281,6 +284,9 @@ class ResamplingTestCaseComplexDistr(unittest.TestCase):
                         np.random.normal(220000, 28000, 10000)
                     ),
                     global_config.etavariable: abs(np.random.normal(1.4, 1, 10000)),
+                    "HadronConeExclTruthLabelID": np.ones(10000) * 4,
+                    "eventNumber": np.arange(0, 10000, 1),
+                    "jetPtRank": np.random.random_integers(1, 4, 10000),
                 }
             ),
             "training_ttbar_ujets": pd.DataFrame(
@@ -289,6 +295,9 @@ class ResamplingTestCaseComplexDistr(unittest.TestCase):
                         np.random.normal(230000, 25000, 10000)
                     ),
                     global_config.etavariable: abs(np.random.normal(1.0, 1, 10000)),
+                    "HadronConeExclTruthLabelID": np.zeros(10000),
+                    "eventNumber": np.arange(0, 10000, 1),
+                    "jetPtRank": np.random.random_integers(1, 4, 10000),
                 }
             ),
             "training_zprime_bjets": pd.DataFrame(
@@ -297,6 +306,9 @@ class ResamplingTestCaseComplexDistr(unittest.TestCase):
                         np.random.normal(260000, 30000, 10000)
                     ),
                     global_config.etavariable: abs(np.random.normal(1.5, 1, 10000)),
+                    "HadronConeExclTruthLabelID": np.ones(10000) * 5,
+                    "eventNumber": np.arange(0, 10000, 1),
+                    "jetPtRank": np.random.random_integers(1, 4, 10000),
                 }
             ),
             "training_zprime_cjets": pd.DataFrame(
@@ -305,6 +317,9 @@ class ResamplingTestCaseComplexDistr(unittest.TestCase):
                         np.random.normal(260000, 28000, 10000)
                     ),
                     global_config.etavariable: abs(np.random.normal(1.6, 1, 10000)),
+                    "HadronConeExclTruthLabelID": np.ones(10000) * 4,
+                    "eventNumber": np.arange(0, 10000, 1),
+                    "jetPtRank": np.random.random_integers(1, 4, 10000),
                 }
             ),
             "training_zprime_ujets": pd.DataFrame(
@@ -313,6 +328,9 @@ class ResamplingTestCaseComplexDistr(unittest.TestCase):
                         np.random.normal(350000, 25000, 10000)
                     ),
                     global_config.etavariable: abs(np.random.normal(1.2, 1, 10000)),
+                    "HadronConeExclTruthLabelID": np.zeros(10000),
+                    "eventNumber": np.arange(0, 10000, 1),
+                    "jetPtRank": np.random.random_integers(1, 4, 10000),
                 }
             ),
         }
@@ -337,6 +355,9 @@ class ResamplingTestCaseComplexDistr(unittest.TestCase):
                         [
                             (global_config.pTvariable, "f"),
                             (global_config.etavariable, "f"),
+                            ("HadronConeExclTruthLabelID", "i"),
+                            ("eventNumber", "i"),
+                            ("jetPtRank", "i"),
                         ]
                     ),
                 )
@@ -346,6 +367,11 @@ class ResamplingTestCaseComplexDistr(unittest.TestCase):
                 jets[global_config.etavariable] = self.data[sample][
                     global_config.etavariable
                 ]
+                jets["HadronConeExclTruthLabelID"] = self.data[sample][
+                    "HadronConeExclTruthLabelID"
+                ]
+                jets["eventNumber"] = self.data[sample]["eventNumber"]
+                jets["jetPtRank"] = self.data[sample]["jetPtRank"]
 
     def setUp(self):
         """
@@ -645,15 +671,15 @@ class PDFResamplingTestCase(ResamplingTestCaseComplexDistr):
         jets_must = np.array(
             [
                 264299.53,
-                270432.1,
-                267145.62,
-                271890.97,
+                272481.4,
+                271023.8,
+                282889.47,
                 253087.52,
-                321016.5,
-                183927.34,
+                305471.3,
+                223912.48,
                 256265.61,
-                196289.08,
-                259284.94,
+                279714.03,
+                260276.78,
             ]
         )
         np.testing.assert_allclose(jets, jets_must)
