@@ -26,12 +26,13 @@ class Weighting(ResamplingTools):
         self.get_pt_eta_bin_statistics()
 
         # target distribution
-        target_jets_stats = self.concat_samples[
-            self.options["weighting_target_flavour"]
-        ]["stat"]
+        target_jets_stats = self.concat_samples[self.options.weighting_target_flavour][
+            "stat"
+        ]
 
         # Write out weights_dict for later use
         weights_dict = {}
+
         # calculate weights between flavours of pt, eta distribution
         for flavour in self.class_categories:
             # jets by flavours to be ratioed
@@ -43,15 +44,24 @@ class Weighting(ResamplingTools):
                 out=np.zeros_like(target_jets_stats),
                 where=flavour_jets_stats != 0,
             )
-        # Some additional infos
-        weights_dict["bins_x"] = self.bins_x
-        weights_dict["bins_y"] = self.bins_y
+        # Add the binning
+        for variable_name, bin_values in self.resampling_bins.items():
+            weights_dict[variable_name] = bin_values
+
+        # Add the flat bin indices
         weights_dict["bin_indices_flat"] = self.bin_indices_flat
+
+        # Add the resampling variables/bins to the weights dict
+        weights_dict["resampling_variables"] = self.resampling_variables
+        weights_dict["resampling_bins"] = self.resampling_bins
+
         # map inverse -> {0: 'ujets', 1: 'cjets', 2: 'bjets'}
         weights_dict["label_map"] = {v: k for k, v in self.class_labels_map.items()}
         save_name = os.path.join(
             self.outfile_path,
-            "flavour_weights",
+            "flavour_weights_training"
+            if not self.use_validation_samples
+            else "flavour_weights_validation",
         )
 
         with open(save_name, "wb") as file:
@@ -79,7 +89,15 @@ class Weighting(ResamplingTools):
         # "training_ttbar_bjets"
         size_total = 0
         self.indices_to_keep = {}  # pylint: disable=attribute-defined-outside-init
-        with h5py.File(self.options["intermediate_index_file"], "w") as f_index:
+
+        # decide which index file to use
+        index_file = (
+            self.options.intermediate_index_file_validation
+            if self.use_validation_samples
+            else self.options.intermediate_index_file
+        )
+
+        with h5py.File(index_file, "w") as f_index:
             for class_category in self.class_categories:
                 sample_categories = self.concat_samples[class_category]["jets"][
                     indices_to_keep[class_category], 4
@@ -122,17 +140,17 @@ class Weighting(ResamplingTools):
         plot_resampling_variables(
             concat_samples=self.concat_samples,
             var_positions=[0, 1],
-            variable_names=[self.var_x, self.var_y],
+            variable_names=self.resampling_variables,
             sample_categories=self.config.preparation.sample_categories,
             output_dir=os.path.join(
                 self.resampled_path,
                 "plots/resampling/",
             ),
             bins_dict={
-                self.var_x: 200,
-                self.var_y: 20,
+                self.resampling_variables[0]: 200,
+                self.resampling_variables[1]: 20,
             },
-            atlas_second_tag=self.config.plot_sample_label,
+            atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
             ylabel="Normalised number of jets",
         )
@@ -140,27 +158,25 @@ class Weighting(ResamplingTools):
         self.write_file(self.indices_to_keep)
 
         # Plot the variables from the output file of the resampling process
-        if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
+        if self.options.n_jets_to_plot:
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.get_file_name(
                     option="resampled",
                     use_val=self.use_validation_samples,
                 ),
-                var_dict=get_variable_dict(self.config.var_file),
-                class_labels=self.config.sampling["class_labels"],
+                var_dict=get_variable_dict(self.config.general.var_file),
+                class_labels=self.config.sampling.class_labels,
                 plots_dir=os.path.join(
                     self.resampled_path,
                     "plots/resampling/",
                     "validation/" if self.use_validation_samples else "",
                 ),
-                track_collection_list=self.options["tracks_names"]
-                if "tracks_names" in self.options
-                and "save_tracks" in self.options
-                and self.options["save_tracks"] is True
+                track_collection_list=self.options.tracks_names
+                if self.options.save_tracks is True
                 else None,
-                n_jets=self.options["n_jets_to_plot"],
-                atlas_second_tag=self.config.plot_sample_label,
+                n_jets=self.options.n_jets_to_plot,
+                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
             )

@@ -99,7 +99,7 @@ def plot_unique_jet_appearence(
     # Set the x-label
     histo_plot.xlabel = "Number of duplicates"
 
-    if histo_plot.atlas_second_tag == "":
+    if histo_plot.atlas_second_tag == "" or histo_plot.atlas_second_tag is None:
         histo_plot.atlas_second_tag = (
             f"Total number of unique jets: {total_unique}"
             + f",\nTotal number of jets: {len(jets)}"

@@ -1,11 +1,7 @@
-parameters:
-  # file path
-  file_path: &file_path ./
-  ntuple_path: &ntuple_path ./
-  sample_path: &sample_path ./
+parameters: !include test_parameters_for_resampling.yaml
 
 cut_parameters:
-  # cut definitions to be applied to remove outliers
+ # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=
   cuts:
     - JetFitterSecondaryVertex_mass:
@@ -17,10 +13,13 @@ cut_parameters:
         condition: 1e8
         NaNcheck: True
 
-
 preparation:
   ntuples:
     ttbar:
+      path: *ntuple_path
+      file_pattern: "*.h5"
+
+    zprime:
       path: *ntuple_path
       file_pattern: "*.h5"
 
@@ -108,41 +107,32 @@ sampling:
       - pt_btagJes:
           # bins take either a list containing the np.linspace arguments
           # or a list of them
-          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+          bins: [0, 6000000, 35]
       - absEta_btagJes:
-          bins: [0, 2.5, 10]
+          bins: [0, 2, 10]
     samples_training:
       ttbar:
         - training_ttbar_bjets
         - training_ttbar_cjets
         - training_ttbar_ujets
-      zprime:
-        - training_zprime_bjets
-        - training_zprime_cjets
-        - training_zprime_ujets
     samples_validation:
       ttbar:
         - validation_ttbar_bjets
         - validation_ttbar_cjets
         - validation_ttbar_ujets
-      zprime:
-        - validation_zprime_bjets
-        - validation_zprime_cjets
-        - validation_zprime_ujets
     fractions:
-      ttbar: 0.65
-      zprime: 0.35
+      ttbar: 1
     # can change after applying resampling in the hybrid sample creation
-    save_tracks: True
-    tracks_names: ["tracks"]
-    save_track_labels: True
-    n_jets: 5.5e6
+    save_tracks: False
+    tracks_names: "tracks"
+    n_jets: 9000
+    n_jets_to_plot: 9000
     intermediate_index_file: indices.h5
 
-outfile_name: dummy_out.h5
+outfile_name: !join [*base_path, /preprocessed/dummy_out.h5]
 plot_name: dummy_plot
 
-var_file: "fixtures/dummy_var_file.yaml"
+var_file: "umami/tests/unit/preprocessing/fixtures/dummy_var_file_micro.yaml"
 
 # Dictfile for the scaling and shifting (json)
 dict_file: "test.json"

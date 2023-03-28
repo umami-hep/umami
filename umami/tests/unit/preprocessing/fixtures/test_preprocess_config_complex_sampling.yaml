@@ -1,11 +1,7 @@
-parameters:
-  # file path
-  file_path: &file_path ./
-  ntuple_path: &ntuple_path ./
-  sample_path: &sample_path ./
+parameters: !include test_parameters_for_resampling.yaml
 
 cut_parameters:
-  # cut definitions to be applied to remove outliers
+ # cut definitions to be applied to remove outliers
 # possible operators: <, ==, >, >=, <=
   cuts:
     - JetFitterSecondaryVertex_mass:
@@ -17,10 +13,13 @@ cut_parameters:
         condition: 1e8
         NaNcheck: True
 
-
 preparation:
   ntuples:
     ttbar:
+      path: *ntuple_path
+      file_pattern: "*.h5"
+
+    zprime:
       path: *ntuple_path
       file_pattern: "*.h5"
 
@@ -108,9 +107,9 @@ sampling:
       - pt_btagJes:
           # bins take either a list containing the np.linspace arguments
           # or a list of them
-          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+          bins: [0, 5e5, 20]
       - absEta_btagJes:
-          bins: [0, 2.5, 10]
+          bins: [0, 1.25, 5]
     samples_training:
       ttbar:
         - training_ttbar_bjets
@@ -133,16 +132,16 @@ sampling:
       ttbar: 0.65
       zprime: 0.35
     # can change after applying resampling in the hybrid sample creation
-    save_tracks: True
+    save_tracks: False
     tracks_names: ["tracks"]
-    save_track_labels: True
-    n_jets: 5.5e6
+    n_jets: 3e5
+    n_jets_to_plot: 3e5
     intermediate_index_file: indices.h5
 
-outfile_name: dummy_out.h5
+outfile_name: !join [*base_path, /preprocessed/dummy_out.h5]
 plot_name: dummy_plot
 
-var_file: "fixtures/dummy_var_file.yaml"
+var_file: "umami/tests/unit/preprocessing/fixtures/dummy_var_file_micro.yaml"
 
 # Dictfile for the scaling and shifting (json)
 dict_file: "test.json"

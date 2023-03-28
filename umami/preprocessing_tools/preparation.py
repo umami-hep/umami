@@ -70,8 +70,8 @@ class PrepareSamples:
             self.cuts += category_setup["cuts"]
 
         # Check if tracks are used
-        self.save_tracks = self.config.sampling["options"]["save_tracks"]
-        self.tracks_names = self.config.sampling["options"]["tracks_names"]
+        self.save_tracks = self.config.sampling.options.save_tracks
+        self.tracks_names = self.config.sampling.options.tracks_names
         self.jets_name = self.config.preparation.settings.get("jets_name", "jets")
         self.collection_name = self.config.preparation.settings.get(
             "collection_name", ""
@@ -171,15 +171,20 @@ class PrepareSamples:
             "Preparing ntuples for %s %s...", self.sample.type, self.sample.category
         )
 
+        # Define a new progress bar
         pbar = tqdm(total=self.sample.n_jets)
+
         # get list of batches for each file
         files_in_batches = map(
             self.get_batches_per_file,
             self.config.preparation.get_input_files(self.sample.type),
         )
+
         # loop over batches for all files and load the batches separately
         n_jets_check = self.sample.n_jets
         displayed_writing_output = True
+
+        # Loop over the available batches and write them to the new files
         for jets, tracks in self.jets_generator(files_in_batches):
             if jets.shape[0] == 0:
                 continue
@@ -187,6 +192,7 @@ class PrepareSamples:
             self.jets_loaded += jets.size
             self.sample.n_jets -= jets.size
 
+            # Check if the loaded jets in this batch should be shuffled
             if self.shuffle_array:
                 pbar.write("Shuffling array")
 
@@ -203,11 +209,22 @@ class PrepareSamples:
                     for tracks_name in self.tracks_names:
                         tracks[tracks_name] = tracks[tracks_name][rng_index]
 
+            # Check if a file is already present
             if self.create_file:
+
+                # Set to false because the file will be created now
                 self.create_file = False  # pylint: disable=W0201:
+
                 # write to file by creating dataset
                 pbar.write(f"Creating output file: {self.sample.output_name}")
+
+                # Start h5 file
                 with h5py.File(self.sample.output_name, "w") as out_file:
+
+                    # Set git hash as attribute of the file
+                    out_file.attrs["git_hash"] = self.config.git_hash
+
+                    # Create the jets dataset
                     out_file.create_dataset(
                         "jets",
                         data=jets,
@@ -215,6 +232,8 @@ class PrepareSamples:
                         chunks=True,
                         maxshape=(None,),
                     )
+
+                    # Create tracks datasets, if used
                     if self.save_tracks:
                         for tracks_name in self.tracks_names:
                             out_file.create_dataset(
@@ -224,16 +243,27 @@ class PrepareSamples:
                                 chunks=True,
                                 maxshape=(None, tracks[tracks_name].shape[1]),
                             )
+
+            # If file is already created, append the jets instead of create a new file
             else:
-                # appending to existing dataset
+
+                # Check if the write message should be printed
                 if displayed_writing_output:
                     pbar.write(f"Writing to output file: {self.sample.output_name}")
+
+                # Start h5 fill
                 with h5py.File(self.sample.output_name, "a") as out_file:
+
+                    # Resize the max shape of the jets group
                     out_file["jets"].resize(
                         (out_file["jets"].shape[0] + jets.shape[0]),
                         axis=0,
                     )
+
+                    # Fill the new batch of jets to the end of the group
                     out_file["jets"][-jets.shape[0] :] = jets
+
+                    # Check if tracks are used and do the same as for the jets
                     if self.save_tracks:
                         for tracks_name in self.tracks_names:
                             out_file[tracks_name].resize(
@@ -246,10 +276,18 @@ class PrepareSamples:
                             out_file[tracks_name][
                                 -tracks[tracks_name].shape[0] :
                             ] = tracks[tracks_name]
+
+                # Set writing message to False (So its not) printed every time
                 displayed_writing_output = False
+
+            # Check if already enough jets are loaded
             if self.sample.n_jets <= 0:
                 break
+
+        # Close the progress bar
         pbar.close()
+
+        # If not enough jets are loaded after all a processes, print warning
         if self.sample.n_jets > 0:
             logger.warning(
                 "Not as many jets selected as defined in config file. Only"

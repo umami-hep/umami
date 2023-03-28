@@ -57,7 +57,8 @@ class MinimalPreprocessingConfig:
         scale_dict : str
             Path to the used scale dict.
         """
-        self.dict_file = scale_dict
+        self.general = ConfigObject()
+        setattr(self.general, "dict_file", scale_dict)
 
 
 class GetUniqueIdentifiersTestCase(unittest.TestCase):

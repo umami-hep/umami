@@ -1,0 +1,6 @@
+# file path
+# Base path where all the preprocessing testing wshould happen (makes it easier to cleanup afterwards)
+.base_path: &base_path ./test_preprocessing_workspace
+file_path: &file_path !join [*base_path, /]
+ntuple_path: &ntuple_path !join [*base_path, /]
+sample_path: &sample_path !join [*base_path, /]
