@@ -214,7 +214,8 @@ class UnderSampling(ResamplingTools):
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.get_file_name(
-                    option="resampled", use_val=self.use_validation_samples
+                    option="resampled",
+                    use_val=self.use_validation_samples,
                 ),
                 var_dict=get_variable_dict(self.config.var_file),
                 class_labels=self.config.sampling["class_labels"],
