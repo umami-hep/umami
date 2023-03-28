@@ -207,3 +207,71 @@ def flatten_list(nested_list: list):
     if nested_list is None:
         return None
     return list(flatten(nested_list))
+
+
+def check_option_definition(
+    variable_to_check,
+    variable_name: str,
+    needed_type: list,
+    check_for_nan: bool,
+) -> None:
+    """
+    Check if the given variable is correctly defined.
+
+    Parameters
+    ----------
+    variable_to_check
+        Variable which is to be checked.
+    variable_name : str
+        Name of the variable (for logger).
+    needed_type : list
+        List of allowed types for the variable.
+    check_for_nan : bool
+        Bool, if the variable needs to be set (True) or if a NaN
+        value is also allowed (False).
+
+    Raises
+    ------
+    ValueError
+        If you havn't/wronly defined a variable which is needed.
+    """
+    # Check that needed_types is a list to loop over
+    if not isinstance(needed_type, list):
+        needed_type = [needed_type]
+
+    # If given values is a int, continue
+    if type(variable_to_check) in needed_type:
+        return
+
+    # Check case where the given type is string but you need a list
+    if (
+        isinstance(variable_to_check, str)
+        and list in needed_type
+        and str not in needed_type
+    ):
+        variable_to_check = [variable_to_check]
+
+    # If a flaot value was found but it should be int
+    elif (
+        isinstance(variable_to_check, float)
+        and int in needed_type
+        and float not in needed_type
+    ):
+        logger.warning(
+            "You defined a float for %s! Translating to int value %s",
+            variable_name,
+            int(variable_to_check),
+        )
+        variable_to_check = int(variable_to_check)
+
+    else:
+        # Check if the value is allowed to be None
+        if check_for_nan is False and variable_to_check is None:
+            return
+
+        # Raise error for all other cases
+        raise ValueError(
+            f"You havn't/wrongly defined {variable_name}! "
+            f"You gave a {type(variable_to_check)} but it should be one of these types "
+            f"{needed_type}. Please define this correctly!"
+        )

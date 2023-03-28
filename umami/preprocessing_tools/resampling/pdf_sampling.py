@@ -65,13 +65,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Get the samples which will be used for resampling
         self.samples_to_resample = (
-            self.options["samples_validation"]
+            self.options.samples_validation
             if self.use_validation_samples
-            else self.options["samples_training"]
+            else self.options.samples_training
         )
 
         # Setting some limits: important for good spline approximation
-        sampling_var = self.options.get("sampling_variables")
+        sampling_var = self.options.sampling_variables
 
         # Init a list for the bin info and ranges info
         bin_info = []
@@ -219,27 +219,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             n_jets_initial = len(f_in["jets"])
 
             # Check if custom inital n_jets are given for this sample
-            if (
-                "custom_n_jets_initial" in self.options
-                and self.options["custom_n_jets_initial"] is not None
-                and sample in list(self.options["custom_n_jets_initial"])
+            if self.options.custom_n_jets_initial is not None and sample in list(
+                self.options.custom_n_jets_initial
             ):
-
-                # Get the number of jets that are asked for in the config
-                n_jets_asked = int(self.options["custom_n_jets_initial"][sample])
-
-                # Check that enough jets are there. If not, changed asked n_jets
-                if n_jets_initial <= n_jets_asked:
-                    logger.warning(
-                        "For sample %s, demanding more initial jets (%i) than "
-                        "available (%i). Forcing to available.",
-                        sample,
-                        n_jets_asked,
-                        n_jets_initial,
-                    )
-
-                else:
-                    n_jets_initial = n_jets_asked
+                logger.warning(
+                    "You selected the PDF resampling method but provided "
+                    "custom_n_jets_initial! This option can't be used with "
+                    "the PDF sampling! Ignoring custom_n_jets_initial!"
+                )
 
             # Set start and end index
             start_ind = 0
@@ -273,12 +260,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 # Get the chunk of jets that is to be loaded
                 to_load = f_in["jets"][index_tuple[0] : index_tuple[1]]
 
-                # Load the two resampling variables from the jets
-                jets_x = np.asarray(to_load[self.var_x])
-                jets_y = np.asarray(to_load[self.var_y])
-
                 # Stack the jet variables
-                sample_vector = np.column_stack((jets_x, jets_y))
+                sample_vector = np.column_stack(
+                    [
+                        np.asarray(to_load[variable])
+                        for variable in self.resampling_variables
+                    ]
+                )
 
                 # Get a dict with the file, the stacked jets and the category
                 samples = {
@@ -399,18 +387,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             # Get the jets which are to be loaded
             to_load = f_in["jets"][:n_jets_initial]
 
-            # Retrieve the resampling variables from the jets
-            jets_x = np.asarray(to_load[self.var_x])
-            jets_y = np.asarray(to_load[self.var_y])
-            logger.info(
-                "Loaded %i %s jets from %s.",
-                len(jets_x),
-                preparation_sample.category,
-                sample,
+            # Stack the jet variables
+            sample_vector = np.column_stack(
+                [
+                    np.asarray(to_load[variable])
+                    for variable in self.resampling_variables
+                ]
             )
-
-        # Stack the jets
-        sample_vector = np.column_stack((jets_x, jets_y))
 
         # Create dict with the info for resampling
         samples = {
@@ -609,12 +592,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     preparation_sample,
                 )
                 # If max upsampling ratio set, need to save the number of jets available
-                if (
-                    "max_upsampling_ratio" in self.options
-                    and self.options["max_upsampling_ratio"] is not None
-                    and sample in list(self.options["max_upsampling_ratio"])
+                if self.options.max_upsampling_ratio is not None and sample in list(
+                    self.options.max_upsampling_ratio
                 ):
-                    max_upsampling = float(self.options["max_upsampling_ratio"][sample])
+                    max_upsampling = float(self.options.max_upsampling_ratio[sample])
                     in_file = self.config.preparation.get_sample(
                         preparation_sample.name
                     ).output_name
@@ -624,12 +605,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                         max_upsampling,
                         num_available,
                     )
-                if (
-                    "sampling_fraction" in self.options
-                    and self.options["sampling_fraction"] is not None
-                    and sample in list(self.options["sampling_fraction"])
+                if self.options.sampling_fraction is not None and sample in list(
+                    self.options.sampling_fraction
                 ):
-                    self.sampling_fraction[sample] = self.options["sampling_fraction"][
+                    self.sampling_fraction[sample] = self.options.sampling_fraction[
                         sample
                     ]
 
@@ -1126,7 +1105,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             Indicies of the resampled jets which are to use.
         """
 
-        sampled_indices = np.random.default_rng().choice(
+        sampled_indices = np.random.default_rng(seed=self.rnd_seed).choice(
             len(r_resamp), p=r_resamp, size=size, replace=replacement
         )
 
@@ -1281,11 +1260,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 create_file = False
                 with h5py.File(save_name, "w") as f_h5:
 
+                    # Set git hash as attribute of the file
+                    f_h5.attrs["git_hash"] = self.config.git_hash
+
                     # Create new dataset with the indicies inside
                     f_h5.create_dataset(
                         "jets",
                         data=selected_indices,
-                        compression=self.config.compression,
+                        compression=self.config.general.compression,
                         chunks=True,
                         maxshape=(None,),
                     )
@@ -1409,10 +1391,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
                 # Write to file by creating dataset
                 with h5py.File(save_name, "w") as out_file:
+
+                    # Set git hash as attribute of the file
+                    out_file.attrs["git_hash"] = self.config.git_hash
+
                     out_file.create_dataset(
                         "jets",
                         data=jets,
-                        compression=self.config.compression,
+                        compression=self.config.general.compression,
                         chunks=True,
                         maxshape=(None,),
                     )
@@ -1420,7 +1406,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     out_file.create_dataset(
                         "labels",
                         data=labels,
-                        compression=self.config.compression,
+                        compression=self.config.general.compression,
                         chunks=True,
                         maxshape=(None, labels.shape[1]),
                     )
@@ -1429,7 +1415,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                             out_file.create_dataset(
                                 tracks_name,
                                 data=tracks[i],
-                                compression=self.config.compression,
+                                compression=self.config.general.compression,
                                 chunks=True,
                                 maxshape=(None, tracks[i].shape[1]),
                             )
@@ -1594,10 +1580,14 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
                 # write to file by creating dataset
                 with h5py.File(save_name, "w") as out_file:
+
+                    # Set git hash as attribute of the file
+                    out_file.attrs["git_hash"] = self.config.git_hash
+
                     out_file.create_dataset(
                         "jets",
                         data=jets,
-                        compression=self.config.compression,
+                        compression=self.config.general.compression,
                         chunks=True,
                         maxshape=(None,),
                     )
@@ -1605,7 +1595,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     out_file.create_dataset(
                         "labels",
                         data=labels,
-                        compression=self.config.compression,
+                        compression=self.config.general.compression,
                         chunks=True,
                         maxshape=(None,),
                     )
@@ -1614,7 +1604,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                             out_file.create_dataset(
                                 tracks_name,
                                 data=tracks[i],
-                                compression=self.config.compression,
+                                compression=self.config.general.compression,
                                 chunks=True,
                                 maxshape=(None, tracks[i].shape[1]),
                             )
@@ -1683,13 +1673,13 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # Add the available number and the fraction of jets
             available_numbers.append(reading_dict["available_numbers"])
-            self.target_fractions.append(self.options["fractions"][sample_category])
+            self.target_fractions.append(self.options.fractions[sample_category])
 
         # Correct target numbers
         n_jets_asked = (
-            self.options["n_jets"]
+            self.options.n_jets
             if not self.use_validation_samples
-            else self.options["n_jets_validation"]
+            else self.options.n_jets_validation
         )
         target_numbers_corr = correct_fractions(
             n_jets=available_numbers,
@@ -2031,6 +2021,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         # Open file where the indicies will be saved
         with h5py.File(save_name, "w") as f_h5:
 
+            # Set git hash as attribute of the file
+            f_h5.attrs["git_hash"] = self.config.git_hash
+
             # Sort the indicies
             selected_indices = np.sort(selected_ind).astype(int)
 
@@ -2038,7 +2031,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             f_h5.create_dataset(
                 "jets",
                 data=selected_indices,
-                compression=self.config.compression,
+                compression=self.config.general.compression,
             )
 
         # Return the selected indicies
@@ -2287,6 +2280,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 # Open the final output file and create the datasets
                 # needed.
                 with h5py.File(output_name, "w") as out_file:
+
+                    # Set git hash as attribute of the file
+                    out_file.attrs["git_hash"] = self.config.git_hash
+
                     out_file.create_dataset(
                         "jets",
                         data=jets_with_labels,
@@ -2375,17 +2372,17 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             plot_resampling_variables(
                 concat_samples=self.concat_samples,
                 var_positions=[0, 1],
-                variable_names=[self.var_x, self.var_y],
+                variable_names=self.resampling_variables,
                 sample_categories=self.config.preparation.sample_categories,
                 output_dir=os.path.join(
                     self.resampled_path,
                     "plots/resampling/",
                 ),
                 bins_dict={
-                    self.var_x: 200,
-                    self.var_y: 20,
+                    self.resampling_variables[0]: 200,
+                    self.resampling_variables[1]: 20,
                 },
-                atlas_second_tag=self.config.plot_sample_label,
+                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
             )
@@ -2450,23 +2447,21 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             self.combine_flavours()
 
             # Plot the variables from the output file of the resampling process
-            if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
+            if self.options.n_jets_to_plot:
                 logger.info("Plotting resampled distributions...")
                 preprocessing_plots(
                     sample=self.config.get_file_name(option="resampled"),
-                    var_dict=get_variable_dict(self.config.var_file),
-                    class_labels=self.config.sampling["class_labels"],
+                    var_dict=get_variable_dict(self.config.general.var_file),
+                    class_labels=self.config.sampling.class_labels,
                     plots_dir=os.path.join(
                         self.resampled_path,
                         "plots/resampling/",
                     ),
-                    track_collection_list=self.options["tracks_names"]
-                    if "tracks_names" in self.options
-                    and "save_tracks" in self.options
-                    and self.options["save_tracks"] is True
+                    track_collection_list=self.options.tracks_names
+                    if self.options.save_tracks is True
                     else None,
-                    n_jets=self.options["n_jets_to_plot"],
-                    atlas_second_tag=self.config.plot_sample_label,
+                    n_jets=self.options.n_jets_to_plot,
+                    atlas_second_tag=self.config.general.plot_sample_label,
                     logy=True,
                     ylabel="Normalised number of jets",
                 )

@@ -15,30 +15,30 @@ class H5ToTFRecords:
     def __init__(self, config):
         self.config = config
         self.path_h5 = self.config.get_file_name(option="resampled_scaled_shuffled")
-        try:
-            self.chunk_size = int(config.convert_to_tfrecord["chunk_size"])
+        self.save_tracks = config.sampling.options.save_tracks
+        self.tracks_name = config.sampling.options.tracks_names
+        self.save_track_labels = config.sampling.options.save_track_labels
+
+        if config.general.convert_to_tfrecord is None:
+            raise ValueError(
+                "No convert_to_tfrecord options set in the preprocessing config! "
+                "Please set this options to run the tfrecord conversion!"
+            )
+
+        # Get the chunk size
+        self.chunk_size = int(config.general.convert_to_tfrecord.get("chunk_size"))
+
+        if self.chunk_size is None:
+            logger.warning(
+                "Chunk size for conversion into tf records not set in config"
+                "file. Set to 5000"
+            )
+            self.chunk_size = 5_000
+
+        else:
             logger.info("Save %i entries in one file", self.chunk_size)
 
-        except (AttributeError, KeyError, ValueError) as chunk_size_no_int:
-            try:
-                self.chunk_size = config.convert_to_tfrecord["chunk_size"]
-                if not isinstance(self.chunk_size, int):
-                    raise KeyError from chunk_size_no_int
-                logger.info("Save %i entries in one file", self.chunk_size)
-
-            except KeyError:
-                logger.warning(
-                    "Chunk size for conversion into tf records not set in config"
-                    "file. Set to 5000"
-                )
-                self.chunk_size = 5_000
-
-        self.save_tracks = config.sampling["options"].get("save_tracks", False)
-        self.tracks_name = config.sampling["options"].get("tracks_names")
-        self.save_track_labels = config.sampling["options"].get(
-            "save_track_labels", False
-        )
-        self.n_add_vars = config.convert_to_tfrecord.get("N_add_vars")
+        self.n_add_vars = config.general.convert_to_tfrecord.get("N_add_vars")
 
     def load_h5file_train(self):
         """

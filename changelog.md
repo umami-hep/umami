@@ -2,6 +2,11 @@
 
 ### Latest
 
+- Merge Preprocessing Rewrite into Master [!716](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/716)
+- Added and refactored some unit tests for resampling classes, refactored Undersampling and UndersamllingNoReplace classes[!705](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/705)
+- Adding git hash to output h5 files [!710](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/710)
+- Enable multidimensional count resampling [!687](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/687)
+- Enable correct usage of dataclasses in preprocessing config [!696](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/696)
 - Improve resampled file flavour label handling [!713](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/713)
 - Make track weight variable customizable [!712](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/712)
 - Add support for different labels for each track-like group [!688](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/688)

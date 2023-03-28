@@ -364,24 +364,15 @@ class CalculateScaling:
             is not defined in the track label variables
         """
 
-        self.scale_dict_path = config.dict_file
-        self.sampling_options = config.sampling["options"]
-        self.save_tracks = (
-            config.sampling["options"]["save_tracks"]
-            if "save_tracks" in config.sampling["options"].keys()
-            else False
-        )
-        self.save_track_labels = (
-            config.sampling["options"]["save_track_labels"]
-            if "save_track_labels" in config.sampling["options"].keys()
-            else False
-        )
+        self.scale_dict_path = config.general.dict_file
+        self.sampling_options = config.sampling.options
+        self.save_tracks = self.sampling_options.save_tracks
+        self.save_track_labels = self.sampling_options.save_track_labels
+        self.tracks_names = self.sampling_options.tracks_names
+        self.compression = config.general.compression
 
-        self.tracks_names = config.sampling["options"]["tracks_names"]
-        self.compression = config.compression
-
-        logger.info("Using variable dict at %s", config.var_file)
-        self.variable_config = get_variable_dict(config.var_file)
+        logger.info("Using variable dict at %s", config.general.var_file)
+        self.variable_config = get_variable_dict(config.general.var_file)
 
         self.track_label_variables = self.variable_config.get("track_truth_variables")
         self.track_weight_variables = self.variable_config.get("track_weight_variables")
@@ -667,10 +658,11 @@ class CalculateScaling:
         # Get the file_length
         file_length = len(h5py.File(input_file, "r")["/jets"])
         logger.info("Found %i jets in file.", file_length)
-        n_jets_scaling = int(
-            self.config.sampling["options"].get("n_jets_scaling", file_length)
+        n_jets_scaling = (
+            self.sampling_options.n_jets_scaling
+            if self.sampling_options.n_jets_scaling
+            else file_length
         )
-        n_jets_scaling = file_length if n_jets_scaling is None else int(n_jets_scaling)
         logger.info("Using %i jets to calculate scaling and shifting.", n_jets_scaling)
 
         # Get the number of chunks we need to load

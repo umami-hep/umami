@@ -427,8 +427,9 @@ class TestPreprocessing(unittest.TestCase):
         )
         replace_line_in_file(
             self.config_paths,
-            "outfile_name_validation:",
-            f"outfile_name_validation: {self.output_validation}",
+            ".outfile_name_validation:",
+            ".outfile_name_validation: &outfile_name_validation"
+            f" {self.output_validation}",
         )
         replace_line_in_file(
             self.config_paths,
@@ -442,8 +443,9 @@ class TestPreprocessing(unittest.TestCase):
         )
         replace_line_in_file(
             self.config_paths,
-            "intermediate_index_file_validation:",
-            f"intermediate_index_file_validation: {self.indices_validation}",
+            ".intermediate_index_file_validation:",
+            ".intermediate_index_file_validation: &intermediate_index_file_validation"
+            f" {self.indices_validation}",
         )
         replace_line_in_file(
             self.config,
