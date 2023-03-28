@@ -12,6 +12,7 @@ from matplotlib.testing.compare import compare_images
 from umami.configuration import logger, set_log_level
 from umami.plotting_tools.preprocessing_plotting_functions import (
     plot_resampling_variables,
+    plot_unique_jet_appearence,
     preprocessing_plots,
 )
 
@@ -31,9 +32,7 @@ class PreprocessingPlotsTestCase(unittest.TestCase):
 
         # Create a temporary directory
         self.tmp_dir = tempfile.TemporaryDirectory()  # pylint: disable=R1732
-        self.actual_plots_dir = os.path.join(
-            os.path.dirname(__file__), "plots_act/"
-        )  # f"{self.tmp_dir.name}/"
+        self.actual_plots_dir = f"{self.tmp_dir.name}/"
         self.expected_plots_dir = os.path.join(os.path.dirname(__file__), "plots/")
 
         run(
@@ -101,6 +100,35 @@ class PreprocessingPlotsTestCase(unittest.TestCase):
                     tol=1,
                 ),
             )
+
+    def test_plot_unique_jet_appearence(self):
+        """Testing the plot unique jet appearance nominal behaviour."""
+        plot_unique_jet_appearence(
+            sample=os.path.join(
+                self.actual_plots_dir,
+                "ci_preprocessing_plotting_20221117.h5",
+            ),
+            class_labels=["ujets", "cjets", "bjets"],
+            output_dir=self.actual_plots_dir,
+            # output_dir=self.expected_plots_dir,
+            fileformat="png",
+            n_jets=int(3e4),
+            atlas_second_tag=(
+                "$\\sqrt{s}=13$ TeV, PFlow jets,\nResampled $t\\bar{t}$ training sample"
+            ),
+            logy=True,
+            ylabel="Normalised number of jets",
+            figsize=[7, 5.25],
+        )
+
+        self.assertEqual(
+            None,
+            compare_images(
+                self.expected_plots_dir + "Duplicated_jet_multiplicity.png",
+                self.actual_plots_dir + "Duplicated_jet_multiplicity.png",
+                tol=1,
+            ),
+        )
 
 
 class PlotResamplingVariablesTestCase(unittest.TestCase):

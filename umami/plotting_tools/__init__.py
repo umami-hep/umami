@@ -13,6 +13,7 @@ from umami.plotting_tools.eval_plotting_functions import (
 )
 from umami.plotting_tools.preprocessing_plotting_functions import (
     plot_resampling_variables,
+    plot_unique_jet_appearence,
     plot_variable,
     preprocessing_plots,
 )

@@ -11,7 +11,11 @@ from scipy.interpolate import RectBivariateSpline
 from tqdm import tqdm
 
 from umami.configuration import logger
-from umami.plotting_tools import plot_resampling_variables, preprocessing_plots
+from umami.plotting_tools import (
+    plot_resampling_variables,
+    plot_unique_jet_appearence,
+    preprocessing_plots,
+)
 from umami.preprocessing_tools.resampling.resampling_base import (
     JsonNumpyEncoder,
     ResamplingTools,
@@ -2453,12 +2457,16 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             if "n_jets_to_plot" in self.options and self.options["n_jets_to_plot"]:
                 logger.info("Plotting resampled distributions...")
                 preprocessing_plots(
-                    sample=self.config.get_file_name(option="resampled"),
+                    sample=self.config.get_file_name(
+                        option="resampled",
+                        use_val=self.use_validation_samples,
+                    ),
                     var_dict=get_variable_dict(self.config.var_file),
                     class_labels=self.config.sampling["class_labels"],
                     plots_dir=os.path.join(
                         self.resampled_path,
                         "plots/resampling/",
+                        "validation/" if self.use_validation_samples else "",
                     ),
                     track_collection_list=self.options["tracks_names"]
                     if "tracks_names" in self.options
@@ -2471,6 +2479,24 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     ylabel="Normalised number of jets",
                 )
 
+                # Plot the duplicated jets histogram
+                plot_unique_jet_appearence(
+                    sample=self.config.get_file_name(
+                        option="resampled",
+                        use_val=self.use_validation_samples,
+                    ),
+                    class_labels=self.config.sampling["class_labels"],
+                    output_dir=os.path.join(
+                        self.resampled_path,
+                        "plots/resampling/",
+                        "validation/" if self.use_validation_samples else "",
+                    ),
+                    n_jets=self.options["n_jets_to_plot"],
+                    atlas_second_tag=self.config.plot_sample_label,
+                    logy=True,
+                    ylabel="Normalised number of jets",
+                    figsize=[8, 6],
+                )
         else:
             logger.warning("Skipping combining step (not in list to execute).")
 
