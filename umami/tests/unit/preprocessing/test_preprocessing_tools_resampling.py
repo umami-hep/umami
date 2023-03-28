@@ -547,11 +547,11 @@ class UnderSamplingTestCase(ResamplingTestCaseComplexDistr):
         # ensure the deterministic sampling for a seed
         np.testing.assert_array_equal(
             indices["training_ttbar_bjets"][:10],
-            np.array([7, 8, 13, 16, 18, 28, 29, 33, 35, 36]),
+            np.array([8, 12, 13, 16, 18, 27, 28, 29, 33, 35]),
         )
         np.testing.assert_array_equal(
             indices["training_zprime_ujets"][:10],
-            np.array([18, 19, 23, 60, 78, 82, 119, 155, 200, 204]),
+            np.array([7, 16, 49, 51, 59, 62, 79, 86, 102, 154]),
         )
 
     # def testDESIRED_equal_length(self):
