@@ -8,7 +8,118 @@ import pandas as pd
 from puma import Histogram, HistogramPlot
 
 from umami.configuration import global_config, logger
+from umami.data_tools import load_jets_from_file
 from umami.plotting_tools.utils import translate_kwargs
+
+
+def plot_unique_jet_appearence(
+    sample: str,
+    class_labels: list,
+    output_dir: str,
+    n_jets: int,
+    fileformat: str = "pdf",
+    **kwargs,
+) -> None:
+    """
+    Plot a histogram which shows how often the jets are duplicated.
+    This is done per class.
+
+    Parameters
+    ----------
+    sample : str
+        Path to the resampled file (after resampling before writing)
+    class_labels : list
+        List with the class labels used (flavours)
+    output_dir : str
+        Path where the plot wil be stored. The filename is always
+        Duplicated_jet_multiplicity + the format of the file.
+    n_jets : int
+        Number of jets used for the histogram
+    fileformat : str, optional
+        Fileformat used for the plot, by default "pdf"
+    **kwargs : kwargs
+        kwargs from `plot_object`
+    """
+
+    jets, _ = load_jets_from_file(
+        filepath=sample,
+        class_labels=class_labels,
+        n_jets=n_jets,
+        variables=["eventNumber", "jetPtRank"],
+        print_logger=False,
+    )
+
+    # Init the histogram plot object
+    histo_plot = HistogramPlot(
+        bins=30,
+        bins_range=[0, 30],
+        **kwargs,
+    )
+
+    # Init a total unique to sum to
+    total_unique = 0
+
+    # Loop over the different flavours
+    for counter, class_label in enumerate(class_labels):
+
+        # Select only the wanted category
+        tmp_jets = jets[jets["Umami_labels"] == counter]
+
+        # Check that the needed variables are loaded and given
+        try:
+            unique, count = np.unique(
+                tmp_jets["eventNumber"] + tmp_jets["jetPtRank"] / 10,
+                return_counts=True,
+            )
+
+            # Add the number of unique jets for this flavour to the total counter
+            total_unique += len(unique)
+
+        # If not, print error and break the loop
+        except KeyError:
+            logger.error(
+                """
+                Duplicate plot can't be made without the eventNumber variable
+                and the jetPtRank variable! Please check that these are given!
+                Plot will be empty!
+                """
+            )
+            break
+
+        # Add the flavour to the histogram
+        histo_plot.add(
+            Histogram(
+                values=count,
+                flavour=class_label,
+                label=r"($N_{Unique} = $" + f"{len(unique)})",
+            ),
+            reference=False,
+        )
+
+    # Set the x-label
+    histo_plot.xlabel = "Number of duplicates"
+
+    if histo_plot.atlas_second_tag == "":
+        histo_plot.atlas_second_tag = (
+            f"Total number of unique jets: {total_unique}"
+            + f",\nTotal number of jets: {len(jets)}"
+        )
+
+    else:
+        histo_plot.atlas_second_tag += (
+            f",\nTotal number of unique jets: {total_unique}"
+            + f",\nTotal number of jets: {len(jets)}"
+        )
+
+    # Draw and save the plot
+    histo_plot.draw()
+    histo_plot.savefig(
+        plot_name=os.path.join(
+            output_dir,
+            f"Duplicated_jet_multiplicity.{fileformat}",
+        ),
+        **kwargs,
+    )
 
 
 def plot_variable(

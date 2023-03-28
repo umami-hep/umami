@@ -7,6 +7,7 @@
 - Adding git hash to output h5 files [!710](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/710)
 - Enable multidimensional count resampling [!687](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/687)
 - Enable correct usage of dataclasses in preprocessing config [!696](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/696)
+- Adding duplicated jets plot to after resampling plots [!714](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/714)
 - Improve resampled file flavour label handling [!713](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/713)
 - Make track weight variable customizable [!712](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/712)
 - Add support for different labels for each track-like group [!688](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/688)
