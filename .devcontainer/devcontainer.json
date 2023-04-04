@@ -1,0 +1,12 @@
+{
+    "name": "Umamibase",
+    "image": "gitlab-registry.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/umamibase:latest",
+    "runArgs": [
+        "-v", 
+        "/cvmfs:/cvmfs"
+    ],
+    "postStartCommand": [
+        "./run_setup.sh",
+        "pre-commit install"
+    ]
+}
