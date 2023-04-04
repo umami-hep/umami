@@ -41,6 +41,10 @@
       optional: true
     - job: build_umamibase_cpu
       optional: true
+  rules:
+    - if: $CI_PROJECT_PATH=="atlas-flavor-tagging-tools/algorithms/umami"
+    - if: $CI_PROJECT_PATH!="atlas-flavor-tagging-tools/algorithms/umami"
+      allow_failure: true
 
 
 .black_check_template: &black_check_template
