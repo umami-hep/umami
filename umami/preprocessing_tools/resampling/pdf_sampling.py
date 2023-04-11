@@ -2328,10 +2328,10 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 with h5py.File(output_name, "a") as out_file:
                     # Save jets
                     out_file["jets"].resize(
-                        (out_file["jets"].shape[0] + jets.shape[0]),
+                        (out_file["jets"].shape[0] + jets_with_labels.shape[0]),
                         axis=0,
                     )
-                    out_file["jets"][-jets.shape[0] :] = jets
+                    out_file["jets"][-jets_with_labels.shape[0] :] = jets_with_labels
 
                     # Save labels
                     out_file["labels"].resize(

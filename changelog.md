@@ -1,6 +1,7 @@
 # Changelog
 
 ### Latest
+- Fix for `flavour_label` variable [!719](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/719)
 - Allow linter to fail in forks [!718](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/)
 - Merge Preprocessing Rewrite into Master [!716](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/716)
 - Added and refactored some unit tests for resampling classes, refactored Undersampling and UndersamllingNoReplace classes[!705](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/705)
