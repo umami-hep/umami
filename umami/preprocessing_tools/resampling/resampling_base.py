@@ -888,10 +888,10 @@ class Resampling:
                 # appending to existing dataset
                 with h5py.File(self.outfile_name, "a") as out_file:
                     out_file["jets"].resize(
-                        (out_file["jets"].shape[0] + jets.shape[0]),
+                        (out_file["jets"].shape[0] + jets_with_labels.shape[0]),
                         axis=0,
                     )
-                    out_file["jets"][-jets.shape[0] :] = jets
+                    out_file["jets"][-jets_with_labels.shape[0] :] = jets_with_labels
                     out_file["labels"].resize(
                         (out_file["labels"].shape[0] + labels.shape[0]),
                         axis=0,
