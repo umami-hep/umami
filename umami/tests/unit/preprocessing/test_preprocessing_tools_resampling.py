@@ -13,11 +13,11 @@ from umami.configuration import global_config, logger, set_log_level
 from umami.preprocessing_tools import (
     PDFSampling,
     PreprocessConfiguration,
+    ResamplingTools,
     UnderSampling,
     UnderSamplingNoReplace,
     calculate_binning,
     correct_fractions,
-    sampling_generator,
 )
 
 set_log_level(logger, "DEBUG")
@@ -128,8 +128,10 @@ class SamplingGeneratorTestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                "https://umami-ci-provider.web.cern.ch/preprocessing/"
-                "ci_ttbar_testing.h5",
+                (
+                    "https://umami-ci-provider.web.cern.ch/preprocessing/"
+                    "ci_ttbar_testing.h5"
+                ),
                 "--directory-prefix",
                 self.tmp_test_dir,
             ],
@@ -138,7 +140,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
 
     def test_no_tracks(self):
         """Testing no tracks yield"""
-        generator = sampling_generator(
+        generator = ResamplingTools.sampling_generator(
             file=self.test_file,
             indices=self.indices,
             label=self.label,
@@ -160,7 +162,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
 
     def test_tracks(self):
         """Testing with tracks yield"""
-        generator = sampling_generator(
+        generator = ResamplingTools.sampling_generator(
             file=self.test_file,
             indices=self.indices,
             label=self.label,
@@ -185,7 +187,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
 
     def test_no_duplicate(self):
         """Testing with tracks yield with no duplicates."""
-        generator = sampling_generator(
+        generator = ResamplingTools.sampling_generator(
             file=self.test_file,
             indices=np.arange(0, 3000, 1),
             label=self.label,
@@ -210,7 +212,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
 
     def test_no_duplicate_no_tracks(self):
         """Testing no tracks yield with no duplicates."""
-        generator = sampling_generator(
+        generator = ResamplingTools.sampling_generator(
             file=self.test_file,
             indices=np.arange(0, 3000, 1),
             label=self.label,
@@ -232,7 +234,7 @@ class SamplingGeneratorTestCase(unittest.TestCase):
     def test_duplicate_error(self):
         """Test duplicate TypeError."""
         with self.assertRaises(TypeError):
-            generator = sampling_generator(
+            generator = ResamplingTools.sampling_generator(
                 file=self.test_file,
                 indices=self.indices,
                 label=self.label,
@@ -600,6 +602,24 @@ class UnderSamplingTestCase(ResamplingTestCaseComplexDistr):
         )
         self.assertEqual(n_b, n_c)
         self.assertEqual(n_b, n_u)
+
+        # check if the total number of jets in the output file is correct:
+        # (This test is broaken because the resampling_generator cuts off
+        # the last chunk)
+        output_name = countsampler.config.get_file_name(
+            option="resampled",
+            use_val=countsampler.use_validation_samples,
+        )
+        with h5py.File(output_name, "r") as file:
+            jets = np.array(file["jets"]["pt_btagJes"][:])
+        self.assertEqual(len(jets), self.config.sampling.options.n_jets)
+        # try writing with small batch
+        countsampler.write_file(countsampler.indices_to_keep, chunk_size=100)
+        with h5py.File(output_name, "r") as file:
+            jets = np.array(file["jets"]["pt_btagJes"][:])
+        self.assertEqual(len(jets), self.config.sampling.options.n_jets)
+
+        # return everything to a previous state
         self.config.sampling.options.n_jets = n_jets_initial
         self.config.sampling.options.n_jets_to_plot = n_jets_to_plot_initial
 

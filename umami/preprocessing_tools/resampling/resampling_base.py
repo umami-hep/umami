@@ -16,152 +16,6 @@ from umami.data_tools import compare_h5_files_variables
 from umami.preprocessing_tools.utils import join_structured_arrays
 
 
-def sampling_generator(
-    file: str,
-    indices: np.ndarray,
-    label: int,
-    label_classes: list,
-    save_tracks: bool = False,
-    tracks_names: list = None,
-    chunk_size: int = 10_000,
-    seed: int = 42,
-    duplicate: bool = False,
-):
-    """
-    Generator to iterate over datasets based on given indices.
-
-    This method also implements fancy indexing for H5 files by
-    separating a list of indices that may contain duplicates
-    into lists of uniques indices. The splitting consists in:
-        - 1st list: all indices repeated at least 1 time (all).
-        - 2nd list: all indices repeated at least 2 times.
-        - 3rd list: ............................. 3 ......
-        ...
-
-    Parameters
-    ----------
-    file : str
-        the path to the h5 file to read
-    indices : list or numpy.array
-        the indices of entries to read
-    label : int
-        the label of the jets being read
-    label_classes : list
-        the combined labelling scheme
-    save_tracks : bool
-        whether to store tracks, by default False
-    tracks_names : list
-        list of tracks collection names to use, by default None
-    chunk_size : int
-        the size of each chunk (last chunk might at most be twice this size),
-        by default 10000
-    seed : int
-        random seed to use, by default 42
-    duplicate : bool
-        whether the reading should assume duplicates are present.
-        DO NOT USE IF NO DUPLICATES ARE EXPECTED!, by default False
-
-    Yields
-    -------
-    numpy.ndarray
-        jets
-    numpy.ndarray
-        tracks, if `save_tracks` is True
-    numpy.ndarray
-        labels
-    """
-    # Check that track names are a list
-    tracks_names = tracks_names or ["tracks"]
-
-    # Open the file to read the jets
-    with h5py.File(file, "r") as f_h5:
-        start_ind = 0
-        end_ind = int(start_ind + chunk_size)
-
-        # create indices and then shuffle those to be used in the loop below
-        tupled_indices = []
-        while end_ind <= len(indices) or start_ind == 0:
-            if end_ind + chunk_size > len(indices):
-                # Missing less then a chunk, joining to last chunk
-                end_ind = len(indices)
-            tupled_indices.append((start_ind, end_ind))
-            start_ind = end_ind
-            end_ind = int(start_ind + chunk_size)
-
-        # Init a random generator for the choice
-        rng = np.random.default_rng(seed=seed)
-        tupled_indices = rng.choice(tupled_indices, len(tupled_indices), replace=False)
-
-        # Loop over the shuffled indicies
-        for index_tuple in tupled_indices:
-
-            # Get the indicies which are to be loaded
-            loading_indices = indices[index_tuple[0] : index_tuple[1]]
-
-            # save labels as int labels 0, 1, ..., nclasses-1
-            label_classes.append(-1)
-            labels = (np.ones(index_tuple[1] - index_tuple[0]) * label).astype(int)
-            label_classes.pop()
-
-            # Check for duplicates
-            if duplicate and quick_check_duplicates(loading_indices):
-                # Duplicate indices, fancy indexing of H5 not working, manual approach.
-                list_loading_indices = []
-                counting = Counter(loading_indices)
-
-                for index in counting:
-                    number_occ = counting[index]
-
-                    while len(list_loading_indices) < number_occ:
-                        list_loading_indices.append([])
-
-                    for i in range(number_occ):
-                        list_loading_indices[i].append(index)
-
-                # Init a list for the jets and tracks
-                jet_ls = []
-                track_ls = {elem: [] for elem in tracks_names}
-
-                # Loop over the list of indicies which are to be loaded
-                for i, sublist_loading_indices in enumerate(list_loading_indices):
-
-                    # Loading the jets
-                    jet_ls.append(f_h5["jets"][sublist_loading_indices])
-
-                    # Appending tracks and track labels
-                    if save_tracks:
-                        for tracks_name in tracks_names:
-                            track_ls[tracks_name].append(
-                                f_h5[tracks_name][sublist_loading_indices]
-                            )
-
-                # Concatenate the jets, tracks and track labels
-                jets = np.concatenate(jet_ls)
-                if save_tracks:
-                    tracks = [
-                        np.concatenate(track_ls[tracks_name])
-                        for tracks_name in tracks_names
-                    ]
-
-                    yield jets, tracks, labels
-
-                else:
-                    yield jets, labels
-
-            else:
-                # No duplicate indices, fancy indexing of H5 working.
-                if save_tracks:
-                    tracks = [
-                        f_h5[tracks_name][loading_indices]
-                        for tracks_name in tracks_names
-                    ]
-
-                    yield f_h5["jets"][loading_indices], tracks, labels
-
-                else:
-                    yield f_h5["jets"][loading_indices], labels
-
-
 def read_dataframe_repetition(
     file_df: np.ndarray,
     loading_indices: list,
@@ -643,104 +497,6 @@ class Resampling:
 
         return common_vars
 
-    def resampling_generator(
-        self,
-        file: str,
-        indices: list,
-        label: int,
-        label_classes: list,
-        variables: dict,
-        save_tracks: bool = False,
-        tracks_names: list = None,
-        chunk_size: int = 10000,
-        seed: int = 42,
-    ):
-        """Generator for resampling
-
-        Parameters
-        ----------
-        file : str
-            path to h5 file
-        indices : list
-            list of indices which need to be loaded
-        label : int
-            flavour label
-        label_classes : list
-            list with all label classes used, info is necessary for the binarisation
-        variables : dict
-            variables per dataset which should be used
-        save_tracks : bool, optional
-            writing out tracks, by default False
-        tracks_names : list, optional
-            list containing the tracks collection names to write
-        chunk_size : int, optional
-            size of loaded chunks, by default 10_000
-        seed : int, optional
-            random seed, by default 42
-
-        Yields
-        -------
-        numpy.ndarray
-            jets
-        numpy.ndarray
-            tracks if `save_tracks` is True
-        numpy.ndarray
-            binarised labels
-        numpy.ndarray
-            binarised track labels
-        """
-        # Get the tracks name. If not provided, use default
-        tracks_names = tracks_names or ["tracks"]
-
-        # Open the h5 file
-        with h5py.File(file, "r") as f_h5:
-
-            # Set the start and end index for the given chunk
-            start_ind = 0
-            end_ind = int(start_ind + chunk_size)
-
-            # create indices and then shuffle those to be used in the loop below
-            tupled_indices = []
-            while end_ind <= len(indices) or start_ind == 0:
-                tupled_indices.append((start_ind, end_ind))
-                start_ind = end_ind
-                end_ind = int(start_ind + chunk_size)
-
-            # Get a random generator with specified seed
-            rng = np.random.default_rng(seed=seed)
-
-            # Mix the chunks
-            tupled_indices = rng.choice(
-                tupled_indices, len(tupled_indices), replace=False
-            )
-
-            # Iterate over the indicies
-            for index_tuple in tupled_indices:
-                loading_indices = indices[index_tuple[0] : index_tuple[1]]
-                label_classes.append(-1)
-                # save labels as int labels 0, 1, ..., nclasses-1
-                labels = (np.ones(index_tuple[1] - index_tuple[0]) * label).astype(int)
-
-                label_classes.pop()
-                # Yield the jets and labels
-                # If tracks are used, also yield the tracks
-                if save_tracks:
-                    tracks = [
-                        f_h5[tracks_name].fields(variables[tracks_name])[
-                            loading_indices
-                        ]
-                        for tracks_name in tracks_names
-                    ]
-
-                    yield f_h5["jets"].fields(variables["jets"])[
-                        loading_indices
-                    ], tracks, labels
-
-                else:
-                    yield f_h5["jets"].fields(variables["jets"])[
-                        loading_indices
-                    ], labels
-
     def write_file(self, indices: dict, chunk_size: int = 10_000):
         """
         Takes the indices as input calculated in the GetIndices function and
@@ -778,7 +534,7 @@ class Resampling:
 
         # Get the resampling generators for the different samples
         generators = [
-            self.resampling_generator(
+            self.sampling_generator(
                 file=self.sample_file_map[sample],
                 indices=indices[sample],
                 chunk_size=chunk_sizes[i],
@@ -797,7 +553,7 @@ class Resampling:
         chunk_counter = 0
         logger.info("Writing to file %s", self.outfile_name)
         pbar = tqdm(total=np.sum(sample_lengths))
-        while chunk_counter < n_chunks + 1:
+        while chunk_counter < n_chunks:
             for i, _ in enumerate(indices):
                 try:
                     if self.save_tracks:
@@ -907,6 +663,181 @@ class Resampling:
 
             chunk_counter += 1
         pbar.close()
+
+    @staticmethod
+    def sampling_generator(
+        file: str,
+        indices: np.ndarray,
+        label: int,
+        label_classes: list,
+        variables: dict = None,
+        save_tracks: bool = False,
+        tracks_names: list = None,
+        chunk_size: int = 10_000,
+        seed: int = 42,
+        duplicate: bool = False,
+    ):
+        """
+        Generator to iterate over datasets based on given indices.
+
+        This method also implements fancy indexing for H5 files by
+        separating a list of indices that may contain duplicates
+        into lists of uniques indices. The splitting consists in:
+            - 1st list: all indices repeated at least 1 time (all).
+            - 2nd list: all indices repeated at least 2 times.
+            - 3rd list: ............................. 3 ......
+            ...
+
+        Parameters
+        ----------
+        file : str
+            the path to the h5 file to read
+        indices : list or numpy.array
+            the indices of entries to read
+        label : int
+            the label of the jets being read
+        label_classes : list
+            the combined labelling scheme
+        variables : dict
+            variables per dataset which should be used
+            if None all variables are used, by default None
+        save_tracks : bool
+            whether to store tracks, by default False
+        tracks_names : list
+            list of tracks collection names to use, by default None
+        chunk_size : int
+            the size of each chunk (last chunk might at most be twice this size),
+            by default 10000
+        seed : int
+            random seed to use, by default 42
+        duplicate : bool
+            whether the reading should assume duplicates are present.
+            DO NOT USE IF NO DUPLICATES ARE EXPECTED!, by default False
+
+        Yields
+        -------
+        numpy.ndarray
+            jets
+        numpy.ndarray
+            tracks, if `save_tracks` is True
+        numpy.ndarray
+            labels
+        """
+        # Check that track names are a list
+        tracks_names = tracks_names or ["tracks"]
+
+        # Open the file to read the jets
+        with h5py.File(file, "r") as f_h5:
+
+            # Use all variables if none are specified
+            if variables is None:
+                variables = {}
+                variables["jets"] = [i[0] for i in f_h5["jets"].dtype.descr]
+                for tracks_name in tracks_names:
+                    variables[tracks_name] = [
+                        i[0] for i in f_h5[tracks_name].dtype.descr
+                    ]
+
+            start_ind = 0
+            end_ind = int(start_ind + chunk_size)
+
+            # create indices and then shuffle those to be used in the loop below
+            tupled_indices = []
+            while end_ind <= len(indices) or start_ind == 0:
+                if end_ind + chunk_size > len(indices):
+                    # Missing less then a chunk, joining to last chunk
+                    end_ind = len(indices)
+                tupled_indices.append((start_ind, end_ind))
+                start_ind = end_ind
+                end_ind = int(start_ind + chunk_size)
+
+            # Init a random generator for the choice
+            rng = np.random.default_rng(seed=seed)
+            tupled_indices = rng.choice(
+                tupled_indices, len(tupled_indices), replace=False
+            )
+
+            # Loop over the shuffled indicies
+            for index_tuple in tupled_indices:
+
+                # Get the indicies which are to be loaded
+                loading_indices = indices[index_tuple[0] : index_tuple[1]]
+
+                # save labels as int labels 0, 1, ..., nclasses-1
+                label_classes.append(-1)
+                labels = (np.ones(index_tuple[1] - index_tuple[0]) * label).astype(int)
+                label_classes.pop()
+
+                # Check for duplicates
+                if duplicate and quick_check_duplicates(loading_indices):
+                    # Duplicate indices, fancy indexing of H5 not working,
+                    # manual approach.
+                    list_loading_indices = []
+                    counting = Counter(loading_indices)
+
+                    for index in counting:
+                        number_occ = counting[index]
+
+                        while len(list_loading_indices) < number_occ:
+                            list_loading_indices.append([])
+
+                        for i in range(number_occ):
+                            list_loading_indices[i].append(index)
+
+                    # Init a list for the jets and tracks
+                    jet_ls = []
+                    track_ls = {elem: [] for elem in tracks_names}
+
+                    # Loop over the list of indicies which are to be loaded
+                    for i, sublist_loading_indices in enumerate(list_loading_indices):
+
+                        # Loading the jets
+                        jet_ls.append(
+                            f_h5["jets"].fields(variables["jets"])[
+                                sublist_loading_indices
+                            ]
+                        )
+
+                        # Appending tracks and track labels
+                        if save_tracks:
+                            for tracks_name in tracks_names:
+                                track_ls[tracks_name].append(
+                                    f_h5[tracks_name].fields(variables[tracks_name])[
+                                        sublist_loading_indices
+                                    ]
+                                )
+
+                    # Concatenate the jets, tracks and track labels
+                    jets = np.concatenate(jet_ls)
+                    if save_tracks:
+                        tracks = [
+                            np.concatenate(track_ls[tracks_name])
+                            for tracks_name in tracks_names
+                        ]
+
+                        yield jets, tracks, labels
+
+                    else:
+                        yield jets, labels
+
+                else:
+                    # No duplicate indices, fancy indexing of H5 working.
+                    if save_tracks:
+                        tracks = [
+                            f_h5[tracks_name].fields(variables[tracks_name])[
+                                loading_indices
+                            ]
+                            for tracks_name in tracks_names
+                        ]
+
+                        yield f_h5["jets"].fields(variables["jets"])[
+                            loading_indices
+                        ], tracks, labels
+
+                    else:
+                        yield f_h5["jets"].fields(variables["jets"])[
+                            loading_indices
+                        ], labels
 
 
 class ResamplingTools(Resampling):
