@@ -21,7 +21,6 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     ResamplingTools,
     correct_fractions,
     read_dataframe_repetition,
-    sampling_generator,
 )
 from umami.preprocessing_tools.utils import get_variable_dict, join_structured_arrays
 
@@ -1333,7 +1332,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         chunk_sizes = sample_lengths / n_chunks
 
         # Get the sampling generator
-        generators = sampling_generator(
+        generators = self.sampling_generator(
             file=in_file,
             indices=selected_indices,
             chunk_size=chunk_sizes,

@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Fixing a bug (ignoring the last non-full batch of jets) with resampling_generator by merging it with sampling_generator method [!721] (https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/721#b6dd309981fbaa780ef50c3d4be7fa02c1ad2ffa)
 - Adding plot_type to Preprocessing configs [!722](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/722)
 - Adding atlas-ftag-tools package [!723](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/723)
 - Fix for `flavour_label` variable [!719](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/719)

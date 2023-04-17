@@ -23,7 +23,6 @@ from umami.preprocessing_tools.resampling.resampling_base import (
     ResamplingTools,
     calculate_binning,
     correct_fractions,
-    sampling_generator,
 )
 from umami.preprocessing_tools.resampling.weighting import Weighting
 from umami.preprocessing_tools.scaling import (
