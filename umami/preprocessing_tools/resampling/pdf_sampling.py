@@ -2389,6 +2389,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
+                fileformat=self.config.general.plot_type,
             )
 
         logger.info("Starting PDFsampling...")
@@ -2472,6 +2473,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     atlas_second_tag=self.config.general.plot_sample_label,
                     logy=True,
                     ylabel="Normalised number of jets",
+                    fileformat=self.config.general.plot_type,
                 )
 
                 # Plot the duplicated jets histogram
@@ -2491,6 +2493,7 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     logy=True,
                     ylabel="Normalised number of jets",
                     figsize=[8, 6],
+                    fileformat=self.config.general.plot_type,
                 )
         else:
             logger.warning("Skipping combining step (not in list to execute).")

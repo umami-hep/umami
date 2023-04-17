@@ -225,6 +225,7 @@ class GeneralSettings:
     outfile_name: str = None
     outfile_name_validation: str = None
     plot_name: str = None
+    plot_type: str = "pdf"
     plot_sample_label: str = None
     var_file: str = None
     dict_file: str = None
@@ -251,6 +252,7 @@ class GeneralSettings:
             (self.outfile_name, "outfile_name", str, True),
             (self.outfile_name_validation, "outfile_name_validation", str, False),
             (self.plot_name, "plot_name", str, True),
+            (self.plot_type, "plot_type", str, True),
             (self.plot_sample_label, "plot_sample_label", str, False),
             (self.var_file, "var_file", str, True),
             (self.dict_file, "dict_file", str, True),

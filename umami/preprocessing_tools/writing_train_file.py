@@ -455,6 +455,7 @@ class TrainSampleWriter:
                 atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
+                fileformat=self.config.general.plot_type,
             )
 
     def calculate_weights(
