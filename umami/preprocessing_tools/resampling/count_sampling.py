@@ -120,6 +120,7 @@ class SimpleSamplingBase(ResamplingTools, abc.ABC):
             atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
             ylabel="Normalised number of jets",
+            fileformat=self.config.general.plot_type,
         )
 
         # Resample the files and write them to disk
@@ -130,7 +131,8 @@ class SimpleSamplingBase(ResamplingTools, abc.ABC):
             logger.info("Plotting resampled distributions...")
             preprocessing_plots(
                 sample=self.config.get_file_name(
-                    option="resampled", use_val=self.use_validation_samples
+                    option="resampled",
+                    use_val=self.use_validation_samples,
                 ),
                 var_dict=get_variable_dict(self.config.general.var_file),
                 class_labels=self.config.sampling.class_labels,
@@ -146,6 +148,7 @@ class SimpleSamplingBase(ResamplingTools, abc.ABC):
                 atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
+                fileformat=self.config.general.plot_type,
             )
 
 
@@ -304,6 +307,7 @@ class UnderSampling(SimpleSamplingBase):
             atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
             ylabel="Normalised number of jets",
+            fileformat=self.config.general.plot_type,
         )
 
         # Resample the files and write them to disk
@@ -317,7 +321,7 @@ class UnderSampling(SimpleSamplingBase):
                     option="resampled",
                     use_val=self.use_validation_samples,
                 ),
-                var_dict=get_variable_dict(self.config.config["var_file"]),
+                var_dict=get_variable_dict(self.config.general.var_file),
                 class_labels=self.config.sampling.class_labels,
                 plots_dir=os.path.join(
                     self.resampled_path,
@@ -331,4 +335,5 @@ class UnderSampling(SimpleSamplingBase):
                 atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
+                fileformat=self.config.general.plot_type,
             )
