@@ -3,6 +3,7 @@
 ### Latest
 
 - Adding plot_type to Preprocessing configs [!722](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/722)
+- Adding atlas-ftag-tools package [!723](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/723)
 - Fix for `flavour_label` variable [!719](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/719)
 - Allow linter to fail in forks [!718](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/)
 - Merge Preprocessing Rewrite into Master [!716](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/716)
