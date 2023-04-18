@@ -6,7 +6,7 @@ After the ntuple production (training-dataset-dumper), the first step of the pre
 As already mentioned in the [overview](preprocessing/Overview.md), the preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:121:139§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:121:142§§§
 ```
 
 | Setting | Type | Explanation |
@@ -15,6 +15,7 @@ As already mentioned in the [overview](preprocessing/Overview.md), the preproces
 | `outfile_name_validation` | `str` | Name of the validation output file of the preprocessing. The different steps will add append some info to this name to produce their output files (Like `_resampled`). |
 | `plot_name` | `str` | Defines the names of the control plots which are produced in the preprocessing. |
 | `plot_sample_label` | `str` | Defines the label in the control plots which are made in the preprocessing. This is the text which is written under the "ATLAS". |
+| `legend_sample_category` | `bool` | Whether to include sample categories in the legends of plots before resampling. Set to False for Boosted tagging. |
 | `var_file` | `str` | Path to the variable dict which is used. Default configs can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tree/master/umami/configs) |
 | `dict_file` | `str` | Full path (with filename) to the scale dict. This must be a `.json` file! |
 

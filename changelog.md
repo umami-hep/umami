@@ -1,6 +1,8 @@
 # Changelog
 
 ### Latest
+- Added example configs for Xbb/Xcc boosted preprocessing, fixed a misnomer (dijets -> QCD) with the in the global config, added flag "legend_sample_category" [!717](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/717)
+
 
 - Fixing a bug (ignoring the last non-full batch of jets) with resampling_generator by merging it with sampling_generator method [!721] (https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/721#b6dd309981fbaa780ef50c3d4be7fa02c1ad2ffa)
 - Adding plot_type to Preprocessing configs [!722](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/722)

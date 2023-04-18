@@ -1,0 +1,38 @@
+# Defining anchor with outlier cuts that are used over and over again
+.outlier_cuts: &outlier_cuts
+    - pt:
+          operator: ">="
+          condition: 2.1e5
+    - pt:
+          operator: "<="
+          condition: 3e6
+    - abs_eta:
+          operator: "<="
+          condition: 2.5
+    - n_subjets:
+          operator: ">="
+          condition: 1.0
+# Defining yaml anchors to be used later, avoiding duplication
+
+.cuts_template_training: &cuts_template_training
+    cuts:
+        - eventNumber:
+              operator: mod_10_<=
+              condition: 7
+        - *outlier_cuts
+
+
+.cuts_template_validation: &cuts_template_validation
+    cuts:
+        - eventNumber:
+              operator: mod_10_==
+              condition: 8
+        - *outlier_cuts
+
+
+.cuts_template_testing: &cuts_template_testing
+    cuts:
+        - eventNumber:
+              operator: mod_10_==
+              condition: 9
+        - *outlier_cuts

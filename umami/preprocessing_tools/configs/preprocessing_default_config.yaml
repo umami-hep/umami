@@ -3,6 +3,7 @@
 outfile_name: Null
 plot_name: Null
 plot_sample_label: "$\\sqrt{s}=13$ TeV, PFlow jets"
+legend_sample_category: False
 dict_file: Null
 var_file: Null
 compression: Null
