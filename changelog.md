@@ -1,15 +1,17 @@
 # Changelog
 
 ### Latest
+
+
+### [v0.20](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.20) (18.04.2023)
+
 - Added example configs for Xbb/Xcc boosted preprocessing, fixed a misnomer (dijets -> QCD) with the in the global config, added flag "legend_sample_category" [!717](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/717)
-
-
-- Fixing a bug (ignoring the last non-full batch of jets) with resampling_generator by merging it with sampling_generator method [!721] (https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/721#b6dd309981fbaa780ef50c3d4be7fa02c1ad2ffa)
+- Fixing a bug (ignoring the last non-full batch of jets) with resampling_generator by merging it with sampling_generator method [!721](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/721)
 - Removing unused preprocessing UnderSamplingProp + Fixing coverage issue [!724](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/724)
 - Adding plot_type to Preprocessing configs [!722](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/722)
 - Adding atlas-ftag-tools package [!723](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/723)
 - Fix for `flavour_label` variable [!719](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/719)
-- Allow linter to fail in forks [!718](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/)
+- Allow linter to fail in forks [!718](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/718)
 - Merge Preprocessing Rewrite into Master [!716](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/716)
 - Added and refactored some unit tests for resampling classes, refactored Undersampling and UndersamllingNoReplace classes[!705](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/705)
 - Adding git hash to output h5 files [!710](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/710)
