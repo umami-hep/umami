@@ -141,7 +141,9 @@ class Weighting(ResamplingTools):
             concat_samples=self.concat_samples,
             var_positions=[0, 1],
             variable_names=self.resampling_variables,
-            sample_categories=self.config.preparation.sample_categories,
+            sample_categories=self.config.preparation.sample_categories
+            if self.config.general.legend_sample_category
+            else None,
             output_dir=os.path.join(
                 self.resampled_path,
                 "plots/resampling/",

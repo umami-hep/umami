@@ -1,0 +1,94 @@
+label: R10TruthLabel_R22v1
+
+train_variables:
+  JetKinematics:
+    - eta
+    - abs_eta
+    - pt
+    - mass
+    - energy
+    - n_subjets
+    - Xbb2020v3_Higgs
+    - Xbb2020v3_QCD
+    - Xbb2020v3_Top
+
+
+.tracks_variables: &tracks_variables
+  noNormVars: []
+  logNormVars: []
+  jointNormVars:
+    - pt
+    - eta
+    - ptfrac
+    - d0
+    - d0Uncertainty
+    - z0SinTheta
+    - dphi
+    - deta
+    - dr
+    - qOverP
+    - qOverPUncertainty
+    - IP3D_signed_d0_significance
+    - IP3D_signed_z0_significance
+    - phiUncertainty
+    - theta
+    - thetaUncertainty
+    - numberOfPixelHits
+    - numberOfSCTHits
+    - numberOfInnermostPixelLayerHits
+    - numberOfNextToInnermostPixelLayerHits
+    - numberOfInnermostPixelLayerSharedHits
+    - numberOfInnermostPixelLayerSplitHits
+    - numberOfPixelSharedHits
+    - numberOfPixelSplitHits
+    - numberOfSCTSharedHits
+    - numberOfPixelHoles
+    - numberOfSCTHoles
+    - chiSquared
+    - numberDoF
+    - radiusOfFirstHit
+    - leptonID
+
+.subjets_variables: &subjets_variables
+  noNormVars: []
+  logNormVars: []
+  jointNormVars:
+    - pt
+    - eta
+    - mass
+    - energy
+    - DL1r_pu
+    - DL1r_pc
+    - DL1r_pb
+    - DL1dv01_VR_pu
+    - DL1dv01_VR_pc
+    - DL1dv01_VR_pb
+    - GN2v00_pu
+    - GN2v00_pc
+    - GN2v00_pb
+
+track_truth_variables:
+  tracks:
+    - truthOriginLabel
+    - truthVertexIndex
+  subjets:
+    - relativeDeltaRToVRJet
+    - HadronConeExclTruthLabelID
+    - HadronGhostExtendedTruthLabelID
+
+track_weight_variables:
+  tracks:
+    - truthOriginLabel
+    - truthVertexIndex
+  subjets:
+    - relativeDeltaRToVRJet
+    - HadronConeExclTruthLabelID
+    - HadronGhostExtendedTruthLabelID
+
+track_train_variables:
+  tracks:
+    <<: *tracks_variables
+  subjets:
+    <<: *subjets_variables
+
+custom_defaults_vars:
