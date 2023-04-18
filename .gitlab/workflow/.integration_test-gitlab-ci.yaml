@@ -546,6 +546,9 @@ test_plotting_umami_dips:
   dependencies:
     - test_train_dips
     - test_train_tfrecords_dips
+    - test_train_dips_four_classes
+    - test_train_cads
+    - test_train_tfrecords_cads
     - build_umamibase_cpu_MR
     - build_umamibase_cpu
     - linter
@@ -600,6 +603,8 @@ test_plotting_umami_umami:
   dependencies:
     - test_train_umami
     - test_train_tfrecords_umami
+    - test_train_cond_att_umami
+    - test_train_tfrecords_cond_att_umami
     - build_umamibase_cpu_MR
     - build_umamibase_cpu
     - linter

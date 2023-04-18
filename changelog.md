@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Removing unused preprocessing UnderSamplingProp + Fixing coverage issue [!724](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/724)
 - Adding plot_type to Preprocessing configs [!722](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/722)
 - Fix for `flavour_label` variable [!719](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/719)
 - Allow linter to fail in forks [!718](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/)

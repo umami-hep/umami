@@ -17,7 +17,6 @@ from umami.preprocessing_tools.resampling.importance_sampling_no_replace import 
     UnderSamplingNoReplace,
 )
 from umami.preprocessing_tools.resampling.pdf_sampling import PDFSampling
-from umami.preprocessing_tools.resampling.proportional_sampling import UnderSamplingProp
 from umami.preprocessing_tools.resampling.resampling_base import (
     Resampling,
     ResamplingTools,
