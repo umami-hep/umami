@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Setting coverage precision to two decimals [!726](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/726)
 
 ### [v0.20](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.20) (18.04.2023)
 
