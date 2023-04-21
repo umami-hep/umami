@@ -22,7 +22,7 @@ test_coverage:
     - pip install pytest-cov==2.12.0
     - cd ./coverage_files/
     - coverage combine
-    - coverage report
+    - coverage report --precision=2
     - coverage xml
     - coverage html
   rules:
