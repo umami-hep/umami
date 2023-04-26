@@ -42,26 +42,26 @@ preparation:
             file_pattern: "*.h5/*.h5"
 
     samples:
-        training_Hbb:
+        training_hbb:
             type: Boosted-Mix
-            category: Hbb    # Hbb comes from VHbb samples
+            category: hbb    # hbb comes from VHbb samples
             n_jets: 1e9
             <<: *cuts_template_training
-            output_name: !join [*sample_path, /Hbb_training_Mix.h5]
+            output_name: !join [*sample_path, /hbb_training_Mix.h5]
 
-        training_Hcc:
+        training_hcc:
             type: Boosted-Mix
-            category: Hcc    # Hcc comes from VHcc samples
+            category: hcc    # hcc comes from VHcc samples
             n_jets: 1e9
             <<: *cuts_template_training
-            output_name: !join [*sample_path, /Hcc_training_Mix.h5]
+            output_name: !join [*sample_path, /hcc_training_Mix.h5]
 
-        training_QCD:
+        training_qcd:
             type: Boosted-Mix
-            category: QCD    # QCD comes from dijet samples
+            category: qcd    # qcd comes from dijet samples
             n_jets: 1e9
             <<: *cuts_template_training
-            output_name: !join [*sample_path, /QCD_training_Mix.h5]
+            output_name: !join [*sample_path, /qcd_training_Mix.h5]
 
         training_top:
             type: Boosted-Mix
@@ -95,7 +95,7 @@ preparation:
 sampling:
     # Classes which are used in the resampling. Order is important.
     # The order needs to be the same as in the training config!
-    class_labels: [Hbb, Hcc, QCD, top]
+    class_labels: [hbb, hcc, qcd, top]
 
     # Decide, which resampling method is used.
     method: count
@@ -116,9 +116,9 @@ sampling:
         # Decide, which samples are used in the resampling.
         samples_training:
             Boosted-Mix:
-                - training_Hbb
-                - training_Hcc
-                - training_QCD
+                - training_hbb
+                - training_hcc
+                - training_qcd
                 - training_top
         samples_validation:
             Boosted-Mix:
@@ -153,7 +153,7 @@ sampling:
 
         # for method: weighting
         # relative to which distribution the weights should be calculated
-        weighting_target_flavour: 'Hbb'
+        weighting_target_flavour: 'hbb'
 
         # If you want to attach weights to the final files
         bool_attach_sample_weights: false
@@ -163,7 +163,7 @@ sampling:
         n_jets_to_plot: 20e6
 
         # # Specify the target distribution
-        # target_Mixribution: Hbb
+        # target_Mixribution: hbb
 
 
 ################################

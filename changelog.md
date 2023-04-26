@@ -1,6 +1,7 @@
 # Changelog
 
 ### Latest
+- Changed boosted tagging flavours to lowercase: (Hbb, Hcc, QCD) changed to (hbb, hcc, qcd) [!727](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/727)
 
 - Setting coverage precision to two decimals [!726](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/726)
 
