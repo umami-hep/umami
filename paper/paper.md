@@ -8,67 +8,31 @@ tags:
   - flavour tagging
   - machine learning
 authors:
-  - name: Alexander Froch
-    orcid: 0000-0002-8259-2622
+  - name: Jackson Barr
+    orcid: 0000-0002-9752-9204 
     equal-contrib: true
-    affiliation: 1
-  - name: Manuel Guth
-    orcid: 0000-0002-6647-1433
-    equal-contrib: true
-    affiliation: 2
+    affiliation: 5
   - name: Joschka Birk
     orcid: 0000-0002-1931-0127
+    equal-contrib: true
+    affiliation: 1
+  - name: Maxence Draguet
+    equal-contrib: true
+    affiliation: 4
+  - name: Stefano Franchellucci
+    orcid: 0000-0003-0695-0798
+    equal-contrib: true
+    affiliation: 2
+  - name: Alexander Froch
+    orcid: 0000-0002-8259-2622
     equal-contrib: true
     affiliation: 1
   - name: Philipp Gadow
     orcid: 0000-0003-4475-6734
     equal-contrib: true
     affiliation: 3
-  - name: Maxence Draguet
-    equal-contrib: true
-    affiliation: 4
-  - name: Tomke Schröer
-    orcid: 0000-0001-7967-6385
-    equal-contrib: true
-    affiliation: 2
-  - name: Samuel Van Stroud
-    orcid: 0000-0002-7969-0301
-    equal-contrib: true
-    affiliation: 5
-  - name: Victor Hugo Ruelas Rivera
-    orcid: 0000-0002-2116-048X
-    equal-contrib: true
-    affiliation: 6
-  - name: Frederic Renner
-    orcid: 0000-0002-9475-3075
-    equal-contrib: true
-    affiliation: 3
-  - name: Jackson Barr
-    orcid: 0000-0002-9752-9204 
-    equal-contrib: true
-    affiliation: 5
-  - name: Janik Von Ahnen
-    orcid: 0000-0003-4032-0079
-    equal-contrib: true
-    affiliation: 3
-  - name: Stefano Franchellucci
-    orcid: 0000-0003-0695-0798
-    equal-contrib: true
-    affiliation: 2
-  - name: Sebastien Rettie
-    orcid: 0000-0002-7092-3893
-    equal-contrib: true
-    affiliation: 7
-  - name: Nikita Ivvan Pond
-    orcid: 0000-0002-5966-0332
-    equal-contrib: true
-    affiliation: 5
-  - name: Martino Tanasini
-    orcid: 0000-0002-6313-4175
-    equal-contrib: true
-    affiliation: 8
-  - name: Ivan Oleksiyuk
-    orcid: 0000-0002-4784-6340
+  - name: Manuel Guth
+    orcid: 0000-0002-6647-1433
     equal-contrib: true
     affiliation: 2
   - name: Osama Karkout
@@ -79,6 +43,45 @@ authors:
     orcid: 0009-0002-0070-5900
     equal-contrib: true
     affiliation: 10
+  - name: Ivan Oleksiyuk
+    orcid: 0000-0002-4784-6340
+    equal-contrib: true
+    affiliation: 2
+  - name: Nikita Ivvan Pond
+    orcid: 0000-0002-5966-0332
+    equal-contrib: true
+    affiliation: 5
+  - name: Frederic Renner
+    orcid: 0000-0002-9475-3075
+    equal-contrib: true
+    affiliation: 3
+  - name: Sebastien Rettie
+    orcid: 0000-0002-7092-3893
+    equal-contrib: true
+    affiliation: 7
+  - name: Victor Hugo Ruelas Rivera
+    orcid: 0000-0002-2116-048X
+    equal-contrib: true
+    affiliation: 6
+  - name: Tomke Schröer
+    orcid: 0000-0001-7967-6385
+    equal-contrib: true
+    affiliation: 2
+  - name: Samuel Van Stroud
+    orcid: 0000-0002-7969-0301
+    equal-contrib: true
+    affiliation: 5
+  - name: Janik Von Ahnen
+    orcid: 0000-0003-4032-0079
+    equal-contrib: true
+    affiliation: 3
+  - name: Martino Tanasini
+    orcid: 0000-0002-6313-4175
+    equal-contrib: true
+    affiliation: 8
+  
+  
+  
 affiliations:
  - name: Albert-Ludwigs-Universität Freiburg, Germany
    index: 1
@@ -182,58 +185,7 @@ While the software is customized for this application, it is not limited to it. 
 
 # Acknowledgements
 
-We acknowledge the support of 
-ANPCyT, Argentina; 
-YerPhI, Armenia; 
-ARC, Australia; 
-BMWFW and FWF, Austria; 
-ANAS, Azerbaijan; 
-CNPq and FAPESP, Brazil; 
-NSERC, NRC and CFI, Canada; 
-CERN; 
-ANID, Chile; 
-CAS, MOST and NSFC, China; 
-Minciencias, Colombia; 
-MEYS CR, Czech Republic; 
-DNRF and DNSRC, Denmark; 
-IN2P3-CNRS and CEA-DRF/IRFU, France; 
-SRNSFG, Georgia; 
-BMBF, HGF and MPG, Germany; 
-GSRI, Greece; 
-RGC and Hong Kong SAR, China; 
-ISF and Benoziyo Center, Israel; 
-INFN, Italy; 
-MEXT and JSPS, Japan; 
-CNRST, Morocco; 
-NWO, Netherlands; 
-RCN, Norway; 
-MEiN, Poland; 
-FCT, Portugal; 
-MNE/IFA, Romania; 
-MESTD, Serbia; 
-MSSR, Slovakia; 
-ARRS and MIZ\v{S}, Slovenia; 
-DSI/NRF, South Africa; 
-MICINN, Spain; 
-SRC and Wallenberg Foundation, Sweden; 
-SERI, SNSF and Cantons of Bern and Geneva, Switzerland; 
-MOST, Taiwan; 
-TENMAK, T\"urkiye; 
-STFC, United Kingdom; 
-DOE and NSF, United States of America. 
-In addition, individual groups and members have received support from 
-BCKDF, CANARIE, Compute Canada and CRC, Canada; 
-PRIMUS 21/SCI/017 and UNCE SCI/013, Czech Republic; 
-COST, ERC, ERDF, Horizon 2020 and Marie Sk{\l}odowska-Curie Actions, European Union; 
-Investissements d'Avenir Labex, Investissements d'Avenir Idex and ANR, France; 
-DFG and AvH Foundation, Germany; 
-Herakleitos, Thales and Aristeia programmes co-financed by EU-ESF and the Greek NSRF, Greece; 
-BSF-NSF and MINERVA, Israel; 
-Norwegian Financial Mechanism 2014-2021, Norway; 
-NCN and NAWA, Poland; 
-La Caixa Banking Foundation, CERCA Programme Generalitat de Catalunya and PROMETEO and GenT Programmes Generalitat Valenciana, Spain; 
-G\"{o}ran Gustafssons Stiftelse, Sweden; 
-The Royal Society and Leverhulme Trust, United Kingdom.
+This work was done as part of the offline software research and development programme of the ATLAS Collaboration, and we thank the collaboration for its support and cooperation.
 
 
 # References
