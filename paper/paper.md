@@ -112,19 +112,19 @@ bibliography: paper.bib
 
 Flavour-tagging, the identification of jets originating from bottom and charm quarks, is a critically important technique in the data analysis of the ATLAS experiment [@ATLAS:2008] at the Large Hadron Collider [@Evans:2008]. It is applied in precision measurements of the Standard Model and the Higgs boson, as well as in searches for yet unknown phenomena.
 The long lifetime, high mass, and large decay multiplicity of hadrons containing bottom and charm quarks provide distinct signatures of charged particle trajectories in the detector which can be exploited by machine learning algorithms.
-The excellent knowledge of the detector and the physics processes at hand enables simulations to provide high-quality training data for algorithms.
+Excellent knowledge of the detector and the physics processes at hand enables simulations to provide high-quality training data for algorithms.
 The `Umami` software toolkit provides a unified data pipeline, definition of the algorithms, training and performance evaluation with a high degree of automation.
 
 # Statement of need
 
 `Umami` is a Python [@Rossum:2009] toolkit for training and evaluating machine learning algorithms used in high-energy-physics jet flavour tagging.
-The creation and training of production-grade machine learning models is supported by the `TensorFlow` [@tensorflow:2015] and `keras` [@chollet:2015] packages for Python. The training datasets feature highly imbalanced distributions among the target classes and input features of vastly different magnitude. Consequentially, the preprocessing of the training data requires resampling to provide balanced datasets and normalisation of the input features by scaling and shifting.
+The creation and training of production-grade machine learning models is supported by the `TensorFlow` [@tensorflow:2015] and `keras` [@chollet:2015] packages for Python. The training datasets feature highly imbalanced distributions among the target classes and input features of vastly different magnitude. Consequentially, the preprocessing of the training data requires resampling to provide balanced datasets and transformation of the input features by scaling and shifting.
 
 `Umami` provides a class-based and user-friendly interface with `yaml` configuration files to steer the data preprocessing and the training of deep neural networks. It is deployed as a Python module which can be installed with `setuptools` or used via Docker images [@Merkel:2014]. `Umami` was designed to be used by researchers in the ATLAS collaboration and is open to be applied in more general context.
 
 # Related work
 
-The application of machine learning in high energy physics, particularly for the classification of jets, is a common and critically important technique [@Guest:2018; @Cagnotta:2022]. In contrast to previous efforts in jet flavour tagging [@Bols:2020; @ATLAS:2019], the current state-of-the-art algorithms [@Qu:2022] rely on specialised toolkits, such as the `Weaver` framework [@Qu:2020]. These toolkits enable the design of algorithms by taking care of input processing, steering the training on large datasets and providing performance metrics with fast inference.
+The application of machine learning in high energy physics, particularly for the classification of jets, is a common and critically important technique [@Guest:2018; @Cagnotta:2022]. In contrast to previous efforts in jet flavour tagging [@Bols:2020; @ATLAS:2019], the current state-of-the-art algorithms [@Qu:2022] rely on specialised toolkits, such as the `Weaver` framework [@Qu:2020]. These toolkits enable the design of algorithms by taking care of input processing, steering the training on large datasets and providing performance metrics as well as fast inference by exporting the trained models to `ONNX`.
 
 # Development Notes
 
@@ -138,21 +138,21 @@ The `Umami` toolkit provides an integrated workflow including input data preproc
 
 ## Preprocessing
 
-The algorithms are trained on simulated physics processes which provide jets originating from bottom and charm quarks, as well as the background processes which produce jets originating from other sources. Several datasets with different physics processes can be combined to a hybrid sample, which is populated over a large momentum range.
+The algorithms are trained on simulated physics processes which provide jets originating from bottom and charm quarks, as well as the background processes which produce jets originating from other sources. Several datasets with different physics processes can be combined to a hybrid sample, which is populated over a large jet momentum range.
 The classes in the input dataset are highly imbalanced. Consequentially, `Umami` provides under- and oversampling methods as well as a weighting method to ensure similar kinematic distributions for the jets of different target classes.
-The range of values of the input features on which the algorithm is trained can differ considerably. Consequentially, `Umami` normalises the range of the variables used in training and creates a `json` file with scaling and shifting parameters.
-The resulting training data has balanced target classes and normalised input features. It can be stored in either as an `hdf5` file [@hdf5:2023] or in the binary `TFRecords` format to improve reading speed provided by `TensorFlow`.
+The range of values of the input features on which the algorithm is trained can differ considerably. Consequentially, `Umami` transforms the range of the variables used in training and creates a `json` file with scaling and shifting parameters.
+The resulting training data has balanced target classes and transformed input features. It can be stored either as an `hdf5` file [@hdf5:2023] or in the binary `TFRecords` format to improve reading speed provided by `TensorFlow`.
 The steps involved in the preprocessing workflow are illustrated in \autoref{fig:preprocessing}.
-First, datasets which are pure in the target classes are extracted from the simulated physics processes in the "Preparation" step. Then, the training datasets are resampled in the "Resampling" step and the input features are scaled and shifted to ensure normalised distributions in the "Scaling/Shifting" step. Finally, the training sample is written to disk, together with the "Scale Dict" and datasets for validation and performance evaluation.
+First, datasets which are pure in the target classes are extracted from the simulated physics processes in the "Preparation" step. Then, the training datasets are resampled in the "Resampling" step and the input features are scaled and shifted to ensure normalised distributions in the "Scaling/Shifting" step. Finally, the training sample is written to disk, together with the "Scale Dict" and datasets for validation and performance evaluation. The validation and testing samples can undergo the same resampling procedure as the training data if desired by the user.
 
-![Illustration of the preprocessing workflow in `Umami`.\label{fig:preprocessing}](preprocessing.png){ width=60% }
+![Illustration of the preprocessing workflow in `Umami`. The validation/testing samples can also undergo the same resampling as the training sample (not shown).\label{fig:preprocessing}](preprocessing.png){ width=60% }
 
 ## Training
 
 Different architectures of neural networks, including Deep Multi-Layer-Perceptrons [@LeCun:2015] and Deep Sets [@Zaheer:2017], are supported in `Umami` for definition with configuration files.
-The training is performed with `TensorFlow` using the `keras` back-end and the Adam optimizer [@Kingma:2015], supporting the use of GPU resources to drastically shorten the time to train the networks.
+The training is performed with `keras` using the `TensorFlow` back-end and the Adam optimizer [@Kingma:2015], supporting the use of GPU resources to drastically shorten the time to train the networks.
 Parameters defined in the configuration file include the batch size, the number of epochs, as well as the learning rate.
-The resulting model from each epoch during the training is saved. These models are evaluated on a validation dataset to identify the optimal configuration. Typical performance metrics include the validation loss and the efficiency in identifying the correct jet labels. These can be plotted as a function of the training epoch to select the epoch which corresponds to the optimal performance of the trained model.
+The resulting model from each epoch during the training is saved. These models are evaluated on a validation dataset to identify the network weights corresponding to the epoch with the best performance. Typical performance metrics include the validation loss and the efficiency in identifying the correct jet labels. These can be plotted as a function of the training epoch to guide the selection.
 The steps involved in the training workflow are illustrated in \autoref{fig:training}. After the "Training" step, the optimal model configuration is chosen in the "Validation" step by evaluating the trained model with the "Scale Dict" on a validation sample.
 
 ![Illustration of the training workflow in `Umami`.\label{fig:training}](training.png){ width=60% }
@@ -167,8 +167,7 @@ Typical performance plots include
 - receiver-operator-characteristics (ROC),
 - efficiency of the signal class and rejection of background classes as functions of certain variables,
 - confusion matrices (indicating percentage of correct or wrong classification),
-- saliency plots (indicating impact of input features to final discriminant),
-- intepretability plots based on SHAPley [@NIPS:2017] to evaluate the impact of input features to the discrimination between the classes.
+- interpretability plots based on SHAPley [@NIPS:2017] to evaluate the impact of input features to the discrimination between the classes, as well as saliency plots indicating impact of input features to final discriminant
 
 Furthermore, all input features can be plotted with a single command, based on a `yaml` configuration file.
 The steps involved in the evaluation stage are illustrated in \autoref{fig:evaluation}. The inference is carried out by running the chosen model on test samples. The evaluation results are rendered in a suite of performance plots.
