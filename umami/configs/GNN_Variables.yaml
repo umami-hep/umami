@@ -32,8 +32,6 @@ train_variables:
     - numberOfPixelSharedHits
     - numberOfPixelSplitHits
     - numberOfSCTSharedHits
-    - numberOfPixelHoles
-    - numberOfSCTHoles
     #- leptonID
 
 track_train_variables:
