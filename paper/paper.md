@@ -117,10 +117,10 @@ The `Umami` software toolkit provides a unified data pipeline, definition of the
 
 # Statement of need
 
-`Umami` is a Python [@Rossum:2009] toolkit for training and evaluating machine learning algorithms used in high-energy-physics jet flavour tagging.
+`Umami` is a Python [@Rossum:2009] toolkit for training and evaluating machine learning algorithms used in high energy physics for jet flavour tagging.
 The creation and training of production-grade machine learning models is supported by the `TensorFlow` [@tensorflow:2015] and `keras` [@chollet:2015] packages for Python. The training datasets feature highly imbalanced distributions among the target classes and input features of vastly different magnitude. Consequentially, the preprocessing of the training data requires resampling to provide balanced datasets and transformation of the input features by scaling and shifting.
 
-`Umami` provides a class-based and user-friendly interface with `yaml` configuration files to steer the data preprocessing and the training of deep neural networks. It is deployed as a Python module which can be installed with `setuptools` or used via Docker images [@Merkel:2014]. `Umami` was designed to be used by researchers in the ATLAS collaboration and is open to be applied in more general context.
+`Umami` provides a class-based and user-friendly interface with `yaml` [@YAML:2021] configuration files to steer the data preprocessing and the training of deep neural networks. It is deployed as a Python module which can be installed with `setuptools` [@setuptools:2023] or used via Docker images [@Merkel:2014]. `Umami` was designed to be used by researchers in the ATLAS collaboration and is open to be applied in a more general context.
 
 # Related work
 
@@ -128,8 +128,8 @@ The application of machine learning in high energy physics, particularly for the
 
 # Development Notes
 
-The development of the package is based on PEP8 standards. They are enforced by a continuous integration pipeline in a GitLab project, using the `flake8` linter and the `black` command-line tool for code formatting. The code quality is tested as part of the continuous integration pipeline with the `pytest` module, using unit tests and integration tests.
-Documentation of the software is built automatically with the `mkdocs` and `sphinx` modules and deployed to a website.
+The development of the package is adheres to PEP8 standards [@PEP8:2001]. They are enforced by a continuous integration pipeline in a GitLab project, using the `flake8` linter [@flake8:2023] and the `black` command-line tool for code formatting [@black:2023]. The code quality is tested as part of the continuous integration pipeline with the `pytest` module [@pytest:2004], using unit tests and integration tests.
+Documentation of the software is built automatically with the `mkdocs` [@mkdocs:2023] and `sphinx` [@sphinx:2023] modules and deployed to the website [`https://umami.docs.cern.ch`](https://umami.docs.cern.ch).
 The `Umami` toolkit has been released as open-source software under the Apache v2 license. 
 
 # Software description
@@ -138,21 +138,20 @@ The `Umami` toolkit provides an integrated workflow including input data preproc
 
 ## Preprocessing
 
-The algorithms are trained on simulated physics processes which provide jets originating from bottom and charm quarks, as well as the background processes which produce jets originating from other sources. Several datasets with different physics processes can be combined to a hybrid sample, which is populated over a large jet momentum range.
+The algorithms are trained on simulated physics processes which provide jets originating from bottom and charm quarks, as well as the background processes which produce jets originating from other sources, such as light-flavour quarks, gluons, or hadronically decaying tau leptons. Several datasets with different physics processes can be combined to a hybrid sample, which is populated over a large jet momentum range.
 The classes in the input dataset are highly imbalanced. Consequentially, `Umami` provides under- and oversampling methods as well as a weighting method to ensure similar kinematic distributions for the jets of different target classes.
 The range of values of the input features on which the algorithm is trained can differ considerably. Consequentially, `Umami` transforms the range of the variables used in training and creates a `json` file with scaling and shifting parameters.
 The resulting training data has balanced target classes and transformed input features. It can be stored either as an `hdf5` file [@hdf5:2023] or in the binary `TFRecords` format to improve reading speed provided by `TensorFlow`.
 The steps involved in the preprocessing workflow are illustrated in \autoref{fig:preprocessing}.
-First, datasets which are pure in the target classes are extracted from the simulated physics processes in the "Preparation" step. Then, the training datasets are resampled in the "Resampling" step and the input features are scaled and shifted to ensure normalised distributions in the "Scaling/Shifting" step. Finally, the training sample is written to disk, together with the "Scale Dict" and datasets for validation and performance evaluation. The validation and testing samples can undergo the same resampling procedure as the training data if desired by the user.
+First, datasets which are pure in the target classes are extracted from the simulated physics processes in the "Preparation" step. Then, the training datasets are resampled in the "Resampling" step and the input features are scaled and shifted in the "Scaling/Shifting" step. Finally, the training sample is written to disk, together with the "Scale Dict" and datasets for validation and performance evaluation. The validation and testing samples can undergo the same resampling procedure as the training data if desired by the user.
 
 ![Illustration of the preprocessing workflow in `Umami`. The validation/testing samples can also undergo the same resampling as the training sample (not shown).\label{fig:preprocessing}](preprocessing.png){ width=60% }
 
 ## Training
 
 Different architectures of neural networks, including Deep Multi-Layer-Perceptrons [@LeCun:2015] and Deep Sets [@Zaheer:2017], are supported in `Umami` for definition with configuration files.
-The training is performed with `keras` using the `TensorFlow` back-end and the Adam optimizer [@Kingma:2015], supporting the use of GPU resources to drastically shorten the time to train the networks.
-Parameters defined in the configuration file include the batch size, the number of epochs, as well as the learning rate.
-The resulting model from each epoch during the training is saved. These models are evaluated on a validation dataset to identify the network weights corresponding to the epoch with the best performance. Typical performance metrics include the validation loss and the efficiency in identifying the correct jet labels. These can be plotted as a function of the training epoch to guide the selection.
+The training is performed with `keras` using the `TensorFlow` back-end and the Adam optimiser [@Kingma:2015], supporting the use of GPU resources to shorten the required time to train the networks by an order of magnitude.
+The resulting model from each epoch (in which the whole dataset was processed by the algorithm) is saved during the training. These models are evaluated on a validation dataset to identify the network weights corresponding to the epoch with the best performance. Typical performance metrics include the validation loss and the efficiency in identifying the correct jet labels. These can be plotted as a function of the training epoch to guide the selection.
 The steps involved in the training workflow are illustrated in \autoref{fig:training}. After the "Training" step, the optimal model configuration is chosen in the "Validation" step by evaluating the trained model with the "Scale Dict" on a validation sample.
 
 ![Illustration of the training workflow in `Umami`.\label{fig:training}](training.png){ width=60% }
@@ -179,7 +178,7 @@ The steps involved in the evaluation stage are illustrated in \autoref{fig:evalu
 
 We present `Umami`, a Python toolkit designed for training machine learning algorithms for jet flavour tagging.
 The software is widely used within the ATLAS collaboration to design neural networks which classify jets originating from bottom quarks, charm quarks or other sources.
-While the software is customized for this application, it is not limited to it. It is straightforward to modify the expected input features and target classes, such that the general preprocessing and training capabilities can be used in wider contexts. The identification of charged particle tracks or classification of hadronically decaying tau leptons present relevant and adequate possible use-cases.
+While the software is customised for this application, it is not limited to it. It is straightforward to modify the expected input features and target classes, such that the general preprocessing and training capabilities can be used in wider contexts. The identification of charged particle tracks or classification of hadronically decaying tau leptons present relevant and adequate possible use-cases.
 
 
 # Acknowledgements
