@@ -6,7 +6,7 @@ After the ntuple production (training-dataset-dumper), the first step of the pre
 As already mentioned in the [overview](preprocessing/Overview.md), the preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
 
 ```yaml
-§§§examples/preprocessing/PFlow-Preprocessing.yaml:121:142§§§
+§§§examples/preprocessing/PFlow-Preprocessing.yaml:121:148§§§
 ```
 
 | Setting | Type | Explanation |
@@ -14,11 +14,15 @@ As already mentioned in the [overview](preprocessing/Overview.md), the preproces
 | `outfile_name` | `str` | Name of the output file of the preprocessing. The different steps will add append some info to this name to produce their output files (Like `_resampled`). |
 | `outfile_name_validation` | `str` | Name of the validation output file of the preprocessing. The different steps will add append some info to this name to produce their output files (Like `_resampled`). |
 | `plot_name` | `str` | Defines the names of the control plots which are produced in the preprocessing. |
-| `plot_sample_label` | `str` | Defines the label in the control plots which are made in the preprocessing. This is the text which is written under the "ATLAS". |
+| `plot_type` | `str` | Defines the filetype in which the preprocessing plots are saved. Default is "pdf" |
+| `use_atlas_tag` | `bool` | Define if you want to have the ATLAS Logo at the top left of the plot. |
+| `atlas_first_tag` | `str` | Define the text after the ATLAS Logo. By default "Simulation Internal". |
+| `atlas_second_tag` | `str` | Defines the label in the control plots which are made in the preprocessing. This is the text which is written under the "ATLAS". |
 | `legend_sample_category` | `bool` | Whether to include sample categories in the legends of plots before resampling. Set to False for Boosted tagging. |
 | `var_file` | `str` | Path to the variable dict which is used. Default configs can be found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tree/master/umami/configs) |
 | `dict_file` | `str` | Full path (with filename) to the scale dict. This must be a `.json` file! |
 
+For plot related variables, Umami supports here also all available options of [`PUMA`](https://github.com/umami-hep/puma/).
 The `var_dict` and `dict_file` options are normally set in the [`Preprocessing-parameters.yaml`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/preprocessing/Preprocessing-parameters.yaml) file. A snapshot of these two variables is shown here:
 
 ```yaml

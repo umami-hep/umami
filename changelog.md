@@ -1,6 +1,8 @@
 # Changelog
 
 ### Latest
+
+- Support PUMA variables in general preprocessing config for preprocessing plots [!731](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/731)
 - Removed pixel and SCT holes from GNN variables [!729]
 - Changed boosted tagging flavours to lowercase: (Hbb, Hcc, QCD) changed to (hbb, hcc, qcd) [!727](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/727)
 - Setting coverage precision to two decimals [!726](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/726)

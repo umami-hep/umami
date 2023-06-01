@@ -156,7 +156,6 @@ class TrainSampleWriter:
 
         # Open the file and load the jets
         with h5py.File(input_file, "r") as in_file:
-
             # Get the indices
             start_ind = 0
             tupled_indices = []
@@ -175,7 +174,6 @@ class TrainSampleWriter:
                 start_ind = end_ind
 
             for index_tuple in tupled_indices:
-
                 # Retrieve the slice of indices randomly selected from whole file
                 indices_selected = index[index_tuple[0] : index_tuple[1]]
 
@@ -249,7 +247,6 @@ class TrainSampleWriter:
 
                     # Loop over track selections
                     for tracks_name in self.tracks_names:
-
                         # Retrieving the dtypes of the variables to load
                         to_load_dtype = [
                             (n, as_full(x))
@@ -368,7 +365,6 @@ class TrainSampleWriter:
 
         weights_dict = None
         if self.sampling_options.bool_attach_sample_weights:
-
             if self.use_validation_samples:
                 file_name = (
                     self.config.parameters["sample_path"] + "/flavour_weights_training"
@@ -411,7 +407,6 @@ class TrainSampleWriter:
         logger.info("Using compression: %s", self.compression)
 
         with h5py.File(out_file, "w") as self.h5file:
-
             # Set up chunk counter and start looping
             chunk_counter = 0
             jet_idx = 0
@@ -452,10 +447,10 @@ class TrainSampleWriter:
                 if self.sampling_options.save_tracks is True
                 else None,
                 n_jets=self.sampling_options.n_jets_to_plot,
-                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
                 fileformat=self.config.general.plot_type,
+                **self.config.general.plot_options_as_dict(),
             )
 
     def calculate_weights(
@@ -634,7 +629,6 @@ class TrainSampleWriter:
 
         # for each track-like group
         for i, tracks_name in enumerate(self.tracks_names):
-
             trk_i = tracks[i]
 
             # create a group
@@ -665,7 +659,6 @@ class TrainSampleWriter:
             )
 
             if self.save_track_labels:
-
                 for label in self.track_label_variables.get(tracks_name, []):
                     track_group.create_dataset(
                         f"labels/{label}",
@@ -762,12 +755,11 @@ class TrainSampleWriter:
         self.jet_group["weight"][jet_idx:jet_idx_end] = weights
 
         if additional_jet_labels:
-            for (add_label, add_data) in additional_jet_labels.items():
+            for add_label, add_data in additional_jet_labels.items():
                 self.jet_group["add_labels"][add_label][jet_idx:jet_idx_end] = add_data
 
         # write tracks
         if self.save_tracks is True:
-
             # Loop over tracks selections
             for i, track_group in enumerate(self.track_groups):
                 track_i = tracks[i]

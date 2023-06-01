@@ -152,10 +152,10 @@ class Weighting(ResamplingTools):
                 self.resampling_variables[0]: 200,
                 self.resampling_variables[1]: 20,
             },
-            atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
             ylabel="Normalised number of jets",
             fileformat=self.config.general.plot_type,
+            **self.config.general.plot_options_as_dict(),
         )
 
         self.write_file(self.indices_to_keep)
@@ -179,8 +179,8 @@ class Weighting(ResamplingTools):
                 if self.options.save_tracks is True
                 else None,
                 n_jets=self.options.n_jets_to_plot,
-                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
                 fileformat=self.config.general.plot_type,
+                **self.config.general.plot_options_as_dict(),
             )
