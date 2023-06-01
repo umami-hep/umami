@@ -87,7 +87,9 @@ class Sample:
             (self.output_name, "output_name", [str, PosixPath], True),
         ]
 
-        # Check option definition
+        # Check option definition and define return dict
+        self.return_dict = {}
+
         for iter_var in needed_args:
             check_option_definition(
                 variable_to_check=iter_var[0],
@@ -95,6 +97,7 @@ class Sample:
                 needed_type=iter_var[2],
                 check_for_nan=iter_var[3],
             )
+            self.return_dict[iter_var[1]] = iter_var[0]
 
 
 @dataclass
@@ -105,6 +108,17 @@ class Sampling:
     method: str = None
     options: object = None
     use_validation_samples: bool = False
+
+    def as_dict(self):
+        """
+        Return the class attributes as dict
+
+        Returns
+        -------
+        dict
+            Class attributes as dict
+        """
+        return self.return_dict
 
     def __post_init__(self):
         """
@@ -121,7 +135,9 @@ class Sampling:
             (self.use_validation_samples, "use_validation_samples", bool, True),
         ]
 
-        # Check option definition
+        # Check option definition and define return dict
+        self.return_dict = {}
+
         for iter_var in needed_args:
             check_option_definition(
                 variable_to_check=iter_var[0],
@@ -129,6 +145,7 @@ class Sampling:
                 needed_type=iter_var[2],
                 check_for_nan=iter_var[3],
             )
+            self.return_dict[iter_var[1]] = iter_var[0]
 
 
 @dataclass
@@ -154,6 +171,17 @@ class SamplingOptions:
     bool_attach_sample_weights: bool = None
     n_jets_to_plot: int = None
     target_distribution: str = None
+
+    def as_dict(self):
+        """
+        Return the class attributes as dict
+
+        Returns
+        -------
+        dict
+            Class attributes as dict
+        """
+        return self.return_dict
 
     def __post_init__(self):
         """
@@ -201,7 +229,9 @@ class SamplingOptions:
             (self.target_distribution, "target_distribution", str, False),
         ]
 
-        # Check option definition
+        # Check option definition and define return dict
+        self.return_dict = {}
+
         for iter_var in needed_args:
             check_option_definition(
                 variable_to_check=iter_var[0],
@@ -209,6 +239,7 @@ class SamplingOptions:
                 needed_type=iter_var[2],
                 check_for_nan=iter_var[3],
             )
+            self.return_dict[iter_var[1]] = iter_var[0]
 
         # Check that tracks_name is correctly defined if save tracks is true
         if self.save_tracks and self.tracks_names is None:
@@ -226,7 +257,10 @@ class GeneralSettings:
     outfile_name_validation: str = None
     plot_name: str = None
     plot_type: str = "pdf"
-    plot_sample_label: str = None
+    apply_atlas_style: bool = True
+    use_atlas_tag: bool = True
+    atlas_first_tag: str = "Simulation Internal"
+    atlas_second_tag: str = None
     legend_sample_category: bool = True
     var_file: str = None
     dict_file: str = None
@@ -234,6 +268,29 @@ class GeneralSettings:
     precision: str = None
     concat_jet_tracks: bool = False
     convert_to_tfrecord: dict = None
+
+    def as_dict(self):
+        """
+        Return the class attributes as dict
+
+        Returns
+        -------
+        dict
+            Class attributes as dict
+        """
+        return self.return_dict
+
+    def plot_options_as_dict(self):
+        """
+        Return the plotting related class attributes as dict. These
+        values are the ones which can be passed to PUMA.
+
+        Returns
+        -------
+        dict
+            Plotting related class attributes
+        """
+        return self.plot_options_dict
 
     def __post_init__(self):
         """
@@ -254,7 +311,10 @@ class GeneralSettings:
             (self.outfile_name_validation, "outfile_name_validation", str, False),
             (self.plot_name, "plot_name", str, True),
             (self.plot_type, "plot_type", str, True),
-            (self.plot_sample_label, "plot_sample_label", str, False),
+            (self.apply_atlas_style, "apply_atlas_style", bool, True),
+            (self.use_atlas_tag, "use_atlas_tag", bool, True),
+            (self.atlas_first_tag, "atlas_first_tag", str, False),
+            (self.atlas_second_tag, "atlas_second_tag", str, False),
             (self.legend_sample_category, "legend_sample_category", bool, True),
             (self.var_file, "var_file", str, True),
             (self.dict_file, "dict_file", str, True),
@@ -264,7 +324,11 @@ class GeneralSettings:
             (self.convert_to_tfrecord, "convert_to_tfrecord", dict, False),
         ]
 
-        # Check option definition
+        # Check option definition and define return dict
+        self.return_dict = {}
+        self.plot_options_dict = {}
+
+        # Loop over list
         for iter_var in needed_args:
             check_option_definition(
                 variable_to_check=iter_var[0],
@@ -272,6 +336,22 @@ class GeneralSettings:
                 needed_type=iter_var[2],
                 check_for_nan=iter_var[3],
             )
+            self.return_dict[iter_var[1]] = iter_var[0]
+
+            if iter_var[1] not in [
+                "outfile_name",
+                "outfile_name_validation",
+                "plot_name",
+                "plot_type",
+                "legend_sample_category",
+                "var_file",
+                "dict_file",
+                "compression",
+                "precision",
+                "concat_jet_tracks",
+                "convert_to_tfrecord",
+            ]:
+                self.plot_options_dict[iter_var[1]] = iter_var[0]
 
         # Check that .h5 files have the h5 in the name
         for varname, var, needed_extension in zip(
@@ -284,7 +364,6 @@ class GeneralSettings:
             ],
             [".h5", ".h5", ".yaml", ".json"],
         ):
-
             # Skip variable if its None
             if not var:
                 continue
@@ -606,7 +685,7 @@ class PreprocessConfiguration(Configuration):
             if self.config["parameters"]["file_path"] == ".":
                 return
             # get output directory of this preprocessing job and go up one level
-            out_dir = Path(self.config["parameters"]["file_path"]).parent
+            out_dir = Path(self.config["parameters"]["file_path"])
         else:
             out_dir = Path(out_dir)
         # make output directory

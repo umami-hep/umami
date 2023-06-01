@@ -89,3 +89,104 @@ class PreprocessConfigurationTestCase(unittest.TestCase):
         config = PreprocessConfiguration(self.config_file)
         out_file = config.get_file_name()
         self.assertEqual(config.general.outfile_name, out_file)
+
+    def test_sampling_class_as_dict(self):
+        """Test return of all class attributes as dict."""
+        config = PreprocessConfiguration(self.config_file)
+        out_dict = config.sampling.as_dict()
+
+        # Define reference dict
+        ref_dict = {
+            "class_labels": ["bjets", "cjets", "ujets"],
+            "method": "count",
+            "use_validation_samples": False,
+        }
+
+        # Check the ref with output
+        self.assertEqual(out_dict, ref_dict)
+
+    def test_sampling_options_class_as_dict(self):
+        """Test return of all class attributes as dict."""
+        config = PreprocessConfiguration(self.config_file)
+        out_dict = config.sampling.options.as_dict()
+
+        # Define reference dict
+        ref_dict = {
+            "sampling_variables": [
+                {"pt_btagJes": {"bins": [[0, 600000, 351], [650000, 6000000, 84]]}},
+                {"absEta_btagJes": {"bins": [0, 2.5, 10]}},
+            ],
+            "samples": {
+                "ttbar": [
+                    "validation_ttbar_bjets",
+                    "validation_ttbar_cjets",
+                    "validation_ttbar_ujets",
+                ],
+                "zprime": [
+                    "validation_zprime_bjets",
+                    "validation_zprime_cjets",
+                    "validation_zprime_ujets",
+                ],
+            },
+            "custom_n_jets_initial": None,
+            "fractions": {"ttbar": 0.65, "zprime": 0.35},
+            "max_upsampling_ratio": None,
+            "n_jets": 5500000.0,
+            "n_jets_validation": None,
+            "n_jets_scaling": None,
+            "save_tracks": True,
+            "tracks_names": ["tracks"],
+            "save_track_labels": False,
+            "intermediate_index_file": "indices.h5",
+            "intermediate_index_file_validation": None,
+            "weighting_target_flavour": None,
+            "bool_attach_sample_weights": None,
+            "n_jets_to_plot": None,
+            "target_distribution": None,
+        }
+
+        # Check the ref with output
+        self.assertEqual(out_dict, ref_dict)
+
+    def test_general_settings_class_as_dict(self):
+        """Test return of all class attributes as dict."""
+        config = PreprocessConfiguration(self.config_file)
+        out_dict = config.general.as_dict()
+
+        # Define reference dict
+        ref_dict = {
+            "outfile_name": "dummy_out.h5",
+            "outfile_name_validation": None,
+            "plot_name": "dummy_plot",
+            "plot_type": "pdf",
+            "apply_atlas_style": True,
+            "use_atlas_tag": True,
+            "atlas_first_tag": "Simulation Internal",
+            "atlas_second_tag": None,
+            "legend_sample_category": True,
+            "var_file": "fixtures/dummy_var_file.yaml",
+            "dict_file": "test.json",
+            "compression": None,
+            "precision": "float32",
+            "concat_jet_tracks": False,
+            "convert_to_tfrecord": {"chunk_size": 5000},
+        }
+
+        # Check the ref with output
+        self.assertEqual(out_dict, ref_dict)
+
+    def test_genera_settings_class_plot_options_as_dict(self):
+        """Test return of all class attributes as dict."""
+        config = PreprocessConfiguration(self.config_file)
+        out_dict = config.general.plot_options_as_dict()
+
+        # Define reference dict
+        ref_dict = {
+            "apply_atlas_style": True,
+            "use_atlas_tag": True,
+            "atlas_first_tag": "Simulation Internal",
+            "atlas_second_tag": None,
+        }
+
+        # Check the ref with output
+        self.assertEqual(out_dict, ref_dict)
