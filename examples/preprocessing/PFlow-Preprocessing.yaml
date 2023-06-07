@@ -126,11 +126,17 @@ outfile_name_validation: *outfile_name_validation
 # Name of the plot
 plot_name: PFlow_ext-hybrid
 
-# Define the plot type (like pdf or png) for the plots created
+# Define the plot type (like pdf or png) for the preprocessing plots created
 plot_type: "pdf"
 
-# Label for the distribution plots of the resampling
-plot_sample_label: "$\\sqrt{s}=13$ TeV, PFlow jets"
+# Define, if you want to use the ATLAS Logo
+use_atlas_tag: True
+
+# Define, what's the text behind the ATLAS Logo
+atlas_first_tag: "Simulation Internal"
+
+# Label under the ATLAS logo on the preprocessing plots
+atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets"
 
 # include sample categories in the plots legends before resampling
 legend_sample_category: True

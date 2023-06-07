@@ -119,10 +119,10 @@ class SimpleSamplingBase(ResamplingTools, abc.ABC):
                 self.resampling_variables[0]: 200,
                 self.resampling_variables[1]: 20,
             },
-            atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
             ylabel="Normalised number of jets",
             fileformat=self.config.general.plot_type,
+            **self.config.general.plot_options_as_dict(),
         )
 
         # Resample the files and write them to disk
@@ -147,10 +147,10 @@ class SimpleSamplingBase(ResamplingTools, abc.ABC):
                 if self.options.save_tracks is True
                 else None,
                 n_jets=self.options.n_jets_to_plot,
-                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
                 fileformat=self.config.general.plot_type,
+                **self.config.general.plot_options_as_dict(),
             )
 
 
@@ -308,10 +308,10 @@ class UnderSampling(SimpleSamplingBase):
                 self.resampling_variables[0]: 200,
                 self.resampling_variables[1]: 20,
             },
-            atlas_second_tag=self.config.general.plot_sample_label,
             logy=True,
             ylabel="Normalised number of jets",
             fileformat=self.config.general.plot_type,
+            **self.config.general.plot_options_as_dict(),
         )
 
         # Resample the files and write them to disk
@@ -336,8 +336,8 @@ class UnderSampling(SimpleSamplingBase):
                 if self.options.save_tracks is True
                 else None,
                 n_jets=self.options.n_jets_to_plot,
-                atlas_second_tag=self.config.general.plot_sample_label,
                 logy=True,
                 ylabel="Normalised number of jets",
                 fileformat=self.config.general.plot_type,
+                **self.config.general.plot_options_as_dict(),
             )
