@@ -139,19 +139,32 @@ The `Umami` toolkit provides an integrated workflow including input data preproc
 
 ## Preprocessing
 
-The algorithms are trained on simulated physics processes which provide jets originating from bottom and charm quarks, as well as the background processes which produce jets originating from other sources, such as light-flavour quarks, gluons, or hadronically decaying tau leptons. Several datasets with different physics processes can be combined to a hybrid sample, which is populated over a large jet momentum range.
-Typically, the three classes "b-jets" (originating from bottom quark), "c-jets" (originating from charm quark), and "light-flavour jets" (originating from gluon and light-flavour quarks) are considered.
-The classes in the input dataset are highly imbalanced because the physics processes will predominantly produce light-flavoured jets instead of b-jets or c-jets. Consequentially, `Umami` provides under- and oversampling methods as well as a weighting method to ensure similar kinematic distributions for the jets of different target classes.
-The range of values of the input features on which the algorithm is trained can differ considerably. Consequentially, `Umami` transforms the range of the variables used in training and creates a `json` file with scaling and shifting parameters.
-The resulting training data has balanced target classes and transformed input features. It can be stored either as an `hdf5` file [@hdf5:2023] or in the binary `TFRecords` format to improve reading speed provided by `TensorFlow`.
+The algorithms are trained on simulated physics processes which provide jets originating from bottom and charm quarks, as well as the background processes which produce jets originating from other sources, such as light-flavour quarks, gluons, or hadronically decaying tau leptons. The input features to the algorithm provide discrimination between the processes. The preprocessing in `Umami` addresses several challenges provided both by the nature of the training datasets and the input features.
+
 The steps involved in the preprocessing workflow are illustrated in \autoref{fig:preprocessing}.
-First, datasets which are pure in the target classes are extracted from the simulated physics processes in the "Preparation" step. Then, the training datasets are resampled in the "Resampling" step and the input features are scaled and shifted in the "Scaling/Shifting" step. Finally, the training sample is written to disk, together with the "Scale Dict" and datasets for validation and performance evaluation. The validation and testing samples can undergo the same resampling procedure as the training data if desired by the user.
 
-![Illustration of the preprocessing workflow in `Umami`. The validation/testing samples can also undergo the same resampling as the training sample (not shown).\label{fig:preprocessing}](preprocessing.png){ width=60% }
+![Illustration of the preprocessing workflow in `Umami`. Input files with simulated physics processes undergo several stages to provide a training sample, as well as a scale dict and validation/testing samples. These stages include a Preparation stage to define the target classes for the training, a Resampling stage to balance the classes, a Scaling/Shifting stage to transform the range of variables used for training, and a Writing stage to output the resulting samples. The validation/testing samples can also undergo the same resampling as the training sample (not shown).\label{fig:preprocessing}](preprocessing.png){ width=60% }
 
-Using `Umami` is not limited to jet flavour tagging but provides support for a broad range of applications. The preprocessing capabilities are demonstrated with simulated physics processes from the JetClass dataset [@JetClass:2022] to distinguish jets originating from Higgs boson decays from jets originating from top quark decays. \autoref{fig:mass} shows the invariant mass of the jets from Higgs boson decays to b-quarks (Hbb-jets), Higgs boson decays to c-quarks (Hcc-jets), and to top quarks (Top-jets) before and after pre-processing.
+Typically, the three classes "b-jets" (originating from bottom quark), "c-jets" (originating from charm quark), and "light-flavour jets" (originating from gluon and light-flavour quarks) are considered. Several datasets with different physics processes can be combined to a hybrid sample, which is populated over a large jet momentum range.
+The classes in the input dataset are highly imbalanced because the physics processes will predominantly produce light-flavoured jets instead of b-jets or c-jets. Consequentially, `Umami` provides under- and oversampling methods as well as a weighting method to ensure similar kinematic distributions for the jets of different target classes.
 
-![Distributions of the invariant mass jets from Higgs boson decays to b-quarks (Hbb-jets), Higgs boson decays to c-quarks (Hcc-jets), and to top quarks (Top-jets) before and after pre-processing.\label{fig:mass}](mass.pdf){ width=90% }
+In the first step "Preparation", datasets which are pure in the target classes are extracted from the simulated physics processes. Then, the training datasets are resampled in the "Resampling" step to provide balanced distributions between classes.
+
+The range of values of the input features on which the algorithm is trained can differ considerably. Consequentially, `Umami` transforms the range of the variables used in training and creates a `json` file with scaling and shifting parameters.
+The input features are scaled and shifted in the "Scaling/Shifting" step.
+The resulting training data has balanced target classes and transformed input features. 
+Finally, the training sample is written to disk, together with the "Scale Dict" and datasets for validation and performance evaluation. The resulting datasets can be stored either as an `hdf5` file [@hdf5:2023] or in the binary `TFRecords` format to improve reading speed provided by `TensorFlow`.
+The validation and testing samples can undergo the same resampling procedure as the training data if desired by the user.
+
+Using `Umami` is not limited to jet flavour tagging but provides support for a broad range of applications. The preprocessing capabilities are demonstrated with simulated physics processes from the JetClass dataset [@JetClass:2022] to distinguish jets originating from Higgs boson decays from jets originating from top quark decays. 
+
+\autoref{fig:eta} shows the pseudorapidity $\eta$ and its absolute value $|\eta|$ of the jets from Higgs boson decays to b-quarks (Hbb-jets), Higgs boson decays to c-quarks (Hcc-jets), and to top quarks (Top-jets) before and after the re-sampling step in the preprocessing.
+
+![Distributions of the pseudorapidity $\eta$ of jets from Higgs boson decays to b-quarks (Hbb-jets), Higgs boson decays to c-quarks (Hcc-jets), and to top quarks (Top-jets) before and after resampling.\label{fig:eta}](eta.png){ width=90% }
+
+Similarly, \autoref{fig:mass} shows the invariant mass before and after pre-processing, including the transformation of the dimensional quantity to a smaller range centered around zero.
+
+![Distributions of the invariant mass jets from Higgs boson decays to b-quarks (Hbb-jets), Higgs boson decays to c-quarks (Hcc-jets), and to top quarks (Top-jets) before and after pre-processing.\label{fig:mass}](mass.png){ width=90% }
 
 
 ## Training
@@ -159,9 +172,9 @@ Using `Umami` is not limited to jet flavour tagging but provides support for a b
 Different architectures of neural networks, including Deep Multi-Layer-Perceptrons [@LeCun:2015] and Deep Sets [@Zaheer:2017], are supported in `Umami` for definition with configuration files.
 The training is performed with `keras` using the `TensorFlow` back-end and the Adam optimiser [@Kingma:2015], supporting the use of GPU resources to shorten the required time to train the networks by an order of magnitude.
 The resulting model from each epoch (in which the whole dataset was processed by the algorithm) is saved during the training. These models are evaluated on a validation dataset to identify the network weights corresponding to the epoch with the best performance. Typical performance metrics include the validation loss and the efficiency in identifying the correct jet labels. These can be plotted as a function of the training epoch to guide the selection.
-The steps involved in the training workflow are illustrated in \autoref{fig:training}. After the "Training" step, the optimal model configuration is chosen in the "Validation" step by evaluating the trained model with the "Scale Dict" on a validation sample.
+The steps involved in the training workflow are illustrated in \autoref{fig:training}. After the "Training" step, the optimal model configuration is chosen in the "Validation" step by evaluating the trained model with the "Scale Dict" on the validation sample which was prepared in the preprocessing.
 
-![Illustration of the training workflow in `Umami`.\label{fig:training}](training.png){ width=60% }
+![Illustration of the training workflow in `Umami`. The training sample is processed to determine the optimal weights of the network with a given loss function. Using the validation sample and the Scale Dict obtained from the preprocessing, the performance of the training is validated to chose a certain model.\label{fig:training}](training.png){ width=60% }
 
 
 ## Performance evaluation
@@ -178,13 +191,12 @@ Typical performance plots include
 Furthermore, all input features can be plotted with a single command, based on a `yaml` configuration file.
 The steps involved in the evaluation stage are illustrated in \autoref{fig:evaluation}. The inference is carried out by running the chosen model on test samples. The evaluation results are rendered in a suite of performance plots.
 
-![Illustration of the evaluation workflow in `Umami`.\label{fig:evaluation}](evaluation.png){ width=60% }
+![Illustration of the evaluation workflow in `Umami`. The chosen model after training is evaluated on the testing sample using the Scale Dict obtained from the preprocessing. The results of the evaluation can be plotted.\label{fig:evaluation}](evaluation.png){ width=60% }
 
 
 # Conclusions and future work
 
-We present `Umami`, a Python toolkit designed for training machine learning algorithms for jet flavour tagging.
-The software is widely used within the ATLAS collaboration to design neural networks which classify jets originating from bottom quarks, charm quarks or other sources.
+We present `Umami`, a Python toolkit designed for training machine learning algorithms for jet flavour tagging. Its strong point is that it unifies the steps for preprocessing of the training samples, the training and validation of the resulting models in a mostly automated and user-friendly way. The software is widely used within the ATLAS collaboration to design neural networks which classify jets originating from bottom quarks, charm quarks or other sources.
 While the software is customised for this application, it is not limited to it. It is straightforward to modify the expected input features and target classes, such that the general preprocessing and training capabilities can be used in wider contexts. The identification of charged particle tracks or classification of hadronically decaying tau leptons present relevant and adequate possible use-cases.
 
 
