@@ -171,10 +171,20 @@ Similarly, \autoref{fig:mass} shows the invariant mass before and after pre-proc
 
 Different architectures of neural networks, including Deep Multi-Layer-Perceptrons [@LeCun:2015] and Deep Sets [@Zaheer:2017], are supported in `Umami` for definition with configuration files.
 The training is performed with `keras` using the `TensorFlow` back-end and the Adam optimiser [@Kingma:2015], supporting the use of GPU resources to shorten the required time to train the networks by an order of magnitude.
-The resulting model from each epoch (in which the whole dataset was processed by the algorithm) is saved during the training. These models are evaluated on a validation dataset to identify the network weights corresponding to the epoch with the best performance. Typical performance metrics include the validation loss and the efficiency in identifying the correct jet labels. These can be plotted as a function of the training epoch to guide the selection.
+
 The steps involved in the training workflow are illustrated in \autoref{fig:training}. After the "Training" step, the optimal model configuration is chosen in the "Validation" step by evaluating the trained model with the "Scale Dict" on the validation sample which was prepared in the preprocessing.
 
 ![Illustration of the training workflow in `Umami`. The training sample is processed to determine the optimal weights of the network with a given loss function. Using the validation sample and the Scale Dict obtained from the preprocessing, the performance of the training is validated to chose a certain model.\label{fig:training}](training.png){ width=60% }
+
+The resulting model from each epoch (in which the whole dataset was processed by the algorithm) is saved during the training. These models are evaluated on a validation dataset to identify the network weights corresponding to the epoch with the best performance. Typical performance metrics include the validation loss and the efficiency in identifying the correct jet labels. These can be plotted as a function of the training epoch to guide the selection.
+
+As an example, a deep neural network is trained on the previously discussed JetClass dataset to separate Hbb- and Hcc-jets from Top-jets. \autoref{fig:loss} shows the loss function which is minimised while training the model on the training sample (purple curve) as a function of the epoch together with the loss function evaluated on the validation sample (green curve). Similarly, \autoref{fig:accuracy} shows the accuracy.
+
+![The loss function (cross-entropy loss) which is minimised while training a deep neural network for separating Hbb- and Hcc-jets from Top-jets in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:loss}](loss-plot.png){ width=60% }
+
+![The accuracy for classifying Hbb- and Hcc-jets while training a deep neural network for separating Hbb- and Hcc-jets from Top-jets in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:accuracy}](accuracy-plot.png){ width=60% }
+
+Typically, in the early epochs the accuracy on the training data is higher than on the validation data which are not used in training. Convergence of the two curves for later epochs demonstrates that the model does generalise well and does not pick up peculiarities of the training data ("overtraining").
 
 
 ## Performance evaluation
@@ -192,6 +202,11 @@ Furthermore, all input features can be plotted with a single command, based on a
 The steps involved in the evaluation stage are illustrated in \autoref{fig:evaluation}. The inference is carried out by running the chosen model on test samples. The evaluation results are rendered in a suite of performance plots.
 
 ![Illustration of the evaluation workflow in `Umami`. The chosen model after training is evaluated on the testing sample using the Scale Dict obtained from the preprocessing. The results of the evaluation can be plotted.\label{fig:evaluation}](evaluation.png){ width=60% }
+
+The plotting capabilities of the `Umami` toolkit are used to evaluate the performance of flavour tagging algorithms used in ATLAS and in the corresponding publications. \autoref{fig:evaluation} [@ATLAS:2019] shows the light-flavour jet and c-jet rejection factors as a function of the b-jet efficiency for three different ATLAS flavour tagging algorithms MV2c10, DL1, and DL1r.
+
+![The light-flavour jet and c-jet rejection factors as a function of the b-jet efficiency for the high-level b-tagging algorithms MV2c10, DL1, and DL1r. The lower two panels show the ratio of the light-flavour jet rejection and the (c)-jet rejection of the algorithms to MV2c10. The statistical uncertainties of the rejection factors are calculated using binomial uncertainties and are indicated as coloured bands. Reproduced from [@ATLAS:2019].\label{fig:dl1r}](fig_09.png){ width=60% }
+
 
 
 # Conclusions and future work
