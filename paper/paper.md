@@ -67,6 +67,10 @@ authors:
     orcid: 0000-0001-7967-6385
     equal-contrib: true
     affiliation: 2
+  - name: Martino Tanasini
+    orcid: 0000-0002-6313-4175
+    equal-contrib: true
+    affiliation: 8
   - name: Samuel Van Stroud
     orcid: 0000-0002-7969-0301
     equal-contrib: true
@@ -75,10 +79,6 @@ authors:
     orcid: 0000-0003-4032-0079
     equal-contrib: true
     affiliation: 3
-  - name: Martino Tanasini
-    orcid: 0000-0002-6313-4175
-    equal-contrib: true
-    affiliation: 8
   
   
   
@@ -103,7 +103,7 @@ affiliations:
    index: 9
  - name: Department of Particle Physics and Astrophysics, Weizmann Institute of Science, Israel
    index: 10
-date: 01 May 2023
+date: 13 June 2023
 bibliography: paper.bib
 
 ---
@@ -124,7 +124,7 @@ The creation and training of production-grade machine learning models is support
 
 # Related work
 
-The application of machine learning in high energy physics, particularly for the classification of jets, is a common and critically important technique [@Guest:2018; @Cagnotta:2022]. In contrast to previous efforts in jet flavour tagging [@Bols:2020; @ATLAS:2019], the current state-of-the-art algorithms [@Qu:2022] rely on specialised toolkits, such as the `Weaver` framework [@Qu:2020]. These toolkits enable the design of algorithms by taking care of input processing, steering the training on large datasets and providing performance metrics. `Umami` provides the required functionality to define, train and evaluate the algorithms used in ATLAS data-analysis.
+The application of machine learning in high energy physics, particularly for the classification of jets, is a common and critically important technique [@Guest:2018; @Cagnotta:2022]. In contrast to previous efforts in jet flavour tagging [@Bols:2020; @ATLAS:2019], the current state-of-the-art algorithms [@Qu:2022] rely on specialised toolkits, such as the `Weaver` framework [@Qu:2020]. These toolkits enable the design of algorithms by taking care of input processing, steering the training on large datasets and providing performance metrics. `Umami` provides the required functionality to define, train and evaluate the algorithms used in ATLAS data analysis.
 
 
 # Development Notes
@@ -180,9 +180,9 @@ The resulting model from each epoch (in which the whole dataset was processed by
 
 As an example, a deep neural network is trained on the previously discussed JetClass dataset to separate Hbb- and Hcc-jets from Top-jets. \autoref{fig:loss} shows the loss function which is minimised while training the model on the training sample (purple curve) as a function of the epoch together with the loss function evaluated on the validation sample (green curve). Similarly, \autoref{fig:accuracy} shows the accuracy.
 
-![The loss function (cross-entropy loss) which is minimised while training a deep neural network for separating Hbb- and Hcc-jets from Top-jets in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:loss}](loss-plot.png){ width=60% }
+![The loss function which is minimised while training a deep neural network for separating Hbb- and Hcc-jets from Top-jets in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:loss}](loss-plot.png){ width=80% }
 
-![The accuracy for classifying Hbb- and Hcc-jets while training a deep neural network for separating Hbb- and Hcc-jets from Top-jets in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:accuracy}](accuracy-plot.png){ width=60% }
+![The accuracy for classifying Hbb- and Hcc-jets while training a deep neural network for separating Hbb- and Hcc-jets from Top-jets in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:accuracy}](accuracy-plot.png){ width=80% }
 
 Typically, in the early epochs the accuracy on the training data is higher than on the validation data which are not used in training. Convergence of the two curves for later epochs demonstrates that the model does generalise well and does not pick up peculiarities of the training data ("overtraining").
 
@@ -205,7 +205,7 @@ The steps involved in the evaluation stage are illustrated in \autoref{fig:evalu
 
 The plotting capabilities of the `Umami` toolkit are used to evaluate the performance of flavour tagging algorithms used in ATLAS and in the corresponding publications. \autoref{fig:evaluation} [@ATLAS:2019] shows the light-flavour jet and c-jet rejection factors as a function of the b-jet efficiency for three different ATLAS flavour tagging algorithms MV2c10, DL1, and DL1r.
 
-![The light-flavour jet and c-jet rejection factors as a function of the b-jet efficiency for the high-level b-tagging algorithms MV2c10, DL1, and DL1r. The lower two panels show the ratio of the light-flavour jet rejection and the (c)-jet rejection of the algorithms to MV2c10. The statistical uncertainties of the rejection factors are calculated using binomial uncertainties and are indicated as coloured bands. Reproduced from [@ATLAS:2019].\label{fig:dl1r}](fig_09.png){ width=60% }
+![The light-flavour jet and c-jet rejection factors as a function of the b-jet efficiency for the high-level b-tagging algorithms MV2c10, DL1, and DL1r. The lower two panels show the ratio of the light-flavour jet rejection and the (c)-jet rejection of the algorithms to MV2c10. The statistical uncertainties of the rejection factors are calculated using binomial uncertainties and are indicated as coloured bands. Reproduced from [@ATLAS:2019].\label{fig:dl1r}](fig_09.png){ width=80% }
 
 
 
