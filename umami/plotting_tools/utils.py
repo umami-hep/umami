@@ -30,8 +30,8 @@ def translate_kwargs(kwargs):
         "n_Leading": "n_leading",
         "ncol": "leg_ncol",
         "normalise": "norm",
-        "ratio_cut": ["ymin_ratio_1", "ymax_ratio_1"],
-        "Ratio_Cut": ["ymin_ratio_1", "ymax_ratio_1"],
+        "ratio_cut": ["ymin_ratio", "ymax_ratio"],
+        "Ratio_Cut": ["ymin_ratio", "ymax_ratio"],
         "SecondTag": "atlas_second_tag",
         "set_logy": "logy",
         "UseAtlasTag": "use_atlas_tag",
@@ -46,8 +46,10 @@ def translate_kwargs(kwargs):
                 # print warning if old AND new convention are used
                 if elem in kwargs:
                     logger.warning(
-                        "You specified two keyword arguments which mean the same: "
-                        "%s, %s --> using the new naming convention %s",
+                        (
+                            "You specified two keyword arguments which mean the same: "
+                            "%s, %s --> using the new naming convention %s"
+                        ),
                         key,
                         elem,
                         elem,
@@ -64,8 +66,10 @@ def translate_kwargs(kwargs):
     for dep_key in deprecated_args:
         if dep_key in kwargs:
             logger.warning(
-                "You specified the argument %s, which is no longer"
-                " supported and will be ignored.",
+                (
+                    "You specified the argument %s, which is no longer"
+                    " supported and will be ignored."
+                ),
                 dep_key,
             )
             kwargs.pop(dep_key)

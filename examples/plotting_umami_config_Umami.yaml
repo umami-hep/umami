@@ -73,7 +73,7 @@ scores_Umami_ttbar_comparison:
     use_atlas_tag: True # Enable/Disable atlas_first_tag
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets"
-    Ratio_Cut: [0.5, 1.5]
+    Ratio_Cut: [[0.5], [1.5]]
 
 confusion_matrix_Umami_ttbar:
   type: "confusion_matrix"
