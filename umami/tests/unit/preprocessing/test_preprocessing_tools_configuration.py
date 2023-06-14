@@ -131,6 +131,7 @@ class PreprocessConfigurationTestCase(unittest.TestCase):
             "custom_n_jets_initial": None,
             "fractions": {"ttbar": 0.65, "zprime": 0.35},
             "max_upsampling_ratio": None,
+            "sampling_fraction": None,
             "n_jets": 5500000.0,
             "n_jets_validation": None,
             "n_jets_scaling": None,

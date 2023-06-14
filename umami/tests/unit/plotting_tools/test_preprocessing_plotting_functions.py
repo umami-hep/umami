@@ -223,6 +223,7 @@ class PlotResamplingVariablesTestCase(unittest.TestCase):
                 variable_names=self.variables,
                 sample_categories=["ttbar", "zprime"],
                 output_dir=self.actual_plots_dir,
+                # output_dir=self.expected_plots_dir,
                 bins_dict={
                     "pT": [1, 2],
                     "eta": 20,

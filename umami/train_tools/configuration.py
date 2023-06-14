@@ -296,9 +296,10 @@ class NNStructureConfig:
         class_cuts_flatten = np.hstack((np.array(cuts) for cuts in class_cuts.values()))
 
         if "HadronConeExclTruthLabelID == 5" in class_cuts_flatten and (
-            "HadronConeExclExtendedTruthLabelID == 55" in class_cuts_flatten
-            or "HadronConeExclExtendedTruthLabelID == 54" in class_cuts_flatten
+            ("HadronConeExclExtendedTruthLabelID == 55" in class_cuts_flatten)
+            or ("HadronConeExclExtendedTruthLabelID == 54" in class_cuts_flatten)
             or ("HadronConeExclExtendedTruthLabelID == [5, 54]" in class_cuts_flatten)
+            or ("HadronConeExclExtendedTruthLabelID == 5" in class_cuts_flatten)
         ):
             raise ValueError(
                 "You defined default bjets and extended bjets"
@@ -306,8 +307,9 @@ class NNStructureConfig:
                 " scheme! Please modify class_labels."
             )
         if "HadronConeExclTruthLabelID == 4" in class_cuts_flatten and (
-            "HadronConeExclExtendedTruthLabelID == 44" in class_cuts_flatten
-            or "HadronConeExclExtendedTruthLabelID == [4, 44]" in class_cuts_flatten
+            ("HadronConeExclExtendedTruthLabelID == 44" in class_cuts_flatten)
+            or ("HadronConeExclExtendedTruthLabelID == [4, 44]" in class_cuts_flatten)
+            or ("HadronConeExclExtendedTruthLabelID == 4" in class_cuts_flatten)
         ):
             raise ValueError(
                 "You defined default cjets and extended cjets"
@@ -510,7 +512,6 @@ class TrainConfiguration:
 
         # Check for validation_settings
         if self.config["validation_settings"]:
-
             # Define the validation_settings
             self.validation_settings = ValidationSettingsConfig(
                 **self.config["validation_settings"]
@@ -526,7 +527,6 @@ class TrainConfiguration:
 
         # Check for evaluation_settings
         if self.config["evaluation_settings"]:
-
             # Define the evaluation_settings
             self.evaluation_settings = EvaluationSettingsConfig(
                 self.general.evaluate_trained_model,

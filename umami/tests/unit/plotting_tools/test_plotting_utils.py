@@ -21,7 +21,7 @@ class RetrieveTruthLabelVarValueTestCase(unittest.TestCase):
             "ujets": "HadronConeExclTruthLabelID in [0]",
         }
         self.control_cut_strings_extended = {
-            "singlebjets": "HadronConeExclExtendedTruthLabelID in [5, 54]",
+            "singlebjets": "HadronConeExclExtendedTruthLabelID in [5]",
             "cjets": "HadronConeExclTruthLabelID in [4]",
             "ujets": "HadronConeExclTruthLabelID in [0]",
             "bbjets": "HadronConeExclExtendedTruthLabelID in [55]",
