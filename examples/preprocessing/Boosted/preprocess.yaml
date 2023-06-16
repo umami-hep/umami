@@ -44,40 +44,61 @@ preparation:
     samples:
         training_hbb:
             type: Boosted-Mix
-            category: hbb    # hbb comes from VHbb samples
+            category: hbb
             n_jets: 1e9
             <<: *cuts_template_training
             output_name: !join [*sample_path, /hbb_training_Mix.h5]
 
         training_hcc:
             type: Boosted-Mix
-            category: hcc    # hcc comes from VHcc samples
+            category: hcc
             n_jets: 1e9
             <<: *cuts_template_training
             output_name: !join [*sample_path, /hcc_training_Mix.h5]
 
         training_qcd:
             type: Boosted-Mix
-            category: qcd    # qcd comes from dijet samples
+            category: qcd
             n_jets: 1e9
             <<: *cuts_template_training
             output_name: !join [*sample_path, /qcd_training_Mix.h5]
 
         training_top:
             type: Boosted-Mix
-            category: top    # comes from ttbar samples
+            category: top
             n_jets: 1e9
             <<: *cuts_template_training
             output_name: !join [*sample_path, /top_training_Mix.h5]
 
         ##################
 
-        validation:
+        validation_hbb:
             type: Boosted-Mix
-            category: inclusive
+            category: hbb
             n_jets: 1e9
             <<: *cuts_template_validation
-            output_name: !join [*sample_path, /inclusive_validation_Mix.h5]
+            output_name: !join [*sample_path, /hbb_validation_Mix.h5]
+
+        validation_hcc:
+            type: Boosted-Mix
+            category: hcc
+            n_jets: 1e9
+            <<: *cuts_template_validation
+            output_name: !join [*sample_path, /hcc_validation_Mix.h5]
+
+        validation_qcd:
+            type: Boosted-Mix
+            category: qcd
+            n_jets: 1e9
+            <<: *cuts_template_validation
+            output_name: !join [*sample_path, /qcd_validation_Mix.h5]
+
+        validation_top:
+            type: Boosted-Mix
+            category: top
+            n_jets: 1e9
+            <<: *cuts_template_validation
+            output_name: !join [*sample_path, /top_validation_Mix.h5]
 
         testing:
             type: Boosted-Mix
@@ -122,7 +143,10 @@ sampling:
                 - training_top
         samples_validation:
             Boosted-Mix:
-                - validation
+                - validation_hbb
+                - validation_hcc
+                - validation_qcd
+                - validation_top
 
         custom_n_jets_initial:
 
@@ -138,6 +162,9 @@ sampling:
         # If set to -1: max out to target numbers (limited by fractions ratio)
         n_jets: 200e6
 
+        # number of validation jets in the validation sample
+        n_jets_validation: 200e6
+
         # Bool, if track information (for DIPS etc.) are saved.
         save_tracks: True
 
@@ -150,6 +177,9 @@ sampling:
 
         # this stores the indices per sample into an intermediate file
         intermediate_index_file: *intermediate_index_file
+
+        # this stores the indices per sample for the validation
+        intermediate_index_file_validation: *intermediate_index_file_validation
 
         # for method: weighting
         # relative to which distribution the weights should be calculated
@@ -179,7 +209,7 @@ compression: null
 precision: float16
 
 # concatenate jet inputs with each track's inputs in the final output file
-concat_jet_tracks: True
+concat_jet_tracks: False
 
 # Options for the conversion to tfrecords
 convert_to_tfrecord:

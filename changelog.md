@@ -1,6 +1,9 @@
 # Changelog
 
 ### Latest
+- Added validation definitions to boosted preprocessing config file in order to create a validation sample [!728](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/728)
+
+- Changed boosted tagging flavours to lowercase: (Hbb, Hcc, QCD) changed to (hbb, hcc, qcd) [!727](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/727)
 
 - Update PUMA and atlas-ftag-tools [!732](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/732)
 - Support PUMA variables in general preprocessing config for preprocessing plots [!731](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/731)
