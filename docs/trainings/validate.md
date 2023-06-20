@@ -26,7 +26,7 @@ The important part for the validation of your training is the `validation_settin
 
 ### Running the Validation
 
-Before running the validation, please ensure that the `frac_dict` and `frac_dict_comp` option in `evaluation_settings` is set for all taggers you want to plot! The validation uses this fraction values also for the rejection per epoch calculation! For a more detailed description of `frac_dict` and `frac_dict_comp`, please have a look [here](evaluate.md).
+Before running the validation, please ensure that the `frac_dict` and `frac_dict_comp` option in `evaluation_settings` is set for all taggers you want to plot! The validation uses this fraction values also for the rejection per epoch calculation! For a more detailed description of `frac_dict` and `frac_dict_comp`, please have a look [here](evaluate.md). Also, check that the `n_jets` are properly set to a value larger than 0! A zero will produce errors.
 
 After the config is prepared switch to the `umami/umami` folder and run the `plotting_epoch_performance.py` by executing the following command:
 
