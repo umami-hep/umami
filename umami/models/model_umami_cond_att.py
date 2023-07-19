@@ -2,7 +2,6 @@
 from umami.configuration import logger  # isort:skip
 import os
 
-import h5py
 import tensorflow as tf
 import yaml
 from tensorflow.keras.callbacks import ModelCheckpoint  # pylint: disable=import-error
@@ -131,20 +130,41 @@ def train_umami_cond_att(args, train_config):
         # Init a metadata dict
         metadata = {}
 
-        # Get the shapes for training
-        with h5py.File(train_config.general.train_file, "r") as f_train:
-            (
-                metadata["n_jets"],
-                metadata["n_trks"],
-                metadata["n_trk_features"],
-            ) = f_train[f"{tracks_name}/inputs"].shape
-            _, metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
-            _, metadata["n_jet_features"] = f_train["jets/inputs"].shape
-            if exclude is not None:
-                metadata["n_jet_features"] -= len(excluded_var)
-            logger.debug(
-                "Input shape of jet training set: %s", metadata["n_jet_features"]
-            )
+        generator_args = {
+            "train_file_path": train_config.general.train_file,
+            "x_name": "jets/inputs",
+            "x_trk_name": f"{tracks_name}/inputs",
+            "y_name": "jets/labels_one_hot",
+            "n_jets": None,
+            "batch_size": nn_structure.batch_size,
+            "n_conds": nn_structure.n_conditions,
+            "chunk_size": 1e6,
+            "excluded_var": excluded_var,
+            "sample_weights": nn_structure.use_sample_weights,
+            "config_file": train_config.general.preprocess_config,
+            "tracks_name": train_config.general.tracks_name,
+        }
+
+        # Get a small generator for metadata
+        generator = utf.get_generator(
+            "UmamiCondition",
+            generator_args,
+            train_config.general.train_data_structure,
+            small=True,
+        )
+
+        # Get the shapes for training from generator
+        metadata["n_jets"] = generator.get_n_jets()
+        generator_args["n_jets"] = (
+            int(nn_structure.n_jets_train)
+            if nn_structure.n_jets_train is not None
+            else metadata["n_jets"]
+        )
+        metadata["n_dim"] = generator.get_n_dim()
+        metadata["n_jet_features"] = generator.get_n_jet_features()
+        metadata["n_trk_features"] = generator.get_n_trk_features()
+        metadata["n_trks"] = generator.get_n_trks()
+        logger.debug("Input shape of training set: %s", metadata["n_jet_features"])
 
         if nn_structure.use_sample_weights:
             tensor_types = (
@@ -180,22 +200,17 @@ def train_umami_cond_att(args, train_config):
                 tf.TensorShape([None, metadata["n_dim"]]),
             )
 
+        # Get a full generator for training
+        generator = utf.get_generator(
+            "UmamiCondition",
+            generator_args,
+            train_config.general.train_data_structure,
+            small=False,
+        )
+
         train_dataset = (
             tf.data.Dataset.from_generator(
-                utf.UmamiConditionGenerator(
-                    train_file_path=train_config.general.train_file,
-                    x_name="jets/inputs",
-                    x_trk_name=f"{tracks_name}/inputs",
-                    y_name="jets/labels_one_hot",
-                    n_jets=int(nn_structure.n_jets_train)
-                    if nn_structure.n_jets_train is not None
-                    else metadata["n_jets"],
-                    batch_size=nn_structure.batch_size,
-                    n_conds=nn_structure.n_conditions,
-                    chunk_size=int(1e6),
-                    excluded_var=excluded_var,
-                    sample_weights=nn_structure.use_sample_weights,
-                ),
+                generator,
                 output_types=tensor_types,
                 output_shapes=tensor_shapes,
             )

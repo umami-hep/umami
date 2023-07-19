@@ -24,6 +24,7 @@ class TrainConfigurationObject:
 
     # File options
     train_file: str = None
+    train_data_structure: str = None
     validation_files: dict = None
     test_files: dict = None
 

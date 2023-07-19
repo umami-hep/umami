@@ -21,4 +21,12 @@ from umami.tf_tools.layers import (
 )
 from umami.tf_tools.load_tfrecord import TFRecordReader, load_tfrecords_train_dataset
 from umami.tf_tools.models import deepsets_model, deepsets_model_umami, prepare_model
+from umami.tf_tools.tddgenerators import (
+    TDDCadsGenerator,
+    TDDDipsGenerator,
+    TDDDl1Generator,
+    TDDUmamiConditionGenerator,
+    TDDUmamiGenerator,
+    get_generator,
+)
 from umami.tf_tools.tools import get_learning_rate_reducer

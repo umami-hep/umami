@@ -2,7 +2,6 @@
 from umami.configuration import logger  # isort:skip
 import os
 
-import h5py
 import tensorflow as tf
 from tensorflow.keras import activations  # pylint: disable=import-error
 from tensorflow.keras.callbacks import ModelCheckpoint  # pylint: disable=import-error
@@ -80,7 +79,6 @@ def create_umami_model(
         for i, (phi_nodes, dropout_rate_phi) in enumerate(
             zip(nn_structure.dips_ppm_units, dropout_rates_phi)
         ):
-
             tdd = TimeDistributed(
                 Dense(phi_nodes, activation="linear"), name=f"Phi{i}_Dense"
             )(tdd)
@@ -106,7 +104,6 @@ def create_umami_model(
         for j, (f_nodes, dropout_rate_f) in enumerate(
             zip(nn_structure.dips_dense_units, dropout_rates_f)
         ):
-
             f_net = Dense(f_nodes, activation="linear", name=f"F{j}_Dense")(f_net)
             if batch_norm:
                 f_net = BatchNormalization(name=f"F{j}_BatchNormalization")(f_net)
@@ -236,20 +233,39 @@ def train_umami(args, train_config):
         # Init a metadata dict
         metadata = {}
 
-        # Get the shapes for training
-        with h5py.File(train_config.general.train_file, "r") as h5_file:
-            (
-                metadata["n_jets"],
-                metadata["n_trks"],
-                metadata["n_trk_features"],
-            ) = h5_file[f"{tracks_name}/inputs"].shape
-            _, metadata["n_dim"] = h5_file["jets/labels_one_hot"].shape
-            _, metadata["n_jet_features"] = h5_file["jets/inputs"].shape
-            if exclude is not None:
-                metadata["n_jet_features"] -= len(excluded_var)
-            logger.debug(
-                "Input shape of jet training set: %s", metadata["n_jet_features"]
-            )
+        generator_args = {
+            "train_file_path": train_config.general.train_file,
+            "x_name": "jets/inputs",
+            "x_trk_name": f"{tracks_name}/inputs",
+            "y_name": "jets/labels_one_hot",
+            "n_jets": None,
+            "batch_size": nn_structure.batch_size,
+            "excluded_var": excluded_var,
+            "sample_weights": nn_structure.use_sample_weights,
+            "config_file": train_config.general.preprocess_config,
+            "tracks_name": train_config.general.tracks_name,
+        }
+
+        # Get a small generator for metadata
+        generator = utf.get_generator(
+            "Umami",
+            generator_args,
+            train_config.general.train_data_structure,
+            small=True,
+        )
+
+        # Get the shapes for training from generator
+        metadata["n_jets"] = generator.get_n_jets()
+        generator_args["n_jets"] = (
+            int(nn_structure.n_jets_train)
+            if nn_structure.n_jets_train is not None
+            else metadata["n_jets"]
+        )
+        metadata["n_dim"] = generator.get_n_dim()
+        metadata["n_jet_features"] = generator.get_n_jet_features()
+        metadata["n_trk_features"] = generator.get_n_trk_features()
+        metadata["n_trks"] = generator.get_n_trks()
+        logger.debug("Input shape of training set: %s", metadata["n_jet_features"])
 
         if nn_structure.use_sample_weights:
             tensor_types = (
@@ -283,21 +299,17 @@ def train_umami(args, train_config):
                 tf.TensorShape([None, metadata["n_dim"]]),
             )
 
+        generator = utf.get_generator(
+            "Umami",
+            generator_args,
+            train_config.general.train_data_structure,
+            small=False,
+        )
+
         # Get training set from generator
         train_dataset = (
             tf.data.Dataset.from_generator(
-                utf.UmamiGenerator(
-                    train_file_path=train_config.general.train_file,
-                    x_name="jets/inputs",
-                    x_trk_name=f"{tracks_name}/inputs",
-                    y_name="jets/labels_one_hot",
-                    n_jets=int(nn_structure.n_jets_train)
-                    if nn_structure.n_jets_train is not None
-                    else metadata["n_jets"],
-                    batch_size=nn_structure.batch_size,
-                    excluded_var=excluded_var,
-                    sample_weights=nn_structure.use_sample_weights,
-                ),
+                generator,
                 output_types=tensor_types,
                 output_shapes=tensor_shapes,
             )

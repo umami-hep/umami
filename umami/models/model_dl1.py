@@ -2,7 +2,6 @@
 from umami.configuration import logger  # isort:skip
 import os
 
-import h5py
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint  # pylint: disable=import-error
 from tensorflow.keras.layers import (  # pylint: disable=import-error
@@ -167,14 +166,38 @@ def train_dl1(args, train_config):
         # Init a metadata dict
         metadata = {}
 
-        # Get the shapes for training
-        with h5py.File(train_config.general.train_file, "r") as f_train:
-            metadata["n_jets"], metadata["n_dim"] = f_train["jets/labels_one_hot"].shape
-            _, metadata["n_jet_features"] = f_train["jets/inputs"].shape
-            if exclude is not None:
-                metadata["n_jet_features"] -= len(excluded_var)
-            logger.debug("Input shape of training set: %s", metadata["n_jet_features"])
+        generator_args = {
+            "train_file_path": train_config.general.train_file,
+            "x_name": "jets/inputs",
+            "y_name": "jets/labels_one_hot",
+            "n_jets": None,
+            "batch_size": nn_structure.batch_size,
+            "excluded_var": excluded_var,
+            "sample_weights": nn_structure.use_sample_weights,
+            "config_file": train_config.general.preprocess_config,
+            "tracks_name": train_config.general.tracks_name,
+        }
 
+        # Get a small generator for metadata
+        generator = utf.get_generator(
+            "Dl1",
+            generator_args,
+            train_config.general.train_data_structure,
+            small=True,
+        )
+
+        # Get the shapes for training from generator
+        metadata["n_jets"] = generator.get_n_jets()
+        generator_args["n_jets"] = (
+            int(nn_structure.n_jets_train)
+            if nn_structure.n_jets_train is not None
+            else metadata["n_jets"]
+        )
+        metadata["n_dim"] = generator.get_n_dim()
+        metadata["n_jet_features"] = generator.get_n_jet_features()
+        logger.debug("Input shape of training set: %s", metadata["n_jet_features"])
+
+        # make correct shapes for the tensors
         if nn_structure.use_sample_weights:
             tensor_types = (tf.float32, tf.float32, tf.float32)
             tensor_shapes = (
@@ -189,22 +212,20 @@ def train_dl1(args, train_config):
                 tf.TensorShape([None, metadata["n_dim"]]),
             )
 
-        # Build train_datasets for training
+        # Get a full generator for training
+        generator = utf.get_generator(
+            "Dl1",
+            generator_args,
+            train_config.general.train_data_structure,
+            small=False,
+        )
+
+        # Build train_datasets for training from generator
         train_dataset = (
             tf.data.Dataset.from_generator(
-                utf.Dl1Generator(
-                    train_file_path=train_config.general.train_file,
-                    x_name="jets/inputs",
-                    y_name="jets/labels_one_hot",
-                    n_jets=int(nn_structure.n_jets_train)
-                    if nn_structure.n_jets_train is not None
-                    else metadata["n_jets"],
-                    batch_size=nn_structure.batch_size,
-                    excluded_var=excluded_var,
-                    sample_weights=nn_structure.use_sample_weights,
-                ),
-                tensor_types,
-                tensor_shapes,
+                generator,
+                output_types=tensor_types,
+                output_shapes=tensor_shapes,
             )
             .repeat()
             .prefetch(tf.data.AUTOTUNE)

@@ -1,5 +1,10 @@
 ## Writing Train Sample
 
+Writing step is now optional as the functionality was added to train using the output file from the training-dataset-dumper-like (TDD-like) format coming from the resampling step and the scale_dict from the scaling and shifting step. The TDDGenerators read data from TDD file scale, shift and restructure it in real time, this but is currently slower than loading the Umami training data described below.
+
+Caution:
+  If you use count resampling please use the writing step as the resampling itself doesnt shuffle the jets unlike pdf_resampling!
+
 In the final step of the preprocessing, the resampled, training jets are scaled/shifted and then written to disk in a format, that can be used for training.
 Each type of object is stored within its own group in the output file.
 Each group can contain multiple datasets, for the inputs, weights, and labels for example.
