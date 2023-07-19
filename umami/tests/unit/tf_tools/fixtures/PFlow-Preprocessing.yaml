@@ -1,0 +1,156 @@
+parameters: !include Preprocessing-parameters.yaml
+cut_parameters: !include Preprocessing-cut_parameters.yaml
+
+preparation:
+  # Path to the .h5 files from the h5 dumper.
+  input_h5:
+    ttbar:
+      path: *ntuple_path
+      file_pattern: user.alfroch.410470.btagTraining.e6337_s3681_r13144_p4931.EMPFlowAll.2022-01-26-T171129_output.h5/*.h5
+
+    zprime:
+      path: *ntuple_path
+      file_pattern: user.alfroch.800030.btagTraining.e7954_s3681_r13144_p4931.EMPFlowAll.2022-02-07-T174158_output.h5/*.h5
+
+  samples: !include Preprocessing-samples.yaml
+
+sampling:
+  # Classes which are used in the resampling. Order is important.
+  # The order needs to be the same as in the training config!
+  class_labels: [ujets, cjets, bjets]
+
+  # Decide, which resampling method is used.
+  method: count
+
+  # The options depend on the sampling method
+  options:
+    sampling_variables:
+      - pt_btagJes:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          # For PDF sampling: must be the np.linspace arguments.
+          #   - list of list, one list for each category (in samples)
+          #   - define the region of each category.
+          bins: [[0, 600000, 351], [650000, 6000000, 84]]
+
+      - absEta_btagJes:
+          # For PDF sampling: same structure as in pt_btagJes.
+          bins: [0, 2.5, 10]
+
+    # Decide, which of the in preparation defined samples are used in the resampling.
+    samples_training:
+      ttbar:
+        - training_ttbar_bjets
+        - training_ttbar_cjets
+        - training_ttbar_ujets
+
+      zprime:
+        - training_zprime_bjets
+        - training_zprime_cjets
+        - training_zprime_ujets
+
+    # Decide, which of the in preparation defined samples are used in the hybrid
+    # validation resampling.
+    samples_validation:
+      ttbar:
+        - validation_ttbar_bjets
+        - validation_ttbar_cjets
+        - validation_ttbar_ujets
+
+      zprime:
+        - validation_zprime_bjets
+        - validation_zprime_cjets
+        - validation_zprime_ujets
+
+    custom_n_jets_initial:
+      # these are empiric values ensuring a smooth hybrid sample.
+      # These values are retrieved for a hybrid ttbar + zprime sample for the count method!
+      training_ttbar_bjets: 5.5e6
+      training_ttbar_cjets: 11.5e6
+      training_ttbar_ujets: 13.5e6
+
+      # These are the values for the hybrid validation sample. Just use the same as above!
+      validation_ttbar_bjets: 5.5e6
+      validation_ttbar_cjets: 11.5e6
+      validation_ttbar_ujets: 13.5e6
+
+    # Fractions of ttbar/zprime jets in final training set. This needs to add up to one.
+    fractions:
+      ttbar: 0.7
+      zprime: 0.3
+
+    # number of training jets
+    # For PDF sampling: the number of target jets per class!
+    #                   So if you set n_jets=1_000_000 and you have 3 output classes
+    #                   you will end up with 3_000_000 jets
+    # For other sampling methods: total number of jets after resampling
+    # If set to -1: max out to target numbers (limited by fractions ratio)
+    n_jets: 1.5e5
+
+    # number of validation jets in the hybrid validation sample
+    # Same rules as above for n_jets when it comes to PDF sampling
+    n_jets_validation: 3e4
+
+    # Bool, if track information (for DIPS etc.) are saved.
+    save_tracks: True
+
+    # Name(s) of the track collection(s) to use.
+    tracks_names: ["tracks"]
+
+    # Bool, if track labels are processed
+    save_track_labels: True
+
+    # String with the name of the track truth variable
+    #track_truth_variables: ["truthOriginLabel", "truthVertexIndex"]
+
+    # this stores the indices per sample into an intermediate file
+    intermediate_index_file: *intermediate_index_file
+
+    # this stores the indices per sample into an intermediate file for the validation sample
+    intermediate_index_file_validation: *intermediate_index_file_validation
+
+    # for method: weighting
+    # relative to which distribution the weights should be calculated
+    weighting_target_flavour: 'bjets'
+
+    # If you want to attach weights to the final files
+    bool_attach_sample_weights: False
+
+    # How many jets you want to use for the plotting of the results
+    # Give null (the yaml None) if you don't want to plot them
+    n_jets_to_plot: 3e4
+
+# Name of the output file from the preprocessing
+outfile_name: *outfile_name
+
+# outfile name for the validation sample
+outfile_name_validation: *outfile_name_validation
+
+# Name of the plot
+plot_name: PFlow_ext-hybrid
+
+# Define the plot type (like pdf or png) for the plots created
+plot_type: "pdf"
+
+# include sample categories in the plots legends before resampling
+legend_sample_category: True
+
+# Variable dict which is used for scaling and shifting
+var_file: *var_file
+
+# Dictfile for the scaling and shifting (json)
+dict_file: *dict_file
+
+# compression for final output files (null/gzip/lzf)
+compression: lzf
+
+# save final output files with specified precision
+precision: float16
+
+# concatenate jet inputs with each track's inputs in the final output file
+concat_jet_tracks: False
+
+# Options for the conversion to tfrecords
+convert_to_tfrecord:
+  chunk_size: 5000
+  N_add_vars: null

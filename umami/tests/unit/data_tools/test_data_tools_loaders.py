@@ -22,10 +22,8 @@ class LoadFilesTestCase(unittest.TestCase):
         run(
             [
                 "wget",
-                (
-                    "https://umami-ci-provider.web.cern.ch/preprocessing/"
-                    "ci_ttbar_testing.h5"
-                ),
+                "https://umami-ci-provider.web.cern.ch/preprocessing/"
+                "ci_ttbar_testing.h5",
                 "--directory-prefix",
                 self.tmp_test_dir,
             ],

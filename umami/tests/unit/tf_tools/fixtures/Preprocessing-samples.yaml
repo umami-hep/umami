@@ -1,0 +1,112 @@
+training_ttbar_bjets:
+  type: ttbar
+  category: bjets
+  n_jets: 1e6
+  <<: *cuts_template_training_ttbar
+  output_name: !join [*sample_path, /bjets_training_ttbar_PFlow.h5]
+
+training_ttbar_cjets:
+  type: ttbar
+  category: cjets
+  # Number of c jets available in MC16d
+  n_jets: 1e6
+  <<: *cuts_template_training_ttbar
+  output_name: !join [*sample_path, /cjets_training_ttbar_PFlow.h5]
+
+training_ttbar_ujets:
+  type: ttbar
+  category: ujets
+  n_jets: 1e6
+  <<: *cuts_template_training_ttbar
+  output_name: !join [*sample_path, /ujets_training_ttbar_PFlow.h5]
+
+training_zprime_bjets:
+  type: zprime
+  category: bjets
+  n_jets: 1e6
+  <<: *cuts_template_training_zprime
+  output_name: !join [*sample_path, /bjets_training_zprime_PFlow.h5]
+
+training_zprime_cjets:
+  type: zprime
+  category: cjets
+  n_jets: 1e6
+  <<: *cuts_template_training_zprime
+  output_name: !join [*sample_path, /cjets_training_zprime_PFlow.h5]
+
+training_zprime_ujets:
+  type: zprime
+  category: ujets
+  n_jets: 1e6
+  <<: *cuts_template_training_zprime
+  output_name: !join [*sample_path, /ujets_training_zprime_PFlow.h5]
+
+validation_ttbar:
+  type: ttbar
+  category: inclusive
+  n_jets: 3e5
+  <<: *cuts_template_validation
+  output_name: !join [*sample_path, /inclusive_validation_ttbar_PFlow.h5]
+
+validation_ttbar_bjets:
+  type: ttbar
+  category: bjets
+  n_jets: 3e5
+  <<: *cuts_template_validation_ttbar_hybrid
+  output_name: !join [*sample_path, /bjets_validation_ttbar_PFlow.h5]
+
+validation_ttbar_cjets:
+  type: ttbar
+  category: cjets
+  n_jets: 3e5
+  <<: *cuts_template_validation_ttbar_hybrid
+  output_name: !join [*sample_path, /cjets_validation_ttbar_PFlow.h5]
+
+validation_ttbar_ujets:
+  type: ttbar
+  category: ujets
+  n_jets: 3e5
+  <<: *cuts_template_validation_ttbar_hybrid
+  output_name: !join [*sample_path, /ujets_validation_ttbar_PFlow.h5]
+
+validation_zprime:
+  type: zprime
+  category: inclusive
+  n_jets: 3e5
+  <<: *cuts_template_validation
+  output_name: !join [*sample_path, /inclusive_validation_zprime_PFlow.h5]
+
+validation_zprime_bjets:
+  type: zprime
+  category: bjets
+  n_jets: 3e5
+  <<: *cuts_template_validation_zprime_hybrid
+  output_name: !join [*sample_path, /bjets_validation_zprime_PFlow.h5]
+
+validation_zprime_cjets:
+  type: zprime
+  category: cjets
+  n_jets: 3e5
+  <<: *cuts_template_validation_zprime_hybrid
+  output_name: !join [*sample_path, /cjets_validation_zprime_PFlow.h5]
+
+validation_zprime_ujets:
+  type: zprime
+  category: ujets
+  n_jets: 3e5
+  <<: *cuts_template_validation_zprime_hybrid
+  output_name: !join [*sample_path, /ujets_validation_zprime_PFlow.h5]
+
+testing_ttbar:
+  type: ttbar
+  category: inclusive
+  n_jets: 3e5
+  <<: *cuts_template_testing
+  output_name: !join [*sample_path, /inclusive_testing_ttbar_PFlow.h5]
+
+testing_zprime:
+  type: zprime
+  category: inclusive
+  n_jets: 3e5
+  <<: *cuts_template_testing
+  output_name: !join [*sample_path, /inclusive_testing_zprime_PFlow.h5]

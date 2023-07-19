@@ -143,27 +143,90 @@ class ModelGenerator:  # pylint: disable=too-few-public-methods
                     if self.excluded_var is not None
                     else self.x_in_mem
                 )
-                if self.sample_weights:
-                    # load weights
-                    self.weight_in_mem = f_train["jets/weight"][
-                        self.step_size * part : self.step_size * (part + 1)
-                    ]
+
+            if self.sample_weights:
+                # load weights
+                self.weight_in_mem = f_train["jets/weight"][
+                    self.step_size * part : self.step_size * (part + 1)
+                ]
 
             # Load tracks if wanted
             if load_tracks:
                 self.x_trk_in_mem = f_train[self.x_trk_name][
                     self.step_size * part : self.step_size * (part + 1)
                 ]
-                if self.sample_weights and self.weight_in_mem is None:
-                    # load weights
-                    self.weight_in_mem = f_train["jets/weight"][
-                        self.step_size * part : self.step_size * (part + 1)
-                    ]
 
             # Load truth labels
             self.y_in_mem = f_train[self.y_name][
                 self.step_size * part : self.step_size * (part + 1)
             ]
+
+    def get_n_jets(self):
+        """
+        Get the number of jets.
+
+        Returns
+        -------
+        int
+            The number of jets.
+        """
+        return self.n_jets
+
+    def get_n_dim(self):
+        """
+        This function loads the necessary data into memory
+        and retrieves the number of dimensions
+        of the labels. It does not load jets or tracks.
+
+        Returns
+        -------
+        int
+            The number of dimensions of the labels.
+        """
+        self.load_in_memory(load_jets=False, load_tracks=False, part=0)
+        return self.y_in_mem.shape[1]
+
+    def get_n_jet_features(self):
+        """
+        This function loads the necessary data into memory
+        and retrieves the number of features
+        for the jets. It does not load tracks.
+
+        Returns
+        -------
+        int
+            The number of jet features.
+        """
+        self.load_in_memory(load_jets=True, load_tracks=False, part=0)
+        return self.x_in_mem.shape[1]
+
+    def get_n_trk_features(self):
+        """
+        This function loads the necessary data into memory
+        and retrieves the number of features
+        for the tracks. It does not load jets.
+
+        Returns
+        -------
+        int
+            The number of track features.
+        """
+        self.load_in_memory(load_jets=False, load_tracks=True, part=0)
+        return self.x_trk_in_mem.shape[2]
+
+    def get_n_trks(self):
+        """
+        This function loads the necessary data into memory
+        and retrieves the number of tracks.
+        It does not load jets.
+
+        Returns
+        -------
+        int
+            The number of tracks.
+        """
+        self.load_in_memory(load_jets=False, load_tracks=True, part=0)
+        return self.x_trk_in_mem.shape[1]
 
 
 class DipsGenerator(ModelGenerator):
