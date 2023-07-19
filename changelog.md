@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Update Puma version to v0.2.7 [!734](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/734)
 - Added an option to train umami model directly from TDD files with structured arrays, fixed issue that writer was saving weights as one of the jet variables [!730] (https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/730)
 - Update documentation FAQ [!733](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/733)
 - Added validation definitions to boosted preprocessing config file in order to create a validation sample [!728](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/728)
