@@ -1,0 +1,206 @@
+{
+    "jets": {
+        "absEta_btagJes": {
+            "shift": 0.959050714969635,
+            "scale": 0.6497752666473389,
+            "default": 0.959050714969635
+        },
+        "pt_btagJes": {
+            "shift": 618990.0625,
+            "scale": 1060564.75,
+            "default": 618990.0625
+        },
+        "JetFitter_isDefaults": {
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        },
+        "JetFitter_mass": {
+            "shift": 2643.41015625,
+            "scale": 1949.056396484375,
+            "default": 2643.410400390625
+        },
+        "JetFitter_energyFraction": {
+            "shift": 0.28585389256477356,
+            "scale": 0.3346206545829773,
+            "default": 0
+        },
+        "JetFitter_significance3d": {
+            "shift": 9.492952346801758,
+            "scale": 15.680784225463867,
+            "default": 0
+        },
+        "JetFitter_nVTX": {
+            "shift": 0.11679333448410034,
+            "scale": 0.9901074767112732,
+            "default": -1
+        },
+        "JetFitter_nSingleTracks": {
+            "shift": 0.13291333615779877,
+            "scale": 1.1771862506866455,
+            "default": -1
+        },
+        "JetFitter_nTracksAtVtx": {
+            "shift": 0.9137066602706909,
+            "scale": 2.046025514602661,
+            "default": -1
+        },
+        "JetFitter_N2Tpair": {
+            "shift": 2.5346333980560303,
+            "scale": 6.953289985656738,
+            "default": -1
+        },
+        "JetFitter_deltaR": {
+            "shift": 0.06070326641201973,
+            "scale": 0.05141003429889679,
+            "default": 0.06070327386260033
+        },
+        "JetFitterSecondaryVertex_isDefaults": {
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        },
+        "JetFitterSecondaryVertex_nTracks": {
+            "shift": 1.1848200559616089,
+            "scale": 1.275103211402893,
+            "default": 0
+        },
+        "JetFitterSecondaryVertex_mass": {
+            "shift": 704.7969970703125,
+            "scale": 646.08154296875,
+            "default": 704.7969970703125
+        },
+        "JetFitterSecondaryVertex_energy": {
+            "shift": 120276.90625,
+            "scale": 850035.9375,
+            "default": 120276.90625
+        },
+        "JetFitterSecondaryVertex_energyFraction": {
+            "shift": 0.16054628789424896,
+            "scale": 0.22726541757583618,
+            "default": 0
+        },
+        "JetFitterSecondaryVertex_displacement3d": {
+            "shift": 23.55575942993164,
+            "scale": 37.60857009887695,
+            "default": 23.555755615234375
+        },
+        "JetFitterSecondaryVertex_displacement2d": {
+            "shift": 12.90566349029541,
+            "scale": 18.03818130493164,
+            "default": 12.905662536621094
+        },
+        "JetFitterSecondaryVertex_maximumAllJetTrackRelativeEta": {
+            "shift": 5.354335784912109,
+            "scale": 1.0399153232574463,
+            "default": 5.354336261749268
+        },
+        "JetFitterSecondaryVertex_minimumAllJetTrackRelativeEta": {
+            "shift": 2.4091763496398926,
+            "scale": 0.43040037155151367,
+            "default": 2.4091765880584717
+        },
+        "JetFitterSecondaryVertex_averageAllJetTrackRelativeEta": {
+            "shift": 3.5361175537109375,
+            "scale": 0.6035805344581604,
+            "default": 3.5361180305480957
+        },
+        "SV1_isDefaults": {
+            "shift": 0.0,
+            "scale": 1.0,
+            "default": null
+        },
+        "SV1_NGTinSvx": {
+            "shift": 0.4525466561317444,
+            "scale": 2.285966157913208,
+            "default": -1
+        },
+        "SV1_masssvx": {
+            "shift": 1765.671142578125,
+            "scale": 610.3449096679688,
+            "default": 1765.6712646484375
+        },
+        "SV1_N2Tpair": {
+            "shift": 0.7560133337974548,
+            "scale": 3.830805540084839,
+            "default": -1
+        },
+        "SV1_efracsvx": {
+            "shift": 0.20196695625782013,
+            "scale": 0.32656922936439514,
+            "default": 0
+        },
+        "SV1_deltaR": {
+            "shift": 0.05406508967280388,
+            "scale": 0.04708915576338768,
+            "default": 0.05406508594751358
+        },
+        "SV1_Lxy": {
+            "shift": 11.230347633361816,
+            "scale": 10.072769165039062,
+            "default": 11.230348587036133
+        },
+        "SV1_L3d": {
+            "shift": 21.25480079650879,
+            "scale": 21.882078170776367,
+            "default": 21.25480079650879
+        },
+        "SV1_significance3d": {
+            "shift": 26.465797424316406,
+            "scale": 20.215869903564453,
+            "default": 26.46579933166504
+        }
+    },
+    "tracks_origin_weights": {
+        "truthOriginLabel": {
+            "0": 15.623279963169471,
+            "1": 141.94004879749042,
+            "2": 1.4236779728567532,
+            "3": 18.086607645160335,
+            "4": 13.73103897855505,
+            "5": 12.370796415371373,
+            "6": 3292.932614555256,
+            "7": 57.85282000284131
+        },
+        "truthVertexIndex": {
+            "-2": 15.621082511795619,
+            "0": 1.3940541953034693,
+            "1": 6.748819197772634,
+            "2": 18.03587457186725,
+            "3": 84.88590883824347,
+            "4": 411.47793869989897,
+            "5": 1646.466307277628,
+            "6": 6429.884210526316,
+            "7": 21432.947368421053,
+            "8": 111061.63636363637,
+            "9": 610839.0,
+            "10": 610839.0
+        }
+    },
+    "tracks": {
+        "ptfrac": {
+            "shift": -3.8643784523010254,
+            "scale": 1.6233832836151123
+        },
+        "dr": {
+            "shift": -2.7646241188049316,
+            "scale": 1.0538729429244995
+        },
+        "numberOfPixelHits": {
+            "shift": 3.8942487300254243,
+            "scale": 0.9153158269265627
+        },
+        "numberOfSCTHits": {
+            "shift": 8.113281077337891,
+            "scale": 1.305687120726391
+        },
+        "d0": {
+            "shift": 7.096839544828981e-05,
+            "scale": 0.17923499643802643
+        },
+        "z0SinTheta": {
+            "shift": -0.0005599393043667078,
+            "scale": 0.22553731501102448
+        }
+    }
+}

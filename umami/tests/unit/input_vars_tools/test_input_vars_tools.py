@@ -352,7 +352,11 @@ class JetPlottingTestCase(unittest.TestCase):
             output_directory=f"{self.actual_plots_dir}",
             # output_directory=f"{self.expected_plots_dir}",
             plot_type="png",
-            **plotting_config["plot_settings"],
+            **{
+                iter_var: plotting_config["plot_settings"][iter_var]
+                for iter_var in plotting_config["plot_settings"]
+                if iter_var not in ["ymin_ratio", "ymax_ratio"]
+            },
         )
 
         with self.subTest():

@@ -29,6 +29,7 @@ class TrainSampleWriter:
         self,
         config: object,
         compression: str = None,
+        shuffling: bool = True,
     ) -> None:
         """
         Init the needed configs and variables
@@ -39,7 +40,9 @@ class TrainSampleWriter:
             Loaded config file for the preprocessing.
         compression : str, optional
             Type of compression which should be used, by default None
-
+        shuffling : bool, optional
+            Only used to disable shuffling of the data for testing,
+            by default True
         Raises
         ------
         ValueError
@@ -47,6 +50,7 @@ class TrainSampleWriter:
               is not a list or a string
         """
 
+        self.shuffling = shuffling
         self.save_tracks = config.sampling.options.save_tracks
         self.save_track_labels = config.sampling.options.save_track_labels
         self.class_labels = config.sampling.class_labels
@@ -224,7 +228,8 @@ class TrainSampleWriter:
                 # shuffling the chunk now (prior step still has ordered chunks)
                 rng_index = np.arange(len(jets))
                 rng = np.random.default_rng(seed=self.rnd_seed)
-                rng.shuffle(rng_index)
+                if self.shuffling:
+                    rng.shuffle(rng_index)
                 jets = jets[rng_index]
                 labels = labels[rng_index]
                 labels_one_hot = labels_one_hot[rng_index]
@@ -323,7 +328,8 @@ class TrainSampleWriter:
         thearray = np.concatenate([thearray, adding])
         thearray = thearray.reshape((-1, slice_size))
         rng = np.random.default_rng(seed=self.rnd_seed)
-        rng.shuffle(thearray)
+        if self.shuffling:
+            rng.shuffle(thearray)
         thearray = thearray.reshape((-1))
 
         # Remove the nans that were introduced and return
@@ -332,7 +338,7 @@ class TrainSampleWriter:
     def write_train_sample(
         self,
         input_file: str = None,
-        output_file: str = None,
+        out_file: str = None,
         chunk_size: int = 100_000,
     ) -> None:
         """
@@ -343,7 +349,7 @@ class TrainSampleWriter:
         input_file : str, optional
             File with scaled/shifted jets. Default is name from
             config + resampled_scaled, by default None
-        output_file : str, optional
+        out_file : str, optional
             Name of the output file. Default is name from
             config + resampled_scaled_shuffled., by default None
         chunk_size : int, optional
@@ -358,7 +364,7 @@ class TrainSampleWriter:
             )
 
         # Define outfile name
-        if output_file is None:
+        if out_file is None:
             out_file = self.config.get_file_name(
                 option="resampled_scaled_shuffled", use_val=self.use_validation_samples
             )
@@ -724,6 +730,11 @@ class TrainSampleWriter:
             self.calculate_weights(weights_dict, jets, labels)
 
         weights = jets["weight"]
+        # under no circumstances should the weight be an input to the network
+        # it can be used for training, but should not be an input
+        jets = np.lib.recfunctions.drop_fields(jets, "weight")
+        if "weight" in self.jet_vars:
+            self.jet_vars.remove("weight")
 
         # Reform jets to unstructured arrays
         jets = repack_fields(jets[self.jet_vars])

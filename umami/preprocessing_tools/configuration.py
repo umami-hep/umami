@@ -204,7 +204,7 @@ class SamplingOptions:
             (self.custom_n_jets_initial, "custom_n_jets_initial", dict, False),
             (self.fractions, "fractions", dict, False),
             (self.max_upsampling_ratio, "max_upsampling_ratio", dict, False),
-            (self.sampling_fraction, "max_upsampling_ratio", dict, False),
+            (self.sampling_fraction, "sampling_fraction", dict, False),
             (self.n_jets, "n_jets", int, True),
             (self.n_jets_validation, "n_jets_validation", int, False),
             (self.n_jets_scaling, "n_jets_scaling", int, False),

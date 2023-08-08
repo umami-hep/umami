@@ -413,19 +413,17 @@ def plot_roc(
     roc_plot.set_ratio_class(
         ratio_panel=1,
         rej_class=flav_list[0],
-        label=f'{flav_cat[flav_list[0]]["legend_label"]} ratio'.capitalize(),
     )
 
     if n_ratio_panels > 1:
         roc_plot.set_ratio_class(
             ratio_panel=2,
             rej_class=flav_list[1],
-            label=f'{flav_cat[flav_list[1]]["legend_label"]} ratio'.capitalize(),
         )
 
     if working_points is not None:
         roc_plot.draw_vlines(
-            vlines_xvalues=working_points,
+            xs=working_points,
             same_height=same_height_working_points,
         )
 
@@ -460,17 +458,6 @@ def plot_roc(
             linestyle=linestyle,
         )
         roc_plot.add_roc(roc_curve, reference=ratio_ref)
-
-    roc_plot.set_leg_rej_labels(
-        flav_list[0],
-        label=f'{flav_cat[flav_list[0]]["legend_label"]} rejection',
-    )
-
-    if n_ratio_panels > 1:
-        roc_plot.set_leg_rej_labels(
-            flav_list[1],
-            label=f'{flav_cat[flav_list[1]]["legend_label"]} rejection',
-        )
 
     # Draw and save the plot
     roc_plot.draw(labelpad=labelpad)
@@ -671,9 +658,9 @@ def plot_score(
             working_point_label.append(f"{int(working_point * 100)} %")
 
         score_plot.draw_vlines(
-            vlines_xvalues=working_point_xvalues,
+            xs=working_point_xvalues,
             same_height=same_height_working_points,
-            vlines_label_list=working_point_label,
+            labels=working_point_label,
         )
 
     for model_counter, (
@@ -1013,10 +1000,8 @@ def plot_fraction_contour(
 
         # Loop over the fraction values
         for frac in fraction_list:
-
             # Loop over the entries in the provided results
             for dict_key, dict_values in df_results.items():
-
                 # Init a rej_to_fix bool
                 rej_to_fix_bool = True
 

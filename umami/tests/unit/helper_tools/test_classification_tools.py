@@ -43,7 +43,7 @@ class GetClassTestCase(unittest.TestCase):
             "bjets": ["HadronConeExclTruthLabelID == 5"],
             "cjets": ["HadronConeExclTruthLabelID == 4"],
             "ujets": ["HadronConeExclTruthLabelID == 0"],
-            "singlebjets": ["HadronConeExclExtendedTruthLabelID == [5, 54]"],
+            "singlebjets": ["HadronConeExclExtendedTruthLabelID == 5"],
         }
 
     def test_get_class_label_variables_3_classes(self):

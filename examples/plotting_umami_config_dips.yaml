@@ -73,7 +73,7 @@ scores_Dips_ttbar_comparison:
     use_atlas_tag: True # Enable/Disable atlas_first_tag
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets"
-    Ratio_Cut: [0.5, 1.5]
+    Ratio_Cut: [[0.5], [1.5]]
 
 Dips_pT_vs_beff:
   type: "pT_vs_eff"
@@ -200,4 +200,4 @@ Dips_prob_comparison_pb:
     use_atlas_tag: True # Enable/Disable atlas_first_tag
     atlas_first_tag: "Simulation Internal"
     atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets"
-    Ratio_Cut: [0.5, 1.5]
+    Ratio_Cut: [[0.5], [1.5]]

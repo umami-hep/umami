@@ -123,8 +123,8 @@ nTracks:
   <<: *ttbar_cuts
   plot_settings:
     <<: *default_plot_settings
-    ymin_ratio_1: 0.5
-    ymax_ratio_1: 2
+    ymin_ratio: [0.5]
+    ymax_ratio: [2]
   class_labels: ["bjets", "cjets", "ujets"]
 
 tracks_input_vars:
@@ -143,8 +143,8 @@ tracks_input_vars:
     <<: *default_plot_settings
     sorting_variable: "ptfrac"
     n_leading: [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    ymin_ratio_1: 0.5
-    ymax_ratio_1: 1.5
+    ymin_ratio: [0.5]
+    ymax_ratio: [1.5]
   <<: *ttbar_cuts
   var_dict:
     IP3D_signed_d0_significance: 100
