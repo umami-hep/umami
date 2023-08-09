@@ -10,115 +10,97 @@ tags:
 authors:
   - name: Jackson Barr
     orcid: 0000-0002-9752-9204 
-    equal-contrib: true
-    affiliation: 5
+    affiliation: 1
   - name: Joschka Birk
     orcid: 0000-0002-1931-0127
-    equal-contrib: true
-    affiliation: 1
+    affiliation: 2
   - name: Maxence Draguet
-    equal-contrib: true
-    affiliation: 4
+    affiliation: 3
   - name: Stefano Franchellucci
     orcid: 0000-0003-0695-0798
-    equal-contrib: true
-    affiliation: 2
+    affiliation: 4
   - name: Alexander Froch
     orcid: 0000-0002-8259-2622
-    equal-contrib: true
-    affiliation: 1
+    affiliation: 2
   - name: Philipp Gadow
     orcid: 0000-0003-4475-6734
-    equal-contrib: true
-    affiliation: 3
+    affiliation: 5
   - name: Daniel Hay Guest
     orcid: 0000-0002-4305-2295
-    equal-contrib: true
     affiliation: 6
   - name: Manuel Guth
     orcid: 0000-0002-6647-1433
-    equal-contrib: true
-    affiliation: 2
+    affiliation: 4
   - name: Nicole Michelle Hartman
     orcid: 0000-0001-9111-4916
-    equal-contrib: true
-    affiliation: 12
+    affiliation: 7
   - name: Michael Kagan
     orcid: 0000-0002-3386-6869
-    equal-contrib: true
-    affiliation: 11
+    affiliation: 8
   - name: Osama Karkout
     orcid: 0000-0002-4907-9499
-    equal-contrib: true
     affiliation: 9
   - name: Dmitrii Kobylianskii
     orcid: 0009-0002-0070-5900
-    equal-contrib: true
     affiliation: 10
   - name: Ivan Oleksiyuk
     orcid: 0000-0002-4784-6340
-    equal-contrib: true
-    affiliation: 2
+    affiliation: 4
   - name: Nikita Ivvan Pond
     orcid: 0000-0002-5966-0332
-    equal-contrib: true
-    affiliation: 5
+    affiliation: 1
   - name: Frederic Renner
     orcid: 0000-0002-9475-3075
-    equal-contrib: true
-    affiliation: 3
+    affiliation: 11
   - name: Sebastien Rettie
     orcid: 0000-0002-7092-3893
-    equal-contrib: true
-    affiliation: 7
+    affiliation: 5
   - name: Victor Hugo Ruelas Rivera
     orcid: 0000-0002-2116-048X
-    equal-contrib: true
     affiliation: 6
   - name: Tomke Schröer
     orcid: 0000-0001-7967-6385
-    equal-contrib: true
-    affiliation: 2
+    affiliation: 4
   - name: Martino Tanasini
     orcid: 0000-0002-6313-4175
-    equal-contrib: true
-    affiliation: 8
+    affiliation: 12
   - name: Samuel Van Stroud
     orcid: 0000-0002-7969-0301
-    equal-contrib: true
-    affiliation: 5
+    affiliation: 1
   - name: Janik Von Ahnen
     orcid: 0000-0003-4032-0079
-    equal-contrib: true
-    affiliation: 3
+    affiliation: 11
   
   
   
 affiliations:
- - name: Albert-Ludwigs-Universität Freiburg, Germany
-   index: 1
- - name: Université de Genève, Switzerland
-   index: 2
- - name: Deutsches Elektronen-Synchrotron DESY, Germany
-   index: 3
- - name: University of Oxford, United Kingdom
-   index: 4
  - name: University College London, United Kingdom
+   index: 1
+ - name: Albert-Ludwigs-Universität Freiburg, Germany
+   index: 2
+ - name: University of Oxford, United Kingdom
+   index: 3
+ - name: Université de Genève, Switzerland
+   index: 4
+ - name: European Laboratory for Particle Physics CERN, Switzerland
    index: 5
  - name: Humboldt University Berlin, Germany
    index: 6
- - name: European Laboratory for Particle Physics CERN, Switzerland
+ - name: Technical University of Munich, Germany
    index: 7
- - name: INFN Genova and Universita' di Genova, Italy
+ - name: SLAC National Accelerator Laboratory, United States of America
    index: 8
  - name: Nikhef National Institute for Subatomic Physics and University of Amsterdam, Netherlands
    index: 9
  - name: Department of Particle Physics and Astrophysics, Weizmann Institute of Science, Israel
    index: 10
- - name: SLAC National Accelerator Laboratory, United States of America
+ - name: Deutsches Elektronen-Synchrotron DESY, Germany
    index: 11
- - name: Technical University of Munich, Germany
+ - name: INFN Genova and Universita' di Genova, Italy
    index: 12
+
+
+
 date: 09 August 2023
 bibliography: paper.bib
 
