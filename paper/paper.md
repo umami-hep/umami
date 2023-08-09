@@ -156,15 +156,15 @@ The resulting training data has balanced target classes and transformed input fe
 Finally, the training sample is written to disk, together with the `json` file and datasets for validation and performance evaluation. The resulting datasets can be stored either as an `hdf5` file [@hdf5:2023] or in the binary `TFRecords` format to improve reading speed provided by `TensorFlow`.
 The validation and testing samples can undergo the same resampling procedure as the training data if desired by the user.
 
-Using `Umami` is not limited to jet flavour tagging but provides support for a broad range of applications. The preprocessing capabilities are demonstrated with simulated physics processes from the JetClass dataset [@JetClass:2022] to distinguish jets originating from Higgs boson decays from jets originating from top quark decays. This represents a similar but slightly different use of machine learning algorithms for jet classification. The software is flexible enough to address this task with only minimal modifications in configuration files. The training of flavour tagging algorithms is discussed in Ref. [@ATLAS:2019].
+Using `Umami` is not limited to jet flavour tagging but provides support for a broad range of applications. The preprocessing capabilities are demonstrated with simulated physics processes from the JetClass dataset [@JetClass:2022] to distinguish jets originating from Higgs boson decays from jets originating from top quark decays. This represents a similar but slightly different use of machine learning algorithms for jet classification. The software is flexible enough to address this task with only minimal modifications in configuration files. A comprehensive discussion of flavour tagging algorithm training is provided in Ref. [@ATLAS:2019].
 
-\autoref{fig:eta} shows the pseudorapidity $\eta$ and its absolute value $|\eta|$ of the jets from Higgs boson decays to b-quarks (Hbb-jets), Higgs boson decays to c-quarks (Hcc-jets), and to top quarks (Top-jets) before and after the re-sampling step in the preprocessing.
+\autoref{fig:eta} shows the pseudorapidity $\eta$ and its absolute value $|\eta|$ of the jets from Higgs boson decays to b-quarks, Higgs boson decays to c-quarks, and to top quarks before and after the re-sampling step in the preprocessing. The total number of events in each class is equalised and the shape differences between classes are removed by the resampling.
 
-![Distributions of the pseudorapidity $\eta$ of jets from Higgs boson decays to b-quarks (Hbb-jets), Higgs boson decays to c-quarks (Hcc-jets), and to top quarks (Top-jets) before and after resampling.\label{fig:eta}](eta.png){ width=90% }
+![Distributions of the pseudorapidity $\eta$ of jets from Higgs boson decays to b-quarks ($H \rightarrow b\overline{b}$-jets), Higgs boson decays to c-quarks ($H \rightarrow c\overline{c}$-jets), and to top quarks (Top) before and after resampling.\label{fig:eta}](eta.png){ width=90% }
 
-Similarly, \autoref{fig:mass} shows the invariant mass before and after pre-processing, including the transformation of the dimensional quantity to a smaller range centered around zero.
+Similarly, \autoref{fig:mass} shows the invariant mass before and after pre-processing, including the transformation of the dimensional quantity to a smaller range centered around zero. She scaling and shifting results in input features which are centred around zero and have the distribution in similar order of magnitude as other features.
 
-![Distributions of the invariant mass jets from Higgs boson decays to b-quarks (Hbb-jets), Higgs boson decays to c-quarks (Hcc-jets), and to top quarks (Top-jets) before and after pre-processing.\label{fig:mass}](mass.png){ width=90% }
+![Distributions of the invariant mass jets from Higgs boson decays to b-quarks ($H \rightarrow b\overline{b}$-jets), Higgs boson decays to c-quarks ($H \rightarrow c\overline{c}$-jets), and to top quarks (Top) before and after pre-processing.\label{fig:mass}](mass.png){ width=90% }
 
 
 ## Training
@@ -178,11 +178,11 @@ The steps involved in the training workflow are illustrated in \autoref{fig:trai
 
 The resulting model from each epoch (in which the whole dataset was processed by the algorithm) is saved during the training. These models are evaluated on a validation dataset to identify the network weights corresponding to the epoch with the best performance. Typical performance metrics include the validation loss and the efficiency in identifying the correct jet labels. These can be plotted as a function of the training epoch to guide the selection.
 
-As an example, a deep neural network is trained on the previously discussed JetClass dataset to separate Hbb- and Hcc-jets from Top-jets. \autoref{fig:loss} shows the loss function which is minimised while training the model on the training sample (purple curve) as a function of the epoch together with the loss function evaluated on the validation sample (green curve). Similarly, \autoref{fig:accuracy} shows the accuracy.
+As an example, a deep neural network is trained on the previously discussed JetClass dataset to separate jets originating from Higgs boson decays from jets originating from top quark decays. \autoref{fig:loss} shows the loss function which is minimised while training the model on the training sample (purple curve) as a function of the epoch together with the loss function evaluated on the validation sample (green curve). Similarly, \autoref{fig:accuracy} shows the accuracy.
 
-![The loss function which is minimised while training a deep neural network for separating Hbb- and Hcc-jets from Top-jets in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:loss}](loss-plot.png){ width=80% }
+![The loss function which is minimised while training a deep neural network for separating jets originating from Higgs boson decays from jets originating from top quark decays in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:loss}](loss-plot.png){ width=80% }
 
-![The accuracy for classifying Hbb- and Hcc-jets while training a deep neural network for separating Hbb- and Hcc-jets from Top-jets in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:accuracy}](accuracy-plot.png){ width=80% }
+![The accuracy for classifying jets originating from Higgs boson decays while training a deep neural network for separating jets originating from Higgs boson decays from jets originating from top quark decays in the JetClass dataset, shown both for the training data (purple curve) and the validation data (green curve).\label{fig:accuracy}](accuracy-plot.png){ width=80% }
 
 Typically, in the early epochs the accuracy on the training data is higher than on the validation data which are not used in training. Convergence of the two curves for later epochs demonstrates that the model does generalise well and does not pick up peculiarities of the training data ("overtraining").
 
