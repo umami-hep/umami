@@ -12,4 +12,4 @@ seaborn==0.11.2
 shap==0.40.0
 tables==3.7.0
 tqdm==4.62.3
-umami-preprocessing==0.0.1
+umami-preprocessing==0.0.2
