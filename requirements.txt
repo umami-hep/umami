@@ -1,10 +1,10 @@
-atlas-ftag-tools==0.1.5
+atlas-ftag-tools==0.1.9
 h5py==3.7.0
 matplotlib==3.5.1
 mlxtend==0.19.0
 numpy==1.21.0
 pandas==1.3.5
-puma-hep==0.2.7
+puma-hep==0.2.8
 pydash==5.1.0
 pyyaml==6.0
 ruamel.yaml==0.17.21
@@ -12,3 +12,4 @@ seaborn==0.11.2
 shap==0.40.0
 tables==3.7.0
 tqdm==4.62.3
+umami-preprocessing==0.0.1
