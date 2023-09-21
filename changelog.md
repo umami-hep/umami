@@ -2,6 +2,8 @@
 
 ### Latest
 
+### [v0.21](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.21) (21.09.2023)
+
 - Update UPP to v0.0.2 [!737](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/737)
 - Update atlas-ftag-tools and UPP [!736](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/736)
 - Update atlas-ftag-tools to v0.1.5 [!735](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/735)
