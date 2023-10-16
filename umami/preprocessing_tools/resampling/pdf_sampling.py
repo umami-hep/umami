@@ -83,10 +83,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Iterate over the chosen variables which are used for resampling
         for samp_var in sampling_var:
-
             # Iterate over the variables
             for _, var in enumerate(list(samp_var.keys())):
-
                 # Add the bin and range info to the lists
                 while len(bin_info) < len(samp_var[var]["bins"]):
                     bin_info.append([])
@@ -217,7 +215,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Open input file
         with h5py.File(in_file, "r") as f_in:
-
             # Get the number of jets inside the file
             n_jets_initial = len(f_in["jets"])
 
@@ -240,7 +237,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # Iterate until the number of asked jets is reached
             while end_ind <= n_jets_initial or start_ind == 0:
-
                 # Check that not an end index is chosen, which is not available
                 # 100 jets available, chunk size: 30, end index: 80
                 # Adding this up would cause an error
@@ -259,7 +255,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # Loop over the index paris
             for index_tuple in tupled_indices:
-
                 # Get the chunk of jets that is to be loaded
                 to_load = f_in["jets"][index_tuple[0] : index_tuple[1]]
 
@@ -307,7 +302,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Open input file
         with h5py.File(in_file, "r") as f_in:
-
             # Get the number of available jets
             n_indices = len(f_in["jets"])
 
@@ -334,7 +328,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # Iterate over the index pairs
             for index_tuple in tupled_indices:
-
                 # Get the indicies which are to be loaded
                 loading_indices = np.arange(index_tuple[0], index_tuple[1])
 
@@ -473,7 +466,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # Iterate over until all chunks are loaded
             while load_chunk:
-
                 # Get the dict with the resampling info, the info if more
                 # chunks can be loaded and the number of total jets available
                 try:
@@ -500,7 +492,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                     )
 
                 else:
-
                     # Get the 2d histogram of the two resampling variables
                     new_hist, _, _ = np.histogram2d(
                         target_dist["sample_vector"][:, 0],
@@ -529,7 +520,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Or the in memory approach
         else:
-
             # Get the target dist from the sample
             _, target_dist = self.load_samples(sample_category, sample_id)
 
@@ -640,10 +630,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Iterate over the categories
         for category in self.sample_categories:
-
             # Iterate over the samples in the category
             for sample in samples[category]:
-
                 # Get the preparation configs (cuts etc.) for the sample
                 preparation_sample = self.preparation_config.get_sample(sample)
 
@@ -1209,7 +1197,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Loop over the chunks until no chunks can be loaded anymore
         while load_chunk:
-
             # Try to get chunk from generator
             try:
                 _, target_dist, load_more, total_number, start_ind = next(generator)
@@ -1258,11 +1245,9 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # If this is the first chunk, create a new file
             if create_file:
-
                 # Set the creation to false
                 create_file = False
                 with h5py.File(save_name, "w") as f_h5:
-
                     # Set git hash as attribute of the file
                     f_h5.attrs["git_hash"] = self.config.git_hash
 
@@ -1277,7 +1262,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # If this is not the first chunk, extend existing file
             else:
-
                 with h5py.File(save_name, "a") as f_h5:
                     # Append indicies to existing ones
                     f_h5["jets"].resize(
@@ -1361,7 +1345,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Iterate over the chunks
         while chunk_counter < n_chunks + 1:
-
             # Get jets, tracks and labels of the chunk
             try:
                 if self.save_tracks:
@@ -1391,10 +1374,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # Create a new file if this is the first chunk
             if chunk_counter == 0:
-
                 # Write to file by creating dataset
                 with h5py.File(save_name, "w") as out_file:
-
                     # Set git hash as attribute of the file
                     out_file.attrs["git_hash"] = self.config.git_hash
 
@@ -1535,7 +1516,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Iterate over chunks
         while load_chunk:
-
             # Load the chunk with the generator
             try:
                 indices, load_more = next(index_generator)
@@ -1577,13 +1557,11 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
             # Check if this is the first chunk
             if create_file:
-
                 # Set file creation to false
                 create_file = False
 
                 # write to file by creating dataset
                 with h5py.File(save_name, "w") as out_file:
-
                     # Set git hash as attribute of the file
                     out_file.attrs["git_hash"] = self.config.git_hash
 
@@ -1778,20 +1756,17 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Iterate over the samples
         for cat_ind, sample_category in enumerate(self.samples_to_resample):
-
             # Get the flavour name and append it to list
             flavour_name = self.sample_file_map[sample_category][sample_id][0]
             flavour_names.append(flavour_name)
 
         # If the flavour name is in the max upsampling section
         if any(flavour_name in self.max_upsampling for flavour_name in flavour_names):
-
             # Init list for asked number of jets
             asked_num = []
 
             # Iterate over samples
             for cat_ind, flavour_name in enumerate(flavour_names):
-
                 # Get the number of asked jets
                 num_asked = target_data["target_number"][
                     list(self.samples_to_resample)[cat_ind]
@@ -2023,7 +1998,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Open file where the indicies will be saved
         with h5py.File(save_name, "w") as f_h5:
-
             # Set git hash as attribute of the file
             f_h5.attrs["git_hash"] = self.config.git_hash
 
@@ -2132,10 +2106,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
         for sample_id, _ in enumerate(
             self.samples_to_resample[list(self.sample_categories.keys())[0]]
         ):
-
             # Iterate over the different sample types (ttbar, zpext)
             for sample_category in self.samples_to_resample:
-
                 # Get the name of the file where the selected jets are stored in
                 # for the given combination of flavour and sample type
                 load_name = os.path.join(
@@ -2189,10 +2161,8 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
 
         # Loop over all chunks until limit is reached
         while chunk_number < number_of_chunks:
-
             # Loop over the files
             for file_counter, (dict_key, df_in) in enumerate(sample_dict.items()):
-
                 # Get the chunk size for this file
                 chunk_size_file = int(
                     np.round((sample_length[dict_key] / sample_sum) * chunk_size)
@@ -2276,14 +2246,12 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
             # Check if this is the first chunk that is written to the final
             # output file.
             if create_file:
-
                 # Create the output directory if not exist
                 os.makedirs(output_name.rsplit("/", 1)[0], exist_ok=True)
 
                 # Open the final output file and create the datasets
                 # needed.
                 with h5py.File(output_name, "w") as out_file:
-
                     # Set git hash as attribute of the file
                     out_file.attrs["git_hash"] = self.config.git_hash
 
@@ -2321,7 +2289,6 @@ class PDFSampling(ResamplingTools):  # pylint: disable=too-many-public-methods
                 create_file = False
 
             else:
-
                 # Open the already existing output file and datasets
                 # and append the chunk to it
                 with h5py.File(output_name, "a") as out_file:

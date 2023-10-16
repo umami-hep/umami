@@ -123,7 +123,6 @@ if __name__ == "__main__":
 
     # Check for preparation
     if args.prepare:
-
         # Copy config to output directory
         config.copy_to_out_dir("preparation")
 
@@ -138,7 +137,6 @@ if __name__ == "__main__":
                 " take a lot of time!"
             )
         for iter_sample in samples:
-
             # Set the argument in args to this sample and run prepare
             args.sample = iter_sample
             preparation_tool = upt.PrepareSamples(args, config)
@@ -146,7 +144,6 @@ if __name__ == "__main__":
 
     # Check for resampling
     elif args.resampling:
-
         # ensure output dir exists
         out_dir = Path(config.config["parameters"]["file_path"])
         out_dir.mkdir(parents=True, exist_ok=True)

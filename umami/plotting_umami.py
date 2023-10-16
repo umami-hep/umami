@@ -619,7 +619,6 @@ def set_up_plots(
 
     # Iterate over the different plots which are to be plotted
     for plot_name, plot_config in tqdm(plot_config_dict.items()):
-
         # Skip general "Eval_parameters" and yaml anchors (have to start with a dot)
         if plot_name == "Eval_parameters" or plot_name.startswith("."):
             continue

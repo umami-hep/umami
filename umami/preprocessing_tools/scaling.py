@@ -138,7 +138,6 @@ def apply_scaling_jets(
 
     # Loop over the variables requested
     for var in variables_list:
-
         # Skipping default variables
         if "isDefaults" in var or "weight" in var:
             continue
@@ -269,7 +268,6 @@ def apply_scaling_trks(
 
         # Check if the variable needs to be in log
         if var in trk_vars_lists_dict["logNormVars"]:
-
             # Check for negative values in the log vars
             if (trk_array < 0).any():
                 raise ValueError(
@@ -295,7 +293,6 @@ def apply_scaling_trks(
             var in trk_vars_lists_dict["jointNormVars"]
             or var in trk_vars_lists_dict["logNormVars"]
         ):
-
             # Check against 0 or inf scale value
             if scale == 0 or np.isinf(scale):
                 raise ValueError(f"Scale parameter for track var {var} is {scale}.")
@@ -561,7 +558,6 @@ class CalculateScaling:
             scale_dict[var] = {"shift": float(mean), "scale": float(scale)}
 
         if self.save_track_labels:
-
             # Get the track label variables and the track weight variable
             trk_label_variables = self.track_label_variables.get(tracks_name)
             trk_weight_variables = self.track_weight_variables.get(tracks_name)
@@ -703,7 +699,6 @@ class CalculateScaling:
 
         # Check if tracks are used or not
         if self.save_tracks is True:
-
             # Loop over all tracks selections
             for tracks_name in self.tracks_names:
                 scale_dict_trk = {}
@@ -888,7 +883,6 @@ class CalculateScaling:
 
                     # Calculate scaling/shifting value for given variable
                     else:
-
                         # Get the dict entry
                         var, vals = self.get_scaling(
                             vec=jets[var].values,
@@ -959,7 +953,6 @@ class CalculateScaling:
 
         # Open h5 file
         with h5py.File(input_file, "r") as infile_all:
-
             # Get the indices
             start_ind = 0
             tupled_indices = []
@@ -985,7 +978,6 @@ class CalculateScaling:
 
             # Loop over the chunks
             for idx in tupled_indices:
-
                 # Load tracks
                 trks = np.asarray(
                     infile_all[f"/{tracks_name}"][idx[0] : idx[1]],
