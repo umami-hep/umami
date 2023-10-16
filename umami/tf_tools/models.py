@@ -261,7 +261,6 @@ def deepsets_model(
 
     # Check for attention pooling
     elif pooling in "attention":
-
         # Assert that attention nodes are given and that the attention_nodes are
         # in list form
         assert attention_nodes is not None and isinstance(
@@ -467,7 +466,6 @@ def deepsets_model_umami(
 
     # Check for attention pooling
     elif pooling in "attention":
-
         # Assert that attention nodes are given and that the attention_nodes are
         # in list form
         assert attention_nodes is not None and isinstance(

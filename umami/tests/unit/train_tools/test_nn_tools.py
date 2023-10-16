@@ -981,7 +981,11 @@ class GetSamplesTestCase(unittest.TestCase):
 
     def test_get_test_file(self):
         """Test nominal behaviour."""
-        (x_valid, x_valid_trk, y_valid,) = get_test_file(
+        (
+            x_valid,
+            x_valid_trk,
+            y_valid,
+        ) = get_test_file(
             input_file=self.validation_files["ttbar_r21_val"]["path"],
             var_dict=self.var_dict,
             scale_dict=self.dict_file,

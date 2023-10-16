@@ -138,7 +138,6 @@ def calc_disc_values(
 
     # Iterate over the rejection classes
     for num_iter, rej_class_iterator in enumerate(rej_class):
-
         # Init denominator of disc_score and add_small
         numerator = 0
         denominator = 0

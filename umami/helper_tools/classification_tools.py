@@ -26,7 +26,6 @@ def get_class_label_variables(class_labels: list):
     label_var_list = []
 
     for class_label in class_labels:
-
         for cut_list in flavour_categories[class_label]["cuts"]:
             for cut in cut_list:
                 label_var_list.append(cut)

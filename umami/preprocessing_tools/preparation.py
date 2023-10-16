@@ -211,7 +211,6 @@ class PrepareSamples:
 
             # Check if a file is already present
             if self.create_file:
-
                 # Set to false because the file will be created now
                 self.create_file = False  # pylint: disable=W0201:
 
@@ -220,7 +219,6 @@ class PrepareSamples:
 
                 # Start h5 file
                 with h5py.File(self.sample.output_name, "w") as out_file:
-
                     # Set git hash as attribute of the file
                     out_file.attrs["git_hash"] = self.config.git_hash
 
@@ -246,14 +244,12 @@ class PrepareSamples:
 
             # If file is already created, append the jets instead of create a new file
             else:
-
                 # Check if the write message should be printed
                 if displayed_writing_output:
                     pbar.write(f"Writing to output file: {self.sample.output_name}")
 
                 # Start h5 fill
                 with h5py.File(self.sample.output_name, "a") as out_file:
-
                     # Resize the max shape of the jets group
                     out_file["jets"].resize(
                         (out_file["jets"].shape[0] + jets.shape[0]),

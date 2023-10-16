@@ -67,7 +67,6 @@ def read_dataframe_repetition(
 
         # Loop over the list of indicies which are to be loaded
         for i, sublist_loading_indices in enumerate(list_loading_indices):
-
             # Loading the jets
             jet_ls.append(file_df["jets"][sublist_loading_indices])
 
@@ -390,7 +389,6 @@ class Resampling:
 
         # Iterate over the variables which are used for resampling
         for iter_counter, _ in enumerate(self.resampling_variables):
-
             # Get the name of the variable
             iter_var = self.resampling_variables[iter_counter]
             iter_bins = sampling_variables[iter_counter][iter_var]["bins"]
@@ -468,7 +466,6 @@ class Resampling:
 
         # Iterate over the different jets/tracks groups
         for dataset in ["jets"] + self.tracks_names if self.save_tracks else ["jets"]:
-
             # Retrieve the common and diff vars for the given dataset for the files
             common_vars_i, diff_vars = compare_h5_files_variables(
                 *sample_paths,
@@ -611,7 +608,6 @@ class Resampling:
                 create_file = False
                 # write to file by creating dataset
                 with h5py.File(self.outfile_name, "w") as out_file:
-
                     # Set git hash as attribute of the file
                     out_file.attrs["git_hash"] = self.config.git_hash
 
@@ -728,7 +724,6 @@ class Resampling:
 
         # Open the file to read the jets
         with h5py.File(file, "r") as f_h5:
-
             # Use all variables if none are specified
             if variables is None:
                 variables = {}
@@ -759,7 +754,6 @@ class Resampling:
 
             # Loop over the shuffled indicies
             for index_tuple in tupled_indices:
-
                 # Get the indicies which are to be loaded
                 loading_indices = indices[index_tuple[0] : index_tuple[1]]
 
@@ -790,7 +784,6 @@ class Resampling:
 
                     # Loop over the list of indicies which are to be loaded
                     for i, sublist_loading_indices in enumerate(list_loading_indices):
-
                         # Loading the jets
                         jet_ls.append(
                             f_h5["jets"].fields(variables["jets"])[
@@ -896,7 +889,6 @@ class ResamplingTools(Resampling):
                     "Loading sampling variables from %s", preparation_sample_path
                 )
                 with h5py.File(preparation_sample_path, "r") as f_prep:
-
                     # Check for custom initial jets
                     if (
                         self.options.custom_n_jets_initial is not None

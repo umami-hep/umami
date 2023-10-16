@@ -141,7 +141,6 @@ def main(args, train_config):
         "dips_attention",
         "cads",
     ]:
-
         # If dict is given, the re-calculation is skipped
         if args.dict:
             output_file_name = args.dict

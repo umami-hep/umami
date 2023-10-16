@@ -61,7 +61,6 @@ def plot_unique_jet_appearence(
 
     # Loop over the different flavours
     for counter, class_label in enumerate(class_labels):
-
         # Select only the wanted category
         tmp_jets = jets[jets["Umami_labels"] == counter]
 
@@ -287,7 +286,6 @@ def plot_resampling_variables(
 
     # Loop over the variables which are used for resampling
     for var, varpos in zip(variable_names, var_positions):
-
         if isinstance(bins_dict[var], int):
             bins = bins_dict[var]
             bins_range = None
@@ -327,7 +325,6 @@ def plot_resampling_variables(
 
         # Loop over the different flavours
         for flavour in concat_samples:
-
             # Loop over sample ids (ttbar and zprime for example)
             for sample_id in np.unique(
                 concat_samples[flavour]["jets"][:, sample_id_position]
@@ -414,7 +411,6 @@ def preprocessing_plots(
 
     # Check if random values are used or not
     if use_random_jets is True:
-
         # Get a random generator with specified seed
         rng = np.random.default_rng(seed=seed)
 
@@ -428,7 +424,6 @@ def preprocessing_plots(
         )
 
     else:
-
         # if number of requested jets is larger that what is available,
         # plot all available jets.
         if n_jets > n_jets_infile:
@@ -461,7 +456,6 @@ def preprocessing_plots(
 
         # Check if jet collection is given
         if jet_collection:
-
             # Check if output directory exists
             os.makedirs(
                 plots_dir,
@@ -483,7 +477,6 @@ def preprocessing_plots(
 
             # Loop over variables
             for jet_var_counter, jet_var in enumerate(jet_var_list):
-
                 # Plotting
                 plot_variable(
                     df_in=jets,
@@ -498,7 +491,6 @@ def preprocessing_plots(
 
         # Loop over the track selections
         for track_collection in track_collection_list:
-
             # Check if output directory exists
             os.makedirs(
                 os.path.join(
@@ -531,7 +523,6 @@ def preprocessing_plots(
 
             # Loop over track variables
             for trk_var_counter, trk_var in enumerate(trks_vars):
-
                 # Plotting
                 plot_variable(
                     df_in=tracks,

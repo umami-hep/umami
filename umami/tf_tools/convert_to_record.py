@@ -63,7 +63,6 @@ class H5ToTFRecords:
 
         # Open the h5 output file
         with h5py.File(self.path_h5, "r") as f_h5:
-
             # Get the number of jets in the file
             length_dataset = len(f_h5["jets/inputs"])
             logger.info(
@@ -81,7 +80,6 @@ class H5ToTFRecords:
 
             logger.info("Total number of loading steps is %i", total_loads)
             for i in tqdm.tqdm(range(total_loads)):
-
                 # Get start and end chunk index
                 start = i * self.chunk_size
                 end = (i + 1) * self.chunk_size
@@ -139,7 +137,6 @@ class H5ToTFRecords:
 
         # Open h5 file
         with h5py.File(self.path_h5) as h5file:
-
             # Init a data dict
             data = {}
 
@@ -235,7 +232,6 @@ class H5ToTFRecords:
 
             with tf.io.TFRecordWriter(filename) as file_writer:
                 for iterator, _ in enumerate(x_jets):
-
                     # Get record bytes example
                     record_bytes = tf.train.Example()
 
