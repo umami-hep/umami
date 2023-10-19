@@ -1,0 +1,36 @@
+diff --git a/umami/configs/global_config.yaml b/umami/configs/global_config.yaml
+index cb945d3e..7532c574 100644
+--- a/umami/configs/global_config.yaml
++++ b/umami/configs/global_config.yaml
+@@ -83,25 +83,25 @@ flavour_categories:
+   # Xbb tagging
+   hbb:
+     cuts:
+-      - R10TruthLabel_R22v1:
++      - HadronConeExclTruthLabelID:
+           operator: "=="
+-          condition: 11
++          condition: 5
+     colour: "#1f77b4"  # blue
+     legend_label: $Hbb$-jets
+     prob_var_name: "pHbb"
+   hcc:
+     cuts:
+-      - R10TruthLabel_R22v1:
++      - HadronConeExclTruthLabelID:
+           operator: "=="
+-          condition: 12
++          condition: 4
+     colour: "#B45F06"  # Tenne (dark orange)
+     legend_label: $Hcc$-jets
+     prob_var_name: "pHcc"
+   top:
+     cuts:
+-      - R10TruthLabel_R22v1:
++      - HadronConeExclTruthLabelID:
+           operator: "=="
+-          condition: 1
++          condition: 0
+     colour: "#A300A3" # dark magenta
+     legend_label: $Top$-jets
+     prob_var_name: "ptop"
