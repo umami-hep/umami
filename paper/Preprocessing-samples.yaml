@@ -1,0 +1,47 @@
+training_hbb:
+  type: paper
+  category: hbb
+  n_jets: 10e6
+  output_name: !join [*sample_path, /hbb_training_PFlow.h5]
+
+training_hcc:
+  type: paper
+  category: hcc
+  n_jets: 10e6
+  output_name: !join [*sample_path, /hcc_training_PFlow.h5]
+
+training_top:
+  type: paper
+  category: top
+  n_jets: 10e6
+  output_name: !join [*sample_path, /top_training_PFlow.h5]
+
+validation:
+  type: paper
+  category: inclusive
+  n_jets: 4e6
+  output_name: !join [*sample_path, /inclusive_validation_PFlow.h5]
+
+validation_hbb:
+  type: paper
+  category: hbb
+  n_jets: 4e6
+  output_name: !join [*sample_path, /hbb_validation_PFlow.h5]
+
+validation_hcc:
+  type: paper
+  category: hcc
+  n_jets: 4e6
+  output_name: !join [*sample_path, /hcc_validation_PFlow.h5]
+
+validation_top:
+  type: paper
+  category: top
+  n_jets: 4e6
+  output_name: !join [*sample_path, /top_validation_PFlow.h5]
+
+testing:
+  type: paper
+  category: inclusive
+  n_jets: 4e6
+  output_name: !join [*sample_path, /inclusive_testing_PFlow.h5]

@@ -1,0 +1,31 @@
+# Path where the ntuples are saved
+ntuple_path: &ntuple_path <Path/to/h5/files>
+
+# Base path where to store preprocessing results
+.base_path: &base_path <Base/Path>
+
+# Path where the hybrid samples will be saved
+sample_path: &sample_path !join [*base_path, /hybrids]
+
+# Path where the merged and ready-to-train samples are saved
+file_path: &file_path !join [*base_path, /preprocessed]
+
+# Name of the output file from the preprocessing used for training (has to be a .h5 file, no folder)
+.outfile_name: &outfile_name !join [*file_path, /PFlow-hybrid.h5]
+
+# List of variables for training (yaml)
+.var_file: &var_file <Path/to/Variables/yaml>
+
+# Dictfile for the scaling and shifting (json)
+.dict_file: &dict_file <Output/Path/for/the/Scaling/file>
+
+# Intermediate file for the training sample indicies used in h5 format
+.intermediate_index_file: &intermediate_index_file !join [*file_path, /indicies.h5]
+
+# Name of the output file from the preprocessing used for hybrid validation (has to be a .h5 file, no folder)
+# Will be ignored if hybrid validation is not used
+.outfile_name_validation: &outfile_name_validation !join [*file_path, /PFlow-hybrid-validation.h5]
+
+# Intermediate file for the hybrid validation sample indicies used in h5 format
+# Will be ignored if hybrid validation is not used
+.intermediate_index_file_validation: &intermediate_index_file_validation !join [*file_path, /indicies-hybrid-validation.h5]
