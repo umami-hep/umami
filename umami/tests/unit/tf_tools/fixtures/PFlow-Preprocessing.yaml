@@ -101,7 +101,7 @@ sampling:
     save_track_labels: True
 
     # String with the name of the track truth variable
-    #track_truth_variables: ["truthOriginLabel", "truthVertexIndex"]
+    #track_truth_variables: ["ftagTruthOriginLabel", "ftagTruthVertexIndex"]
 
     # this stores the indices per sample into an intermediate file
     intermediate_index_file: *intermediate_index_file
