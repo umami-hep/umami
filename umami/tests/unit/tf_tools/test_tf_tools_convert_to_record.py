@@ -43,7 +43,7 @@ class ConvertTest(unittest.TestCase):
             out_file.create_dataset(f"{tracks_name}/inputs", data=x_trks_train)
             out_file.create_dataset("jets/labels_one_hot", data=y_train)
             out_file.create_dataset(
-                f"{tracks_name}/labels/truthOriginLabel", data=y_trks_train
+                f"{tracks_name}/labels/ftagTruthOriginLabel", data=y_trks_train
             )
         self.config.general.outfile_name = self.tfh5.name.replace(
             "-resampled_scaled_shuffled.h5", ".h5"

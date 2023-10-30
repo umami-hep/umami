@@ -205,7 +205,8 @@ def plot_n_tracks_per_jet(
             n_tracks = np.sum(
                 np.logical_and(
                     ~np.isnan(trks["ptfrac"]),
-                    trks["truthOriginLabel"] == global_config.OriginType[track_origin],
+                    trks["ftagTruthOriginLabel"]
+                    == global_config.OriginType[track_origin],
                 ),
                 axis=1,
             )
@@ -476,14 +477,14 @@ def plot_input_vars_trks(
                         )
 
                     else:
-                        # Select tracks of a given origin, so keep truthOriginLabel
+                        # Select tracks of a given origin, so keep ftagTruthOriginLabel
                         trks_array = operator_dict[var_operator](
                             trks_array,
                             np.asarray(
                                 [
-                                    trks_dict[label][[iter_var, "truthOriginLabel"]][k][
-                                        sorting[k]
-                                    ]
+                                    trks_dict[label][
+                                        [iter_var, "ftagTruthOriginLabel"]
+                                    ][k][sorting[k]]
                                     for k in range(
                                         len(trks_dict[label][sorting_variable])
                                     )
@@ -524,7 +525,7 @@ def plot_input_vars_trks(
 
                     else:
                         mask_origin = np.asarray(
-                            tracks["truthOriginLabel"]
+                            tracks["ftagTruthOriginLabel"]
                             == global_config.OriginType[track_origin]
                         )
                         track_values = tracks[np.logical_and(tracks_mask, mask_origin)][
