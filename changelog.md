@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Update UPP to v0.0.4 [!744](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/744)
 - Change truth label names [!739](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/739)
 
 ### [v0.21](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.21) (21.09.2023)
