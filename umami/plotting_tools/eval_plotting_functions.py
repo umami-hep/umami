@@ -197,7 +197,7 @@ def plot_var_vs_eff(
                 bins=bin_edges,
                 working_point=working_point,
                 disc_cut=disc_cut,
-                fixed_eff_bin=fixed_eff_bin,
+                flat_per_bin=fixed_eff_bin,
                 label=model_label,
                 colour=colour,
                 alpha=alpha,
