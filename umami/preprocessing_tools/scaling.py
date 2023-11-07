@@ -172,8 +172,8 @@ def apply_scaling_jets(
             raise ValueError(
                 "Inf or NaN value(s) encountered when applying the scaling/shifting "
                 f"for the jets! The probablematic variable is {var}. "
-                f'Scale value: {scale_dict[var]["scale"]}, '
-                f'Shift value: {scale_dict[var]["shift"]}'
+                f"Scale value: {scale_dict[var]['scale']}, "
+                f"Shift value: {scale_dict[var]['shift']}"
             )
 
     return jets
@@ -751,8 +751,10 @@ class CalculateScaling:
                     for shift_scale, shift_scale_value in iter_dict.items():
                         if np.isinf(shift_scale_value) or np.isnan(shift_scale_value):
                             logger.error(
-                                "Track variable %s in track collection %s has an"
-                                " inf/nan value for %s value!",
+                                (
+                                    "Track variable %s in track collection %s has an"
+                                    " inf/nan value for %s value!"
+                                ),
                                 iter_var,
                                 tracks_name,
                                 shift_scale,
