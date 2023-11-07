@@ -1,14 +1,17 @@
 """Configuration module for NN trainings."""
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 import pydash
 import yaml
+from upp.classes.preprocessing_config import PreprocessingConfig
 
 from umami.configuration import logger
 from umami.data_tools import get_cut_list
 from umami.plotting_tools.utils import translate_kwargs
 from umami.preprocessing_tools import PreprocessConfiguration
+from umami.preprocessing_tools.configuration import GeneralSettings
 from umami.tools import check_option_definition, yaml_loader
 
 
@@ -70,8 +73,26 @@ class TrainConfigurationObject:
 
         if self.evaluate_trained_model:
             # Load the preprocessing config and var dict
-            self.preprocess_config = PreprocessConfiguration(self.preprocess_config)
-            self.var_dict = self.preprocess_config.general.var_file
+            try:
+                self.preprocess_config = PreprocessConfiguration(self.preprocess_config)
+                self.var_dict = self.preprocess_config.general.var_file
+                self.scale_dict_file = self.preprocess_config.general.dict_file
+            except TypeError:
+                config_file = self.preprocess_config
+                self.preprocess_config = PreprocessingConfig.from_file(
+                    Path(self.preprocess_config),
+                    "train",
+                )
+                genral_dict = self.preprocess_config.get_umami_general()
+                general = GeneralSettings(**genral_dict)
+                self.preprocess_config.mimic_umami_config(general)
+                self.var_dict = self.preprocess_config.config["umami"]["general"][
+                    "var_file"
+                ]
+                self.preprocess_config.yaml_config = config_file
+                self.scale_dict_file = self.preprocess_config.config["umami"][
+                    "general"
+                ]["dict_file"]
 
         # Setting the tracks key
         self.tracks_key = f"{self.tracks_name}/inputs" if self.tracks_name else None

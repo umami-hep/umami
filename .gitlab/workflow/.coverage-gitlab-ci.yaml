@@ -12,6 +12,9 @@
   - test_scripts
   - test_evaluate_tagger_in_files
   - test_preprocessing_additional_jet_labels
+  - test_preprocessing_dips_upp_pdf
+  - test_preprocessing_dips_upp_countup
+  - test_preprocessing_upp_flags
 
 test_coverage:
   stage: coverage_test_stage

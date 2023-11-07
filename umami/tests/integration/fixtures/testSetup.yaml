@@ -19,6 +19,20 @@ test_preprocessing:
         - ci_zpext_basefile.h5
         - ci_hits_basefile.h5
 
+test_preprocessing_upp:
+    data_subfolder: "preprocessing"
+    config: "examples/preprocessing/PFlow-Preprocessing-UPP-DL1r.yaml"
+    config_paths: "examples/preprocessing/Preprocessing-parameters.yaml"
+    var_dict_dl1r: "umami/configs/DL1r_Variables_R22.yaml"
+    var_dict_dips: "umami/configs/Dips_Variables_R22.yaml"
+    var_dict_gn1: "umami/configs/GNN_Variables.yaml"
+    var_dict_umami: "umami/configs/Umami_Variables_R22.yaml"
+    var_dict_dips_hits: "umami/configs/Dips_Variables_Hits_R22.yaml"
+    files:
+        - ci_ttbar_basefile.h5
+        - ci_zpext_basefile.h5
+        - ci_hits_basefile.h5
+
 test_dips:
     data_subfolder: "preprocessing"
     model_name: "test_train_dips"

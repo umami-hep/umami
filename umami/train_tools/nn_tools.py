@@ -14,6 +14,7 @@ import tensorflow.keras.backend as K  # pylint: disable=import-error
 from tensorflow.keras.callbacks import Callback  # pylint: disable=import-error
 from tensorflow.keras.models import load_model  # pylint: disable=import-error
 from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-error
+from upp.classes.preprocessing_config import PreprocessingConfig
 
 import umami.metrics as umt
 import umami.tf_tools as utf
@@ -320,7 +321,17 @@ def create_metadata_folder(
     model_files_folder.mkdir(parents=True, exist_ok=True)
 
     # Get scale dict and copy it to metadata
-    preprocess_config = PreprocessConfiguration(preprocess_config_path)
+
+    try:
+        # Try to load the old umami preprocessing config
+        preprocess_config = PreprocessConfiguration(preprocess_config_path)
+    except TypeError:
+        # If it fails, try to load the new upp preprocessing config
+        preprocess_config = PreprocessingConfig.from_file(
+            Path(preprocess_config_path),
+            "train",
+        )
+        preprocess_config.yaml_config = Path(preprocess_config_path)
     metadata_preprocess_config_path = (
         meta_data_folder / preprocess_config.yaml_config.name
     )
