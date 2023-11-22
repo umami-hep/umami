@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Improved documentation + umami paper draft [!747](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/747)
 - Integrate UPP in umami/preprocessing.py [!740](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/740)
 - Update packages to match UPP + UPP update (v0.0.5) [!745](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/745)
 - Update UPP to v0.0.4 [!744](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/744)

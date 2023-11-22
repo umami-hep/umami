@@ -3,7 +3,7 @@
 After the ntuple production (training-dataset-dumper), the first step of the preprocessing is the preparation of the different flavour files. In this step, the different flavours that are to be used for the training are extracted from the `.h5` files and written into extra files. While extracting the jets, different cuts are applied and the splitting into training/validation/test is done.
 
 ### Config file
-As already mentioned in the [overview](preprocessing/Overview.md), the preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
+The preprocessing is configured using [`.yaml`](https://en.wikipedia.org/wiki/YAML) config files. We start with some general options that are needed by multiple preprocessing steps and should be set at the very beginning of the preprocessing:
 
 ```yaml
 §§§examples/preprocessing/PFlow-Preprocessing.yaml:121:148§§§
@@ -126,11 +126,11 @@ The sample are defined as dicts with the following options:
         "testing": int(4e6),
     }
     ```
-    | Setting | Type | Explanation |
-    | ------- | ---- | ----------- |
-    | `categories` | `list` | List with the flavours to extract. |
-    | `sample_types` | `list` | List with the sample types you want to use. |
-    | `n_jets` | `dict` | Dict with the number of jets which are to be extracted from the `.h5` files for the different usages of the samples (this must be training/validation/testing! You can't rename them!). |
+    **Setting** (**Type**): **Explanation**
+    
+    - `categories` (`list`): List with the flavours to extract.
+    - `sample_types` (`list`): List with the sample types you want to use.
+    - `n_jets` (`dict`): Dict with the number of jets which are to be extracted from the `.h5` files for the different usages of the samples (this must be training/validation/testing! You can't rename them!).
 
     This will create the content of the `samples` dict of the preprocessing config file. The different training samples, i.e. `training_ttbar_bjets` etc. and also the validation (`validation_ttbar` and `validation_zprime`) and testing samples (`testing_ttbar` and `testing_zprime`) will be created. In addition, the by flavour separated validation files (i.e `validation_ttbar_bjets`) needed for the hybrid validation creation are also prepared. Which cut template is used is also based on the name of the cut template. This must be `.cuts_template_training_ttbar` for the `training` case of `ttbar`.
 
@@ -164,15 +164,10 @@ preprocessing.py --config <path to config file> --prepare --sample testing_ttbar
 
 ## Ntuple Preparation for VR track jets
 
-The preparation of VR track jet input files for training, validation, and testing datasets is very similar to the workflow described above for PFlow jets.
+The preparation of [variable-radius track jet](https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PUBNOTES/ATL-PHYS-PUB-2017-010/) input files for training, validation, and testing datasets is very similar to the workflow described above for PFlow jets.
 The main difference is that a special set of config files is used, which accounts for the different hybrid sample composition when using VR track jets. The main differences to PFlow jets are:
 
 - implementation of the VR track jet overlap removal
 - only the four leading jets in pt are used for the ttbar sample
 - only the two leading jets in pt are used for the Z' sample
 - the transition from ttbar to Z' occurs in a region in pt and not by a fixed pt cut
-
-## Ntuple Preparation for bb-jets
-
-TODO: Rewrite this!
-The double b-jets will be taken from Znunu and Zmumu samples. The framework still requires some updates in order to process those during the hybrid sample creation stage.

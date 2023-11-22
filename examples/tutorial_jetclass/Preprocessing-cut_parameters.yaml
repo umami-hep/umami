@@ -1,0 +1,70 @@
+# Defining anchor with outlier cuts that are used over and over again
+.outlier_cuts: &outlier_cuts
+  - JetFitterSecondaryVertex_mass:
+      operator: <
+      condition: 25000
+      NaNcheck: True
+  - JetFitterSecondaryVertex_energy:
+      operator: <
+      condition: 1e8
+      NaNcheck: True
+  - JetFitter_deltaR:
+      operator: <
+      condition: 0.6
+      NaNcheck: True
+
+
+# Defining yaml anchors to be used later, avoiding duplication
+.cuts_template_training_ttbar: &cuts_template_training_ttbar
+  cuts:
+    - eventNumber:
+        operator: mod_10_<=
+        condition: 7
+    - pt_btagJes:
+        operator: "<="
+        condition: 2.5e5
+    - *outlier_cuts
+
+.cuts_template_training_zprime: &cuts_template_training_zprime
+  cuts:
+    - eventNumber:
+        operator: mod_10_<=
+        condition: 7
+    - pt_btagJes:
+        operator: ">"
+        condition: 2.5e5
+    - *outlier_cuts
+
+.cuts_template_validation: &cuts_template_validation
+  cuts:
+    - eventNumber:
+        operator: mod_10_==
+        condition: 8
+    - *outlier_cuts
+
+.cuts_template_validation_ttbar_hybrid: &cuts_template_validation_ttbar_hybrid
+  cuts:
+    - eventNumber:
+        operator: mod_10_==
+        condition: 8
+    - pt_btagJes:
+        operator: "<="
+        condition: 2.5e5
+    - *outlier_cuts
+
+.cuts_template_validation_zprime_hybrid: &cuts_template_validation_zprime_hybrid
+  cuts:
+    - eventNumber:
+        operator: mod_10_==
+        condition: 8
+    - pt_btagJes:
+        operator: ">"
+        condition: 2.5e5
+    - *outlier_cuts
+
+.cuts_template_testing: &cuts_template_testing
+  cuts:
+    - eventNumber:
+        operator: mod_10_==
+        condition: 9
+    - *outlier_cuts
