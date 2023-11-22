@@ -161,7 +161,6 @@ def get_comp_tagger_rej_dict(
 
     # Loop over the tagger variables that are needed
     for iter_counter, tagger_var in enumerate(tagger_comp_var):
-
         # Try to retrieve the values of the tagger prob variable
         try:
             if iter_counter == 0:
@@ -1072,7 +1071,6 @@ def run_validation_check(
 
     # Merge the train and val metrics dicts
     if train_metrics_dict is not None and val_metrics_dict is not None:
-
         # Join the two dataframes in one
         tagger_rej_dict = train_metrics_dict.join(
             val_metrics_dict.set_index("epoch"), on="epoch"

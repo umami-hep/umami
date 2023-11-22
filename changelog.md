@@ -2,6 +2,15 @@
 
 ### Latest
 
+- Integrate UPP in umami/preprocessing.py [!740](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/740)
+- Update packages to match UPP + UPP update (v0.0.5) [!745](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/745)
+- Update UPP to v0.0.4 [!744](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/744)
+- Change truth label names [!739](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/739)
+
+### [v0.21](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/tags/0.21) (21.09.2023)
+
+- Update UPP to v0.0.2 [!737](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/737)
+- Update atlas-ftag-tools and UPP [!736](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/736)
 - Update atlas-ftag-tools to v0.1.5 [!735](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/735)
 - Update Puma version to v0.2.7 [!734](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/734)
 - Added an option to train umami model directly from TDD files with structured arrays, fixed issue that writer was saving weights as one of the jet variables [!730] (https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/730)

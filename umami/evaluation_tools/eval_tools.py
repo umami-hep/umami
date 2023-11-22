@@ -54,7 +54,6 @@ def calculate_fraction_dict(
 
     # Iterate over the combinations
     for iterator in combinations:
-
         # Add up the values
         summation = np.sum(np.round(iterator, decimals=4))
 
@@ -180,7 +179,6 @@ def get_rej_per_frac_dict(
 
     # Loop over effs for ROC plots
     for frac_dict in tqdm(dict_list, disable=not progress_bar):
-
         # Create dict entry key for the given fraction dict
         dict_key = ""
 
@@ -193,7 +191,6 @@ def get_rej_per_frac_dict(
 
         # Loop over the taggers
         for tagger in extended_tagger_list:
-
             # If the tagger is fresh, load the provided y_pred
             if tagger in tagger_names:
                 y_pred = tagger_preds[tagger_names.index(tagger)]
@@ -215,7 +212,6 @@ def get_rej_per_frac_dict(
                 # Shape the probabilities of the comparison taggers like the output of
                 # the networks
                 for flav_index, flav in enumerate(class_labels):
-
                     # Trying to load the output probs of the tagger from file
                     try:
                         # Append the output to a flat array
@@ -390,17 +386,14 @@ def get_rej_per_eff_dict(
 
     # Loop over effs for ROC plots
     for eff in tqdm(effs, disable=not progress_bar):
-
         # Loop over the taggers which are to be evaluated
         for tagger in extended_tagger_list:
-
             # Check if the tagger is a freshly trained tagger
             if tagger in tagger_names:
                 tagger_pred_tmp = tagger_preds[tagger_names.index(tagger)]
 
                 # Iterate over the flavours which are to be evaluated
                 for iter_counter, iter_class in enumerate(class_labels):
-
                     # Try to get the probability output values for the given class
                     try:
                         if iter_counter == 0:
@@ -436,7 +429,6 @@ def get_rej_per_eff_dict(
                 # Shape the probabilities of the comparison taggers like the output of
                 # the networks
                 for flav_index, flav in enumerate(class_labels):
-
                     # Trying to load the output probs of the tagger from file
                     try:
                         # Append the output to a flat array
@@ -594,7 +586,6 @@ def get_scores_probs_dict(
 
     # Adding trained tagger probabilities
     for tagger in extended_tagger_list:
-
         # Get probability values of freshly trained tagger from provided predictions
         for flav_index, flav in enumerate(class_labels):
             if tagger in tagger_names:
@@ -623,7 +614,6 @@ def get_scores_probs_dict(
 
         # Check which tagger is used
         if tagger in tagger_names:
-
             # Define y_pred for the freshly trained tagger
             y_pred = tagger_preds[tagger_names.index(tagger)]
 
@@ -641,7 +631,6 @@ def get_scores_probs_dict(
             # Shape the probabilities of the comparison taggers like the output of
             # the networks
             for flav_index, flav in enumerate(class_labels):
-
                 # Trying to load the output probs of the tagger from file
                 try:
                     # Append the output to a flat array
@@ -839,9 +828,8 @@ def get_saliency_map_dict(
 
     # Iterate over different beff, jet flavours and passed options
     for target_beff in effs:
-        for (jet_flavour, class_index) in zip(class_labels, class_indices):
+        for jet_flavour, class_index in zip(class_labels, class_indices):
             for pass_bool in [True, False]:
-
                 # Get the Disc_values value for a specific flavour
                 disc_values_flavour = disc_values[y_test[:, class_index].astype(bool)]
 

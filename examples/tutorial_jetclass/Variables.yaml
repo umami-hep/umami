@@ -1,4 +1,4 @@
-label: HadronConeExclTruthLabelID
+label: R10TruthLabel_R22v1
 train_variables:
   JetKinematics:
     - pt

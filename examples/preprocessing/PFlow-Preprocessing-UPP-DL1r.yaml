@@ -1,0 +1,183 @@
+variables: #DL1r variables in UPP style
+  jets:
+    inputs:
+      - absEta_btagJes
+      - pt_btagJes
+      - JetFitter_isDefaults
+      - JetFitter_mass
+      - JetFitter_energyFraction
+      - JetFitter_significance3d
+      - JetFitter_nVTX
+      - JetFitter_nSingleTracks
+      - JetFitter_nTracksAtVtx
+      - JetFitter_N2Tpair
+      - JetFitter_deltaR
+      - JetFitterSecondaryVertex_isDefaults
+      - JetFitterSecondaryVertex_nTracks
+      - JetFitterSecondaryVertex_mass
+      - JetFitterSecondaryVertex_energy
+      - JetFitterSecondaryVertex_energyFraction
+      - JetFitterSecondaryVertex_displacement3d
+      - JetFitterSecondaryVertex_displacement2d
+      - JetFitterSecondaryVertex_maximumTrackRelativeEta
+      - JetFitterSecondaryVertex_minimumTrackRelativeEta
+      - JetFitterSecondaryVertex_averageTrackRelativeEta
+      - JetFitterSecondaryVertex_maximumAllJetTrackRelativeEta  # Modified name in R22. Was: maximumTrackRelativeEta
+      - JetFitterSecondaryVertex_minimumAllJetTrackRelativeEta  # Modified name in R22. Was: minimumTrackRelativeEta
+      - JetFitterSecondaryVertex_averageAllJetTrackRelativeEta  # Modified name in R22. Was: averageTrackRelativeEta
+      - SV1_isDefaults
+      - SV1_NGTinSvx
+      - SV1_masssvx
+      - SV1_N2Tpair
+      - SV1_efracsvx
+      - SV1_deltaR
+      - SV1_Lxy
+      - SV1_L3d
+      - SV1_correctSignificance3d
+    labels:
+      - HadronConeExclTruthLabelID
+
+
+  tracks:
+    inputs:
+      - IP3D_signed_d0_significance
+      - IP3D_signed_z0_significance
+      - numberOfInnermostPixelLayerHits
+      - numberOfNextToInnermostPixelLayerHits
+      - numberOfInnermostPixelLayerSharedHits
+      - numberOfInnermostPixelLayerSplitHits
+      - numberOfPixelSharedHits
+      - numberOfPixelSplitHits
+      - numberOfSCTSharedHits
+      - ptfrac
+      - dr
+      - numberOfPixelHits
+      - numberOfSCTHits
+      - d0
+      - z0SinTheta
+    labels:
+      - ftagTruthOriginLabel
+      - ftagTruthVertexIndex
+      - ftagTruthOriginLabel
+      - ftagTruthVertexIndex
+
+ttbar: &ttbar
+  name: ttbar
+  pattern: user.alfroch.410470.btagTraining.e6337_s3126_r10201_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
+zprime: &zprime
+  name: zprime
+  pattern: user.alfroch.427081.btagTraining.e6928_e5984_s3126_r10201_r10210_p3985.EMPFlow.2021-07-28-T130145-R11969_output.h5/*.h5
+
+.outlier_cuts: &outlier_cuts
+  - [JetFitterSecondaryVertex_mass, "<", 25000]
+  - [JetFitterSecondaryVertex_energy", "<", 1e8]
+  - [JetFitter_deltaR, "<", 0.6]
+
+global_cuts:
+  train:
+    - [eventNumber, "%10<=", 7]
+
+  val:
+    - [eventNumber, "%10==", 8]
+
+  test:
+    - [eventNumber, "%10==", 9]
+
+
+lowpt: &lowpt
+  name: lowpt
+  cuts:
+    - [pt_btagJes, ">", 0]
+    - [pt_btagJes, "<", 250_000]
+highpt: &highpt
+  name: highpt
+  cuts:
+    - [pt_btagJes, ">", 250_000]
+    - [pt_btagJes, "<", 6_000_000]
+
+components:
+  - region:
+      <<: *lowpt
+    sample:
+      <<: *ttbar
+    flavours: [bjets]
+    num_jets: 5_000
+
+  - region:
+      <<: *lowpt
+    sample:
+      <<: *ttbar
+    flavours: [cjets]
+    num_jets: 5_000
+
+  - region:
+      <<: *lowpt
+    sample:
+      <<: *ttbar
+    flavours: [ ujets]
+    num_jets: 5_000
+
+  - region:
+      <<: *highpt
+    sample:
+      <<: *zprime
+    flavours: [bjets]
+    num_jets: 5_000
+
+  - region:
+      <<: *highpt
+    sample:
+      <<: *zprime
+    flavours: [cjets]
+    num_jets: 5_000
+
+  - region:
+      <<: *highpt
+    sample:
+      <<: *zprime
+    flavours: [ujets]
+    num_jets: 5_000
+
+resampling:
+  target: bjets
+  method: pdf
+  sampling_fraction: auto
+  variables:
+    pt_btagJes:
+      bins: [[0, 600000, 351], [600000, 6000000, 84]]
+    absEta_btagJes:
+      bins: [[0, 2.5, 10]]
+  upscale_pdf: 2
+
+global:
+  batch_size: 1_000
+  num_jets_estimate: 5_000
+  base_dir: /home/users/o/oleksiyu/WORK/umami/user/upp_prep_small/preprocessed/
+  out_dir: test_out/
+  ntuple_dir: /srv/beegfs/scratch/groups/dpnc/atlas/FTag/samples/r22/
+
+umami:
+  general:
+    plot_name: PFlow_ext-hybrid
+    plot_type: "pdf"
+    use_atlas_tag: True
+    atlas_first_tag: "Simulation Internal"
+    atlas_second_tag: "$\\sqrt{s}=13$ TeV, PFlow jets"
+    legend_sample_category: True
+    var_file: umami/configs/Dips_Variables_R22.yaml
+    dict_file: /home/users/o/oleksiyu/WORK/umami/user/upp_prep_small/preprocessed/test_out/PFlow-scale_dict.json
+    compression: lzf
+    precision: float16
+    concat_jet_tracks: False
+  sampling:
+    use_validation_samples: False
+    options:
+      n_jets_to_plot: 3e4
+      save_tracks: True
+      save_track_labels: True
+      bool_attach_sample_weights: False
+      tracks_names: ["tracks"]
+      n_jets_scaling: 0
+  convert_to_tfrecord:
+    chunk_size: 5000
+    N_add_vars: null

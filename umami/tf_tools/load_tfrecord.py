@@ -41,7 +41,6 @@ def load_tfrecords_train_dataset(
 
     # Loop over files in dir
     for train_file_name in train_file_names:
-
         # Check if file is tfrecords or .h5
         if not (".tfrecord" in train_file_name) and not (
             train_file_name == "metadata.json"

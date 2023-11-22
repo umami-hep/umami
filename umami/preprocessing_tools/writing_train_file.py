@@ -193,7 +193,9 @@ class TrainSampleWriter:
 
                 # Load jets
                 jets = in_file["/jets"].fields(self.jet_vars)[indices_selected]
-                labels = in_file["/labels"][indices_selected]
+
+                labels = in_file["/jets"].fields("flavour_label")[indices_selected]
+
                 label_classes = list(range(len(self.class_labels)))
                 labels_one_hot = binarise_jet_labels(
                     labels=labels, internal_labels=label_classes

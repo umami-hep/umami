@@ -1,10 +1,9 @@
 parameters: !include Preprocessing-parameters.yaml
 cut_parameters: !include Preprocessing-cut_parameters.yaml
-
 preparation:
   # Path to the .h5 files from the h5 dumper.
   input_h5:
-    paper:
+    jetclass:
       path: *ntuple_path
       file_pattern: "*.h5"
 
@@ -35,7 +34,7 @@ sampling:
 
     # Decide, which of the in preparation defined samples are used in the resampling.
     samples_training:
-      paper:
+      jetclass:
         - training_hbb
         - training_hcc
         - training_top
@@ -43,7 +42,7 @@ sampling:
     # Decide, which of the in preparation defined samples are used in the hybrid
     # validation resampling.
     samples_validation:
-      paper:
+      jetclass:
         - validation_hbb
         - validation_hcc
         - validation_top
@@ -52,7 +51,7 @@ sampling:
 
     # Fractions of ttbar/zprime jets in final training set. This needs to add up to one.
     fractions:
-      paper: 1.0
+      jetclass: 1.0
 
     # number of training jets
     # For PDF sampling: the number of target jets per class!
@@ -60,17 +59,17 @@ sampling:
     #                   you will end up with 3_000_000 jets
     # For other sampling methods: total number of jets after resampling
     # If set to -1: max out to target numbers (limited by fractions ratio)
-    n_jets: 25e6
+    n_jets: 2.5e6
 
     # number of validation jets in the hybrid validation sample
     # Same rules as above for n_jets when it comes to PDF sampling
-    n_jets_validation: 4e6
+    n_jets_validation: 5e5
 
     # Bool, if track information (for DIPS etc.) are saved.
     save_tracks: False
 
     # Name(s) of the track collection(s) to use.
-    tracks_names: ["tracks"]
+    tracks_names: []
 
     # Bool, if track labels are processed
     save_track_labels: False
@@ -99,10 +98,10 @@ outfile_name: *outfile_name
 outfile_name_validation: *outfile_name_validation
 
 # Name of the plot
-plot_name: PFlow_ext-hybrid
+plot_name: jetclass
 
 # Define the plot type (like pdf or png) for the plots created
-plot_type: "pdf"
+plot_type: "png"
 
 # Label for the distribution plots of the resampling
 use_atlas_tag: False

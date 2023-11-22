@@ -51,7 +51,7 @@
   stage: linting
   image: $SLIM_IMAGE
   script:
-    - pip install black==22.3.0
+    - pip install black==23.3.0
     - black --check .
 
 .linting_rules_template: &linting_rules_template
