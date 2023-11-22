@@ -69,8 +69,8 @@ train_variables:
 
 track_truth_variables:
   tracks:
-    - truthOriginLabel
-    - truthVertexIndex
+    - ftagTruthOriginLabel
+    - ftagTruthVertexIndex
   subjets:
     - relativeDeltaRToVRJet
     - HadronConeExclTruthLabelID
@@ -80,8 +80,8 @@ track_truth_variables:
 
 track_weight_variables:
   tracks:
-    - truthOriginLabel
-    - truthVertexIndex
+    - ftagTruthOriginLabel
+    - ftagTruthVertexIndex
   subjets:
     - HadronConeExclTruthLabelID
     - HadronConeExclExtendedTruthLabelID

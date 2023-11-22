@@ -63,7 +63,8 @@ class GlobalConfiguration:
 
     def set_tf_debug_level(self):
         """Setting the Debug level of tensorflow.
-        For reference see https://stackoverflow.com/questions/35869137/avoid-tensorflow-print-on-standard-error"""  # noqa # pylint: disable=C0301
+        For reference see https://stackoverflow.com/questions/35869137/avoid-tensorflow-print-on-standard-error
+        """  # noqa # pylint: disable=C0301
         self.logger.debug("Setting TFDebugLevel to %s", self.config["TFDebugLevel"])
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(self.config["TFDebugLevel"])
 

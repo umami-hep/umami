@@ -102,7 +102,6 @@ def load_jets_from_file(
     class_label_vars = get_class_label_variables(class_labels)
 
     if variables:
-
         # Get list with all available variables
         avai_var_list = list(h5py.File(filepaths[0], "r")["/jets"].dtype.fields.keys())
 
@@ -123,7 +122,6 @@ def load_jets_from_file(
 
         # Load variables for cuts if given
         if cut_vars_dict:
-
             # Iterate over the cuts and get the needed variables
             for variable in cut_vars_dict:
                 variables_list += list(variable.keys())
@@ -135,7 +133,6 @@ def load_jets_from_file(
     n_jets_counter = 0
 
     for j, file in enumerate(sorted(filepaths, key=natural_keys)):
-
         # Get the number of available jets in the file
         n_jets_infile = len(h5py.File(file, "r")["/jets"])
 
@@ -150,7 +147,6 @@ def load_jets_from_file(
 
         # Iterate over the file
         for infile_counter in loop_list:
-
             if not indices_to_load:
                 lower_index_counter = infile_counter * chunk_size
                 upper_index_counter = (infile_counter + 1) * chunk_size
@@ -359,7 +355,6 @@ def load_trks_from_file(
 
     # Load variables for cuts if given
     if cut_vars_dict:
-
         # Iterate over the cuts and get the needed variables
         for variable in cut_vars_dict:
             jet_vars_to_load += list(variable.keys())
@@ -372,7 +367,6 @@ def load_trks_from_file(
 
     # Iterate over the files
     for j, file in enumerate(sorted(filepaths, key=natural_keys)):
-
         # Get the number of available jets in the file
         n_jets_infile = len(h5py.File(file, "r")["/jets"])
 
@@ -387,7 +381,6 @@ def load_trks_from_file(
 
         # Iterate over the file
         for infile_counter in loop_list:
-
             if not indices_to_load:
                 lower_index_counter = infile_counter * chunk_size
                 upper_index_counter = (infile_counter + 1) * chunk_size

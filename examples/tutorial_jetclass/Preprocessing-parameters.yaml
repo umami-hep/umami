@@ -1,8 +1,8 @@
 # Path where the ntuples are saved
-ntuple_path: &ntuple_path <Path/to/h5/files>
+ntuple_path: &ntuple_path data/jetclass/ntuples/
 
 # Base path where to store preprocessing results
-.base_path: &base_path <Base/Path>
+.base_path: &base_path data/jetclass/
 
 # Path where the hybrid samples will be saved
 sample_path: &sample_path !join [*base_path, /hybrids]
@@ -11,20 +11,20 @@ sample_path: &sample_path !join [*base_path, /hybrids]
 file_path: &file_path !join [*base_path, /preprocessed]
 
 # Name of the output file from the preprocessing used for training (has to be a .h5 file, no folder)
-.outfile_name: &outfile_name !join [*file_path, /PFlow-hybrid.h5]
+.outfile_name: &outfile_name !join [*file_path, /jetclass-hybrid.h5]
 
 # List of variables for training (yaml)
-.var_file: &var_file <Path/to/Variables/yaml>
+.var_file: &var_file examples/tutorial_jetclass/Variables.yaml
 
 # Dictfile for the scaling and shifting (json)
-.dict_file: &dict_file <Output/Path/for/the/Scaling/file>
+.dict_file: &dict_file data/jetclass/preprocessed/dict.json
 
 # Intermediate file for the training sample indicies used in h5 format
 .intermediate_index_file: &intermediate_index_file !join [*file_path, /indicies.h5]
 
 # Name of the output file from the preprocessing used for hybrid validation (has to be a .h5 file, no folder)
 # Will be ignored if hybrid validation is not used
-.outfile_name_validation: &outfile_name_validation !join [*file_path, /PFlow-hybrid-validation.h5]
+.outfile_name_validation: &outfile_name_validation !join [*file_path, /jetclass-hybrid-validation.h5]
 
 # Intermediate file for the hybrid validation sample indicies used in h5 format
 # Will be ignored if hybrid validation is not used

@@ -159,7 +159,7 @@ def plot_n_tracks_per_jet(
     flavour_label_dict = {}
 
     # Iterate over the different dataset filepaths and labels defined in the config
-    for (filepath, label, tracks_name, class_labels) in zip(
+    for filepath, label, tracks_name, class_labels in zip(
         datasets_filepaths, datasets_labels, datasets_track_names, datasets_class_labels
     ):
         loaded_trks, loaded_flavour_labels = udt.load_trks_from_file(
@@ -205,13 +205,13 @@ def plot_n_tracks_per_jet(
             n_tracks = np.sum(
                 np.logical_and(
                     ~np.isnan(trks["ptfrac"]),
-                    trks["truthOriginLabel"] == global_config.OriginType[track_origin],
+                    trks["ftagTruthOriginLabel"]
+                    == global_config.OriginType[track_origin],
                 ),
                 axis=1,
             )
 
         for flav_label, flavour in enumerate(class_labels):
-
             n_tracks_flavour = n_tracks[flavour_label_dict[label] == flav_label]
             n_tracks_means[label].update({flavour: n_tracks_flavour.mean()})
 
@@ -337,7 +337,6 @@ def plot_input_vars_trks(
         datasets_class_labels,
         datasets_track_names,
     ):
-
         # Get the tracks and the labels from the file/files
         trks, flavour_labels = udt.load_trks_from_file(
             filepath=filepath,
@@ -463,7 +462,6 @@ def plot_input_vars_trks(
                     continue
 
                 for iter_var in var_loop_list:
-
                     # Sort the variables and tracks after given variable
                     if track_origin == "All":
                         trks_array = operator_dict[var_operator](
@@ -479,14 +477,14 @@ def plot_input_vars_trks(
                         )
 
                     else:
-                        # Select tracks of a given origin, so keep truthOriginLabel
+                        # Select tracks of a given origin, so keep ftagTruthOriginLabel
                         trks_array = operator_dict[var_operator](
                             trks_array,
                             np.asarray(
                                 [
-                                    trks_dict[label][[iter_var, "truthOriginLabel"]][k][
-                                        sorting[k]
-                                    ]
+                                    trks_dict[label][
+                                        [iter_var, "ftagTruthOriginLabel"]
+                                    ][k][sorting[k]]
                                     for k in range(
                                         len(trks_dict[label][sorting_variable])
                                     )
@@ -527,7 +525,7 @@ def plot_input_vars_trks(
 
                     else:
                         mask_origin = np.asarray(
-                            tracks["truthOriginLabel"]
+                            tracks["ftagTruthOriginLabel"]
                             == global_config.OriginType[track_origin]
                         )
                         track_values = tracks[np.logical_and(tracks_mask, mask_origin)][
@@ -647,7 +645,7 @@ def plot_input_vars_jets(
     flavour_label_dict = {}
 
     # Iterate over the different dataset filepaths and labels defined in the config
-    for (filepath, label, class_labels) in zip(
+    for filepath, label, class_labels in zip(
         datasets_filepaths, datasets_labels, datasets_class_labels
     ):
         # Get the tracks and the labels from the file/files

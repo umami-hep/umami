@@ -14,6 +14,7 @@ import tensorflow.keras.backend as K  # pylint: disable=import-error
 from tensorflow.keras.callbacks import Callback  # pylint: disable=import-error
 from tensorflow.keras.models import load_model  # pylint: disable=import-error
 from tensorflow.keras.utils import CustomObjectScope  # pylint: disable=import-error
+from upp.classes.preprocessing_config import PreprocessingConfig
 
 import umami.metrics as umt
 import umami.tf_tools as utf
@@ -320,7 +321,17 @@ def create_metadata_folder(
     model_files_folder.mkdir(parents=True, exist_ok=True)
 
     # Get scale dict and copy it to metadata
-    preprocess_config = PreprocessConfiguration(preprocess_config_path)
+
+    try:
+        # Try to load the old umami preprocessing config
+        preprocess_config = PreprocessConfiguration(preprocess_config_path)
+    except TypeError:
+        # If it fails, try to load the new upp preprocessing config
+        preprocess_config = PreprocessingConfig.from_file(
+            Path(preprocess_config_path),
+            "train",
+        )
+        preprocess_config.yaml_config = Path(preprocess_config_path)
     metadata_preprocess_config_path = (
         meta_data_folder / preprocess_config.yaml_config.name
     )
@@ -344,7 +355,6 @@ def create_metadata_folder(
         # Change the paths for the preprocess config and var dict in the
         # train_config
         if file_path == train_config_path:
-
             replace_line_in_file(
                 new_file_path,
                 "preprocess_config:",
@@ -1005,7 +1015,10 @@ def load_validation_data(
 
         # Check which tagger is used and load the neede data
         if tagger.casefold() in ("dips", "dips_attention"):
-            (x_valid, y_valid,) = get_test_sample_trks(
+            (
+                x_valid,
+                y_valid,
+            ) = get_test_sample_trks(
                 input_file=val_file_config["path"],
                 var_dict=train_config.general.var_dict,
                 scale_dict=train_config.general.preprocess_config.general.dict_file,
@@ -1016,7 +1029,10 @@ def load_validation_data(
             )
 
         elif tagger.casefold() in ("dl1"):
-            (x_valid, y_valid,) = get_test_sample(
+            (
+                x_valid,
+                y_valid,
+            ) = get_test_sample(
                 input_file=val_file_config["path"],
                 var_dict=train_config.general.var_dict,
                 scale_dict=train_config.general.preprocess_config.general.dict_file,
@@ -1027,7 +1043,11 @@ def load_validation_data(
             )
 
         elif tagger.casefold() in ("umami", "umami_cond_att", "cads"):
-            (x_valid, x_valid_trk, y_valid,) = get_test_file(
+            (
+                x_valid,
+                x_valid_trk,
+                y_valid,
+            ) = get_test_file(
                 input_file=val_file_config["path"],
                 var_dict=train_config.general.var_dict,
                 scale_dict=train_config.general.preprocess_config.general.dict_file,
@@ -1220,7 +1240,13 @@ def evaluate_model_umami(
                 data_dict[f"X_valid_trk_{val_file_identifier}"],
                 data_dict[f"X_valid_{val_file_identifier}"],
             ]
-        (loss, dips_loss, umami_loss, dips_accuracy, umami_accuracy,) = model.evaluate(
+        (
+            loss,
+            dips_loss,
+            umami_loss,
+            dips_accuracy,
+            umami_accuracy,
+        ) = model.evaluate(
             x_valid,
             data_dict[f"Y_valid_{val_file_identifier}"],
             batch_size=batch_size,
@@ -1461,7 +1487,6 @@ def calc_validation_metrics(
 
     # Open the json file and load the training out
     try:
-
         # Get val dict file name
         _, val_output_file_path = get_metrics_file_name(
             working_point=eval_parameters.working_point,

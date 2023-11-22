@@ -1,23 +1,23 @@
 # Set modelname and path to Pflow preprocessing config file
-model_name: DL1_paper
-preprocess_config: <Path/to/Preprocessing/config/file>
+model_name: tagger_jetclass
+preprocess_config: examples/tutorial_jetclass/Preprocessing-config.yaml
 
 # Add here a pretrained model to start with.
 # Leave empty for a fresh start
 model_file:
 
 # Add training file
-train_file: <Path/to/training/file>
+train_file: data/jetclass/preprocessed/jetclass-hybrid-resampled.h5
 
 # Add validation files
 validation_files:
     hybrid_validation:
-        path: <Path/to/hybrid/validation/file>
+        path: data/jetclass/preprocessed/jetclass-hybrid-validation-resampled.h5
         label: "resampled validation"
 
 test_files:
     testing:
-        path: <Path/to/testing/file>
+        path: data/jetclass/hybrids/inclusive_testing_jetclass.h5
 
 exclude: null
 
@@ -86,7 +86,7 @@ validation_settings:
     atlas_second_tag: ""
 
     # Set the datatype of the plots
-    plot_datatype: "pdf"
+    plot_datatype: "png"
 
     figsize: [6, 4]
 

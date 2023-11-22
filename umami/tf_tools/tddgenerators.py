@@ -12,6 +12,7 @@ from numpy.lib.recfunctions import (
     structured_to_unstructured,
 )
 from scipy.stats import binned_statistic_dd
+from upp.classes.preprocessing_config import PreprocessingConfig
 
 from umami.configuration import logger
 from umami.preprocessing_tools import (
@@ -99,17 +100,22 @@ class TDDGenerator:
         self.n_conds = n_conds
 
         # Load the configuration file and all the necessary information
-        if isinstance(config_file, PreprocessConfiguration):
+        if isinstance(config_file, (PreprocessConfiguration, PreprocessingConfig)):
             config = config_file
         else:
             config = PreprocessConfiguration(config_file)
 
         self.sampling_options = config.sampling.options
+        self.bool_attach_sample_weights = (
+            config.sampling.options.bool_attach_sample_weights
+        )
         self.save_track_labels = config.sampling.options.save_track_labels
         self.class_labels = config.sampling.class_labels
         self.variable_config = get_variable_dict(config.general.var_file)
         self.jet_vars = sum(self.variable_config["train_variables"].values(), [])
-        self.track_label_variables = self.variable_config.get("track_truth_variables")
+        self.track_label_variables = self.variable_config.get(
+            "track_truth_variables", []
+        )
         with open(config.general.dict_file, "r") as infile:
             self.scale_dict = json.load(infile)
         # done with the configuration file
@@ -131,7 +137,6 @@ class TDDGenerator:
         # Retrieving the dtypes of the variables to load
         self.datasets = {
             "jets": self.in_file["/jets"],
-            "labels": self.in_file["/labels"],
         }  # handles to the datasets
         self.norm = {}
         self.dtype = {}
@@ -140,7 +145,7 @@ class TDDGenerator:
             (n, as_full(x)) for n, x in self.in_file["/jets"].dtype.descr
         ]
         self.norm["jets"] = self.get_normalisation_arrays(self.jet_vars, "jets")
-
+        self.labels = self.datasets["jets"]["flavour_label"]
         if tracks_name is not None:
             self.datasets[f"{self.tracks_name}"] = self.in_file[f"/{self.tracks_name}"]
             self.dtype[tracks_name] = [
@@ -443,7 +448,7 @@ class TDDGenerator:
                 "\nloading in memory %i/%i", part + 1, 1 + self.n_jets // self.step_size
             )
         length = (
-            min(self.step_size * (part + 1), len(self.datasets["labels"]))
+            min(self.step_size * (part + 1), len(self.datasets["jets"]))
             - self.step_size * part
         )
 
@@ -459,10 +464,8 @@ class TDDGenerator:
         # Jets/
         ############################
         # Labels\
-        # Load labels
-        labels = self.datasets["labels"][
-            self.step_size * part : self.step_size * (part + 1)
-        ]
+        # Load labels (upp preprocessed data does not have "labels" dataset)
+        labels = self.labels[self.step_size * part : self.step_size * (part + 1)]
         label_classes = list(range(len(self.class_labels)))
 
         # Binarise labels
@@ -510,7 +513,7 @@ class TDDGenerator:
             if "weight" not in self.datasets["jets"].dtype.names:
                 jets = append_fields(jets, "weight", np.ones(int(length)), dtypes="<i8")
 
-            if self.sampling_options.bool_attach_sample_weights:
+            if self.bool_attach_sample_weights:
                 weights_dict = None
                 if self.use_validation_samples:
                     file_name = (

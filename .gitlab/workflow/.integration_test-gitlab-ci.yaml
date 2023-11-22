@@ -196,6 +196,42 @@ test_preprocessing_additional_jet_labels:
       - test_preprocessing_gn1_additional_jet_labels_count/
       - coverage_files/
 
+test_preprocessing_dips_upp_pdf:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_upp.py -k "test_preprocessing_dips_upp_pdf" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips_upp_pdf
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_preprocessing_dips_upp_pdf/
+      - coverage_files/
+
+test_preprocessing_dips_upp_countup:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_upp.py -k "test_preprocessing_dips_upp_countup" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_dips_upp_countup
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_preprocessing_dips_upp_countup/
+      - coverage_files/
+
+test_preprocessing_upp_flags:
+  <<: *test_template
+  stage: integration_test_preprocessing
+  script:
+    - pytest --cov=./ --cov-report= ./umami/tests/integration/test_preprocessing_upp.py -k "test_preprocessing_upp_flags" -v -s --junitxml=report.xml
+    - cp .coverage ./coverage_files/.coverage.test_preprocessing_upp_flags
+  artifacts:
+    <<: *artifact_template
+    paths:
+      - test_preprocessing_upp_flags/
+      - coverage_files/
+
 test_train_dips:
   extends: .test_template
   stage: integration_test_tagger

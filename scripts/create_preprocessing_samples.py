@@ -94,15 +94,12 @@ def build_preparation_sample_dict(
 
     # Iterate over the steps training, validation, testing
     for step, _ in n_jets.items():
-
         # Create the samples which are used for the resampling
         # Note: Validation is also used to create the samples
         # needed to create the hybrid validation file
         if step in ("training", "validation"):
-
             # Iterate over the ttbar, zprime
             for sample_type in sample_types:
-
                 # Iterate over the flavours
                 for category in categories:
                     samples[f"{step}_{sample_type}_{category}"] = {

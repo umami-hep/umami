@@ -304,7 +304,6 @@ class TTbarMerge:
         """
 
         with h5py.File(input_file, "r") as data_set:
-
             if indices is not None:
                 # if single index is requested from a file
                 if isinstance(indices, int):
@@ -319,7 +318,6 @@ class TTbarMerge:
                 end = min(start + chunk_size, max_events)
 
                 if indices is not None:
-
                     if save_tracks:
                         track_list = []
                         for track in self.tracks_names:
@@ -328,7 +326,6 @@ class TTbarMerge:
                     else:
                         yield data_set["jets"][indices[start:end]], None
                 else:
-
                     if save_tracks:
                         track_list = []
                         for track in self.tracks_names:

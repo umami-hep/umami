@@ -56,7 +56,6 @@ class DenseNet(Layer):
 
         # Iterate over given layers
         for node in nodes[:-1]:
-
             # Append dense layer with activation
             self.layers.append(Dense(units=node, activation=activation))
 
@@ -168,7 +167,6 @@ class DeepSet(Layer):
 
         # Iterate over the given nodes
         for node in nodes[:-1]:
-
             # Append Dense node with activation
             self.layers.append(Dense(units=node, activation=activation))
 
@@ -207,7 +205,6 @@ class DeepSet(Layer):
 
         # Check if mask is None and the standard zero mask is used
         if mask is None and self.mask_zero:
-
             # Compute zero mask
             mask = self.compute_mask(inputs, mask)
 
@@ -303,7 +300,6 @@ class MaskedSoftmax(Layer):
         """
         # Check for masking
         if mask is None:
-
             # Compute masking for not existing inputs
             mask = self.compute_mask(inputs, mask)
 
@@ -820,7 +816,6 @@ class MaskedAverage1DPooling(Layer):  # pylint: disable=too-few-public-methods
         """
         # Check for masking
         if mask is not None:
-
             # Create mask based on given mask
             mask1 = K.cast(mask, dtype="float32")
 
