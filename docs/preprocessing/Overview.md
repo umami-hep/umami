@@ -3,6 +3,8 @@ Training ntuples are produced using the [training-dataset-dumper](https://gitlab
 
 Currently one can also use [Umami PreProcessing (UPP) module](https://github.com/umami-hep/umami-preprocessing/) using the same preprocessing commands but a somewhat different config. The documentation can be found [here](https://umami-hep.github.io/umami-preprocessing/umami_int/). An example of a config please see `examples/preprocessing/PFlow-Preprocessing-UPP-DL1r.yaml`.
 
+Currently one can also use Umami PreProcessing (UPP) module using the same preprocessing commands but a somewhat different config. The documntation can be found [here](https://umami-hep.github.io/umami-preprocessing/umami_int/). An example of a config please see `examples/preprocessing/PFlow-Preprocessing-UPP-DL1r.yaml`.
+
 ## Motivation
 The motivation for preprocessing the training samples results from the fact that the input datasets are highly imbalanced in their flavour composition. While there are large quantities of light jets, the fraction of _b_-jets is small and the fraction of other flavours is even smaller.
 A widely adopted technique for dealing with highly unbalanced datasets is called resampling. It consists of removing samples from the majority class (under-sampling) and / or adding more examples from the minority class (over-sampling).
