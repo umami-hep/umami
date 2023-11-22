@@ -1,0 +1,132 @@
+parameters: !include Preprocessing-parameters.yaml
+cut_parameters: !include Preprocessing-cut_parameters.yaml
+preparation:
+  # Path to the .h5 files from the h5 dumper.
+  input_h5:
+    jetclass:
+      path: *ntuple_path
+      file_pattern: "*.h5"
+
+  samples: !include Preprocessing-samples.yaml
+
+sampling:
+  # Classes which are used in the resampling. Order is important.
+  # The order needs to be the same as in the training config!
+  class_labels: [hbb, hcc, top]
+
+  # Decide, which resampling method is used.
+  method: count
+
+  # The options depend on the sampling method
+  options:
+    sampling_variables:
+      - pt:
+          # bins take either a list containing the np.linspace arguments
+          # or a list of them
+          # For PDF sampling: must be the np.linspace arguments.
+          #   - list of list, one list for each category (in samples)
+          #   - define the region of each category.
+          bins: [[0, 600000, 351]]
+
+      - eta:
+          # For PDF sampling: same structure as in pt_btagJes.
+          bins: [0, 2.5, 10]
+
+    # Decide, which of the in preparation defined samples are used in the resampling.
+    samples_training:
+      jetclass:
+        - training_hbb
+        - training_hcc
+        - training_top
+
+    # Decide, which of the in preparation defined samples are used in the hybrid
+    # validation resampling.
+    samples_validation:
+      jetclass:
+        - validation_hbb
+        - validation_hcc
+        - validation_top
+
+    custom_n_jets_initial:
+
+    # Fractions of ttbar/zprime jets in final training set. This needs to add up to one.
+    fractions:
+      jetclass: 1.0
+
+    # number of training jets
+    # For PDF sampling: the number of target jets per class!
+    #                   So if you set n_jets=1_000_000 and you have 3 output classes
+    #                   you will end up with 3_000_000 jets
+    # For other sampling methods: total number of jets after resampling
+    # If set to -1: max out to target numbers (limited by fractions ratio)
+    n_jets: 2.5e6
+
+    # number of validation jets in the hybrid validation sample
+    # Same rules as above for n_jets when it comes to PDF sampling
+    n_jets_validation: 5e5
+
+    # Bool, if track information (for DIPS etc.) are saved.
+    save_tracks: False
+
+    # Name(s) of the track collection(s) to use.
+    tracks_names: []
+
+    # Bool, if track labels are processed
+    save_track_labels: False
+
+    # this stores the indices per sample into an intermediate file
+    intermediate_index_file: *intermediate_index_file
+
+    # this stores the indices per sample for the hybrid validation
+    intermediate_index_file_validation: *intermediate_index_file_validation
+
+    # for method: weighting
+    # relative to which distribution the weights should be calculated
+    weighting_target_flavour: 'bjets'
+
+    # If you want to attach weights to the final files
+    bool_attach_sample_weights: False
+
+    # How many jets you want to use for the plotting of the results
+    # Give null (the yaml None) if you don't want to plot them
+    n_jets_to_plot: 3e6
+
+# Name of the output file from the preprocessing
+outfile_name: *outfile_name
+
+# outfile name for the validation sample
+outfile_name_validation: *outfile_name_validation
+
+# Name of the plot
+plot_name: jetclass
+
+# Define the plot type (like pdf or png) for the plots created
+plot_type: "png"
+
+# Label for the distribution plots of the resampling
+use_atlas_tag: False
+atlas_first_tag: ""
+atlas_second_tag: ""
+
+# include sample categories in the plots legends before resampling
+legend_sample_category: False
+
+# Variable dict which is used for scaling and shifting
+var_file: *var_file
+
+# Dictfile for the scaling and shifting (json)
+dict_file: *dict_file
+
+# compression for final output files (null/gzip/lzf)
+compression: lzf
+
+# save final output files with specified precision
+precision: float16
+
+# concatenate jet inputs with each track's inputs in the final output file
+concat_jet_tracks: False
+
+# Options for the conversion to tfrecords
+convert_to_tfrecord:
+  chunk_size: 5000
+  N_add_vars: null

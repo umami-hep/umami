@@ -1,0 +1,47 @@
+training_hbb:
+  type: jetclass
+  category: hbb
+  n_jets: 10e6
+  output_name: !join [*sample_path, /hbb_training_jetclass.h5]
+
+training_hcc:
+  type: jetclass
+  category: hcc
+  n_jets: 10e6
+  output_name: !join [*sample_path, /hcc_training_jetclass.h5]
+
+training_top:
+  type: jetclass
+  category: top
+  n_jets: 10e6
+  output_name: !join [*sample_path, /top_training_jetclass.h5]
+
+validation:
+  type: jetclass
+  category: inclusive
+  n_jets: 4e6
+  output_name: !join [*sample_path, /inclusive_validation_jetclass.h5]
+
+validation_hbb:
+  type: jetclass
+  category: hbb
+  n_jets: 4e6
+  output_name: !join [*sample_path, /hbb_validation_jetclass.h5]
+
+validation_hcc:
+  type: jetclass
+  category: hcc
+  n_jets: 4e6
+  output_name: !join [*sample_path, /hcc_validation_jetclass.h5]
+
+validation_top:
+  type: jetclass
+  category: top
+  n_jets: 4e6
+  output_name: !join [*sample_path, /top_validation_jetclass.h5]
+
+testing:
+  type: jetclass
+  category: inclusive
+  n_jets: 4e6
+  output_name: !join [*sample_path, /inclusive_testing_jetclass.h5]

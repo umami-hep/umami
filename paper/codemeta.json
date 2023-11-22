@@ -1,0 +1,17 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+
+  ],
+  "identifier": "",
+  "codeRepository": "https://github.com/umami-hep/umami",
+  "datePublished": "2023-04-11",
+  "dateModified": "2023-04-18",
+  "dateCreated": "2019-10-23",
+  "description": "This repository presents the Umami toolkit package, an open-source python library for training and evaluating machine learning algorithms used in high-energy-physics jet flavour tagging. The software is provided under the MIT license.",
+  "keywords": "high energy physics, jet physics, flavour tagging, machine learning, Python",
+  "license": "Apache-2.0 license",
+  "title": "Umami",
+  "version": "v0.20"
+}

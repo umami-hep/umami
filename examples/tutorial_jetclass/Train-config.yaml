@@ -1,0 +1,138 @@
+# Set modelname and path to Pflow preprocessing config file
+model_name: tagger_jetclass
+preprocess_config: examples/tutorial_jetclass/Preprocessing-config.yaml
+
+# Add here a pretrained model to start with.
+# Leave empty for a fresh start
+model_file:
+
+# Add training file
+train_file: data/jetclass/preprocessed/jetclass-hybrid-resampled.h5
+
+# Add validation files
+validation_files:
+    hybrid_validation:
+        path: data/jetclass/preprocessed/jetclass-hybrid-validation-resampled.h5
+        label: "resampled validation"
+
+test_files:
+    testing:
+        path: data/jetclass/hybrids/inclusive_testing_jetclass.h5
+
+exclude: null
+
+nn_structure:
+    # Decide, which tagger is used
+    tagger: "dl1"
+
+    # NN Training parameters
+    learning_rate: 0.001
+    batch_size: 15000
+    epochs: 20
+
+    # Number of jets used for training
+    # To use all: Fill nothing
+    n_jets_train:
+
+    # Dropout rates for the dense layers
+    # --> has to be a list of same length as the `dense_sizes` list
+    # The example here would use a dropout rate of 0.2 for the two middle layers but
+    # no dropout for the other layers
+    dropout_rate: [0, 0, 0]
+
+    # Define which classes are used for training
+    # These are defined in the global_config
+    class_labels: ["hbb", "hcc", "top"]
+
+    # Main class which is to be tagged
+    main_class: "hbb"
+
+    # Decide if Batch Normalisation is used
+    batch_normalisation: True
+
+    # Nodes per dense layer. Starting with first dense layer.
+    dense_sizes: [12, 12, 6]
+
+    # Activations of the layers. Starting with first dense layer.
+    activations: ["relu", "relu", "relu"]
+
+    # Variables to repeat in the last layer (example)
+    repeat_end: null
+
+    # Options for the Learning Rate reducer
+    lrr: True
+
+    # Option if you want to use sample weights for training
+    use_sample_weights: False
+
+# Plotting settings for training metrics plots
+validation_settings:
+    # Number of jets used for validation
+    n_jets: 3e5
+
+    # Define which taggers should also be plotted
+    taggers_from_file:
+
+    # Label for the freshly trained tagger
+    tagger_label: "DL1"
+
+    # Working point used in the validation
+    working_point: 0.77
+
+    # Plotting API parameters
+    # fc_value and working_point_b are automatically added to the plot label
+    use_atlas_tag: False
+    atlas_first_tag: ""
+    atlas_second_tag: ""
+
+    # Set the datatype of the plots
+    plot_datatype: "png"
+
+    figsize: [6, 4]
+
+# Eval parameters for validation evaluation while training
+evaluation_settings:
+    # Number of jets used for evaluation
+    n_jets: 3e5
+
+    # Define taggers that are used for comparison in evaluate_model
+    # This can be a list or a string for only one tagger
+    tagger: ["rnnip", "DL1r"]
+
+    # Define fc values for the taggers
+    frac_values_comp: null
+
+    # Charm fraction value used for evaluation of the trained model
+    frac_values: {
+        "top": 0.5,
+        "hcc": 0.5,
+    }
+
+    # A list to add available variables to the evaluation files
+    add_eval_variables: null
+
+    # Working point used in the evaluation
+    working_point: 0.77
+
+    # some properties for the feature importance explanation with SHAPley
+    shapley:
+        # Over how many full sets of features it should calculate over.
+        # Corresponds to the dots in the beeswarm plot.
+        # 200 takes like 10-15 min for DL1r on a 32 core-cpu
+        feature_sets: 200
+
+        # defines which of the model outputs (flavor) you want to explain
+        # Must be an entry from class_labels! You can also give list of multiple flavours
+        flavour: "bjets"
+
+        # You can also choose if you want to plot the magnitude of feature
+        # importance for all output nodes (flavors) in another plot. This
+        # will give you a bar plot of the mean SHAP value magnitudes.
+        bool_all_flavor_plot: False
+
+        # as this takes much longer you can average the feature_sets to a
+        # smaller set, 50 is a good choice for DL1r
+        averaged_sets: 50
+
+        # [11,11] works well for dl1r
+        plot_size: [11, 11]
