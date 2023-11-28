@@ -9,15 +9,21 @@ edit_uri: 'tree/master/docs'
 
 theme:
     name: material
-    palette:
-        primary: teal
     features:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
     - navigation.indexes
     - navigation.top
-
+    palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 
 nav:
     - Home: index.md
