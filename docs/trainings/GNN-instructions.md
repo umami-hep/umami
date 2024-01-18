@@ -16,7 +16,7 @@ After the previous step the ntuples need to be further processed. We can use dif
 
 This processing can be done using the preprocessing capabilities of Umami via the [`preprocessing.py`](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/umami/preprocessing.py) script.
 
-Please refer to the [documentation on preprocessing](https://umami-docs.web.cern.ch/preprocessing/preprocessing/) for additional information.
+Please refer to the [documentation on preprocessing](https://umami-docs.web.cern.ch/preprocessing/Overview/) for additional information.
 
 For the GNN, we use the `PFlow-Preprocessing-GNN.yaml` config file, found [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami-config-tags/-/blob/master/offline/PFlow-Preprocessing-GNN.yaml).
 
