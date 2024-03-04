@@ -34,5 +34,6 @@ An API reference can be found [here](sphinx-docs).
 
 A general tutorial is provided as part of the Umami documentation. It makes use of the JetClass dataset and is provided [here](tutorial/index.md).
 
-A corresponding step-by-step tutorial for using Umami inside the ATLAS collaboration for jet flavour tagging is provided in the ATLAS flavour tagging webpage [here](https://ftag.docs.cern.ch/software/tutorials/tutorial-umami/) (only accessible by ATLAS users).
+A corresponding step-by-step tutorial for Umami inside the ATLAS collaboration for jet flavour tagging is provided [here](tutorial/tutorial-umami.md)
+
 Additionally, at the [FTAG Workshop in 2022 in Amsterdam](https://indico.cern.ch/event/1193206/timetable/?view=standard), we gave a tutorial how to work with Umami. You can find the slides together with a recording of the talk [here](https://indico.cern.ch/event/1193206/timetable/?view=standard#b-477082-day-3-afternoon-tutor). Please note that since that tutorial, the Umami software has been developed further and might slightly deviate from the version covered in the tutorial.

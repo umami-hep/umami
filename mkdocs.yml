@@ -63,7 +63,7 @@ nav:
         - Preprocessing: tutorial/preprocessing.md
         - Training: tutorial/training.md
         - Validation: tutorial/validation.md
-        - ATLAS FTAG (internal): 'https://ftag-docs.docs.cern.ch/software/tutorials/tutorial-umami/'
+        - ATLAS FTAG: tutorial/tutorial-umami.md
     - Contributing:
         - contributing/index.md
     - FAQ:
