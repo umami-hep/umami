@@ -107,29 +107,21 @@ bibliography: paper.bib
 ---
 
 # Summary
-
-Flavour-tagging, the identification of jets originating from bottom and charm quarks, is a critically important technique in the data analysis of the ATLAS experiment [@ATLAS:2008] at the Large Hadron Collider [@Evans:2008]. It is applied in precision measurements of the Standard Model, e.g. in characterisations of the Higgs boson properties, as well as in searches for yet unknown phenomena.
+Flavour-tagging, the identification of collimated sprays of particles ("jets") originating from bottom and charm quarks, is a critically important technique in the data analysis of the ATLAS experiment [@ATLAS:2008] at the Large Hadron Collider [@Evans:2008]. It is applied in precision measurements of the Standard Model, e.g. in characterisations of the Higgs boson properties, as well as in searches for yet unknown phenomena.
 The long lifetime, high mass, and large decay multiplicity of hadrons containing bottom and charm quarks provide distinct signatures in particle detectors which can be exploited by machine learning algorithms.
 Excellent knowledge of the detector and the physics processes at hand enables simulations to provide a high-quality training dataset representative of recorded ATLAS data.
 The `Umami` software toolkit provides a unified data pipeline, definition of the algorithms, training and performance evaluation with a high degree of automation.
 
 # Statement of need
 
-`Umami` is a Python [@Rossum:2009] toolkit for training and evaluating machine learning algorithms used in high energy physics for jet flavour tagging.
-The creation and training of production-grade machine learning models is supported by the `TensorFlow` [@tensorflow:2015] and `keras` [@chollet:2015] packages. The training datasets feature highly imbalanced distributions among the target classes and input features of vastly different magnitude. Consequentially, the preprocessing of the training data requires resampling to provide balanced datasets and transformation of the input features by scaling and shifting.
+`Umami` is a Python toolkit for training and evaluating machine learning algorithms used in high energy physics for jet flavour tagging.
+The creation and training of production-grade machine learning models is supported by the `TensorFlow` and `keras` packages. The training datasets feature highly imbalanced distributions among the target classes and input features of vastly different magnitude. Consequentially, the preprocessing of the training data requires resampling to provide balanced datasets and transformation of the input features by scaling and shifting.
 
-`Umami` provides a class-based and user-friendly interface with `yaml` [@YAML:2021] configuration files to steer the data preprocessing and the training of deep neural networks. It is deployed as a Python module which can be installed with `setuptools` [@setuptools:2023] or used via Docker images [@Merkel:2014]. `Umami` was designed to be used by researchers in the ATLAS collaboration and is open to be applied in a more general context.
+`Umami` provides a class-based and user-friendly interface with `yaml` configuration files to steer the data preprocessing and the training of deep neural networks. It is available as a Python application and is also distributed via Linux container images. `Umami` was designed to be used by researchers in the ATLAS collaboration and is open to be applied in a more general context.
 
 # Related work
 
 The application of machine learning in high energy physics, particularly for the classification of jets, is a common and critically important technique [@Guest:2018; @Cagnotta:2022]. In contrast to previous efforts in jet flavour tagging [@Bols:2020; @ATLAS:2019], the current state-of-the-art algorithms [@Qu:2022] rely on specialised toolkits, such as the `Weaver` framework [@Qu:2020]. These toolkits enable the design of algorithms by taking care of input processing, steering the training on large datasets and providing performance metrics. `Umami` provides the required functionality to define, train and evaluate the algorithms used in ATLAS data analysis.
-
-
-# Development Notes
-
-The development of the package adheres to PEP8 standards [@PEP8:2001]. The code quality is tested as part of a continuous integration pipeline with the `pytest` module [@pytest:2004], using unit tests and integration tests.
-Documentation of the software is built automatically with the `mkdocs` [@mkdocs:2023] and `sphinx` [@sphinx:2023] modules and deployed to the website [`https://umami.docs.cern.ch`](https://umami.docs.cern.ch).
-The `Umami` toolkit has been released as open-source software under the Apache v2 license. 
 
 # Software description
 
@@ -143,10 +135,10 @@ Using `Umami` is not limited to jet flavour tagging but provides support for a b
 
 ![Distributions of the pseudorapidity $\eta$ of jets from Higgs boson decays to b-quarks ($H \rightarrow b\overline{b}$-jets), Higgs boson decays to c-quarks ($H \rightarrow c\overline{c}$-jets), and to top quarks (Top) before and after resampling.\label{fig:eta}](eta.png){ width=90% }
 
-Different architectures of neural networks, including Deep Multi-Layer-Perceptrons [@LeCun:2015] and Deep Sets [@Zaheer:2017], are supported in `Umami` for definition with configuration files.
+Different architectures of neural networks, including Deep Multi-Layer-Perceptrons [@LeCun:2015] and Deep Sets, are supported in `Umami` for definition with configuration files.
 The training is performed with `keras` using the `TensorFlow` back-end and the Adam optimiser [@Kingma:2015], supporting the use of GPU resources to shorten the required time to train the networks by an order of magnitude.
 
-The performance of the chosen model can be evaluated in publication-grade plots, which are steered with configuration files. The plots are created using the `matplotlib` [@Hunter:2007] and `puma` [@Birk:2023] Python modules.
+The performance of the chosen model can be evaluated in publication-grade plots, which are steered with configuration files. The plots are created using the `matplotlib` [@Hunter:2007] and `puma` [@Birk:2023] Python libraries.
 
 # Conclusions and future work
 
