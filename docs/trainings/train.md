@@ -81,13 +81,13 @@ The next section in the train config is the `nn_structure`. Here we define all t
     #### DL1*
 
     ```yaml
-    §§§examples/training/DL1r-PFlow-Training-config.yaml:89:93§§§
+    §§§examples/training/DL1r-PFlow-Training-config.yaml:89:90§§§
     ```
 
     | Options | Data Type | Necessary, Optional | Explanation |
     |---------|-----------|---------------------|-------------|
     | `activations` | `list` | Necessary | List of activations per layer defined in `dense_sizes`. Every entry is the activation for one hidden layer. The entries must be `str` and activations supported by `Keras`. |
-    | `repeat_end` | `list` | Optional | List of input variables that are folded into the output of the penultimate layer. This is then feeded into the last layer. |
+    | `repeat_end` | `list` | Optional | Experimental. List of input variables that are folded into the output of the penultimate layer. This is then feeded into the last layer. |
 
 ??? info "Umami"
     #### Umami

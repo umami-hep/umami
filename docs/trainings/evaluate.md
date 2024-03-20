@@ -90,7 +90,7 @@ which will output a beeswarm plot into `modelname/plots/`. Each dot in this plot
 You have some options to play with in the `evaluation_settings` section in the [DL1r-PFlow-Training-config.yaml](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/examples/training/DL1r-PFlow-Training-config.yaml) shown here:
 
 ```yaml
-§§§examples/training/DL1r-PFlow-Training-config.yaml:157:178§§§
+§§§examples/training/DL1r-PFlow-Training-config.yaml:154:175§§§
 ```
 
 The options are explained here:

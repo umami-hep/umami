@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Removing `repeat_end` option from default config [!751](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/751)
 - Add dark mode to mkdocs documentation [!748](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/748)
 - Improved documentation + umami paper draft [!747](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/747)
 - Integrate UPP in umami/preprocessing.py [!740](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/740)

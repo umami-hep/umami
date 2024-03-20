@@ -89,9 +89,6 @@ nn_structure:
     # Activations of the layers. Starting with first dense layer.
     activations: ["relu", "relu", "relu", "relu", "relu", "relu", "relu", "relu"]
 
-    # Variables to repeat in the last layer (example)
-    repeat_end: ["pt_btagJes", "absEta_btagJes"]
-
     # Options for the Learning Rate reducer
     lrr: True
 
