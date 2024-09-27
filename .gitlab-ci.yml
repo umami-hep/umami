@@ -5,7 +5,7 @@ variables:
   TORCHTAG: 1.11.0-cuda11.3-cudnn8-runtime
   MATERIAL_VERSION: '8.2.7'
   IMAGE_TYPE: umamibase:latest
-  SLIM_IMAGE: python:3.8-slim
+  SLIM_IMAGE: python:3.8.15-slim
   REGISTY_PATH: ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/umami
   SPHINX_PYDATA_THEME_VERSION: 0.9.0
 

@@ -17,5 +17,9 @@ RUN apt-get update && \
 COPY requirements.txt .
 COPY requirements_develop.txt .
 
+# Remove tensorflow from requirements list
+RUN sed -i '/tensorflow/d' requirements.txt
+
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN pip install -r requirements_develop.txt

@@ -106,3 +106,19 @@ This will give you 5 different files
 - `ci_zpext_testing.h5`
 
 To copy them to the `eos` area, please ask one of the umami responsibles.
+
+
+## Generate `requirements.txt` Lock File
+The `requirements.txt` file in the repository serves for umami also as a lock file, pinning down the exact packages and their versions installed in the environment in which umami "lives". This file is created using the [`uv`](https://pypi.org/project/uv/) package.
+
+To recreate the `requirements.txt` file (needed for when you changeda version of a package in the `setup.cfg` for example) you need to install `uv` via
+
+```bash
+python -m pip install uv
+```
+
+If you run umami in a containered way, you might want to set the extra `--prefix python_install` option, where `python_install` is the path where umami is installed, to install uv in the same python version as used in the container. The full command would look like this:
+
+```bash
+python -m pip install --prefix python_install uv
+```

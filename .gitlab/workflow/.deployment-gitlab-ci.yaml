@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 
 .pages_template: &pages_template
-  image: python:3.8-alpine
+  image: python:3.8.15-alpine
   script:
     - ls docs/ci_assets  # list this folder to see in the logs if all the expected files are present
     - apk add --no-cache git subversion
@@ -117,7 +117,7 @@ render_md_placeholders:
   # we use the tool librep here. In case of any troubles with librep itself, submit
   # an issue here: https://github.com/umami-hep/librep
   stage: builds
-  image: python:3.8-alpine
+  image: python:3.8.15-alpine
   script:
     - pip install librep==0.0.5
     - librep --ref_dir $PWD --input "docs/**/*.md" --no_backup --exclude docs/setup/development/good_practices_docs.md
