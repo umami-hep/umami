@@ -226,17 +226,13 @@ within the `umami` folder.
     git clone ssh://git@gitlab.cern.ch:7999/atlas-flavor-tagging-tools/algorithms/umami.git
     ```
 
-    In order for the `umami` code to work you need at least `python3.6` or higher.
+    In order for the `umami` code to work you need at least `python3.8` or higher.
 
-    Now you need to install all the requirements which are in the first place `tensorflow`
-
-    You can find the recommended `tensorflow` version in [this line](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/blob/master/.gitlab-ci.yml#L4).
+    Now you need to install all the requirements which are in the first place `tensorflow`.
 
     WARNING: it is typically quite complicated to install `tensorflow` properly, especially on a cluster. You might consider using a conda environment for this.
 
-    In order to install `tensorflow` you can use `pip` or conda - in both cases make sure to use a virtual environment.
-
-    After you installed `tensorflow` you can proceed installing the remaining packages which are required via
+    Tensorflow, together with all other requirements can be installed using the provided `requirements.txt` file and the following command:
     ```
     pip install -r requirements.txt
     ```
@@ -251,3 +247,5 @@ within the `umami` folder.
     ```bash
     python -m pip install -e .
     ```
+
+    The `requirements.txt` serves as a `lock` file, snap-shoting the actual packages installed with their versions. Together with the related hashes, the environment can be exactly rebuild. The process to generate this file is explained in the [development](https://umami-docs.web.cern.ch/setup/development/#updating-ci-files) part of the documentation.
