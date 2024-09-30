@@ -16,9 +16,6 @@ RUN apt-get update && \
 COPY . /umami
 WORKDIR /umami
 
-# Remove tensorflow from requirements list
-RUN sed -i '/tensorflow/d' requirements.txt
-
 RUN pip install -r requirements.txt
 RUN cd /umami && python -m pip install .
 
