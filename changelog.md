@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Remove github workflow in master [!756](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/756)
 - Removing obsolete slim image [!755](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/755)
 - Fixing version issue in master pipeline [!753](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/753)
 - Adding comments from JOSS review [!752](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/752)
