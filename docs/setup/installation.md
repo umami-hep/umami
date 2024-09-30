@@ -12,7 +12,7 @@ The images are created automatically from the `master` branch and updated for ev
 Other tags correspond to the tags in the GitLab project. For more details see the image overviews below.
 
 
-There are two different kind of images:
+There are three different kind of images:
 - Base images
     - these image types contain all the necessary dependencies for `umami` but not the `umami` package itself
     - these are best suited for any developemts in `umami`
@@ -24,10 +24,6 @@ There are two different kind of images:
     - these images use the base images and have `umami` installed on top
     - these are the best choice if you just want to run `umami` but you don't want to change anything in the code
     - You can browse them [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry/8387) in the gitlab container registry
-- Packaged slim images
-    - these images which use minimal requirements, have `umami` installed on top and are meant for plotting (they don't ship with tensorflow)
-    - only useful for plotting tasks
-    - You can browse them [here](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/container_registry/13154) in the gitlab container registry
 
 
 ??? info "Overview Base images"

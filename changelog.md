@@ -2,6 +2,7 @@
 
 ### Latest
 
+- Removing obsolete slim image [!755](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/755)
 - Fixing version issue in master pipeline [!753](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/753)
 - Adding comments from JOSS review [!752](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/752)
 - Removing `repeat_end` option from default config [!751](https://gitlab.cern.ch/atlas-flavor-tagging-tools/algorithms/umami/-/merge_requests/751)
