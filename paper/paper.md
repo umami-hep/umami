@@ -13,7 +13,7 @@ authors:
     affiliation: 1
   - name: Joschka Birk
     orcid: 0000-0002-1931-0127
-    affiliation: 2
+    affiliation: 13
   - name: Maxence Draguet
     affiliation: 3
   - name: Stefano Franchellucci
@@ -21,7 +21,7 @@ authors:
     affiliation: 4
   - name: Alexander Froch
     orcid: 0000-0002-8259-2622
-    affiliation: 2
+    affiliation: 4
   - name: Philipp Gadow
     orcid: 0000-0003-4475-6734
     affiliation: 5
@@ -98,10 +98,11 @@ affiliations:
    index: 11
  - name: INFN Genova and Universita' di Genova, Italy
    index: 12
+ - name: University of Hamburg, Germany
+   index: 13
 
 
-
-date: 09 August 2023
+date: 02 October 2024
 bibliography: paper.bib
 
 ---
