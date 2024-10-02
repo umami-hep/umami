@@ -15,6 +15,7 @@ authors:
     orcid: 0000-0002-1931-0127
     affiliation: 13
   - name: Maxence Draguet
+    orcid: 0000-0003-1530-0519
     affiliation: 3
   - name: Stefano Franchellucci
     orcid: 0000-0003-0695-0798
@@ -96,7 +97,7 @@ affiliations:
    index: 10
  - name: Deutsches Elektronen-Synchrotron DESY, Germany
    index: 11
- - name: INFN Genova and Universita' di Genova, Italy
+ - name: Stony Brook University, United States of America
    index: 12
  - name: University of Hamburg, Germany
    index: 13
